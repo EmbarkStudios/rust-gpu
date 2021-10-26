@@ -131,7 +131,7 @@
 
 <span class="doccomment">/// Provides the hook to expand `#[derive(TryInto)]` into an implementation of `TryInto`</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::cognitive_complexity</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">DeriveInput</span>, <span class="ident">trait_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">DeriveInput</span>, <span class="ident">trait_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">State::with_attr_params</span>(
         <span class="ident">input</span>,
         <span class="ident">trait_name</span>,
@@ -184,13 +184,13 @@
             );
         }
 
-        <span class="kw">let</span> <span class="ident">vars</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vars</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+        <span class="kw">let</span> <span class="ident">vars</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vars</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
             <span class="macro">quote!</span>(#(#<span class="ident">vars</span>)<span class="kw-2">*</span>)
         } <span class="kw">else</span> {
             <span class="macro">quote!</span>((#(#<span class="ident">vars</span>),<span class="kw-2">*</span>))
         };
 
-        <span class="kw">let</span> <span class="ident">output_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">original_types</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+        <span class="kw">let</span> <span class="ident">output_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">original_types</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
             <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">quote!</span>(#(#<span class="ident">original_types</span>)<span class="kw-2">*</span>))
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">types</span> <span class="op">=</span> <span class="ident">original_types</span>
@@ -228,10 +228,10 @@
 
                 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_variables</span>)]</span>
                 <span class="attribute">#[<span class="ident">inline</span>]</span>
-                <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: #<span class="ident">reference_with_lifetime</span> #<span class="ident">input_type</span>#<span class="ident">ty_generics</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">::core::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+                <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: #<span class="ident">reference_with_lifetime</span> #<span class="ident">input_type</span>#<span class="ident">ty_generics</span>) -&gt; <span class="ident">::core::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
                     <span class="kw">match</span> <span class="ident">value</span> {
-                        #(#<span class="ident">matchers</span>)<span class="op">|</span><span class="op">*</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">::core::result::Result::Ok</span>(#<span class="ident">vars</span>),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">::core::result::Result::Err</span>(#<span class="ident">message</span>),
+                        #(#<span class="ident">matchers</span>)<span class="op">|</span><span class="op">*</span> =&gt; <span class="ident">::core::result::Result::Ok</span>(#<span class="ident">vars</span>),
+                        <span class="kw">_</span> =&gt; <span class="ident">::core::result::Result::Err</span>(#<span class="ident">message</span>),
                     }
                 }
             }

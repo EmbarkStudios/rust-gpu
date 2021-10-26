@@ -32,7 +32,7 @@
 <span id="32">32</span>
 <span id="33">33</span>
 <span id="34">34</span>
-</pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">modf</span>(<span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">f64</span>, <span class="ident">f64</span>) {
+</pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">modf</span>(<span class="ident">x</span>: <span class="ident">f64</span>) -&gt; (<span class="ident">f64</span>, <span class="ident">f64</span>) {
     <span class="kw">let</span> <span class="ident">rv2</span>: <span class="ident">f64</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">u</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
     <span class="kw">let</span> <span class="ident">mask</span>: <span class="ident">u64</span>;
@@ -41,7 +41,7 @@
     <span class="comment">/* no fractional part */</span>
     <span class="kw">if</span> <span class="ident">e</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">52</span> {
         <span class="ident">rv2</span> <span class="op">=</span> <span class="ident">x</span>;
-        <span class="kw">if</span> <span class="ident">e</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x400</span> <span class="op">&amp;&amp;</span> (<span class="ident">u</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">e</span> <span class="op">==</span> <span class="number">0x400</span> <span class="op">&amp;&amp;</span> (<span class="ident">u</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="comment">/* nan */</span>
             <span class="kw">return</span> (<span class="ident">x</span>, <span class="ident">rv2</span>);
         }
@@ -57,7 +57,7 @@
     }
 
     <span class="ident">mask</span> <span class="op">=</span> ((<span class="op">!</span><span class="number">0</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">12</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">e</span>;
-    <span class="kw">if</span> (<span class="ident">u</span> <span class="op">&amp;</span> <span class="ident">mask</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> (<span class="ident">u</span> <span class="op">&amp;</span> <span class="ident">mask</span>) <span class="op">==</span> <span class="number">0</span> {
         <span class="ident">rv2</span> <span class="op">=</span> <span class="ident">x</span>;
         <span class="ident">u</span> <span class="op">&amp;=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">63</span>;
         <span class="kw">return</span> (<span class="ident">f64::from_bits</span>(<span class="ident">u</span>), <span class="ident">rv2</span>);

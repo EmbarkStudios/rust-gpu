@@ -97,7 +97,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">StructMember</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">ty</span>: <span class="ident">Token</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">ty</span>: <span class="ident">Token</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">StructMember</span> {
             <span class="ident">token</span>: <span class="ident">ty</span>,
             <span class="ident">decorations</span>: <span class="ident">Vec::new</span>(),
@@ -108,10 +108,10 @@
 <span class="macro">include!</span>(<span class="string">&quot;autogen_types.rs&quot;</span>);
 
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Type</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">use</span> <span class="ident">Type</span>::<span class="kw-2">*</span>;
         <span class="kw">match</span> (<span class="self">self</span>, <span class="ident">other</span>) {
-            (<span class="ident">Bool</span>, <span class="ident">Bool</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            (<span class="ident">Bool</span>, <span class="ident">Bool</span>) =&gt; <span class="bool-val">true</span>,
             (
                 <span class="ident">Int</span> {
                     <span class="ident">width</span>: <span class="ident">sw</span>,
@@ -121,8 +121,8 @@
                     <span class="ident">width</span>: <span class="ident">ow</span>,
                     <span class="ident">signedness</span>: <span class="ident">os</span>,
                 },
-            ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sw</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ow</span> <span class="op">&amp;&amp;</span> <span class="ident">ss</span> <span class="op">=</span><span class="op">=</span> <span class="ident">os</span>,
-            (<span class="ident">Float</span> { <span class="ident">width</span>: <span class="ident">s</span> }, <span class="ident">Float</span> { <span class="ident">width</span>: <span class="ident">o</span> }) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span> <span class="op">=</span><span class="op">=</span> <span class="ident">o</span>,
+            ) =&gt; <span class="ident">sw</span> <span class="op">==</span> <span class="ident">ow</span> <span class="op">&amp;&amp;</span> <span class="ident">ss</span> <span class="op">==</span> <span class="ident">os</span>,
+            (<span class="ident">Float</span> { <span class="ident">width</span>: <span class="ident">s</span> }, <span class="ident">Float</span> { <span class="ident">width</span>: <span class="ident">o</span> }) =&gt; <span class="ident">s</span> <span class="op">==</span> <span class="ident">o</span>,
             (
                 <span class="ident">Vector</span> {
                     <span class="ident">component_type</span>: <span class="ident">st</span>,
@@ -132,7 +132,7 @@
                     <span class="ident">component_type</span>: <span class="ident">ot</span>,
                     <span class="ident">component_count</span>: <span class="ident">oc</span>,
                 },
-            ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">st</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ot</span> <span class="op">&amp;&amp;</span> <span class="ident">sc</span> <span class="op">=</span><span class="op">=</span> <span class="ident">oc</span>,
+            ) =&gt; <span class="ident">st</span> <span class="op">==</span> <span class="ident">ot</span> <span class="op">&amp;&amp;</span> <span class="ident">sc</span> <span class="op">==</span> <span class="ident">oc</span>,
             (
                 <span class="ident">Matrix</span> {
                     <span class="ident">column_type</span>: <span class="ident">st</span>,
@@ -142,35 +142,35 @@
                     <span class="ident">column_type</span>: <span class="ident">ot</span>,
                     <span class="ident">column_count</span>: <span class="ident">oc</span>,
                 },
-            ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">st</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ot</span> <span class="op">&amp;&amp;</span> <span class="ident">sc</span> <span class="op">=</span><span class="op">=</span> <span class="ident">oc</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            ) =&gt; <span class="ident">st</span> <span class="op">==</span> <span class="ident">ot</span> <span class="op">&amp;&amp;</span> <span class="ident">sc</span> <span class="op">==</span> <span class="ident">oc</span>,
+            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Type</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_numerical_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_numerical_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="macro">matches!</span>(<span class="self">self</span>, <span class="ident">Type::Int</span> { .. } <span class="op">|</span> <span class="ident">Type::Float</span> { .. })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_scalar_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_scalar_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Type::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">is_numerical_type</span>(),
+            <span class="ident">Type::Bool</span> =&gt; <span class="bool-val">true</span>,
+            <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">is_numerical_type</span>(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_aggregate_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_aggregate_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="macro">matches!</span>(
             <span class="self">self</span>,
             <span class="ident">Type::Struct</span> { .. } <span class="op">|</span> <span class="ident">Type::Array</span> { .. } <span class="op">|</span> <span class="ident">Type::RuntimeArray</span> { .. }
         )
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_composite_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_composite_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Type::Vector</span> { .. } <span class="op">|</span> <span class="ident">Type::Matrix</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">is_aggregate_type</span>(),
+            <span class="ident">Type::Vector</span> { .. } <span class="op">|</span> <span class="ident">Type::Matrix</span> { .. } =&gt; <span class="bool-val">true</span>,
+            <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">is_aggregate_type</span>(),
         }
     }
 }

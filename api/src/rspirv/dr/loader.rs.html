@@ -394,33 +394,33 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This method is intended to be used by fmt::Display and error::Error to</span>
     <span class="doccomment">/// avoid duplication in implementation. So it&#39;s private.</span>
-    <span class="kw">fn</span> <span class="ident">describe</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">describe</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">Error::NestedFunction</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found nested function&quot;</span>),
-            <span class="ident">Error::UnclosedFunction</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found unclosed function&quot;</span>),
-            <span class="ident">Error::MismatchedFunctionEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found mismatched OpFunctionEnd&quot;</span>),
-            <span class="ident">Error::DetachedFunctionParameter</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Error::NestedFunction</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found nested function&quot;</span>),
+            <span class="ident">Error::UnclosedFunction</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found unclosed function&quot;</span>),
+            <span class="ident">Error::MismatchedFunctionEnd</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found mismatched OpFunctionEnd&quot;</span>),
+            <span class="ident">Error::DetachedFunctionParameter</span> =&gt; {
                 <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found function OpFunctionParameter not inside function&quot;</span>)
             }
-            <span class="ident">Error::DetachedBlock</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found block not inside function&quot;</span>),
-            <span class="ident">Error::NestedBlock</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found nested block&quot;</span>),
-            <span class="ident">Error::UnclosedBlock</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found block without terminator&quot;</span>),
-            <span class="ident">Error::MismatchedTerminator</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found mismatched terminator&quot;</span>),
-            <span class="ident">Error::DetachedInstruction</span>(<span class="prelude-val">Some</span>(<span class="ident">inst</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Owned</span>(<span class="macro">format!</span>(
+            <span class="ident">Error::DetachedBlock</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found block not inside function&quot;</span>),
+            <span class="ident">Error::NestedBlock</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found nested block&quot;</span>),
+            <span class="ident">Error::UnclosedBlock</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found block without terminator&quot;</span>),
+            <span class="ident">Error::MismatchedTerminator</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found mismatched terminator&quot;</span>),
+            <span class="ident">Error::DetachedInstruction</span>(<span class="prelude-val">Some</span>(<span class="ident">inst</span>)) =&gt; <span class="ident">Cow::Owned</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;found instruction `{:?}` not inside block&quot;</span>,
                 <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opname</span>
             )),
-            <span class="ident">Error::DetachedInstruction</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Error::DetachedInstruction</span>(<span class="prelude-val">None</span>) =&gt; {
                 <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;found unknown instruction not inside block&quot;</span>)
             }
-            <span class="ident">Error::EmptyInstructionList</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;list of instructions is empty&quot;</span>),
-            <span class="ident">Error::WrongOpCapabilityOperand</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpCapability operand&quot;</span>),
-            <span class="ident">Error::WrongOpExtensionOperand</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpExtension operand&quot;</span>),
-            <span class="ident">Error::WrongOpExtInstImportOperand</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpExtInstImport operand&quot;</span>),
-            <span class="ident">Error::WrongOpMemoryModelOperand</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpMemoryModel operand&quot;</span>),
-            <span class="ident">Error::WrongOpNameOperand</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpName operand&quot;</span>),
-            <span class="ident">Error::FunctionNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;can&#39;t find the function&quot;</span>),
-            <span class="ident">Error::BlockNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;can&#39;t find the block&quot;</span>),
+            <span class="ident">Error::EmptyInstructionList</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;list of instructions is empty&quot;</span>),
+            <span class="ident">Error::WrongOpCapabilityOperand</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpCapability operand&quot;</span>),
+            <span class="ident">Error::WrongOpExtensionOperand</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpExtension operand&quot;</span>),
+            <span class="ident">Error::WrongOpExtInstImportOperand</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpExtInstImport operand&quot;</span>),
+            <span class="ident">Error::WrongOpMemoryModelOperand</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpMemoryModel operand&quot;</span>),
+            <span class="ident">Error::WrongOpNameOperand</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;wrong OpName operand&quot;</span>),
+            <span class="ident">Error::FunctionNotFound</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;can&#39;t find the function&quot;</span>),
+            <span class="ident">Error::BlockNotFound</span> =&gt; <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;can&#39;t find the block&quot;</span>),
         }
     }
 }
@@ -428,7 +428,7 @@
 <span class="kw">impl</span> <span class="ident">error::Error</span> <span class="kw">for</span> <span class="ident">Error</span> {}
 
 <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">describe</span>())
     }
 }
@@ -449,7 +449,7 @@
 
 <span class="kw">impl</span> <span class="ident">Loader</span> {
     <span class="doccomment">/// Creates a new empty loader.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Loader</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Loader</span> {
         <span class="ident">Loader</span> {
             <span class="ident">module</span>: <span class="ident">dr::Module::new</span>(),
             <span class="ident">function</span>: <span class="prelude-val">None</span>,
@@ -458,14 +458,14 @@
     }
 
     <span class="doccomment">/// Returns the `Module` under construction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">module</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">dr::Module</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">module</span>(<span class="self">self</span>) -&gt; <span class="ident">dr::Module</span> {
         <span class="self">self</span>.<span class="ident">module</span>
     }
 }
 
 <span class="doccomment">/// Returns `$error` if `$condition` evaluates to false.</span>
 <span class="macro">macro_rules!</span> <span class="ident">if_ret_err</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">condition</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">error</span>: <span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">condition</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">error</span>: <span class="ident">ident</span>) =&gt; {
         <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">condition</span> {
             <span class="kw">return</span> <span class="ident">ParseAction::Error</span>(<span class="ident">Box::new</span>(<span class="ident">Error</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">error</span>));
         }
@@ -473,80 +473,80 @@
 }
 
 <span class="kw">impl</span> <span class="ident">binary::Consumer</span> <span class="kw">for</span> <span class="ident">Loader</span> {
-    <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseAction</span> {
+    <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">ParseAction</span> {
         <span class="ident">ParseAction::Continue</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseAction</span> {
+    <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">ParseAction</span> {
         <span class="macro">if_ret_err!</span>(<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">is_some</span>(), <span class="ident">UnclosedBlock</span>);
         <span class="macro">if_ret_err!</span>(<span class="self">self</span>.<span class="ident">function</span>.<span class="ident">is_some</span>(), <span class="ident">UnclosedFunction</span>);
         <span class="ident">ParseAction::Continue</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="ident">dr::ModuleHeader</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseAction</span> {
+    <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="ident">dr::ModuleHeader</span>) -&gt; <span class="ident">ParseAction</span> {
         <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">header</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">header</span>);
         <span class="ident">ParseAction::Continue</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseAction</span> {
+    <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>) -&gt; <span class="ident">ParseAction</span> {
         <span class="kw">let</span> <span class="ident">opcode</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span>;
         <span class="kw">match</span> <span class="ident">opcode</span> {
-            <span class="ident">spirv::Op::Capability</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">capabilities</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
-            <span class="ident">spirv::Op::Extension</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
-            <span class="ident">spirv::Op::ExtInstImport</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">ext_inst_imports</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
-            <span class="ident">spirv::Op::MemoryModel</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">memory_model</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">inst</span>),
-            <span class="ident">spirv::Op::EntryPoint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">entry_points</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
-            <span class="ident">spirv::Op::ExecutionMode</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">execution_modes</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">spirv::Op::Capability</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">capabilities</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">spirv::Op::Extension</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">spirv::Op::ExtInstImport</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">ext_inst_imports</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">spirv::Op::MemoryModel</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">memory_model</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">inst</span>),
+            <span class="ident">spirv::Op::EntryPoint</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">entry_points</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">spirv::Op::ExecutionMode</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">execution_modes</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
             <span class="ident">spirv::Op::String</span>
             <span class="op">|</span> <span class="ident">spirv::Op::SourceExtension</span>
             <span class="op">|</span> <span class="ident">spirv::Op::Source</span>
-            <span class="op">|</span> <span class="ident">spirv::Op::SourceContinued</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">debug_string_source</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
-            <span class="ident">spirv::Op::Name</span> <span class="op">|</span> <span class="ident">spirv::Op::MemberName</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">debug_names</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
-            <span class="ident">spirv::Op::ModuleProcessed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">debug_module_processed</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
-            <span class="ident">opcode</span> <span class="kw">if</span> <span class="ident">grammar::reflect::is_location_debug</span>(<span class="ident">opcode</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="op">|</span> <span class="ident">spirv::Op::SourceContinued</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">debug_string_source</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">spirv::Op::Name</span> <span class="op">|</span> <span class="ident">spirv::Op::MemberName</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">debug_names</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">spirv::Op::ModuleProcessed</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">debug_module_processed</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">opcode</span> <span class="kw">if</span> <span class="ident">grammar::reflect::is_location_debug</span>(<span class="ident">opcode</span>) =&gt; {
                 <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">block</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+                    <span class="prelude-val">Some</span>(<span class="ident">block</span>) =&gt; <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
                     <span class="comment">// types_global_values is the only valid section (other than functions) that</span>
                     <span class="comment">// OpLine/OpNoLine can be placed in, so put it there.</span>
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
                 }
             }
-            <span class="ident">opcode</span> <span class="kw">if</span> <span class="ident">grammar::reflect::is_annotation</span>(<span class="ident">opcode</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">annotations</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">opcode</span> <span class="kw">if</span> <span class="ident">grammar::reflect::is_annotation</span>(<span class="ident">opcode</span>) =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">annotations</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
             <span class="ident">opcode</span>
-                <span class="kw">if</span> <span class="ident">grammar::reflect::is_type</span>(<span class="ident">opcode</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">grammar::reflect::is_constant</span>(<span class="ident">opcode</span>) <span class="op">=</span><span class="op">&gt;</span>
+                <span class="kw">if</span> <span class="ident">grammar::reflect::is_type</span>(<span class="ident">opcode</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">grammar::reflect::is_constant</span>(<span class="ident">opcode</span>) =&gt;
             {
                 <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>)
             }
-            <span class="ident">spirv::Op::Variable</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">is_none</span>() <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">spirv::Op::Variable</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">is_none</span>() =&gt; {
                 <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>)
             }
-            <span class="ident">spirv::Op::Undef</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">is_none</span>() <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">spirv::Op::Undef</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">is_none</span>() =&gt; {
                 <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>)
             }
-            <span class="ident">spirv::Op::Function</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">spirv::Op::Function</span> =&gt; {
                 <span class="macro">if_ret_err!</span>(<span class="self">self</span>.<span class="ident">function</span>.<span class="ident">is_some</span>(), <span class="ident">NestedFunction</span>);
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">dr::Function::new</span>();
                 <span class="ident">f</span>.<span class="ident">def</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">inst</span>);
                 <span class="self">self</span>.<span class="ident">function</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">f</span>)
             }
-            <span class="ident">spirv::Op::FunctionEnd</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">spirv::Op::FunctionEnd</span> =&gt; {
                 <span class="macro">if_ret_err!</span>(<span class="self">self</span>.<span class="ident">function</span>.<span class="ident">is_none</span>(), <span class="ident">MismatchedFunctionEnd</span>);
                 <span class="macro">if_ret_err!</span>(<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">is_some</span>(), <span class="ident">UnclosedBlock</span>);
                 <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>().<span class="ident">end</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">inst</span>);
                 <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">function</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>())
             }
-            <span class="ident">spirv::Op::FunctionParameter</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">spirv::Op::FunctionParameter</span> =&gt; {
                 <span class="macro">if_ret_err!</span>(<span class="self">self</span>.<span class="ident">function</span>.<span class="ident">is_none</span>(), <span class="ident">DetachedFunctionParameter</span>);
                 <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>().<span class="ident">parameters</span>.<span class="ident">push</span>(<span class="ident">inst</span>);
             }
-            <span class="ident">spirv::Op::Label</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">spirv::Op::Label</span> =&gt; {
                 <span class="macro">if_ret_err!</span>(<span class="self">self</span>.<span class="ident">function</span>.<span class="ident">is_none</span>(), <span class="ident">DetachedBlock</span>);
                 <span class="macro">if_ret_err!</span>(<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">is_some</span>(), <span class="ident">NestedBlock</span>);
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">dr::Block::new</span>();
                 <span class="ident">block</span>.<span class="ident">label</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">inst</span>);
                 <span class="self">self</span>.<span class="ident">block</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">block</span>)
             }
-            <span class="ident">opcode</span> <span class="kw">if</span> <span class="ident">grammar::reflect::is_block_terminator</span>(<span class="ident">opcode</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">opcode</span> <span class="kw">if</span> <span class="ident">grammar::reflect::is_block_terminator</span>(<span class="ident">opcode</span>) =&gt; {
                 <span class="comment">// Make sure the block exists here. Once the block exists,</span>
                 <span class="comment">// we are certain the function exists because the above checks.</span>
                 <span class="macro">if_ret_err!</span>(<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">is_none</span>(), <span class="ident">MismatchedTerminator</span>);
@@ -557,7 +557,7 @@
                     .<span class="ident">blocks</span>
                     .<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>())
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">_</span> =&gt; {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">is_none</span>() {
                     <span class="kw">return</span> <span class="ident">ParseAction::Error</span>(<span class="ident">Box::new</span>(<span class="ident">Error::DetachedInstruction</span>(<span class="prelude-val">Some</span>(<span class="ident">inst</span>))));
                 }
@@ -600,7 +600,7 @@
 <span class="doccomment">///             ; Bound: 0\n\</span>
 <span class="doccomment">///             OpMemoryModel Logical GLSL450&quot;);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_bytes</span>(<span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseResult</span><span class="op">&lt;</span><span class="ident">dr::Module</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_bytes</span>(<span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) -&gt; <span class="ident">ParseResult</span><span class="op">&lt;</span><span class="ident">dr::Module</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">Loader::new</span>();
     <span class="ident">binary::parse_bytes</span>(<span class="ident">binary</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">loader</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">loader</span>.<span class="ident">module</span>())
@@ -637,7 +637,7 @@
 <span class="doccomment">///             ; Bound: 0\n\</span>
 <span class="doccomment">///             OpMemoryModel Logical GLSL450&quot;);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_words</span>(<span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseResult</span><span class="op">&lt;</span><span class="ident">dr::Module</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_words</span>(<span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>) -&gt; <span class="ident">ParseResult</span><span class="op">&lt;</span><span class="ident">dr::Module</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">Loader::new</span>();
     <span class="ident">binary::parse_words</span>(<span class="ident">binary</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">loader</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">loader</span>.<span class="ident">module</span>())

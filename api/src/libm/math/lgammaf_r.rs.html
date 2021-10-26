@@ -334,7 +334,7 @@
 <span class="kw">const</span> <span class="ident">W6</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">1.6309292987e-03</span>; <span class="comment">/* 0xbad5c4e8 */</span>
 
 <span class="comment">/* sin(PI*x) assuming x &gt; 2^-100, if sin(PI*x)==0 the sign is arbitrary */</span>
-<span class="kw">fn</span> <span class="ident">sin_pi</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+<span class="kw">fn</span> <span class="ident">sin_pi</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">y</span>: <span class="ident">f64</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">n</span>: <span class="ident">isize</span>;
 
@@ -346,14 +346,14 @@
     <span class="ident">y</span> <span class="op">=</span> (<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">-</span> (<span class="ident">n</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">*</span> <span class="number">0.5</span>;
     <span class="ident">y</span> <span class="kw-2">*</span><span class="op">=</span> <span class="number">3.14159265358979323846</span>;
     <span class="kw">match</span> <span class="ident">n</span> {
-        <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k_cosf</span>(<span class="ident">y</span>),
-        <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k_sinf</span>(<span class="op">-</span><span class="ident">y</span>),
-        <span class="number">3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">k_cosf</span>(<span class="ident">y</span>),
-        <span class="number">0</span> <span class="op">|</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k_sinf</span>(<span class="ident">y</span>),
+        <span class="number">1</span> =&gt; <span class="ident">k_cosf</span>(<span class="ident">y</span>),
+        <span class="number">2</span> =&gt; <span class="ident">k_sinf</span>(<span class="op">-</span><span class="ident">y</span>),
+        <span class="number">3</span> =&gt; <span class="op">-</span><span class="ident">k_cosf</span>(<span class="ident">y</span>),
+        <span class="number">0</span> <span class="op">|</span> <span class="kw">_</span> =&gt; <span class="ident">k_sinf</span>(<span class="ident">y</span>),
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lgammaf_r</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">f32</span>, <span class="ident">i32</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lgammaf_r</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f32</span>) -&gt; (<span class="ident">f32</span>, <span class="ident">i32</span>) {
     <span class="kw">let</span> <span class="ident">u</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span>: <span class="ident">f32</span>;
     <span class="kw">let</span> <span class="ident">y</span>: <span class="ident">f32</span>;
@@ -389,7 +389,7 @@
     <span class="kw">if</span> <span class="ident">sign</span> {
         <span class="ident">x</span> <span class="op">=</span> <span class="op">-</span><span class="ident">x</span>;
         <span class="ident">t</span> <span class="op">=</span> <span class="ident">sin_pi</span>(<span class="ident">x</span>);
-        <span class="kw">if</span> <span class="ident">t</span> <span class="op">=</span><span class="op">=</span> <span class="number">0.0</span> {
+        <span class="kw">if</span> <span class="ident">t</span> <span class="op">==</span> <span class="number">0.0</span> {
             <span class="comment">/* -integer */</span>
             <span class="kw">return</span> (<span class="number">1.0</span> <span class="op">/</span> (<span class="ident">x</span> <span class="op">-</span> <span class="ident">x</span>), <span class="ident">signgam</span>);
         }
@@ -404,7 +404,7 @@
     }
 
     <span class="comment">/* purge off 1 and 2 */</span>
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x3f800000</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x40000000</span> {
+    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x3f800000</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x40000000</span> {
         <span class="ident">r</span> <span class="op">=</span> <span class="number">0.0</span>;
     }
     <span class="comment">/* for x &lt; 2.0 */</span>
@@ -438,14 +438,14 @@
             }
         }
         <span class="kw">match</span> <span class="ident">i</span> {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="number">0</span> =&gt; {
                 <span class="ident">z</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">*</span> <span class="ident">y</span>;
                 <span class="ident">p1</span> <span class="op">=</span> <span class="ident">A0</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">A2</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">A4</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">A6</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">A8</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">A10</span>))));
                 <span class="ident">p2</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">A1</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">A3</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">A5</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">A7</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">A9</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">A11</span>)))));
                 <span class="ident">p</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">*</span> <span class="ident">p1</span> <span class="op">+</span> <span class="ident">p2</span>;
                 <span class="ident">r</span> <span class="op">+</span><span class="op">=</span> <span class="ident">p</span> <span class="op">-</span> <span class="number">0.5</span> <span class="op">*</span> <span class="ident">y</span>;
             }
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="number">1</span> =&gt; {
                 <span class="ident">z</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">*</span> <span class="ident">y</span>;
                 <span class="ident">w</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">y</span>;
                 <span class="ident">p1</span> <span class="op">=</span> <span class="ident">T0</span> <span class="op">+</span> <span class="ident">w</span> <span class="op">*</span> (<span class="ident">T3</span> <span class="op">+</span> <span class="ident">w</span> <span class="op">*</span> (<span class="ident">T6</span> <span class="op">+</span> <span class="ident">w</span> <span class="op">*</span> (<span class="ident">T9</span> <span class="op">+</span> <span class="ident">w</span> <span class="op">*</span> <span class="ident">T12</span>))); <span class="comment">/* parallel comp */</span>
@@ -454,15 +454,15 @@
                 <span class="ident">p</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">p1</span> <span class="op">-</span> (<span class="ident">TT</span> <span class="op">-</span> <span class="ident">w</span> <span class="op">*</span> (<span class="ident">p2</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> <span class="ident">p3</span>));
                 <span class="ident">r</span> <span class="op">+</span><span class="op">=</span> <span class="ident">TF</span> <span class="op">+</span> <span class="ident">p</span>;
             }
-            <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="number">2</span> =&gt; {
                 <span class="ident">p1</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">*</span> (<span class="ident">U0</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> (<span class="ident">U1</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> (<span class="ident">U2</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> (<span class="ident">U3</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> (<span class="ident">U4</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> <span class="ident">U5</span>)))));
                 <span class="ident">p2</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> (<span class="ident">V1</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> (<span class="ident">V2</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> (<span class="ident">V3</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> (<span class="ident">V4</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> <span class="ident">V5</span>))));
                 <span class="ident">r</span> <span class="op">+</span><span class="op">=</span> <span class="op">-</span><span class="number">0.5</span> <span class="op">*</span> <span class="ident">y</span> <span class="op">+</span> <span class="ident">p1</span> <span class="op">/</span> <span class="ident">p2</span>;
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">debug_assertions</span>))]</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="kw">_</span> =&gt; {}
         }
     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x41000000</span> {
         <span class="comment">/* x &lt; 8.0 */</span>

@@ -282,7 +282,7 @@
 <span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
 
 <span class="macro">macro_rules!</span> <span class="ident">const_u32x4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::UVec4Cast</span> { <span class="ident">ux4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux4</span> }.<span class="ident">m128</span> }
     };
 }
@@ -306,12 +306,12 @@
 <span class="kw">const</span> <span class="ident">PS_RECIPROCAL_TWO_PI</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">0.159_154_94</span>; <span class="number">4</span>]);
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_abs</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">__m128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_abs</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
     <span class="ident">_mm_and_ps</span>(<span class="ident">v</span>, <span class="ident">_mm_castsi128_ps</span>(<span class="ident">_mm_set1_epi32</span>(<span class="number">0x7f_ff_ff_ff</span>)))
 }
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_round</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">__m128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_round</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
     <span class="comment">// Based on https://github.com/microsoft/DirectXMath `XMVectorRound`</span>
     <span class="kw">let</span> <span class="ident">sign</span> <span class="op">=</span> <span class="ident">_mm_and_ps</span>(<span class="ident">v</span>, <span class="ident">PS_SIGN_MASK</span>);
     <span class="kw">let</span> <span class="ident">s_magic</span> <span class="op">=</span> <span class="ident">_mm_or_ps</span>(<span class="ident">PS_NO_FRACTION</span>, <span class="ident">sign</span>);
@@ -325,7 +325,7 @@
 }
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_floor</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">__m128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_floor</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
     <span class="comment">// Based on https://github.com/microsoft/DirectXMath `XMVectorFloor`</span>
     <span class="comment">// To handle NAN, INF and numbers greater than 8388608, use masking</span>
     <span class="kw">let</span> <span class="ident">test</span> <span class="op">=</span> <span class="ident">_mm_and_si128</span>(<span class="ident">_mm_castps_si128</span>(<span class="ident">v</span>), <span class="ident">_mm_castps_si128</span>(<span class="ident">PS_INV_SIGN_MASK</span>));
@@ -345,7 +345,7 @@
 }
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_ceil</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">__m128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_ceil</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
     <span class="comment">// Based on https://github.com/microsoft/DirectXMath `XMVectorCeil`</span>
     <span class="comment">// To handle NAN, INF and numbers greater than 8388608, use masking</span>
     <span class="kw">let</span> <span class="ident">test</span> <span class="op">=</span> <span class="ident">_mm_and_si128</span>(<span class="ident">_mm_castps_si128</span>(<span class="ident">v</span>), <span class="ident">_mm_castps_si128</span>(<span class="ident">PS_INV_SIGN_MASK</span>));
@@ -365,7 +365,7 @@
 }
 
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_mul_add</span>(<span class="ident">a</span>: <span class="ident">__m128</span>, <span class="ident">b</span>: <span class="ident">__m128</span>, <span class="ident">c</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">__m128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_mul_add</span>(<span class="ident">a</span>: <span class="ident">__m128</span>, <span class="ident">b</span>: <span class="ident">__m128</span>, <span class="ident">c</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;fma&quot;</span>)]</span>
     {
         <span class="ident">_mm_fmadd_ps</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>)
@@ -378,13 +378,13 @@
 }
 
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_neg_mul_sub</span>(<span class="ident">a</span>: <span class="ident">__m128</span>, <span class="ident">b</span>: <span class="ident">__m128</span>, <span class="ident">c</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">__m128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_neg_mul_sub</span>(<span class="ident">a</span>: <span class="ident">__m128</span>, <span class="ident">b</span>: <span class="ident">__m128</span>, <span class="ident">c</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
     <span class="ident">_mm_sub_ps</span>(<span class="ident">c</span>, <span class="ident">_mm_mul_ps</span>(<span class="ident">a</span>, <span class="ident">b</span>))
 }
 
 <span class="doccomment">/// Returns a vector whose components are the corresponding components of Angles modulo 2PI.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_mod_angles</span>(<span class="ident">angles</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">__m128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_mod_angles</span>(<span class="ident">angles</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
     <span class="comment">// Based on https://github.com/microsoft/DirectXMath `XMVectorModAngles`</span>
     <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">angles</span>, <span class="ident">PS_RECIPROCAL_TWO_PI</span>);
     <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">m128_round</span>(<span class="ident">v</span>);
@@ -395,7 +395,7 @@
 <span class="doccomment">/// the bounds of PI may produce an increasing error as the input angle</span>
 <span class="doccomment">/// drifts from `[-PI, PI]`.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_sin</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">__m128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">m128_sin</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
     <span class="comment">// Based on https://github.com/microsoft/DirectXMath `XMVectorSin`</span>
 
     <span class="comment">// 11-degree minimax approximation</span>

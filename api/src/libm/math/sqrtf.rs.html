@@ -166,7 +166,7 @@
  */</span>
 
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sqrtf</span>(<span class="ident">x</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sqrtf</span>(<span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
     <span class="comment">// On wasm32 we know that LLVM&#39;s intrinsic will compile to an optimized</span>
     <span class="comment">// `f32.sqrt` native instruction, so we can leverage this for both code size</span>
     <span class="comment">// and speed.</span>
@@ -211,13 +211,13 @@
         <span class="ident">ix</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>() <span class="kw">as</span> <span class="ident">i32</span>;
 
         <span class="comment">/* take care of Inf and NaN */</span>
-        <span class="kw">if</span> (<span class="ident">ix</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&amp;</span> <span class="number">0x7f800000</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0x7f800000</span> {
+        <span class="kw">if</span> (<span class="ident">ix</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&amp;</span> <span class="number">0x7f800000</span>) <span class="op">==</span> <span class="number">0x7f800000</span> {
             <span class="kw">return</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">x</span>; <span class="comment">/* sqrt(NaN)=NaN, sqrt(+inf)=+inf, sqrt(-inf)=sNaN */</span>
         }
 
         <span class="comment">/* take care of zero */</span>
         <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">sign</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">sign</span>) <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">return</span> <span class="ident">x</span>; <span class="comment">/* sqrt(+-0) = +-0 */</span>
             }
             <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0</span> {
@@ -227,10 +227,10 @@
 
         <span class="comment">/* normalize x */</span>
         <span class="ident">m</span> <span class="op">=</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">23</span>;
-        <span class="kw">if</span> <span class="ident">m</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">m</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="comment">/* subnormal x */</span>
             <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">while</span> <span class="ident">ix</span> <span class="op">&amp;</span> <span class="number">0x00800000</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">while</span> <span class="ident">ix</span> <span class="op">&amp;</span> <span class="number">0x00800000</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">ix</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span>;
                 <span class="ident">i</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>;
             }
@@ -238,7 +238,7 @@
         }
         <span class="ident">m</span> <span class="op">-</span><span class="op">=</span> <span class="number">127</span>; <span class="comment">/* unbias exponent */</span>
         <span class="ident">ix</span> <span class="op">=</span> (<span class="ident">ix</span> <span class="op">&amp;</span> <span class="number">0x007fffff</span>) <span class="op">|</span> <span class="number">0x00800000</span>;
-        <span class="kw">if</span> <span class="ident">m</span> <span class="op">&amp;</span> <span class="number">1</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+        <span class="kw">if</span> <span class="ident">m</span> <span class="op">&amp;</span> <span class="number">1</span> <span class="op">==</span> <span class="number">1</span> {
             <span class="comment">/* odd m, double x to make it even */</span>
             <span class="ident">ix</span> <span class="op">+</span><span class="op">=</span> <span class="ident">ix</span>;
         }

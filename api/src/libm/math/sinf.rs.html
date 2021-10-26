@@ -118,7 +118,7 @@
 <span class="kw">const</span> <span class="ident">S4_PIO2</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">4.</span> <span class="op">*</span> <span class="ident">FRAC_PI_2</span>; <span class="comment">/* 0x401921FB, 0x54442D18 */</span>
 
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sinf</span>(<span class="ident">x</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sinf</span>(<span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
     <span class="kw">let</span> <span class="ident">x64</span> <span class="op">=</span> <span class="ident">x</span> <span class="kw">as</span> <span class="ident">f64</span>;
 
     <span class="kw">let</span> <span class="ident">x1p120</span> <span class="op">=</span> <span class="ident">f32::from_bits</span>(<span class="number">0x7b800000</span>); <span class="comment">// 0x1p120f === 2 ^ 120</span>
@@ -178,10 +178,10 @@
     <span class="comment">/* general argument reduction needed */</span>
     <span class="kw">let</span> (<span class="ident">n</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rem_pio2f</span>(<span class="ident">x</span>);
     <span class="kw">match</span> <span class="ident">n</span> <span class="op">&amp;</span> <span class="number">3</span> {
-        <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k_sinf</span>(<span class="ident">y</span>),
-        <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k_cosf</span>(<span class="ident">y</span>),
-        <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k_sinf</span>(<span class="op">-</span><span class="ident">y</span>),
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">k_cosf</span>(<span class="ident">y</span>),
+        <span class="number">0</span> =&gt; <span class="ident">k_sinf</span>(<span class="ident">y</span>),
+        <span class="number">1</span> =&gt; <span class="ident">k_cosf</span>(<span class="ident">y</span>),
+        <span class="number">2</span> =&gt; <span class="ident">k_sinf</span>(<span class="op">-</span><span class="ident">y</span>),
+        <span class="kw">_</span> =&gt; <span class="op">-</span><span class="ident">k_cosf</span>(<span class="ident">y</span>),
     }
 }
 </code></pre></div>

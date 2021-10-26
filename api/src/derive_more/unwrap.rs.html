@@ -104,7 +104,7 @@
 <span class="kw">use</span> <span class="ident">quote</span>::{<span class="ident">format_ident</span>, <span class="ident">quote</span>};
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">DeriveInput</span>, <span class="ident">Fields</span>, <span class="ident">Ident</span>, <span class="prelude-ty">Result</span>};
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">DeriveInput</span>, <span class="ident">trait_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">DeriveInput</span>, <span class="ident">trait_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">State::with_attr_params</span>(
         <span class="ident">input</span>,
         <span class="ident">trait_name</span>,
@@ -136,8 +136,8 @@
         <span class="kw">let</span> <span class="ident">variant_ident</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">variant</span>.<span class="ident">ident</span>;
 
         <span class="kw">let</span> (<span class="ident">data_pattern</span>, <span class="ident">ret_value</span>, <span class="ident">ret_type</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">variant</span>.<span class="ident">fields</span> {
-            <span class="ident">Fields::Named</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;cannot unwrap anonymous records&quot;</span>),
-            <span class="ident">Fields::Unnamed</span>(<span class="kw-2">ref</span> <span class="ident">fields</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Fields::Named</span>(<span class="kw">_</span>) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;cannot unwrap anonymous records&quot;</span>),
+            <span class="ident">Fields::Unnamed</span>(<span class="kw-2">ref</span> <span class="ident">fields</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">data_pattern</span> <span class="op">=</span>
                     (<span class="number">0</span>..<span class="ident">fields</span>.<span class="ident">unnamed</span>.<span class="ident">len</span>()).<span class="ident">fold</span>(<span class="macro">vec!</span>[], <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">a</span>, <span class="ident">n</span><span class="op">|</span> {
                         <span class="ident">a</span>.<span class="ident">push</span>(<span class="macro">format_ident!</span>(<span class="string">&quot;field_{}&quot;</span>, <span class="ident">n</span>));
@@ -150,7 +150,7 @@
                     <span class="macro">quote!</span> { (#<span class="ident">ret_type</span>) },
                 )
             }
-            <span class="ident">Fields::Unit</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="macro">quote!</span> {}, <span class="macro">quote!</span> { () }, <span class="macro">quote!</span> { () }),
+            <span class="ident">Fields::Unit</span> =&gt; (<span class="macro">quote!</span> {}, <span class="macro">quote!</span> { () }, <span class="macro">quote!</span> { () }),
         };
 
         <span class="kw">let</span> <span class="ident">other_arms</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">variant_states</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">variant</span><span class="op">|</span> {
@@ -159,12 +159,12 @@
             <span class="kw-2">&amp;</span><span class="ident">variant</span>.<span class="ident">ident</span> <span class="op">!</span><span class="op">=</span> <span class="ident">variant_ident</span>
         }).<span class="ident">map</span>(<span class="op">|</span><span class="ident">variant</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">data_pattern</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">variant</span>.<span class="ident">fields</span> {
-                <span class="ident">Fields::Named</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span> { {..} },
-                <span class="ident">Fields::Unnamed</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span> { (..) },
-                <span class="ident">Fields::Unit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span> {},
+                <span class="ident">Fields::Named</span>(<span class="kw">_</span>) =&gt; <span class="macro">quote!</span> { {..} },
+                <span class="ident">Fields::Unnamed</span>(<span class="kw">_</span>) =&gt; <span class="macro">quote!</span> { (..) },
+                <span class="ident">Fields::Unit</span> =&gt; <span class="macro">quote!</span> {},
             };
             <span class="kw">let</span> <span class="ident">variant_ident</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">variant</span>.<span class="ident">ident</span>;
-            <span class="macro">quote!</span> { #<span class="ident">enum_name</span> :: #<span class="ident">variant_ident</span> #<span class="ident">data_pattern</span> <span class="op">=</span><span class="op">&gt;</span>
+            <span class="macro">quote!</span> { #<span class="ident">enum_name</span> :: #<span class="ident">variant_ident</span> #<span class="ident">data_pattern</span> =&gt;
                       <span class="macro">panic!</span>(<span class="macro">concat!</span>(<span class="string">&quot;called `&quot;</span>, <span class="macro">stringify!</span>(#<span class="ident">enum_name</span>), <span class="string">&quot;::&quot;</span>, <span class="macro">stringify!</span>(#<span class="ident">fn_name</span>),
                                      <span class="string">&quot;()` on a `&quot;</span>, <span class="macro">stringify!</span>(#<span class="ident">variant_ident</span>), <span class="string">&quot;` value&quot;</span>))
             }
@@ -180,9 +180,9 @@
         };
         <span class="kw">let</span> <span class="ident">func</span> <span class="op">=</span> <span class="macro">quote!</span> {
             #<span class="ident">track_caller</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> #<span class="ident">fn_name</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> #<span class="ident">ret_type</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> #<span class="ident">fn_name</span>(<span class="self">self</span>) -&gt; #<span class="ident">ret_type</span> {
                 <span class="kw">match</span> <span class="self">self</span> {
-                    #<span class="ident">enum_name</span> ::#<span class="ident">variant_ident</span> #<span class="ident">data_pattern</span> <span class="op">=</span><span class="op">&gt;</span> #<span class="ident">ret_value</span>,
+                    #<span class="ident">enum_name</span> ::#<span class="ident">variant_ident</span> #<span class="ident">data_pattern</span> =&gt; #<span class="ident">ret_value</span>,
                     #(#<span class="ident">other_arms</span>),<span class="op">*</span>
                 }
             }

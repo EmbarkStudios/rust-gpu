@@ -253,7 +253,7 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">CustomDecoration</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Serialize</span> {
     <span class="kw">const</span> <span class="ident">ENCODING_PREFIX</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
 
-    <span class="kw">fn</span> <span class="ident">encode</span>(<span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
+    <span class="kw">fn</span> <span class="ident">encode</span>(<span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Word</span>) -&gt; <span class="ident">Instruction</span> {
         <span class="comment">// FIXME(eddyb) this allocates twice, because there is no functionality</span>
         <span class="comment">// in `serde_json` for writing to something that impls `fmt::Write`,</span>
         <span class="comment">// only for `io::Write`, which would require performing redundant UTF-8</span>
@@ -273,9 +273,9 @@
         )
     }
 
-    <span class="kw">fn</span> <span class="ident">try_decode</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">LazilyDeserialized</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="self">Self</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::DecorateString</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_decoration</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">Decoration::UserTypeGOOGLE</span>
+    <span class="kw">fn</span> <span class="ident">try_decode</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">LazilyDeserialized</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="self">Self</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::DecorateString</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_decoration</span>() <span class="op">==</span> <span class="ident">Decoration::UserTypeGOOGLE</span>
         {
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>();
             <span class="kw">let</span> <span class="ident">encoded</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">2</span>].<span class="ident">unwrap_literal_string</span>();
@@ -293,11 +293,11 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">decode_all</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DecodeAllIter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">decode_all</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) -&gt; <span class="ident">DecodeAllIter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">module</span>
             .<span class="ident">annotations</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">filter_map</span>(<span class="ident"><span class="self">Self</span>::try_decode</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span>)
+            .<span class="ident">filter_map</span>(<span class="ident"><span class="self">Self</span>::try_decode</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>) -&gt; <span class="kw">_</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">remove_all</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Module</span>) {
@@ -311,7 +311,7 @@
 <span class="comment">// `-&gt; impl Iterator&lt;Item = (Word, LazilyDeserialized&lt;&#39;_, Self&gt;)` in the trait.</span>
 <span class="kw">type</span> <span class="ident">DecodeAllIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">iter::FilterMap</span><span class="op">&lt;</span>
     <span class="ident">slice::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">LazilyDeserialized</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+    <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Instruction</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">LazilyDeserialized</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
 <span class="op">&gt;</span>;
 
 <span class="doccomment">/// Helper allowing full deserialization to be avoided where possible.</span>
@@ -322,7 +322,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span>: <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">LazilyDeserialized</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">D</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="self">self</span>) -&gt; <span class="ident">D</span> {
         <span class="ident">serde_json::from_str</span>(<span class="self">self</span>.<span class="ident">json</span>).<span class="ident">unwrap</span>()
     }
 }
@@ -373,11 +373,11 @@
     }
 
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">rustc_span::SourceFileHashAlgorithm</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SourceFileHashAlgorithm</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">kind</span>: <span class="ident">rustc_span::SourceFileHashAlgorithm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">kind</span>: <span class="ident">rustc_span::SourceFileHashAlgorithm</span>) -&gt; <span class="self">Self</span> {
             <span class="kw">match</span> <span class="ident">kind</span> {
-                <span class="ident">rustc_span::SourceFileHashAlgorithm::Md5</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Md5</span>,
-                <span class="ident">rustc_span::SourceFileHashAlgorithm::Sha1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Sha1</span>,
-                <span class="ident">rustc_span::SourceFileHashAlgorithm::Sha256</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Sha256</span>,
+                <span class="ident">rustc_span::SourceFileHashAlgorithm::Md5</span> =&gt; <span class="ident"><span class="self">Self</span>::Md5</span>,
+                <span class="ident">rustc_span::SourceFileHashAlgorithm::Sha1</span> =&gt; <span class="ident"><span class="self">Self</span>::Sha1</span>,
+                <span class="ident">rustc_span::SourceFileHashAlgorithm::Sha256</span> =&gt; <span class="ident"><span class="self">Self</span>::Sha256</span>,
             }
         }
     }
@@ -389,7 +389,7 @@
     }
 
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">rustc_span::SourceFileHash</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SourceFileHash</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">hash</span>: <span class="ident">rustc_span::SourceFileHash</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">hash</span>: <span class="ident">rustc_span::SourceFileHash</span>) -&gt; <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">hash</span>.<span class="ident">hash_bytes</span>();
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="self">Self</span> {
                 <span class="ident">kind</span>: <span class="ident">hash</span>.<span class="ident">kind</span>.<span class="ident">into</span>(),
@@ -402,7 +402,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">SerializedSpan</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_rustc</span>(<span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">source_map</span>: <span class="kw-2">&amp;</span><span class="ident">SourceMap</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_rustc</span>(<span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">source_map</span>: <span class="kw-2">&amp;</span><span class="ident">SourceMap</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// Decorations may not always have valid spans.</span>
         <span class="comment">// FIXME(eddyb) reduce the sources of this as much as possible.</span>
         <span class="kw">if</span> <span class="ident">span</span>.<span class="ident">is_dummy</span>() {
@@ -425,8 +425,8 @@
             <span class="ident">file</span>: <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">file</span>.<span class="ident">name</span> {
                 <span class="comment">// We can only support real files, not &quot;synthetic&quot; ones (which</span>
                 <span class="comment">// are almost never exposed to the compiler backend anyway).</span>
-                <span class="ident">FileName::Real</span>(<span class="ident">real_name</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">real_name</span>.<span class="ident">local_path</span>()<span class="question-mark">?</span>.<span class="ident">to_path_buf</span>(),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
+                <span class="ident">FileName::Real</span>(<span class="ident">real_name</span>) =&gt; <span class="ident">real_name</span>.<span class="ident">local_path</span>()<span class="question-mark">?</span>.<span class="ident">to_path_buf</span>(),
+                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
             },
             <span class="ident">hash</span>: <span class="ident">file</span>.<span class="ident">src_hash</span>.<span class="ident">into</span>(),
             <span class="ident">lo</span>: (<span class="ident">lo</span> <span class="op">-</span> <span class="ident">file</span>.<span class="ident">start_pos</span>).<span class="ident">to_u32</span>(),
@@ -434,7 +434,7 @@
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_rustc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">source_map</span>: <span class="kw-2">&amp;</span><span class="ident">SourceMap</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_rustc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">source_map</span>: <span class="kw-2">&amp;</span><span class="ident">SourceMap</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">source_map</span>.<span class="ident">load_file</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">file</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
 
         <span class="comment">// If the file has changed since serializing, there&#39;s not much we can do,</span>

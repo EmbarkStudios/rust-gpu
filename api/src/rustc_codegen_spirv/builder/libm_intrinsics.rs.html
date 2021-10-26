@@ -550,10 +550,10 @@
         <span class="ident">intrinsic</span>: <span class="ident">LibmIntrinsic</span>,
         <span class="ident">result_type</span>: <span class="ident">Word</span>,
         <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">SpirvValue</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+    ) -&gt; <span class="ident">SpirvValue</span> {
         <span class="kw">match</span> <span class="ident">intrinsic</span> {
-            <span class="ident">LibmIntrinsic::GLOp</span>(<span class="ident">op</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">op</span>, <span class="ident">result_type</span>, <span class="ident">args</span>),
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::SinCos</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::GLOp</span>(<span class="ident">op</span>) =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">op</span>, <span class="ident">result_type</span>, <span class="ident">args</span>),
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::SinCos</span>) =&gt; {
                 <span class="macro">assert_eq!</span>(<span class="ident">args</span>.<span class="ident">len</span>(), <span class="number">1</span>);
                 <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>];
                 <span class="kw">let</span> <span class="ident">sin</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Sin</span>, <span class="ident">x</span>.<span class="ident">ty</span>, <span class="kw-2">&amp;</span>[<span class="ident">x</span>]).<span class="ident">def</span>(<span class="self">self</span>);
@@ -563,18 +563,18 @@
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Fmod</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Fmod</span>) =&gt; {
                 <span class="macro">assert_eq!</span>(<span class="ident">args</span>.<span class="ident">len</span>(), <span class="number">2</span>);
                 <span class="self">self</span>.<span class="ident">emit</span>()
                     .<span class="ident">f_mod</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">def</span>(<span class="self">self</span>))
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::CopySign</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::CopySign</span>) =&gt; {
                 <span class="macro">assert_eq!</span>(<span class="ident">args</span>.<span class="ident">len</span>(), <span class="number">2</span>);
                 <span class="self">self</span>.<span class="ident">copysign</span>(<span class="ident">args</span>[<span class="number">0</span>], <span class="ident">args</span>[<span class="number">1</span>])
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Cbrt</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Cbrt</span>) =&gt; {
                 <span class="macro">assert_eq!</span>(<span class="ident">args</span>.<span class="ident">len</span>(), <span class="number">1</span>);
                 <span class="self">self</span>.<span class="ident">gl_op</span>(
                     <span class="ident">GLOp::Pow</span>,
@@ -582,117 +582,117 @@
                     <span class="kw-2">&amp;</span>[<span class="ident">args</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="ident">constant_float</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">ty</span>, <span class="number">1.0</span> <span class="op">/</span> <span class="number">3.0</span>)],
                 )
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Log10</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Log10</span>) =&gt; {
                 <span class="macro">assert_eq!</span>(<span class="ident">args</span>.<span class="ident">len</span>(), <span class="number">1</span>);
                 <span class="comment">// log10(x) == (1 / ln(10)) * ln(x)</span>
                 <span class="kw">let</span> <span class="ident">mul</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_float</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">ty</span>, <span class="number">1.0</span> <span class="op">/</span> <span class="number">10.0f64</span>.<span class="ident">ln</span>());
                 <span class="kw">let</span> <span class="ident">ln</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Log</span>, <span class="ident">result_type</span>, [<span class="ident">args</span>[<span class="number">0</span>]]);
                 <span class="self">self</span>.<span class="ident">mul</span>(<span class="ident">mul</span>, <span class="ident">ln</span>)
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Log1p</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Log1p</span>) =&gt; {
                 <span class="macro">assert_eq!</span>(<span class="ident">args</span>.<span class="ident">len</span>(), <span class="number">1</span>);
                 <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_float</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">ty</span>, <span class="number">1.0</span>);
                 <span class="kw">let</span> <span class="ident">add</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">args</span>[<span class="number">0</span>], <span class="ident">one</span>);
                 <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Log</span>, <span class="ident">result_type</span>, <span class="kw-2">&amp;</span>[<span class="ident">add</span>])
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Exp10</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Exp10</span>) =&gt; {
                 <span class="macro">assert_eq!</span>(<span class="ident">args</span>.<span class="ident">len</span>(), <span class="number">1</span>);
                 <span class="comment">// exp10(x) == exp(x * log(10));</span>
                 <span class="kw">let</span> <span class="ident">log10</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_float</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">ty</span>, <span class="number">10.0f64</span>.<span class="ident">ln</span>());
                 <span class="kw">let</span> <span class="ident">mul</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mul</span>(<span class="ident">args</span>[<span class="number">0</span>], <span class="ident">log10</span>);
                 <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Exp</span>, <span class="ident">result_type</span>, [<span class="ident">mul</span>])
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Expm1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Expm1</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Exp</span>, <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">ty</span>, <span class="kw-2">&amp;</span>[<span class="ident">args</span>[<span class="number">0</span>]]);
                 <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_float</span>(<span class="ident">exp</span>.<span class="ident">ty</span>, <span class="number">1.0</span>);
                 <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">exp</span>, <span class="ident">one</span>)
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Erf</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Erf</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Erf not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Erfc</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Erfc</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Erfc not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Fdim</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Fdim</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Fdim not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Hypot</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Hypot</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Hypot not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Ilogb</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Ilogb</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Ilogb not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::J0</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::J0</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;J0 not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Y0</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Y0</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Y0 not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::J1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::J1</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;J1 not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Y1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Y1</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Y1 not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Jn</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Jn</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Jn not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Yn</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Yn</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Yn not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Lgamma</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Lgamma</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Lgamma not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::LgammaR</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::LgammaR</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;LgammaR not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Tgamma</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Tgamma</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Tgamma not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::NextAfter</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::NextAfter</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;NextAfter not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Remainder</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Remainder</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Remainder not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::RemQuo</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::RemQuo</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;RemQuo not supported yet&quot;</span>);
                 <span class="ident">undef</span>
             }
-            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Scalbn</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LibmIntrinsic::Custom</span>(<span class="ident">LibmCustomIntrinsic::Scalbn</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">undef</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>);
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">undef</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Scalbn not supported yet&quot;</span>);
                 <span class="ident">undef</span>

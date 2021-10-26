@@ -521,7 +521,7 @@
 <span class="kw">use</span> <span class="ident">num_traits::Float</span>;
 
 <span class="macro">macro_rules!</span> <span class="ident">define_affine2_struct</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>:<span class="ident">ident</span>) =&gt; {
         <span class="doccomment">/// A 2D affine transform, which can represent translation, rotation, scaling and shear.</span>
         <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
         <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
@@ -532,7 +532,7 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_affine2_methods</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
             <span class="doccomment">/// The degenerate zero transform.</span>
             <span class="doccomment">///</span>
@@ -559,7 +559,7 @@
 
             <span class="doccomment">/// Creates an affine transform from three column vectors.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols</span>(<span class="ident">x_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>, <span class="ident">y_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>, <span class="ident">z_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols</span>(<span class="ident">x_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>, <span class="ident">y_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>, <span class="ident">z_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_cols</span>(<span class="ident">x_axis</span>, <span class="ident">y_axis</span>),
                     <span class="ident">translation</span>: <span class="ident">z_axis</span>,
@@ -570,7 +570,7 @@
             <span class="doccomment">/// If your data is stored in row major you will need to `transpose` the returned</span>
             <span class="doccomment">/// matrix.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_array</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">6</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_array</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">6</span>]) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_cols_slice</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>[<span class="number">0</span>..<span class="number">4</span>]),
                     <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>[<span class="number">4</span>..<span class="number">6</span>]),
@@ -580,7 +580,7 @@
             <span class="doccomment">/// Creates a `[S; 6]` array storing data in column major order.</span>
             <span class="doccomment">/// If you require data in row major order `transpose` the matrix first.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_cols_array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">6</span>] {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_cols_array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">6</span>] {
                 <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">matrix2</span>.<span class="ident">x_axis</span>;
                 <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">matrix2</span>.<span class="ident">y_axis</span>;
                 <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">translation</span>;
@@ -591,7 +591,7 @@
             <span class="doccomment">/// If your data is in row major order you will need to `transpose` the returned</span>
             <span class="doccomment">/// matrix.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_array_2d</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span>[[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">2</span>]; <span class="number">3</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_array_2d</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span>[[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">2</span>]; <span class="number">3</span>]) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_cols</span>(<span class="ident">m</span>[<span class="number">0</span>].<span class="ident">into</span>(), <span class="ident">m</span>[<span class="number">1</span>].<span class="ident">into</span>()),
                     <span class="ident">translation</span>: <span class="ident">m</span>[<span class="number">2</span>].<span class="ident">into</span>(),
@@ -601,7 +601,7 @@
             <span class="doccomment">/// Creates a `[[S; 2]; 3]` 2D array storing data in column major order.</span>
             <span class="doccomment">/// If you require data in row major order `transpose` the matrix first.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_cols_array_2d</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">2</span>]; <span class="number">3</span>] {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_cols_array_2d</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">2</span>]; <span class="number">3</span>] {
                 [
                     <span class="self">self</span>.<span class="ident">matrix2</span>.<span class="ident">x_axis</span>.<span class="ident">into</span>(),
                     <span class="self">self</span>.<span class="ident">matrix2</span>.<span class="ident">y_axis</span>.<span class="ident">into</span>(),
@@ -615,7 +615,7 @@
             <span class="doccomment">///</span>
             <span class="doccomment">/// Panics if `slice` is less than 6 elements long.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_slice</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_slice</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_cols_slice</span>(<span class="kw-2">&amp;</span><span class="ident">slice</span>[<span class="number">0</span>..<span class="number">4</span>]),
                     <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">slice</span>[<span class="number">4</span>..<span class="number">6</span>]),
@@ -636,7 +636,7 @@
             <span class="doccomment">/// Creates an affine transform that changes scale.</span>
             <span class="doccomment">/// Note that if any scale is zero the transform will be non-invertible.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scale</span>(<span class="ident">scale</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scale</span>(<span class="ident">scale</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_diagonal</span>(<span class="ident">scale</span>),
                     <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column::ZERO</span>,
@@ -645,7 +645,7 @@
 
             <span class="doccomment">/// Creates an affine transform from the given rotation `angle`.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_angle</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_angle</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_angle</span>(<span class="ident">angle</span>),
                     <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column::ZERO</span>,
@@ -654,7 +654,7 @@
 
             <span class="doccomment">/// Creates an affine transformation from the given 2D `translation`.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_translation</span>(<span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_translation</span>(<span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::IDENTITY</span>,
                     <span class="ident">translation</span>,
@@ -664,7 +664,7 @@
             <span class="doccomment">/// Creates an affine transform from a 2x2 matrix (expressing scale, shear and</span>
             <span class="doccomment">/// rotation)</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat2</span>(<span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat2</span>(<span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>,
                     <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column::ZERO</span>,
@@ -676,7 +676,7 @@
             <span class="doccomment">///</span>
             <span class="doccomment">/// Equivalent to `Affine2::from_translation(translation) * Affine2::from_mat2(mat2)`</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat2_translation</span>(<span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>, <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat2_translation</span>(<span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>, <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>,
                     <span class="ident">translation</span>,
@@ -693,7 +693,7 @@
                 <span class="ident">scale</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>,
                 <span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>,
                 <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>,
-            ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            ) -&gt; <span class="self">Self</span> {
                 <span class="kw">let</span> <span class="ident">rotation</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_angle</span>(<span class="ident">angle</span>);
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_cols</span>(
@@ -709,7 +709,7 @@
             <span class="doccomment">///</span>
             <span class="doccomment">/// Equivalent to `Affine2::from_translation(translation) * Affine2::from_angle(angle)`</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_angle_translation</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_angle_translation</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_angle</span>(<span class="ident">angle</span>),
                     <span class="ident">translation</span>,
@@ -718,7 +718,7 @@
 
             <span class="doccomment">/// The given `Mat3` must be an affine transform,</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat3</span>(<span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat3</span>(<span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix::from_cols</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>(<span class="ident">m</span>.<span class="ident">x_axis</span>.<span class="number">0</span>.<span class="ident">into</span>()), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>(<span class="ident">m</span>.<span class="ident">y_axis</span>.<span class="number">0</span>.<span class="ident">into</span>())),
                     <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>(<span class="ident">m</span>.<span class="ident">z_axis</span>.<span class="number">0</span>.<span class="ident">into</span>()),
@@ -727,7 +727,7 @@
 
             <span class="doccomment">/// Transforms the given 2D point, applying shear, scale, rotation and translation.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_point2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_point2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span> {
                 <span class="self">self</span>.<span class="ident">matrix2</span> <span class="op">*</span> <span class="ident">other</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">translation</span>
             }
 
@@ -736,7 +736,7 @@
             <span class="doccomment">///</span>
             <span class="doccomment">/// To also apply translation, use [`Self::transform_point2`] instead.</span>
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_vector2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_vector2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span> {
                 <span class="self">self</span>.<span class="ident">matrix2</span> <span class="op">*</span> <span class="ident">other</span>
             }
 
@@ -745,13 +745,13 @@
             <span class="doccomment">/// If any element is either `NaN`, positive or negative infinity, this will return</span>
             <span class="doccomment">/// `false`.</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_finite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_finite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="self">self</span>.<span class="ident">matrix2</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">translation</span>.<span class="ident">is_finite</span>()
             }
 
             <span class="doccomment">/// Returns `true` if any elements are `NaN`.</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_nan</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_nan</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="self">self</span>.<span class="ident">matrix2</span>.<span class="ident">is_nan</span>() <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">translation</span>.<span class="ident">is_nan</span>()
             }
 
@@ -765,7 +765,7 @@
             <span class="doccomment">/// For more see</span>
             <span class="doccomment">/// [comparing floating point numbers](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">abs_diff_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>, <span class="ident">max_abs_diff</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">abs_diff_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>, <span class="ident">max_abs_diff</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="ident">bool</span> {
                 <span class="self">self</span>.<span class="ident">matrix2</span>.<span class="ident">abs_diff_eq</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">matrix2</span>, <span class="ident">max_abs_diff</span>)
                     <span class="op">&amp;&amp;</span> <span class="self">self</span>
                         .<span class="ident">translation</span>
@@ -777,7 +777,7 @@
             <span class="doccomment">/// Note that if the transform is not invertible the result will be invalid.</span>
             <span class="attribute">#[<span class="ident">must_use</span>]</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inverse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inverse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
                 <span class="kw">let</span> <span class="ident">matrix2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">matrix2</span>.<span class="ident">inverse</span>();
                 <span class="comment">// transform negative translation by the 2x2 inverse:</span>
                 <span class="kw">let</span> <span class="ident">translation</span> <span class="op">=</span> <span class="op">-</span>(<span class="ident">matrix2</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">translation</span>);
@@ -792,10 +792,10 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_affine2_traits</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">deref</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">matrix</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">column</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">deref</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
                 <span class="ident"><span class="self">Self</span>::IDENTITY</span>
             }
         }
@@ -803,28 +803,28 @@
         <span class="kw">impl</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
             <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">deref</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
+            <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
                 <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="self">Self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident"><span class="self">Self</span>::Target</span>) }
             }
         }
 
         <span class="kw">impl</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
+            <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
                 <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="self">Self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Target</span>) }
             }
         }
 
         <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+            <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="self">self</span>.<span class="ident">matrix2</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">matrix2</span>) <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">translation</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">translation</span>)
             }
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>))]</span>
         <span class="kw">impl</span> <span class="ident">core::fmt::Debug</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
-            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">core::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">core::fmt::Result</span> {
+            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">core::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">core::fmt::Result</span> {
                 <span class="ident">fmt</span>.<span class="ident">debug_struct</span>(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>))
                     .<span class="ident">field</span>(<span class="string">&quot;matrix2&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">matrix2</span>)
                     .<span class="ident">field</span>(<span class="string">&quot;translation&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">translation</span>)
@@ -834,14 +834,14 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>))]</span>
         <span class="kw">impl</span> <span class="ident">core::fmt::Display</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
-            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">core::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">core::fmt::Result</span> {
+            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">core::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">core::fmt::Result</span> {
                 <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;[{}, {}, {}]&quot;</span>, <span class="self">self</span>.<span class="ident">x_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>)
             }
         }
 
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
                 <span class="ident"><span class="self">Self</span>::from_cols</span>(
                     <span class="ident">m</span>.<span class="ident">matrix2</span>.<span class="ident">x_axis</span>.<span class="ident">extend</span>(<span class="number">0.0</span>),
                     <span class="ident">m</span>.<span class="ident">matrix2</span>.<span class="ident">y_axis</span>.<span class="ident">extend</span>(<span class="number">0.0</span>),
@@ -854,7 +854,7 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="self">self</span>.<span class="ident">matrix2</span> <span class="op">*</span> <span class="ident">other</span>.<span class="ident">matrix2</span>,
                     <span class="ident">translation</span>: <span class="self">self</span>.<span class="ident">matrix2</span> <span class="op">*</span> <span class="ident">other</span>.<span class="ident">translation</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">translation</span>,
@@ -865,7 +865,7 @@
         <span class="kw">impl</span> <span class="ident">Mul</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
                     <span class="ident">matrix2</span>: <span class="self">self</span> <span class="op">*</span> <span class="ident">other</span>.<span class="ident">matrix2</span>,
                     <span class="ident">translation</span>: <span class="self">self</span> <span class="op">*</span> <span class="ident">other</span>.<span class="ident">translation</span>,
@@ -876,7 +876,7 @@
         <span class="kw">impl</span> <span class="ident">Mul</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="self">self</span>.<span class="ident">matrix2</span> <span class="op">*</span> <span class="ident">other</span>,
                     <span class="ident">translation</span>: <span class="self">self</span>.<span class="ident">translation</span> <span class="op">*</span> <span class="ident">other</span>,
@@ -887,7 +887,7 @@
         <span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="self">self</span>.<span class="ident">matrix2</span> <span class="op">+</span> <span class="ident">other</span>.<span class="ident">matrix2</span>,
                     <span class="ident">translation</span>: <span class="self">self</span>.<span class="ident">translation</span> <span class="op">+</span> <span class="ident">other</span>.<span class="ident">translation</span>,
@@ -898,7 +898,7 @@
         <span class="kw">impl</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="self">Self</span> {
                     <span class="ident">matrix2</span>: <span class="self">self</span>.<span class="ident">matrix2</span> <span class="op">-</span> <span class="ident">other</span>.<span class="ident">matrix2</span>,
                     <span class="ident">translation</span>: <span class="self">self</span>.<span class="ident">translation</span> <span class="op">-</span> <span class="ident">other</span>.<span class="ident">translation</span>,
@@ -910,7 +910,7 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3::from</span>(<span class="self">self</span>) <span class="op">*</span> <span class="ident">other</span>
             }
         }
@@ -919,13 +919,13 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="self">self</span> <span class="op">*</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3::from</span>(<span class="ident">other</span>)
             }
         }
 
         <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">core::iter::Product</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">affine2</span> {
-            <span class="kw">fn</span> <span class="ident">product</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
+            <span class="kw">fn</span> <span class="ident">product</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) -&gt; <span class="self">Self</span>
             <span class="kw">where</span>
                 <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span>,
             {
@@ -954,7 +954,7 @@
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Affine2</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Mat3A</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="ident">Affine2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Mat3A</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="ident">Affine2</span>) -&gt; <span class="ident">Mat3A</span> {
         <span class="ident"><span class="self">Self</span>::from_cols</span>(
             <span class="ident">Vec3A::from</span>((<span class="ident">m</span>.<span class="ident">matrix2</span>.<span class="ident">x_axis</span>, <span class="number">0.0</span>)),
             <span class="ident">Vec3A::from</span>((<span class="ident">m</span>.<span class="ident">matrix2</span>.<span class="ident">y_axis</span>, <span class="number">0.0</span>)),
@@ -967,7 +967,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Mat3A</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Mat3A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Mat3A</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="ident">Mat3A::from</span>(<span class="self">self</span>) <span class="op">*</span> <span class="ident">other</span>
     }
 }
@@ -976,7 +976,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Mat3A</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Affine2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Affine2</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="self">self</span> <span class="op">*</span> <span class="ident">Mat3A::from</span>(<span class="ident">other</span>)
     }
 }

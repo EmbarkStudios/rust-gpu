@@ -324,12 +324,12 @@
 <span class="kw">use</span> <span class="ident">rustc_span::Span</span>;
 <span class="kw">use</span> <span class="ident">rustc_target::abi::Align</span>;
 
-<span class="kw">fn</span> <span class="ident">attrs_to_spirv</span>(<span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenFnAttrs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FunctionControl</span> {
+<span class="kw">fn</span> <span class="ident">attrs_to_spirv</span>(<span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenFnAttrs</span>) -&gt; <span class="ident">FunctionControl</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">control</span> <span class="op">=</span> <span class="ident">FunctionControl::NONE</span>;
     <span class="kw">match</span> <span class="ident">attrs</span>.<span class="ident">inline</span> {
-        <span class="ident">InlineAttr::None</span> <span class="op">=</span><span class="op">&gt;</span> (),
-        <span class="ident">InlineAttr::Hint</span> <span class="op">|</span> <span class="ident">InlineAttr::Always</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">control</span>.<span class="ident">insert</span>(<span class="ident">FunctionControl::INLINE</span>),
-        <span class="ident">InlineAttr::Never</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">control</span>.<span class="ident">insert</span>(<span class="ident">FunctionControl::DONT_INLINE</span>),
+        <span class="ident">InlineAttr::None</span> =&gt; (),
+        <span class="ident">InlineAttr::Hint</span> <span class="op">|</span> <span class="ident">InlineAttr::Always</span> =&gt; <span class="ident">control</span>.<span class="ident">insert</span>(<span class="ident">FunctionControl::INLINE</span>),
+        <span class="ident">InlineAttr::Never</span> =&gt; <span class="ident">control</span>.<span class="ident">insert</span>(<span class="ident">FunctionControl::DONT_INLINE</span>),
     }
     <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">CodegenFnAttrFlags::FFI_PURE</span>) {
         <span class="ident">control</span>.<span class="ident">insert</span>(<span class="ident">FunctionControl::PURE</span>);
@@ -342,7 +342,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Returns a function if it already exists, or declares a header if it doesn&#39;t.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_fn_ext</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_fn_ext</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) -&gt; <span class="ident">SpirvValue</span> {
         <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">instance</span>.<span class="ident">substs</span>.<span class="ident">needs_infer</span>());
         <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">instance</span>.<span class="ident">substs</span>.<span class="ident">has_escaping_bound_vars</span>());
 
@@ -364,7 +364,7 @@
     <span class="comment">// MiscMethods::get_fn -&gt; get_fn_ext -&gt; declare_fn_ext</span>
     <span class="comment">// MiscMethods::get_fn_addr -&gt; get_fn_ext -&gt; declare_fn_ext</span>
     <span class="comment">// PreDefineMethods::predefine_fn -&gt; declare_fn_ext</span>
-    <span class="kw">fn</span> <span class="ident">declare_fn_ext</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">linkage</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LinkageType</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+    <span class="kw">fn</span> <span class="ident">declare_fn_ext</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">linkage</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LinkageType</span><span class="op">&gt;</span>) -&gt; <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">control</span> <span class="op">=</span> <span class="ident">attrs_to_spirv</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">codegen_fn_attrs</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>()));
         <span class="kw">let</span> <span class="ident">fn_abi</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">fn_abi_of_instance</span>(<span class="ident">instance</span>, <span class="ident">ty::List::empty</span>());
         <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>());
@@ -373,8 +373,8 @@
             <span class="ident">SpirvType::Function</span> {
                 <span class="ident">return_type</span>,
                 <span class="ident">arguments</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">return_type</span>, <span class="ident">arguments</span>),
-            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug!</span>(<span class="string">&quot;fn_abi type {}&quot;</span>, <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">function_type</span>, <span class="self">self</span>)),
+            } =&gt; (<span class="ident">return_type</span>, <span class="ident">arguments</span>),
+            <span class="ident">other</span> =&gt; <span class="macro">bug!</span>(<span class="string">&quot;fn_abi type {}&quot;</span>, <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">function_type</span>, <span class="self">self</span>)),
         };
 
         <span class="kw">if</span> <span class="ident"><span class="kw">crate</span>::is_blocklisted_fn</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sym</span>, <span class="ident">instance</span>) {
@@ -438,15 +438,15 @@
 
         <span class="kw">let</span> <span class="ident">instance_def_id</span> <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">def_id</span>();
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">instance_def_id</span>.<span class="ident">krate</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">libm</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">instance_def_id</span>.<span class="ident">krate</span>) <span class="op">==</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">libm</span> {
             <span class="kw">let</span> <span class="ident">item_name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">item_name</span>(<span class="ident">instance_def_id</span>);
             <span class="kw">let</span> <span class="ident">intrinsic</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">libm_intrinsics</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">item_name</span>);
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">visibility</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>()) <span class="op">=</span><span class="op">=</span> <span class="ident">ty::Visibility::Public</span> {
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">visibility</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>()) <span class="op">==</span> <span class="ident">ty::Visibility::Public</span> {
                 <span class="kw">match</span> <span class="ident">intrinsic</span> {
-                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">intrinsic</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">intrinsic</span>) =&gt; {
                         <span class="self">self</span>.<span class="ident">libm_intrinsics</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">fn_id</span>, <span class="ident">intrinsic</span>);
                     }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;missing libm intrinsic {}, which is {}&quot;</span>,
                         <span class="ident">symbol_name</span>, <span class="ident">instance</span>
                     )),
@@ -454,17 +454,17 @@
             }
         }
 
-        <span class="kw">if</span> <span class="prelude-val">Some</span>(<span class="ident">instance_def_id</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">lang_items</span>().<span class="ident">panic_fn</span>() {
+        <span class="kw">if</span> <span class="prelude-val">Some</span>(<span class="ident">instance_def_id</span>) <span class="op">==</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">lang_items</span>().<span class="ident">panic_fn</span>() {
             <span class="self">self</span>.<span class="ident">panic_fn_id</span>.<span class="ident">set</span>(<span class="prelude-val">Some</span>(<span class="ident">fn_id</span>));
         }
-        <span class="kw">if</span> <span class="prelude-val">Some</span>(<span class="ident">instance_def_id</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">lang_items</span>().<span class="ident">panic_bounds_check_fn</span>() {
+        <span class="kw">if</span> <span class="prelude-val">Some</span>(<span class="ident">instance_def_id</span>) <span class="op">==</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">lang_items</span>().<span class="ident">panic_bounds_check_fn</span>() {
             <span class="self">self</span>.<span class="ident">panic_bounds_check_fn_id</span>.<span class="ident">set</span>(<span class="prelude-val">Some</span>(<span class="ident">fn_id</span>));
         }
 
         <span class="ident">declared</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_static</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <span class="ident">DefId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_static</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <span class="ident">DefId</span>) -&gt; <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">Instance::mono</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">def_id</span>);
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">g</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">instances</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">instance</span>) {
             <span class="kw">return</span> <span class="ident">g</span>;
@@ -489,7 +489,7 @@
         <span class="ident">g</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">declare_global</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+    <span class="kw">fn</span> <span class="ident">declare_global</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) -&gt; <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ptr_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span>: <span class="ident">ty</span> }.<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="comment">// FIXME(eddyb) figure out what the correct storage class is.</span>
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
@@ -515,9 +515,9 @@
         <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">def_id</span>);
         <span class="kw">let</span> <span class="ident">spvty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">ty</span>).<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="kw">let</span> <span class="ident">linkage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">linkage</span> {
-            <span class="ident">Linkage::External</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">LinkageType::Export</span>),
-            <span class="ident">Linkage::Internal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Linkage::External</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">LinkageType::Export</span>),
+            <span class="ident">Linkage::Internal</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="ident">other</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;TODO: Linkage type {:?} not supported yet for static var symbol {}&quot;</span>,
                     <span class="ident">other</span>, <span class="ident">symbol_name</span>
@@ -545,9 +545,9 @@
             <span class="comment">// super sketchy hack: memcpy, memmove, memset, memcmp, and bcmp in the</span>
             <span class="comment">// compiler_builtins crate use the WeakAny linkage type. Treat it as actually External</span>
             <span class="comment">// linkage because we know there&#39;s only one of them.</span>
-            <span class="ident">Linkage::External</span> <span class="op">|</span> <span class="ident">Linkage::WeakAny</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">LinkageType::Export</span>),
-            <span class="ident">Linkage::Internal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Linkage::External</span> <span class="op">|</span> <span class="ident">Linkage::WeakAny</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">LinkageType::Export</span>),
+            <span class="ident">Linkage::Internal</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="ident">other</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;TODO: Linkage type {:?} not supported yet for function symbol {}&quot;</span>,
                     <span class="ident">other</span>, <span class="ident">symbol_name</span>
@@ -562,7 +562,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">StaticMethods</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">static_addr_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cv</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>, <span class="ident">_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">static_addr_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cv</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>, <span class="ident">_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(
             <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">cv</span>.<span class="ident">ty</span>),
             <span class="ident">SpirvConst::PtrTo</span> {
@@ -576,23 +576,23 @@
         <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">def_id</span>);
 
         <span class="kw">let</span> <span class="ident">alloc</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">eval_static_initializer</span>(<span class="ident">def_id</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">alloc</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">alloc</span>,
+            <span class="prelude-val">Ok</span>(<span class="ident">alloc</span>) =&gt; <span class="ident">alloc</span>,
             <span class="comment">// Error has already been reported</span>
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span>,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span>,
         };
         <span class="kw">let</span> <span class="ident">value_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">g</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
-            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+            <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } =&gt; <span class="ident">pointee</span>,
+            <span class="ident">other</span> =&gt; <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;global had non-pointer type {}&quot;</span>,
                 <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">g</span>.<span class="ident">ty</span>, <span class="self">self</span>)
             )),
         };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_const_alloc</span>(<span class="ident">alloc</span>, <span class="ident">value_ty</span>);
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">v</span>.<span class="ident">ty</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">SpirvType::Bool</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">v</span>.<span class="ident">ty</span>) <span class="op">==</span> <span class="ident">SpirvType::Bool</span> {
             <span class="kw">let</span> <span class="ident">val_int</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const</span>(<span class="ident">v</span>).<span class="ident">unwrap</span>() {
-                <span class="ident">SpirvConst::Bool</span>(<span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u8</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug!</span>(),
+                <span class="ident">SpirvConst::Bool</span>(<span class="ident">val</span>) =&gt; <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u8</span>,
+                <span class="kw">_</span> =&gt; <span class="macro">bug!</span>(),
             };
             <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u8</span>(<span class="ident">span</span>, <span class="ident">val_int</span>);
         }

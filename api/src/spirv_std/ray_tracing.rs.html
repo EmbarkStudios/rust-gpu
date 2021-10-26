@@ -972,7 +972,7 @@
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpConvertUToAccelerationStructureKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::empty_loop</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_u64</span>(<span class="ident">id</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AccelerationStructure</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_u64</span>(<span class="ident">id</span>: <span class="ident">u64</span>) -&gt; <span class="ident">AccelerationStructure</span> {
         <span class="comment">// Since we can&#39;t represent an uninitalized opaque type in Rust at the</span>
         <span class="comment">// moment, we need to create and return the acceleration structure entirely</span>
         <span class="comment">// in assembly.</span>
@@ -992,7 +992,7 @@
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpConvertUToAccelerationStructureKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::empty_loop</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_vec</span>(<span class="ident">id</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="number">2</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AccelerationStructure</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_vec</span>(<span class="ident">id</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="number">2</span><span class="op">&gt;</span>) -&gt; <span class="ident">AccelerationStructure</span> {
         <span class="comment">// Since we can&#39;t represent an uninitalized opaque type in Rust at the</span>
         <span class="comment">// moment, we need to create and return the acceleration structure entirely</span>
         <span class="comment">// in assembly.</span>
@@ -1140,13 +1140,13 @@
 <span class="doccomment">/// `let (mut)? &lt;name&gt;`. Where `name` is the name of the ray query variable.</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">ray_query</span> {
-    (<span class="kw">let</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="kw">let</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::ray_query!</span>(@<span class="macro-nonterminal">inner</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>)
     };
-    (<span class="kw">let</span> <span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="kw">let</span> <span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::ray_query!</span>(@<span class="macro-nonterminal">inner</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="kw-2">mut</span>)
     };
-    (@<span class="ident">inner</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> $(, <span class="macro-nonterminal">$</span><span class="kw-2">mut</span>:<span class="macro-nonterminal">tt</span>)<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (@<span class="ident">inner</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> $(, <span class="macro-nonterminal">$</span><span class="kw-2">mut</span>:<span class="macro-nonterminal">tt</span>)<span class="question-mark">?</span>) =&gt; {
         <span class="kw">let</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>: <span class="kw-2">&amp;</span>$(<span class="macro-nonterminal">$</span><span class="kw-2">mut</span>)<span class="question-mark">?</span> <span class="macro-nonterminal">RayQuery</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> : <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">RayQuery</span>;
             <span class="macro">asm!</span> {
@@ -1219,7 +1219,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryProceedKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">proceed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">proceed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">u32</span>;
 
         <span class="macro">asm!</span> {
@@ -1253,7 +1253,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionTypeKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CandidateIntersection</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">CandidateIntersection</span> {
         <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">u32</span>;
 
         <span class="macro">asm!</span> {
@@ -1265,9 +1265,9 @@
         }
 
         <span class="kw">match</span> <span class="ident">result</span> {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CandidateIntersection::Triangle</span>,
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CandidateIntersection::AABB</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CandidateIntersection::Triangle</span>,
+            <span class="number">0</span> =&gt; <span class="ident">CandidateIntersection::Triangle</span>,
+            <span class="number">1</span> =&gt; <span class="ident">CandidateIntersection::AABB</span>,
+            <span class="kw">_</span> =&gt; <span class="ident">CandidateIntersection::Triangle</span>,
         }
     }
 
@@ -1275,7 +1275,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionTypeKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommittedIntersection</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">CommittedIntersection</span> {
         <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">u32</span>;
 
         <span class="macro">asm!</span> {
@@ -1287,10 +1287,10 @@
         }
 
         <span class="kw">match</span> <span class="ident">result</span> {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CommittedIntersection::None</span>,
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CommittedIntersection::Triangle</span>,
-            <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CommittedIntersection::Generated</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CommittedIntersection::None</span>,
+            <span class="number">0</span> =&gt; <span class="ident">CommittedIntersection::None</span>,
+            <span class="number">1</span> =&gt; <span class="ident">CommittedIntersection::Triangle</span>,
+            <span class="number">2</span> =&gt; <span class="ident">CommittedIntersection::Generated</span>,
+            <span class="kw">_</span> =&gt; <span class="ident">CommittedIntersection::None</span>,
         }
     }
 
@@ -1298,7 +1298,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetRayTMinKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_ray_t_min</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_ray_t_min</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">f32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1315,7 +1315,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetRayFlagsKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_ray_flags</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RayFlags</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_ray_flags</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">RayFlags</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1336,7 +1336,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionTKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_t</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_t</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">f32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1360,7 +1360,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionTKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_t</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_t</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">f32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1381,7 +1381,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionInstanceCustomIndexKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_instance_custom_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_instance_custom_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1405,7 +1405,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionInstanceCustomIndexKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_instance_custom_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_instance_custom_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1426,7 +1426,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionInstanceIdKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_instance_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_instance_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1450,7 +1450,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionInstanceIdKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_instance_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_instance_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1471,7 +1471,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_shader_binding_table_record_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_shader_binding_table_record_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1495,7 +1495,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_shader_binding_table_record_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_shader_binding_table_record_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1516,7 +1516,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionGeometryIndexKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_geometry_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_geometry_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1540,7 +1540,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionGeometryIndexKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_geometry_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_geometry_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1561,7 +1561,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionPrimitiveIndexKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_primitive_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_primitive_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1585,7 +1585,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionPrimitiveIndexKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_primitive_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_primitive_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">result</span>;
 
         <span class="macro">asm!</span> {
@@ -1608,7 +1608,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionBarycentricsKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_barycentrics</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_barycentrics</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">V</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {
@@ -1634,7 +1634,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionBarycentricsKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_barycentrics</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_barycentrics</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">V</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {
@@ -1658,7 +1658,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionFrontFaceKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_front_face</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_front_face</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">u32</span>;
 
         <span class="macro">asm!</span> {
@@ -1683,7 +1683,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionFrontFaceKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_front_face</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_front_face</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">u32</span>;
 
         <span class="macro">asm!</span> {
@@ -1702,7 +1702,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionCandidateAABBOpaqueKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_intersection_candidate_aabb_opaque</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_intersection_candidate_aabb_opaque</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">u32</span>;
 
         <span class="macro">asm!</span> {
@@ -1722,7 +1722,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionObjectRayDirectionKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_object_ray_direction</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_object_ray_direction</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">V</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {
@@ -1747,7 +1747,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionObjectRayDirectionKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_object_ray_direction</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_object_ray_direction</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">V</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {
@@ -1769,7 +1769,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionObjectRayOriginKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_object_ray_origin</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_object_ray_origin</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">V</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {
@@ -1794,7 +1794,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionObjectRayOriginKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_object_ray_origin</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_object_ray_origin</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">V</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {
@@ -1813,7 +1813,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetWorldRayDirectionKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_world_ray_direction</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_world_ray_direction</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">V</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {
@@ -1831,7 +1831,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetWorldRayOriginKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_world_ray_origin</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_world_ray_origin</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">V</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {
@@ -1852,7 +1852,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionObjectToWorldKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_object_to_world</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">V</span>; <span class="number">4</span>] {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_candidate_intersection_object_to_world</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">V</span>; <span class="number">4</span>] {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {
@@ -1885,7 +1885,7 @@
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionObjectToWorldKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_object_to_world</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">V</span>; <span class="number">4</span>] {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_committed_intersection_object_to_world</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">V</span>; <span class="number">4</span>] {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="macro">asm!</span> {

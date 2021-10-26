@@ -32,24 +32,24 @@
 </pre><pre class="rust"><code><span class="kw">const</span> <span class="ident">FP_ILOGBNAN</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="op">-</span><span class="number">1</span> <span class="op">-</span> <span class="number">0x7fffffff</span>;
 <span class="kw">const</span> <span class="ident">FP_ILOGB0</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">FP_ILOGBNAN</span>;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ilogbf</span>(<span class="ident">x</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ilogbf</span>(<span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">i32</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
     <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> ((<span class="ident">i</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">23</span>) <span class="op">&amp;</span> <span class="number">0xff</span>) <span class="kw">as</span> <span class="ident">i32</span>;
 
-    <span class="kw">if</span> <span class="ident">e</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">e</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="ident">i</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">9</span>;
-        <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">i</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="macro">force_eval!</span>(<span class="number">0.0</span> <span class="op">/</span> <span class="number">0.0</span>);
             <span class="kw">return</span> <span class="ident">FP_ILOGB0</span>;
         }
         <span class="comment">/* subnormal x */</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">e</span> <span class="op">=</span> <span class="op">-</span><span class="number">0x7f</span>;
-        <span class="kw">while</span> (<span class="ident">i</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">while</span> (<span class="ident">i</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">==</span> <span class="number">0</span> {
             <span class="ident">e</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
             <span class="ident">i</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span>;
         }
         <span class="ident">e</span>
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">e</span> <span class="op">=</span><span class="op">=</span> <span class="number">0xff</span> {
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">e</span> <span class="op">==</span> <span class="number">0xff</span> {
         <span class="macro">force_eval!</span>(<span class="number">0.0</span> <span class="op">/</span> <span class="number">0.0</span>);
         <span class="kw">if</span> (<span class="ident">i</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="ident">FP_ILOGBNAN</span>

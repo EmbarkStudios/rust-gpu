@@ -148,13 +148,13 @@
     <span class="kw">type</span> <span class="ident">SIMDVector3</span> <span class="op">=</span> <span class="ident">__m128</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">conjugate</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">conjugate</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">const</span> <span class="ident">SIGN</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="op">-</span><span class="number">0.0</span>, <span class="op">-</span><span class="number">0.0</span>, <span class="op">-</span><span class="number">0.0</span>, <span class="number">0.0</span>]);
         <span class="kw">unsafe</span> { <span class="ident">_mm_xor_ps</span>(<span class="self">self</span>, <span class="ident">SIGN</span>) }
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">lerp</span>(<span class="self">self</span>, <span class="ident">end</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">lerp</span>(<span class="self">self</span>, <span class="ident">end</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
         <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="self">self</span>));
         <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="ident">end</span>));
 
@@ -175,7 +175,7 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">slerp</span>(<span class="self">self</span>, <span class="ident">end</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">slerp</span>(<span class="self">self</span>, <span class="ident">end</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
         <span class="comment">// http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/</span>
         <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="self">self</span>));
         <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="ident">end</span>));
@@ -209,7 +209,7 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_quaternion</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">mul_quaternion</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
         <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="self">self</span>));
         <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="ident">other</span>));
         <span class="kw">unsafe</span> {
@@ -249,12 +249,12 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_vector3</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">mul_vector3</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">mul_float4_as_vector3</span>(<span class="ident">other</span>.<span class="ident">into</span>()).<span class="ident">into</span>()
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_float4_as_vector3</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">__m128</span> {
+    <span class="kw">fn</span> <span class="ident">mul_float4_as_vector3</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
         <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="self">self</span>));
         <span class="kw">unsafe</span> {
             <span class="kw">const</span> <span class="ident">TWO</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">2.0</span>; <span class="number">4</span>]);

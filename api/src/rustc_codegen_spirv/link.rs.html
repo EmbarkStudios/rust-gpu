@@ -592,6 +592,10 @@
 <span id="592">592</span>
 <span id="593">593</span>
 <span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx</span>::{<span class="ident">CodegenArgs</span>, <span class="ident">ModuleOutputType</span>, <span class="ident">SpirvMetadata</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">linker</span>, <span class="ident">CompileResult</span>, <span class="ident">ModuleResult</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>,
@@ -628,7 +632,7 @@
     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">crate_type</span> <span class="kw">in</span> <span class="ident">sess</span>.<span class="ident">crate_types</span>().<span class="ident">iter</span>() {
         <span class="kw">if</span> (<span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debugging_opts</span>.<span class="ident">no_codegen</span> <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">output_types</span>.<span class="ident">should_codegen</span>())
             <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">output_metadata</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">crate_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">CrateType::Executable</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">crate_type</span> <span class="op">==</span> <span class="ident">CrateType::Executable</span>
         {
             <span class="kw">continue</span>;
         }
@@ -652,13 +656,13 @@
         <span class="kw">if</span> <span class="ident">outputs</span>.<span class="ident">outputs</span>.<span class="ident">should_codegen</span>() {
             <span class="kw">let</span> <span class="ident">out_filename</span> <span class="op">=</span> <span class="ident">out_filename</span>(<span class="ident">sess</span>, <span class="ident">crate_type</span>, <span class="ident">outputs</span>, <span class="ident">crate_name</span>);
             <span class="kw">match</span> <span class="ident">crate_type</span> {
-                <span class="ident">CrateType::Rlib</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">CrateType::Rlib</span> =&gt; {
                     <span class="ident">link_rlib</span>(<span class="ident">sess</span>, <span class="ident">codegen_results</span>, <span class="kw-2">&amp;</span><span class="ident">out_filename</span>);
                 }
-                <span class="ident">CrateType::Executable</span> <span class="op">|</span> <span class="ident">CrateType::Cdylib</span> <span class="op">|</span> <span class="ident">CrateType::Dylib</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">CrateType::Executable</span> <span class="op">|</span> <span class="ident">CrateType::Cdylib</span> <span class="op">|</span> <span class="ident">CrateType::Dylib</span> =&gt; {
                     <span class="ident">link_exe</span>(<span class="ident">sess</span>, <span class="ident">crate_type</span>, <span class="kw-2">&amp;</span><span class="ident">out_filename</span>, <span class="ident">codegen_results</span>);
                 }
-                <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;CrateType {:?} not supported yet&quot;</span>, <span class="ident">other</span>)),
+                <span class="ident">other</span> =&gt; <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;CrateType {:?} not supported yet&quot;</span>, <span class="ident">other</span>)),
             }
         }
     }
@@ -678,7 +682,7 @@
             <span class="ident">NativeLibKind::Static</span> {
                 <span class="ident">bundle</span>: <span class="prelude-val">None</span> <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
                 ..
-            } <span class="op">=</span><span class="op">&gt;</span> {}
+            } =&gt; {}
             <span class="ident">NativeLibKind::Static</span> {
                 <span class="ident">bundle</span>: <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
                 ..
@@ -686,7 +690,7 @@
             <span class="op">|</span> <span class="ident">NativeLibKind::Dylib</span> { .. }
             <span class="op">|</span> <span class="ident">NativeLibKind::Framework</span> { .. }
             <span class="op">|</span> <span class="ident">NativeLibKind::RawDylib</span>
-            <span class="op">|</span> <span class="ident">NativeLibKind::Unspecified</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+            <span class="op">|</span> <span class="ident">NativeLibKind::Unspecified</span> =&gt; <span class="kw">continue</span>,
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="ident">lib</span>.<span class="ident">name</span> {
             <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
@@ -696,7 +700,11 @@
         }
     }
 
-    <span class="ident">create_archive</span>(<span class="kw-2">&amp;</span><span class="ident">file_list</span>, <span class="kw-2">&amp;</span><span class="ident">codegen_results</span>.<span class="ident">metadata</span>.<span class="ident">raw_data</span>, <span class="ident">out_filename</span>);
+    <span class="ident">create_archive</span>(
+        <span class="kw-2">&amp;</span><span class="ident">file_list</span>,
+        <span class="ident">codegen_results</span>.<span class="ident">metadata</span>.<span class="ident">raw_data</span>(),
+        <span class="ident">out_filename</span>,
+    );
 }
 
 <span class="kw">fn</span> <span class="ident">link_exe</span>(
@@ -734,7 +742,7 @@
     }
 
     <span class="kw">let</span> <span class="ident">compile_result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">spv_binary</span> {
-        <span class="ident">linker::LinkResult::SingleModule</span>(<span class="ident">spv_binary</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">linker::LinkResult::SingleModule</span>(<span class="ident">spv_binary</span>) =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module_filename</span> <span class="op">=</span> <span class="ident">out_dir</span>;
             <span class="ident">module_filename</span>.<span class="ident">push</span>(<span class="string">&quot;module&quot;</span>);
             <span class="ident">post_link_single_module</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">cg_args</span>, <span class="ident">spv_binary</span>.<span class="ident">assemble</span>(), <span class="kw-2">&amp;</span><span class="ident">module_filename</span>);
@@ -745,7 +753,7 @@
                 <span class="ident">entry_points</span>: <span class="ident">entry_points</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>),
             }
         }
-        <span class="ident">linker::LinkResult::MultipleModules</span>(<span class="ident">map</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">linker::LinkResult::MultipleModules</span>(<span class="ident">map</span>) =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashmap</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
             <span class="kw">let</span> <span class="ident">entry_points</span> <span class="op">=</span> <span class="ident">map</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
             <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">spv_binary</span>) <span class="kw">in</span> <span class="ident">map</span> {
@@ -766,11 +774,11 @@
     <span class="ident">serde_json::to_writer</span>(<span class="ident">BufWriter::new</span>(<span class="ident">file</span>), <span class="kw-2">&amp;</span><span class="ident">compile_result</span>).<span class="ident">unwrap</span>();
 }
 
-<span class="kw">fn</span> <span class="ident">entry_points</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">rspirv::dr::Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">entry_points</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">rspirv::dr::Module</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="ident">module</span>
         .<span class="ident">entry_points</span>
         .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rspirv::spirv::Op::EntryPoint</span>)
+        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">rspirv::spirv::Op::EntryPoint</span>)
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">2</span>].<span class="ident">unwrap_literal_string</span>().<span class="ident">to_string</span>())
         .<span class="ident">collect</span>()
 }
@@ -804,16 +812,16 @@
     };
 
     <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">OptLevel::No</span>
-        <span class="op">|</span><span class="op">|</span> (<span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="ident">cg_args</span>.<span class="ident">spirv_metadata</span> <span class="op">=</span><span class="op">=</span> <span class="ident">SpirvMetadata::None</span>)
+        <span class="op">|</span><span class="op">|</span> (<span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">==</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="ident">cg_args</span>.<span class="ident">spirv_metadata</span> <span class="op">==</span> <span class="ident">SpirvMetadata::None</span>)
     {
         <span class="kw">if</span> <span class="ident">env::var</span>(<span class="string">&quot;NO_SPIRV_OPT&quot;</span>).<span class="ident">is_err</span>() {
             <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_spirv_opt&quot;</span>);
             <span class="ident">do_spirv_opt</span>(<span class="ident">sess</span>, <span class="ident">cg_args</span>, <span class="ident">spv_binary</span>, <span class="ident">out_filename</span>, <span class="ident">opt_options</span>)
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">reason</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span>, <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span>) {
-                (<span class="ident">OptLevel::No</span>, <span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;debuginfo=None&quot;</span>.<span class="ident">to_string</span>(),
-                (<span class="ident">optlevel</span>, <span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format!</span>(<span class="string">&quot;optlevel={:?}&quot;</span>, <span class="ident">optlevel</span>),
-                (<span class="ident">optlevel</span>, <span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format!</span>(<span class="string">&quot;optlevel={:?}, debuginfo=None&quot;</span>, <span class="ident">optlevel</span>),
+            <span class="kw">let</span> <span class="ident">reason</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span>, <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">==</span> <span class="ident">DebugInfo::None</span>) {
+                (<span class="ident">OptLevel::No</span>, <span class="bool-val">true</span>) =&gt; <span class="string">&quot;debuginfo=None&quot;</span>.<span class="ident">to_string</span>(),
+                (<span class="ident">optlevel</span>, <span class="bool-val">false</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;optlevel={:?}&quot;</span>, <span class="ident">optlevel</span>),
+                (<span class="ident">optlevel</span>, <span class="bool-val">true</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;optlevel={:?}, debuginfo=None&quot;</span>, <span class="ident">optlevel</span>),
             };
             <span class="ident">sess</span>.<span class="ident">warn</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;spirv-opt should have ran ({}) but was disabled by NO_SPIRV_OPT&quot;</span>,
@@ -849,7 +857,7 @@
     <span class="ident">spv_binary</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">options</span>: <span class="ident">spirv_tools::opt::Options</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
     <span class="kw">use</span> <span class="ident">spirv_tools</span>::{
         <span class="ident">error</span>,
         <span class="ident">opt</span>::{<span class="self">self</span>, <span class="ident">Optimizer</span>},
@@ -858,16 +866,16 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">optimizer</span> <span class="op">=</span> <span class="ident">opt::create</span>(<span class="ident">sess</span>.<span class="ident">target</span>.<span class="ident">options</span>.<span class="ident">env</span>.<span class="ident">parse</span>().<span class="ident">ok</span>());
 
     <span class="kw">match</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> {
-        <span class="ident">OptLevel::No</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">OptLevel::Less</span> <span class="op">|</span> <span class="ident">OptLevel::Default</span> <span class="op">|</span> <span class="ident">OptLevel::Aggressive</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">OptLevel::No</span> =&gt; {}
+        <span class="ident">OptLevel::Less</span> <span class="op">|</span> <span class="ident">OptLevel::Default</span> <span class="op">|</span> <span class="ident">OptLevel::Aggressive</span> =&gt; {
             <span class="ident">optimizer</span>.<span class="ident">register_performance_passes</span>();
         }
-        <span class="ident">OptLevel::Size</span> <span class="op">|</span> <span class="ident">OptLevel::SizeMin</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">OptLevel::Size</span> <span class="op">|</span> <span class="ident">OptLevel::SizeMin</span> =&gt; {
             <span class="ident">optimizer</span>.<span class="ident">register_size_passes</span>();
         }
     }
 
-    <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="ident">cg_args</span>.<span class="ident">spirv_metadata</span> <span class="op">=</span><span class="op">=</span> <span class="ident">SpirvMetadata::None</span> {
+    <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">==</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="ident">cg_args</span>.<span class="ident">spirv_metadata</span> <span class="op">==</span> <span class="ident">SpirvMetadata::None</span> {
         <span class="ident">optimizer</span>
             .<span class="ident">register_pass</span>(<span class="ident">opt::Passes::EliminateDeadConstant</span>)
             .<span class="ident">register_pass</span>(<span class="ident">opt::Passes::StripDebugInfo</span>);
@@ -881,10 +889,10 @@
             <span class="comment">// TODO: Adds spans here? Not sure how useful with binary, but maybe?</span>
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">level</span> {
-                <span class="ident">Level::Fatal</span> <span class="op">|</span> <span class="ident">Level::InternalError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_fatal</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
-                <span class="ident">Level::Error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
-                <span class="ident">Level::Warning</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_warn</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
-                <span class="ident">Level::Info</span> <span class="op">|</span> <span class="ident">Level::Debug</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_note_without_error</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level::Fatal</span> <span class="op">|</span> <span class="ident">Level::InternalError</span> =&gt; <span class="ident">sess</span>.<span class="ident">struct_fatal</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level::Error</span> =&gt; <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level::Warning</span> =&gt; <span class="ident">sess</span>.<span class="ident">struct_warn</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level::Info</span> <span class="op">|</span> <span class="ident">Level::Debug</span> =&gt; <span class="ident">sess</span>.<span class="ident">struct_note_without_error</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
             };
 
             <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">filename</span>.<span class="ident">display</span>()));
@@ -894,8 +902,8 @@
     );
 
     <span class="kw">match</span> <span class="ident">result</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">binary</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec::from</span>(<span class="ident">binary</span>.<span class="ident">as_ref</span>()),
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">binary</span>) =&gt; <span class="ident">Vec::from</span>(<span class="ident">binary</span>.<span class="ident">as_ref</span>()),
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_warn</span>(<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="ident">to_string</span>());
             <span class="ident">err</span>.<span class="ident">note</span>(<span class="string">&quot;spirv-opt failed, leaving as unoptimized&quot;</span>);
             <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">filename</span>.<span class="ident">display</span>()));
@@ -957,15 +965,15 @@
         .<span class="ident">crate_info</span>
         .<span class="ident">dependency_formats</span>
         .<span class="ident">iter</span>()
-        .<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">ty</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">ty</span> <span class="op">=</span><span class="op">=</span> <span class="ident">crate_type</span>)
+        .<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">ty</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">ty</span> <span class="op">==</span> <span class="ident">crate_type</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;failed to find crate type in dependency format list&quot;</span>);
     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">cnum</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">codegen_results</span>.<span class="ident">crate_info</span>.<span class="ident">used_crates</span> {
         <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">codegen_results</span>.<span class="ident">crate_info</span>.<span class="ident">used_crate_source</span>[<span class="kw-2">&amp;</span><span class="ident">cnum</span>];
         <span class="kw">match</span> <span class="ident">data</span>[<span class="ident">cnum</span>.<span class="ident">as_usize</span>() <span class="op">-</span> <span class="number">1</span>] {
-            <span class="ident">Linkage::NotLinked</span> <span class="op">|</span> <span class="ident">Linkage::IncludedFromDylib</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="ident">Linkage::Static</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rlibs</span>.<span class="ident">push</span>(<span class="ident">src</span>.<span class="ident">rlib</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="number">0</span>.<span class="ident">clone</span>()),
+            <span class="ident">Linkage::NotLinked</span> <span class="op">|</span> <span class="ident">Linkage::IncludedFromDylib</span> =&gt; {}
+            <span class="ident">Linkage::Static</span> =&gt; <span class="ident">rlibs</span>.<span class="ident">push</span>(<span class="ident">src</span>.<span class="ident">rlib</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="number">0</span>.<span class="ident">clone</span>()),
             <span class="comment">//Linkage::Dynamic =&gt; rlibs.push(src.dylib.as_ref().unwrap().0.clone()),</span>
-            <span class="ident">Linkage::Dynamic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">err</span>(<span class="string">&quot;TODO: Linkage::Dynamic not supported yet&quot;</span>),
+            <span class="ident">Linkage::Dynamic</span> =&gt; <span class="ident">sess</span>.<span class="ident">err</span>(<span class="string">&quot;TODO: Linkage::Dynamic not supported yet&quot;</span>),
         }
     }
 }
@@ -979,32 +987,32 @@
         .<span class="ident">crate_info</span>
         .<span class="ident">dependency_formats</span>
         .<span class="ident">iter</span>()
-        .<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">ty</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">ty</span> <span class="op">=</span><span class="op">=</span> <span class="ident">crate_type</span>)
+        .<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">ty</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">ty</span> <span class="op">==</span> <span class="ident">crate_type</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;failed to find crate type in dependency format list&quot;</span>);
 
     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">cnum</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">codegen_results</span>.<span class="ident">crate_info</span>.<span class="ident">used_crates</span> {
         <span class="kw">for</span> <span class="ident">lib</span> <span class="kw">in</span> <span class="ident">codegen_results</span>.<span class="ident">crate_info</span>.<span class="ident">native_libraries</span>[<span class="kw-2">&amp;</span><span class="ident">cnum</span>].<span class="ident">iter</span>() {
             <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">lib</span>.<span class="ident">name</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">l</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">l</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                <span class="prelude-val">Some</span>(<span class="ident">l</span>) =&gt; <span class="ident">l</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="kw">continue</span>,
             };
             <span class="kw">if</span> <span class="op">!</span><span class="ident">relevant_lib</span>(<span class="ident">sess</span>, <span class="ident">lib</span>) {
                 <span class="kw">continue</span>;
             }
             <span class="kw">match</span> <span class="ident">lib</span>.<span class="ident">kind</span> {
-                <span class="ident">NativeLibKind::Dylib</span> { .. } <span class="op">|</span> <span class="ident">NativeLibKind::Unspecified</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                <span class="ident">NativeLibKind::Dylib</span> { .. } <span class="op">|</span> <span class="ident">NativeLibKind::Unspecified</span> =&gt; <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;TODO: dylib nativelibkind not supported yet: {}&quot;</span>,
                     <span class="ident">name</span>
                 )),
-                <span class="ident">NativeLibKind::Framework</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                <span class="ident">NativeLibKind::Framework</span> { .. } =&gt; <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;TODO: framework nativelibkind not supported yet: {}&quot;</span>,
                     <span class="ident">name</span>
                 )),
                 <span class="ident">NativeLibKind::Static</span> {
                     <span class="ident">bundle</span>: <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
                     ..
-                } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">if</span> <span class="ident">data</span>[<span class="ident">cnum</span>.<span class="ident">as_usize</span>() <span class="op">-</span> <span class="number">1</span>] <span class="op">=</span><span class="op">=</span> <span class="ident">Linkage::Static</span> {
+                } =&gt; {
+                    <span class="kw">if</span> <span class="ident">data</span>[<span class="ident">cnum</span>.<span class="ident">as_usize</span>() <span class="op">-</span> <span class="number">1</span>] <span class="op">==</span> <span class="ident">Linkage::Static</span> {
                         <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                             <span class="string">&quot;TODO: staticnobundle nativelibkind not supported yet: {}&quot;</span>,
                             <span class="ident">name</span>
@@ -1014,8 +1022,8 @@
                 <span class="ident">NativeLibKind::Static</span> {
                     <span class="ident">bundle</span>: <span class="prelude-val">None</span> <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
                     ..
-                } <span class="op">=</span><span class="op">&gt;</span> {}
-                <span class="ident">NativeLibKind::RawDylib</span> <span class="op">=</span><span class="op">&gt;</span> {
+                } =&gt; {}
+                <span class="ident">NativeLibKind::RawDylib</span> =&gt; {
                     <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;raw_dylib feature not yet implemented: {}&quot;</span>, <span class="ident">name</span>))
                 }
             }
@@ -1023,10 +1031,10 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">relevant_lib</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">lib</span>: <span class="kw-2">&amp;</span><span class="ident">NativeLib</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">relevant_lib</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">lib</span>: <span class="kw-2">&amp;</span><span class="ident">NativeLib</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="ident">lib</span>.<span class="ident">cfg</span> {
-        <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">cfg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rustc_attr::cfg_matches</span>(<span class="ident">cfg</span>, <span class="kw-2">&amp;</span><span class="ident">sess</span>.<span class="ident">parse_sess</span>, <span class="prelude-val">None</span>),
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+        <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">cfg</span>) =&gt; <span class="ident">rustc_attr::cfg_matches</span>(<span class="ident">cfg</span>, <span class="kw-2">&amp;</span><span class="ident">sess</span>.<span class="ident">parse_sess</span>, <span class="prelude-val">None</span>),
+        <span class="prelude-val">None</span> =&gt; <span class="bool-val">true</span>,
     }
 }
 
@@ -1075,8 +1083,8 @@
     <span class="ident">cg_args</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenArgs</span>,
     <span class="ident">objects</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>],
     <span class="ident">rlibs</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">linker::LinkResult</span> {
-    <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rspirv::dr::Module</span> {
+) -&gt; <span class="ident">linker::LinkResult</span> {
+    <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">rspirv::dr::Module</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">rspirv::dr::Loader::new</span>();
         <span class="ident">rspirv::binary::parse_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">loader</span>).<span class="ident">unwrap</span>();
         <span class="ident">loader</span>.<span class="ident">module</span>()
@@ -1121,15 +1129,15 @@
         <span class="ident">dce</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_DCE&quot;</span>).<span class="ident">is_err</span>(),
         <span class="ident">compact_ids</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_COMPACT_IDS&quot;</span>).<span class="ident">is_err</span>(),
         <span class="ident">structurize</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_STRUCTURIZE&quot;</span>).<span class="ident">is_err</span>(),
-        <span class="ident">emit_multiple_modules</span>: <span class="ident">cg_args</span>.<span class="ident">module_output_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ModuleOutputType::Multiple</span>,
+        <span class="ident">emit_multiple_modules</span>: <span class="ident">cg_args</span>.<span class="ident">module_output_type</span> <span class="op">==</span> <span class="ident">ModuleOutputType::Multiple</span>,
         <span class="ident">spirv_metadata</span>: <span class="ident">cg_args</span>.<span class="ident">spirv_metadata</span>,
     };
 
     <span class="kw">let</span> <span class="ident">link_result</span> <span class="op">=</span> <span class="ident">linker::link</span>(<span class="ident">sess</span>, <span class="ident">modules</span>, <span class="kw-2">&amp;</span><span class="ident">options</span>);
 
     <span class="kw">match</span> <span class="ident">link_result</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">rustc_errors::ErrorReported</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>,
+        <span class="prelude-val">Err</span>(<span class="ident">rustc_errors::ErrorReported</span>) =&gt; {
             <span class="ident">sess</span>.<span class="ident">abort_if_errors</span>();
             <span class="macro">bug!</span>(<span class="string">&quot;Linker errored, but no error reported&quot;</span>)
         }
@@ -1143,7 +1151,7 @@
     <span class="ident">cgcx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenContext</span><span class="op">&lt;</span><span class="ident">SpirvCodegenBackend</span><span class="op">&gt;</span>,
     <span class="ident">modules</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">SpirvThinBuffer</span>)<span class="op">&gt;</span>,
     <span class="ident">cached_modules</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">SerializedModule</span><span class="op">&lt;</span><span class="ident">SpirvModuleBuffer</span><span class="op">&gt;</span>, <span class="ident">WorkProduct</span>)<span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">LtoModuleCodegen</span><span class="op">&lt;</span><span class="ident">SpirvCodegenBackend</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">WorkProduct</span><span class="op">&gt;</span>), <span class="ident">FatalError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">LtoModuleCodegen</span><span class="op">&lt;</span><span class="ident">SpirvCodegenBackend</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">WorkProduct</span><span class="op">&gt;</span>), <span class="ident">FatalError</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">cgcx</span>.<span class="ident">opts</span>.<span class="ident">cg</span>.<span class="ident">linker_plugin_lto</span>.<span class="ident">enabled</span>() {
         <span class="macro">unreachable!</span>(<span class="string">&quot;We should never reach this case if the LTO step is deferred to the linker&quot;</span>);
     }

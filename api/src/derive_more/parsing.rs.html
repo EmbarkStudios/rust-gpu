@@ -972,10 +972,10 @@
 <span id="972">972</span>
 <span id="973">973</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="self">self</span>::RuleResult</span>::{<span class="ident">Failed</span>, <span class="ident">Matched</span>};
-<span class="kw">fn</span> <span class="ident">escape_default</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">fn</span> <span class="ident">escape_default</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">String</span> {
     <span class="ident">s</span>.<span class="ident">chars</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">escape_default</span>()).<span class="ident">collect</span>()
 }
-<span class="kw">fn</span> <span class="ident">char_range_at</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">pos</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">char</span>, <span class="ident">usize</span>) {
+<span class="kw">fn</span> <span class="ident">char_range_at</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">pos</span>: <span class="ident">usize</span>) -&gt; (<span class="ident">char</span>, <span class="ident">usize</span>) {
     <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">s</span>[<span class="ident">pos</span>..].<span class="ident">chars</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">next_pos</span> <span class="op">=</span> <span class="ident">pos</span> <span class="op">+</span> <span class="ident">c</span>.<span class="ident">len_utf8</span>();
     (<span class="kw-2">*</span><span class="ident">c</span>, <span class="ident">next_pos</span>)
@@ -997,11 +997,11 @@
     <span class="kw">fn</span> <span class="ident">fmt</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">::std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">::std::result::Result</span><span class="op">&lt;</span>(), <span class="ident">::std::fmt::Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">::std::result::Result</span><span class="op">&lt;</span>(), <span class="ident">::std::fmt::Error</span><span class="op">&gt;</span> {
         <span class="macro">write!</span>(<span class="ident">fmt</span>, <span class="string">&quot;error at {}:{}: expected &quot;</span>, <span class="self">self</span>.<span class="ident">line</span>, <span class="self">self</span>.<span class="ident">column</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">expected</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">expected</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> {
             <span class="macro">write!</span>(<span class="ident">fmt</span>, <span class="string">&quot;EOF&quot;</span>)<span class="question-mark">?</span>;
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">expected</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">expected</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
             <span class="macro">write!</span>(
                 <span class="ident">fmt</span>,
                 <span class="string">&quot;`{}`&quot;</span>,
@@ -1018,7 +1018,7 @@
     }
 }
 <span class="kw">impl</span> <span class="ident">::std::error::Error</span> <span class="kw">for</span> <span class="ident">ParseError</span> {
-    <span class="kw">fn</span> <span class="ident">description</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">description</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
         <span class="string">&quot;parse error&quot;</span>
     }
 }
@@ -1027,11 +1027,11 @@
     <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
     <span class="ident">pos</span>: <span class="ident">usize</span>,
     <span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">inline</span>]</span>
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="kw">let</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">len</span>();
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">pos</span> <span class="op">+</span> <span class="ident">l</span> <span class="op">&amp;&amp;</span> <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">as_bytes</span>()[<span class="ident">pos</span>..<span class="ident">pos</span> <span class="op">+</span> <span class="ident">l</span>] <span class="op">=</span><span class="op">=</span> <span class="ident">m</span>.<span class="ident">as_bytes</span>() {
+    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">pos</span> <span class="op">+</span> <span class="ident">l</span> <span class="op">&amp;&amp;</span> <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">as_bytes</span>()[<span class="ident">pos</span>..<span class="ident">pos</span> <span class="op">+</span> <span class="ident">l</span>] <span class="op">==</span> <span class="ident">m</span>.<span class="ident">as_bytes</span>() {
         <span class="ident">Matched</span>(<span class="ident">pos</span> <span class="op">+</span> <span class="ident">l</span>, ())
     } <span class="kw">else</span> {
         <span class="ident">state</span>.<span class="ident">mark_failure</span>(<span class="ident">pos</span>, <span class="ident">m</span>)
@@ -1042,7 +1042,7 @@
     <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
     <span class="ident">pos</span>: <span class="ident">usize</span>,
     <span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">inline</span>]</span>
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used</span> <span class="op">=</span> <span class="number">0usize</span>;
@@ -1056,7 +1056,7 @@
     }
     <span class="ident">Matched</span>(<span class="ident">pos</span> <span class="op">+</span> <span class="ident">used</span>, ())
 }
-<span class="kw">fn</span> <span class="ident">any_char</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">pos</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">any_char</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">pos</span>: <span class="ident">usize</span>) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">inline</span>]</span>
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">pos</span> {
@@ -1066,20 +1066,20 @@
         <span class="ident">state</span>.<span class="ident">mark_failure</span>(<span class="ident">pos</span>, <span class="string">&quot;&lt;character&gt;&quot;</span>)
     }
 }
-<span class="kw">fn</span> <span class="ident">pos_to_line</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">pos</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="ident">usize</span>) {
+<span class="kw">fn</span> <span class="ident">pos_to_line</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">pos</span>: <span class="ident">usize</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
     <span class="kw">let</span> <span class="ident">before</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">input</span>[..<span class="ident">pos</span>];
-    <span class="kw">let</span> <span class="ident">line</span> <span class="op">=</span> <span class="ident">before</span>.<span class="ident">as_bytes</span>().<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">b&#39;\n&#39;</span>).<span class="ident">count</span>() <span class="op">+</span> <span class="number">1</span>;
+    <span class="kw">let</span> <span class="ident">line</span> <span class="op">=</span> <span class="ident">before</span>.<span class="ident">as_bytes</span>().<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">b&#39;\n&#39;</span>).<span class="ident">count</span>() <span class="op">+</span> <span class="number">1</span>;
     <span class="kw">let</span> <span class="ident">col</span> <span class="op">=</span> <span class="ident">before</span>.<span class="ident">chars</span>().<span class="ident">rev</span>().<span class="ident">take_while</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">!</span><span class="op">=</span> <span class="string">&#39;\n&#39;</span>).<span class="ident">count</span>() <span class="op">+</span> <span class="number">1</span>;
     (<span class="ident">line</span>, <span class="ident">col</span>)
 }
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">mark_failure</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pos</span>: <span class="ident">usize</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">suppress_fail</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">fn</span> <span class="ident">mark_failure</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pos</span>: <span class="ident">usize</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">suppress_fail</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">if</span> <span class="ident">pos</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">max_err_pos</span> {
                 <span class="self">self</span>.<span class="ident">max_err_pos</span> <span class="op">=</span> <span class="ident">pos</span>;
                 <span class="self">self</span>.<span class="ident">expected</span>.<span class="ident">clear</span>();
             }
-            <span class="kw">if</span> <span class="ident">pos</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">max_err_pos</span> {
+            <span class="kw">if</span> <span class="ident">pos</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">max_err_pos</span> {
                 <span class="self">self</span>.<span class="ident">expected</span>.<span class="ident">insert</span>(<span class="ident">expected</span>);
             }
         }
@@ -1093,7 +1093,7 @@
     <span class="ident">_phantom</span>: <span class="ident">::std::marker::PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> ()<span class="op">&gt;</span>,
 }
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span> {
         <span class="ident">ParseState</span> {
             <span class="ident">max_err_pos</span>: <span class="number">0</span>,
             <span class="ident">suppress_fail</span>: <span class="number">0</span>,
@@ -1107,31 +1107,31 @@
     <span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>,
     <span class="ident">__state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>,
     <span class="ident">__pos</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     {
         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> {
                 <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;{&quot;</span>);
                 <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;{&quot;</span>),
-                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;{&quot;</span>),
+                    <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                 }
             };
             <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
-                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
+                <span class="ident">Failed</span> =&gt; {
                     <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;}&quot;</span>);
                     <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;}&quot;</span>),
-                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;}&quot;</span>),
+                        <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                     }
                 }
             }
         };
         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="prelude-val">None</span> }),
-            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="prelude-val">None</span> }),
+            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
         }
     }
 }
@@ -1140,7 +1140,7 @@
     <span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>,
     <span class="ident">__state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>,
     <span class="ident">__pos</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     {
         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> {
@@ -1149,14 +1149,14 @@
                 <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">__input</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">__pos</span> {
                     <span class="kw">let</span> (<span class="ident">__ch</span>, <span class="ident">__next</span>) <span class="op">=</span> <span class="ident">char_range_at</span>(<span class="ident">__input</span>, <span class="ident">__pos</span>);
                     <span class="kw">match</span> <span class="ident">__ch</span> {
-                        <span class="string">&#39;{&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[{]&quot;</span>),
+                        <span class="string">&#39;{&#39;</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
+                        <span class="kw">_</span> =&gt; <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[{]&quot;</span>),
                     }
                 } <span class="kw">else</span> {
                     <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[{]&quot;</span>)
                 };
                 <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> {
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">__repeat_pos</span> <span class="op">=</span> <span class="ident">__pos</span>;
                             <span class="kw">loop</span> {
@@ -1168,8 +1168,8 @@
                                             <span class="kw">let</span> (<span class="ident">__ch</span>, <span class="ident">__next</span>) <span class="op">=</span>
                                                 <span class="ident">char_range_at</span>(<span class="ident">__input</span>, <span class="ident">__pos</span>);
                                             <span class="kw">match</span> <span class="ident">__ch</span> {
-                                                <span class="string">&#39;{&#39;</span> <span class="op">|</span> <span class="string">&#39;}&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
-                                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                <span class="string">&#39;{&#39;</span> <span class="op">|</span> <span class="string">&#39;}&#39;</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
+                                                <span class="kw">_</span> =&gt; {
                                                     <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[{}]&quot;</span>)
                                                 }
                                             }
@@ -1178,22 +1178,22 @@
                                         };
                                         <span class="ident">__state</span>.<span class="ident">suppress_fail</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
                                         <span class="kw">match</span> <span class="ident">__assert_res</span> {
-                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
-                                            <span class="ident">Matched</span>(..) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                            <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
+                                            <span class="ident">Matched</span>(..) =&gt; <span class="ident">Failed</span>,
                                         }
                                     };
                                     <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                             <span class="ident">any_char</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>)
                                         }
-                                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                        <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                     }
                                 };
                                 <span class="kw">match</span> <span class="ident">__step_res</span> {
-                                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) =&gt; {
                                         <span class="ident">__repeat_pos</span> <span class="op">=</span> <span class="ident">__newpos</span>;
                                     }
-                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="ident">Failed</span> =&gt; {
                                         <span class="kw">break</span>;
                                     }
                                 }
@@ -1201,32 +1201,32 @@
                             <span class="ident">Matched</span>(<span class="ident">__repeat_pos</span>, ())
                         };
                         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                 <span class="kw">if</span> <span class="ident">__input</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">__pos</span> {
                                     <span class="kw">let</span> (<span class="ident">__ch</span>, <span class="ident">__next</span>) <span class="op">=</span> <span class="ident">char_range_at</span>(<span class="ident">__input</span>, <span class="ident">__pos</span>);
                                     <span class="kw">match</span> <span class="ident">__ch</span> {
-                                        <span class="string">&#39;}&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
-                                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[}]&quot;</span>),
+                                        <span class="string">&#39;}&#39;</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
+                                        <span class="kw">_</span> =&gt; <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[}]&quot;</span>),
                                     }
                                 } <span class="kw">else</span> {
                                     <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[}]&quot;</span>)
                                 }
                             }
-                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                         }
                     }
-                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                    <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                 }
             } {
-                <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; {
                     <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw-2">&amp;</span><span class="ident">__input</span>[<span class="ident">str_start</span>..<span class="ident">__newpos</span>])
                 }
-                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
             }
         };
         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="prelude-val">Some</span>(<span class="ident">n</span>) }),
-            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">n</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="prelude-val">Some</span>(<span class="ident">n</span>) }),
+            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
         }
     }
 }
@@ -1235,13 +1235,13 @@
     <span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>,
     <span class="ident">__state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>,
     <span class="ident">__pos</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     {
         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="ident">any_char</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>);
         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="prelude-val">None</span> }),
-            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="prelude-val">None</span> }),
+            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
         }
     }
 }
@@ -1250,7 +1250,7 @@
     <span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>,
     <span class="ident">__state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>,
     <span class="ident">__pos</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     {
         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> {
@@ -1263,18 +1263,18 @@
                     <span class="kw">let</span> <span class="ident">__step_res</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">__input</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">__pos</span> {
                         <span class="kw">let</span> (<span class="ident">__ch</span>, <span class="ident">__next</span>) <span class="op">=</span> <span class="ident">char_range_at</span>(<span class="ident">__input</span>, <span class="ident">__pos</span>);
                         <span class="kw">match</span> <span class="ident">__ch</span> {
-                            <span class="string">&#39;0&#39;</span>...<span class="string">&#39;9&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[0-9]&quot;</span>),
+                            <span class="string">&#39;0&#39;</span>...<span class="string">&#39;9&#39;</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
+                            <span class="kw">_</span> =&gt; <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[0-9]&quot;</span>),
                         }
                     } <span class="kw">else</span> {
                         <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[0-9]&quot;</span>)
                     };
                     <span class="kw">match</span> <span class="ident">__step_res</span> {
-                        <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) =&gt; {
                             <span class="ident">__repeat_pos</span> <span class="op">=</span> <span class="ident">__newpos</span>;
                             <span class="ident">__repeat_value</span>.<span class="ident">push</span>(<span class="ident">__value</span>);
                         }
-                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Failed</span> =&gt; {
                             <span class="kw">break</span>;
                         }
                     }
@@ -1285,15 +1285,15 @@
                     <span class="ident">Failed</span>
                 }
             } {
-                <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; {
                     <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw-2">&amp;</span><span class="ident">__input</span>[<span class="ident">str_start</span>..<span class="ident">__newpos</span>])
                 }
-                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
             }
         };
         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="ident">n</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>() }),
-            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">n</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="ident">n</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>() }),
+            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
         }
     }
 }
@@ -1302,7 +1302,7 @@
     <span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>,
     <span class="ident">__state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>,
     <span class="ident">__pos</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     {
         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> {
@@ -1311,46 +1311,46 @@
                 <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> {
                     <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;x?&quot;</span>);
                     <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
-                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;X?&quot;</span>),
+                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
+                        <span class="ident">Failed</span> =&gt; <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;X?&quot;</span>),
                     }
                 };
                 <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
-                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
+                    <span class="ident">Failed</span> =&gt; {
                         <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;o&quot;</span>);
                         <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
-                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
+                            <span class="ident">Failed</span> =&gt; {
                                 <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span>
                                     <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;x&quot;</span>);
                                 <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
-                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
+                                    <span class="ident">Failed</span> =&gt; {
                                         <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span>
                                             <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;X&quot;</span>);
                                         <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; {
                                                 <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>)
                                             }
-                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                            <span class="ident">Failed</span> =&gt; {
                                                 <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(
                                                     <span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;p&quot;</span>,
                                                 );
                                                 <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; {
                                                         <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>)
                                                     }
-                                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                    <span class="ident">Failed</span> =&gt; {
                                                         <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(
                                                             <span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>,
                                                             <span class="string">&quot;b&quot;</span>,
                                                         );
                                                         <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; {
                                                                 <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>)
                                                             }
-                                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                            <span class="ident">Failed</span> =&gt; {
                                                                 <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span>
                                                                     <span class="ident">slice_eq</span>(
                                                                         <span class="ident">__input</span>,
@@ -1361,10 +1361,10 @@
                                                                     <span class="ident">Matched</span>(
                                                                         <span class="ident">__pos</span>,
                                                                         <span class="ident">__value</span>,
-                                                                    ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(
+                                                                    ) =&gt; <span class="ident">Matched</span>(
                                                                         <span class="ident">__pos</span>, <span class="ident">__value</span>,
                                                                     ),
-                                                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                                    <span class="ident">Failed</span> =&gt; {
                                                                         <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span>
                                                                             <span class="ident">slice_eq</span>(
                                                                                 <span class="ident">__input</span>,
@@ -1376,10 +1376,10 @@
                                                                             <span class="ident">Matched</span>(
                                                                                 <span class="ident">__pos</span>,
                                                                                 <span class="ident">__value</span>,
-                                                                            ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(
+                                                                            ) =&gt; <span class="ident">Matched</span>(
                                                                                 <span class="ident">__pos</span>, <span class="ident">__value</span>,
                                                                             ),
-                                                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">slice_eq</span>(
+                                                                            <span class="ident">Failed</span> =&gt; <span class="ident">slice_eq</span>(
                                                                                 <span class="ident">__input</span>, <span class="ident">__state</span>,
                                                                                 <span class="ident">__pos</span>, <span class="string">&quot;?&quot;</span>,
                                                                             ),
@@ -1399,15 +1399,15 @@
                     }
                 }
             } {
-                <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; {
                     <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw-2">&amp;</span><span class="ident">__input</span>[<span class="ident">str_start</span>..<span class="ident">__newpos</span>])
                 }
-                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
             }
         };
         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="ident">n</span> }),
-            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">n</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="ident">n</span> }),
+            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
         }
     }
 }
@@ -1416,12 +1416,12 @@
     <span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>,
     <span class="ident">__state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>,
     <span class="ident">__pos</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     {
         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;:&quot;</span>);
         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="kw">match</span> {
                     <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="kw">match</span> {
                         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> {
@@ -1429,65 +1429,65 @@
                             <span class="kw">let</span> <span class="ident">__assert_res</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">__input</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">__pos</span> {
                                 <span class="kw">let</span> (<span class="ident">__ch</span>, <span class="ident">__next</span>) <span class="op">=</span> <span class="ident">char_range_at</span>(<span class="ident">__input</span>, <span class="ident">__pos</span>);
                                 <span class="kw">match</span> <span class="ident">__ch</span> {
-                                    <span class="string">&#39;&lt;&#39;</span> <span class="op">|</span> <span class="string">&#39;^&#39;</span> <span class="op">|</span> <span class="string">&#39;&gt;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
-                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[&lt;^&gt;]&quot;</span>),
+                                    <span class="string">&#39;&lt;&#39;</span> <span class="op">|</span> <span class="string">&#39;^&#39;</span> <span class="op">|</span> <span class="string">&#39;&gt;&#39;</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
+                                    <span class="kw">_</span> =&gt; <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[&lt;^&gt;]&quot;</span>),
                                 }
                             } <span class="kw">else</span> {
                                 <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[&lt;^&gt;]&quot;</span>)
                             };
                             <span class="ident">__state</span>.<span class="ident">suppress_fail</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
                             <span class="kw">match</span> <span class="ident">__assert_res</span> {
-                                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
-                                <span class="ident">Matched</span>(..) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
+                                <span class="ident">Matched</span>(..) =&gt; <span class="ident">Failed</span>,
                             }
                         };
                         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">any_char</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>),
-                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; <span class="ident">any_char</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>),
+                            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                         }
                     } {
-                        <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ()),
-                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
+                        <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ()),
+                        <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
                     };
                     <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                             <span class="kw">if</span> <span class="ident">__input</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">__pos</span> {
                                 <span class="kw">let</span> (<span class="ident">__ch</span>, <span class="ident">__next</span>) <span class="op">=</span> <span class="ident">char_range_at</span>(<span class="ident">__input</span>, <span class="ident">__pos</span>);
                                 <span class="kw">match</span> <span class="ident">__ch</span> {
-                                    <span class="string">&#39;&lt;&#39;</span> <span class="op">|</span> <span class="string">&#39;^&#39;</span> <span class="op">|</span> <span class="string">&#39;&gt;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
-                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[&lt;^&gt;]&quot;</span>),
+                                    <span class="string">&#39;&lt;&#39;</span> <span class="op">|</span> <span class="string">&#39;^&#39;</span> <span class="op">|</span> <span class="string">&#39;&gt;&#39;</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__next</span>, ()),
+                                    <span class="kw">_</span> =&gt; <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[&lt;^&gt;]&quot;</span>),
                                 }
                             } <span class="kw">else</span> {
                                 <span class="ident">__state</span>.<span class="ident">mark_failure</span>(<span class="ident">__pos</span>, <span class="string">&quot;[&lt;^&gt;]&quot;</span>)
                             }
                         }
-                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                        <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                     }
                 } {
-                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ()),
-                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
+                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ()),
+                    <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
                 };
                 <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="kw">match</span> {
                             <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;+&quot;</span>);
                             <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
-                                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;-&quot;</span>),
+                                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
+                                <span class="ident">Failed</span> =&gt; <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;-&quot;</span>),
                             }
                         } {
-                            <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ()),
-                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
+                            <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ()),
+                            <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
                         };
                         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                 <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span>
                                     <span class="kw">match</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;#&quot;</span>) {
-                                        <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ()),
-                                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
+                                        <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ()),
+                                        <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
                                     };
                                 <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="kw">match</span> {
                                             <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> {
                                                 <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> {
@@ -1505,11 +1505,11 @@
                                                                     <span class="string">&#39;A&#39;</span>...<span class="string">&#39;Z&#39;</span>
                                                                     <span class="op">|</span> <span class="string">&#39;a&#39;</span>...<span class="string">&#39;z&#39;</span>
                                                                     <span class="op">|</span> <span class="string">&#39;0&#39;</span>...<span class="string">&#39;9&#39;</span>
-                                                                    <span class="op">|</span> <span class="string">&#39;_&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(
+                                                                    <span class="op">|</span> <span class="string">&#39;_&#39;</span> =&gt; <span class="ident">Matched</span>(
                                                                         <span class="ident">__next</span>,
                                                                         (),
                                                                     ),
-                                                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__state</span>
+                                                                    <span class="kw">_</span> =&gt; <span class="ident">__state</span>
                                                                         .<span class="ident">mark_failure</span>(
                                                                         <span class="ident">__pos</span>,
                                                                         <span class="string">&quot;[A-Za-z0-9_]&quot;</span>,
@@ -1525,12 +1525,12 @@
                                                             <span class="ident">Matched</span>(
                                                                 <span class="ident">__newpos</span>,
                                                                 <span class="ident">__value</span>,
-                                                            ) <span class="op">=</span><span class="op">&gt;</span> {
+                                                            ) =&gt; {
                                                                 <span class="ident">__repeat_pos</span> <span class="op">=</span> <span class="ident">__newpos</span>;
                                                                 <span class="ident">__repeat_value</span>
                                                                     .<span class="ident">push</span>(<span class="ident">__value</span>);
                                                             }
-                                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                            <span class="ident">Failed</span> =&gt; {
                                                                 <span class="kw">break</span>;
                                                             }
                                                         }
@@ -1542,17 +1542,17 @@
                                                     }
                                                 };
                                                 <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">slice_eq</span>(
+                                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; <span class="ident">slice_eq</span>(
                                                         <span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;$&quot;</span>,
                                                     ),
-                                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                                    <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                                 }
                                             };
                                             <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                                                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; {
                                                     <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>)
                                                 }
-                                                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                <span class="ident">Failed</span> =&gt; {
                                                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">__repeat_pos</span> <span class="op">=</span> <span class="ident">__pos</span>;
                                                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">__repeat_value</span> <span class="op">=</span> <span class="macro">vec!</span>[];
                                                     <span class="kw">loop</span> {
@@ -1566,10 +1566,10 @@
                                                                     <span class="ident">__input</span>, <span class="ident">__pos</span>,
                                                                 );
                                                             <span class="kw">match</span> <span class="ident">__ch</span> {
-                                                                <span class="string">&#39;0&#39;</span>...<span class="string">&#39;9&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                                <span class="string">&#39;0&#39;</span>...<span class="string">&#39;9&#39;</span> =&gt; {
                                                                     <span class="ident">Matched</span>(<span class="ident">__next</span>, ())
                                                                 }
-                                                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__state</span>
+                                                                <span class="kw">_</span> =&gt; <span class="ident">__state</span>
                                                                     .<span class="ident">mark_failure</span>(
                                                                         <span class="ident">__pos</span>, <span class="string">&quot;[0-9]&quot;</span>,
                                                                     ),
@@ -1583,12 +1583,12 @@
                                                             <span class="ident">Matched</span>(
                                                                 <span class="ident">__newpos</span>,
                                                                 <span class="ident">__value</span>,
-                                                            ) <span class="op">=</span><span class="op">&gt;</span> {
+                                                            ) =&gt; {
                                                                 <span class="ident">__repeat_pos</span> <span class="op">=</span> <span class="ident">__newpos</span>;
                                                                 <span class="ident">__repeat_value</span>
                                                                     .<span class="ident">push</span>(<span class="ident">__value</span>);
                                                             }
-                                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                            <span class="ident">Failed</span> =&gt; {
                                                                 <span class="kw">break</span>;
                                                             }
                                                         }
@@ -1601,30 +1601,30 @@
                                                 }
                                             }
                                         } {
-                                            <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                            <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; {
                                                 <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ())
                                             }
-                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
+                                            <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
                                         };
                                         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                                 <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">slice_eq</span>(
                                                     <span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;0&quot;</span>,
                                                 ) {
-                                                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; {
                                                         <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ())
                                                     }
-                                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
+                                                    <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, ()),
                                                 };
                                                 <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                                         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="kw">match</span> {
                                                             <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(
                                                                 <span class="ident">__input</span>, <span class="ident">__state</span>,
                                                                 <span class="ident">__pos</span>, <span class="string">&quot;.&quot;</span>,
                                                             );
                                                             <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                                                                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                                                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                                                     <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> {
                                                                         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> {
                                                                             <span class="kw">let</span> <span class="kw-2">mut</span>
@@ -1641,7 +1641,7 @@
                                                                                         <span class="op">&gt;</span> <span class="ident">__pos</span>
                                                                                     {
                                                                                         <span class="kw">let</span> ( <span class="ident">__ch</span> , <span class="ident">__next</span> ) <span class="op">=</span> <span class="ident">char_range_at</span> ( <span class="ident">__input</span> , <span class="ident">__pos</span> ) ;
-                                                                                        <span class="kw">match</span> <span class="ident">__ch</span> { <span class="string">&#39;A&#39;</span> ... <span class="string">&#39;Z&#39;</span> <span class="op">|</span> <span class="string">&#39;a&#39;</span> ... <span class="string">&#39;z&#39;</span> <span class="op">|</span> <span class="string">&#39;0&#39;</span> ... <span class="string">&#39;9&#39;</span> <span class="op">|</span> <span class="string">&#39;_&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span> ( <span class="ident">__next</span> , ( ) ) , <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__state</span> . <span class="ident">mark_failure</span> ( <span class="ident">__pos</span> , <span class="string">&quot;[A-Za-z0-9_]&quot;</span> ) , }
+                                                                                        <span class="kw">match</span> <span class="ident">__ch</span> { <span class="string">&#39;A&#39;</span> ... <span class="string">&#39;Z&#39;</span> <span class="op">|</span> <span class="string">&#39;a&#39;</span> ... <span class="string">&#39;z&#39;</span> <span class="op">|</span> <span class="string">&#39;0&#39;</span> ... <span class="string">&#39;9&#39;</span> <span class="op">|</span> <span class="string">&#39;_&#39;</span> =&gt; <span class="ident">Matched</span> ( <span class="ident">__next</span> , ( ) ) , <span class="kw">_</span> =&gt; <span class="ident">__state</span> . <span class="ident">mark_failure</span> ( <span class="ident">__pos</span> , <span class="string">&quot;[A-Za-z0-9_]&quot;</span> ) , }
                                                                                     } <span class="kw">else</span> {
                                                                                         <span class="ident">__state</span> . <span class="ident">mark_failure</span> ( <span class="ident">__pos</span> , <span class="string">&quot;[A-Za-z0-9_]&quot;</span> )
                                                                                     };
@@ -1649,11 +1649,11 @@
                                                                                     <span class="ident">Matched</span>(
                                                                                         <span class="ident">__newpos</span>,
                                                                                         <span class="ident">__value</span>,
-                                                                                    ) <span class="op">=</span><span class="op">&gt;</span> {
+                                                                                    ) =&gt; {
                                                                                         <span class="ident">__repeat_pos</span> <span class="op">=</span> <span class="ident">__newpos</span> ;
                                                                                         <span class="ident">__repeat_value</span> . <span class="ident">push</span> ( <span class="ident">__value</span> ) ;
                                                                                     }
-                                                                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                                                    <span class="ident">Failed</span> =&gt; {
                                                                                         <span class="kw">break</span>;
                                                                                     }
                                                                                 }
@@ -1670,25 +1670,25 @@
                                                                             }
                                                                         };
                                                                         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                                                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                                                                 <span class="ident">slice_eq</span>(
                                                                                     <span class="ident">__input</span>,
                                                                                     <span class="ident">__state</span>, <span class="ident">__pos</span>,
                                                                                     <span class="string">&quot;$&quot;</span>,
                                                                                 )
                                                                             }
-                                                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                                                            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                                                         }
                                                                     };
                                                                     <span class="kw">match</span> <span class="ident">__choice_res</span> {
                                                                         <span class="ident">Matched</span>(
                                                                             <span class="ident">__pos</span>,
                                                                             <span class="ident">__value</span>,
-                                                                        ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(
+                                                                        ) =&gt; <span class="ident">Matched</span>(
                                                                             <span class="ident">__pos</span>,
                                                                             <span class="ident">__value</span>,
                                                                         ),
-                                                                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                                        <span class="ident">Failed</span> =&gt; {
                                                                             <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> {
                                                                                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">__repeat_pos</span> <span class="op">=</span>
                                                                                     <span class="ident">__pos</span>;
@@ -1702,7 +1702,7 @@
                                                                                             <span class="op">&gt;</span> <span class="ident">__pos</span>
                                                                                         {
                                                                                             <span class="kw">let</span> ( <span class="ident">__ch</span> , <span class="ident">__next</span> ) <span class="op">=</span> <span class="ident">char_range_at</span> ( <span class="ident">__input</span> , <span class="ident">__pos</span> ) ;
-                                                                                            <span class="kw">match</span> <span class="ident">__ch</span> { <span class="string">&#39;0&#39;</span> ... <span class="string">&#39;9&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span> ( <span class="ident">__next</span> , ( ) ) , <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__state</span> . <span class="ident">mark_failure</span> ( <span class="ident">__pos</span> , <span class="string">&quot;[0-9]&quot;</span> ) , }
+                                                                                            <span class="kw">match</span> <span class="ident">__ch</span> { <span class="string">&#39;0&#39;</span> ... <span class="string">&#39;9&#39;</span> =&gt; <span class="ident">Matched</span> ( <span class="ident">__next</span> , ( ) ) , <span class="kw">_</span> =&gt; <span class="ident">__state</span> . <span class="ident">mark_failure</span> ( <span class="ident">__pos</span> , <span class="string">&quot;[0-9]&quot;</span> ) , }
                                                                                         } <span class="kw">else</span> {
                                                                                             <span class="ident">__state</span> . <span class="ident">mark_failure</span> ( <span class="ident">__pos</span> , <span class="string">&quot;[0-9]&quot;</span> )
                                                                                         };
@@ -1711,11 +1711,11 @@
                                                                                         <span class="ident">Matched</span>(
                                                                                             <span class="ident">__newpos</span>,
                                                                                             <span class="ident">__value</span>,
-                                                                                        ) <span class="op">=</span><span class="op">&gt;</span> {
+                                                                                        ) =&gt; {
                                                                                             <span class="ident">__repeat_pos</span> <span class="op">=</span> <span class="ident">__newpos</span> ;
                                                                                             <span class="ident">__repeat_value</span> . <span class="ident">push</span> ( <span class="ident">__value</span> ) ;
                                                                                         }
-                                                                                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                                                        <span class="ident">Failed</span> =&gt; {
                                                                                             <span class="kw">break</span>;
                                                                                         }
                                                                                     }
@@ -1733,10 +1733,10 @@
                                                                                 <span class="ident">Matched</span>(
                                                                                     <span class="ident">__pos</span>,
                                                                                     <span class="ident">__value</span>,
-                                                                                ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(
+                                                                                ) =&gt; <span class="ident">Matched</span>(
                                                                                     <span class="ident">__pos</span>, <span class="ident">__value</span>,
                                                                                 ),
-                                                                                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">slice_eq</span>(
+                                                                                <span class="ident">Failed</span> =&gt; <span class="ident">slice_eq</span>(
                                                                                     <span class="ident">__input</span>,
                                                                                     <span class="ident">__state</span>, <span class="ident">__pos</span>,
                                                                                     <span class="string">&quot;*&quot;</span>,
@@ -1745,18 +1745,18 @@
                                                                         }
                                                                     }
                                                                 }
-                                                                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                                                <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                                             }
                                                         } {
-                                                            <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                                            <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="kw">_</span>) =&gt; {
                                                                 <span class="ident">Matched</span>(<span class="ident">__newpos</span>, ())
                                                             }
-                                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                            <span class="ident">Failed</span> =&gt; {
                                                                 <span class="ident">Matched</span>(<span class="ident">__pos</span>, ())
                                                             }
                                                         };
                                                         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                                                 <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span>
                                                                     <span class="kw">match</span> <span class="ident">__parse_ty</span>(
                                                                         <span class="ident">__input</span>,
@@ -1765,13 +1765,13 @@
                                                                         <span class="ident">Matched</span>(
                                                                             <span class="ident">__newpos</span>,
                                                                             <span class="ident">__value</span>,
-                                                                        ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(
+                                                                        ) =&gt; <span class="ident">Matched</span>(
                                                                             <span class="ident">__newpos</span>,
                                                                             <span class="prelude-val">Some</span>(
                                                                                 <span class="ident">__value</span>,
                                                                             ),
                                                                         ),
-                                                                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                                                        <span class="ident">Failed</span> =&gt; {
                                                                             <span class="ident">Matched</span>(
                                                                                 <span class="ident">__pos</span>,
                                                                                 <span class="prelude-val">None</span>,
@@ -1782,32 +1782,32 @@
                                                                     <span class="ident">Matched</span>(
                                                                         <span class="ident">__pos</span>,
                                                                         <span class="ident">n</span>,
-                                                                    ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(
+                                                                    ) =&gt; <span class="ident">Matched</span>(
                                                                         <span class="ident">__pos</span>,
                                                                         { <span class="ident">n</span> },
                                                                     ),
-                                                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                                                    <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                                                 }
                                                             }
-                                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                                            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                                         }
                                                     }
-                                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                                    <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                                 }
                                             }
-                                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                         }
                                     }
-                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                    <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                 }
                             }
-                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                         }
                     }
-                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                    <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                 }
             }
-            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
         }
     }
 }
@@ -1816,7 +1816,7 @@
     <span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>,
     <span class="ident">__state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>,
     <span class="ident">__pos</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     {
         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> {
@@ -1827,23 +1827,23 @@
                 <span class="kw">let</span> <span class="ident">__step_res</span> <span class="op">=</span> {
                     <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span> <span class="ident">__parse_discard_doubles</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>);
                     <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
-                        <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
+                        <span class="ident">Failed</span> =&gt; {
                             <span class="kw">let</span> <span class="ident">__choice_res</span> <span class="op">=</span>
                                 <span class="ident">__parse_placeholder_inner</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>);
                             <span class="kw">match</span> <span class="ident">__choice_res</span> {
-                                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
-                                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">__parse_discard_any</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>),
+                                <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>),
+                                <span class="ident">Failed</span> =&gt; <span class="ident">__parse_discard_any</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>),
                             }
                         }
                     }
                 };
                 <span class="kw">match</span> <span class="ident">__step_res</span> {
-                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) =&gt; {
                         <span class="ident">__repeat_pos</span> <span class="op">=</span> <span class="ident">__newpos</span>;
                         <span class="ident">__repeat_value</span>.<span class="ident">push</span>(<span class="ident">__value</span>);
                     }
-                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Failed</span> =&gt; {
                         <span class="kw">break</span>;
                     }
                 }
@@ -1851,10 +1851,10 @@
             <span class="ident">Matched</span>(<span class="ident">__repeat_pos</span>, <span class="ident">__repeat_value</span>)
         };
         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">x</span>) =&gt; {
                 <span class="ident">Matched</span>(<span class="ident">__pos</span>, { <span class="ident">x</span>.<span class="ident">into_iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>).<span class="ident">collect</span>() })
             }
-            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
         }
     }
 }
@@ -1863,56 +1863,56 @@
     <span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>,
     <span class="ident">__state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ParseState</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>,
     <span class="ident">__pos</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RuleResult</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
+) -&gt; <span class="ident">RuleResult</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     {
         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;{&quot;</span>);
         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">__parse_arg</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>) {
-                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="prelude-val">Some</span>(<span class="ident">__value</span>)),
-                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="prelude-val">None</span>),
+                    <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) =&gt; <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="prelude-val">Some</span>(<span class="ident">__value</span>)),
+                    <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="prelude-val">None</span>),
                 };
                 <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">n</span>) =&gt; {
                         <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span>
                             <span class="kw">match</span> <span class="ident">__parse_format_spec</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>) {
-                                <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="ident">__value</span>) =&gt; {
                                     <span class="ident">Matched</span>(<span class="ident">__newpos</span>, <span class="prelude-val">Some</span>(<span class="ident">__value</span>))
                                 }
-                                <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="prelude-val">None</span>),
+                                <span class="ident">Failed</span> =&gt; <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="prelude-val">None</span>),
                             };
                         <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">o</span>) =&gt; {
                                 <span class="kw">let</span> <span class="ident">__seq_res</span> <span class="op">=</span> <span class="ident">slice_eq</span>(<span class="ident">__input</span>, <span class="ident">__state</span>, <span class="ident">__pos</span>, <span class="string">&quot;}&quot;</span>);
                                 <span class="kw">match</span> <span class="ident">__seq_res</span> {
-                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="kw">_</span>) =&gt; {
                                         <span class="ident">Matched</span>(<span class="ident">__pos</span>, { (<span class="ident">n</span>, <span class="ident">o</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>)) })
                                     }
-                                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                                    <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                                 }
                             }
-                            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                         }
                     }
-                    <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+                    <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
                 }
             }
-            <span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Failed</span>,
+            <span class="ident">Failed</span> =&gt; <span class="ident">Failed</span>,
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_placeholders</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>(<span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_placeholders</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>(<span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>) -&gt; <span class="ident">ParseResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">__state</span> <span class="op">=</span> <span class="ident">ParseState::new</span>();
     <span class="kw">match</span> <span class="ident">__parse_all_placeholders</span>(<span class="ident">__input</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">__state</span>, <span class="number">0</span>) {
-        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="ident">__pos</span> <span class="op">=</span><span class="op">=</span> <span class="ident">__input</span>.<span class="ident">len</span>() {
+        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; {
+            <span class="kw">if</span> <span class="ident">__pos</span> <span class="op">==</span> <span class="ident">__input</span>.<span class="ident">len</span>() {
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">__value</span>);
             }
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="kw">_</span> =&gt; {}
     }
     <span class="kw">let</span> (<span class="ident">__line</span>, <span class="ident">__col</span>) <span class="op">=</span> <span class="ident">pos_to_line</span>(<span class="ident">__input</span>, <span class="ident">__state</span>.<span class="ident">max_err_pos</span>);
     <span class="prelude-val">Err</span>(<span class="ident">ParseError</span> {
@@ -1925,16 +1925,16 @@
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format</span><span class="op">&lt;</span><span class="lifetime">&#39;input</span><span class="op">&gt;</span>(
     <span class="ident">__input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseResult</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
+) -&gt; <span class="ident">ParseResult</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;input</span> <span class="ident">str</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">__state</span> <span class="op">=</span> <span class="ident">ParseState::new</span>();
     <span class="kw">match</span> <span class="ident">__parse_format</span>(<span class="ident">__input</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">__state</span>, <span class="number">0</span>) {
-        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="ident">__pos</span> <span class="op">=</span><span class="op">=</span> <span class="ident">__input</span>.<span class="ident">len</span>() {
+        <span class="ident">Matched</span>(<span class="ident">__pos</span>, <span class="ident">__value</span>) =&gt; {
+            <span class="kw">if</span> <span class="ident">__pos</span> <span class="op">==</span> <span class="ident">__input</span>.<span class="ident">len</span>() {
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">__value</span>);
             }
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="kw">_</span> =&gt; {}
     }
     <span class="kw">let</span> (<span class="ident">__line</span>, <span class="ident">__col</span>) <span class="op">=</span> <span class="ident">pos_to_line</span>(<span class="ident">__input</span>, <span class="ident">__state</span>.<span class="ident">max_err_pos</span>);
     <span class="prelude-val">Err</span>(<span class="ident">ParseError</span> {

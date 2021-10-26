@@ -290,7 +290,7 @@
     <span class="ident">kill_unrooted</span>(<span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">rooted</span>);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">collect_roots</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">collect_roots</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) -&gt; <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rooted</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
     <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">entry_points</span> {
         <span class="ident">root</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rooted</span>);
@@ -300,7 +300,7 @@
 
 <span class="comment">// Exactly the same as Function::all_inst_iter, except return type is `impl DoubleEndedIterator`</span>
 <span class="comment">// instead of `impl Iterator`</span>
-<span class="kw">fn</span> <span class="ident">all_inst_iter</span>(<span class="ident">func</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">DoubleEndedIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">Instruction</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">all_inst_iter</span>(<span class="ident">func</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>) -&gt; <span class="kw">impl</span> <span class="ident">DoubleEndedIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">Instruction</span><span class="op">&gt;</span> {
     <span class="ident">func</span>.<span class="ident">def</span>
         .<span class="ident">iter</span>()
         .<span class="ident">chain</span>(<span class="ident">func</span>.<span class="ident">parameters</span>.<span class="ident">iter</span>())
@@ -312,7 +312,7 @@
         .<span class="ident">chain</span>(<span class="ident">func</span>.<span class="ident">end</span>.<span class="ident">iter</span>())
 }
 
-<span class="kw">fn</span> <span class="ident">spread_roots</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">spread_roots</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any</span> <span class="op">=</span> <span class="bool-val">false</span>;
     <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">global_inst_iter</span>() {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
@@ -341,7 +341,7 @@
     <span class="ident">any</span>
 }
 
-<span class="kw">fn</span> <span class="ident">root</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">root</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any</span> <span class="op">=</span> <span class="bool-val">false</span>;
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_type</span> {
         <span class="ident">any</span> <span class="op">|</span><span class="op">=</span> <span class="ident">rooted</span>.<span class="ident">insert</span>(<span class="ident">id</span>);
@@ -354,7 +354,7 @@
     <span class="ident">any</span>
 }
 
-<span class="kw">fn</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
         <span class="ident">rooted</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">result_id</span>)
     } <span class="kw">else</span> {
@@ -420,7 +420,7 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">instruction_is_pure</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">instruction_is_pure</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">use</span> <span class="ident">Op</span>::<span class="kw-2">*</span>;
     <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
         <span class="ident">Nop</span>
@@ -539,9 +539,9 @@
         <span class="op">|</span> <span class="ident">CopyLogical</span>
         <span class="op">|</span> <span class="ident">PtrEqual</span>
         <span class="op">|</span> <span class="ident">PtrNotEqual</span>
-        <span class="op">|</span> <span class="ident">PtrDiff</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-        <span class="ident">Variable</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">get</span>(<span class="number">0</span>) <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">Operand::StorageClass</span>(<span class="ident">StorageClass::Function</span>)),
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="op">|</span> <span class="ident">PtrDiff</span> =&gt; <span class="bool-val">true</span>,
+        <span class="ident">Variable</span> =&gt; <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">get</span>(<span class="number">0</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">Operand::StorageClass</span>(<span class="ident">StorageClass::Function</span>)),
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 </code></pre></div>

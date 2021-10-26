@@ -397,11 +397,11 @@
 <span class="doccomment">/// Trait for disassembling functionalities.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Disassemble</span> {
     <span class="doccomment">/// Disassembles the current object and returns the assembly code.</span>
-    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>;
+    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::ModuleHeader</span> {
-    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> (<span class="ident">major</span>, <span class="ident">minor</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">version</span>();
         <span class="kw">let</span> (<span class="ident">vendor</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">generator</span>();
         <span class="macro">format!</span>(
@@ -414,27 +414,27 @@
 <span class="macro">include!</span>(<span class="string">&quot;autogen_disas_operand.rs&quot;</span>);
 
 <span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::Operand</span> {
-    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">dr::Operand::IdMemorySemantics</span>(<span class="ident">v</span>) <span class="op">|</span> <span class="ident">dr::Operand::IdScope</span>(<span class="ident">v</span>) <span class="op">|</span> <span class="ident">dr::Operand::IdRef</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">dr::Operand::IdMemorySemantics</span>(<span class="ident">v</span>) <span class="op">|</span> <span class="ident">dr::Operand::IdScope</span>(<span class="ident">v</span>) <span class="op">|</span> <span class="ident">dr::Operand::IdRef</span>(<span class="ident">v</span>) =&gt; {
                 <span class="macro">format!</span>(<span class="string">&quot;%{}&quot;</span>, <span class="ident">v</span>)
             }
-            <span class="ident">dr::Operand::ImageOperands</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr::Operand::FPFastMathMode</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr::Operand::SelectionControl</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr::Operand::LoopControl</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr::Operand::MemorySemantics</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr::Operand::MemoryAccess</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr::Operand::KernelProfilingInfo</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>),
+            <span class="ident">dr::Operand::ImageOperands</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::FPFastMathMode</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::SelectionControl</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::LoopControl</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::MemorySemantics</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::MemoryAccess</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::KernelProfilingInfo</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="kw">_</span> =&gt; <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>),
         }
     }
 }
 
 <span class="doccomment">/// Disassembles each instruction in `insts` and joins them together</span>
 <span class="doccomment">/// with the given `delimiter`.</span>
-<span class="kw">fn</span> <span class="ident">disas_join</span>(<span class="ident">insts</span>: <span class="kw-2">&amp;</span>[<span class="kw">impl</span> <span class="ident">Disassemble</span>], <span class="ident">delimiter</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">fn</span> <span class="ident">disas_join</span>(<span class="ident">insts</span>: <span class="kw-2">&amp;</span>[<span class="kw">impl</span> <span class="ident">Disassemble</span>], <span class="ident">delimiter</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">String</span> {
     <span class="ident">insts</span>
         .<span class="ident">iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>())
@@ -443,7 +443,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::Instruction</span> {
-    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">space</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">operands</span>.<span class="ident">is_empty</span>() { <span class="string">&quot; &quot;</span> } <span class="kw">else</span> { <span class="string">&quot;&quot;</span> };
         <span class="macro">format!</span>(
             <span class="string">&quot;{rid}{opcode}{rtype}{space}{operands}&quot;</span>,
@@ -462,7 +462,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::Block</span> {
-    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">label</span>
             .<span class="ident">as_ref</span>()
@@ -476,7 +476,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::Function</span> {
-    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">def</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>());
         <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">end</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>());
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">parameters</span>.<span class="ident">is_empty</span>() {
@@ -500,7 +500,7 @@
 
 <span class="doccomment">/// Pushes the given value to the given container if the value is not empty.</span>
 <span class="macro">macro_rules!</span> <span class="ident">push</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">container</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>: <span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">container</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>: <span class="ident">expr</span>) =&gt; {
         <span class="kw">if</span> <span class="op">!</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>.<span class="ident">is_empty</span>() {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">container</span>.<span class="ident">push</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>)
         }
@@ -513,7 +513,7 @@
     <span class="doccomment">/// This method will try to link information together to be wise. E.g.,</span>
     <span class="doccomment">/// If the extended instruction set is recognized, the symbolic opcode for</span>
     <span class="doccomment">/// instructions in it will be shown.</span>
-    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ext_inst_set_tracker</span> <span class="op">=</span> <span class="ident">tracker::ExtInstSetTracker::new</span>();
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ext_inst_imports</span> {
             <span class="ident">ext_inst_set_tracker</span>.<span class="ident">track</span>(<span class="ident">i</span>)
@@ -547,10 +547,10 @@
                 );
                 <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">bb</span>.<span class="ident">instructions</span> {
                     <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-                        <span class="ident">spirv::Op::ExtInst</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">spirv::Op::ExtInst</span> =&gt; {
                             <span class="macro">push!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">disas_ext_inst</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">ext_inst_set_tracker</span>))
                         }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">push!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">inst</span>.<span class="ident">disassemble</span>()),
+                        <span class="kw">_</span> =&gt; <span class="macro">push!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">inst</span>.<span class="ident">disassemble</span>()),
                     }
                 }
             }
@@ -567,7 +567,7 @@
 <span class="kw">fn</span> <span class="ident">disas_ext_inst</span>(
     <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">dr::Instruction</span>,
     <span class="ident">ext_inst_set_tracker</span>: <span class="kw-2">&amp;</span><span class="ident">tracker::ExtInstSetTracker</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+) -&gt; <span class="ident">String</span> {
     <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
         <span class="kw">return</span> <span class="ident">inst</span>.<span class="ident">disassemble</span>();
     }

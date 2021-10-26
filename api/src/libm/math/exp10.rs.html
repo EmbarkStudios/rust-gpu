@@ -27,12 +27,12 @@
     <span class="number">1e0</span>, <span class="number">1e1</span>, <span class="number">1e2</span>, <span class="number">1e3</span>, <span class="number">1e4</span>, <span class="number">1e5</span>, <span class="number">1e6</span>, <span class="number">1e7</span>, <span class="number">1e8</span>, <span class="number">1e9</span>, <span class="number">1e10</span>, <span class="number">1e11</span>, <span class="number">1e12</span>, <span class="number">1e13</span>, <span class="number">1e14</span>, <span class="number">1e15</span>,
 ];
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exp10</span>(<span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exp10</span>(<span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">y</span>, <span class="ident">n</span>) <span class="op">=</span> <span class="ident">modf</span>(<span class="ident">x</span>);
     <span class="kw">let</span> <span class="ident">u</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">n</span>.<span class="ident">to_bits</span>();
     <span class="comment">/* fabs(n) &lt; 16 without raising invalid on nan */</span>
     <span class="kw">if</span> (<span class="ident">u</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">52</span> <span class="op">&amp;</span> <span class="number">0x7ff</span>) <span class="op">&lt;</span> <span class="number">0x3ff</span> <span class="op">+</span> <span class="number">4</span> {
-        <span class="kw">if</span> <span class="ident">y</span> <span class="op">=</span><span class="op">=</span> <span class="number">0.0</span> {
+        <span class="kw">if</span> <span class="ident">y</span> <span class="op">==</span> <span class="number">0.0</span> {
             <span class="kw">return</span> <span class="ident">P10</span>[((<span class="ident">n</span> <span class="kw">as</span> <span class="ident">isize</span>) <span class="op">+</span> <span class="number">15</span>) <span class="kw">as</span> <span class="ident">usize</span>];
         }
         <span class="ident">y</span> <span class="op">=</span> <span class="ident">exp2</span>(<span class="ident">LN10</span> <span class="op">*</span> <span class="ident">y</span>);

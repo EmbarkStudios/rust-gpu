@@ -639,7 +639,7 @@
 <span class="kw">use</span> <span class="ident">core::arch::wasm32::v128</span>;
 
 <span class="macro">macro_rules!</span> <span class="ident">define_mat3_struct</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) =&gt; {
         <span class="doccomment">/// A 3x3 column major matrix.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This 3x3 matrix type features convenience methods for creating and using linear and</span>
@@ -671,7 +671,7 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_mat3_methods</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">quat</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat4</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">quat</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat4</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) =&gt; {
         <span class="doccomment">/// A 3x3 matrix with all elements set to `0.0`.</span>
         <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ZERO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::ZERO</span>);
 
@@ -684,7 +684,7 @@
 
         <span class="doccomment">/// Creates a 3x3 matrix from three column vectors.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols</span>(<span class="ident">x_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>, <span class="ident">y_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>, <span class="ident">z_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols</span>(<span class="ident">x_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>, <span class="ident">y_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>, <span class="ident">z_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">Matrix3x3::from_cols</span>(<span class="ident">x_axis</span>.<span class="number">0</span>, <span class="ident">y_axis</span>.<span class="number">0</span>, <span class="ident">z_axis</span>.<span class="number">0</span>))
         }
 
@@ -692,14 +692,14 @@
         <span class="doccomment">/// If your data is stored in row major you will need to `transpose` the returned</span>
         <span class="doccomment">/// matrix.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_array</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_array</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>]) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">Matrix3x3::from_cols_array</span>(<span class="ident">m</span>))
         }
 
         <span class="doccomment">/// Creates a `[S; 9]` array storing data in column major order.</span>
         <span class="doccomment">/// If you require data in row major order `transpose` the matrix first.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_cols_array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>] {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_cols_array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>] {
             <span class="self">self</span>.<span class="number">0</span>.<span class="ident">to_cols_array</span>()
         }
 
@@ -707,14 +707,14 @@
         <span class="doccomment">/// If your data is in row major order you will need to `transpose` the returned</span>
         <span class="doccomment">/// matrix.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_array_2d</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span>[[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">3</span>]; <span class="number">3</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_array_2d</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span>[[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">3</span>]; <span class="number">3</span>]) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">Matrix3x3::from_cols_array_2d</span>(<span class="ident">m</span>))
         }
 
         <span class="doccomment">/// Creates a `[[S; 3]; 3]` 2D array storing data in column major order.</span>
         <span class="doccomment">/// If you require data in row major order `transpose` the matrix first.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_cols_array_2d</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">3</span>]; <span class="number">3</span>] {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_cols_array_2d</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">3</span>]; <span class="number">3</span>] {
             <span class="self">self</span>.<span class="number">0</span>.<span class="ident">to_cols_array_2d</span>()
         }
 
@@ -722,12 +722,12 @@
         <span class="doccomment">/// The resulting matrix is a 3D scale transfom.</span>
         <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;scale&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_diagonal</span>(<span class="ident">diagonal</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_diagonal</span>(<span class="ident">diagonal</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::from_diagonal</span>(<span class="ident">diagonal</span>.<span class="number">0</span>))
         }
 
         <span class="doccomment">/// Creates a 3x3 matrix from a 4x4 matrix, discarding the 3rd row and column.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat4</span>(<span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat4</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat4</span>(<span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat4</span>) -&gt; <span class="self">Self</span> {
             <span class="ident"><span class="self">Self</span>::from_cols</span>(
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>(<span class="ident">m</span>.<span class="ident">x_axis</span>.<span class="number">0</span>.<span class="ident">into</span>()),
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>(<span class="ident">m</span>.<span class="ident">y_axis</span>.<span class="number">0</span>.<span class="ident">into</span>()),
@@ -741,7 +741,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Will panic if `rotation` is not normalized when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_quat</span>(<span class="ident">rotation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">quat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_quat</span>(<span class="ident">rotation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">quat</span>) -&gt; <span class="self">Self</span> {
             <span class="comment">// TODO: SIMD?</span>
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::from_quaternion</span>(<span class="ident">rotation</span>.<span class="number">0</span>.<span class="ident">into</span>()))
         }
@@ -753,33 +753,33 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Will panic if `axis` is not normalized when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_axis_angle</span>(<span class="ident">axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>, <span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_axis_angle</span>(<span class="ident">axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>, <span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">FloatMatrix3x3::from_axis_angle</span>(<span class="ident">axis</span>.<span class="number">0</span>, <span class="ident">angle</span>))
         }
 
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
         <span class="doccomment">/// Creates a 3D rotation matrix from the given euler rotation sequence and the angles (in</span>
         <span class="doccomment">/// radians).</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_euler</span>(<span class="ident">order</span>: <span class="ident">EulerRot</span>, <span class="ident">a</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">b</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">c</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_euler</span>(<span class="ident">order</span>: <span class="ident">EulerRot</span>, <span class="ident">a</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">b</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">c</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">quat</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">quat::from_euler</span>(<span class="ident">order</span>, <span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>);
             <span class="ident"><span class="self">Self</span>::from_quat</span>(<span class="ident">quat</span>)
         }
 
         <span class="doccomment">/// Creates a 3D rotation matrix from `angle` (in radians) around the x axis.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_rotation_x</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_rotation_x</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::from_rotation_x</span>(<span class="ident">angle</span>))
         }
 
         <span class="doccomment">/// Creates a 3D rotation matrix from `angle` (in radians) around the y axis.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_rotation_y</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_rotation_y</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::from_rotation_y</span>(<span class="ident">angle</span>))
         }
 
         <span class="doccomment">/// Creates a 3D rotation matrix from `angle` (in radians) around the z axis.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_rotation_z</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_rotation_z</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::from_rotation_z</span>(<span class="ident">angle</span>))
         }
 
@@ -788,7 +788,7 @@
         <span class="doccomment">/// The resulting matrix can be used to transform 2D points and vectors. See</span>
         <span class="doccomment">/// [`Self::transform_point2()`] and [`Self::transform_vector2()`].</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_translation</span>(<span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_translation</span>(<span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">Matrix3x3::from_translation</span>(<span class="ident">translation</span>.<span class="number">0</span>))
         }
 
@@ -798,7 +798,7 @@
         <span class="doccomment">/// The resulting matrix can be used to transform 2D points and vectors. See</span>
         <span class="doccomment">/// [`Self::transform_point2()`] and [`Self::transform_vector2()`].</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_angle</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_angle</span>(<span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">FloatMatrix3x3::from_angle</span>(<span class="ident">angle</span>))
         }
 
@@ -808,7 +808,7 @@
         <span class="doccomment">/// The resulting matrix can be used to transform 2D points and vectors. See</span>
         <span class="doccomment">/// [`Self::transform_point2()`] and [`Self::transform_vector2()`].</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scale_angle_translation</span>(<span class="ident">scale</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>, <span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scale_angle_translation</span>(<span class="ident">scale</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>, <span class="ident">angle</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">translation</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">FloatMatrix3x3::from_scale_angle_translation</span>(
                 <span class="ident">scale</span>.<span class="number">0</span>,
                 <span class="ident">angle</span>,
@@ -825,7 +825,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Will panic if all elements of `scale` are zero when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scale</span>(<span class="ident">scale</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scale</span>(<span class="ident">scale</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">Matrix3x3::from_scale</span>(<span class="ident">scale</span>.<span class="number">0</span>))
         }
 
@@ -834,7 +834,7 @@
         <span class="doccomment">/// The resulting matrix can be used to transform 2D points and vectors. See</span>
         <span class="doccomment">/// [`Self::transform_point2()`] and [`Self::transform_vector2()`].</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat2</span>(<span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_mat2</span>(<span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2</span>) -&gt; <span class="self">Self</span> {
             <span class="ident"><span class="self">Self</span>::from_cols</span>((<span class="ident">m</span>.<span class="ident">x_axis</span>, <span class="number">0.0</span>).<span class="ident">into</span>(), (<span class="ident">m</span>.<span class="ident">y_axis</span>, <span class="number">0.0</span>).<span class="ident">into</span>(), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a::Z</span>)
         }
 
@@ -844,7 +844,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Panics if `slice` is less than 9 elements long.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_slice</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_cols_slice</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">Matrix3x3::from_cols_slice</span>(<span class="ident">slice</span>))
         }
 
@@ -864,12 +864,12 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Panics if `index` is greater than 2.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">col</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">col</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span> {
             <span class="kw">match</span> <span class="ident">index</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">x_axis</span>,
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">y_axis</span>,
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">z_axis</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;index out of bounds&quot;</span>),
+                <span class="number">0</span> =&gt; <span class="self">self</span>.<span class="ident">x_axis</span>,
+                <span class="number">1</span> =&gt; <span class="self">self</span>.<span class="ident">y_axis</span>,
+                <span class="number">2</span> =&gt; <span class="self">self</span>.<span class="ident">z_axis</span>,
+                <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;index out of bounds&quot;</span>),
             }
         }
 
@@ -879,12 +879,12 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Panics if `index` is greater than 2.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">col_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">col_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span> {
             <span class="kw">match</span> <span class="ident">index</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">x_axis</span>,
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">y_axis</span>,
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">z_axis</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;index out of bounds&quot;</span>),
+                <span class="number">0</span> =&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">x_axis</span>,
+                <span class="number">1</span> =&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">y_axis</span>,
+                <span class="number">2</span> =&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">z_axis</span>,
+                <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;index out of bounds&quot;</span>),
             }
         }
 
@@ -894,38 +894,38 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Panics if `index` is greater than 2.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">row</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">row</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span> {
             <span class="kw">match</span> <span class="ident">index</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a::new</span>(<span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">x</span>),
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a::new</span>(<span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">y</span>),
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a::new</span>(<span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">z</span>, <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">z</span>, <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">z</span>),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;index out of bounds&quot;</span>),
+                <span class="number">0</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a::new</span>(<span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">x</span>),
+                <span class="number">1</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a::new</span>(<span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">y</span>),
+                <span class="number">2</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a::new</span>(<span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">z</span>, <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">z</span>, <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">z</span>),
+                <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;index out of bounds&quot;</span>),
             }
         }
 
         <span class="doccomment">/// Returns `true` if, and only if, all elements are finite.</span>
         <span class="doccomment">/// If any element is either `NaN`, positive or negative infinity, this will return `false`.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_finite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_finite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
             <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">is_finite</span>()
         }
 
         <span class="doccomment">/// Returns `true` if any elements are `NaN`.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_nan</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_nan</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
             <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">is_nan</span>() <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">is_nan</span>() <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">is_nan</span>()
         }
 
         <span class="doccomment">/// Returns the transpose of `self`.</span>
         <span class="attribute">#[<span class="ident">must_use</span>]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transpose</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transpose</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">transpose</span>())
         }
 
         <span class="doccomment">/// Returns the determinant of `self`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">determinant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">determinant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="self">self</span>.<span class="number">0</span>.<span class="ident">determinant</span>()
         }
 
@@ -938,37 +938,37 @@
         <span class="doccomment">/// Will panic if the determinant of `self` is zero when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">must_use</span>]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inverse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inverse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">inverse</span>())
         }
 
         <span class="doccomment">/// Transforms a 3D vector.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_vec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_vec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">mul_vector</span>(<span class="ident">other</span>.<span class="number">0</span>.<span class="ident">into</span>()).<span class="ident">into</span>())
         }
 
         <span class="doccomment">/// Multiplies two 3x3 matrices.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_mat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_mat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">mul_matrix</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">0</span>))
         }
 
         <span class="doccomment">/// Adds two 3x3 matrices.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_mat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_mat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">add_matrix</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">0</span>))
         }
 
         <span class="doccomment">/// Subtracts two 3x3 matrices.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub_mat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub_mat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">sub_matrix</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">0</span>))
         }
 
         <span class="doccomment">/// Multiplies a 3x3 matrix by a scalar.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_scalar</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_scalar</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>))
         }
 
@@ -978,7 +978,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// This method assumes that `self` contains a valid affine transform.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_point2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_point2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2::from_cols</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>(<span class="self">self</span>.<span class="ident">x_axis</span>.<span class="number">0</span>.<span class="ident">into</span>()), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>(<span class="self">self</span>.<span class="ident">y_axis</span>.<span class="number">0</span>.<span class="ident">into</span>())) <span class="op">*</span> <span class="ident">other</span>
                 <span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>(<span class="self">self</span>.<span class="ident">z_axis</span>.<span class="number">0</span>.<span class="ident">into</span>())
         }
@@ -989,7 +989,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// This method assumes that `self` contains a valid affine transform.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_vector2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_vector2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat2::from_cols</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>(<span class="self">self</span>.<span class="ident">x_axis</span>.<span class="number">0</span>.<span class="ident">into</span>()), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec2</span>(<span class="self">self</span>.<span class="ident">y_axis</span>.<span class="number">0</span>.<span class="ident">into</span>())) <span class="op">*</span> <span class="ident">other</span>
         }
 
@@ -1003,17 +1003,17 @@
         <span class="doccomment">/// For more see</span>
         <span class="doccomment">/// [comparing floating point numbers](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">abs_diff_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>, <span class="ident">max_abs_diff</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">abs_diff_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>, <span class="ident">max_abs_diff</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="ident">bool</span> {
             <span class="self">self</span>.<span class="number">0</span>.<span class="ident">abs_diff_eq</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">0</span>, <span class="ident">max_abs_diff</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_mat3_traits</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">new</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">new</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>:<span class="ident">ident</span>) =&gt; {
         <span class="doccomment">/// Creates a 3x3 matrix from three column vectors.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">new</span>(<span class="ident">x_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>, <span class="ident">y_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>, <span class="ident">z_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">new</span>(<span class="ident">x_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>, <span class="ident">y_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>, <span class="ident">z_axis</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3::from_cols</span>(<span class="ident">x_axis</span>, <span class="ident">y_axis</span>, <span class="ident">z_axis</span>)
         }
 
@@ -1021,7 +1021,7 @@
 
         <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+            <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">x_axis</span>)
                     <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">y_axis</span>)
                     <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">z_axis</span>)
@@ -1031,28 +1031,28 @@
         <span class="kw">impl</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
             <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vec3a</span><span class="op">&gt;</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
+            <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
                 <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="self">Self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident"><span class="self">Self</span>::Target</span>) }
             }
         }
 
         <span class="kw">impl</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
+            <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
                 <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="self">Self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Target</span>) }
             }
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>))]</span>
         <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
-            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
                 <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;[{}, {}, {}]&quot;</span>, <span class="self">self</span>.<span class="ident">x_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>)
             }
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>))]</span>
         <span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
-            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
                 <span class="ident">fmt</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;$mat3&quot;</span>)
                     .<span class="ident">field</span>(<span class="string">&quot;x_axis&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">x_axis</span>)
                     .<span class="ident">field</span>(<span class="string">&quot;y_axis&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">y_axis</span>)
@@ -1064,11 +1064,11 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_mat3_traits_unsafe</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span>:<span class="ident">ident</span>) =&gt; {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spriv&quot;</span>))]</span>
         <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>] {
+            <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>] {
                 <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="self">Self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>]) }
             }
         }
@@ -1076,7 +1076,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spriv&quot;</span>))]</span>
         <span class="kw">impl</span> <span class="ident">AsMut</span><span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mat3</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>] {
+            <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>] {
                 <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="self">Self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="number">9</span>]) }
             }
         }
@@ -1091,18 +1091,18 @@
 
     <span class="doccomment">/// Transforms a `Vec3A`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_vec3a</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Vec3A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec3A</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_vec3a</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Vec3A</span>) -&gt; <span class="ident">Vec3A</span> {
         <span class="self">self</span>.<span class="ident">mul_vec3</span>(<span class="ident">other</span>.<span class="ident">into</span>()).<span class="ident">into</span>()
     }
 
     <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_dmat3()` instead&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DMat3</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DMat3</span> {
         <span class="self">self</span>.<span class="ident">as_dmat3</span>()
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dmat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DMat3</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dmat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DMat3</span> {
         <span class="ident">DMat3::from_cols</span>(
             <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">as_dvec3</span>(),
             <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">as_dvec3</span>(),
@@ -1116,7 +1116,7 @@
 <span class="kw">impl</span> <span class="ident">Mul</span><span class="op">&lt;</span><span class="ident">Vec3A</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Mat3</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Vec3A</span>;
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Vec3A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec3A</span> {
+    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Vec3A</span>) -&gt; <span class="ident">Vec3A</span> {
         <span class="self">self</span>.<span class="ident">mul_vec3a</span>(<span class="ident">other</span>)
     }
 }
@@ -1139,18 +1139,18 @@
 
     <span class="doccomment">/// Transforms a `Vec3A`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_vec3a</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Vec3A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec3A</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_vec3a</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Vec3A</span>) -&gt; <span class="ident">Vec3A</span> {
         <span class="ident">Vec3A</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">mul_vector</span>(<span class="ident">other</span>.<span class="number">0</span>))
     }
 
     <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_dmat3()` instead&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DMat3</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DMat3</span> {
         <span class="self">self</span>.<span class="ident">as_dmat3</span>()
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dmat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DMat3</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dmat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DMat3</span> {
         <span class="ident">DMat3::from_cols</span>(
             <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">as_dvec3</span>(),
             <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">as_dvec3</span>(),
@@ -1163,21 +1163,21 @@
 <span class="kw">impl</span> <span class="ident">Mul</span><span class="op">&lt;</span><span class="ident">Vec3</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Mat3A</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Vec3</span>;
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Vec3</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec3</span> {
+    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Vec3</span>) -&gt; <span class="ident">Vec3</span> {
         <span class="self">self</span>.<span class="ident">mul_vec3</span>(<span class="ident">other</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Mat3</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Mat3A</span> {
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="ident">Mat3</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="ident">Mat3</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">m</span>.<span class="number">0</span>.<span class="ident">into</span>())
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Mat3A</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Mat3</span> {
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="ident">Mat3A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="ident">Mat3A</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">m</span>.<span class="number">0</span>.<span class="ident">into</span>())
     }
 }
@@ -1190,12 +1190,12 @@
 
     <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_mat3()` instead&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Mat3</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Mat3</span> {
         <span class="self">self</span>.<span class="ident">as_mat3</span>()
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_mat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Mat3</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_mat3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Mat3</span> {
         <span class="ident">Mat3::from_cols</span>(
             <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">as_vec3</span>(),
             <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">as_vec3</span>(),

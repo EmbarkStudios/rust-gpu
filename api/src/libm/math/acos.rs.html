@@ -160,7 +160,7 @@
 <span class="kw">const</span> <span class="ident">QS3</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="op">-</span><span class="number">6.88283971605453293030e-01</span>; <span class="comment">/* 0xBFE6066C, 0x1B8D0159 */</span>
 <span class="kw">const</span> <span class="ident">QS4</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">7.70381505559019352791e-02</span>; <span class="comment">/* 0x3FB3B8C5, 0xB12E9282 */</span>
 
-<span class="kw">fn</span> <span class="ident">r</span>(<span class="ident">z</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">fn</span> <span class="ident">r</span>(<span class="ident">z</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PS0</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PS1</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PS2</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PS3</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PS4</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">PS5</span>)))));
     <span class="kw">let</span> <span class="ident">q</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QS1</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QS2</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QS3</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">QS4</span>)));
     <span class="ident">p</span> <span class="op">/</span> <span class="ident">q</span>
@@ -172,7 +172,7 @@
 <span class="doccomment">/// Arguments must be in the range -1 to 1.</span>
 <span class="doccomment">/// Returns values in radians, in the range of 0 to pi.</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">acos</span>(<span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">acos</span>(<span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> <span class="ident">x1p_120f</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3870000000000000</span>); <span class="comment">// 0x1p-120 === 2 ^ -120</span>
     <span class="kw">let</span> <span class="ident">z</span>: <span class="ident">f64</span>;
     <span class="kw">let</span> <span class="ident">w</span>: <span class="ident">f64</span>;
@@ -188,7 +188,7 @@
     <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x3ff00000</span> {
         <span class="kw">let</span> <span class="ident">lx</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>() <span class="kw">as</span> <span class="ident">u32</span>;
 
-        <span class="kw">if</span> ((<span class="ident">ix</span> <span class="op">-</span> <span class="number">0x3ff00000</span>) <span class="op">|</span> <span class="ident">lx</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> ((<span class="ident">ix</span> <span class="op">-</span> <span class="number">0x3ff00000</span>) <span class="op">|</span> <span class="ident">lx</span>) <span class="op">==</span> <span class="number">0</span> {
             <span class="comment">/* acos(1)=0, acos(-1)=pi */</span>
             <span class="kw">if</span> (<span class="ident">hx</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="kw">return</span> <span class="number">2.</span> <span class="op">*</span> <span class="ident">PIO2_HI</span> <span class="op">+</span> <span class="ident">x1p_120f</span>;

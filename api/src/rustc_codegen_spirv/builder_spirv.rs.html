@@ -766,15 +766,15 @@
 }
 
 <span class="kw">impl</span> <span class="ident">SpirvValue</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">const_fold_load</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">const_fold_load</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">kind</span> {
-            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>) <span class="op">|</span> <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>) <span class="op">|</span> <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)<span class="question-mark">?</span>.<span class="ident">clone</span>();
                 <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">val</span> {
-                    <span class="ident">SpirvConst::PtrTo</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">SpirvConst::PtrTo</span> { <span class="ident">pointee</span> } =&gt; {
                         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="self">self</span>.<span class="ident">ty</span>) {
-                            <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
-                            <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug!</span>(<span class="string">&quot;load called on value that wasn&#39;t a pointer: {:?}&quot;</span>, <span class="ident">ty</span>),
+                            <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } =&gt; <span class="ident">pointee</span>,
+                            <span class="ident">ty</span> =&gt; <span class="macro">bug!</span>(<span class="string">&quot;load called on value that wasn&#39;t a pointer: {:?}&quot;</span>, <span class="ident">ty</span>),
                         };
                         <span class="comment">// FIXME(eddyb) deduplicate this `if`-`else` and its other copies.</span>
                         <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">legal</span>.<span class="ident">is_ok</span>() {
@@ -784,35 +784,35 @@
                         };
                         <span class="prelude-val">Some</span>(<span class="ident">SpirvValue</span> { <span class="ident">kind</span>, <span class="ident">ty</span> })
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
                 }
             }
 
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
         }
     }
 
     <span class="comment">// Important: we *cannot* use bx.emit() here, because this is called in</span>
     <span class="comment">// contexts where the emitter is already locked. Doing so may cause subtle</span>
     <span class="comment">// rare bugs.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def</span>(<span class="self">self</span>, <span class="ident">bx</span>: <span class="kw-2">&amp;</span><span class="ident">builder::Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def</span>(<span class="self">self</span>, <span class="ident">bx</span>: <span class="kw-2">&amp;</span><span class="ident">builder::Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">Word</span> {
         <span class="self">self</span>.<span class="ident">def_with_span</span>(<span class="ident">bx</span>, <span class="ident">bx</span>.<span class="ident">span</span>())
     }
 
     <span class="comment">// def and def_cx are separated, because Builder has a span associated with</span>
     <span class="comment">// what it&#39;s currently emitting.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_cx</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_cx</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">Word</span> {
         <span class="self">self</span>.<span class="ident">def_with_span</span>(<span class="ident">cx</span>, <span class="ident">DUMMY_SP</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_with_span</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_with_span</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>) -&gt; <span class="ident">Word</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">kind</span> {
-            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">id</span>,
+            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>) =&gt; <span class="ident">id</span>,
 
-            <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>()[<span class="kw-2">&amp;</span><span class="ident">id</span>];
                 <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">legal</span>.<span class="ident">unwrap_err</span>() {
-                    <span class="ident">IllegalConst::Shallow</span>(<span class="ident">cause</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">IllegalConst::Shallow</span>(<span class="ident">cause</span>) =&gt; {
                         <span class="kw">if</span> <span class="kw">let</span> (
                             <span class="ident">LeafIllegalConst::CompositeContainsPtrTo</span>,
                             <span class="ident">SpirvConst::Composite</span>(<span class="ident">_fields</span>),
@@ -830,7 +830,7 @@
                         <span class="ident">cause</span>.<span class="ident">message</span>()
                     }
 
-                    <span class="ident">IllegalConst::Indirect</span>(<span class="ident">cause</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cause</span>.<span class="ident">message</span>(),
+                    <span class="ident">IllegalConst::Indirect</span>(<span class="ident">cause</span>) =&gt; <span class="ident">cause</span>.<span class="ident">message</span>(),
                 };
 
                 <span class="comment">// HACK(eddyb) we don&#39;t know whether this constant originated</span>
@@ -840,7 +840,7 @@
                 <span class="ident">id</span>
             }
 
-            <span class="ident">SpirvValueKind::IllegalTypeUsed</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvValueKind::IllegalTypeUsed</span>(<span class="ident">id</span>) =&gt; {
                 <span class="ident">cx</span>.<span class="ident">tcx</span>
                     .<span class="ident">sess</span>
                     .<span class="ident">struct_span_err</span>(<span class="ident">span</span>, <span class="string">&quot;Can&#39;t use type as a value&quot;</span>)
@@ -850,7 +850,7 @@
                 <span class="ident">id</span>
             }
 
-            <span class="ident">SpirvValueKind::FnAddr</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvValueKind::FnAddr</span> { .. } =&gt; {
                 <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">is_system_crate</span>() {
                     <span class="ident">cx</span>.<span class="ident">builder</span>
                         .<span class="ident">const_to_id</span>
@@ -875,7 +875,7 @@
                 <span class="ident">original_ptr</span>: <span class="kw">_</span>,
                 <span class="ident">original_pointee_ty</span>,
                 <span class="ident">zombie_target_undef</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; {
                 <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">is_system_crate</span>() {
                     <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(
                         <span class="ident">zombie_target_undef</span>,
@@ -902,11 +902,11 @@
 }
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SpirvValueExt</span> {
-    <span class="kw">fn</span> <span class="ident">with_type</span>(<span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span>;
+    <span class="kw">fn</span> <span class="ident">with_type</span>(<span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) -&gt; <span class="ident">SpirvValue</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">SpirvValueExt</span> <span class="kw">for</span> <span class="ident">Word</span> {
-    <span class="kw">fn</span> <span class="ident">with_type</span>(<span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+    <span class="kw">fn</span> <span class="ident">with_type</span>(<span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) -&gt; <span class="ident">SpirvValue</span> {
         <span class="ident">SpirvValue</span> {
             <span class="ident">kind</span>: <span class="ident">SpirvValueKind::Def</span>(<span class="self">self</span>),
             <span class="ident">ty</span>,
@@ -959,9 +959,9 @@
 }
 
 <span class="kw">impl</span> <span class="ident">LeafIllegalConst</span> {
-    <span class="kw">fn</span> <span class="ident">message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::CompositeContainsPtrTo</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="self">Self</span>::CompositeContainsPtrTo</span> =&gt; {
                 <span class="string">&quot;constant arrays/structs cannot contain pointers to other constants&quot;</span>
             }
         }
@@ -1033,7 +1033,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BuilderSpirv</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">Symbols</span>, <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">SpirvTarget</span>, <span class="ident">features</span>: <span class="kw-2">&amp;</span>[<span class="ident">TargetFeature</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">Symbols</span>, <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">SpirvTarget</span>, <span class="ident">features</span>: <span class="kw-2">&amp;</span>[<span class="ident">TargetFeature</span>]) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">target</span>.<span class="ident">spirv_version</span>();
         <span class="kw">let</span> <span class="ident">memory_model</span> <span class="op">=</span> <span class="ident">target</span>.<span class="ident">memory_model</span>();
 
@@ -1063,17 +1063,17 @@
 
         <span class="kw">for</span> <span class="ident">feature</span> <span class="kw">in</span> <span class="ident">features</span> {
             <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">feature</span> {
-                <span class="ident">TargetFeature::Capability</span>(<span class="ident">cap</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TargetFeature::Capability</span>(<span class="ident">cap</span>) =&gt; {
                     <span class="ident">add_cap</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">enabled_capabilities</span>, <span class="ident">cap</span>);
                 }
-                <span class="ident">TargetFeature::Extension</span>(<span class="ident">ext</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TargetFeature::Extension</span>(<span class="ident">ext</span>) =&gt; {
                     <span class="ident">add_ext</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">enabled_extensions</span>, <span class="ident">ext</span>);
                 }
             }
         }
 
         <span class="ident">add_cap</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">enabled_capabilities</span>, <span class="ident">Capability::Shader</span>);
-        <span class="kw">if</span> <span class="ident">memory_model</span> <span class="op">=</span><span class="op">=</span> <span class="ident">MemoryModel::Vulkan</span> {
+        <span class="kw">if</span> <span class="ident">memory_model</span> <span class="op">==</span> <span class="ident">MemoryModel::Vulkan</span> {
             <span class="kw">if</span> <span class="ident">version</span> <span class="op">&lt;</span> (<span class="number">1</span>, <span class="number">5</span>) {
                 <span class="ident">add_ext</span>(
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>,
@@ -1103,11 +1103,11 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Module</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="self">self</span>) -&gt; <span class="ident">Module</span> {
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">into_inner</span>().<span class="ident">module</span>()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dump_module_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dump_module_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow</span>().<span class="ident">module_ref</span>().<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">rspirv::dr::ModuleHeader::new</span>(<span class="number">0</span>);
         <span class="ident">header</span>.<span class="ident">set_version</span>(<span class="number">0</span>, <span class="number">0</span>);
@@ -1131,7 +1131,7 @@
     }
 
     <span class="doccomment">/// See comment on `BuilderCursor`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cursor</span>: <span class="ident">BuilderCursor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Builder</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cursor</span>: <span class="ident">BuilderCursor</span>) -&gt; <span class="ident">RefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Builder</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow_mut</span>();
         <span class="comment">// select_function does bounds checks and other relatively expensive things, so don&#39;t just call it</span>
         <span class="comment">// unconditionally.</span>
@@ -1144,18 +1144,18 @@
         <span class="ident">builder</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">capability</span>: <span class="ident">Capability</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">capability</span>: <span class="ident">Capability</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">enabled_capabilities</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">capability</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_extension</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">extension</span>: <span class="ident">Symbol</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_extension</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">extension</span>: <span class="ident">Symbol</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">enabled_extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">extension</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_function_by_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuilderCursor</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_function_by_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Word</span>) -&gt; <span class="ident">BuilderCursor</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow_mut</span>();
         <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">func</span>) <span class="kw">in</span> <span class="ident">builder</span>.<span class="ident">module_ref</span>().<span class="ident">functions</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="ident">func</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">result_id</span>) <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) {
+            <span class="kw">if</span> <span class="ident">func</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">result_id</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) {
                 <span class="ident">builder</span>.<span class="ident">select_function</span>(<span class="prelude-val">Some</span>(<span class="ident">index</span>)).<span class="ident">unwrap</span>();
                 <span class="kw">return</span> <span class="ident">BuilderCursor</span> {
                     <span class="ident">function</span>: <span class="prelude-val">Some</span>(<span class="ident">index</span>),
@@ -1167,7 +1167,7 @@
         <span class="macro">bug!</span>(<span class="string">&quot;Function not found: {}&quot;</span>, <span class="ident">id</span>);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_constant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>, <span class="ident">val</span>: <span class="ident">SpirvConst</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_constant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>, <span class="ident">val</span>: <span class="ident">SpirvConst</span>) -&gt; <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">val_with_type</span> <span class="op">=</span> <span class="ident">WithType</span> { <span class="ident">ty</span>, <span class="ident">val</span> };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>(<span class="ident">BuilderCursor::default</span>());
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">const_to_id</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">val_with_type</span>) {
@@ -1181,11 +1181,11 @@
         }
         <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">val_with_type</span>.<span class="ident">val</span>;
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">val</span> {
-            <span class="ident">SpirvConst::U32</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">builder</span>.<span class="ident">constant_u32</span>(<span class="ident">ty</span>, <span class="ident">v</span>),
-            <span class="ident">SpirvConst::U64</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">builder</span>.<span class="ident">constant_u64</span>(<span class="ident">ty</span>, <span class="ident">v</span>),
-            <span class="ident">SpirvConst::F32</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">builder</span>.<span class="ident">constant_f32</span>(<span class="ident">ty</span>, <span class="ident">f32::from_bits</span>(<span class="ident">v</span>)),
-            <span class="ident">SpirvConst::F64</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">builder</span>.<span class="ident">constant_f64</span>(<span class="ident">ty</span>, <span class="ident">f64::from_bits</span>(<span class="ident">v</span>)),
-            <span class="ident">SpirvConst::Bool</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvConst::U32</span>(<span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_u32</span>(<span class="ident">ty</span>, <span class="ident">v</span>),
+            <span class="ident">SpirvConst::U64</span>(<span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_u64</span>(<span class="ident">ty</span>, <span class="ident">v</span>),
+            <span class="ident">SpirvConst::F32</span>(<span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_f32</span>(<span class="ident">ty</span>, <span class="ident">f32::from_bits</span>(<span class="ident">v</span>)),
+            <span class="ident">SpirvConst::F64</span>(<span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_f64</span>(<span class="ident">ty</span>, <span class="ident">f64::from_bits</span>(<span class="ident">v</span>)),
+            <span class="ident">SpirvConst::Bool</span>(<span class="ident">v</span>) =&gt; {
                 <span class="kw">if</span> <span class="ident">v</span> {
                     <span class="ident">builder</span>.<span class="ident">constant_true</span>(<span class="ident">ty</span>)
                 } <span class="kw">else</span> {
@@ -1193,12 +1193,12 @@
                 }
             }
 
-            <span class="ident">SpirvConst::Null</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">builder</span>.<span class="ident">constant_null</span>(<span class="ident">ty</span>),
-            <span class="ident">SpirvConst::Undef</span> <span class="op">|</span> <span class="ident">SpirvConst::ZombieUndefForFnAddr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">builder</span>.<span class="ident">undef</span>(<span class="ident">ty</span>, <span class="prelude-val">None</span>),
+            <span class="ident">SpirvConst::Null</span> =&gt; <span class="ident">builder</span>.<span class="ident">constant_null</span>(<span class="ident">ty</span>),
+            <span class="ident">SpirvConst::Undef</span> <span class="op">|</span> <span class="ident">SpirvConst::ZombieUndefForFnAddr</span> =&gt; <span class="ident">builder</span>.<span class="ident">undef</span>(<span class="ident">ty</span>, <span class="prelude-val">None</span>),
 
-            <span class="ident">SpirvConst::Composite</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">builder</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">copied</span>()),
+            <span class="ident">SpirvConst::Composite</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">copied</span>()),
 
-            <span class="ident">SpirvConst::PtrTo</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvConst::PtrTo</span> { <span class="ident">pointee</span> } =&gt; {
                 <span class="ident">builder</span>.<span class="ident">variable</span>(<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">StorageClass::Private</span>, <span class="prelude-val">Some</span>(<span class="ident">pointee</span>))
             }
         };
@@ -1208,18 +1208,18 @@
             <span class="op">|</span> <span class="ident">SpirvConst::U64</span>(<span class="kw">_</span>)
             <span class="op">|</span> <span class="ident">SpirvConst::F32</span>(<span class="kw">_</span>)
             <span class="op">|</span> <span class="ident">SpirvConst::F64</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">SpirvConst::Bool</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+            <span class="op">|</span> <span class="ident">SpirvConst::Bool</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
 
-            <span class="ident">SpirvConst::Null</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvConst::Null</span> =&gt; {
                 <span class="comment">// FIXME(eddyb) check that the type supports `OpConstantNull`.</span>
                 <span class="prelude-val">Ok</span>(())
             }
-            <span class="ident">SpirvConst::Undef</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvConst::Undef</span> =&gt; {
                 <span class="comment">// FIXME(eddyb) check that the type supports `OpUndef`.</span>
                 <span class="prelude-val">Ok</span>(())
             }
 
-            <span class="ident">SpirvConst::ZombieUndefForFnAddr</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvConst::ZombieUndefForFnAddr</span> =&gt; {
                 <span class="comment">// This can be considered legal as it&#39;s already marked as zombie.</span>
                 <span class="comment">// FIXME(eddyb) is it possible for the original zombie to lack a</span>
                 <span class="comment">// span, and should we go through `IllegalConst` in order to be</span>
@@ -1227,22 +1227,22 @@
                 <span class="prelude-val">Ok</span>(())
             }
 
-            <span class="ident">SpirvConst::Composite</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="prelude-val">Ok</span>(()), <span class="op">|</span><span class="ident">composite_legal</span>, <span class="ident">field</span><span class="op">|</span> {
+            <span class="ident">SpirvConst::Composite</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="prelude-val">Ok</span>(()), <span class="op">|</span><span class="ident">composite_legal</span>, <span class="ident">field</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">field_entry</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>()[<span class="ident">field</span>];
                 <span class="kw">let</span> <span class="ident">field_legal_in_composite</span> <span class="op">=</span> <span class="ident">field_entry</span>.<span class="ident">legal</span>.<span class="ident">and_then</span>(<span class="op">|</span>()<span class="op">|</span> {
                     <span class="comment">// `field` is itself some legal `SpirvConst`, but can we have</span>
                     <span class="comment">// it as part of an `OpConstantComposite`?</span>
                     <span class="kw">match</span> <span class="ident">field_entry</span>.<span class="ident">val</span> {
-                        <span class="ident">SpirvConst::PtrTo</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Shallow</span>(
+                        <span class="ident">SpirvConst::PtrTo</span> { .. } =&gt; <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Shallow</span>(
                             <span class="ident">LeafIllegalConst::CompositeContainsPtrTo</span>,
                         )),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+                        <span class="kw">_</span> =&gt; <span class="prelude-val">Ok</span>(()),
                     }
                 });
 
                 <span class="kw">match</span> (<span class="ident">composite_legal</span>, <span class="ident">field_legal_in_composite</span>) {
-                    (<span class="prelude-val">Ok</span>(()), <span class="prelude-val">Ok</span>(())) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
-                    (<span class="prelude-val">Err</span>(<span class="ident">illegal</span>), <span class="prelude-val">Ok</span>(())) <span class="op">|</span> (<span class="prelude-val">Ok</span>(()), <span class="prelude-val">Err</span>(<span class="ident">illegal</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">illegal</span>),
+                    (<span class="prelude-val">Ok</span>(()), <span class="prelude-val">Ok</span>(())) =&gt; <span class="prelude-val">Ok</span>(()),
+                    (<span class="prelude-val">Err</span>(<span class="ident">illegal</span>), <span class="prelude-val">Ok</span>(())) <span class="op">|</span> (<span class="prelude-val">Ok</span>(()), <span class="prelude-val">Err</span>(<span class="ident">illegal</span>)) =&gt; <span class="prelude-val">Err</span>(<span class="ident">illegal</span>),
 
                     <span class="comment">// Combining two causes of an illegal `SpirvConst` has to</span>
                     <span class="comment">// take into account which is &quot;worse&quot;, i.e. which imposes</span>
@@ -1251,17 +1251,17 @@
                     <span class="comment">// materialized at runtime in the same way `Shallow` can be.</span>
                     (<span class="prelude-val">Err</span>(<span class="ident">illegal</span> @ <span class="ident">IllegalConst::Indirect</span>(<span class="kw">_</span>)), <span class="prelude-val">Err</span>(<span class="kw">_</span>))
                     <span class="op">|</span> (<span class="prelude-val">Err</span>(<span class="kw">_</span>), <span class="prelude-val">Err</span>(<span class="ident">illegal</span> @ <span class="ident">IllegalConst::Indirect</span>(<span class="kw">_</span>)))
-                    <span class="op">|</span> (<span class="prelude-val">Err</span>(<span class="ident">illegal</span> @ <span class="ident">IllegalConst::Shallow</span>(<span class="kw">_</span>)), <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Shallow</span>(<span class="kw">_</span>))) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="op">|</span> (<span class="prelude-val">Err</span>(<span class="ident">illegal</span> @ <span class="ident">IllegalConst::Shallow</span>(<span class="kw">_</span>)), <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Shallow</span>(<span class="kw">_</span>))) =&gt; {
                         <span class="prelude-val">Err</span>(<span class="ident">illegal</span>)
                     }
                 }
             }),
 
-            <span class="ident">SpirvConst::PtrTo</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>()[<span class="kw-2">&amp;</span><span class="ident">pointee</span>].<span class="ident">legal</span> {
-                <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+            <span class="ident">SpirvConst::PtrTo</span> { <span class="ident">pointee</span> } =&gt; <span class="kw">match</span> <span class="self">self</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>()[<span class="kw-2">&amp;</span><span class="ident">pointee</span>].<span class="ident">legal</span> {
+                <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
 
                 <span class="comment">// `Shallow` becomes `Indirect` when placed behind a pointer.</span>
-                <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Shallow</span>(<span class="ident">cause</span>) <span class="op">|</span> <span class="ident">IllegalConst::Indirect</span>(<span class="ident">cause</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Shallow</span>(<span class="ident">cause</span>) <span class="op">|</span> <span class="ident">IllegalConst::Indirect</span>(<span class="ident">cause</span>)) =&gt; {
                     <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Indirect</span>(<span class="ident">cause</span>))
                 }
             },
@@ -1291,28 +1291,28 @@
         <span class="ident">SpirvValue</span> { <span class="ident">kind</span>, <span class="ident">ty</span> }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_const</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">SpirvValue</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SpirvConst</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_const</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">SpirvValue</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SpirvConst</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">def</span>.<span class="ident">kind</span> {
-            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>) <span class="op">|</span> <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>) <span class="op">|</span> <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>) =&gt; {
                 <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)<span class="question-mark">?</span>.<span class="ident">val</span>.<span class="ident">clone</span>())
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_const_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">SpirvValue</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_const_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">SpirvValue</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_const</span>(<span class="ident">def</span>)<span class="question-mark">?</span> {
-            <span class="ident">SpirvConst::U32</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u64</span>),
-            <span class="ident">SpirvConst::U64</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">v</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">SpirvConst::U32</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u64</span>),
+            <span class="ident">SpirvConst::U64</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
+            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="ident">String</span>) -&gt; <span class="ident">Word</span> {
         <span class="kw">use</span> <span class="ident">std::collections::hash_map::Entry</span>;
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">string_cache</span>.<span class="ident">borrow_mut</span>().<span class="ident">entry</span>(<span class="ident">s</span>) {
-            <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">entry</span>.<span class="ident">get</span>(),
-            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; <span class="kw-2">*</span><span class="ident">entry</span>.<span class="ident">get</span>(),
+            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">key</span>().<span class="ident">clone</span>();
                 <span class="kw-2">*</span><span class="ident">entry</span>.<span class="ident">insert</span>(<span class="self">self</span>.<span class="ident">builder</span>(<span class="ident">Default::default</span>()).<span class="ident">string</span>(<span class="ident">key</span>))
             }
@@ -1327,7 +1327,7 @@
             .<span class="ident">iter</span>()
             .<span class="ident">enumerate</span>()
             .<span class="ident">find_map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">inst</span>)<span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">result_id</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">global</span>) {
+                <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">result_id</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">global</span>) {
                     <span class="prelude-val">Some</span>(<span class="ident">index</span>)
                 } <span class="kw">else</span> {
                     <span class="prelude-val">None</span>
@@ -1347,9 +1347,9 @@
         <span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_block_by_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuilderCursor</span> {
-        <span class="kw">fn</span> <span class="ident">block_matches</span>(<span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">Block</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-            <span class="ident">block</span>.<span class="ident">label</span>.<span class="ident">as_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">result_id</span>) <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_block_by_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Word</span>) -&gt; <span class="ident">BuilderCursor</span> {
+        <span class="kw">fn</span> <span class="ident">block_matches</span>(<span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">Block</span>, <span class="ident">id</span>: <span class="ident">Word</span>) -&gt; <span class="ident">bool</span> {
+            <span class="ident">block</span>.<span class="ident">label</span>.<span class="ident">as_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">result_id</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>)
         }
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow_mut</span>();

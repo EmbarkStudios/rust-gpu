@@ -242,9 +242,17 @@
 <span id="242">242</span>
 <span id="243">243</span>
 <span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vector::Vector</span>;
 
 <span class="doccomment">/// Abstract trait representing a SPIR-V floating point type.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Safety</span>
+<span class="doccomment">/// Implementing this trait on non-primitive-float types breaks assumptions of other unsafe code,</span>
+<span class="doccomment">/// and should not be done.</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">trait</span> <span class="ident">Float</span>: <span class="ident">num_traits::Float</span> <span class="op">+</span> <span class="ident"><span class="kw">crate</span>::scalar::Scalar</span> <span class="op">+</span> <span class="ident">Default</span> {
     <span class="kw">const</span> <span class="ident">WIDTH</span>: <span class="ident">usize</span>;
 }
@@ -260,7 +268,7 @@
 <span class="doccomment">/// Converts two f32 values (floats) into two f16 values (halfs). The result is a u32, with the low</span>
 <span class="doccomment">/// 16 bits being the first f16, and the high 16 bits being the second f16.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec2_to_f16x2</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec2_to_f16x2</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>) -&gt; <span class="ident">u32</span> {
     <span class="kw">let</span> <span class="ident">result</span>;
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(
@@ -279,7 +287,7 @@
 <span class="doccomment">/// Converts two f16 values (halfs) into two f32 values (floats). The parameter is a u32, with the</span>
 <span class="doccomment">/// low 16 bits being the first f16, and the high 16 bits being the second f16.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">f16x2_to_vec2</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">f16x2_to_vec2</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) -&gt; <span class="ident">V</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(
@@ -311,7 +319,7 @@
 <span class="doccomment">/// Converts an f32 (float) into an f16 (half). The result is a u32, not a u16, due to GPU support</span>
 <span class="doccomment">/// for u16 not being universal - the upper 16 bits will always be zero.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">f32_to_f16</span>(<span class="ident">float</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">f32_to_f16</span>(<span class="ident">float</span>: <span class="ident">f32</span>) -&gt; <span class="ident">u32</span> {
     <span class="ident">vec2_to_f16x2</span>(<span class="ident">F32x2</span> { <span class="ident">x</span>: <span class="ident">float</span>, <span class="ident">y</span>: <span class="number">0.0</span> })
 }
 
@@ -319,7 +327,7 @@
 <span class="doccomment">/// not being universal - the upper 16 bits are ignored.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;glam&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">f16_to_f32</span>(<span class="ident">packed</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">f16_to_f32</span>(<span class="ident">packed</span>: <span class="ident">u32</span>) -&gt; <span class="ident">f32</span> {
     <span class="ident">f16x2_to_vec2</span>::<span class="op">&lt;</span><span class="ident">F32x2</span><span class="op">&gt;</span>(<span class="ident">packed</span>).<span class="ident">x</span>
 }
 
@@ -327,7 +335,7 @@
 <span class="doccomment">/// [PackSnorm4x8](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact</span>
 <span class="doccomment">/// semantics.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec4_to_u8x4_snorm</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec4_to_u8x4_snorm</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span>) -&gt; <span class="ident">u32</span> {
     <span class="kw">let</span> <span class="ident">result</span>;
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(
@@ -347,7 +355,7 @@
 <span class="doccomment">/// [PackUnorm4x8](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact</span>
 <span class="doccomment">/// semantics.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec4_to_u8x4_unorm</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec4_to_u8x4_unorm</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span>) -&gt; <span class="ident">u32</span> {
     <span class="kw">let</span> <span class="ident">result</span>;
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(
@@ -367,7 +375,7 @@
 <span class="doccomment">/// [PackSnorm2x16](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact</span>
 <span class="doccomment">/// semantics.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec2_to_u16x2_snorm</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec2_to_u16x2_snorm</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>) -&gt; <span class="ident">u32</span> {
     <span class="kw">let</span> <span class="ident">result</span>;
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(
@@ -387,7 +395,7 @@
 <span class="doccomment">/// [PackUnorm2x16](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact</span>
 <span class="doccomment">/// semantics.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec2_to_u16x2_unorm</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec2_to_u16x2_unorm</span>(<span class="ident">vec</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>) -&gt; <span class="ident">u32</span> {
     <span class="kw">let</span> <span class="ident">result</span>;
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(
@@ -407,7 +415,7 @@
 <span class="doccomment">/// [UnpackSnorm4x8](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact</span>
 <span class="doccomment">/// semantics.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u8x4_to_vec4_snorm</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u8x4_to_vec4_snorm</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) -&gt; <span class="ident">V</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(
@@ -428,7 +436,7 @@
 <span class="doccomment">/// [UnpackSnorm4x8](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact</span>
 <span class="doccomment">/// semantics.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u8x4_to_vec4_unorm</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u8x4_to_vec4_unorm</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) -&gt; <span class="ident">V</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(
@@ -449,7 +457,7 @@
 <span class="doccomment">/// [UnpackSnorm2x16](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for</span>
 <span class="doccomment">/// exact semantics.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u16x2_to_vec2_snorm</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u16x2_to_vec2_snorm</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) -&gt; <span class="ident">V</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(
@@ -470,7 +478,7 @@
 <span class="doccomment">/// [UnpackUnorm2x16](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for</span>
 <span class="doccomment">/// exact semantics.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u16x2_to_vec2_unorm</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">u16x2_to_vec2_unorm</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">int</span>: <span class="ident">u32</span>) -&gt; <span class="ident">V</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span>(

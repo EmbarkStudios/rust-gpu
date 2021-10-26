@@ -747,30 +747,30 @@
 <span class="comment">// The `Image` is supposed to be used in the type position, which</span>
 <span class="comment">// uses `PascalCase`.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">nonstandard_style</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">Image</span>(<span class="ident">item</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">Image</span>(<span class="ident">item</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="macro">syn::parse_macro_input!</span>(<span class="ident">item</span> <span class="kw">as</span> <span class="ident">image::ImageType</span>).<span class="ident">into_token_stream</span>();
 
     <span class="ident">output</span>.<span class="ident">into</span>()
 }
 
 <span class="attribute">#[<span class="ident">proc_macro_attribute</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spirv</span>(<span class="ident">_attr</span>: <span class="ident">TokenStream</span>, <span class="ident">item</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spirv</span>(<span class="ident">_attr</span>: <span class="ident">TokenStream</span>, <span class="ident">item</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="ident">item</span>: <span class="ident">proc_macro2::TokenStream</span> <span class="op">=</span> <span class="ident">item</span>.<span class="ident">into</span>();
     <span class="kw">for</span> <span class="ident">tt</span> <span class="kw">in</span> <span class="ident">item</span> {
         <span class="kw">match</span> <span class="ident">tt</span> {
-            <span class="ident">TokenTree::Group</span>(<span class="ident">group</span>) <span class="kw">if</span> <span class="ident">group</span>.<span class="ident">delimiter</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">Delimiter::Parenthesis</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">TokenTree::Group</span>(<span class="ident">group</span>) <span class="kw">if</span> <span class="ident">group</span>.<span class="ident">delimiter</span>() <span class="op">==</span> <span class="ident">Delimiter::Parenthesis</span> =&gt; {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sub_tokens</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
                 <span class="kw">for</span> <span class="ident">tt</span> <span class="kw">in</span> <span class="ident">group</span>.<span class="ident">stream</span>() {
                     <span class="kw">match</span> <span class="ident">tt</span> {
                         <span class="ident">TokenTree::Group</span>(<span class="ident">group</span>)
-                            <span class="kw">if</span> <span class="ident">group</span>.<span class="ident">delimiter</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">Delimiter::Bracket</span>
-                                <span class="op">&amp;&amp;</span> <span class="macro">matches!</span>(<span class="ident">group</span>.<span class="ident">stream</span>().<span class="ident">into_iter</span>().<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="ident">TokenTree::Ident</span>(<span class="ident">ident</span>)) <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)
-                                <span class="op">&amp;&amp;</span> <span class="macro">matches!</span>(<span class="ident">sub_tokens</span>.<span class="ident">last</span>(), <span class="prelude-val">Some</span>(<span class="ident">TokenTree::Punct</span>(<span class="ident">p</span>)) <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">as_char</span>() <span class="op">=</span><span class="op">=</span> <span class="string">&#39;#&#39;</span>) <span class="op">=</span><span class="op">&gt;</span>
+                            <span class="kw">if</span> <span class="ident">group</span>.<span class="ident">delimiter</span>() <span class="op">==</span> <span class="ident">Delimiter::Bracket</span>
+                                <span class="op">&amp;&amp;</span> <span class="macro">matches!</span>(<span class="ident">group</span>.<span class="ident">stream</span>().<span class="ident">into_iter</span>().<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="ident">TokenTree::Ident</span>(<span class="ident">ident</span>)) <span class="kw">if</span> <span class="ident">ident</span> <span class="op">==</span> <span class="string">&quot;spirv&quot;</span>)
+                                <span class="op">&amp;&amp;</span> <span class="macro">matches!</span>(<span class="ident">sub_tokens</span>.<span class="ident">last</span>(), <span class="prelude-val">Some</span>(<span class="ident">TokenTree::Punct</span>(<span class="ident">p</span>)) <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">as_char</span>() <span class="op">==</span> <span class="string">&#39;#&#39;</span>) =&gt;
                         {
                             <span class="ident">sub_tokens</span>.<span class="ident">pop</span>();
                         }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sub_tokens</span>.<span class="ident">push</span>(<span class="ident">tt</span>),
+                        <span class="kw">_</span> =&gt; <span class="ident">sub_tokens</span>.<span class="ident">push</span>(<span class="ident">tt</span>),
                     }
                 }
                 <span class="ident">tokens</span>.<span class="ident">push</span>(<span class="ident">TokenTree::from</span>(<span class="ident">Group::new</span>(
@@ -778,7 +778,7 @@
                     <span class="ident">sub_tokens</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>(),
                 )));
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tokens</span>.<span class="ident">push</span>(<span class="ident">tt</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">tokens</span>.<span class="ident">push</span>(<span class="ident">tt</span>),
         }
     }
     <span class="ident">tokens</span>
@@ -790,7 +790,7 @@
 <span class="doccomment">/// Marks a function as runnable only on the GPU, and will panic on</span>
 <span class="doccomment">/// CPU platforms.</span>
 <span class="attribute">#[<span class="ident">proc_macro_attribute</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gpu_only</span>(<span class="ident">_attr</span>: <span class="ident">TokenStream</span>, <span class="ident">item</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gpu_only</span>(<span class="ident">_attr</span>: <span class="ident">TokenStream</span>, <span class="ident">item</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="ident">syn::ItemFn</span> {
         <span class="ident">attrs</span>,
         <span class="ident">vis</span>,
@@ -828,11 +828,11 @@
 <span class="doccomment">/// a scalar and vector versions of the same operation.</span>
 <span class="attribute">#[<span class="ident">proc_macro_attribute</span>]</span>
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vectorized</span>(<span class="ident">_attr</span>: <span class="ident">TokenStream</span>, <span class="ident">item</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vectorized</span>(<span class="ident">_attr</span>: <span class="ident">TokenStream</span>, <span class="ident">item</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="macro">syn::parse_macro_input!</span>(<span class="ident">item</span> <span class="kw">as</span> <span class="ident">syn::ItemFn</span>);
     <span class="kw">let</span> <span class="ident">vectored_function</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">create_vectored_fn</span>(<span class="ident">function</span>.<span class="ident">clone</span>()) {
-        <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">val</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">err</span>.<span class="ident">to_compile_error</span>().<span class="ident">into</span>(),
+        <span class="prelude-val">Ok</span>(<span class="ident">val</span>) =&gt; <span class="ident">val</span>,
+        <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="kw">return</span> <span class="ident">err</span>.<span class="ident">to_compile_error</span>().<span class="ident">into</span>(),
     };
 
     <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="macro">quote::quote!</span>(
@@ -851,7 +851,7 @@
         <span class="kw-2">mut</span> <span class="ident">sig</span>,
         <span class="ident">block</span>,
     }: <span class="ident">ItemFn</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ItemFn</span>, <span class="ident">syn::Error</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ItemFn</span>, <span class="ident">syn::Error</span><span class="op">&gt;</span> {
     <span class="kw">const</span> <span class="ident">COMPONENT_ARG_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;component&quot;</span>;
     <span class="kw">let</span> <span class="ident">trait_bound_name</span> <span class="op">=</span> <span class="ident">Ident::new</span>(<span class="string">&quot;VECTOR&quot;</span>, <span class="ident">Span::mixed_site</span>());
     <span class="kw">let</span> <span class="ident">const_bound_name</span> <span class="op">=</span> <span class="ident">Ident::new</span>(<span class="string">&quot;LENGTH&quot;</span>, <span class="ident">Span::mixed_site</span>());
@@ -863,11 +863,11 @@
     );
 
     <span class="kw">let</span> <span class="ident">component_type</span> <span class="op">=</span> <span class="ident">sig</span>.<span class="ident">inputs</span>.<span class="ident">iter_mut</span>().<span class="ident">find_map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">x</span> {
-        <span class="ident">syn::FnArg::Typed</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">ty</span>.<span class="ident">pat</span> {
-            <span class="ident">syn::Pat::Ident</span>(<span class="ident">pat</span>) <span class="kw">if</span> <span class="ident">pat</span>.<span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="ident">COMPONENT_ARG_NAME</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ty</span>.<span class="ident">ty</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="ident">syn::FnArg::Typed</span>(<span class="ident">ty</span>) =&gt; <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">ty</span>.<span class="ident">pat</span> {
+            <span class="ident">syn::Pat::Ident</span>(<span class="ident">pat</span>) <span class="kw">if</span> <span class="ident">pat</span>.<span class="ident">ident</span> <span class="op">==</span> <span class="ident">COMPONENT_ARG_NAME</span> =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ty</span>.<span class="ident">ty</span>),
+            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
         },
-        <span class="ident">syn::FnArg::Receiver</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="ident">syn::FnArg::Receiver</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
     });
 
     <span class="kw">if</span> <span class="ident">component_type</span>.<span class="ident">is_none</span>() {
@@ -959,7 +959,7 @@
     })
 }
 
-<span class="kw">fn</span> <span class="ident">path_from_ident</span>(<span class="ident">ident</span>: <span class="ident">Ident</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">syn::Type</span> {
+<span class="kw">fn</span> <span class="ident">path_from_ident</span>(<span class="ident">ident</span>: <span class="ident">Ident</span>) -&gt; <span class="ident">syn::Type</span> {
     <span class="ident">syn::Type::Path</span>(<span class="ident">syn::TypePath</span> {
         <span class="ident">qself</span>: <span class="prelude-val">None</span>,
         <span class="ident">path</span>: <span class="ident">syn::Path::from</span>(<span class="ident">ident</span>),
@@ -977,13 +977,13 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// See &lt;https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string&gt; for formatting rules.</span>
 <span class="attribute">#[<span class="ident">proc_macro</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">debug_printf</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">debug_printf</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="ident">debug_printf_inner</span>(<span class="macro">syn::parse_macro_input!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">DebugPrintfInput</span>))
 }
 
 <span class="doccomment">/// Similar to `debug_printf` but appends a newline to the format string.</span>
 <span class="attribute">#[<span class="ident">proc_macro</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">debug_printfln</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">debug_printfln</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">syn::parse_macro_input!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">DebugPrintfInput</span>);
     <span class="ident">input</span>.<span class="ident">format_string</span>.<span class="ident">push</span>(<span class="string">&#39;\n&#39;</span>);
     <span class="ident">debug_printf_inner</span>(<span class="ident">input</span>)
@@ -996,7 +996,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">syn::parse::Parse</span> <span class="kw">for</span> <span class="ident">DebugPrintfInput</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">syn::parse::ParseStream</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">syn::parse::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">syn::parse::ParseStream</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">syn::parse::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">span</span>();
 
         <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">is_empty</span>() {
@@ -1022,7 +1022,7 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">parsing_error</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">span</span>: <span class="ident">proc_macro2::Span</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+<span class="kw">fn</span> <span class="ident">parsing_error</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">span</span>: <span class="ident">proc_macro2::Span</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="ident">syn::Error::new</span>(<span class="ident">span</span>, <span class="ident">message</span>).<span class="ident">to_compile_error</span>().<span class="ident">into</span>()
 }
 
@@ -1036,7 +1036,7 @@
     },
 }
 
-<span class="kw">fn</span> <span class="ident">debug_printf_inner</span>(<span class="ident">input</span>: <span class="ident">DebugPrintfInput</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+<span class="kw">fn</span> <span class="ident">debug_printf_inner</span>(<span class="ident">input</span>: <span class="ident">DebugPrintfInput</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="ident">DebugPrintfInput</span> {
         <span class="ident">format_string</span>,
         <span class="ident">variables</span>,
@@ -1046,14 +1046,14 @@
     <span class="kw">fn</span> <span class="ident">map_specifier_to_type</span>(
         <span class="ident">specifier</span>: <span class="ident">char</span>,
         <span class="ident">chars</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::str::Chars</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">proc_macro2::TokenStream</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">proc_macro2::TokenStream</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peekable</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">peekable</span>();
 
         <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">specifier</span> {
-            <span class="string">&#39;d&#39;</span> <span class="op">|</span> <span class="string">&#39;i&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote::quote!</span> { <span class="ident">i32</span> },
-            <span class="string">&#39;o&#39;</span> <span class="op">|</span> <span class="string">&#39;x&#39;</span> <span class="op">|</span> <span class="string">&#39;X&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote::quote!</span> { <span class="ident">u32</span> },
-            <span class="string">&#39;a&#39;</span> <span class="op">|</span> <span class="string">&#39;A&#39;</span> <span class="op">|</span> <span class="string">&#39;e&#39;</span> <span class="op">|</span> <span class="string">&#39;E&#39;</span> <span class="op">|</span> <span class="string">&#39;f&#39;</span> <span class="op">|</span> <span class="string">&#39;F&#39;</span> <span class="op">|</span> <span class="string">&#39;g&#39;</span> <span class="op">|</span> <span class="string">&#39;G&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote::quote!</span> { <span class="ident">f32</span> },
-            <span class="string">&#39;u&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="string">&#39;d&#39;</span> <span class="op">|</span> <span class="string">&#39;i&#39;</span> =&gt; <span class="macro">quote::quote!</span> { <span class="ident">i32</span> },
+            <span class="string">&#39;o&#39;</span> <span class="op">|</span> <span class="string">&#39;x&#39;</span> <span class="op">|</span> <span class="string">&#39;X&#39;</span> =&gt; <span class="macro">quote::quote!</span> { <span class="ident">u32</span> },
+            <span class="string">&#39;a&#39;</span> <span class="op">|</span> <span class="string">&#39;A&#39;</span> <span class="op">|</span> <span class="string">&#39;e&#39;</span> <span class="op">|</span> <span class="string">&#39;E&#39;</span> <span class="op">|</span> <span class="string">&#39;f&#39;</span> <span class="op">|</span> <span class="string">&#39;F&#39;</span> <span class="op">|</span> <span class="string">&#39;g&#39;</span> <span class="op">|</span> <span class="string">&#39;G&#39;</span> =&gt; <span class="macro">quote::quote!</span> { <span class="ident">f32</span> },
+            <span class="string">&#39;u&#39;</span> =&gt; {
                 <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">peekable</span>.<span class="ident">peek</span>(), <span class="prelude-val">Some</span>(<span class="string">&#39;l&#39;</span>)) {
                     <span class="ident">chars</span>.<span class="ident">next</span>();
                     <span class="macro">quote::quote!</span> { <span class="ident">u64</span> }
@@ -1061,7 +1061,7 @@
                     <span class="macro">quote::quote!</span> { <span class="ident">u32</span> }
                 }
             }
-            <span class="string">&#39;l&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="string">&#39;l&#39;</span> =&gt; {
                 <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">peekable</span>.<span class="ident">peek</span>(), <span class="prelude-val">Some</span>(<span class="string">&#39;u&#39;</span> <span class="op">|</span> <span class="string">&#39;x&#39;</span>)) {
                     <span class="ident">chars</span>.<span class="ident">next</span>();
                     <span class="macro">quote::quote!</span> { <span class="ident">u64</span> }
@@ -1069,7 +1069,7 @@
                     <span class="kw">return</span> <span class="prelude-val">None</span>;
                 }
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
+            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
         })
     }
 
@@ -1077,19 +1077,19 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">format_arguments</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
 
     <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">ch</span>) <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-        <span class="kw">if</span> <span class="ident">ch</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;%&#39;</span> {
+        <span class="kw">if</span> <span class="ident">ch</span> <span class="op">==</span> <span class="string">&#39;%&#39;</span> {
             <span class="ident">ch</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-                <span class="prelude-val">Some</span>(<span class="string">&#39;%&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">parsing_error</span>(<span class="string">&quot;Unterminated format specifier&quot;</span>, <span class="ident">span</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ch</span>,
+                <span class="prelude-val">Some</span>(<span class="string">&#39;%&#39;</span>) =&gt; <span class="kw">continue</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">parsing_error</span>(<span class="string">&quot;Unterminated format specifier&quot;</span>, <span class="ident">span</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">ch</span>) =&gt; <span class="ident">ch</span>,
             };
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_precision</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
             <span class="kw">while</span> <span class="macro">matches!</span>(<span class="ident">ch</span>, <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span>) {
                 <span class="ident">ch</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ch</span>,
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">ch</span>) =&gt; <span class="ident">ch</span>,
+                    <span class="prelude-val">None</span> =&gt; {
                         <span class="kw">return</span> <span class="ident">parsing_error</span>(
                             <span class="string">&quot;Unterminated format specifier: missing type after precision&quot;</span>,
                             <span class="ident">span</span>,
@@ -1100,10 +1100,10 @@
                 <span class="ident">has_precision</span> <span class="op">=</span> <span class="bool-val">true</span>;
             }
 
-            <span class="kw">if</span> <span class="ident">has_precision</span> <span class="op">&amp;&amp;</span> <span class="ident">ch</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;.&#39;</span> {
+            <span class="kw">if</span> <span class="ident">has_precision</span> <span class="op">&amp;&amp;</span> <span class="ident">ch</span> <span class="op">==</span> <span class="string">&#39;.&#39;</span> {
                 <span class="ident">ch</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ch</span>,
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">ch</span>) =&gt; <span class="ident">ch</span>,
+                    <span class="prelude-val">None</span> =&gt; {
                         <span class="kw">return</span> <span class="ident">parsing_error</span>(
                             <span class="string">&quot;Unterminated format specifier: missing type after decimal point&quot;</span>,
                             <span class="ident">span</span>,
@@ -1113,8 +1113,8 @@
 
                 <span class="kw">while</span> <span class="macro">matches!</span>(<span class="ident">ch</span>, <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span>) {
                     <span class="ident">ch</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ch</span>,
-                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">parsing_error</span>(
+                        <span class="prelude-val">Some</span>(<span class="ident">ch</span>) =&gt; <span class="ident">ch</span>,
+                        <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">parsing_error</span>(
                             <span class="string">&quot;Unterminated format specifier: missing type after fraction precision&quot;</span>,
                             <span class="ident">span</span>,
                         ),
@@ -1122,25 +1122,25 @@
                 }
             }
 
-            <span class="kw">if</span> <span class="ident">ch</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;v&#39;</span> {
+            <span class="kw">if</span> <span class="ident">ch</span> <span class="op">==</span> <span class="string">&#39;v&#39;</span> {
                 <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-                    <span class="prelude-val">Some</span>(<span class="string">&#39;2&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-                    <span class="prelude-val">Some</span>(<span class="string">&#39;3&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
-                    <span class="prelude-val">Some</span>(<span class="string">&#39;4&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">4</span>,
-                    <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="string">&#39;2&#39;</span>) =&gt; <span class="number">2</span>,
+                    <span class="prelude-val">Some</span>(<span class="string">&#39;3&#39;</span>) =&gt; <span class="number">3</span>,
+                    <span class="prelude-val">Some</span>(<span class="string">&#39;4&#39;</span>) =&gt; <span class="number">4</span>,
+                    <span class="prelude-val">Some</span>(<span class="ident">ch</span>) =&gt; {
                         <span class="kw">return</span> <span class="ident">parsing_error</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Invalid width for vector: {}&quot;</span>, <span class="ident">ch</span>), <span class="ident">span</span>)
                     }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">parsing_error</span>(<span class="string">&quot;Missing vector dimensions specifier&quot;</span>, <span class="ident">span</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">parsing_error</span>(<span class="string">&quot;Missing vector dimensions specifier&quot;</span>, <span class="ident">span</span>),
                 };
 
                 <span class="ident">ch</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ch</span>,
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">parsing_error</span>(<span class="string">&quot;Missing vector type specifier&quot;</span>, <span class="ident">span</span>),
+                    <span class="prelude-val">Some</span>(<span class="ident">ch</span>) =&gt; <span class="ident">ch</span>,
+                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">parsing_error</span>(<span class="string">&quot;Missing vector type specifier&quot;</span>, <span class="ident">span</span>),
                 };
 
                 <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">map_specifier_to_type</span>(<span class="ident">ch</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">chars</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>,
+                    <span class="kw">_</span> =&gt; {
                         <span class="kw">return</span> <span class="ident">parsing_error</span>(
                             <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unrecognised vector type specifier: &#39;{}&#39;&quot;</span>, <span class="ident">ch</span>),
                             <span class="ident">span</span>,
@@ -1151,8 +1151,8 @@
                 <span class="ident">format_arguments</span>.<span class="ident">push</span>(<span class="ident">FormatType::Vector</span> { <span class="ident">ty</span>, <span class="ident">width</span> });
             } <span class="kw">else</span> {
                 <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">map_specifier_to_type</span>(<span class="ident">ch</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">chars</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>,
+                    <span class="kw">_</span> =&gt; {
                         <span class="kw">return</span> <span class="ident">parsing_error</span>(
                             <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unrecognised format specifier: &#39;{}&#39;&quot;</span>, <span class="ident">ch</span>),
                             <span class="ident">span</span>,
@@ -1189,10 +1189,10 @@
         <span class="ident">variable_idents</span>.<span class="ident">push_str</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;%{} &quot;</span>, <span class="ident">ident</span>));
 
         <span class="kw">let</span> <span class="ident">assert_fn</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">format_argument</span> {
-            <span class="ident">FormatType::Scalar</span> { <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">FormatType::Scalar</span> { <span class="ident">ty</span> } =&gt; {
                 <span class="macro">quote::quote!</span> { <span class="ident">spirv_std::debug_printf_assert_is_type</span>::<span class="op">&lt;</span>#<span class="ident">ty</span><span class="op">&gt;</span> }
             }
-            <span class="ident">FormatType::Vector</span> { <span class="ident">ty</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">FormatType::Vector</span> { <span class="ident">ty</span>, <span class="ident">width</span> } =&gt; {
                 <span class="macro">quote::quote!</span> { <span class="ident">spirv_std::debug_printf_assert_is_vector</span>::<span class="op">&lt;</span>#<span class="ident">ty</span>, <span class="kw">_</span>, #<span class="ident">width</span><span class="op">&gt;</span> }
             }
         };

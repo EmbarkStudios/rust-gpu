@@ -1091,10 +1091,10 @@
 
 <span class="comment">// The methods here should be supported for all types of $t and all sizes of vector.</span>
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_common_methods</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vectrait</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vectrait</span>:<span class="ident">ident</span>) =&gt; {
         <span class="doccomment">/// Creates a vector with all elements set to `v`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">splat</span>(<span class="ident">v</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">splat</span>(<span class="ident">v</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::splat</span>(<span class="ident">v</span>))
         }
 
@@ -1104,13 +1104,13 @@
         <span class="doccomment">/// A true element in the mask uses the corresponding element from `if_true`, and false</span>
         <span class="doccomment">/// uses the element from `if_false`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select</span>(<span class="ident">mask</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>, <span class="ident">if_true</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>, <span class="ident">if_false</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select</span>(<span class="ident">mask</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>, <span class="ident">if_true</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>, <span class="ident">if_false</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::select</span>(<span class="ident">mask</span>.<span class="number">0</span>, <span class="ident">if_true</span>.<span class="number">0</span>, <span class="ident">if_false</span>.<span class="number">0</span>))
         }
 
         <span class="doccomment">/// Computes the dot product of `self` and `other`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dot</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dot</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vectrait::dot</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">other</span>.<span class="number">0</span>)
         }
 
@@ -1118,7 +1118,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// In other words this computes `[self.x.max(other.x), self.y.max(other.y), ..]`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">min</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">min</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">min</span>(<span class="ident">other</span>.<span class="number">0</span>))
         }
 
@@ -1126,7 +1126,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// In other words this computes `[self.x.max(other.x), self.y.max(other.y), ..]`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">max</span>(<span class="ident">other</span>.<span class="number">0</span>))
         }
 
@@ -1138,7 +1138,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Will panic if `min` is greater than `max` when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp</span>(<span class="self">self</span>, <span class="ident">min</span>: <span class="self">Self</span>, <span class="ident">max</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp</span>(<span class="self">self</span>, <span class="ident">min</span>: <span class="self">Self</span>, <span class="ident">max</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vectrait::clamp</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">min</span>.<span class="number">0</span>, <span class="ident">max</span>.<span class="number">0</span>))
         }
 
@@ -1146,7 +1146,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// In other words this computes `min(x, y, ..)`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">min_element</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">min_element</span>(<span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vectrait::min_element</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
 
@@ -1154,7 +1154,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// In other words this computes `max(x, y, ..)`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_element</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_element</span>(<span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vectrait::max_element</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
 
@@ -1164,7 +1164,7 @@
         <span class="doccomment">/// In other words, this computes `[self.x == other.x, self.y == other.y, ..]` for all</span>
         <span class="doccomment">/// elements.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmpeq</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmpeq</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">cmpeq</span>(<span class="ident">other</span>.<span class="number">0</span>))
         }
 
@@ -1174,7 +1174,7 @@
         <span class="doccomment">/// In other words this computes `[self.x != other.x, self.y != other.y, ..]` for all</span>
         <span class="doccomment">/// elements.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmpne</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmpne</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">cmpne</span>(<span class="ident">other</span>.<span class="number">0</span>))
         }
 
@@ -1184,7 +1184,7 @@
         <span class="doccomment">/// In other words this computes `[self.x &gt;= other.x, self.y &gt;= other.y, ..]` for all</span>
         <span class="doccomment">/// elements.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmpge</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmpge</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">cmpge</span>(<span class="ident">other</span>.<span class="number">0</span>))
         }
 
@@ -1194,7 +1194,7 @@
         <span class="doccomment">/// In other words this computes `[self.x &gt; other.x, self.y &gt; other.y, ..]` for all</span>
         <span class="doccomment">/// elements.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmpgt</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmpgt</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">cmpgt</span>(<span class="ident">other</span>.<span class="number">0</span>))
         }
 
@@ -1204,7 +1204,7 @@
         <span class="doccomment">/// In other words this computes `[self.x &lt;= other.x, self.y &lt;= other.y, ..]` for all</span>
         <span class="doccomment">/// elements.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmple</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmple</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">cmple</span>(<span class="ident">other</span>.<span class="number">0</span>))
         }
 
@@ -1214,7 +1214,7 @@
         <span class="doccomment">/// In other words this computes `[self.x &lt; other.x, self.y &lt; other.y, ..]` for all</span>
         <span class="doccomment">/// elements.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmplt</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmplt</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">cmplt</span>(<span class="ident">other</span>.<span class="number">0</span>))
         }
 
@@ -1224,7 +1224,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Panics if `slice` is less than N elements long.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vectrait::from_slice_unaligned</span>(<span class="ident">slice</span>))
         }
 
@@ -1241,7 +1241,7 @@
         <span class="doccomment">/// Per element multiplication/addition of the three inputs: b + (self * a)</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
         <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>: <span class="self">Self</span>, <span class="ident">b</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>: <span class="self">Self</span>, <span class="ident">b</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">mul_add</span>(<span class="ident">a</span>.<span class="number">0</span>, <span class="ident">b</span>.<span class="number">0</span>))
         }
     };
@@ -1250,12 +1250,12 @@
 <span class="comment">// Adds signed type vector methods to an impl.</span>
 <span class="comment">// The methods here should be supported for signed types of $t and all sizes of vector.</span>
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_signed_methods</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">sgntrait</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">sgntrait</span>:<span class="ident">ident</span>) =&gt; {
         <span class="comment">// impl_vecn_common_methods!($t, $vecn, $mask, $inner, $vectrait);</span>
 
         <span class="doccomment">/// Returns a vector containing the absolute value of each element of `self`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">sgntrait::abs</span>(<span class="self">self</span>.<span class="number">0</span>))
         }
 
@@ -1265,7 +1265,7 @@
         <span class="doccomment">/// - `-1.0` if the number is negative, `-0.0` or `NEG_INFINITY`</span>
         <span class="doccomment">/// - `NAN` if the number is `NAN`</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">signum</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">signum</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">sgntrait::signum</span>(<span class="self">self</span>.<span class="number">0</span>))
         }
     };
@@ -1274,7 +1274,7 @@
 <span class="comment">// Adds float type vector methods to an impl.</span>
 <span class="comment">// The methods here should be supported for float types of $t and all sizes of vector.</span>
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_float_methods</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait</span>:<span class="ident">ident</span>) =&gt; {
         <span class="comment">// impl_vecn_signed_methods!($t, $vecn, $mask, $inner, $sgntrait, $vectrait);</span>
 
         <span class="doccomment">/// All NAN.</span>
@@ -1283,13 +1283,13 @@
         <span class="doccomment">/// Returns `true` if, and only if, all elements are finite.  If any element is either</span>
         <span class="doccomment">/// `NaN`, positive or negative infinity, this will return `false`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_finite</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_finite</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::is_finite</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
 
         <span class="doccomment">/// Returns `true` if any elements are `NaN`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_nan</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_nan</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::is_nan</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
 
@@ -1297,14 +1297,14 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// In other words, this computes `[x.is_nan(), y.is_nan(), z.is_nan(), w.is_nan()]`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_nan_mask</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_nan_mask</span>(<span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mask</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::is_nan_mask</span>(<span class="self">self</span>.<span class="number">0</span>))
         }
 
         <span class="doccomment">/// Computes the length of `self`.</span>
         <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;magnitude&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length</span>(<span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::length</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
 
@@ -1313,7 +1313,7 @@
         <span class="doccomment">/// This is faster than `length()` as it avoids a square root operation.</span>
         <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;magnitude2&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length_squared</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length_squared</span>(<span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::length_squared</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
 
@@ -1321,19 +1321,19 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// For valid results, `self` must _not_ be of length zero.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length_recip</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length_recip</span>(<span class="self">self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::length_recip</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
 
         <span class="doccomment">/// Computes the Euclidean distance between two points in space.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">distance</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">distance</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             (<span class="self">self</span> <span class="op">-</span> <span class="ident">other</span>).<span class="ident">length</span>()
         }
 
         <span class="doccomment">/// Compute the squared euclidean distance between two points in space.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">distance_squared</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">distance_squared</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             (<span class="self">self</span> <span class="op">-</span> <span class="ident">other</span>).<span class="ident">length_squared</span>()
         }
 
@@ -1348,7 +1348,7 @@
         <span class="doccomment">/// Will panic if `self` is zero length when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">must_use</span>]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">normalize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">normalize</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::normalize</span>(<span class="self">self</span>.<span class="number">0</span>))
         }
 
@@ -1360,7 +1360,7 @@
         <span class="doccomment">/// See also [`Self::normalize_or_zero`].</span>
         <span class="attribute">#[<span class="ident">must_use</span>]</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_normalize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_normalize</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">rcp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">length_recip</span>();
             <span class="kw">if</span> <span class="ident">rcp</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="ident">rcp</span> <span class="op">&gt;</span> <span class="number">0.0</span> {
                 <span class="prelude-val">Some</span>(<span class="self">self</span> <span class="op">*</span> <span class="ident">rcp</span>)
@@ -1377,7 +1377,7 @@
         <span class="doccomment">/// See also [`Self::try_normalize`].</span>
         <span class="attribute">#[<span class="ident">must_use</span>]</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">normalize_or_zero</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">normalize_or_zero</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">rcp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">length_recip</span>();
             <span class="kw">if</span> <span class="ident">rcp</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="ident">rcp</span> <span class="op">&gt;</span> <span class="number">0.0</span> {
                 <span class="self">self</span> <span class="op">*</span> <span class="ident">rcp</span>
@@ -1390,7 +1390,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Uses a precision threshold of `1e-6`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_normalized</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_normalized</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::is_normalized</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
 
@@ -1403,7 +1403,7 @@
         <span class="doccomment">/// Will panic if `other` is zero length when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">must_use</span>]</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">project_onto</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">project_onto</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">other_len_sq_rcp</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">dot</span>(<span class="ident">other</span>).<span class="ident">recip</span>();
             <span class="macro">glam_assert!</span>(<span class="ident">other_len_sq_rcp</span>.<span class="ident">is_finite</span>());
             <span class="ident">other</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">dot</span>(<span class="ident">other</span>) <span class="op">*</span> <span class="ident">other_len_sq_rcp</span>
@@ -1421,7 +1421,7 @@
         <span class="doccomment">/// Will panic if `other` has a length of zero when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">must_use</span>]</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reject_from</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reject_from</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">self</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">project_onto</span>(<span class="ident">other</span>)
         }
 
@@ -1434,7 +1434,7 @@
         <span class="doccomment">/// Will panic if `other` is not normalized when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">must_use</span>]</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">project_onto_normalized</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">project_onto_normalized</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="macro">glam_assert!</span>(<span class="ident">other</span>.<span class="ident">is_normalized</span>());
             <span class="ident">other</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">dot</span>(<span class="ident">other</span>)
         }
@@ -1451,28 +1451,28 @@
         <span class="doccomment">/// Will panic if `other` is not normalized when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">must_use</span>]</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reject_from_normalized</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reject_from_normalized</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">self</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">project_onto_normalized</span>(<span class="ident">other</span>)
         }
 
         <span class="doccomment">/// Returns a vector containing the nearest integer to a number for each element of `self`.</span>
         <span class="doccomment">/// Round half-way cases away from 0.0.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">round</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">round</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::round</span>(<span class="self">self</span>.<span class="number">0</span>))
         }
 
         <span class="doccomment">/// Returns a vector containing the largest integer less than or equal to a number for each</span>
         <span class="doccomment">/// element of `self`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">floor</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">floor</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::floor</span>(<span class="self">self</span>.<span class="number">0</span>))
         }
 
         <span class="doccomment">/// Returns a vector containing the smallest integer greater than or equal to a number for</span>
         <span class="doccomment">/// each element of `self`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ceil</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ceil</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::ceil</span>(<span class="self">self</span>.<span class="number">0</span>))
         }
 
@@ -1481,26 +1481,26 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Note that this is fast but not precise for large numbers.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fract</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fract</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">self</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">floor</span>()
         }
 
         <span class="doccomment">/// Returns a vector containing `e^self` (the exponential function) for each element of</span>
         <span class="doccomment">/// `self`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exp</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exp</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::exp</span>(<span class="self">self</span>.<span class="number">0</span>))
         }
 
         <span class="doccomment">/// Returns a vector containing each element of `self` raised to the power of `n`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">powf</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">powf</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::powf</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">n</span>))
         }
 
         <span class="doccomment">/// Returns a vector containing the reciprocal `1.0/n` of each element of `self`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recip</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recip</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::recip</span>(<span class="self">self</span>.<span class="number">0</span>))
         }
 
@@ -1510,7 +1510,7 @@
         <span class="doccomment">/// will be equal to `other`.</span>
         <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;mix&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lerp</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lerp</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="self">self</span> <span class="op">+</span> ((<span class="ident">other</span> <span class="op">-</span> <span class="self">self</span>) <span class="op">*</span> <span class="ident">s</span>)
         }
 
@@ -1524,7 +1524,7 @@
         <span class="doccomment">/// For more see</span>
         <span class="doccomment">/// [comparing floating point numbers](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">abs_diff_eq</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>, <span class="ident">max_abs_diff</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">abs_diff_eq</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>, <span class="ident">max_abs_diff</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="ident">bool</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">flttrait::abs_diff_eq</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">other</span>.<span class="number">0</span>, <span class="ident">max_abs_diff</span>)
         }
 
@@ -1534,7 +1534,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// Will panic if `min` is greater than `max` when `glam_assert` is enabled.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp_length</span>(<span class="self">self</span>, <span class="ident">min</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">max</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp_length</span>(<span class="self">self</span>, <span class="ident">min</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">max</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="macro">glam_assert!</span>(<span class="ident">min</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">max</span>);
             <span class="kw">let</span> <span class="ident">length_sq</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">length_squared</span>();
             <span class="kw">if</span> <span class="ident">length_sq</span> <span class="op">&lt;</span> <span class="ident">min</span> <span class="op">*</span> <span class="ident">min</span> {
@@ -1547,7 +1547,7 @@
         }
 
         <span class="doccomment">/// Returns a vector with a length no more than `max`</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp_length_max</span>(<span class="self">self</span>, <span class="ident">max</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp_length_max</span>(<span class="self">self</span>, <span class="ident">max</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">length_sq</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">length_squared</span>();
             <span class="kw">if</span> <span class="ident">length_sq</span> <span class="op">&gt;</span> <span class="ident">max</span> <span class="op">*</span> <span class="ident">max</span> {
                 <span class="self">self</span> <span class="op">*</span> (<span class="ident">length_sq</span>.<span class="ident">sqrt</span>().<span class="ident">recip</span>() <span class="op">*</span> <span class="ident">max</span>)
@@ -1557,7 +1557,7 @@
         }
 
         <span class="doccomment">/// Returns a vector with a length no less than `min`</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp_length_min</span>(<span class="self">self</span>, <span class="ident">min</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp_length_min</span>(<span class="self">self</span>, <span class="ident">min</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">length_sq</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">length_squared</span>();
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">length_squared</span>() <span class="op">&lt;</span> <span class="ident">min</span> <span class="op">*</span> <span class="ident">min</span> {
                 <span class="self">self</span> <span class="op">*</span> (<span class="ident">length_sq</span>.<span class="ident">sqrt</span>().<span class="ident">recip</span>() <span class="op">*</span> <span class="ident">min</span>)
@@ -1571,31 +1571,31 @@
 <span class="comment">// Adds common vector trait implementations.</span>
 <span class="comment">// The traits here should be supported for all types of $t and all sizes of vector.</span>
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_common_traits</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>:<span class="ident">literal</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>:<span class="ident">literal</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::ZERO</span>)
             }
         }
 
         <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+            <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="self">self</span>.<span class="ident">cmpeq</span>(<span class="kw-2">*</span><span class="ident">other</span>).<span class="ident">all</span>()
             }
         }
 
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">t</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">t</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="self">Self</span> {
                 <span class="ident">t</span>.<span class="number">0</span>
             }
         }
 
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">t</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">t</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="ident">t</span>)
             }
         }
@@ -1603,7 +1603,7 @@
         <span class="kw">impl</span> <span class="ident">Div</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">div</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1618,7 +1618,7 @@
         <span class="kw">impl</span> <span class="ident">Div</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">div_scalar</span>(<span class="ident">other</span>))
             }
         }
@@ -1633,7 +1633,7 @@
         <span class="kw">impl</span> <span class="ident">Div</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
+            <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::splat</span>(<span class="self">self</span>).<span class="ident">div</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1641,7 +1641,7 @@
         <span class="kw">impl</span> <span class="ident">Mul</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">mul</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1656,7 +1656,7 @@
         <span class="kw">impl</span> <span class="ident">Mul</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>))
             }
         }
@@ -1671,7 +1671,7 @@
         <span class="kw">impl</span> <span class="ident">Mul</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
+            <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::splat</span>(<span class="self">self</span>).<span class="ident">mul</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1679,7 +1679,7 @@
         <span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">add</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1694,7 +1694,7 @@
         <span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">add_scalar</span>(<span class="ident">other</span>))
             }
         }
@@ -1709,7 +1709,7 @@
         <span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
+            <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::splat</span>(<span class="self">self</span>).<span class="ident">add</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1717,7 +1717,7 @@
         <span class="kw">impl</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">sub</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1732,7 +1732,7 @@
         <span class="kw">impl</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">sub_scalar</span>(<span class="ident">other</span>))
             }
         }
@@ -1747,7 +1747,7 @@
         <span class="kw">impl</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
+            <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::splat</span>(<span class="self">self</span>).<span class="ident">sub</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1755,7 +1755,7 @@
         <span class="kw">impl</span> <span class="ident">Rem</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">rem</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1770,7 +1770,7 @@
         <span class="kw">impl</span> <span class="ident">Rem</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">rem_scalar</span>(<span class="ident">other</span>))
             }
         }
@@ -1785,7 +1785,7 @@
         <span class="kw">impl</span> <span class="ident">Rem</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
+            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::splat</span>(<span class="self">self</span>).<span class="ident">rem</span>(<span class="ident">other</span>.<span class="number">0</span>))
             }
         }
@@ -1793,7 +1793,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spriv&quot;</span>))]</span>
         <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>] {
+            <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>] {
                 <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>]) }
             }
         }
@@ -1801,28 +1801,28 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spriv&quot;</span>))]</span>
         <span class="kw">impl</span> <span class="ident">AsMut</span><span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>] {
+            <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>] {
                 <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>]) }
             }
         }
 
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">a</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">a</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>]) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="macro-nonterminal">$</span><span class="kw">trait</span><span class="macro-nonterminal">::from_array</span>(<span class="ident">a</span>))
             }
         }
 
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span><span class="op">&gt;</span> <span class="kw">for</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>] {
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>) -&gt; <span class="self">Self</span> {
                 <span class="ident">v</span>.<span class="ident">into_array</span>()
             }
         }
 
         <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Sum</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">sum</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
+            <span class="kw">fn</span> <span class="ident">sum</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) -&gt; <span class="self">Self</span>
             <span class="kw">where</span>
                 <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span>,
             {
@@ -1832,7 +1832,7 @@
 
         <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Product</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">product</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
+            <span class="kw">fn</span> <span class="ident">product</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) -&gt; <span class="self">Self</span>
             <span class="kw">where</span>
                 <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span>,
             {
@@ -1843,7 +1843,7 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_eq_hash_traits</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>:<span class="ident">literal</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>:<span class="ident">literal</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {}
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spriv&quot;</span>))]</span>
@@ -1859,11 +1859,11 @@
 <span class="comment">// Adds signed vector trait implementations.</span>
 <span class="comment">// The traits here should be supported for signed types of $t and all sizes of vector.</span>
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_signed_traits</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>:<span class="ident">literal</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">sgntrait</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>:<span class="ident">literal</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">sgntrait</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">Neg</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">neg</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">neg</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">neg</span>())
             }
         }
@@ -1871,12 +1871,12 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_shift_op_traits</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">Shl</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">shl</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">shl</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::vector_shl</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>.<span class="number">0</span>))
             }
         }
@@ -1885,7 +1885,7 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">shr</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">shr</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::vector_shr</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>.<span class="number">0</span>))
             }
         }
@@ -1893,12 +1893,12 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_scalar_shift_op_traits</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">Shl</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">shl</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">shl</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::scalar_shl</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>))
             }
         }
@@ -1907,7 +1907,7 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">shr</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">shr</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::scalar_shr</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>))
             }
         }
@@ -1915,12 +1915,12 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_bit_op_traits</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">Not</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">not</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">not</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::not</span>(<span class="self">self</span>.<span class="number">0</span>))
             }
         }
@@ -1929,7 +1929,7 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">bitand</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">bitand</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::vector_bitand</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>.<span class="number">0</span>))
             }
         }
@@ -1938,7 +1938,7 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::vector_bitor</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>.<span class="number">0</span>))
             }
         }
@@ -1947,7 +1947,7 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">bitxor</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">bitxor</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::vector_bitxor</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>.<span class="number">0</span>))
             }
         }
@@ -1955,12 +1955,12 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_vecn_scalar_bit_op_traits</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">BitAnd</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">bitand</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">bitand</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::scalar_bitand</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>))
             }
         }
@@ -1969,7 +1969,7 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::scalar_bitor</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>))
             }
         }
@@ -1978,7 +1978,7 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">bitxor</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+            <span class="kw">fn</span> <span class="ident">bitxor</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rhs</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">vecn</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner::scalar_bitxor</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">rhs</span>))
             }
         }
@@ -1986,192 +1986,192 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_vec2</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_vec2()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec2</span> {
             <span class="self">self</span>.<span class="ident">as_vec2</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `f32`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_vec2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_vec2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec2</span> {
             <span class="ident">Vec2::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">f32</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_vec3</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_vec3()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec3</span> {
             <span class="self">self</span>.<span class="ident">as_vec3</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `f32`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_vec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_vec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec3</span> {
             <span class="ident">Vec3::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="self">self</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">f32</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_vec4</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_vec4()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec4</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec4</span> {
             <span class="self">self</span>.<span class="ident">as_vec4</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `f32`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_vec4</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec4</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_vec4</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec4</span> {
             <span class="ident">Vec4::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="self">self</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="self">self</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">f32</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_dvec2</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_dvec2()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DVec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DVec2</span> {
             <span class="self">self</span>.<span class="ident">as_dvec2</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `f64`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dvec2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DVec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dvec2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DVec2</span> {
             <span class="ident">DVec2::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f64</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">f64</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_dvec3</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_dvec3()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DVec3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DVec3</span> {
             <span class="self">self</span>.<span class="ident">as_dvec3</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `f64`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dvec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DVec3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dvec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DVec3</span> {
             <span class="ident">DVec3::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f64</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">f64</span>, <span class="self">self</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">f64</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_dvec4</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_dvec4()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DVec4</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DVec4</span> {
             <span class="self">self</span>.<span class="ident">as_dvec4</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `f64`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dvec4</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DVec4</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_dvec4</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DVec4</span> {
             <span class="ident">DVec4::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f64</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">f64</span>, <span class="self">self</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">f64</span>, <span class="self">self</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">f64</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_ivec2</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_ivec2()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IVec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">IVec2</span> {
             <span class="self">self</span>.<span class="ident">as_ivec2</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `i32`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ivec2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IVec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ivec2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">IVec2</span> {
             <span class="ident">IVec2::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_ivec3</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_ivec3()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IVec3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">IVec3</span> {
             <span class="self">self</span>.<span class="ident">as_ivec3</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `i32`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ivec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IVec3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ivec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">IVec3</span> {
             <span class="ident">IVec3::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="self">self</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_ivec4</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_ivec4()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IVec4</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">IVec4</span> {
             <span class="self">self</span>.<span class="ident">as_ivec4</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `i32`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ivec4</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IVec4</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ivec4</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">IVec4</span> {
             <span class="ident">IVec4::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="self">self</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="self">self</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">i32</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_uvec2</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_uvec2()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UVec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">UVec2</span> {
             <span class="self">self</span>.<span class="ident">as_uvec2</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `u32`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_uvec2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UVec2</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_uvec2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">UVec2</span> {
             <span class="ident">UVec2::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">u32</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_uvec3</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_uvec3()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UVec3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">UVec3</span> {
             <span class="self">self</span>.<span class="ident">as_uvec3</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `u32`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_uvec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UVec3</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_uvec3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">UVec3</span> {
             <span class="ident">UVec3::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="self">self</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">u32</span>)
         }
     };
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_as_uvec4</span> {
-    () <span class="op">=</span><span class="op">&gt;</span> {
+    () =&gt; {
         <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.18.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `as_uvec4()` instead&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UVec4</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">UVec4</span> {
             <span class="self">self</span>.<span class="ident">as_uvec4</span>()
         }
 
         <span class="doccomment">/// Casts all elements of `self` to `u32`.</span>
         <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_uvec4</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UVec4</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_uvec4</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">UVec4</span> {
             <span class="ident">UVec4::new</span>(<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="self">self</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="self">self</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">u32</span>)
         }
     };

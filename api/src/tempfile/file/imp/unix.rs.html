@@ -149,8 +149,8 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cvt_err</span>(<span class="ident">result</span>: <span class="ident">c_int</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">c_int</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">result</span> <span class="op">=</span><span class="op">=</span> <span class="op">-</span><span class="number">1</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cvt_err</span>(<span class="ident">result</span>: <span class="ident">c_int</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">c_int</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="ident">result</span> <span class="op">==</span> <span class="op">-</span><span class="number">1</span> {
         <span class="prelude-val">Err</span>(<span class="ident">io::Error::last_os_error</span>())
     } <span class="kw">else</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
@@ -159,17 +159,17 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cvt_err</span>(<span class="ident">result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">syscall::Error</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cvt_err</span>(<span class="ident">result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">syscall::Error</span><span class="op">&gt;</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
     <span class="ident">result</span>.<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">io::Error::from_raw_os_error</span>(<span class="ident">err</span>.<span class="ident">errno</span>))
 }
 
 <span class="comment">// Stolen from std.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cstr</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">CString</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cstr</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">CString</span><span class="op">&gt;</span> {
     <span class="ident">CString::new</span>(<span class="ident">path</span>.<span class="ident">as_os_str</span>().<span class="ident">as_bytes</span>())
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::InvalidInput</span>, <span class="string">&quot;path contained a null&quot;</span>))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_named</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">open_options</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">OpenOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_named</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">open_options</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">OpenOptions</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
     <span class="ident">open_options</span>
         .<span class="ident">read</span>(<span class="bool-val">true</span>)
         .<span class="ident">write</span>(<span class="bool-val">true</span>)
@@ -178,7 +178,7 @@
         .<span class="ident">open</span>(<span class="ident">path</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">create_unlinked</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">create_unlinked</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">tmp</span>;
     <span class="comment">// shadow this to decrease the lifetime. It can&#39;t live longer than `tmp`.</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>;
@@ -196,7 +196,7 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;linux&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
     <span class="kw">use</span> <span class="ident">libc</span>::{<span class="ident">EISDIR</span>, <span class="ident">ENOENT</span>, <span class="ident">EOPNOTSUPP</span>, <span class="ident">O_EXCL</span>, <span class="ident">O_TMPFILE</span>};
     <span class="ident">OpenOptions::new</span>()
         .<span class="ident">read</span>(<span class="bool-val">true</span>)
@@ -206,18 +206,18 @@
         .<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
             <span class="kw">match</span> <span class="ident">e</span>.<span class="ident">raw_os_error</span>() {
                 <span class="comment">// These are the three &quot;not supported&quot; error codes for O_TMPFILE.</span>
-                <span class="prelude-val">Some</span>(<span class="ident">EOPNOTSUPP</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">EISDIR</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">ENOENT</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">create_unix</span>(<span class="ident">dir</span>),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">EOPNOTSUPP</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">EISDIR</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">ENOENT</span>) =&gt; <span class="ident">create_unix</span>(<span class="ident">dir</span>),
+                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">e</span>),
             }
         })
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;linux&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
     <span class="ident">create_unix</span>(<span class="ident">dir</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">create_unix</span>(<span class="ident">dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">create_unix</span>(<span class="ident">dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
     <span class="ident">util::create_helper</span>(
         <span class="ident">dir</span>,
         <span class="ident">OsStr::new</span>(<span class="string">&quot;.tmp&quot;</span>),
@@ -227,7 +227,7 @@
     )
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reopen</span>(<span class="ident">file</span>: <span class="kw-2">&amp;</span><span class="ident">File</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reopen</span>(<span class="ident">file</span>: <span class="kw-2">&amp;</span><span class="ident">File</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">new_file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>().<span class="ident">read</span>(<span class="bool-val">true</span>).<span class="ident">write</span>(<span class="bool-val">true</span>).<span class="ident">open</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">old_meta</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">metadata</span>()<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">new_meta</span> <span class="op">=</span> <span class="ident">new_file</span>.<span class="ident">metadata</span>()<span class="question-mark">?</span>;
@@ -241,7 +241,7 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">persist</span>(<span class="ident">old_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">new_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">overwrite</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">persist</span>(<span class="ident">old_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">new_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">overwrite</span>: <span class="ident">bool</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">unsafe</span> {
         <span class="kw">let</span> <span class="ident">old_path</span> <span class="op">=</span> <span class="ident">cstr</span>(<span class="ident">old_path</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">new_path</span> <span class="op">=</span> <span class="ident">cstr</span>(<span class="ident">new_path</span>)<span class="question-mark">?</span>;
@@ -264,12 +264,12 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">persist</span>(<span class="ident">old_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">new_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">overwrite</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">persist</span>(<span class="ident">old_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">new_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">overwrite</span>: <span class="ident">bool</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// XXX implement when possible</span>
     <span class="prelude-val">Err</span>(<span class="ident">io::Error::from_raw_os_error</span>(<span class="ident">syscall::ENOSYS</span>))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keep</span>(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keep</span>(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>

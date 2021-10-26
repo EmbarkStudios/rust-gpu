@@ -1131,7 +1131,7 @@
 
 <span class="doccomment">/// Returns an array of valid signatures for an instruction with opcode `op`,</span>
 <span class="doccomment">/// or `None` if there aren&#39;t any known type constraints for that instruction.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">instruction_signatures</span>(<span class="ident">op</span>: <span class="ident">Op</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">InstSig</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>]<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">instruction_signatures</span>(<span class="ident">op</span>: <span class="ident">Op</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">InstSig</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>]<span class="op">&gt;</span> {
     <span class="comment">// Restrict the names the `pat!` macro can take as pattern constructors.</span>
     <span class="kw">mod</span> <span class="ident">pat_ctors</span> {
         <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">S</span>: <span class="ident"><span class="kw">super</span>::StorageClassPat</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::StorageClassPat::S</span>;
@@ -1147,14 +1147,14 @@
     }
 
     <span class="macro">macro_rules!</span> <span class="ident">pat</span> {
-        (<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> { <span class="kw-2">&amp;</span><span class="ident">Pat::ANY</span> };
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span>:<span class="ident">ident</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>),<span class="op">+</span>))<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        (<span class="kw">_</span>) =&gt; { <span class="kw-2">&amp;</span><span class="ident">Pat::ANY</span> };
+        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span>:<span class="ident">ident</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>),<span class="op">+</span>))<span class="question-mark">?</span>) =&gt; {
             <span class="kw-2">&amp;</span><span class="ident">pat_ctors</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span> $(($(<span class="macro">pat!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>)),<span class="op">+</span>))<span class="question-mark">?</span>
         };
-        ([]) <span class="op">=</span><span class="op">&gt;</span> { <span class="kw-2">&amp;</span><span class="ident">TyListPat::Nil</span> };
-        ([..]) <span class="op">=</span><span class="op">&gt;</span> { <span class="kw-2">&amp;</span><span class="ident">TyListPat::Any</span> };
-        ([...$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="op">+</span>]) <span class="op">=</span><span class="op">&gt;</span> { <span class="macro">pat!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>)<span class="op">+</span>) };
-        ([<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span> $(, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>)<span class="question-mark">?</span>]) <span class="op">=</span><span class="op">&gt;</span> {
+        ([]) =&gt; { <span class="kw-2">&amp;</span><span class="ident">TyListPat::Nil</span> };
+        ([..]) =&gt; { <span class="kw-2">&amp;</span><span class="ident">TyListPat::Any</span> };
+        ([...$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="op">+</span>]) =&gt; { <span class="macro">pat!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>)<span class="op">+</span>) };
+        ([<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span> $(, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>)<span class="question-mark">?</span>]) =&gt; {
             <span class="kw-2">&amp;</span><span class="ident">TyListPat::Cons</span> {
                 <span class="ident">first</span>: <span class="macro">pat!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>),
                 <span class="ident">suffix</span>: <span class="macro">pat!</span>([$($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>)<span class="kw-2">*</span>)<span class="question-mark">?</span>]),
@@ -1162,10 +1162,10 @@
         }
     }
     <span class="macro">macro_rules!</span> <span class="ident">optionify</span> {
-        () <span class="op">=</span><span class="op">&gt;</span> {
+        () =&gt; {
             <span class="prelude-val">None</span>
         };
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">expr</span>) =&gt; {
             <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>)
         };
     }
@@ -1173,8 +1173,8 @@
         ($(
             $({$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">storage_class</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>})<span class="question-mark">?</span>
             ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_tys</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>)
-            $(<span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>)<span class="question-mark">?</span>
-        )<span class="op">|</span><span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            $(-&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>)<span class="question-mark">?</span>
+        )<span class="op">|</span><span class="op">+</span>) =&gt; {
             <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[$(<span class="ident">InstSig</span> {
                 <span class="ident">storage_class</span>: <span class="macro">optionify!</span>($(<span class="macro">pat!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">storage_class</span>)<span class="kw-2">*</span>))<span class="question-mark">?</span>),
                 <span class="ident">input_types</span>: <span class="macro">pat!</span>([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_tys</span>)<span class="kw-2">*</span>]),
@@ -1184,7 +1184,7 @@
     }
 
     <span class="macro">macro_rules!</span> <span class="ident">reserved</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ext</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ext</span>:<span class="ident">ident</span>) =&gt; {
             <span class="macro">unreachable!</span>(<span class="macro">concat!</span>(<span class="string">&quot;Op{:?} is reserved for &quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ext</span>)), <span class="ident">op</span>)
         };
     }
@@ -1192,9 +1192,9 @@
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::match_same_arms</span>)]</span>
     <span class="kw">match</span> <span class="ident">op</span> {
         <span class="comment">// 3.37.1. Miscellaneous Instructions</span>
-        <span class="ident">Op::Nop</span> <span class="op">|</span> <span class="ident">Op::Undef</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::Nop</span> <span class="op">|</span> <span class="ident">Op::Undef</span> =&gt; {}
         <span class="comment">// SPIR-V 1.1, Capability: Addresses</span>
-        <span class="ident">Op::SizeOf</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::SizeOf</span> =&gt; {}
 
         <span class="comment">// 3.37.2. Debug Instructions</span>
         <span class="ident">Op::SourceContinued</span>
@@ -1203,30 +1203,30 @@
         <span class="op">|</span> <span class="ident">Op::Name</span>
         <span class="op">|</span> <span class="ident">Op::MemberName</span>
         <span class="op">|</span> <span class="ident">Op::String</span>
-        <span class="op">|</span> <span class="ident">Op::Line</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="op">|</span> <span class="ident">Op::Line</span> =&gt; {}
         <span class="comment">//</span>
-        <span class="ident">Op::NoLine</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::NoLine</span> =&gt; {}
         <span class="comment">// SPIR-V 1.1</span>
-        <span class="ident">Op::ModuleProcessed</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::ModuleProcessed</span> =&gt; {}
 
         <span class="comment">// 3.37.3. Annotation Instructions</span>
         <span class="ident">Op::Decorate</span>
         <span class="op">|</span> <span class="ident">Op::MemberDecorate</span>
         <span class="op">|</span> <span class="ident">Op::DecorationGroup</span>
         <span class="op">|</span> <span class="ident">Op::GroupDecorate</span>
-        <span class="op">|</span> <span class="ident">Op::GroupMemberDecorate</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="op">|</span> <span class="ident">Op::GroupMemberDecorate</span> =&gt; {}
         <span class="comment">// SPIR-V 1.2</span>
-        <span class="ident">Op::DecorateId</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::DecorateId</span> =&gt; {}
         <span class="comment">// SPIR-V 1.4</span>
-        <span class="ident">Op::DecorateString</span> <span class="op">|</span> <span class="ident">Op::MemberDecorateString</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::DecorateString</span> <span class="op">|</span> <span class="ident">Op::MemberDecorateString</span> =&gt; {}
 
         <span class="comment">// 3.37.4. Extension Instructions</span>
-        <span class="ident">Op::Extension</span> <span class="op">|</span> <span class="ident">Op::ExtInstImport</span> <span class="op">|</span> <span class="ident">Op::ExtInst</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::Extension</span> <span class="op">|</span> <span class="ident">Op::ExtInstImport</span> <span class="op">|</span> <span class="ident">Op::ExtInst</span> =&gt; {}
 
         <span class="comment">// 3.37.5. Mode-Setting Instructions</span>
-        <span class="ident">Op::MemoryModel</span> <span class="op">|</span> <span class="ident">Op::EntryPoint</span> <span class="op">|</span> <span class="ident">Op::ExecutionMode</span> <span class="op">|</span> <span class="ident">Op::Capability</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::MemoryModel</span> <span class="op">|</span> <span class="ident">Op::EntryPoint</span> <span class="op">|</span> <span class="ident">Op::ExecutionMode</span> <span class="op">|</span> <span class="ident">Op::Capability</span> =&gt; {}
         <span class="comment">// SPIR-V 1.2</span>
-        <span class="ident">Op::ExecutionModeId</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::ExecutionModeId</span> =&gt; {}
 
         <span class="comment">// 3.37.6. Type-Declaration Instructions</span>
         <span class="ident">Op::TypeVoid</span>
@@ -1249,26 +1249,26 @@
         <span class="op">|</span> <span class="ident">Op::TypeReserveId</span>
         <span class="op">|</span> <span class="ident">Op::TypeQueue</span>
         <span class="op">|</span> <span class="ident">Op::TypePipe</span>
-        <span class="op">|</span> <span class="ident">Op::TypeForwardPointer</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="op">|</span> <span class="ident">Op::TypeForwardPointer</span> =&gt; {}
         <span class="comment">// SPIR-V 1.1, Capability: PipeStorage</span>
-        <span class="ident">Op::TypePipeStorage</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::TypePipeStorage</span> =&gt; {}
         <span class="comment">// SPIR-V 1.1, Capability: NamedBarrier</span>
-        <span class="ident">Op::TypeNamedBarrier</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::TypeNamedBarrier</span> =&gt; {}
 
         <span class="comment">// 3.37.7. Constant-Creation Instructions</span>
-        <span class="ident">Op::ConstantTrue</span> <span class="op">|</span> <span class="ident">Op::ConstantFalse</span> <span class="op">|</span> <span class="ident">Op::Constant</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::ConstantComposite</span> <span class="op">|</span> <span class="ident">Op::SpecConstantComposite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (...<span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>(<span class="ident">TS</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">T</span>)
+        <span class="ident">Op::ConstantTrue</span> <span class="op">|</span> <span class="ident">Op::ConstantFalse</span> <span class="op">|</span> <span class="ident">Op::Constant</span> =&gt; {}
+        <span class="ident">Op::ConstantComposite</span> <span class="op">|</span> <span class="ident">Op::SpecConstantComposite</span> =&gt; <span class="macro">sig!</span> {
+            (...<span class="ident">TS</span>) -&gt; <span class="ident">Struct</span>(<span class="ident">TS</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Matrix</span>(<span class="ident">T</span>)
         },
         <span class="ident">Op::ConstantSampler</span>
         <span class="op">|</span> <span class="ident">Op::ConstantNull</span>
         <span class="op">|</span> <span class="ident">Op::SpecConstantTrue</span>
         <span class="op">|</span> <span class="ident">Op::SpecConstantFalse</span>
-        <span class="op">|</span> <span class="ident">Op::SpecConstant</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::SpecConstantOp</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="op">|</span> <span class="ident">Op::SpecConstant</span> =&gt; {}
+        <span class="ident">Op::SpecConstantOp</span> =&gt; {
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;Op{:?} should be specially handled outside spirv_type_constraints&quot;</span>,
                 <span class="ident">op</span>
@@ -1276,95 +1276,95 @@
         }
 
         <span class="comment">// 3.37.8. Memory Instructions</span>
-        <span class="ident">Op::Variable</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            {<span class="ident">S</span>} () <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="kw">_</span>) <span class="op">|</span>
-            {<span class="ident">S</span>} (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>)
+        <span class="ident">Op::Variable</span> =&gt; <span class="macro">sig!</span> {
+            {<span class="ident">S</span>} () -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="kw">_</span>) <span class="op">|</span>
+            {<span class="ident">S</span>} (<span class="ident">T</span>) -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>)
         },
-        <span class="ident">Op::ImageTexelPointer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">Image</span>(<span class="ident">T</span>)), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>) },
-        <span class="ident">Op::Load</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::Store</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">T</span>) },
-        <span class="ident">Op::CopyMemory</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) },
-        <span class="ident">Op::CopyMemorySized</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::AccessChain</span> <span class="op">|</span> <span class="ident">Op::InBoundsAccessChain</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>), ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">IndexComposite</span>(<span class="ident">T</span>))
+        <span class="ident">Op::ImageTexelPointer</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">Image</span>(<span class="ident">T</span>)), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>) },
+        <span class="ident">Op::Load</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::Store</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">T</span>) },
+        <span class="ident">Op::CopyMemory</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) },
+        <span class="ident">Op::CopyMemorySized</span> =&gt; {}
+        <span class="ident">Op::AccessChain</span> <span class="op">|</span> <span class="ident">Op::InBoundsAccessChain</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>), ..<span class="comment">/*indices*/</span>) -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">IndexComposite</span>(<span class="ident">T</span>))
         },
-        <span class="ident">Op::PtrAccessChain</span> <span class="op">|</span> <span class="ident">Op::InBoundsPtrAccessChain</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>), <span class="kw">_</span>, ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">IndexComposite</span>(<span class="ident">T</span>))
+        <span class="ident">Op::PtrAccessChain</span> <span class="op">|</span> <span class="ident">Op::InBoundsPtrAccessChain</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>), <span class="kw">_</span>, ..<span class="comment">/*indices*/</span>) -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">IndexComposite</span>(<span class="ident">T</span>))
         },
-        <span class="ident">Op::ArrayLength</span> <span class="op">|</span> <span class="ident">Op::GenericPtrMemSemantics</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::ArrayLength</span> <span class="op">|</span> <span class="ident">Op::GenericPtrMemSemantics</span> =&gt; {}
         <span class="comment">// SPIR-V 1.4</span>
-        <span class="ident">Op::PtrEqual</span> <span class="op">|</span> <span class="ident">Op::PtrNotEqual</span> <span class="op">|</span> <span class="ident">Op::PtrDiff</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span>
+        <span class="ident">Op::PtrEqual</span> <span class="op">|</span> <span class="ident">Op::PtrNotEqual</span> <span class="op">|</span> <span class="ident">Op::PtrDiff</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="kw">_</span>
         },
 
         <span class="comment">// 3.37.9. Function Instructions</span>
-        <span class="ident">Op::Function</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::FunctionParameter</span> <span class="op">|</span> <span class="ident">Op::FunctionEnd</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Op::Function</span> =&gt; {}
+        <span class="ident">Op::FunctionParameter</span> <span class="op">|</span> <span class="ident">Op::FunctionEnd</span> =&gt; {
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;Op{:?} should be specially handled outside spirv_type_constraints&quot;</span>,
                 <span class="ident">op</span>
             );
         }
-        <span class="ident">Op::FunctionCall</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Function</span>(<span class="ident">T</span>, <span class="ident">TS</span>), ...<span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op::FunctionCall</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Function</span>(<span class="ident">T</span>, <span class="ident">TS</span>), ...<span class="ident">TS</span>) -&gt; <span class="ident">T</span> },
 
         <span class="comment">// 3.37.10. Image Instructions</span>
-        <span class="ident">Op::SampledImage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SampledImage</span>(<span class="ident">T</span>) },
+        <span class="ident">Op::SampledImage</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">SampledImage</span>(<span class="ident">T</span>) },
         <span class="ident">Op::ImageSampleImplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSampleExplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSampleProjImplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSampleProjExplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageGather</span>
-        <span class="op">|</span> <span class="ident">Op::ImageDrefGather</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>))), ..) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector4</span>(<span class="ident">T</span>)
+        <span class="op">|</span> <span class="ident">Op::ImageDrefGather</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>))), ..) -&gt; <span class="ident">Vector4</span>(<span class="ident">T</span>)
         },
         <span class="ident">Op::ImageSampleDrefImplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSampleDrefExplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSampleProjDrefImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSampleProjDrefExplicitLod</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">T</span>)), ..) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+        <span class="op">|</span> <span class="ident">Op::ImageSampleProjDrefExplicitLod</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">T</span>)), ..) -&gt; <span class="ident">T</span>
         },
-        <span class="ident">Op::ImageFetch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector4</span>(<span class="ident">T</span>)
+        <span class="ident">Op::ImageFetch</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) -&gt; <span class="ident">Vector4</span>(<span class="ident">T</span>)
         },
-        <span class="ident">Op::ImageRead</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)
+        <span class="ident">Op::ImageRead</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) -&gt; <span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)
         },
-        <span class="ident">Op::ImageWrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::ImageWrite</span> =&gt; <span class="macro">sig!</span> {
             (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), <span class="kw">_</span>, <span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>))
         },
-        <span class="ident">Op::Image</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">SampledImage</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op::Image</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">SampledImage</span>(<span class="ident">T</span>)) -&gt; <span class="ident">T</span> },
         <span class="ident">Op::ImageQueryFormat</span>
         <span class="op">|</span> <span class="ident">Op::ImageQueryOrder</span>
         <span class="op">|</span> <span class="ident">Op::ImageQuerySizeLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageQuerySize</span>
         <span class="op">|</span> <span class="ident">Op::ImageQueryLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageQueryLevels</span>
-        <span class="op">|</span> <span class="ident">Op::ImageQuerySamples</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="op">|</span> <span class="ident">Op::ImageQuerySamples</span> =&gt; {}
         <span class="comment">// Capability: SparseResidency</span>
         <span class="ident">Op::ImageSparseSampleImplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSparseSampleExplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSparseSampleProjImplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSparseSampleProjExplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSparseGather</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseDrefGather</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>))), ..) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">Vector4</span>(<span class="ident">T</span>)])
+        <span class="op">|</span> <span class="ident">Op::ImageSparseDrefGather</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>))), ..) -&gt; <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">Vector4</span>(<span class="ident">T</span>)])
         },
         <span class="ident">Op::ImageSparseSampleDrefImplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSparseSampleDrefExplicitLod</span>
         <span class="op">|</span> <span class="ident">Op::ImageSparseSampleProjDrefImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseSampleProjDrefExplicitLod</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">T</span>)), ..) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">T</span>])
+        <span class="op">|</span> <span class="ident">Op::ImageSparseSampleProjDrefExplicitLod</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">T</span>)), ..) -&gt; <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">T</span>])
         },
-        <span class="ident">Op::ImageSparseFetch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">Vector4</span>(<span class="ident">T</span>)])
+        <span class="ident">Op::ImageSparseFetch</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) -&gt; <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">Vector4</span>(<span class="ident">T</span>)])
         },
-        <span class="ident">Op::ImageSparseTexelsResident</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::ImageSparseTexelsResident</span> =&gt; {}
         <span class="comment">// Capability: SparseResidency</span>
-        <span class="ident">Op::ImageSparseRead</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)])
+        <span class="ident">Op::ImageSparseRead</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) -&gt; <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)])
         },
         <span class="comment">// SPV_NV_shader_image_footprint</span>
-        <span class="ident">Op::ImageSampleFootprintNV</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::ImageSampleFootprintNV</span> =&gt; {}
 
         <span class="comment">// 3.37.11. Conversion Instructions</span>
         <span class="ident">Op::ConvertFToU</span>
@@ -1373,77 +1373,77 @@
         <span class="op">|</span> <span class="ident">Op::ConvertUToF</span>
         <span class="op">|</span> <span class="ident">Op::UConvert</span>
         <span class="op">|</span> <span class="ident">Op::SConvert</span>
-        <span class="op">|</span> <span class="ident">Op::FConvert</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::QuantizeToF16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::ConvertPtrToU</span> <span class="op">|</span> <span class="ident">Op::SatConvertSToU</span> <span class="op">|</span> <span class="ident">Op::SatConvertUToS</span> <span class="op">|</span> <span class="ident">Op::ConvertUToPtr</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::PtrCastToGeneric</span> <span class="op">|</span> <span class="ident">Op::GenericCastToPtr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>) },
-        <span class="ident">Op::GenericCastToPtrExplicit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { {<span class="ident">S</span>} (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>) },
-        <span class="ident">Op::Bitcast</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="op">|</span> <span class="ident">Op::FConvert</span> =&gt; {}
+        <span class="ident">Op::QuantizeToF16</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::ConvertPtrToU</span> <span class="op">|</span> <span class="ident">Op::SatConvertSToU</span> <span class="op">|</span> <span class="ident">Op::SatConvertUToS</span> <span class="op">|</span> <span class="ident">Op::ConvertUToPtr</span> =&gt; {}
+        <span class="ident">Op::PtrCastToGeneric</span> <span class="op">|</span> <span class="ident">Op::GenericCastToPtr</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>) },
+        <span class="ident">Op::GenericCastToPtrExplicit</span> =&gt; <span class="macro">sig!</span> { {<span class="ident">S</span>} (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>) },
+        <span class="ident">Op::Bitcast</span> =&gt; {}
 
         <span class="comment">// 3.37.12. Composite Instructions</span>
-        <span class="ident">Op::VectorExtractDynamic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::VectorInsertDynamic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::VectorExtractDynamic</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::VectorInsertDynamic</span> =&gt; <span class="macro">sig!</span> {
             <span class="comment">// FIXME(eddyb) was `(Vector(T), T, _) -&gt; Vector(T)` but that was</span>
             <span class="comment">// missing an equality constraint between input and output vectors;</span>
             <span class="comment">// we should use `(Vector(T, N), T, _) -&gt; Vector(T, N)`, or constrain</span>
             <span class="comment">// input and output vectors to have the same type some other way.</span>
-            (<span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+            (<span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span>
         },
-        <span class="ident">Op::VectorShuffle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Vector</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>) },
-        <span class="ident">Op::CompositeConstruct</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (...<span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>(<span class="ident">TS</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>)
+        <span class="ident">Op::VectorShuffle</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Vector</span>(<span class="ident">T</span>)) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>) },
+        <span class="ident">Op::CompositeConstruct</span> =&gt; <span class="macro">sig!</span> {
+            (...<span class="ident">TS</span>) -&gt; <span class="ident">Struct</span>(<span class="ident">TS</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Matrix</span>(<span class="ident">T</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)])) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>)
         },
-        <span class="ident">Op::CompositeExtract</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IndexComposite</span>(<span class="ident">T</span>) },
-        <span class="ident">Op::CompositeInsert</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">IndexComposite</span>(<span class="ident">T</span>), <span class="ident">T</span>, ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::CopyObject</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::Transpose</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)) },
+        <span class="ident">Op::CompositeExtract</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, ..<span class="comment">/*indices*/</span>) -&gt; <span class="ident">IndexComposite</span>(<span class="ident">T</span>) },
+        <span class="ident">Op::CompositeInsert</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">IndexComposite</span>(<span class="ident">T</span>), <span class="ident">T</span>, ..<span class="comment">/*indices*/</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::CopyObject</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::Transpose</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))) -&gt; <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)) },
         <span class="comment">// SPIR-V 1.4</span>
-        <span class="ident">Op::CopyLogical</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::CopyLogical</span> =&gt; <span class="macro">sig!</span> {
             <span class="comment">// FIXME(eddyb) this is shallow right now, it should recurse instead</span>
-            (<span class="ident">Array</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (<span class="ident">Struct</span>(<span class="ident">TS</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>(<span class="ident">TS</span>)
+            (<span class="ident">Array</span>(<span class="ident">T</span>)) -&gt; <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
+            (<span class="ident">Struct</span>(<span class="ident">TS</span>)) -&gt; <span class="ident">Struct</span>(<span class="ident">TS</span>)
         },
 
         <span class="comment">// 3.37.13. Arithmetic Instructions</span>
-        <span class="ident">Op::SNegate</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::FNegate</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::IAdd</span> <span class="op">|</span> <span class="ident">Op::ISub</span> <span class="op">|</span> <span class="ident">Op::IMul</span> <span class="op">|</span> <span class="ident">Op::SDiv</span> <span class="op">|</span> <span class="ident">Op::SRem</span> <span class="op">|</span> <span class="ident">Op::SMod</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::FAdd</span> <span class="op">|</span> <span class="ident">Op::FSub</span> <span class="op">|</span> <span class="ident">Op::FMul</span> <span class="op">|</span> <span class="ident">Op::UDiv</span> <span class="op">|</span> <span class="ident">Op::FDiv</span> <span class="op">|</span> <span class="ident">Op::UMod</span> <span class="op">|</span> <span class="ident">Op::FRem</span> <span class="op">|</span> <span class="ident">Op::FMod</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> }
+        <span class="ident">Op::SNegate</span> =&gt; {}
+        <span class="ident">Op::FNegate</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::IAdd</span> <span class="op">|</span> <span class="ident">Op::ISub</span> <span class="op">|</span> <span class="ident">Op::IMul</span> <span class="op">|</span> <span class="ident">Op::SDiv</span> <span class="op">|</span> <span class="ident">Op::SRem</span> <span class="op">|</span> <span class="ident">Op::SMod</span> =&gt; {}
+        <span class="ident">Op::FAdd</span> <span class="op">|</span> <span class="ident">Op::FSub</span> <span class="op">|</span> <span class="ident">Op::FMul</span> <span class="op">|</span> <span class="ident">Op::UDiv</span> <span class="op">|</span> <span class="ident">Op::FDiv</span> <span class="op">|</span> <span class="ident">Op::UMod</span> <span class="op">|</span> <span class="ident">Op::FRem</span> <span class="op">|</span> <span class="ident">Op::FMod</span> =&gt; {
+            <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> }
         }
-        <span class="ident">Op::VectorTimesScalar</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::VectorTimesScalar</span> =&gt; <span class="macro">sig!</span> {
             <span class="comment">// FIXME(eddyb) missing equality constraint between input and output vectors.</span>
-            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>)
+            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>)
         },
-        <span class="ident">Op::MatrixTimesScalar</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::MatrixTimesScalar</span> =&gt; <span class="macro">sig!</span> {
             <span class="comment">// FIXME(eddyb) missing equality constraint between input and output matrices.</span>
-            (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)), <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))
+            (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)), <span class="ident">T</span>) -&gt; <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))
         },
-        <span class="ident">Op::VectorTimesMatrix</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>) },
-        <span class="ident">Op::MatrixTimesVector</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::VectorTimesMatrix</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>) },
+        <span class="ident">Op::MatrixTimesVector</span> =&gt; <span class="macro">sig!</span> {
             <span class="comment">// FIXME(eddyb) missing equality constraint between input vector and</span>
             <span class="comment">// the matrix&#39; column vector.</span>
-            (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)), <span class="ident">Vector</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>)
+            (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)), <span class="ident">Vector</span>(<span class="ident">T</span>)) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>)
         },
-        <span class="ident">Op::MatrixTimesMatrix</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::MatrixTimesMatrix</span> =&gt; <span class="macro">sig!</span> {
             <span class="comment">// FIXME(eddyb) missing equality constraint between the column vectors</span>
             <span class="comment">// of the first input and of the output.</span>
-            (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)), <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))
+            (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)), <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))) -&gt; <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))
         },
-        <span class="ident">Op::OuterProduct</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::OuterProduct</span> =&gt; <span class="macro">sig!</span> {
             <span class="comment">// FIXME(eddyb) missing equality constraint between first input vector and</span>
             <span class="comment">// the matrix&#39; column vector.</span>
-            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Vector</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))
+            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Vector</span>(<span class="ident">T</span>)) -&gt; <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))
         },
-        <span class="ident">Op::Dot</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::Dot</span> =&gt; <span class="macro">sig!</span> {
             <span class="comment">// FIXME(eddyb) missing equality constraint between two vectors</span>
-            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>)
+            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>)
         },
-        <span class="ident">Op::IAddCarry</span> <span class="op">|</span> <span class="ident">Op::ISubBorrow</span> <span class="op">|</span> <span class="ident">Op::UMulExtended</span> <span class="op">|</span> <span class="ident">Op::SMulExtended</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>([<span class="ident">T</span>, <span class="ident">T</span>])
+        <span class="ident">Op::IAddCarry</span> <span class="op">|</span> <span class="ident">Op::ISubBorrow</span> <span class="op">|</span> <span class="ident">Op::UMulExtended</span> <span class="op">|</span> <span class="ident">Op::SMulExtended</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">Struct</span>([<span class="ident">T</span>, <span class="ident">T</span>])
         },
 
         <span class="comment">// 3.37.14. Bit Instructions</span>
@@ -1453,11 +1453,11 @@
         <span class="op">|</span> <span class="ident">Op::BitwiseOr</span>
         <span class="op">|</span> <span class="ident">Op::BitwiseXor</span>
         <span class="op">|</span> <span class="ident">Op::BitwiseAnd</span>
-        <span class="op">|</span> <span class="ident">Op::Not</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::BitFieldInsert</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::BitFieldSExtract</span> <span class="op">|</span> <span class="ident">Op::BitFieldUExtract</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::BitReverse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::BitCount</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="op">|</span> <span class="ident">Op::Not</span> =&gt; {}
+        <span class="ident">Op::BitFieldInsert</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::BitFieldSExtract</span> <span class="op">|</span> <span class="ident">Op::BitFieldUExtract</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::BitReverse</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::BitCount</span> =&gt; {}
 
         <span class="comment">// 3.37.15. Relational and Logical Instructions</span>
         <span class="ident">Op::Any</span>
@@ -1466,13 +1466,13 @@
         <span class="op">|</span> <span class="ident">Op::IsInf</span>
         <span class="op">|</span> <span class="ident">Op::IsFinite</span>
         <span class="op">|</span> <span class="ident">Op::IsNormal</span>
-        <span class="op">|</span> <span class="ident">Op::SignBitSet</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::LessOrGreater</span> <span class="op">|</span> <span class="ident">Op::Ordered</span> <span class="op">|</span> <span class="ident">Op::Unordered</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> },
-        <span class="ident">Op::LogicalEqual</span> <span class="op">|</span> <span class="ident">Op::LogicalNotEqual</span> <span class="op">|</span> <span class="ident">Op::LogicalOr</span> <span class="op">|</span> <span class="ident">Op::LogicalAnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+        <span class="op">|</span> <span class="ident">Op::SignBitSet</span> =&gt; {}
+        <span class="ident">Op::LessOrGreater</span> <span class="op">|</span> <span class="ident">Op::Ordered</span> <span class="op">|</span> <span class="ident">Op::Unordered</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="kw">_</span> },
+        <span class="ident">Op::LogicalEqual</span> <span class="op">|</span> <span class="ident">Op::LogicalNotEqual</span> <span class="op">|</span> <span class="ident">Op::LogicalOr</span> <span class="op">|</span> <span class="ident">Op::LogicalAnd</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span>
         },
-        <span class="ident">Op::LogicalNot</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::Select</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op::LogicalNot</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::Select</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
         <span class="ident">Op::IEqual</span>
         <span class="op">|</span> <span class="ident">Op::INotEqual</span>
         <span class="op">|</span> <span class="ident">Op::UGreaterThan</span>
@@ -1482,7 +1482,7 @@
         <span class="op">|</span> <span class="ident">Op::ULessThan</span>
         <span class="op">|</span> <span class="ident">Op::SLessThan</span>
         <span class="op">|</span> <span class="ident">Op::ULessThanEqual</span>
-        <span class="op">|</span> <span class="ident">Op::SLessThanEqual</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="op">|</span> <span class="ident">Op::SLessThanEqual</span> =&gt; {}
         <span class="ident">Op::FOrdEqual</span>
         <span class="op">|</span> <span class="ident">Op::FUnordEqual</span>
         <span class="op">|</span> <span class="ident">Op::FOrdNotEqual</span>
@@ -1494,7 +1494,7 @@
         <span class="op">|</span> <span class="ident">Op::FOrdLessThanEqual</span>
         <span class="op">|</span> <span class="ident">Op::FUnordLessThanEqual</span>
         <span class="op">|</span> <span class="ident">Op::FOrdGreaterThanEqual</span>
-        <span class="op">|</span> <span class="ident">Op::FUnordGreaterThanEqual</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> },
+        <span class="op">|</span> <span class="ident">Op::FUnordGreaterThanEqual</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="kw">_</span> },
 
         <span class="comment">// 3.37.16. Derivative Instructions</span>
         <span class="ident">Op::DPdx</span>
@@ -1505,30 +1505,30 @@
         <span class="op">|</span> <span class="ident">Op::FwidthFine</span>
         <span class="op">|</span> <span class="ident">Op::DPdxCoarse</span>
         <span class="op">|</span> <span class="ident">Op::DPdyCoarse</span>
-        <span class="op">|</span> <span class="ident">Op::FwidthCoarse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="op">|</span> <span class="ident">Op::FwidthCoarse</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
 
         <span class="comment">// 3.37.17. Control-Flow Instructions</span>
-        <span class="ident">Op::Phi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (...<span class="ident">Repeat</span>([<span class="ident">T</span>, <span class="kw">_</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op::Phi</span> =&gt; <span class="macro">sig!</span> { (...<span class="ident">Repeat</span>([<span class="ident">T</span>, <span class="kw">_</span>])) -&gt; <span class="ident">T</span> },
         <span class="ident">Op::LoopMerge</span>
         <span class="op">|</span> <span class="ident">Op::SelectionMerge</span>
         <span class="op">|</span> <span class="ident">Op::Label</span>
         <span class="op">|</span> <span class="ident">Op::Branch</span>
         <span class="op">|</span> <span class="ident">Op::BranchConditional</span>
         <span class="op">|</span> <span class="ident">Op::Switch</span>
-        <span class="op">|</span> <span class="ident">Op::Kill</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::Return</span> <span class="op">|</span> <span class="ident">Op::ReturnValue</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="op">|</span> <span class="ident">Op::Kill</span> =&gt; {}
+        <span class="ident">Op::Return</span> <span class="op">|</span> <span class="ident">Op::ReturnValue</span> =&gt; {
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;Op{:?} should be specially handled outside spirv_type_constraints&quot;</span>,
                 <span class="ident">op</span>
             );
         }
-        <span class="ident">Op::Unreachable</span> <span class="op">|</span> <span class="ident">Op::LifetimeStart</span> <span class="op">|</span> <span class="ident">Op::LifetimeStop</span> <span class="op">|</span> <span class="ident">Op::TerminateInvocation</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::Unreachable</span> <span class="op">|</span> <span class="ident">Op::LifetimeStart</span> <span class="op">|</span> <span class="ident">Op::LifetimeStop</span> <span class="op">|</span> <span class="ident">Op::TerminateInvocation</span> =&gt; {}
 
         <span class="comment">// 3.37.18. Atomic Instructions</span>
-        <span class="ident">Op::AtomicLoad</span> <span class="op">|</span> <span class="ident">Op::AtomicIIncrement</span> <span class="op">|</span> <span class="ident">Op::AtomicIDecrement</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+        <span class="ident">Op::AtomicLoad</span> <span class="op">|</span> <span class="ident">Op::AtomicIIncrement</span> <span class="op">|</span> <span class="ident">Op::AtomicIDecrement</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span>
         },
-        <span class="ident">Op::AtomicStore</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) },
+        <span class="ident">Op::AtomicStore</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) },
         <span class="ident">Op::AtomicExchange</span>
         <span class="op">|</span> <span class="ident">Op::AtomicIAdd</span>
         <span class="op">|</span> <span class="ident">Op::AtomicISub</span>
@@ -1538,28 +1538,28 @@
         <span class="op">|</span> <span class="ident">Op::AtomicUMax</span>
         <span class="op">|</span> <span class="ident">Op::AtomicAnd</span>
         <span class="op">|</span> <span class="ident">Op::AtomicOr</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicXor</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::AtomicCompareExchange</span> <span class="op">|</span> <span class="ident">Op::AtomicCompareExchangeWeak</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+        <span class="op">|</span> <span class="ident">Op::AtomicXor</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::AtomicCompareExchange</span> <span class="op">|</span> <span class="ident">Op::AtomicCompareExchangeWeak</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span>
         },
         <span class="comment">// Capability: Kernel</span>
-        <span class="ident">Op::AtomicFlagTestAndSet</span> <span class="op">|</span> <span class="ident">Op::AtomicFlagClear</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::AtomicFlagTestAndSet</span> <span class="op">|</span> <span class="ident">Op::AtomicFlagClear</span> =&gt; {}
         <span class="comment">// SPV_EXT_shader_atomic_float_add</span>
-        <span class="ident">Op::AtomicFAddEXT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op::AtomicFAddEXT</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
 
         <span class="comment">// 3.37.19. Primitive Instructions</span>
-        <span class="ident">Op::EmitVertex</span> <span class="op">|</span> <span class="ident">Op::EndPrimitive</span> <span class="op">|</span> <span class="ident">Op::EmitStreamVertex</span> <span class="op">|</span> <span class="ident">Op::EndStreamPrimitive</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::EmitVertex</span> <span class="op">|</span> <span class="ident">Op::EndPrimitive</span> <span class="op">|</span> <span class="ident">Op::EmitStreamVertex</span> <span class="op">|</span> <span class="ident">Op::EndStreamPrimitive</span> =&gt; {}
 
         <span class="comment">// 3.37.20. Barrier Instructions</span>
-        <span class="ident">Op::ControlBarrier</span> <span class="op">|</span> <span class="ident">Op::MemoryBarrier</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::ControlBarrier</span> <span class="op">|</span> <span class="ident">Op::MemoryBarrier</span> =&gt; {}
         <span class="comment">// SPIR-V 1.1, Capability: NamedBarrier</span>
-        <span class="ident">Op::NamedBarrierInitialize</span> <span class="op">|</span> <span class="ident">Op::MemoryNamedBarrier</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::NamedBarrierInitialize</span> <span class="op">|</span> <span class="ident">Op::MemoryNamedBarrier</span> =&gt; {}
 
         <span class="comment">// 3.37.21. Group and Subgroup Instructions</span>
-        <span class="ident">Op::GroupAsyncCopy</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> },
-        <span class="ident">Op::GroupWaitEvents</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::GroupAll</span> <span class="op">|</span> <span class="ident">Op::GroupAny</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::GroupBroadcast</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op::GroupAsyncCopy</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="kw">_</span> },
+        <span class="ident">Op::GroupWaitEvents</span> =&gt; {}
+        <span class="ident">Op::GroupAll</span> <span class="op">|</span> <span class="ident">Op::GroupAny</span> =&gt; {}
+        <span class="ident">Op::GroupBroadcast</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
         <span class="ident">Op::GroupIAdd</span>
         <span class="op">|</span> <span class="ident">Op::GroupFAdd</span>
         <span class="op">|</span> <span class="ident">Op::GroupFMin</span>
@@ -1567,14 +1567,14 @@
         <span class="op">|</span> <span class="ident">Op::GroupSMin</span>
         <span class="op">|</span> <span class="ident">Op::GroupFMax</span>
         <span class="op">|</span> <span class="ident">Op::GroupUMax</span>
-        <span class="op">|</span> <span class="ident">Op::GroupSMax</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="op">|</span> <span class="ident">Op::GroupSMax</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
         <span class="comment">// SPV_KHR_shader_ballot</span>
-        <span class="ident">Op::SubgroupBallotKHR</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::SubgroupFirstInvocationKHR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op::SubgroupBallotKHR</span> =&gt; {}
+        <span class="ident">Op::SubgroupFirstInvocationKHR</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
         <span class="comment">// SPV_KHR_subgroup_vote</span>
-        <span class="ident">Op::SubgroupAllKHR</span> <span class="op">|</span> <span class="ident">Op::SubgroupAnyKHR</span> <span class="op">|</span> <span class="ident">Op::SubgroupAllEqualKHR</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::SubgroupAllKHR</span> <span class="op">|</span> <span class="ident">Op::SubgroupAnyKHR</span> <span class="op">|</span> <span class="ident">Op::SubgroupAllEqualKHR</span> =&gt; {}
         <span class="comment">// SPV_KHR_shader_ballot</span>
-        <span class="ident">Op::SubgroupReadInvocationKHR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op::SubgroupReadInvocationKHR</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
         <span class="comment">// SPV_AMD_shader_ballot</span>
         <span class="ident">Op::GroupIAddNonUniformAMD</span>
         <span class="op">|</span> <span class="ident">Op::GroupFAddNonUniformAMD</span>
@@ -1583,15 +1583,15 @@
         <span class="op">|</span> <span class="ident">Op::GroupSMinNonUniformAMD</span>
         <span class="op">|</span> <span class="ident">Op::GroupFMaxNonUniformAMD</span>
         <span class="op">|</span> <span class="ident">Op::GroupUMaxNonUniformAMD</span>
-        <span class="op">|</span> <span class="ident">Op::GroupSMaxNonUniformAMD</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="op">|</span> <span class="ident">Op::GroupSMaxNonUniformAMD</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
         <span class="comment">// SPV_INTEL_subgroups</span>
-        <span class="ident">Op::SubgroupShuffleINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupShuffleXorINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::SubgroupShuffleDownINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupShuffleUpINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::SubgroupBlockReadINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::SubgroupBlockWriteINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">T</span>) },
-        <span class="ident">Op::SubgroupImageBlockReadINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupImageBlockWriteINTEL</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::SubgroupShuffleINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupShuffleXorINTEL</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::SubgroupShuffleDownINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupShuffleUpINTEL</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::SubgroupBlockReadINTEL</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::SubgroupBlockWriteINTEL</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">T</span>) },
+        <span class="ident">Op::SubgroupImageBlockReadINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupImageBlockWriteINTEL</span> =&gt; {}
         <span class="comment">// SPV_INTEL_media_block_io</span>
-        <span class="ident">Op::SubgroupImageMediaBlockReadINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupImageMediaBlockWriteINTEL</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::SubgroupImageMediaBlockReadINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupImageMediaBlockWriteINTEL</span> =&gt; {}
 
         <span class="comment">// 3.37.22. Device-Side Enqueue Instructions</span>
         <span class="ident">Op::EnqueueMarker</span>
@@ -1606,15 +1606,15 @@
         <span class="op">|</span> <span class="ident">Op::IsValidEvent</span>
         <span class="op">|</span> <span class="ident">Op::SetUserEventStatus</span>
         <span class="op">|</span> <span class="ident">Op::CaptureEventProfilingInfo</span>
-        <span class="op">|</span> <span class="ident">Op::GetDefaultQueue</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::BuildNDRange</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> },
+        <span class="op">|</span> <span class="ident">Op::GetDefaultQueue</span> =&gt; {}
+        <span class="ident">Op::BuildNDRange</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="kw">_</span> },
         <span class="comment">// SPIR-V 1.1, Capability: SubgroupDispatch</span>
-        <span class="ident">Op::GetKernelLocalSizeForSubgroupCount</span> <span class="op">|</span> <span class="ident">Op::GetKernelMaxNumSubgroups</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::GetKernelLocalSizeForSubgroupCount</span> <span class="op">|</span> <span class="ident">Op::GetKernelMaxNumSubgroups</span> =&gt; {}
 
         <span class="comment">// 3.37.23. Pipe Instructions</span>
-        <span class="ident">Op::ReadPipe</span> <span class="op">|</span> <span class="ident">Op::WritePipe</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> },
-        <span class="ident">Op::ReservedReadPipe</span> <span class="op">|</span> <span class="ident">Op::ReservedWritePipe</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
-            (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span>
+        <span class="ident">Op::ReadPipe</span> <span class="op">|</span> <span class="ident">Op::WritePipe</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="kw">_</span> },
+        <span class="ident">Op::ReservedReadPipe</span> <span class="op">|</span> <span class="ident">Op::ReservedWritePipe</span> =&gt; <span class="macro">sig!</span> {
+            (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="kw">_</span>
         },
         <span class="ident">Op::ReserveReadPipePackets</span>
         <span class="op">|</span> <span class="ident">Op::ReserveWritePipePackets</span>
@@ -1626,11 +1626,11 @@
         <span class="op">|</span> <span class="ident">Op::GroupReserveReadPipePackets</span>
         <span class="op">|</span> <span class="ident">Op::GroupReserveWritePipePackets</span>
         <span class="op">|</span> <span class="ident">Op::GroupCommitReadPipe</span>
-        <span class="op">|</span> <span class="ident">Op::GroupCommitWritePipe</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="op">|</span> <span class="ident">Op::GroupCommitWritePipe</span> =&gt; {}
         <span class="comment">// SPIR-V 1.1, Capability: PipeStorage</span>
-        <span class="ident">Op::ConstantPipeStorage</span> <span class="op">|</span> <span class="ident">Op::CreatePipeFromPipeStorage</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::ConstantPipeStorage</span> <span class="op">|</span> <span class="ident">Op::CreatePipeFromPipeStorage</span> =&gt; {}
         <span class="comment">// SPV_INTEL_blocking_pipes</span>
-        <span class="ident">Op::ReadPipeBlockingINTEL</span> <span class="op">|</span> <span class="ident">Op::WritePipeBlockingINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> {
+        <span class="ident">Op::ReadPipeBlockingINTEL</span> <span class="op">|</span> <span class="ident">Op::WritePipeBlockingINTEL</span> =&gt; <span class="macro">sig!</span> {
             (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>)
         },
 
@@ -1638,15 +1638,15 @@
         <span class="ident">Op::GroupNonUniformElect</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformAll</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformAny</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformAllEqual</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op::GroupNonUniformBroadcast</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op::GroupNonUniformBroadcastFirst</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="op">|</span> <span class="ident">Op::GroupNonUniformAllEqual</span> =&gt; {}
+        <span class="ident">Op::GroupNonUniformBroadcast</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
+        <span class="ident">Op::GroupNonUniformBroadcastFirst</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
         <span class="ident">Op::GroupNonUniformBallot</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformInverseBallot</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformBallotBitExtract</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformBallotBitCount</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformBallotFindLSB</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformBallotFindMSB</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="op">|</span> <span class="ident">Op::GroupNonUniformBallotFindMSB</span> =&gt; {}
         <span class="ident">Op::GroupNonUniformShuffle</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformShuffleXor</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformShuffleUp</span>
@@ -1668,9 +1668,9 @@
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformLogicalOr</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformLogicalXor</span>
         <span class="op">|</span> <span class="ident">Op::GroupNonUniformQuadBroadcast</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformQuadSwap</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, ..) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="op">|</span> <span class="ident">Op::GroupNonUniformQuadSwap</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, ..) -&gt; <span class="ident">T</span> },
         <span class="comment">// SPV_NV_shader_subgroup_partitioned</span>
-        <span class="ident">Op::GroupNonUniformPartitionNV</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op::GroupNonUniformPartitionNV</span> =&gt; {}
 
         <span class="comment">// 3.37.25. Reserved Instructions</span>
         <span class="comment">// SPV_KHR_ray_tracing</span>
@@ -1678,7 +1678,7 @@
         <span class="op">|</span> <span class="ident">Op::ExecuteCallableKHR</span>
         <span class="op">|</span> <span class="ident">Op::ConvertUToAccelerationStructureKHR</span>
         <span class="op">|</span> <span class="ident">Op::IgnoreIntersectionKHR</span>
-        <span class="op">|</span> <span class="ident">Op::TerminateRayKHR</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="op">|</span> <span class="ident">Op::TerminateRayKHR</span> =&gt; {
             <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
             <span class="comment">// reserved!(SPV_KHR_ray_tracing)</span>
         }
@@ -1689,26 +1689,26 @@
         <span class="op">|</span> <span class="ident">Op::RayQueryGenerateIntersectionKHR</span>
         <span class="op">|</span> <span class="ident">Op::RayQueryConfirmIntersectionKHR</span>
         <span class="op">|</span> <span class="ident">Op::RayQueryProceedKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionTypeKHR</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionTypeKHR</span> =&gt; {
             <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
             <span class="comment">// reserved!(SPV_KHR_ray_query)</span>
         }
         <span class="comment">// SPV_AMD_shader_fragment_mask</span>
-        <span class="ident">Op::FragmentMaskFetchAMD</span> <span class="op">|</span> <span class="ident">Op::FragmentFetchAMD</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">reserved!</span>(<span class="ident">SPV_AMD_shader_fragment_mask</span>),
+        <span class="ident">Op::FragmentMaskFetchAMD</span> <span class="op">|</span> <span class="ident">Op::FragmentFetchAMD</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_AMD_shader_fragment_mask</span>),
         <span class="comment">// SPV_KHR_shader_clock</span>
-        <span class="ident">Op::ReadClockKHR</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Op::ReadClockKHR</span> =&gt; {
             <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
             <span class="comment">// reserved!(SPV_KHR_shader_clock)</span>
         }
         <span class="comment">// SPV_NV_mesh_shader</span>
-        <span class="ident">Op::WritePackedPrimitiveIndices4x8NV</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">reserved!</span>(<span class="ident">SPV_NV_mesh_shader</span>),
+        <span class="ident">Op::WritePackedPrimitiveIndices4x8NV</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_NV_mesh_shader</span>),
         <span class="comment">// SPV_NV_ray_tracing</span>
         <span class="ident">Op::ReportIntersectionNV</span>
         <span class="op">|</span> <span class="ident">Op::IgnoreIntersectionNV</span>
         <span class="op">|</span> <span class="ident">Op::TerminateRayNV</span>
         <span class="op">|</span> <span class="ident">Op::TraceNV</span>
         <span class="op">|</span> <span class="ident">Op::TypeAccelerationStructureNV</span>
-        <span class="op">|</span> <span class="ident">Op::ExecuteCallableNV</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="op">|</span> <span class="ident">Op::ExecuteCallableNV</span> =&gt; {
             <span class="comment">// NOTE(eddyb) Some KHR variants are aliased to the the NV instructions.</span>
             <span class="comment">// reserved!(SPV_NV_ray_tracing)</span>
         }
@@ -1717,18 +1717,18 @@
         <span class="op">|</span> <span class="ident">Op::CooperativeMatrixLoadNV</span>
         <span class="op">|</span> <span class="ident">Op::CooperativeMatrixStoreNV</span>
         <span class="op">|</span> <span class="ident">Op::CooperativeMatrixMulAddNV</span>
-        <span class="op">|</span> <span class="ident">Op::CooperativeMatrixLengthNV</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">reserved!</span>(<span class="ident">SPV_NV_cooperative_matrix</span>),
+        <span class="op">|</span> <span class="ident">Op::CooperativeMatrixLengthNV</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_NV_cooperative_matrix</span>),
         <span class="comment">// SPV_EXT_fragment_shader_interlock</span>
-        <span class="ident">Op::BeginInvocationInterlockEXT</span> <span class="op">|</span> <span class="ident">Op::EndInvocationInterlockEXT</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Op::BeginInvocationInterlockEXT</span> <span class="op">|</span> <span class="ident">Op::EndInvocationInterlockEXT</span> =&gt; {
             <span class="macro">reserved!</span>(<span class="ident">SPV_EXT_fragment_shader_interlock</span>);
         }
         <span class="comment">// SPV_EXT_demote_to_helper_invocation</span>
-        <span class="ident">Op::DemoteToHelperInvocationEXT</span> <span class="op">|</span> <span class="ident">Op::IsHelperInvocationEXT</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Op::DemoteToHelperInvocationEXT</span> <span class="op">|</span> <span class="ident">Op::IsHelperInvocationEXT</span> =&gt; {
             <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
             <span class="comment">// reserved!(SPV_EXT_demote_to_helper_invocation)</span>
         }
         <span class="comment">// SPV_INTEL_shader_integer_functions2</span>
-        <span class="ident">Op::UCountLeadingZerosINTEL</span> <span class="op">|</span> <span class="ident">Op::UCountTrailingZerosINTEL</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Op::UCountLeadingZerosINTEL</span> <span class="op">|</span> <span class="ident">Op::UCountTrailingZerosINTEL</span> =&gt; {
             <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
             <span class="comment">// reserved!(SPV_INTEL_shader_integer_functions2)</span>
         }
@@ -1743,11 +1743,11 @@
         <span class="op">|</span> <span class="ident">Op::ISubSatINTEL</span>
         <span class="op">|</span> <span class="ident">Op::USubSatINTEL</span>
         <span class="op">|</span> <span class="ident">Op::IMul32x16INTEL</span>
-        <span class="op">|</span> <span class="ident">Op::UMul32x16INTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_shader_integer_functions2</span>),
+        <span class="op">|</span> <span class="ident">Op::UMul32x16INTEL</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_shader_integer_functions2</span>),
         <span class="comment">// SPV_INTEL_unstructured_loop_controls</span>
-        <span class="ident">Op::LoopControlINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_unstructured_loop_controls</span>),
+        <span class="ident">Op::LoopControlINTEL</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_unstructured_loop_controls</span>),
         <span class="comment">// SPV_INTEL_fpga_reg</span>
-        <span class="ident">Op::FPGARegINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_fpga_reg</span>),
+        <span class="ident">Op::FPGARegINTEL</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_fpga_reg</span>),
         <span class="comment">// SPV_KHR_ray_query</span>
         <span class="ident">Op::RayQueryGetRayTMinKHR</span>
         <span class="op">|</span> <span class="ident">Op::RayQueryGetRayFlagsKHR</span>
@@ -1765,14 +1765,14 @@
         <span class="op">|</span> <span class="ident">Op::RayQueryGetWorldRayDirectionKHR</span>
         <span class="op">|</span> <span class="ident">Op::RayQueryGetWorldRayOriginKHR</span>
         <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionObjectToWorldKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionWorldToObjectKHR</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionWorldToObjectKHR</span> =&gt; {
             <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
             <span class="comment">// reserved!(SPV_KHR_ray_query)</span>
         }
 
         <span class="comment">// Instructions not present in current SPIR-V specification</span>
         <span class="comment">// SPV_INTEL_function_pointers</span>
-        <span class="ident">Op::FunctionPointerINTEL</span> <span class="op">|</span> <span class="ident">Op::FunctionPointerCallINTEL</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Op::FunctionPointerINTEL</span> <span class="op">|</span> <span class="ident">Op::FunctionPointerCallINTEL</span> =&gt; {
             <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_function_pointers</span>);
         }
         <span class="comment">// SPV_INTEL_device_side_avc_motion_estimation</span>
@@ -1893,7 +1893,7 @@
         <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetIpeChromaModeINTEL</span>
         <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL</span>
         <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetInterRawSadsINTEL</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetInterRawSadsINTEL</span> =&gt; {
             <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_device_side_avc_motion_estimation</span>);
         }
     }

@@ -526,7 +526,7 @@
 <span class="comment">// HACK(eddyb) helper macros for tests.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="macro">macro_rules!</span> <span class="ident">assert_contains</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">s</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">needle</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {{
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">s</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">needle</span>:<span class="ident">expr</span>) =&gt; {{
         <span class="kw">let</span> (<span class="ident">s</span>, <span class="ident">needle</span>) <span class="op">=</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">s</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">needle</span>);
         <span class="macro">assert!</span>(
             <span class="ident">s</span>.<span class="ident">contains</span>(<span class="ident">needle</span>),
@@ -538,7 +538,7 @@
 }
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="macro">macro_rules!</span> <span class="ident">assert_ends_with</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">s</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">suffix</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {{
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">s</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">suffix</span>:<span class="ident">expr</span>) =&gt; {{
         <span class="kw">let</span> (<span class="ident">s</span>, <span class="ident">suffix</span>) <span class="op">=</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">s</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">suffix</span>);
         <span class="macro">assert!</span>(
             <span class="ident">s</span>.<span class="ident">ends_with</span>(<span class="ident">suffix</span>),
@@ -581,7 +581,7 @@
 <span class="doccomment">/// assert_eq!(demangle(&quot;_ZN3foo3barE&quot;).to_string(), &quot;foo::bar&quot;);</span>
 <span class="doccomment">/// assert_eq!(demangle(&quot;foo&quot;).to_string(), &quot;foo&quot;);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">demangle</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Demangle</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">demangle</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Demangle</span> {
     <span class="comment">// During ThinLTO LLVM may import and rename internal symbols, so strip out</span>
     <span class="comment">// those endings first as they&#39;re one of the last manglings applied to symbol</span>
     <span class="comment">// names.</span>
@@ -589,8 +589,8 @@
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">s</span>.<span class="ident">find</span>(<span class="ident">llvm</span>) {
         <span class="kw">let</span> <span class="ident">candidate</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">s</span>[<span class="ident">i</span> <span class="op">+</span> <span class="ident">llvm</span>.<span class="ident">len</span>()..];
         <span class="kw">let</span> <span class="ident">all_hex</span> <span class="op">=</span> <span class="ident">candidate</span>.<span class="ident">chars</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">c</span> {
-            <span class="string">&#39;A&#39;</span>..<span class="op">=</span><span class="string">&#39;F&#39;</span> <span class="op">|</span> <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> <span class="op">|</span> <span class="string">&#39;@&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="string">&#39;A&#39;</span>..<span class="op">=</span><span class="string">&#39;F&#39;</span> <span class="op">|</span> <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> <span class="op">|</span> <span class="string">&#39;@&#39;</span> =&gt; <span class="bool-val">true</span>,
+            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
         });
 
         <span class="kw">if</span> <span class="ident">all_hex</span> {
@@ -600,12 +600,12 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">suffix</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">style</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">legacy::demangle</span>(<span class="ident">s</span>) {
-        <span class="prelude-val">Ok</span>((<span class="ident">d</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>((<span class="ident">d</span>, <span class="ident">s</span>)) =&gt; {
             <span class="ident">suffix</span> <span class="op">=</span> <span class="ident">s</span>;
             <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle::Legacy</span>(<span class="ident">d</span>))
         }
-        <span class="prelude-val">Err</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">v0::demangle</span>(<span class="ident">s</span>) {
-            <span class="prelude-val">Ok</span>((<span class="ident">d</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Err</span>(()) =&gt; <span class="kw">match</span> <span class="ident">v0::demangle</span>(<span class="ident">s</span>) {
+            <span class="prelude-val">Ok</span>((<span class="ident">d</span>, <span class="ident">s</span>)) =&gt; {
                 <span class="ident">suffix</span> <span class="op">=</span> <span class="ident">s</span>;
                 <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle::V0</span>(<span class="ident">d</span>))
             }
@@ -614,7 +614,7 @@
             <span class="comment">// v0-mangled, and have the error show up in the demangling?</span>
             <span class="comment">// (that error already gets past this initial check, and therefore</span>
             <span class="comment">// will show up in the demangling, if hidden behind a backref)</span>
-            <span class="prelude-val">Err</span>(<span class="ident">v0::ParseError::Invalid</span>) <span class="op">|</span> <span class="prelude-val">Err</span>(<span class="ident">v0::ParseError::RecursedTooDeep</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="prelude-val">Err</span>(<span class="ident">v0::ParseError::Invalid</span>) <span class="op">|</span> <span class="prelude-val">Err</span>(<span class="ident">v0::ParseError::RecursedTooDeep</span>) =&gt; <span class="prelude-val">None</span>,
         },
     };
 
@@ -657,7 +657,7 @@
 <span class="doccomment">/// // While `demangle` will just pass the non-symbol through as a no-op.</span>
 <span class="doccomment">/// assert_eq!(rustc_demangle::demangle(not_a_rust_symbol).as_str(), not_a_rust_symbol);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_demangle</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Demangle</span>, <span class="ident">TryDemangleError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_demangle</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Demangle</span>, <span class="ident">TryDemangleError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">sym</span> <span class="op">=</span> <span class="ident">demangle</span>(<span class="ident">s</span>);
     <span class="kw">if</span> <span class="ident">sym</span>.<span class="ident">style</span>.<span class="ident">is_some</span>() {
         <span class="prelude-val">Ok</span>(<span class="ident">sym</span>)
@@ -668,12 +668,12 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Returns the underlying string that&#39;s being demangled.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span> {
         <span class="self">self</span>.<span class="ident">original</span>
     }
 }
 
-<span class="kw">fn</span> <span class="ident">is_symbol_like</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">is_symbol_like</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">bool</span> {
     <span class="ident">s</span>.<span class="ident">chars</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> {
         <span class="comment">// Once `char::is_ascii_punctuation` and `char::is_ascii_alphanumeric`</span>
         <span class="comment">// have been stable for long enough, use those instead for clarity</span>
@@ -682,29 +682,29 @@
 }
 
 <span class="comment">// Copied from the documentation of `char::is_ascii_alphanumeric`</span>
-<span class="kw">fn</span> <span class="ident">is_ascii_alphanumeric</span>(<span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">is_ascii_alphanumeric</span>(<span class="ident">c</span>: <span class="ident">char</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="ident">c</span> {
-        <span class="string">&#39;\u{0041}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{005A}&#39;</span> <span class="op">|</span> <span class="string">&#39;\u{0061}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{007A}&#39;</span> <span class="op">|</span> <span class="string">&#39;\u{0030}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{0039}&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="string">&#39;\u{0041}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{005A}&#39;</span> <span class="op">|</span> <span class="string">&#39;\u{0061}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{007A}&#39;</span> <span class="op">|</span> <span class="string">&#39;\u{0030}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{0039}&#39;</span> =&gt; <span class="bool-val">true</span>,
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 
 <span class="comment">// Copied from the documentation of `char::is_ascii_punctuation`</span>
-<span class="kw">fn</span> <span class="ident">is_ascii_punctuation</span>(<span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">is_ascii_punctuation</span>(<span class="ident">c</span>: <span class="ident">char</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="ident">c</span> {
         <span class="string">&#39;\u{0021}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{002F}&#39;</span>
         <span class="op">|</span> <span class="string">&#39;\u{003A}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{0040}&#39;</span>
         <span class="op">|</span> <span class="string">&#39;\u{005B}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{0060}&#39;</span>
-        <span class="op">|</span> <span class="string">&#39;\u{007B}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{007E}&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="op">|</span> <span class="string">&#39;\u{007B}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{007E}&#39;</span> =&gt; <span class="bool-val">true</span>,
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">DemangleStyle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">DemangleStyle::Legacy</span>(<span class="kw-2">ref</span> <span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt::Display::fmt</span>(<span class="ident">d</span>, <span class="ident">f</span>),
-            <span class="ident">DemangleStyle::V0</span>(<span class="kw-2">ref</span> <span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt::Display::fmt</span>(<span class="ident">d</span>, <span class="ident">f</span>),
+            <span class="ident">DemangleStyle::Legacy</span>(<span class="kw-2">ref</span> <span class="ident">d</span>) =&gt; <span class="ident">fmt::Display::fmt</span>(<span class="ident">d</span>, <span class="ident">f</span>),
+            <span class="ident">DemangleStyle::V0</span>(<span class="kw-2">ref</span> <span class="ident">d</span>) =&gt; <span class="ident">fmt::Display::fmt</span>(<span class="ident">d</span>, <span class="ident">f</span>),
         }
     }
 }
@@ -721,23 +721,23 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">fmt::Write</span><span class="op">&gt;</span> <span class="ident">fmt::Write</span> <span class="kw">for</span> <span class="ident">SizeLimitedFmtAdapter</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="self">self</span>.<span class="ident">remaining</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">remaining</span>
             .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">checked_sub</span>(<span class="ident">s</span>.<span class="ident">len</span>()).<span class="ident">ok_or</span>(<span class="ident">SizeLimitExhausted</span>));
 
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">remaining</span> {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write_str</span>(<span class="ident">s</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">SizeLimitExhausted</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">fmt::Error</span>),
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write_str</span>(<span class="ident">s</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">SizeLimitExhausted</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">fmt::Error</span>),
         }
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">style</span> {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="self">self</span>.<span class="ident">original</span>)<span class="question-mark">?</span>,
-            <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="self">self</span>.<span class="ident">original</span>)<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">d</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">alternate</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">alternate</span>();
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">size_limited_fmt</span> <span class="op">=</span> <span class="ident">SizeLimitedFmtAdapter</span> {
                     <span class="ident">remaining</span>: <span class="prelude-val">Ok</span>(<span class="ident">MAX_SIZE</span>),
@@ -754,9 +754,9 @@
                 <span class="comment">// into an error message, instead of propagating it upwards</span>
                 <span class="comment">// (which could cause panicking from inside e.g. `std::io::print`).</span>
                 <span class="kw">match</span> (<span class="ident">fmt_result</span>, <span class="ident">size_limit_result</span>) {
-                    (<span class="prelude-val">Err</span>(<span class="kw">_</span>), <span class="prelude-val">Err</span>(<span class="ident">SizeLimitExhausted</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;{size limit reached}&quot;</span>)<span class="question-mark">?</span>,
+                    (<span class="prelude-val">Err</span>(<span class="kw">_</span>), <span class="prelude-val">Err</span>(<span class="ident">SizeLimitExhausted</span>)) =&gt; <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;{size limit reached}&quot;</span>)<span class="question-mark">?</span>,
 
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">_</span> =&gt; {
                         <span class="ident">fmt_result</span><span class="question-mark">?</span>;
                         <span class="ident">size_limit_result</span>
                             .<span class="ident">expect</span>(<span class="string">&quot;`fmt::Error` from `SizeLimitedFmtAdapter` was discarded&quot;</span>);
@@ -769,7 +769,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="ident">fmt::Display::fmt</span>(<span class="self">self</span>, <span class="ident">f</span>)
     }
 }
@@ -779,47 +779,47 @@
     <span class="kw">use</span> <span class="ident">std::prelude::v1</span>::<span class="kw-2">*</span>;
 
     <span class="macro">macro_rules!</span> <span class="ident">t</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">expr</span>) =&gt; {
             <span class="macro">assert!</span>(<span class="ident">ok</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>))
         };
     }
 
     <span class="macro">macro_rules!</span> <span class="ident">t_err</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>) =&gt; {
             <span class="macro">assert!</span>(<span class="ident">ok_err</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>))
         };
     }
 
     <span class="macro">macro_rules!</span> <span class="ident">t_nohash</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {{
+        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">expr</span>) =&gt; {{
             <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#}&quot;</span>, <span class="ident"><span class="kw">super</span>::demangle</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>)), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>);
         }};
     }
 
-    <span class="kw">fn</span> <span class="ident">ok</span>(<span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">ok</span>(<span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="ident"><span class="kw">super</span>::try_demangle</span>(<span class="ident">sym</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">to_string</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">s</span>) =&gt; {
+                <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">to_string</span>() <span class="op">==</span> <span class="ident">expected</span> {
                     <span class="bool-val">true</span>
                 } <span class="kw">else</span> {
                     <span class="macro">println!</span>(<span class="string">&quot;\n{}\n!=\n{}\n&quot;</span>, <span class="ident">s</span>, <span class="ident">expected</span>);
                     <span class="bool-val">false</span>
                 }
             }
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
                 <span class="macro">println!</span>(<span class="string">&quot;error demangling&quot;</span>);
                 <span class="bool-val">false</span>
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">ok_err</span>(<span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">ok_err</span>(<span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="ident"><span class="kw">super</span>::try_demangle</span>(<span class="ident">sym</span>) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
                 <span class="macro">println!</span>(<span class="string">&quot;succeeded in demangling&quot;</span>);
                 <span class="bool-val">false</span>
             }
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="kw">super</span>::demangle</span>(<span class="ident">sym</span>).<span class="ident">to_string</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">sym</span>,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident"><span class="kw">super</span>::demangle</span>(<span class="ident">sym</span>).<span class="ident">to_string</span>() <span class="op">==</span> <span class="ident">sym</span>,
         }
     }
 

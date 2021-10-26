@@ -42,7 +42,15 @@
 <span id="42">42</span>
 <span id="43">43</span>
 <span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
 </pre><pre class="rust"><code><span class="doccomment">/// Abstract trait representing any SPIR-V integer type.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Safety</span>
+<span class="doccomment">/// Implementing this trait on non-primitive-integer types breaks assumptions of other unsafe code,</span>
+<span class="doccomment">/// and should not be done.</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">trait</span> <span class="ident">Integer</span>: <span class="ident">num_traits::PrimInt</span> <span class="op">+</span> <span class="ident"><span class="kw">crate</span>::scalar::Scalar</span> {
     <span class="kw">const</span> <span class="ident">WIDTH</span>: <span class="ident">usize</span>;
     <span class="kw">const</span> <span class="ident">SIGNED</span>: <span class="ident">bool</span>;
@@ -54,7 +62,7 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">UnsignedInteger</span>: <span class="ident">Integer</span> {}
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_numbers</span> {
-    (<span class="kw">impl</span> <span class="ident">UnsignedInteger</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span>;) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="kw">impl</span> <span class="ident">UnsignedInteger</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span>;) =&gt; {
         <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Integer</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span> {
             <span class="kw">const</span> <span class="ident">WIDTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span><span class="op">&gt;</span>() <span class="op">*</span> <span class="number">8</span>;
             <span class="kw">const</span> <span class="ident">SIGNED</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="bool-val">false</span>;
@@ -62,7 +70,7 @@
 
         <span class="kw">impl</span> <span class="ident">UnsignedInteger</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span> {}
     };
-    (<span class="kw">impl</span> <span class="ident">SignedInteger</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span>;) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="kw">impl</span> <span class="ident">SignedInteger</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span>;) =&gt; {
         <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Integer</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span> {
             <span class="kw">const</span> <span class="ident">WIDTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span><span class="op">&gt;</span>() <span class="op">*</span> <span class="number">8</span>;
             <span class="kw">const</span> <span class="ident">SIGNED</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="bool-val">true</span>;
@@ -70,7 +78,7 @@
 
         <span class="kw">impl</span> <span class="ident">SignedInteger</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span> {}
     };
-    ($(<span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span>;)<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    ($(<span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span>;)<span class="op">+</span>) =&gt; {
         $(<span class="macro">impl_numbers!</span>(<span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="kw">trait</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>;);)<span class="op">+</span>
     };
 

@@ -3,23 +3,23 @@
 <li>Use the <a href="fn.tempfile.html"><code>tempfile()</code></a> function for temporary files</li>
 <li>Use the <a href="fn.tempdir.html"><code>tempdir()</code></a> function for temporary directories.</li>
 </ul>
-<h1 id="design" class="section-header"><a href="#design">Design</a></h1>
+<h2 id="design" class="section-header"><a href="#design">Design</a></h2>
 <p>This crate provides several approaches to creating temporary files and directories.
 <a href="fn.tempfile.html"><code>tempfile()</code></a> relies on the OS to remove the temporary file once the last handle is closed.
 <a href="struct.TempDir.html"><code>TempDir</code></a> and <a href="struct.NamedTempFile.html"><code>NamedTempFile</code></a> both rely on Rust destructors for cleanup.</p>
 <p>When choosing between the temporary file variants, prefer <code>tempfile</code>
 unless you either need to know the file’s path or to be able to persist it.</p>
-<h2 id="resource-leaking" class="section-header"><a href="#resource-leaking">Resource Leaking</a></h2>
+<h3 id="resource-leaking" class="section-header"><a href="#resource-leaking">Resource Leaking</a></h3>
 <p><code>tempfile</code> will (almost) never fail to cleanup temporary resources, but <code>TempDir</code> and <code>NamedTempFile</code> will if
 their destructors don’t run. This is because <code>tempfile</code> relies on the OS to cleanup the
 underlying file, while <code>TempDir</code> and <code>NamedTempFile</code> rely on their destructors to do so.</p>
-<h2 id="security" class="section-header"><a href="#security">Security</a></h2>
+<h3 id="security" class="section-header"><a href="#security">Security</a></h3>
 <p>In the presence of pathological temporary file cleaner, relying on file paths is unsafe because
 a temporary file cleaner could delete the temporary file which an attacker could then replace.</p>
 <p><code>tempfile</code> doesn’t rely on file paths so this isn’t an issue. However, <code>NamedTempFile</code> does
 rely on file paths for <em>some</em> operations. See the security documentation on
 the <code>NamedTempFile</code> type for more information.</p>
-<h2 id="examples" class="section-header"><a href="#examples">Examples</a></h2>
+<h3 id="examples" class="section-header"><a href="#examples">Examples</a></h3>
 <p>Create a temporary file and write some data into it:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">tempfile::tempfile</span>;
@@ -70,23 +70,23 @@ the <code>NamedTempFile</code> type for more information.</p>
 <span class="ident">drop</span>(<span class="ident">file</span>);
 <span class="ident">dir</span>.<span class="ident">close</span>()<span class="question-mark">?</span>;</code></pre></div>
 </div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.Builder.html" title="tempfile::Builder struct">Builder</a></div><div class="item-right docblock-short"><p>Create a new temporary file or directory with custom parameters.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.NamedTempFile.html" title="tempfile::NamedTempFile struct">NamedTempFile</a></div><div class="item-right docblock-short"><p>A named temporary file.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.PathPersistError.html" title="tempfile::PathPersistError struct">PathPersistError</a></div><div class="item-right docblock-short"><p>Error returned when persisting a temporary file path fails.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.PersistError.html" title="tempfile::PersistError struct">PersistError</a></div><div class="item-right docblock-short"><p>Error returned when persisting a temporary file fails.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.SpooledTempFile.html" title="tempfile::SpooledTempFile struct">SpooledTempFile</a></div><div class="item-right docblock-short"><p>An object that behaves like a regular temporary file, but keeps data in
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Builder.html" title="tempfile::Builder struct">Builder</a></div><div class="item-right docblock-short"><p>Create a new temporary file or directory with custom parameters.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.NamedTempFile.html" title="tempfile::NamedTempFile struct">NamedTempFile</a></div><div class="item-right docblock-short"><p>A named temporary file.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.PathPersistError.html" title="tempfile::PathPersistError struct">PathPersistError</a></div><div class="item-right docblock-short"><p>Error returned when persisting a temporary file path fails.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.PersistError.html" title="tempfile::PersistError struct">PersistError</a></div><div class="item-right docblock-short"><p>Error returned when persisting a temporary file fails.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SpooledTempFile.html" title="tempfile::SpooledTempFile struct">SpooledTempFile</a></div><div class="item-right docblock-short"><p>An object that behaves like a regular temporary file, but keeps data in
 memory until it reaches a configured size, at which point the data is
 written to a temporary file on disk, and further operations use the file
 on disk.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.TempDir.html" title="tempfile::TempDir struct">TempDir</a></div><div class="item-right docblock-short"><p>A directory in the filesystem that is automatically deleted when
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.TempDir.html" title="tempfile::TempDir struct">TempDir</a></div><div class="item-right docblock-short"><p>A directory in the filesystem that is automatically deleted when
 it goes out of scope.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.TempPath.html" title="tempfile::TempPath struct">TempPath</a></div><div class="item-right docblock-short"><p>A path to a named temporary file without an open file handle.</p>
-</div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="fn" href="fn.spooled_tempfile.html" title="tempfile::spooled_tempfile fn">spooled_tempfile</a></div><div class="item-right docblock-short"><p>Create a new spooled temporary file.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.tempdir.html" title="tempfile::tempdir fn">tempdir</a></div><div class="item-right docblock-short"><p>Create a new temporary directory.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.tempdir_in.html" title="tempfile::tempdir_in fn">tempdir_in</a></div><div class="item-right docblock-short"><p>Create a new temporary directory.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.tempfile.html" title="tempfile::tempfile fn">tempfile</a></div><div class="item-right docblock-short"><p>Create a new temporary file.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.tempfile_in.html" title="tempfile::tempfile_in fn">tempfile_in</a></div><div class="item-right docblock-short"><p>Create a new temporary file in the specified directory.</p>
-</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="tempfile" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.TempPath.html" title="tempfile::TempPath struct">TempPath</a></div><div class="item-right docblock-short"><p>A path to a named temporary file without an open file handle.</p>
+</div></div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.spooled_tempfile.html" title="tempfile::spooled_tempfile fn">spooled_tempfile</a></div><div class="item-right docblock-short"><p>Create a new spooled temporary file.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.tempdir.html" title="tempfile::tempdir fn">tempdir</a></div><div class="item-right docblock-short"><p>Create a new temporary directory.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.tempdir_in.html" title="tempfile::tempdir_in fn">tempdir_in</a></div><div class="item-right docblock-short"><p>Create a new temporary directory.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.tempfile.html" title="tempfile::tempfile fn">tempfile</a></div><div class="item-right docblock-short"><p>Create a new temporary file.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.tempfile_in.html" title="tempfile::tempfile_in fn">tempfile_in</a></div><div class="item-right docblock-short"><p>Create a new temporary file in the specified directory.</p>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="tempfile" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
     <script src="../main.js"></script>
 </body></html>

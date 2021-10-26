@@ -104,7 +104,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)]</span>
 <span class="macro">macro_rules!</span> <span class="ident">deriv_fn</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">p</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">p</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">Default::default</span>();
             <span class="macro">asm!</span>(
@@ -124,7 +124,7 @@
 <span class="doccomment">/// [`ddx_coarse`], selection of which one is dependent on external factors.</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdx</span>)
 }
 
@@ -133,7 +133,7 @@
 <span class="doccomment">/// the current fragment and its immediate neighbor(s).</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdxFine</span>)
 }
 
@@ -145,7 +145,7 @@
 <span class="doccomment">/// locations than would be allowed by [`ddx_fine`].</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdxCoarse</span>)
 }
 
@@ -154,7 +154,7 @@
 <span class="doccomment">/// [`ddy_coarse`], selection of which one is dependent on external factors.</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdy</span>)
 }
 
@@ -163,7 +163,7 @@
 <span class="doccomment">/// the current fragment and its immediate neighbor(s).</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdyFine</span>)
 }
 
@@ -175,7 +175,7 @@
 <span class="doccomment">/// locations than would be allowed by [`ddy_fine`].</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdyCoarse</span>)
 }
 
@@ -183,7 +183,7 @@
 <span class="doccomment">/// operation.</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpFwidth</span>)
 }
 
@@ -191,7 +191,7 @@
 <span class="doccomment">/// single operation.</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpFwidthFine</span>)
 }
 
@@ -199,7 +199,7 @@
 <span class="doccomment">/// as a single operation.</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpFwidthCoarse</span>)
 }
 </code></pre></div>

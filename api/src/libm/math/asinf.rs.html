@@ -96,7 +96,7 @@
 <span class="kw">const</span> <span class="ident">P_S2</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">8.6563630030e-03</span>;
 <span class="kw">const</span> <span class="ident">Q_S1</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">7.0662963390e-01</span>;
 
-<span class="kw">fn</span> <span class="ident">r</span>(<span class="ident">z</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+<span class="kw">fn</span> <span class="ident">r</span>(<span class="ident">z</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
     <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">P_S0</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">P_S1</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">P_S2</span>));
     <span class="kw">let</span> <span class="ident">q</span> <span class="op">=</span> <span class="number">1.</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">Q_S1</span>;
     <span class="ident">p</span> <span class="op">/</span> <span class="ident">q</span>
@@ -108,7 +108,7 @@
 <span class="doccomment">/// Arguments to asin must be in the range -1 to 1.</span>
 <span class="doccomment">/// Returns values in radians, in the range of -pi/2 to pi/2.</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">asinf</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">asinf</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
     <span class="kw">let</span> <span class="ident">x1p_120</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3870000000000000</span>); <span class="comment">// 0x1p-120 === 2 ^ (-120)</span>
 
     <span class="kw">let</span> <span class="ident">hx</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
@@ -116,7 +116,7 @@
 
     <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x3f800000</span> {
         <span class="comment">/* |x| &gt;= 1 */</span>
-        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x3f800000</span> {
+        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x3f800000</span> {
             <span class="comment">/* |x| == 1 */</span>
             <span class="kw">return</span> ((<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">*</span> <span class="ident">PIO2</span> <span class="op">+</span> <span class="ident">x1p_120</span>) <span class="kw">as</span> <span class="ident">f32</span>; <span class="comment">/* asin(+-1) = +-pi/2 with inexact */</span>
         }

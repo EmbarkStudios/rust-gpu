@@ -1241,7 +1241,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DecodeError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">State</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">DecodeError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">DecodeError</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">State::OperandError</span>(<span class="ident">err</span>)
     }
 }
@@ -1249,41 +1249,41 @@
 <span class="kw">impl</span> <span class="ident">error::Error</span> <span class="kw">for</span> <span class="ident">State</span> {}
 
 <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">State</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">State::Complete</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;completed parsing&quot;</span>),
-            <span class="ident">State::ConsumerStopRequested</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;stop parsing requested by consumer&quot;</span>),
-            <span class="ident">State::ConsumerError</span>(<span class="kw-2">ref</span> <span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;consumer error: {}&quot;</span>, <span class="ident">err</span>),
-            <span class="ident">State::HeaderIncomplete</span>(<span class="kw-2">ref</span> <span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;incomplete module header: {}&quot;</span>, <span class="ident">err</span>),
-            <span class="ident">State::HeaderIncorrect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;incorrect module header&quot;</span>),
-            <span class="ident">State::EndiannessUnsupported</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;unsupported endianness&quot;</span>),
-            <span class="ident">State::WordCountZero</span>(<span class="ident">offset</span>, <span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(
+            <span class="ident">State::Complete</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;completed parsing&quot;</span>),
+            <span class="ident">State::ConsumerStopRequested</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;stop parsing requested by consumer&quot;</span>),
+            <span class="ident">State::ConsumerError</span>(<span class="kw-2">ref</span> <span class="ident">err</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;consumer error: {}&quot;</span>, <span class="ident">err</span>),
+            <span class="ident">State::HeaderIncomplete</span>(<span class="kw-2">ref</span> <span class="ident">err</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;incomplete module header: {}&quot;</span>, <span class="ident">err</span>),
+            <span class="ident">State::HeaderIncorrect</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;incorrect module header&quot;</span>),
+            <span class="ident">State::EndiannessUnsupported</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;unsupported endianness&quot;</span>),
+            <span class="ident">State::WordCountZero</span>(<span class="ident">offset</span>, <span class="ident">index</span>) =&gt; <span class="macro">write!</span>(
                 <span class="ident">f</span>,
                 <span class="string">&quot;zero word count found for instruction #{} at offset {}&quot;</span>,
                 <span class="ident">index</span>, <span class="ident">offset</span>
             ),
-            <span class="ident">State::OpcodeUnknown</span>(<span class="ident">offset</span>, <span class="ident">index</span>, <span class="ident">opcode</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(
+            <span class="ident">State::OpcodeUnknown</span>(<span class="ident">offset</span>, <span class="ident">index</span>, <span class="ident">opcode</span>) =&gt; <span class="macro">write!</span>(
                 <span class="ident">f</span>,
                 <span class="string">&quot;unknown opcode ({}) for instruction #{} at offset {}&quot;</span>,
                 <span class="ident">opcode</span>, <span class="ident">index</span>, <span class="ident">offset</span>
             ),
-            <span class="ident">State::OperandExpected</span>(<span class="ident">offset</span>, <span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(
+            <span class="ident">State::OperandExpected</span>(<span class="ident">offset</span>, <span class="ident">index</span>) =&gt; <span class="macro">write!</span>(
                 <span class="ident">f</span>,
                 <span class="string">&quot;expected more operands for instruction #{} at offset {}&quot;</span>,
                 <span class="ident">index</span>, <span class="ident">offset</span>
             ),
-            <span class="ident">State::OperandExceeded</span>(<span class="ident">offset</span>, <span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(
+            <span class="ident">State::OperandExceeded</span>(<span class="ident">offset</span>, <span class="ident">index</span>) =&gt; <span class="macro">write!</span>(
                 <span class="ident">f</span>,
                 <span class="string">&quot;found extra operands for instruction #{} at offset {}&quot;</span>,
                 <span class="ident">index</span>, <span class="ident">offset</span>
             ),
-            <span class="ident">State::OperandError</span>(<span class="kw-2">ref</span> <span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;operand decoding error: {}&quot;</span>, <span class="ident">err</span>),
-            <span class="ident">State::TypeUnsupported</span>(<span class="ident">offset</span>, <span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(
+            <span class="ident">State::OperandError</span>(<span class="kw-2">ref</span> <span class="ident">err</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;operand decoding error: {}&quot;</span>, <span class="ident">err</span>),
+            <span class="ident">State::TypeUnsupported</span>(<span class="ident">offset</span>, <span class="ident">index</span>) =&gt; <span class="macro">write!</span>(
                 <span class="ident">f</span>,
                 <span class="string">&quot;unsupported type for instruction #{} at offset {}&quot;</span>,
                 <span class="ident">index</span>, <span class="ident">offset</span>
             ),
-            <span class="ident">State::SpecConstantOpIntegerIncorrect</span>(<span class="ident">offset</span>, <span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(
+            <span class="ident">State::SpecConstantOpIntegerIncorrect</span>(<span class="ident">offset</span>, <span class="ident">index</span>) =&gt; <span class="macro">write!</span>(
                 <span class="ident">f</span>,
                 <span class="string">&quot;incorrect SpecConstantOp number for instruction #{} at offset {}&quot;</span>,
                 <span class="ident">index</span>, <span class="ident">offset</span>
@@ -1308,11 +1308,11 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Action</span> {
-    <span class="kw">fn</span> <span class="ident">consume</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">consume</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Action::Continue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
-            <span class="ident">Action::Stop</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">State::ConsumerStopRequested</span>),
-            <span class="ident">Action::Error</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">State::ConsumerError</span>(<span class="ident">err</span>)),
+            <span class="ident">Action::Continue</span> =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="ident">Action::Stop</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">State::ConsumerStopRequested</span>),
+            <span class="ident">Action::Error</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">State::ConsumerError</span>(<span class="ident">err</span>)),
         }
     }
 }
@@ -1330,25 +1330,25 @@
 <span class="doccomment">/// parsing process.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Consumer</span> {
     <span class="doccomment">/// Intialize the consumer.</span>
-    <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span>;
+    <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span>;
     <span class="doccomment">/// Finalize the consumer.</span>
-    <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span>;
+    <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span>;
 
     <span class="doccomment">/// Consume the module header.</span>
-    <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">module</span>: <span class="ident">dr::ModuleHeader</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span>;
+    <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">module</span>: <span class="ident">dr::ModuleHeader</span>) -&gt; <span class="ident">Action</span>;
     <span class="doccomment">/// Consume the given instruction.</span>
-    <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span>;
+    <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>) -&gt; <span class="ident">Action</span>;
 }
 
 <span class="doccomment">/// Parses the given `binary` and consumes the module using the given</span>
 <span class="doccomment">/// `consumer`.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_bytes</span>(<span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>, <span class="ident">consumer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Consumer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_bytes</span>(<span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>, <span class="ident">consumer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Consumer</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">Parser::new</span>(<span class="ident">binary</span>.<span class="ident">as_ref</span>(), <span class="ident">consumer</span>).<span class="ident">parse</span>()
 }
 
 <span class="doccomment">/// Parses the given `binary` and consumes the module using the given</span>
 <span class="doccomment">/// `consumer`.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_words</span>(<span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>, <span class="ident">consumer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Consumer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_words</span>(<span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>, <span class="ident">consumer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Consumer</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">binary</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">*</span> <span class="number">4</span>;
     <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">binary</span>.<span class="ident">as_ref</span>().<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">len</span>) };
     <span class="ident">Parser::new</span>(<span class="ident">buf</span>, <span class="ident">consumer</span>).<span class="ident">parse</span>()
@@ -1411,7 +1411,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span>, <span class="lifetime">&#39;d</span><span class="op">&gt;</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span>, <span class="lifetime">&#39;d</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Creates a new parser to parse the given `binary` and send the module</span>
     <span class="doccomment">/// header and instructions to the given `consumer`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">binary</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;d</span> [<span class="ident">u8</span>], <span class="ident">consumer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;c</span> <span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Consumer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">binary</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;d</span> [<span class="ident">u8</span>], <span class="ident">consumer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;c</span> <span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Consumer</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">Parser</span> {
             <span class="ident">decoder</span>: <span class="ident">decoder::Decoder::new</span>(<span class="ident">binary</span>),
             <span class="ident">consumer</span>,
@@ -1421,7 +1421,7 @@
     }
 
     <span class="doccomment">/// Does the parsing.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">consumer</span>.<span class="ident">initialize</span>().<span class="ident">consume</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_header</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">consumer</span>.<span class="ident">consume_header</span>(<span class="ident">header</span>).<span class="ident">consume</span>()<span class="question-mark">?</span>;
@@ -1429,26 +1429,26 @@
         <span class="kw">loop</span> {
             <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_inst</span>();
             <span class="kw">match</span> <span class="ident">result</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">inst</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">inst</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">type_tracker</span>.<span class="ident">track</span>(<span class="kw-2">&amp;</span><span class="ident">inst</span>);
                     <span class="self">self</span>.<span class="ident">consumer</span>.<span class="ident">consume_instruction</span>(<span class="ident">inst</span>).<span class="ident">consume</span>()<span class="question-mark">?</span>;
                 }
-                <span class="prelude-val">Err</span>(<span class="ident">State::Complete</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
-                <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>),
+                <span class="prelude-val">Err</span>(<span class="ident">State::Complete</span>) =&gt; <span class="kw">break</span>,
+                <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>),
             };
         }
         <span class="self">self</span>.<span class="ident">consumer</span>.<span class="ident">finalize</span>().<span class="ident">consume</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">split_into_word_count_and_opcode</span>(<span class="ident">word</span>: <span class="ident">spirv::Word</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">u16</span>, <span class="ident">u16</span>) {
+    <span class="kw">fn</span> <span class="ident">split_into_word_count_and_opcode</span>(<span class="ident">word</span>: <span class="ident">spirv::Word</span>) -&gt; (<span class="ident">u16</span>, <span class="ident">u16</span>) {
         ((<span class="ident">word</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">16</span>) <span class="kw">as</span> <span class="ident">u16</span>, (<span class="ident">word</span> <span class="op">&amp;</span> <span class="number">0xffff</span>) <span class="kw">as</span> <span class="ident">u16</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">parse_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">dr::ModuleHeader</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">dr::ModuleHeader</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">words</span>(<span class="ident">HEADER_NUM_WORDS</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">words</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">words</span>) =&gt; {
                 <span class="kw">if</span> <span class="ident">words</span>[<span class="number">0</span>] <span class="op">!</span><span class="op">=</span> <span class="ident">spirv::MAGIC_NUMBER</span> {
-                    <span class="kw">if</span> <span class="ident">words</span>[<span class="number">0</span>] <span class="op">=</span><span class="op">=</span> <span class="ident">spirv::MAGIC_NUMBER</span>.<span class="ident">swap_bytes</span>() {
+                    <span class="kw">if</span> <span class="ident">words</span>[<span class="number">0</span>] <span class="op">==</span> <span class="ident">spirv::MAGIC_NUMBER</span>.<span class="ident">swap_bytes</span>() {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">State::EndiannessUnsupported</span>);
                     } <span class="kw">else</span> {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">State::HeaderIncorrect</span>);
@@ -1461,15 +1461,15 @@
 
                 <span class="prelude-val">Ok</span>(<span class="ident">header</span>)
             }
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">State::HeaderIncomplete</span>(<span class="ident">err</span>)),
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">State::HeaderIncomplete</span>(<span class="ident">err</span>)),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">parse_inst</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">dr::Instruction</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse_inst</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">dr::Instruction</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inst_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">word</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">word</span>() {
             <span class="kw">let</span> (<span class="ident">wc</span>, <span class="ident">opcode</span>) <span class="op">=</span> <span class="ident">Parser::split_into_word_count_and_opcode</span>(<span class="ident">word</span>);
-            <span class="kw">if</span> <span class="ident">wc</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">wc</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">State::WordCountZero</span>(
                     <span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">offset</span>() <span class="op">-</span> <span class="ident">WORD_NUM_BYTES</span>,
                     <span class="self">self</span>.<span class="ident">inst_index</span>,
@@ -1498,26 +1498,26 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">parse_literal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">type_id</span>: <span class="ident">spirv::Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">dr::Operand</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse_literal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">type_id</span>: <span class="ident">spirv::Word</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">dr::Operand</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">tracked_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_tracker</span>.<span class="ident">resolve</span>(<span class="ident">type_id</span>);
         <span class="kw">match</span> <span class="ident">tracked_type</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">t</span> {
-                <span class="ident">Type::Integer</span>(<span class="ident">size</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">size</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">t</span>) =&gt; <span class="kw">match</span> <span class="ident">t</span> {
+                <span class="ident">Type::Integer</span>(<span class="ident">size</span>, <span class="kw">_</span>) =&gt; <span class="kw">match</span> <span class="ident">size</span> {
                     <span class="comment">// &quot;Value is the bit pattern for the constant. Types 32 bits wide or smaller take one word.&quot;</span>
-                    <span class="number">8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int32</span>()<span class="question-mark">?</span>)),
-                    <span class="number">16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int32</span>()<span class="question-mark">?</span>)),
-                    <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int32</span>()<span class="question-mark">?</span>)),
-                    <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt64</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int64</span>()<span class="question-mark">?</span>)),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">State::TypeUnsupported</span>(
+                    <span class="number">8</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int32</span>()<span class="question-mark">?</span>)),
+                    <span class="number">16</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int32</span>()<span class="question-mark">?</span>)),
+                    <span class="number">32</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int32</span>()<span class="question-mark">?</span>)),
+                    <span class="number">64</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt64</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int64</span>()<span class="question-mark">?</span>)),
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">State::TypeUnsupported</span>(
                         <span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">offset</span>(),
                         <span class="self">self</span>.<span class="ident">inst_index</span>,
                     )),
                 },
-                <span class="ident">Type::Float</span>(<span class="ident">size</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">size</span> {
-                    <span class="number">16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralFloat32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">float32</span>()<span class="question-mark">?</span>)),
-                    <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralFloat32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">float32</span>()<span class="question-mark">?</span>)),
-                    <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralFloat64</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">float64</span>()<span class="question-mark">?</span>)),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">State::TypeUnsupported</span>(
+                <span class="ident">Type::Float</span>(<span class="ident">size</span>) =&gt; <span class="kw">match</span> <span class="ident">size</span> {
+                    <span class="number">16</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralFloat32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">float32</span>()<span class="question-mark">?</span>)),
+                    <span class="number">32</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralFloat32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">float32</span>()<span class="question-mark">?</span>)),
+                    <span class="number">64</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralFloat64</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">float64</span>()<span class="question-mark">?</span>)),
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">State::TypeUnsupported</span>(
                         <span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">offset</span>(),
                         <span class="self">self</span>.<span class="ident">inst_index</span>,
                     )),
@@ -1525,11 +1525,11 @@
             },
             <span class="comment">// Treat as a normal SPIR-V word if we don&#39;t know the type.</span>
             <span class="comment">// TODO: find a better way to handle this.</span>
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int32</span>()<span class="question-mark">?</span>)),
+            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">dr::Operand::LiteralInt32</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int32</span>()<span class="question-mark">?</span>)),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">parse_spec_constant_op</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">dr::Operand</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse_spec_constant_op</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">dr::Operand</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">operands</span> <span class="op">=</span> <span class="macro">vec!</span>[];
 
         <span class="kw">let</span> <span class="ident">number</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">int32</span>()<span class="question-mark">?</span>;
@@ -1552,7 +1552,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">parse_operands</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">grammar</span>: <span class="ident">GInstRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">dr::Instruction</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse_operands</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">grammar</span>: <span class="ident">GInstRef</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">dr::Instruction</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rtype</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rid</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">coperands</span> <span class="op">=</span> <span class="macro">vec!</span>[]; <span class="comment">// concrete operands</span>
@@ -1563,15 +1563,15 @@
             <span class="kw">let</span> <span class="ident">has_more_coperands</span> <span class="op">=</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">limit_reached</span>();
             <span class="kw">if</span> <span class="ident">has_more_coperands</span> {
                 <span class="kw">match</span> <span class="ident">loperand</span>.<span class="ident">kind</span> {
-                    <span class="ident">GOpKind::IdResultType</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rtype</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">id</span>()<span class="question-mark">?</span>),
-                    <span class="ident">GOpKind::IdResult</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rid</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">id</span>()<span class="question-mark">?</span>),
-                    <span class="ident">GOpKind::LiteralContextDependentNumber</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">GOpKind::IdResultType</span> =&gt; <span class="ident">rtype</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">id</span>()<span class="question-mark">?</span>),
+                    <span class="ident">GOpKind::IdResult</span> =&gt; <span class="ident">rid</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">id</span>()<span class="question-mark">?</span>),
+                    <span class="ident">GOpKind::LiteralContextDependentNumber</span> =&gt; {
                         <span class="comment">// Only constant defining instructions use this kind.</span>
                         <span class="comment">// If it is not true, that means the grammar is wrong</span>
                         <span class="comment">// or has changed.</span>
                         <span class="macro">assert!</span>(
-                            <span class="ident">grammar</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">spirv::Op::Constant</span>
-                                <span class="op">|</span><span class="op">|</span> <span class="ident">grammar</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">spirv::Op::SpecConstant</span>
+                            <span class="ident">grammar</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">spirv::Op::Constant</span>
+                                <span class="op">|</span><span class="op">|</span> <span class="ident">grammar</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">spirv::Op::SpecConstant</span>
                         );
                         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">rtype</span>.<span class="ident">expect</span>(
                             <span class="string">&quot;internal error: \
@@ -1579,34 +1579,34 @@
                         );
                         <span class="ident">coperands</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">parse_literal</span>(<span class="ident">id</span>)<span class="question-mark">?</span>)
                     }
-                    <span class="ident">GOpKind::PairLiteralIntegerIdRef</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">GOpKind::PairLiteralIntegerIdRef</span> =&gt; {
                         <span class="macro">assert_eq!</span>(<span class="ident">grammar</span>.<span class="ident">opcode</span>, <span class="ident">spirv::Op::Switch</span>);
                         <span class="kw">let</span> <span class="ident">selector</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">coperands</span>[<span class="number">0</span>] {
-                            <span class="ident">dr::Operand::IdRef</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">id</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;internal error: OpSwitch selector should be IdRef&quot;</span>),
+                            <span class="ident">dr::Operand::IdRef</span>(<span class="ident">id</span>) =&gt; <span class="ident">id</span>,
+                            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;internal error: OpSwitch selector should be IdRef&quot;</span>),
                         };
                         <span class="ident">coperands</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">parse_literal</span>(<span class="ident">selector</span>)<span class="question-mark">?</span>);
                         <span class="ident">coperands</span>.<span class="ident">push</span>(<span class="ident">dr::Operand::IdRef</span>(<span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">id</span>()<span class="question-mark">?</span>));
                     }
-                    <span class="ident">GOpKind::LiteralSpecConstantOpInteger</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">GOpKind::LiteralSpecConstantOpInteger</span> =&gt; {
                         <span class="ident">coperands</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">parse_spec_constant_op</span>()<span class="question-mark">?</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">coperands</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">parse_operand</span>(<span class="ident">loperand</span>.<span class="ident">kind</span>)<span class="question-mark">?</span>),
+                    <span class="kw">_</span> =&gt; <span class="ident">coperands</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">parse_operand</span>(<span class="ident">loperand</span>.<span class="ident">kind</span>)<span class="question-mark">?</span>),
                 }
                 <span class="kw">match</span> <span class="ident">loperand</span>.<span class="ident">quantifier</span> {
-                    <span class="ident">GOpCount::One</span> <span class="op">|</span> <span class="ident">GOpCount::ZeroOrOne</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">loperand_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>,
-                    <span class="ident">GOpCount::ZeroOrMore</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                    <span class="ident">GOpCount::One</span> <span class="op">|</span> <span class="ident">GOpCount::ZeroOrOne</span> =&gt; <span class="ident">loperand_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>,
+                    <span class="ident">GOpCount::ZeroOrMore</span> =&gt; <span class="kw">continue</span>,
                 }
             } <span class="kw">else</span> {
                 <span class="comment">// We still have logical operands to match but no no more words.</span>
                 <span class="kw">match</span> <span class="ident">loperand</span>.<span class="ident">quantifier</span> {
-                    <span class="ident">GOpCount::One</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">GOpCount::One</span> =&gt; {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">State::OperandExpected</span>(
                             <span class="self">self</span>.<span class="ident">decoder</span>.<span class="ident">offset</span>(),
                             <span class="self">self</span>.<span class="ident">inst_index</span>,
                         ))
                     }
-                    <span class="ident">GOpCount::ZeroOrOne</span> <span class="op">|</span> <span class="ident">GOpCount::ZeroOrMore</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
+                    <span class="ident">GOpCount::ZeroOrOne</span> <span class="op">|</span> <span class="ident">GOpCount::ZeroOrMore</span> =&gt; <span class="kw">break</span>,
                 }
             }
         }
@@ -1643,7 +1643,7 @@
         <span class="kw">pub</span> <span class="ident">insts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">dr::Instruction</span><span class="op">&gt;</span>,
     }
     <span class="kw">impl</span> <span class="ident">RetainingConsumer</span> {
-        <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RetainingConsumer</span> {
+        <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">RetainingConsumer</span> {
             <span class="ident">RetainingConsumer</span> {
                 <span class="ident">header</span>: <span class="prelude-val">None</span>,
                 <span class="ident">insts</span>: <span class="macro">vec!</span>[],
@@ -1651,18 +1651,18 @@
         }
     }
     <span class="kw">impl</span> <span class="ident">Consumer</span> <span class="kw">for</span> <span class="ident">RetainingConsumer</span> {
-        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
 
-        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="ident">dr::ModuleHeader</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="ident">dr::ModuleHeader</span>) -&gt; <span class="ident">Action</span> {
             <span class="self">self</span>.<span class="ident">header</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">header</span>);
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>) -&gt; <span class="ident">Action</span> {
             <span class="self">self</span>.<span class="ident">insts</span>.<span class="ident">push</span>(<span class="ident">inst</span>);
             <span class="ident">Action::Continue</span>
         }
@@ -1670,7 +1670,7 @@
 
     <span class="comment">// TODO: Should put this function and its duplicate in the decoder in</span>
     <span class="comment">// a utility module.</span>
-    <span class="kw">fn</span> <span class="ident">w2b</span>(<span class="ident">word</span>: <span class="ident">spirv::Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">w2b</span>(<span class="ident">word</span>: <span class="ident">spirv::Word</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
         (<span class="number">0</span>..<span class="ident">WORD_NUM_BYTES</span>)
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> ((<span class="ident">word</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">8</span> <span class="op">*</span> <span class="ident">i</span>)) <span class="op">&amp;</span> <span class="number">0xff</span>) <span class="kw">as</span> <span class="ident">u8</span>)
             .<span class="ident">collect</span>()
@@ -1681,7 +1681,7 @@
         <span class="ident">insts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     }
     <span class="kw">impl</span> <span class="ident">ModuleBuilder</span> {
-        <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ModuleBuilder</span> {
+        <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">ModuleBuilder</span> {
             <span class="ident">ModuleBuilder</span> {
                 <span class="ident">insts</span>: <span class="ident">ZERO_BOUND_HEADER</span>.<span class="ident">to_vec</span>(),
             }
@@ -1698,7 +1698,7 @@
         }
 
         <span class="doccomment">/// Returns the module being constructed.</span>
-        <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+        <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">insts</span>
         }
     }
@@ -1965,7 +1965,7 @@
     <span class="kw">struct</span> <span class="ident">ErrorString</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>);
     <span class="kw">impl</span> <span class="ident">error::Error</span> <span class="kw">for</span> <span class="ident">ErrorString</span> {}
     <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">ErrorString</span> {
-        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
             <span class="kw">let</span> <span class="kw-2">&amp;</span><span class="ident">ErrorString</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="op">=</span> <span class="self">self</span>;
             <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">s</span>)
         }
@@ -1973,16 +1973,16 @@
 
     <span class="kw">struct</span> <span class="ident">InitializeErrorConsumer</span>;
     <span class="kw">impl</span> <span class="ident">Consumer</span> <span class="kw">for</span> <span class="ident">InitializeErrorConsumer</span> {
-        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Error</span>(<span class="ident">Box::new</span>(<span class="ident">ErrorString</span>(<span class="string">&quot;init error&quot;</span>)))
         }
-        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::ModuleHeader</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::ModuleHeader</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::Instruction</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
     }
@@ -2002,16 +2002,16 @@
 
     <span class="kw">struct</span> <span class="ident">FinalizeErrorConsumer</span>;
     <span class="kw">impl</span> <span class="ident">Consumer</span> <span class="kw">for</span> <span class="ident">FinalizeErrorConsumer</span> {
-        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Error</span>(<span class="ident">Box::new</span>(<span class="ident">ErrorString</span>(<span class="string">&quot;fin error&quot;</span>)))
         }
-        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::ModuleHeader</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::ModuleHeader</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::Instruction</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
     }
@@ -2027,16 +2027,16 @@
 
     <span class="kw">struct</span> <span class="ident">ParseHeaderErrorConsumer</span>;
     <span class="kw">impl</span> <span class="ident">Consumer</span> <span class="kw">for</span> <span class="ident">ParseHeaderErrorConsumer</span> {
-        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::ModuleHeader</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::ModuleHeader</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Error</span>(<span class="ident">Box::new</span>(<span class="ident">ErrorString</span>(<span class="string">&quot;parse header error&quot;</span>)))
         }
-        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::Instruction</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
     }
@@ -2055,16 +2055,16 @@
 
     <span class="kw">struct</span> <span class="ident">ParseInstErrorConsumer</span>;
     <span class="kw">impl</span> <span class="ident">Consumer</span> <span class="kw">for</span> <span class="ident">ParseInstErrorConsumer</span> {
-        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::ModuleHeader</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::ModuleHeader</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Continue</span>
         }
-        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Action</span> {
+        <span class="kw">fn</span> <span class="ident">consume_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">dr::Instruction</span>) -&gt; <span class="ident">Action</span> {
             <span class="ident">Action::Error</span>(<span class="ident">Box::new</span>(<span class="ident">ErrorString</span>(<span class="string">&quot;parse inst error&quot;</span>)))
         }
     }

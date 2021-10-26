@@ -343,7 +343,7 @@
 <span class="kw">use</span> <span class="ident">core::f64</span>;
 
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sqrt</span>(<span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sqrt</span>(<span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="comment">// On wasm32 we know that LLVM&#39;s intrinsic will compile to an optimized</span>
     <span class="comment">// `f64.sqrt` native instruction, so we can leverage this for both code size</span>
     <span class="comment">// and speed.</span>
@@ -395,12 +395,12 @@
         <span class="ident">ix1</span> <span class="op">=</span> <span class="ident">Wrapping</span>(<span class="ident">x</span>.<span class="ident">to_bits</span>() <span class="kw">as</span> <span class="ident">u32</span>);
 
         <span class="comment">/* take care of Inf and NaN */</span>
-        <span class="kw">if</span> (<span class="ident">ix0</span> <span class="op">&amp;</span> <span class="number">0x7ff00000</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> {
+        <span class="kw">if</span> (<span class="ident">ix0</span> <span class="op">&amp;</span> <span class="number">0x7ff00000</span>) <span class="op">==</span> <span class="number">0x7ff00000</span> {
             <span class="kw">return</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">x</span>; <span class="comment">/* sqrt(NaN)=NaN, sqrt(+inf)=+inf, sqrt(-inf)=sNaN */</span>
         }
         <span class="comment">/* take care of zero */</span>
         <span class="kw">if</span> <span class="ident">ix0</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">if</span> ((<span class="ident">ix0</span> <span class="op">&amp;</span> <span class="op">!</span>(<span class="ident">sign</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i32</span>)) <span class="op">|</span> <span class="ident">ix1</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> ((<span class="ident">ix0</span> <span class="op">&amp;</span> <span class="op">!</span>(<span class="ident">sign</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i32</span>)) <span class="op">|</span> <span class="ident">ix1</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">return</span> <span class="ident">x</span>; <span class="comment">/* sqrt(+-0) = +-0 */</span>
             }
             <span class="kw">if</span> <span class="ident">ix0</span> <span class="op">&lt;</span> <span class="number">0</span> {
@@ -409,15 +409,15 @@
         }
         <span class="comment">/* normalize x */</span>
         <span class="ident">m</span> <span class="op">=</span> <span class="ident">ix0</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">20</span>;
-        <span class="kw">if</span> <span class="ident">m</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">m</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="comment">/* subnormal x */</span>
-            <span class="kw">while</span> <span class="ident">ix0</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">while</span> <span class="ident">ix0</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">m</span> <span class="op">-</span><span class="op">=</span> <span class="number">21</span>;
                 <span class="ident">ix0</span> <span class="op">|</span><span class="op">=</span> (<span class="ident">ix1</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">11</span>).<span class="number">0</span> <span class="kw">as</span> <span class="ident">i32</span>;
                 <span class="ident">ix1</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">21</span>;
             }
             <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">while</span> (<span class="ident">ix0</span> <span class="op">&amp;</span> <span class="number">0x00100000</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">while</span> (<span class="ident">ix0</span> <span class="op">&amp;</span> <span class="number">0x00100000</span>) <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 <span class="ident">ix0</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span>;
             }
@@ -427,7 +427,7 @@
         }
         <span class="ident">m</span> <span class="op">-</span><span class="op">=</span> <span class="number">1023</span>; <span class="comment">/* unbias exponent */</span>
         <span class="ident">ix0</span> <span class="op">=</span> (<span class="ident">ix0</span> <span class="op">&amp;</span> <span class="number">0x000fffff</span>) <span class="op">|</span> <span class="number">0x00100000</span>;
-        <span class="kw">if</span> (<span class="ident">m</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+        <span class="kw">if</span> (<span class="ident">m</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">==</span> <span class="number">1</span> {
             <span class="comment">/* odd m, double x to make it even */</span>
             <span class="ident">ix0</span> <span class="op">+</span><span class="op">=</span> <span class="ident">ix0</span> <span class="op">+</span> ((<span class="ident">ix1</span> <span class="op">&amp;</span> <span class="ident">sign</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>).<span class="number">0</span> <span class="kw">as</span> <span class="ident">i32</span>;
             <span class="ident">ix1</span> <span class="op">+</span><span class="op">=</span> <span class="ident">ix1</span>;
@@ -459,9 +459,9 @@
         <span class="kw">while</span> <span class="ident">r</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Wrapping</span>(<span class="number">0</span>) {
             <span class="ident">t1</span> <span class="op">=</span> <span class="ident">s1</span> <span class="op">+</span> <span class="ident">r</span>;
             <span class="ident">t</span> <span class="op">=</span> <span class="ident">s0</span>;
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&lt;</span> <span class="ident">ix0</span> <span class="op">|</span><span class="op">|</span> (<span class="ident">t</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ix0</span> <span class="op">&amp;&amp;</span> <span class="ident">t1</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ix1</span>) {
+            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&lt;</span> <span class="ident">ix0</span> <span class="op">|</span><span class="op">|</span> (<span class="ident">t</span> <span class="op">==</span> <span class="ident">ix0</span> <span class="op">&amp;&amp;</span> <span class="ident">t1</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ix1</span>) {
                 <span class="ident">s1</span> <span class="op">=</span> <span class="ident">t1</span> <span class="op">+</span> <span class="ident">r</span>;
-                <span class="kw">if</span> (<span class="ident">t1</span> <span class="op">&amp;</span> <span class="ident">sign</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">sign</span> <span class="op">&amp;&amp;</span> (<span class="ident">s1</span> <span class="op">&amp;</span> <span class="ident">sign</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">Wrapping</span>(<span class="number">0</span>) {
+                <span class="kw">if</span> (<span class="ident">t1</span> <span class="op">&amp;</span> <span class="ident">sign</span>) <span class="op">==</span> <span class="ident">sign</span> <span class="op">&amp;&amp;</span> (<span class="ident">s1</span> <span class="op">&amp;</span> <span class="ident">sign</span>) <span class="op">==</span> <span class="ident">Wrapping</span>(<span class="number">0</span>) {
                     <span class="ident">s0</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 }
                 <span class="ident">ix0</span> <span class="op">-</span><span class="op">=</span> <span class="ident">t</span>;
@@ -481,11 +481,11 @@
             <span class="ident">z</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">-</span> <span class="ident">TINY</span>; <span class="comment">/* raise inexact flag */</span>
             <span class="kw">if</span> <span class="ident">z</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">1.0</span> {
                 <span class="ident">z</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">+</span> <span class="ident">TINY</span>;
-                <span class="kw">if</span> <span class="ident">q1</span>.<span class="number">0</span> <span class="op">=</span><span class="op">=</span> <span class="number">0xffffffff</span> {
+                <span class="kw">if</span> <span class="ident">q1</span>.<span class="number">0</span> <span class="op">==</span> <span class="number">0xffffffff</span> {
                     <span class="ident">q1</span> <span class="op">=</span> <span class="ident">Wrapping</span>(<span class="number">0</span>);
                     <span class="ident">q</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">z</span> <span class="op">&gt;</span> <span class="number">1.0</span> {
-                    <span class="kw">if</span> <span class="ident">q1</span>.<span class="number">0</span> <span class="op">=</span><span class="op">=</span> <span class="number">0xfffffffe</span> {
+                    <span class="kw">if</span> <span class="ident">q1</span>.<span class="number">0</span> <span class="op">==</span> <span class="number">0xfffffffe</span> {
                         <span class="ident">q</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                     }
                     <span class="ident">q1</span> <span class="op">+</span><span class="op">=</span> <span class="ident">Wrapping</span>(<span class="number">2</span>);
@@ -496,7 +496,7 @@
         }
         <span class="ident">ix0</span> <span class="op">=</span> (<span class="ident">q</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>) <span class="op">+</span> <span class="number">0x3fe00000</span>;
         <span class="ident">ix1</span> <span class="op">=</span> <span class="ident">q1</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>;
-        <span class="kw">if</span> (<span class="ident">q</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+        <span class="kw">if</span> (<span class="ident">q</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">==</span> <span class="number">1</span> {
             <span class="ident">ix1</span> <span class="op">|</span><span class="op">=</span> <span class="ident">sign</span>;
         }
         <span class="ident">ix0</span> <span class="op">+</span><span class="op">=</span> <span class="ident">m</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">20</span>;

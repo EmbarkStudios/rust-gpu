@@ -172,7 +172,7 @@
     <span class="doccomment">/// Creates a right-handed perspective projection matrix with [-1,1] depth range.</span>
     <span class="doccomment">/// This is the same as the OpenGL `gluPerspective` function.</span>
     <span class="doccomment">/// See https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/gluPerspective.xml</span>
-    <span class="kw">fn</span> <span class="ident">perspective_rh_gl</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>, <span class="ident">z_far</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">perspective_rh_gl</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>, <span class="ident">z_far</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">inv_length</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">z_near</span> <span class="op">-</span> <span class="ident">z_far</span>);
         <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">T::HALF</span> <span class="op">*</span> <span class="ident">fov_y_radians</span>).<span class="ident">tan</span>();
         <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">f</span> <span class="op">/</span> <span class="ident">aspect_ratio</span>;
@@ -187,7 +187,7 @@
     }
 
     <span class="doccomment">/// Creates a left-handed perspective projection matrix with [0,1] depth range.</span>
-    <span class="kw">fn</span> <span class="ident">perspective_lh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>, <span class="ident">z_far</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">perspective_lh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>, <span class="ident">z_far</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="macro">glam_assert!</span>(<span class="ident">z_near</span> <span class="op">&gt;</span> <span class="ident">T::ZERO</span> <span class="op">&amp;&amp;</span> <span class="ident">z_far</span> <span class="op">&gt;</span> <span class="ident">T::ZERO</span>);
         <span class="kw">let</span> (<span class="ident">sin_fov</span>, <span class="ident">cos_fov</span>) <span class="op">=</span> (<span class="ident">T::HALF</span> <span class="op">*</span> <span class="ident">fov_y_radians</span>).<span class="ident">sin_cos</span>();
         <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">cos_fov</span> <span class="op">/</span> <span class="ident">sin_fov</span>;
@@ -202,7 +202,7 @@
     }
 
     <span class="doccomment">/// Creates a right-handed perspective projection matrix with [0,1] depth range.</span>
-    <span class="kw">fn</span> <span class="ident">perspective_rh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>, <span class="ident">z_far</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">perspective_rh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>, <span class="ident">z_far</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="macro">glam_assert!</span>(<span class="ident">z_near</span> <span class="op">&gt;</span> <span class="ident">T::ZERO</span> <span class="op">&amp;&amp;</span> <span class="ident">z_far</span> <span class="op">&gt;</span> <span class="ident">T::ZERO</span>);
         <span class="kw">let</span> (<span class="ident">sin_fov</span>, <span class="ident">cos_fov</span>) <span class="op">=</span> (<span class="ident">T::HALF</span> <span class="op">*</span> <span class="ident">fov_y_radians</span>).<span class="ident">sin_cos</span>();
         <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">cos_fov</span> <span class="op">/</span> <span class="ident">sin_fov</span>;
@@ -217,7 +217,7 @@
     }
 
     <span class="doccomment">/// Creates an infinite left-handed perspective projection matrix with [0,1] depth range.</span>
-    <span class="kw">fn</span> <span class="ident">perspective_infinite_lh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">perspective_infinite_lh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="macro">glam_assert!</span>(<span class="ident">z_near</span> <span class="op">&gt;</span> <span class="ident">T::ZERO</span>);
         <span class="kw">let</span> (<span class="ident">sin_fov</span>, <span class="ident">cos_fov</span>) <span class="op">=</span> (<span class="ident">T::HALF</span> <span class="op">*</span> <span class="ident">fov_y_radians</span>).<span class="ident">sin_cos</span>();
         <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">cos_fov</span> <span class="op">/</span> <span class="ident">sin_fov</span>;
@@ -231,7 +231,7 @@
     }
 
     <span class="doccomment">/// Creates an infinite left-handed perspective projection matrix with [0,1] depth range.</span>
-    <span class="kw">fn</span> <span class="ident">perspective_infinite_reverse_lh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">perspective_infinite_reverse_lh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="macro">glam_assert!</span>(<span class="ident">z_near</span> <span class="op">&gt;</span> <span class="ident">T::ZERO</span>);
         <span class="kw">let</span> (<span class="ident">sin_fov</span>, <span class="ident">cos_fov</span>) <span class="op">=</span> (<span class="ident">T::HALF</span> <span class="op">*</span> <span class="ident">fov_y_radians</span>).<span class="ident">sin_cos</span>();
         <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">cos_fov</span> <span class="op">/</span> <span class="ident">sin_fov</span>;
@@ -246,7 +246,7 @@
 
     <span class="doccomment">/// Creates an infinite right-handed perspective projection matrix with</span>
     <span class="doccomment">/// [0,1] depth range.</span>
-    <span class="kw">fn</span> <span class="ident">perspective_infinite_rh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">perspective_infinite_rh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="macro">glam_assert!</span>(<span class="ident">z_near</span> <span class="op">&gt;</span> <span class="ident">T::ZERO</span>);
         <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">T::HALF</span> <span class="op">*</span> <span class="ident">fov_y_radians</span>).<span class="ident">tan</span>();
         <span class="ident"><span class="self">Self</span>::from_cols</span>(
@@ -259,7 +259,7 @@
 
     <span class="doccomment">/// Creates an infinite reverse right-handed perspective projection matrix</span>
     <span class="doccomment">/// with [0,1] depth range.</span>
-    <span class="kw">fn</span> <span class="ident">perspective_infinite_reverse_rh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">perspective_infinite_reverse_rh</span>(<span class="ident">fov_y_radians</span>: <span class="ident">T</span>, <span class="ident">aspect_ratio</span>: <span class="ident">T</span>, <span class="ident">z_near</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="macro">glam_assert!</span>(<span class="ident">z_near</span> <span class="op">&gt;</span> <span class="ident">T::ZERO</span>);
         <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">T::HALF</span> <span class="op">*</span> <span class="ident">fov_y_radians</span>).<span class="ident">tan</span>();
         <span class="ident"><span class="self">Self</span>::from_cols</span>(
@@ -274,7 +274,7 @@
     <span class="doccomment">/// range.  This is the same as the OpenGL `glOrtho` function in OpenGL.</span>
     <span class="doccomment">/// See</span>
     <span class="doccomment">/// https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glOrtho.xml</span>
-    <span class="kw">fn</span> <span class="ident">orthographic_rh_gl</span>(<span class="ident">left</span>: <span class="ident">T</span>, <span class="ident">right</span>: <span class="ident">T</span>, <span class="ident">bottom</span>: <span class="ident">T</span>, <span class="ident">top</span>: <span class="ident">T</span>, <span class="ident">near</span>: <span class="ident">T</span>, <span class="ident">far</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">orthographic_rh_gl</span>(<span class="ident">left</span>: <span class="ident">T</span>, <span class="ident">right</span>: <span class="ident">T</span>, <span class="ident">bottom</span>: <span class="ident">T</span>, <span class="ident">top</span>: <span class="ident">T</span>, <span class="ident">near</span>: <span class="ident">T</span>, <span class="ident">far</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">T::TWO</span> <span class="op">/</span> (<span class="ident">right</span> <span class="op">-</span> <span class="ident">left</span>);
         <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">T::TWO</span> <span class="op">/</span> (<span class="ident">top</span> <span class="op">-</span> <span class="ident">bottom</span>);
         <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="op">-</span><span class="ident">T::TWO</span> <span class="op">/</span> (<span class="ident">far</span> <span class="op">-</span> <span class="ident">near</span>);
@@ -291,7 +291,7 @@
     }
 
     <span class="doccomment">/// Creates a left-handed orthographic projection matrix with [0,1] depth range.</span>
-    <span class="kw">fn</span> <span class="ident">orthographic_lh</span>(<span class="ident">left</span>: <span class="ident">T</span>, <span class="ident">right</span>: <span class="ident">T</span>, <span class="ident">bottom</span>: <span class="ident">T</span>, <span class="ident">top</span>: <span class="ident">T</span>, <span class="ident">near</span>: <span class="ident">T</span>, <span class="ident">far</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">orthographic_lh</span>(<span class="ident">left</span>: <span class="ident">T</span>, <span class="ident">right</span>: <span class="ident">T</span>, <span class="ident">bottom</span>: <span class="ident">T</span>, <span class="ident">top</span>: <span class="ident">T</span>, <span class="ident">near</span>: <span class="ident">T</span>, <span class="ident">far</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">rcp_width</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">right</span> <span class="op">-</span> <span class="ident">left</span>);
         <span class="kw">let</span> <span class="ident">rcp_height</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">top</span> <span class="op">-</span> <span class="ident">bottom</span>);
         <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">far</span> <span class="op">-</span> <span class="ident">near</span>);
@@ -309,7 +309,7 @@
     }
 
     <span class="doccomment">/// Creates a right-handed orthographic projection matrix with [0,1] depth range.</span>
-    <span class="kw">fn</span> <span class="ident">orthographic_rh</span>(<span class="ident">left</span>: <span class="ident">T</span>, <span class="ident">right</span>: <span class="ident">T</span>, <span class="ident">bottom</span>: <span class="ident">T</span>, <span class="ident">top</span>: <span class="ident">T</span>, <span class="ident">near</span>: <span class="ident">T</span>, <span class="ident">far</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">orthographic_rh</span>(<span class="ident">left</span>: <span class="ident">T</span>, <span class="ident">right</span>: <span class="ident">T</span>, <span class="ident">bottom</span>: <span class="ident">T</span>, <span class="ident">top</span>: <span class="ident">T</span>, <span class="ident">near</span>: <span class="ident">T</span>, <span class="ident">far</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">rcp_width</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">right</span> <span class="op">-</span> <span class="ident">left</span>);
         <span class="kw">let</span> <span class="ident">rcp_height</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">top</span> <span class="op">-</span> <span class="ident">bottom</span>);
         <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">/</span> (<span class="ident">near</span> <span class="op">-</span> <span class="ident">far</span>);

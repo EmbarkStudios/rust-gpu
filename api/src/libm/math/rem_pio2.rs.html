@@ -262,13 +262,13 @@
 <span class="comment">//</span>
 <span class="comment">// caller must handle the case when reduction is not needed: |x| ~&lt;= pi/4 */</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">rem_pio2</span>(<span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">i32</span>, <span class="ident">f64</span>, <span class="ident">f64</span>) {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">rem_pio2</span>(<span class="ident">x</span>: <span class="ident">f64</span>) -&gt; (<span class="ident">i32</span>, <span class="ident">f64</span>, <span class="ident">f64</span>) {
     <span class="kw">let</span> <span class="ident">x1p24</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x4170000000000000</span>);
 
     <span class="kw">let</span> <span class="ident">sign</span> <span class="op">=</span> (<span class="ident">f64::to_bits</span>(<span class="ident">x</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">63</span>) <span class="kw">as</span> <span class="ident">i32</span>;
     <span class="kw">let</span> <span class="ident">ix</span> <span class="op">=</span> (<span class="ident">f64::to_bits</span>(<span class="ident">x</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&amp;</span> <span class="number">0x7fffffff</span>;
 
-    <span class="kw">fn</span> <span class="ident">medium</span>(<span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">ix</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">i32</span>, <span class="ident">f64</span>, <span class="ident">f64</span>) {
+    <span class="kw">fn</span> <span class="ident">medium</span>(<span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">ix</span>: <span class="ident">u32</span>) -&gt; (<span class="ident">i32</span>, <span class="ident">f64</span>, <span class="ident">f64</span>) {
         <span class="comment">/* rint(x/(pi/2)), Assume round-to-nearest. */</span>
         <span class="kw">let</span> <span class="ident">f_n</span> <span class="op">=</span> <span class="ident">x</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">INV_PIO2</span> <span class="op">+</span> <span class="ident">TO_INT</span> <span class="op">-</span> <span class="ident">TO_INT</span>;
         <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">f_n</span> <span class="kw">as</span> <span class="ident">i32</span>;
@@ -301,13 +301,13 @@
 
     <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0x400f6a7a</span> {
         <span class="comment">/* |x| ~&lt;= 5pi/4 */</span>
-        <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">&amp;</span> <span class="number">0xfffff</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0x921fb</span> {
+        <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">&amp;</span> <span class="number">0xfffff</span>) <span class="op">==</span> <span class="number">0x921fb</span> {
             <span class="comment">/* |x| ~= pi/2 or 2pi/2 */</span>
             <span class="kw">return</span> <span class="ident">medium</span>(<span class="ident">x</span>, <span class="ident">ix</span>); <span class="comment">/* cancellation -- use medium case */</span>
         }
         <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0x4002d97c</span> {
             <span class="comment">/* |x| ~&lt;= 3pi/4 */</span>
-            <span class="kw">if</span> <span class="ident">sign</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">sign</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">-</span> <span class="ident">PIO2_1</span>; <span class="comment">/* one round good to 85 bits */</span>
                 <span class="kw">let</span> <span class="ident">y0</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">-</span> <span class="ident">PIO2_1T</span>;
                 <span class="kw">let</span> <span class="ident">y1</span> <span class="op">=</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">y0</span>) <span class="op">-</span> <span class="ident">PIO2_1T</span>;
@@ -318,7 +318,7 @@
                 <span class="kw">let</span> <span class="ident">y1</span> <span class="op">=</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">y0</span>) <span class="op">+</span> <span class="ident">PIO2_1T</span>;
                 <span class="kw">return</span> (<span class="op">-</span><span class="number">1</span>, <span class="ident">y0</span>, <span class="ident">y1</span>);
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">sign</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">sign</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">-</span> <span class="number">2.0</span> <span class="op">*</span> <span class="ident">PIO2_1</span>;
             <span class="kw">let</span> <span class="ident">y0</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">-</span> <span class="number">2.0</span> <span class="op">*</span> <span class="ident">PIO2_1T</span>;
             <span class="kw">let</span> <span class="ident">y1</span> <span class="op">=</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">y0</span>) <span class="op">-</span> <span class="number">2.0</span> <span class="op">*</span> <span class="ident">PIO2_1T</span>;
@@ -334,11 +334,11 @@
         <span class="comment">/* |x| ~&lt;= 9pi/4 */</span>
         <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0x4015fdbc</span> {
             <span class="comment">/* |x| ~&lt;= 7pi/4 */</span>
-            <span class="kw">if</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x4012d97c</span> {
+            <span class="kw">if</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x4012d97c</span> {
                 <span class="comment">/* |x| ~= 3pi/2 */</span>
                 <span class="kw">return</span> <span class="ident">medium</span>(<span class="ident">x</span>, <span class="ident">ix</span>);
             }
-            <span class="kw">if</span> <span class="ident">sign</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">sign</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">-</span> <span class="number">3.0</span> <span class="op">*</span> <span class="ident">PIO2_1</span>;
                 <span class="kw">let</span> <span class="ident">y0</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">-</span> <span class="number">3.0</span> <span class="op">*</span> <span class="ident">PIO2_1T</span>;
                 <span class="kw">let</span> <span class="ident">y1</span> <span class="op">=</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">y0</span>) <span class="op">-</span> <span class="number">3.0</span> <span class="op">*</span> <span class="ident">PIO2_1T</span>;
@@ -350,11 +350,11 @@
                 <span class="kw">return</span> (<span class="op">-</span><span class="number">3</span>, <span class="ident">y0</span>, <span class="ident">y1</span>);
             }
         } <span class="kw">else</span> {
-            <span class="kw">if</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x401921fb</span> {
+            <span class="kw">if</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x401921fb</span> {
                 <span class="comment">/* |x| ~= 4pi/2 */</span>
                 <span class="kw">return</span> <span class="ident">medium</span>(<span class="ident">x</span>, <span class="ident">ix</span>);
             }
-            <span class="kw">if</span> <span class="ident">sign</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">sign</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">-</span> <span class="number">4.0</span> <span class="op">*</span> <span class="ident">PIO2_1</span>;
                 <span class="kw">let</span> <span class="ident">y0</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">-</span> <span class="number">4.0</span> <span class="op">*</span> <span class="ident">PIO2_1T</span>;
                 <span class="kw">let</span> <span class="ident">y1</span> <span class="op">=</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">y0</span>) <span class="op">-</span> <span class="number">4.0</span> <span class="op">*</span> <span class="ident">PIO2_1T</span>;
@@ -393,7 +393,7 @@
     <span class="ident">tx</span>[<span class="number">2</span>] <span class="op">=</span> <span class="ident">z</span>;
     <span class="comment">/* skip zero terms, first term is non-zero */</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">2</span>;
-    <span class="kw">while</span> <span class="ident">i</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">tx</span>[<span class="ident">i</span>] <span class="op">=</span><span class="op">=</span> <span class="number">0.0</span> {
+    <span class="kw">while</span> <span class="ident">i</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">tx</span>[<span class="ident">i</span>] <span class="op">==</span> <span class="number">0.0</span> {
         <span class="ident">i</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
     }
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ty</span> <span class="op">=</span> [<span class="number">0.0</span>; <span class="number">3</span>];

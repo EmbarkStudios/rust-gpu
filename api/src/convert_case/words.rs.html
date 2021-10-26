@@ -385,7 +385,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Words</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">words</span> <span class="op">=</span> <span class="ident">name</span>
             .<span class="ident">split</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="string">&quot;-_ &quot;</span>.<span class="ident">contains</span>(<span class="ident">c</span>))
             .<span class="ident">flat_map</span>(<span class="ident"><span class="self">Self</span>::split_camel</span>)
@@ -394,29 +394,29 @@
         <span class="ident">Words</span> { <span class="ident">words</span> }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_casing</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">case</span>: <span class="ident">Case</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_casing</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">case</span>: <span class="ident">Case</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">use</span> <span class="ident">Case</span>::<span class="kw-2">*</span>;
         <span class="kw">let</span> <span class="ident">words</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">case</span> {
-            <span class="ident">Title</span> <span class="op">|</span> <span class="ident">Upper</span> <span class="op">|</span> <span class="ident">Lower</span> <span class="op">|</span> <span class="ident">Toggle</span> <span class="op">|</span> <span class="ident">Alternating</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">name</span>
+            <span class="ident">Title</span> <span class="op">|</span> <span class="ident">Upper</span> <span class="op">|</span> <span class="ident">Lower</span> <span class="op">|</span> <span class="ident">Toggle</span> <span class="op">|</span> <span class="ident">Alternating</span> =&gt; <span class="ident">name</span>
                 .<span class="ident">split_ascii_whitespace</span>()
                 .<span class="ident">map</span>(<span class="ident">ToString::to_string</span>)
                 .<span class="ident">collect</span>(),
-            <span class="ident">Kebab</span> <span class="op">|</span> <span class="ident">Cobol</span> <span class="op">|</span> <span class="ident">Train</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">name</span>
+            <span class="ident">Kebab</span> <span class="op">|</span> <span class="ident">Cobol</span> <span class="op">|</span> <span class="ident">Train</span> =&gt; <span class="ident">name</span>
                 .<span class="ident">split</span>(<span class="string">&#39;-&#39;</span>)
                 .<span class="ident">map</span>(<span class="ident">ToString::to_string</span>)
                 .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="op">!</span><span class="ident">s</span>.<span class="ident">is_empty</span>())
                 .<span class="ident">collect</span>(),
-            <span class="ident">Snake</span> <span class="op">|</span> <span class="ident">UpperSnake</span> <span class="op">|</span> <span class="ident">ScreamingSnake</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">name</span>
+            <span class="ident">Snake</span> <span class="op">|</span> <span class="ident">UpperSnake</span> <span class="op">|</span> <span class="ident">ScreamingSnake</span> =&gt; <span class="ident">name</span>
                 .<span class="ident">split</span>(<span class="string">&#39;_&#39;</span>)
                 .<span class="ident">map</span>(<span class="ident">ToString::to_string</span>)
                 .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="op">!</span><span class="ident">s</span>.<span class="ident">is_empty</span>())
                 .<span class="ident">collect</span>(),
-            <span class="ident">Pascal</span> <span class="op">|</span> <span class="ident">Camel</span> <span class="op">|</span> <span class="ident">UpperCamel</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::split_camel</span>(<span class="ident">name</span>),
-            <span class="ident">Flat</span> <span class="op">|</span> <span class="ident">UpperFlat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec!</span>[<span class="ident">name</span>.<span class="ident">to_string</span>()],
+            <span class="ident">Pascal</span> <span class="op">|</span> <span class="ident">Camel</span> <span class="op">|</span> <span class="ident">UpperCamel</span> =&gt; <span class="ident"><span class="self">Self</span>::split_camel</span>(<span class="ident">name</span>),
+            <span class="ident">Flat</span> <span class="op">|</span> <span class="ident">UpperFlat</span> =&gt; <span class="macro">vec!</span>[<span class="ident">name</span>.<span class="ident">to_string</span>()],
 
             <span class="comment">// Same behavior as title, upper, etc.</span>
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;random&quot;</span>)]</span>
-            <span class="ident">Random</span> <span class="op">|</span> <span class="ident">PseudoRandom</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">name</span>
+            <span class="ident">Random</span> <span class="op">|</span> <span class="ident">PseudoRandom</span> =&gt; <span class="ident">name</span>
                 .<span class="ident">split_ascii_whitespace</span>()
                 .<span class="ident">map</span>(<span class="ident">ToString::to_string</span>)
                 .<span class="ident">collect</span>(),
@@ -424,7 +424,7 @@
         <span class="self">Self</span> { <span class="ident">words</span> }
     }
 
-    <span class="kw">fn</span> <span class="ident">split_camel</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">split_camel</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">left_iter</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">chars</span>();
         <span class="kw">let</span> <span class="ident">mid_iter</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">chars</span>().<span class="ident">skip</span>(<span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">right_iter</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">chars</span>().<span class="ident">skip</span>(<span class="number">2</span>);
@@ -452,7 +452,7 @@
     }
 
     <span class="doccomment">/// Allowed boundaries are (lower upper) (digit (!digit and !punc)) ((!digit and !punc) digit).</span>
-    <span class="kw">fn</span> <span class="ident">two_char_is_boundary</span>(<span class="ident">f</span>: <span class="ident">char</span>, <span class="ident">s</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">two_char_is_boundary</span>(<span class="ident">f</span>: <span class="ident">char</span>, <span class="ident">s</span>: <span class="ident">char</span>) -&gt; <span class="ident">bool</span> {
         (<span class="ident">f</span>.<span class="ident">is_lowercase</span>() <span class="op">&amp;&amp;</span> <span class="ident">s</span>.<span class="ident">is_uppercase</span>())
             <span class="op">|</span><span class="op">|</span> (<span class="ident">f</span>.<span class="ident">is_ascii_digit</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span>(<span class="ident">s</span>.<span class="ident">is_ascii_digit</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">is_ascii_punctuation</span>()))
             <span class="op">|</span><span class="op">|</span> (<span class="op">!</span>(<span class="ident">f</span>.<span class="ident">is_ascii_digit</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">is_ascii_punctuation</span>()) <span class="op">&amp;&amp;</span> <span class="ident">s</span>.<span class="ident">is_ascii_digit</span>())
@@ -460,12 +460,12 @@
 
     <span class="doccomment">/// Checks if three characters are the end of an acronym, otherwise</span>
     <span class="doccomment">/// calls `two_char_is_boundary`.</span>
-    <span class="kw">fn</span> <span class="ident">three_char_is_boundary</span>(<span class="ident">f</span>: <span class="ident">char</span>, <span class="ident">s</span>: <span class="ident">char</span>, <span class="ident">t</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">three_char_is_boundary</span>(<span class="ident">f</span>: <span class="ident">char</span>, <span class="ident">s</span>: <span class="ident">char</span>, <span class="ident">t</span>: <span class="ident">char</span>) -&gt; <span class="ident">bool</span> {
         (<span class="ident">f</span>.<span class="ident">is_uppercase</span>() <span class="op">&amp;&amp;</span> <span class="ident">s</span>.<span class="ident">is_uppercase</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span>.<span class="ident">is_lowercase</span>())
             <span class="op">|</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::two_char_is_boundary</span>(<span class="ident">f</span>, <span class="ident">s</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">split_at_indices</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">split_at_indices</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">words</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">first</span> <span class="op">=</span> <span class="ident">name</span>;
@@ -481,72 +481,72 @@
         <span class="ident">words</span>.<span class="ident">iter</span>().<span class="ident">rev</span>().<span class="ident">map</span>(<span class="ident">ToString::to_string</span>).<span class="ident">collect</span>()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_case</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">case</span>: <span class="ident">Case</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_case</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">case</span>: <span class="ident">Case</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">use</span> <span class="ident">Case</span>::<span class="kw-2">*</span>;
         <span class="kw">match</span> <span class="ident">case</span> {
-            <span class="ident">Camel</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Camel</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_camel_case</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
             }
-            <span class="ident">Title</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Title</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">capitalize_first_letter</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>)
             }
-            <span class="ident">Pascal</span> <span class="op">|</span> <span class="ident">UpperCamel</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Pascal</span> <span class="op">|</span> <span class="ident">UpperCamel</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">capitalize_first_letter</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
             }
-            <span class="ident">Toggle</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Toggle</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">lower_first_letter</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>)
             }
-            <span class="ident">Snake</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Snake</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_lowercase</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot;_&quot;</span>)
             }
-            <span class="ident">Cobol</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Cobol</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_uppercase</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot;-&quot;</span>)
             }
-            <span class="ident">Kebab</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Kebab</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_lowercase</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot;-&quot;</span>)
             }
-            <span class="ident">UpperSnake</span> <span class="op">|</span> <span class="ident">ScreamingSnake</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">UpperSnake</span> <span class="op">|</span> <span class="ident">ScreamingSnake</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_uppercase</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot;_&quot;</span>)
             }
-            <span class="ident">Lower</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Lower</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_lowercase</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>)
             }
-            <span class="ident">Upper</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Upper</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_uppercase</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>)
             }
-            <span class="ident">Flat</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Flat</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_lowercase</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
             }
-            <span class="ident">Train</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Train</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">capitalize_first_letter</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot;-&quot;</span>)
             }
-            <span class="ident">UpperFlat</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">UpperFlat</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_uppercase</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
             }
-            <span class="ident">Alternating</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Alternating</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">make_alternating</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>)
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;random&quot;</span>)]</span>
-            <span class="ident">Random</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Random</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">randomize</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>)
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;random&quot;</span>)]</span>
-            <span class="ident">PseudoRandom</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">PseudoRandom</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">pseudo_randomize</span>();
                 <span class="self">self</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>)
             }
@@ -590,7 +590,7 @@
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">letter</span><span class="op">|</span> {
                         <span class="kw">match</span> <span class="ident">alt</span> {
                             <span class="comment">// No existing pattern, start one</span>
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="prelude-val">None</span> =&gt; {
                                 <span class="kw">if</span> <span class="ident">rng</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>() <span class="op">&gt;</span> <span class="number">0.5</span> {
                                     <span class="ident">alt</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">false</span>); <span class="comment">// Make the next char lower</span>
                                     <span class="ident">letter</span>.<span class="ident">to_uppercase</span>().<span class="ident">to_string</span>()
@@ -600,7 +600,7 @@
                                 }
                             }
                             <span class="comment">// Existing pattern, do what it says</span>
-                            <span class="prelude-val">Some</span>(<span class="ident">upper</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="prelude-val">Some</span>(<span class="ident">upper</span>) =&gt; {
                                 <span class="ident">alt</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                                 <span class="kw">if</span> <span class="ident">upper</span> {
                                     <span class="ident">letter</span>.<span class="ident">to_uppercase</span>().<span class="ident">to_string</span>()
@@ -705,12 +705,12 @@
     }
 
     <span class="comment">// Alternative: construct [my, -, variable, -, name] then collect</span>
-    <span class="kw">fn</span> <span class="ident">join</span>(<span class="self">self</span>, <span class="ident">delim</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">join</span>(<span class="self">self</span>, <span class="ident">delim</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">String</span> {
         <span class="self">self</span>.<span class="ident">words</span>
             .<span class="ident">iter</span>()
             .<span class="ident">enumerate</span>()
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">val</span>)<span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="kw">if</span> <span class="ident">i</span> <span class="op">==</span> <span class="number">0</span> {
                     <span class="ident">val</span>.<span class="ident">to_owned</span>()
                 } <span class="kw">else</span> {
                     <span class="ident">delim</span>.<span class="ident">to_owned</span>() <span class="op">+</span> <span class="ident">val</span>

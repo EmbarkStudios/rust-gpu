@@ -87,32 +87,32 @@
     <span class="kw">let</span> <span class="ident">reference</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">function</span>
         .<span class="ident">all_inst_iter</span>()
         .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-            <span class="ident">Op::CompositeConstruct</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>((<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>(), <span class="ident">inst</span>.<span class="ident">clone</span>())),
-            <span class="ident">Op::CompositeInsert</span> <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">3</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Op::CompositeConstruct</span> =&gt; <span class="prelude-val">Some</span>((<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>(), <span class="ident">inst</span>.<span class="ident">clone</span>())),
+            <span class="ident">Op::CompositeInsert</span> <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">3</span> =&gt; {
                 <span class="prelude-val">Some</span>((<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>(), <span class="ident">inst</span>.<span class="ident">clone</span>()))
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
         })
         .<span class="ident">collect</span>();
     <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">function</span>.<span class="ident">all_inst_iter_mut</span>() {
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::CompositeExtract</span> <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">2</span> {
+        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::CompositeExtract</span> <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">2</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">composite</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>();
             <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_int32</span>();
 
             <span class="kw">let</span> <span class="ident">origin</span> <span class="op">=</span> <span class="kw">loop</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">inst</span>) <span class="op">=</span> <span class="ident">reference</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">composite</span>) {
                     <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-                        <span class="ident">Op::CompositeInsert</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Op::CompositeInsert</span> =&gt; {
                             <span class="kw">let</span> <span class="ident">insert_index</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">2</span>].<span class="ident">unwrap_literal_int32</span>();
-                            <span class="kw">if</span> <span class="ident">insert_index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">index</span> {
+                            <span class="kw">if</span> <span class="ident">insert_index</span> <span class="op">==</span> <span class="ident">index</span> {
                                 <span class="kw">break</span> <span class="prelude-val">Some</span>(<span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>());
                             }
                             <span class="ident">composite</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>();
                         }
-                        <span class="ident">Op::CompositeConstruct</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Op::CompositeConstruct</span> =&gt; {
                             <span class="kw">break</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">get</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span>.<span class="ident">unwrap_id_ref</span>());
                         }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                        <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
                     }
                 } <span class="kw">else</span> {
                     <span class="kw">break</span> <span class="prelude-val">None</span>;

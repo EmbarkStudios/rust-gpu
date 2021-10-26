@@ -61,7 +61,7 @@
 <span class="kw">use</span> <span class="ident">quote::quote</span>;
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">DeriveInput</span>, <span class="ident">Ident</span>, <span class="prelude-ty">Result</span>};
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">DeriveInput</span>, <span class="ident">trait_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">DeriveInput</span>, <span class="ident">trait_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">State::new</span>(
         <span class="ident">input</span>,
         <span class="ident">trait_name</span>,
@@ -77,7 +77,7 @@
         ..
     } <span class="op">=</span> <span class="ident">multi_field_data</span>.<span class="ident">clone</span>();
 
-    <span class="kw">let</span> <span class="ident">op_trait_name</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">trait_name</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;Sum&quot;</span> { <span class="string">&quot;Add&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;Mul&quot;</span> };
+    <span class="kw">let</span> <span class="ident">op_trait_name</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">trait_name</span> <span class="op">==</span> <span class="string">&quot;Sum&quot;</span> { <span class="string">&quot;Add&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;Mul&quot;</span> };
     <span class="kw">let</span> <span class="ident">op_trait_ident</span> <span class="op">=</span> <span class="ident">Ident::new</span>(<span class="ident">op_trait_name</span>, <span class="ident">Span::call_site</span>());
     <span class="kw">let</span> <span class="ident">op_path</span> <span class="op">=</span> <span class="macro">quote!</span>(<span class="ident">::core::ops</span>::#<span class="ident">op_trait_ident</span>);
     <span class="kw">let</span> <span class="ident">op_method_ident</span> <span class="op">=</span>
@@ -104,7 +104,7 @@
     <span class="prelude-val">Ok</span>(<span class="macro">quote!</span>(
         <span class="ident">impl</span>#<span class="ident">impl_generics</span> #<span class="ident">trait_path</span> <span class="kw">for</span> #<span class="ident">input_type</span>#<span class="ident">ty_generics</span> #<span class="ident">where_clause</span> {
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> #<span class="ident">method_ident</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">::core::iter::Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> #<span class="ident">method_ident</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">::core::iter::Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) -&gt; <span class="self">Self</span> {
                 <span class="ident">iter</span>.<span class="ident">fold</span>(#<span class="ident">identity</span>, #<span class="ident">op_path</span>::#<span class="ident">op_method_ident</span>)
             }
         }

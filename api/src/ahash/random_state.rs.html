@@ -410,9 +410,9 @@
 <span class="doccomment">/// See [RandomState.set_random_source].</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RandomSource</span> {
 
-    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>];
+    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>];
 
-    <span class="kw">fn</span> <span class="ident">gen_hasher_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>;
+    <span class="kw">fn</span> <span class="ident">gen_hasher_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span>;
 
 }
 
@@ -435,13 +435,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">DefaultRandomSource</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DefaultRandomSource</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">DefaultRandomSource</span> {
         <span class="ident">DefaultRandomSource</span> {
             <span class="ident">counter</span>: <span class="ident">AtomicUsize::new</span>(<span class="kw-2">&amp;</span><span class="ident">PI</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>),
         }
     }
 
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DefaultRandomSource</span> {
+    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">DefaultRandomSource</span> {
         <span class="ident">DefaultRandomSource</span> {
             <span class="ident">counter</span>: <span class="ident">AtomicUsize::new</span>(<span class="ident">PI</span>[<span class="number">3</span>] <span class="kw">as</span> <span class="ident">usize</span>),
         }
@@ -451,7 +451,7 @@
 <span class="kw">impl</span> <span class="ident">RandomSource</span> <span class="kw">for</span> <span class="ident">DefaultRandomSource</span> {
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>, <span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>, <span class="ident">test</span>))))]</span>
-    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] {
+    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] {
         <span class="kw">static</span> <span class="ident">SEEDS</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span>[[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
 
         <span class="ident">SEEDS</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> {
@@ -462,7 +462,7 @@
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>, <span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>), <span class="ident">test</span>)))]</span>
-    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] {
+    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] {
         <span class="kw">const</span> <span class="ident">RAND</span>: [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] <span class="op">=</span> [
             [
                 <span class="macro">const_random!</span>(<span class="ident">u64</span>),
@@ -480,18 +480,18 @@
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>), <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>)))]</span>
-    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] {
+    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] {
         <span class="kw-2">&amp;</span>[<span class="ident">PI</span>, <span class="ident">PI2</span>]
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)))]</span>
-    <span class="kw">fn</span> <span class="ident">gen_hasher_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">fn</span> <span class="ident">gen_hasher_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="self">self</span>.<span class="ident">counter</span>.<span class="ident">fetch_add</span>(<span class="ident">stack</span>, <span class="ident">Ordering::Relaxed</span>)
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">gen_hasher_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">fn</span> <span class="ident">gen_hasher_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="kw">let</span> <span class="ident">previous</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>);
         <span class="kw">let</span> <span class="ident">new</span> <span class="op">=</span> <span class="ident">previous</span>.<span class="ident">wrapping_add</span>(<span class="ident">stack</span>);
@@ -516,7 +516,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">RandomState</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="ident">f</span>.<span class="ident">pad</span>(<span class="string">&quot;RandomState { .. }&quot;</span>)
     }
 }
@@ -532,26 +532,26 @@
     <span class="doccomment">/// If the source has already been specified `Err` is returned with a `bool` indicating if the set failed because</span>
     <span class="doccomment">/// method was previously invoked (true) or if the default source is already being used (false).</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)))]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_random_source</span>(<span class="ident">source</span>: <span class="kw">impl</span> <span class="ident">RandomSource</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">bool</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_random_source</span>(<span class="ident">source</span>: <span class="kw">impl</span> <span class="ident">RandomSource</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="ident">RAND_SOURCE</span>.<span class="ident">set</span>(<span class="ident">Box::new</span>(<span class="ident">Box::new</span>(<span class="ident">source</span>))).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">as_ref</span>().<span class="ident">type_id</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">TypeId::of</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DefaultRandomSource</span><span class="op">&gt;</span>())
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)))]</span>
-    <span class="kw">fn</span> <span class="ident">get_src</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">RandomSource</span> {
+    <span class="kw">fn</span> <span class="ident">get_src</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">RandomSource</span> {
         <span class="ident">RAND_SOURCE</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Box::new</span>(<span class="ident">Box::new</span>(<span class="ident">DefaultRandomSource::new</span>()))).<span class="ident">as_ref</span>()
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">get_src</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">RandomSource</span> {
+    <span class="kw">fn</span> <span class="ident">get_src</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">RandomSource</span> {
         <span class="kw">static</span> <span class="ident">RAND_SOURCE</span>: <span class="ident">DefaultRandomSource</span> <span class="op">=</span> <span class="ident">DefaultRandomSource::default</span>();
         <span class="kw-2">&amp;</span><span class="ident">RAND_SOURCE</span>
     }
 
     <span class="doccomment">/// Use randomly generated keys</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RandomState</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">RandomState</span> {
         <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_src</span>();
         <span class="kw">let</span> <span class="ident">fixed</span> <span class="op">=</span> <span class="ident">src</span>.<span class="ident">get_fixed_seeds</span>();
         <span class="ident"><span class="self">Self</span>::from_keys</span>(<span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">0</span>], <span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">1</span>], <span class="ident">src</span>.<span class="ident">gen_hasher_seed</span>())
@@ -560,13 +560,13 @@
     <span class="doccomment">/// Allows for supplying seeds, but each time it is called the resulting state will be different.</span>
     <span class="doccomment">/// This is done using a static counter, so it can safely be used with a fixed keys.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_with</span>(<span class="ident">k0</span>: <span class="ident">u64</span>, <span class="ident">k1</span>: <span class="ident">u64</span>, <span class="ident">k2</span>: <span class="ident">u64</span>, <span class="ident">k3</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RandomState</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_with</span>(<span class="ident">k0</span>: <span class="ident">u64</span>, <span class="ident">k1</span>: <span class="ident">u64</span>, <span class="ident">k2</span>: <span class="ident">u64</span>, <span class="ident">k3</span>: <span class="ident">u64</span>) -&gt; <span class="ident">RandomState</span> {
         <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_src</span>();
         <span class="kw">let</span> <span class="ident">fixed</span> <span class="op">=</span> <span class="ident">src</span>.<span class="ident">get_fixed_seeds</span>();
         <span class="ident">RandomState::from_keys</span>(<span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">0</span>], <span class="kw-2">&amp;</span>[<span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span>], <span class="ident">src</span>.<span class="ident">gen_hasher_seed</span>())
     }
 
-    <span class="kw">fn</span> <span class="ident">from_keys</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>; <span class="number">4</span>], <span class="ident">b</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>; <span class="number">4</span>], <span class="ident">c</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RandomState</span> {
+    <span class="kw">fn</span> <span class="ident">from_keys</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>; <span class="number">4</span>], <span class="ident">b</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>; <span class="number">4</span>], <span class="ident">c</span>: <span class="ident">usize</span>) -&gt; <span class="ident">RandomState</span> {
         <span class="kw">let</span> <span class="kw-2">&amp;</span>[<span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span>] <span class="op">=</span> <span class="ident">a</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasher::from_random_state</span>(<span class="kw-2">&amp;</span><span class="ident">RandomState</span> { <span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span> });
         <span class="ident">hasher</span>.<span class="ident">write_usize</span>(<span class="ident">c</span>);
@@ -585,7 +585,7 @@
 
     <span class="doccomment">/// Internal. Used by Default.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_fixed_keys</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RandomState</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_fixed_keys</span>() -&gt; <span class="ident">RandomState</span> {
         <span class="kw">let</span> [<span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span>] <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_src</span>().<span class="ident">get_fixed_seeds</span>()[<span class="number">0</span>];
         <span class="ident">RandomState</span> { <span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span> }
     }
@@ -594,7 +594,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Note: This method does not require the provided seed to be strong.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_seed</span>(<span class="ident">key</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RandomState</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_seed</span>(<span class="ident">key</span>: <span class="ident">usize</span>) -&gt; <span class="ident">RandomState</span> {
         <span class="kw">let</span> <span class="ident">fixed</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_src</span>().<span class="ident">get_fixed_seeds</span>();
         <span class="ident">RandomState::from_keys</span>(<span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">0</span>], <span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">1</span>], <span class="ident">key</span>)
     }
@@ -604,14 +604,14 @@
     <span class="doccomment">/// Note: This method is robust against 0s being passed for one or more of the parameters</span>
     <span class="doccomment">/// or the same value being passed for more than one parameter.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_seeds</span>(<span class="ident">k0</span>: <span class="ident">u64</span>, <span class="ident">k1</span>: <span class="ident">u64</span>, <span class="ident">k2</span>: <span class="ident">u64</span>, <span class="ident">k3</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RandomState</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_seeds</span>(<span class="ident">k0</span>: <span class="ident">u64</span>, <span class="ident">k1</span>: <span class="ident">u64</span>, <span class="ident">k2</span>: <span class="ident">u64</span>, <span class="ident">k3</span>: <span class="ident">u64</span>) -&gt; <span class="ident">RandomState</span> {
         <span class="ident">RandomState</span> { <span class="ident">k0</span>: <span class="ident">k0</span> <span class="op">^</span> <span class="ident">PI2</span>[<span class="number">0</span>], <span class="ident">k1</span>: <span class="ident">k1</span> <span class="op">^</span> <span class="ident">PI2</span>[<span class="number">1</span>], <span class="ident">k2</span>: <span class="ident">k2</span> <span class="op">^</span> <span class="ident">PI2</span>[<span class="number">2</span>], <span class="ident">k3</span>: <span class="ident">k3</span> <span class="op">^</span> <span class="ident">PI2</span>[<span class="number">3</span>] }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">RandomState</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::new</span>()
     }
 }
@@ -648,7 +648,7 @@
     <span class="doccomment">/// [BuildHasher]: std::hash::BuildHasher</span>
     <span class="doccomment">/// [HashMap]: std::collections::HashMap</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">build_hasher</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AHasher</span> {
+    <span class="kw">fn</span> <span class="ident">build_hasher</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">AHasher</span> {
         <span class="ident">AHasher::from_random_state</span>(<span class="self">self</span>)
     }
 }
@@ -656,7 +656,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">BuildHasherExt</span> <span class="kw">for</span> <span class="ident">RandomState</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">hash_as_u64</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">hash_as_u64</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasherU64</span> {
             <span class="ident">buffer</span>: <span class="self">self</span>.<span class="ident">k0</span>,
             <span class="ident">pad</span>: <span class="self">self</span>.<span class="ident">k1</span>,
@@ -666,14 +666,14 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">hash_as_fixed_length</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">hash_as_fixed_length</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasherFixed</span>(<span class="self">self</span>.<span class="ident">build_hasher</span>());
         <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
         <span class="ident">hasher</span>.<span class="ident">finish</span>()
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">hash_as_str</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">hash_as_str</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasherStr</span>(<span class="self">self</span>.<span class="ident">build_hasher</span>());
         <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
         <span class="ident">hasher</span>.<span class="ident">finish</span>()

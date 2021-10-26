@@ -677,30 +677,30 @@
 <span class="comment">// return a TokenStream, or it can be fallible and return</span>
 <span class="comment">// a Result&lt;TokenStream, syn::parse::Error&gt;.</span>
 <span class="kw">trait</span> <span class="ident">Output</span> {
-    <span class="kw">fn</span> <span class="ident">process</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span>;
+    <span class="kw">fn</span> <span class="ident">process</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenStream</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">Output</span> <span class="kw">for</span> <span class="ident">proc_macro2::TokenStream</span> {
-    <span class="kw">fn</span> <span class="ident">process</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+    <span class="kw">fn</span> <span class="ident">process</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenStream</span> {
         <span class="self">self</span>.<span class="ident">into</span>()
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Output</span> <span class="kw">for</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">proc_macro2::TokenStream</span>, <span class="ident">ParseError</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">process</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+    <span class="kw">fn</span> <span class="ident">process</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenStream</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">ts</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ts</span>.<span class="ident">into</span>(),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">e</span>.<span class="ident">to_compile_error</span>().<span class="ident">into</span>(),
+            <span class="prelude-val">Ok</span>(<span class="ident">ts</span>) =&gt; <span class="ident">ts</span>.<span class="ident">into</span>(),
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="ident">e</span>.<span class="ident">to_compile_error</span>().<span class="ident">into</span>(),
         }
     }
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">create_derive</span>(
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">feature</span>:<span class="ident">literal</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mod_</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">trait_</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fn_name</span>: <span class="ident">ident</span> $(,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">attribute</span>:<span class="ident">ident</span>)<span class="op">*</span> $(,)<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">feature</span>:<span class="ident">literal</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">mod_</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">trait_</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fn_name</span>: <span class="ident">ident</span> $(,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">attribute</span>:<span class="ident">ident</span>)<span class="op">*</span> $(,)<span class="question-mark">?</span>) =&gt; {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">feature</span>)]</span>
         <span class="attribute">#[<span class="ident">proc_macro_derive</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">trait_</span>, <span class="ident">attributes</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">attribute</span>),<span class="kw-2">*</span>))]</span>
         <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fn_name</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fn_name</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
             <span class="kw">let</span> <span class="ident">ast</span> <span class="op">=</span> <span class="ident">syn::parse</span>(<span class="ident">input</span>).<span class="ident">unwrap</span>();
             <span class="ident">Output::process</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">mod_::expand</span>(<span class="kw-2">&amp;</span><span class="ident">ast</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">trait_</span>)))
         }

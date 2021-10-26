@@ -12,7 +12,7 @@ same as those of the backing map.</p>
 <p>For convenience, the type definition <a href="type.BiMap.html" title="BiMap"><code>BiMap</code></a> corresponds to a <code>BiHashMap</code>.
 If you’re using this crate without the standard library, it instead
 corresponds to a <code>BiBTreeMap</code>.</p>
-<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<h2 id="examples" class="section-header"><a href="#examples">Examples</a></h2>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bimap::BiMap</span>;
 
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">elements</span> <span class="op">=</span> <span class="ident">BiMap::new</span>();
@@ -46,7 +46,7 @@ corresponds to a <code>BiBTreeMap</code>.</p>
 <span class="kw">for</span> (<span class="ident">left</span>, <span class="ident">right</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">elements</span> {
     <span class="macro">println!</span>(<span class="string">&quot;the chemical symbol for {} is {}&quot;</span>, <span class="ident">left</span>, <span class="ident">right</span>);
 }</code></pre></div>
-<h2 id="insertion-and-overwriting" class="section-header"><a href="#insertion-and-overwriting">Insertion and overwriting</a></h2>
+<h3 id="insertion-and-overwriting" class="section-header"><a href="#insertion-and-overwriting">Insertion and overwriting</a></h3>
 <p>Consider the following example:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bimap::BiMap</span>;
@@ -81,22 +81,22 @@ and the right values.</p>
 
 <span class="comment">// equality only depends on the important data</span>
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Foo</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Foo</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">important</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">important</span>
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Foo</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">important</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">important</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">Foo</span> {}
 
 <span class="kw">impl</span> <span class="ident">PartialOrd</span> <span class="kw">for</span> <span class="ident">Foo</span> {
-    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Foo</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Foo</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
         <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">cmp</span>(<span class="ident">other</span>))
     }
 }
 
 <span class="comment">// ordering only depends on the important data</span>
 <span class="kw">impl</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">Foo</span> {
-    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Foo</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ordering</span> {
+    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Foo</span>) -&gt; <span class="ident">Ordering</span> {
         <span class="self">self</span>.<span class="ident">important</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">important</span>)
     }
 }
@@ -126,8 +126,8 @@ and the right values.</p>
 
 <span class="comment">// foo1 is overwritten and returned</span>
 <span class="kw">match</span> <span class="ident">overwritten</span> {
-    <span class="ident">Overwritten::Left</span>(<span class="ident">foo</span>, <span class="number">99</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">foo</span>.<span class="ident">unimportant</span>, <span class="ident">foo1</span>.<span class="ident">unimportant</span>),
-    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+    <span class="ident">Overwritten::Left</span>(<span class="ident">foo</span>, <span class="number">99</span>) =&gt; <span class="macro">assert_eq!</span>(<span class="ident">foo</span>.<span class="ident">unimportant</span>, <span class="ident">foo1</span>.<span class="ident">unimportant</span>),
+    <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
 };
 
 <span class="comment">// foo2 is in the bimap</span>
@@ -150,25 +150,25 @@ overwritten.</p>
 <span class="macro">assert_eq!</span>(<span class="ident">bimap</span>.<span class="ident">len</span>(), <span class="number">2</span>);
 <span class="macro">assert_eq!</span>(<span class="ident">bimap</span>.<span class="ident">get_by_left</span>(<span class="kw-2">&amp;</span><span class="string">&#39;b&#39;</span>), <span class="prelude-val">None</span>);
 <span class="macro">assert_eq!</span>(<span class="ident">bimap</span>.<span class="ident">get_by_left</span>(<span class="kw-2">&amp;</span><span class="string">&#39;c&#39;</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">2</span>));</code></pre></div>
-<h2 id="no_std-compatibility" class="section-header"><a href="#no_std-compatibility"><code>no_std</code> compatibility</a></h2>
+<h3 id="no_std-compatibility" class="section-header"><a href="#no_std-compatibility"><code>no_std</code> compatibility</a></h3>
 <p>This crate can be used without the standard library when the <code>std</code> feature
 is disabled. If you choose to do this, only <code>BiBTreeMap</code> is available, not
 <code>BiHashMap</code>.</p>
-<h2 id="serde-compatibility" class="section-header"><a href="#serde-compatibility">serde compatibility</a></h2>
+<h3 id="serde-compatibility" class="section-header"><a href="#serde-compatibility">serde compatibility</a></h3>
 <p>When the <code>serde</code> feature is enabled, implementations of <code>Serialize</code> and
 <code>Deserialize</code> are provided for <a href="hash/struct.BiHashMap.html" title="BiHashMap"><code>BiHashMap</code></a> and <a href="btree/struct.BiBTreeMap.html" title="BiBTreeMap"><code>BiBTreeMap</code></a>, allowing
 them to be serialized or deserialized painlessly. See the [<code>serde</code>] module
 for examples and more information.</p>
 </div></details><h2 id="reexports" class="section-header"><a href="#reexports">Re-exports</a></h2>
-<div class="item-table"><div class="item-left import-item"><code>pub use btree::<a class="struct" href="btree/struct.BiBTreeMap.html" title="struct bimap::btree::BiBTreeMap">BiBTreeMap</a>;</code></div><div class="item-right docblock-short"></div><div class="item-left import-item"><code>pub use hash::<a class="struct" href="hash/struct.BiHashMap.html" title="struct bimap::hash::BiHashMap">BiHashMap</a>;</code></div><div class="item-right docblock-short"></div></div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="mod" href="btree/index.html" title="bimap::btree mod">btree</a></div><div class="item-right docblock-short"><p>A bimap backed by two <code>BTreeMap</code>s.</p>
-</div><div class="item-left module-item"><a class="mod" href="hash/index.html" title="bimap::hash mod">hash</a></div><div class="item-right docblock-short"><p>A bimap backed by two <code>HashMap</code>s.</p>
-</div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="enum" href="enum.Overwritten.html" title="bimap::Overwritten enum">Overwritten</a></div><div class="item-right docblock-short"><p>The previous left-right pairs, if any, that were overwritten by a call to
+<div class="item-table"><div class="item-row"><div class="item-left import-item"><code>pub use btree::<a class="struct" href="btree/struct.BiBTreeMap.html" title="struct bimap::btree::BiBTreeMap">BiBTreeMap</a>;</code></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left import-item"><code>pub use hash::<a class="struct" href="hash/struct.BiHashMap.html" title="struct bimap::hash::BiHashMap">BiHashMap</a>;</code></div><div class="item-right docblock-short"></div></div></div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="btree/index.html" title="bimap::btree mod">btree</a></div><div class="item-right docblock-short"><p>A bimap backed by two <code>BTreeMap</code>s.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="hash/index.html" title="bimap::hash mod">hash</a></div><div class="item-right docblock-short"><p>A bimap backed by two <code>HashMap</code>s.</p>
+</div></div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Overwritten.html" title="bimap::Overwritten enum">Overwritten</a></div><div class="item-right docblock-short"><p>The previous left-right pairs, if any, that were overwritten by a call to
 the <a href="hash/struct.BiHashMap.html#method.insert"><code>insert</code></a> method of a bimap.</p>
-</div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="type" href="type.BiMap.html" title="bimap::BiMap type">BiMap</a></div><div class="item-right docblock-short"><p>Type definition for convenience and compatibility with older versions of
+</div></div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.BiMap.html" title="bimap::BiMap type">BiMap</a></div><div class="item-right docblock-short"><p>Type definition for convenience and compatibility with older versions of
 this crate.</p>
-</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="bimap" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="bimap" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
     <script src="../main.js"></script>
 </body></html>

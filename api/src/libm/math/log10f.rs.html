@@ -117,7 +117,7 @@
 <span class="kw">const</span> <span class="ident">LG4</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">0.24279078841</span>; <span class="comment">/* 0xf89e26.0p-26 */</span>
 
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">log10f</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">log10f</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
     <span class="kw">let</span> <span class="ident">x1p25f</span> <span class="op">=</span> <span class="ident">f32::from_bits</span>(<span class="number">0x4c000000</span>); <span class="comment">// 0x1p25f === 2 ^ 25</span>
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ui</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
@@ -139,7 +139,7 @@
     <span class="ident">k</span> <span class="op">=</span> <span class="number">0</span>;
     <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x00800000</span> <span class="op">|</span><span class="op">|</span> (<span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">&gt;</span> <span class="number">0</span> {
         <span class="comment">/* x &lt; 2**-126  */</span>
-        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="op">-</span><span class="number">1.</span> <span class="op">/</span> (<span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span>); <span class="comment">/* log(+-0)=-inf */</span>
         }
         <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">&gt;</span> <span class="number">0</span> {
@@ -152,7 +152,7 @@
         <span class="ident">ix</span> <span class="op">=</span> <span class="ident">ui</span>;
     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x7f800000</span> {
         <span class="kw">return</span> <span class="ident">x</span>;
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x3f800000</span> {
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x3f800000</span> {
         <span class="kw">return</span> <span class="number">0.</span>;
     }
 

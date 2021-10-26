@@ -235,7 +235,7 @@ most ideas and constants are from boost and python
 <span class="kw">const</span> <span class="ident">PI</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">3.141592653589793238462643383279502884</span>;
 
 <span class="comment">/* sin(pi x) with x &gt; 0x1p-100, if sin(pi*x)==0 the sign is arbitrary */</span>
-<span class="kw">fn</span> <span class="ident">sinpi</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">fn</span> <span class="ident">sinpi</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">n</span>: <span class="ident">isize</span>;
 
     <span class="comment">/* argument reduction: x = |x| mod 2 */</span>
@@ -250,10 +250,10 @@ most ideas and constants are from boost and python
 
     <span class="ident">x</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">PI</span>;
     <span class="kw">match</span> <span class="ident">n</span> {
-        <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k_cos</span>(<span class="ident">x</span>, <span class="number">0.0</span>),
-        <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k_sin</span>(<span class="op">-</span><span class="ident">x</span>, <span class="number">0.0</span>, <span class="number">0</span>),
-        <span class="number">3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">k_cos</span>(<span class="ident">x</span>, <span class="number">0.0</span>),
-        <span class="number">0</span> <span class="op">|</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k_sin</span>(<span class="ident">x</span>, <span class="number">0.0</span>, <span class="number">0</span>),
+        <span class="number">1</span> =&gt; <span class="ident">k_cos</span>(<span class="ident">x</span>, <span class="number">0.0</span>),
+        <span class="number">2</span> =&gt; <span class="ident">k_sin</span>(<span class="op">-</span><span class="ident">x</span>, <span class="number">0.0</span>, <span class="number">0</span>),
+        <span class="number">3</span> =&gt; <span class="op">-</span><span class="ident">k_cos</span>(<span class="ident">x</span>, <span class="number">0.0</span>),
+        <span class="number">0</span> <span class="op">|</span> <span class="kw">_</span> =&gt; <span class="ident">k_sin</span>(<span class="ident">x</span>, <span class="number">0.0</span>, <span class="number">0</span>),
     }
 }
 
@@ -318,7 +318,7 @@ most ideas and constants are from boost and python
 ];
 
 <span class="comment">/* S(x) rational function for positive x */</span>
-<span class="kw">fn</span> <span class="ident">s</span>(<span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">fn</span> <span class="ident">s</span>(<span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">0.0</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">den</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">0.0</span>;
 
@@ -337,7 +337,7 @@ most ideas and constants are from boost and python
     <span class="kw">return</span> <span class="ident">num</span> <span class="op">/</span> <span class="ident">den</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tgamma</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tgamma</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> <span class="ident">u</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
     <span class="kw">let</span> <span class="ident">absx</span>: <span class="ident">f64</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">y</span>: <span class="ident">f64</span>;
@@ -359,7 +359,7 @@ most ideas and constants are from boost and python
 
     <span class="comment">/* integer arguments */</span>
     <span class="comment">/* raise inexact when non-integer */</span>
-    <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">floor</span>(<span class="ident">x</span>) {
+    <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">floor</span>(<span class="ident">x</span>) {
         <span class="kw">if</span> <span class="ident">sign</span> {
             <span class="kw">return</span> <span class="number">0.0</span> <span class="op">/</span> <span class="number">0.0</span>;
         }
@@ -375,7 +375,7 @@ most ideas and constants are from boost and python
         <span class="kw">if</span> <span class="ident">sign</span> {
             <span class="kw">let</span> <span class="ident">x1p_126</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3810000000000000</span>); <span class="comment">// 0x1p-126 == 2^-126</span>
             <span class="macro">force_eval!</span>((<span class="ident">x1p_126</span> <span class="op">/</span> <span class="ident">x</span>) <span class="kw">as</span> <span class="ident">f32</span>);
-            <span class="kw">if</span> <span class="ident">floor</span>(<span class="ident">x</span>) <span class="op">*</span> <span class="number">0.5</span> <span class="op">=</span><span class="op">=</span> <span class="ident">floor</span>(<span class="ident">x</span> <span class="op">*</span> <span class="number">0.5</span>) {
+            <span class="kw">if</span> <span class="ident">floor</span>(<span class="ident">x</span>) <span class="op">*</span> <span class="number">0.5</span> <span class="op">==</span> <span class="ident">floor</span>(<span class="ident">x</span> <span class="op">*</span> <span class="number">0.5</span>) {
                 <span class="kw">return</span> <span class="number">0.0</span>;
             } <span class="kw">else</span> {
                 <span class="kw">return</span> <span class="op">-</span><span class="number">0.0</span>;

@@ -175,7 +175,7 @@
 <span class="doccomment">/// Produces the correct result even for angles near pi/2 or -pi/2 (that is, when `x` is near 0).</span>
 <span class="doccomment">/// Returns a value in radians, in the range of -pi to pi.</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">atan2</span>(<span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">atan2</span>(<span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">is_nan</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">y</span>.<span class="ident">is_nan</span>() {
         <span class="kw">return</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">y</span>;
     }
@@ -183,7 +183,7 @@
     <span class="kw">let</span> <span class="ident">lx</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>() <span class="kw">as</span> <span class="ident">u32</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iy</span> <span class="op">=</span> (<span class="ident">y</span>.<span class="ident">to_bits</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>;
     <span class="kw">let</span> <span class="ident">ly</span> <span class="op">=</span> <span class="ident">y</span>.<span class="ident">to_bits</span>() <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">if</span> ((<span class="ident">ix</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x3ff00000</span>)) <span class="op">|</span> <span class="ident">lx</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> ((<span class="ident">ix</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x3ff00000</span>)) <span class="op">|</span> <span class="ident">lx</span>) <span class="op">==</span> <span class="number">0</span> {
         <span class="comment">/* x = 1.0 */</span>
         <span class="kw">return</span> <span class="ident">atan</span>(<span class="ident">y</span>);
     }
@@ -192,37 +192,37 @@
     <span class="ident">iy</span> <span class="op">&amp;=</span> <span class="number">0x7fffffff</span>;
 
     <span class="comment">/* when y = 0 */</span>
-    <span class="kw">if</span> (<span class="ident">iy</span> <span class="op">|</span> <span class="ident">ly</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> (<span class="ident">iy</span> <span class="op">|</span> <span class="ident">ly</span>) <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="kw">match</span> <span class="ident">m</span> {
-            <span class="number">0</span> <span class="op">|</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">y</span>, <span class="comment">/* atan(+-0,+anything)=+-0 */</span>
-            <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PI</span>,    <span class="comment">/* atan(+0,-anything) = PI */</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">PI</span>,   <span class="comment">/* atan(-0,-anything) =-PI */</span>
+            <span class="number">0</span> <span class="op">|</span> <span class="number">1</span> =&gt; <span class="ident">y</span>, <span class="comment">/* atan(+-0,+anything)=+-0 */</span>
+            <span class="number">2</span> =&gt; <span class="ident">PI</span>,    <span class="comment">/* atan(+0,-anything) = PI */</span>
+            <span class="kw">_</span> =&gt; <span class="op">-</span><span class="ident">PI</span>,   <span class="comment">/* atan(-0,-anything) =-PI */</span>
         };
     }
     <span class="comment">/* when x = 0 */</span>
-    <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">|</span> <span class="ident">lx</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">|</span> <span class="ident">lx</span>) <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="kw">if</span> <span class="ident">m</span> <span class="op">&amp;</span> <span class="number">1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> { <span class="op">-</span><span class="ident">PI</span> <span class="op">/</span> <span class="number">2.0</span> } <span class="kw">else</span> { <span class="ident">PI</span> <span class="op">/</span> <span class="number">2.0</span> };
     }
     <span class="comment">/* when x is INF */</span>
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> {
-        <span class="kw">if</span> <span class="ident">iy</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> {
+    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x7ff00000</span> {
+        <span class="kw">if</span> <span class="ident">iy</span> <span class="op">==</span> <span class="number">0x7ff00000</span> {
             <span class="kw">return</span> <span class="kw">match</span> <span class="ident">m</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PI</span> <span class="op">/</span> <span class="number">4.0</span>,        <span class="comment">/* atan(+INF,+INF) */</span>
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">PI</span> <span class="op">/</span> <span class="number">4.0</span>,       <span class="comment">/* atan(-INF,+INF) */</span>
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3.0</span> <span class="op">*</span> <span class="ident">PI</span> <span class="op">/</span> <span class="number">4.0</span>,  <span class="comment">/* atan(+INF,-INF) */</span>
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">3.0</span> <span class="op">*</span> <span class="ident">PI</span> <span class="op">/</span> <span class="number">4.0</span>, <span class="comment">/* atan(-INF,-INF) */</span>
+                <span class="number">0</span> =&gt; <span class="ident">PI</span> <span class="op">/</span> <span class="number">4.0</span>,        <span class="comment">/* atan(+INF,+INF) */</span>
+                <span class="number">1</span> =&gt; <span class="op">-</span><span class="ident">PI</span> <span class="op">/</span> <span class="number">4.0</span>,       <span class="comment">/* atan(-INF,+INF) */</span>
+                <span class="number">2</span> =&gt; <span class="number">3.0</span> <span class="op">*</span> <span class="ident">PI</span> <span class="op">/</span> <span class="number">4.0</span>,  <span class="comment">/* atan(+INF,-INF) */</span>
+                <span class="kw">_</span> =&gt; <span class="op">-</span><span class="number">3.0</span> <span class="op">*</span> <span class="ident">PI</span> <span class="op">/</span> <span class="number">4.0</span>, <span class="comment">/* atan(-INF,-INF) */</span>
             };
         } <span class="kw">else</span> {
             <span class="kw">return</span> <span class="kw">match</span> <span class="ident">m</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0.0</span>,  <span class="comment">/* atan(+...,+INF) */</span>
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">0.0</span>, <span class="comment">/* atan(-...,+INF) */</span>
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PI</span>,   <span class="comment">/* atan(+...,-INF) */</span>
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">PI</span>,  <span class="comment">/* atan(-...,-INF) */</span>
+                <span class="number">0</span> =&gt; <span class="number">0.0</span>,  <span class="comment">/* atan(+...,+INF) */</span>
+                <span class="number">1</span> =&gt; <span class="op">-</span><span class="number">0.0</span>, <span class="comment">/* atan(-...,+INF) */</span>
+                <span class="number">2</span> =&gt; <span class="ident">PI</span>,   <span class="comment">/* atan(+...,-INF) */</span>
+                <span class="kw">_</span> =&gt; <span class="op">-</span><span class="ident">PI</span>,  <span class="comment">/* atan(-...,-INF) */</span>
             };
         }
     }
     <span class="comment">/* |y/x| &gt; 0x1p64 */</span>
-    <span class="kw">if</span> <span class="ident">ix</span>.<span class="ident">wrapping_add</span>(<span class="number">64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">20</span>) <span class="op">&lt;</span> <span class="ident">iy</span> <span class="op">|</span><span class="op">|</span> <span class="ident">iy</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> {
+    <span class="kw">if</span> <span class="ident">ix</span>.<span class="ident">wrapping_add</span>(<span class="number">64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">20</span>) <span class="op">&lt;</span> <span class="ident">iy</span> <span class="op">|</span><span class="op">|</span> <span class="ident">iy</span> <span class="op">==</span> <span class="number">0x7ff00000</span> {
         <span class="kw">return</span> <span class="kw">if</span> <span class="ident">m</span> <span class="op">&amp;</span> <span class="number">1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> { <span class="op">-</span><span class="ident">PI</span> <span class="op">/</span> <span class="number">2.0</span> } <span class="kw">else</span> { <span class="ident">PI</span> <span class="op">/</span> <span class="number">2.0</span> };
     }
 
@@ -234,10 +234,10 @@
         <span class="ident">atan</span>(<span class="ident">fabs</span>(<span class="ident">y</span> <span class="op">/</span> <span class="ident">x</span>))
     };
     <span class="kw">match</span> <span class="ident">m</span> {
-        <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">z</span>,                <span class="comment">/* atan(+,+) */</span>
-        <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">z</span>,               <span class="comment">/* atan(-,+) */</span>
-        <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PI</span> <span class="op">-</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">PI_LO</span>), <span class="comment">/* atan(+,-) */</span>
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">PI_LO</span>) <span class="op">-</span> <span class="ident">PI</span>, <span class="comment">/* atan(-,-) */</span>
+        <span class="number">0</span> =&gt; <span class="ident">z</span>,                <span class="comment">/* atan(+,+) */</span>
+        <span class="number">1</span> =&gt; <span class="op">-</span><span class="ident">z</span>,               <span class="comment">/* atan(-,+) */</span>
+        <span class="number">2</span> =&gt; <span class="ident">PI</span> <span class="op">-</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">PI_LO</span>), <span class="comment">/* atan(+,-) */</span>
+        <span class="kw">_</span> =&gt; (<span class="ident">z</span> <span class="op">-</span> <span class="ident">PI_LO</span>) <span class="op">-</span> <span class="ident">PI</span>, <span class="comment">/* atan(-,-) */</span>
     }
 }
 

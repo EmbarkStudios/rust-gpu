@@ -1456,7 +1456,7 @@
 
 <span class="kw">impl</span> <span class="ident">Builder</span> {
     <span class="doccomment">/// Creates a new empty builder.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Builder</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Builder</span> {
         <span class="ident">Builder</span> {
             <span class="ident">module</span>: <span class="ident">dr::Module::new</span>(),
             <span class="ident">next_id</span>: <span class="number">1</span>,
@@ -1466,7 +1466,7 @@
     }
 
     <span class="doccomment">/// Create a new builder from an existing module</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_module</span>(<span class="ident">module</span>: <span class="ident">dr::Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Builder</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_module</span>(<span class="ident">module</span>: <span class="ident">dr::Module</span>) -&gt; <span class="ident">Builder</span> {
         <span class="kw">let</span> <span class="ident">next_id</span> <span class="op">=</span> <span class="ident">module</span>
             .<span class="ident">header</span>
             .<span class="ident">as_ref</span>()
@@ -1485,23 +1485,23 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">insert_point</span>: <span class="ident">InsertPoint</span>,
         <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">selected_function</span>, <span class="ident">selected_block</span>) <span class="op">=</span>
             <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">selected_function</span>, <span class="self">self</span>.<span class="ident">selected_block</span>) {
-                (<span class="prelude-val">Some</span>(<span class="ident">f</span>), <span class="prelude-val">Some</span>(<span class="ident">b</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">f</span>, <span class="ident">b</span>),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedInstruction</span>(<span class="prelude-val">Some</span>(<span class="ident">inst</span>))),
+                (<span class="prelude-val">Some</span>(<span class="ident">f</span>), <span class="prelude-val">Some</span>(<span class="ident">b</span>)) =&gt; (<span class="ident">f</span>, <span class="ident">b</span>),
+                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedInstruction</span>(<span class="prelude-val">Some</span>(<span class="ident">inst</span>))),
             };
 
         <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">selected_function</span>].<span class="ident">blocks</span>[<span class="ident">selected_block</span>];
 
         <span class="kw">match</span> <span class="ident">insert_point</span> {
-            <span class="ident">InsertPoint::End</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
-            <span class="ident">InsertPoint::Begin</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(<span class="number">0</span>, <span class="ident">inst</span>),
-            <span class="ident">InsertPoint::FromEnd</span>(<span class="ident">offset</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">InsertPoint::End</span> =&gt; <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">InsertPoint::Begin</span> =&gt; <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(<span class="number">0</span>, <span class="ident">inst</span>),
+            <span class="ident">InsertPoint::FromEnd</span>(<span class="ident">offset</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">len</span>();
                 <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(<span class="ident">end</span> <span class="op">-</span> <span class="ident">offset</span>, <span class="ident">inst</span>)
             }
-            <span class="ident">InsertPoint::FromBegin</span>(<span class="ident">offset</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(<span class="ident">offset</span>, <span class="ident">inst</span>),
+            <span class="ident">InsertPoint::FromBegin</span>(<span class="ident">offset</span>) =&gt; <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(<span class="ident">offset</span>, <span class="ident">inst</span>),
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1509,21 +1509,21 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_types_global_values</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">insert_point</span>: <span class="ident">InsertPoint</span>, <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>) {
         <span class="kw">match</span> <span class="ident">insert_point</span> {
-            <span class="ident">InsertPoint::End</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
-            <span class="ident">InsertPoint::Begin</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">insert</span>(<span class="number">0</span>, <span class="ident">inst</span>),
-            <span class="ident">InsertPoint::FromEnd</span>(<span class="ident">offset</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">InsertPoint::End</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="ident">InsertPoint::Begin</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">insert</span>(<span class="number">0</span>, <span class="ident">inst</span>),
+            <span class="ident">InsertPoint::FromEnd</span>(<span class="ident">offset</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">len</span>();
                 <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">insert</span>(<span class="ident">end</span> <span class="op">-</span> <span class="ident">offset</span>, <span class="ident">inst</span>)
             }
-            <span class="ident">InsertPoint::FromBegin</span>(<span class="ident">offset</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">insert</span>(<span class="ident">offset</span>, <span class="ident">inst</span>),
+            <span class="ident">InsertPoint::FromBegin</span>(<span class="ident">offset</span>) =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">insert</span>(<span class="ident">offset</span>, <span class="ident">inst</span>),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">dr::Instruction</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_instruction</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">dr::Instruction</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">selected_function</span>, <span class="ident">selected_block</span>) <span class="op">=</span>
             <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">selected_function</span>, <span class="self">self</span>.<span class="ident">selected_block</span>) {
-                (<span class="prelude-val">Some</span>(<span class="ident">f</span>), <span class="prelude-val">Some</span>(<span class="ident">b</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">f</span>, <span class="ident">b</span>),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedInstruction</span>(<span class="prelude-val">None</span>)),
+                (<span class="prelude-val">Some</span>(<span class="ident">f</span>), <span class="prelude-val">Some</span>(<span class="ident">b</span>)) =&gt; (<span class="ident">f</span>, <span class="ident">b</span>),
+                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedInstruction</span>(<span class="prelude-val">None</span>)),
             };
 
         <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">selected_function</span>].<span class="ident">blocks</span>[<span class="ident">selected_block</span>];
@@ -1548,42 +1548,42 @@
     }
 
     <span class="doccomment">/// Get the SPIR-V version as a (major, minor) tuple</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">u8</span>, <span class="ident">u8</span>)<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">u8</span>, <span class="ident">u8</span>)<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="ident">h</span>.<span class="ident">version</span>())
     }
 
     <span class="doccomment">/// Returns the `Module` under construction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">module</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">dr::Module</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">module</span>(<span class="self">self</span>) -&gt; <span class="ident">dr::Module</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">module</span>;
 
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">header</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">header</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">header</span>.<span class="ident">bound</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_id</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">module</span>.<span class="ident">header</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">dr::ModuleHeader::new</span>(<span class="self">self</span>.<span class="ident">next_id</span>)),
+            <span class="prelude-val">Some</span>(<span class="ident">header</span>) =&gt; <span class="ident">header</span>.<span class="ident">bound</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_id</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="ident">module</span>.<span class="ident">header</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">dr::ModuleHeader::new</span>(<span class="self">self</span>.<span class="ident">next_id</span>)),
         }
 
         <span class="ident">module</span>
     }
 
     <span class="doccomment">/// Returns the `Module` under construction as a reference. Note that header.bound will be inaccurate.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">module_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">dr::Module</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">module_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">dr::Module</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">module</span>
     }
 
     <span class="doccomment">/// Returns the `Module` under construction as a mutable reference. Note that header.bound will be inaccurate.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">module_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">dr::Module</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">module_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">dr::Module</span> {
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">module</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">selected_function</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">selected_function</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">selected_function</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">selected_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">selected_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">selected_block</span>
     }
 
     <span class="doccomment">/// Returns the next unused id.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_id</span>;
         <span class="self">self</span>.<span class="ident">next_id</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="ident">id</span>
@@ -1592,7 +1592,7 @@
     <span class="doccomment">/// Insert a OpType instruction, deduplicate it if needed and either return the existing ID</span>
     <span class="doccomment">/// or a new unused ID if we can&#39;t find find the instruction already. Useful to uphold</span>
     <span class="doccomment">/// the SPIR-V rule that non-aggregate types can&#39;t be duplicates.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dedup_insert_type</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">dr::Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dedup_insert_type</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">dr::Instruction</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="ident">ty</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span> {
             <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">is_type_identical</span>(<span class="kw-2">&amp;</span><span class="ident">inst</span>) {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">result_id</span> {
@@ -1605,7 +1605,7 @@
     }
 
     <span class="doccomment">/// Find all blocks that end in OpReturn</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_return_block_indices</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_return_block_indices</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec!</span>[];
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sel_fn</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">selected_function</span> {
@@ -1616,10 +1616,10 @@
                 <span class="kw">let</span> <span class="ident">last_instr</span> <span class="op">=</span> <span class="ident">blk</span>.<span class="ident">instructions</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>();
 
                 <span class="kw">match</span> <span class="ident">last_instr</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-                    <span class="ident">spirv::Op::Return</span> <span class="op">|</span> <span class="ident">spirv::Op::ReturnValue</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">spirv::Op::Return</span> <span class="op">|</span> <span class="ident">spirv::Op::ReturnValue</span> =&gt; {
                         <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">idx</span>);
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="kw">_</span> =&gt; {}
                 }
             }
         }
@@ -1628,14 +1628,14 @@
     }
 
     <span class="doccomment">/// Select a function to insert instructions into by name</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_function_by_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_function_by_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="ident">dbg</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">module</span>.<span class="ident">debug_names</span> {
-            <span class="kw">if</span> <span class="ident">dbg</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">spirv::Op::Name</span> {
+            <span class="kw">if</span> <span class="ident">dbg</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">spirv::Op::Name</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">dr::Operand::IdRef</span>(<span class="ident">target_id</span>) <span class="op">=</span> <span class="ident">dbg</span>.<span class="ident">operands</span>[<span class="number">0</span>] {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">dr::Operand::LiteralString</span>(<span class="ident">found_name</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">dbg</span>.<span class="ident">operands</span>[<span class="number">1</span>] {
-                        <span class="kw">if</span> <span class="ident">found_name</span> <span class="op">=</span><span class="op">=</span> <span class="ident">name</span> {
+                        <span class="kw">if</span> <span class="ident">found_name</span> <span class="op">==</span> <span class="ident">name</span> {
                             <span class="kw">for</span> (<span class="ident">idx</span>, <span class="ident">func</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                                <span class="kw">if</span> <span class="ident">func</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">result_id</span>.<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">target_id</span> {
+                                <span class="kw">if</span> <span class="ident">func</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">result_id</span>.<span class="ident">unwrap</span>() <span class="op">==</span> <span class="ident">target_id</span> {
                                     <span class="kw">return</span> <span class="self">self</span>.<span class="ident">select_function</span>(<span class="prelude-val">Some</span>(<span class="ident">idx</span>));
                                 }
                             }
@@ -1649,9 +1649,9 @@
     }
 
     <span class="doccomment">/// Select a function to insert instructions into by index (indexed into self.module.functions), or unselect if None</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_function</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">idx</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_function</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">idx</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">idx</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">idx</span>) =&gt; {
                 <span class="kw">if</span> <span class="ident">idx</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">len</span>() {
                     <span class="self">self</span>.<span class="ident">selected_function</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">idx</span>);
                     <span class="prelude-val">Ok</span>(())
@@ -1659,7 +1659,7 @@
                     <span class="prelude-val">Err</span>(<span class="ident">Error::FunctionNotFound</span>)
                 }
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="comment">// make sure to unselect block too</span>
                 <span class="self">self</span>.<span class="ident">selected_block</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                 <span class="self">self</span>.<span class="ident">selected_function</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -1669,12 +1669,12 @@
     }
 
     <span class="doccomment">/// Select a basic block (by index) to insert instructions into, indexed off of self.modules.functions[self.selected_function].blocks[idx], or unselect if None</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">idx</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">idx</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">idx</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">idx</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">selected_function</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">selected_function</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>,
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedBlock</span>),
+                    <span class="prelude-val">Some</span>(<span class="ident">f</span>) =&gt; <span class="ident">f</span>,
+                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedBlock</span>),
                 };
                 <span class="kw">if</span> <span class="ident">idx</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">selected_function</span>].<span class="ident">blocks</span>.<span class="ident">len</span>() {
                     <span class="self">self</span>.<span class="ident">selected_block</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">idx</span>);
@@ -1683,7 +1683,7 @@
                     <span class="prelude-val">Err</span>(<span class="ident">Error::BlockNotFound</span>)
                 }
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">selected_block</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                 <span class="prelude-val">Ok</span>(())
             }
@@ -1701,14 +1701,14 @@
         <span class="ident">function_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>,
         <span class="ident">control</span>: <span class="ident">spirv::FunctionControl</span>,
         <span class="ident">function_type</span>: <span class="ident">spirv::Word</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">selected_function</span>.<span class="ident">is_some</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NestedFunction</span>);
         }
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">function_id</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">id</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">id</span>(),
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">dr::Function::new</span>();
@@ -1727,10 +1727,10 @@
     }
 
     <span class="doccomment">/// Ends building of the current function.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_function</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_function</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">selected_function</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">selected_function</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::MismatchedFunctionEnd</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">f</span>) =&gt; <span class="ident">f</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::MismatchedFunctionEnd</span>),
         };
 
         <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">selected_function</span>].<span class="ident">end</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">dr::Instruction::new</span>(
@@ -1744,10 +1744,10 @@
     }
 
     <span class="doccomment">/// Declares a formal parameter for the current function.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">function_parameter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">function_parameter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">selected_function</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">selected_function</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedFunctionParameter</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">f</span>) =&gt; <span class="ident">f</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedFunctionParameter</span>),
         };
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
@@ -1767,18 +1767,18 @@
     <span class="doccomment">/// If `label_id` is `Some(val)`, then `val` will be used as the result</span>
     <span class="doccomment">/// id for the `OpLabel` instruction begining this block; otherwise,</span>
     <span class="doccomment">/// a unused result id will be automatically assigned.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">begin_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">label_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">begin_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">label_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">selected_function</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">selected_function</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedBlock</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">f</span>) =&gt; <span class="ident">f</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedBlock</span>),
         };
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">selected_block</span>.<span class="ident">is_some</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NestedBlock</span>);
         }
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">label_id</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">id</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">id</span>(),
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bb</span> <span class="op">=</span> <span class="ident">dr::Block::new</span>();
@@ -1802,18 +1802,18 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">begin_block_no_label</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">label_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">selected_function</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">selected_function</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedBlock</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">f</span>) =&gt; <span class="ident">f</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DetachedBlock</span>),
         };
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">selected_block</span>.<span class="ident">is_some</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NestedBlock</span>);
         }
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">label_id</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">id</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">id</span>(),
         };
 
         <span class="kw">let</span> <span class="ident">bb</span> <span class="op">=</span> <span class="ident">dr::Block::new</span>();
@@ -1823,7 +1823,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">id</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">end_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">end_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">insert_end_block</span>(<span class="ident">InsertPoint::End</span>, <span class="ident">inst</span>)
     }
 
@@ -1831,7 +1831,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">insert_point</span>: <span class="ident">InsertPoint</span>,
         <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">selected_block</span>.<span class="ident">is_some</span>() {
             <span class="self">self</span>.<span class="ident">insert_into_block</span>(<span class="ident">insert_point</span>, <span class="ident">inst</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.<span class="ident">selected_block</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -1864,7 +1864,7 @@
     }
 
     <span class="doccomment">/// Appends an OpExtInstImport instruction and returns the result id.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ext_inst_import</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">extended_inst_set</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ext_inst_import</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">extended_inst_set</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::ExtInstImport</span>,
@@ -1960,7 +1960,7 @@
         <span class="ident">extension_set</span>: <span class="ident">spirv::Word</span>,
         <span class="ident">instruction</span>: <span class="ident">spirv::Word</span>,
         <span class="ident">operands</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">dr::Operand</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">BuildResult</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ops</span> <span class="op">=</span> <span class="macro">vec!</span>[
             <span class="ident">dr::Operand::IdRef</span>(<span class="ident">extension_set</span>),
             <span class="ident">dr::Operand::LiteralExtInstInteger</span>(<span class="ident">instruction</span>),
@@ -2022,7 +2022,7 @@
 
 <span class="kw">impl</span> <span class="ident">Builder</span> {
     <span class="doccomment">/// Appends an OpDecorationGroup instruction and returns the result id.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decoration_group</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decoration_group</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">annotations</span>.<span class="ident">push</span>(<span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::DecorationGroup</span>,
@@ -2033,7 +2033,7 @@
         <span class="ident">id</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">string</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">string</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">debug_string_source</span>.<span class="ident">push</span>(<span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::String</span>,
@@ -2069,7 +2069,7 @@
         <span class="ident">result_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>,
         <span class="ident">storage_class</span>: <span class="ident">spirv::StorageClass</span>,
         <span class="ident">pointee_type</span>: <span class="ident">spirv::Word</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    ) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::TypePointer</span>,
             <span class="prelude-val">None</span>,
@@ -2096,7 +2096,7 @@
     }
 
     <span class="doccomment">/// Appends an OpTypeOpaque instruction and returns the result id.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">type_opaque</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">type_name</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">type_opaque</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">type_name</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::TypeOpaque</span>,
@@ -2109,7 +2109,7 @@
 
     <span class="doccomment">/// Appends an OpConstant instruction with the given 32-bit float `value`.</span>
     <span class="doccomment">/// or the module if no block is under construction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">f32</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::Constant</span>,
@@ -2122,7 +2122,7 @@
     }
 
     <span class="doccomment">/// Appends an OpConstant instruction with the given 64-bit float `value`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">f64</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::Constant</span>,
@@ -2136,7 +2136,7 @@
 
     <span class="doccomment">/// Appends an OpConstant instruction with the given 32-bit integer `value`.</span>
     <span class="doccomment">/// or the module if no block is under construction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">u32</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::Constant</span>,
@@ -2149,7 +2149,7 @@
     }
 
     <span class="doccomment">/// Appends an OpConstant instruction with the given 64-bit integer `value`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">u64</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::Constant</span>,
@@ -2163,7 +2163,7 @@
 
     <span class="doccomment">/// Appends an OpSpecConstant instruction with the given 32-bit float `value`.</span>
     <span class="doccomment">/// or the module if no block is under construction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spec_constant_f32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spec_constant_f32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">f32</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::SpecConstant</span>,
@@ -2176,7 +2176,7 @@
     }
 
     <span class="doccomment">/// Appends an OpSpecConstant instruction with the given 64-bit float `value`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spec_constant_f64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spec_constant_f64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">f64</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::SpecConstant</span>,
@@ -2190,7 +2190,7 @@
 
     <span class="doccomment">/// Appends an OpSpecConstant instruction with the given 32-bit integer `value`.</span>
     <span class="doccomment">/// or the module if no block is under construction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spec_constant_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spec_constant_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">u32</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::SpecConstant</span>,
@@ -2203,7 +2203,7 @@
     }
 
     <span class="doccomment">/// Appends an OpSpecConstant instruction with the given 32-bit integer `value`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spec_constant_u64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spec_constant_u64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>, <span class="ident">value</span>: <span class="ident">u64</span>) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(
             <span class="ident">spirv::Op::SpecConstant</span>,
@@ -2223,10 +2223,10 @@
         <span class="ident">result_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>,
         <span class="ident">storage_class</span>: <span class="ident">spirv::StorageClass</span>,
         <span class="ident">initializer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    ) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">result_id</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">id</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">id</span>(),
         };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">operands</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">dr::Operand::StorageClass</span>(<span class="ident">storage_class</span>)];
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="ident">initializer</span> {
@@ -2235,12 +2235,12 @@
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(<span class="ident">spirv::Op::Variable</span>, <span class="prelude-val">Some</span>(<span class="ident">result_type</span>), <span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">operands</span>);
 
         <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">selected_function</span>, <span class="self">self</span>.<span class="ident">selected_block</span>) {
-            (<span class="prelude-val">Some</span>(<span class="ident">selected_function</span>), <span class="prelude-val">Some</span>(<span class="ident">selected_block</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            (<span class="prelude-val">Some</span>(<span class="ident">selected_function</span>), <span class="prelude-val">Some</span>(<span class="ident">selected_block</span>)) =&gt; {
                 <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">selected_function</span>].<span class="ident">blocks</span>[<span class="ident">selected_block</span>]
                     .<span class="ident">instructions</span>
                     .<span class="ident">push</span>(<span class="ident">inst</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
         }
         <span class="ident">id</span>
     }
@@ -2251,20 +2251,20 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>,
         <span class="ident">result_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::Word</span> {
+    ) -&gt; <span class="ident">spirv::Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">result_id</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">id</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">id</span>(),
         };
         <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">dr::Instruction::new</span>(<span class="ident">spirv::Op::Undef</span>, <span class="prelude-val">Some</span>(<span class="ident">result_type</span>), <span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="macro">vec!</span>[]);
 
         <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">selected_function</span>, <span class="self">self</span>.<span class="ident">selected_block</span>) {
-            (<span class="prelude-val">Some</span>(<span class="ident">selected_function</span>), <span class="prelude-val">Some</span>(<span class="ident">selected_block</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            (<span class="prelude-val">Some</span>(<span class="ident">selected_function</span>), <span class="prelude-val">Some</span>(<span class="ident">selected_block</span>)) =&gt; {
                 <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">selected_function</span>].<span class="ident">blocks</span>[<span class="ident">selected_block</span>]
                     .<span class="ident">instructions</span>
                     .<span class="ident">push</span>(<span class="ident">inst</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+            <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
         }
         <span class="ident">id</span>
     }
@@ -2282,7 +2282,7 @@
 
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::binary::Disassemble</span>;
 
-    <span class="kw">fn</span> <span class="ident">has_only_one_global_inst</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">dr::Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">has_only_one_global_inst</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">dr::Module</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">is_empty</span>() {
             <span class="kw">return</span> <span class="bool-val">false</span>;
         }
@@ -2297,7 +2297,7 @@
             <span class="op">+</span> <span class="ident">module</span>.<span class="ident">debug_module_processed</span>.<span class="ident">len</span>()
             <span class="op">+</span> <span class="ident">module</span>.<span class="ident">annotations</span>.<span class="ident">len</span>())
             <span class="op">+</span> (<span class="kw">if</span> <span class="ident">module</span>.<span class="ident">memory_model</span>.<span class="ident">is_some</span>() { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> })
-            <span class="op">=</span><span class="op">=</span> <span class="number">1</span>
+            <span class="op">==</span> <span class="number">1</span>
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -2429,8 +2429,8 @@
         <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">7</span>), <span class="ident">inst</span>.<span class="ident">result_id</span>);
         <span class="comment">// NaN != NaN</span>
         <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>] {
-            <span class="ident">dr::Operand::LiteralFloat32</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert!</span>(<span class="ident">f</span>.<span class="ident">is_nan</span>()),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert!</span>(<span class="bool-val">false</span>),
+            <span class="ident">dr::Operand::LiteralFloat32</span>(<span class="ident">f</span>) =&gt; <span class="macro">assert!</span>(<span class="ident">f</span>.<span class="ident">is_nan</span>()),
+            <span class="kw">_</span> =&gt; <span class="macro">assert!</span>(<span class="bool-val">false</span>),
         }
     }
 
@@ -2481,8 +2481,8 @@
         <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">6</span>), <span class="ident">inst</span>.<span class="ident">result_id</span>);
         <span class="comment">// NaN != NaN</span>
         <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>] {
-            <span class="ident">dr::Operand::LiteralFloat32</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert!</span>(<span class="ident">f</span>.<span class="ident">is_nan</span>()),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert!</span>(<span class="bool-val">false</span>),
+            <span class="ident">dr::Operand::LiteralFloat32</span>(<span class="ident">f</span>) =&gt; <span class="macro">assert!</span>(<span class="ident">f</span>.<span class="ident">is_nan</span>()),
+            <span class="kw">_</span> =&gt; <span class="macro">assert!</span>(<span class="bool-val">false</span>),
         }
     }
 

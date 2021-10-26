@@ -241,7 +241,7 @@
 
 <span class="doccomment">/// Declares the grammar for an SPIR-V instruction.</span>
 <span class="macro">macro_rules!</span> <span class="ident">inst</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">op</span>:<span class="ident">ident</span>, [$( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cap</span>:<span class="ident">ident</span> ),<span class="kw-2">*</span>], [$( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ext</span>:<span class="ident">expr</span> ),<span class="kw-2">*</span>], [$( (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">kind</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">quant</span>:<span class="ident">ident</span>) ),<span class="kw-2">*</span>]) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">op</span>:<span class="ident">ident</span>, [$( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cap</span>:<span class="ident">ident</span> ),<span class="kw-2">*</span>], [$( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ext</span>:<span class="ident">expr</span> ),<span class="kw-2">*</span>], [$( (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">kind</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">quant</span>:<span class="ident">ident</span>) ),<span class="kw-2">*</span>]) =&gt; {
         <span class="ident">Instruction</span> {
             <span class="ident">opname</span>: <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">op</span>),
             <span class="ident">opcode</span>: <span class="ident">spirv::Op</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">op</span>,
@@ -264,7 +264,7 @@
 <span class="doccomment">/// Declares the grammar for an extended instruction instruction.</span>
 <span class="macro">macro_rules!</span> <span class="ident">ext_inst</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">opname</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">opcode</span>: <span class="ident">expr</span>, [$( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cap</span>:<span class="ident">ident</span> ),<span class="kw-2">*</span>], [$( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ext</span>:<span class="ident">expr</span> ),<span class="kw-2">*</span>],
-     [$( (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">kind</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">quant</span>:<span class="ident">ident</span>) ),<span class="kw-2">*</span>]) <span class="op">=</span><span class="op">&gt;</span> {
+     [$( (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">kind</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">quant</span>:<span class="ident">ident</span>) ),<span class="kw-2">*</span>]) =&gt; {
         <span class="ident">ExtendedInstruction</span> {
             <span class="ident">opname</span>: <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">opname</span>),
             <span class="ident">opcode</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">opcode</span>,
@@ -292,22 +292,22 @@
 <span class="kw">impl</span> <span class="ident">CoreInstructionTable</span> {
     <span class="doccomment">/// Looks up the given `opcode` in the instruction table and returns</span>
     <span class="doccomment">/// a reference to the instruction grammar entry if found.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_opcode</span>(<span class="ident">opcode</span>: <span class="ident">u16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Instruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_opcode</span>(<span class="ident">opcode</span>: <span class="ident">u16</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Instruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">INSTRUCTION_TABLE</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> (<span class="ident">inst</span>.<span class="ident">opcode</span> <span class="kw">as</span> <span class="ident">u16</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">opcode</span>)
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> (<span class="ident">inst</span>.<span class="ident">opcode</span> <span class="kw">as</span> <span class="ident">u16</span>) <span class="op">==</span> <span class="ident">opcode</span>)
     }
 
     <span class="doccomment">/// Returns a reference to the instruction grammar entry with the given</span>
     <span class="doccomment">/// `opcode`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">opcode</span>: <span class="ident">spirv::Op</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Instruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">opcode</span>: <span class="ident">spirv::Op</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Instruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
         <span class="ident">INSTRUCTION_TABLE</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> (<span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">opcode</span>))
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> (<span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">opcode</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;internal error&quot;</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Instruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>() -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Instruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">INSTRUCTION_TABLE</span>.<span class="ident">iter</span>()
     }
 }
@@ -322,22 +322,22 @@
 <span class="kw">impl</span> <span class="ident">GlslStd450InstructionTable</span> {
     <span class="doccomment">/// Looks up the given `opcode` in the instruction table and returns</span>
     <span class="doccomment">/// a reference to the instruction grammar entry if found.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_opcode</span>(<span class="ident">opcode</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_opcode</span>(<span class="ident">opcode</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">GLSL_STD_450_INSTRUCTION_TABLE</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">opcode</span>)
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">opcode</span>)
     }
 
     <span class="doccomment">/// Returns a reference to the instruction grammar entry with the given</span>
     <span class="doccomment">/// `opcode`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">opcode</span>: <span class="ident">spirv::GLOp</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">opcode</span>: <span class="ident">spirv::GLOp</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
         <span class="ident">GLSL_STD_450_INSTRUCTION_TABLE</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> (<span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">opcode</span> <span class="kw">as</span> <span class="ident">spirv::Word</span>))
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> (<span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">opcode</span> <span class="kw">as</span> <span class="ident">spirv::Word</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;internal error&quot;</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>() -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">GLSL_STD_450_INSTRUCTION_TABLE</span>.<span class="ident">iter</span>()
     }
 }
@@ -353,22 +353,22 @@
 <span class="kw">impl</span> <span class="ident">OpenCLStd100InstructionTable</span> {
     <span class="doccomment">/// Looks up the given `opcode` in the instruction table and returns</span>
     <span class="doccomment">/// a reference to the instruction grammar entry if found.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_opcode</span>(<span class="ident">opcode</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_opcode</span>(<span class="ident">opcode</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">OPENCL_STD_100_INSTRUCTION_TABLE</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">opcode</span>)
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">opcode</span>)
     }
 
     <span class="doccomment">/// Returns a reference to the instruction grammar entry with the given</span>
     <span class="doccomment">/// `opcode`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">opcode</span>: <span class="ident">spirv::CLOp</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">opcode</span>: <span class="ident">spirv::CLOp</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
         <span class="ident">OPENCL_STD_100_INSTRUCTION_TABLE</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> (<span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">opcode</span> <span class="kw">as</span> <span class="ident">spirv::Word</span>))
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> (<span class="ident">inst</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">opcode</span> <span class="kw">as</span> <span class="ident">spirv::Word</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;internal error&quot;</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>() -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ExtendedInstruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">OPENCL_STD_100_INSTRUCTION_TABLE</span>.<span class="ident">iter</span>()
     }
 }

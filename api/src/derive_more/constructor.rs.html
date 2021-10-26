@@ -55,41 +55,41 @@
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">Data</span>, <span class="ident">DeriveInput</span>, <span class="ident">Field</span>, <span class="ident">Fields</span>, <span class="ident">Ident</span>};
 
 <span class="doccomment">/// Provides the hook to expand `#[derive(Constructor)]` into an implementation of `Constructor`</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">DeriveInput</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">DeriveInput</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="ident">input_type</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">ident</span>;
     <span class="kw">let</span> (<span class="ident">impl_generics</span>, <span class="ident">ty_generics</span>, <span class="ident">where_clause</span>) <span class="op">=</span> <span class="ident">input</span>.<span class="ident">generics</span>.<span class="ident">split_for_impl</span>();
     <span class="kw">let</span> ((<span class="ident">body</span>, <span class="ident">vars</span>), <span class="ident">fields</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>.<span class="ident">data</span> {
-        <span class="ident">Data::Struct</span>(<span class="kw-2">ref</span> <span class="ident">data_struct</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">data_struct</span>.<span class="ident">fields</span> {
-            <span class="ident">Fields::Unnamed</span>(<span class="kw-2">ref</span> <span class="ident">fields</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Data::Struct</span>(<span class="kw-2">ref</span> <span class="ident">data_struct</span>) =&gt; <span class="kw">match</span> <span class="ident">data_struct</span>.<span class="ident">fields</span> {
+            <span class="ident">Fields::Unnamed</span>(<span class="kw-2">ref</span> <span class="ident">fields</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">field_vec</span> <span class="op">=</span> <span class="ident">unnamed_to_vec</span>(<span class="ident">fields</span>);
                 (<span class="ident">tuple_body</span>(<span class="ident">input_type</span>, <span class="kw-2">&amp;</span><span class="ident">field_vec</span>), <span class="ident">field_vec</span>)
             }
-            <span class="ident">Fields::Named</span>(<span class="kw-2">ref</span> <span class="ident">fields</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Fields::Named</span>(<span class="kw-2">ref</span> <span class="ident">fields</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">field_vec</span> <span class="op">=</span> <span class="ident">named_to_vec</span>(<span class="ident">fields</span>);
                 (<span class="ident">struct_body</span>(<span class="ident">input_type</span>, <span class="kw-2">&amp;</span><span class="ident">field_vec</span>), <span class="ident">field_vec</span>)
             }
-            <span class="ident">Fields::Unit</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">struct_body</span>(<span class="ident">input_type</span>, <span class="kw-2">&amp;</span>[]), <span class="macro">vec!</span>[]),
+            <span class="ident">Fields::Unit</span> =&gt; (<span class="ident">struct_body</span>(<span class="ident">input_type</span>, <span class="kw-2">&amp;</span>[]), <span class="macro">vec!</span>[]),
         },
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Only structs can derive a constructor&quot;</span>),
+        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Only structs can derive a constructor&quot;</span>),
     };
     <span class="kw">let</span> <span class="ident">original_types</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">get_field_types</span>(<span class="kw-2">&amp;</span><span class="ident">fields</span>);
     <span class="macro">quote!</span> {
         <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
         <span class="ident">impl</span>#<span class="ident">impl_generics</span> #<span class="ident">input_type</span>#<span class="ident">ty_generics</span> #<span class="ident">where_clause</span> {
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(#(#<span class="ident">vars</span>: #<span class="ident">original_types</span>),<span class="kw-2">*</span>) <span class="op">-</span><span class="op">&gt;</span> #<span class="ident">input_type</span>#<span class="ident">ty_generics</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(#(#<span class="ident">vars</span>: #<span class="ident">original_types</span>),<span class="kw-2">*</span>) -&gt; #<span class="ident">input_type</span>#<span class="ident">ty_generics</span> {
                 #<span class="ident">body</span>
             }
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">tuple_body</span>(<span class="ident">return_type</span>: <span class="kw-2">&amp;</span><span class="ident">Ident</span>, <span class="ident">fields</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Field</span>]) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">TokenStream</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Ident</span><span class="op">&gt;</span>) {
+<span class="kw">fn</span> <span class="ident">tuple_body</span>(<span class="ident">return_type</span>: <span class="kw-2">&amp;</span><span class="ident">Ident</span>, <span class="ident">fields</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Field</span>]) -&gt; (<span class="ident">TokenStream</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Ident</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="ident">vars</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">numbered_vars</span>(<span class="ident">fields</span>.<span class="ident">len</span>(), <span class="string">&quot;&quot;</span>);
     (<span class="macro">quote!</span>(#<span class="ident">return_type</span>(#(#<span class="ident">vars</span>),<span class="kw-2">*</span>)), <span class="ident">vars</span>.<span class="ident">clone</span>())
 }
 
-<span class="kw">fn</span> <span class="ident">struct_body</span>(<span class="ident">return_type</span>: <span class="kw-2">&amp;</span><span class="ident">Ident</span>, <span class="ident">fields</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Field</span>]) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">TokenStream</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Ident</span><span class="op">&gt;</span>) {
+<span class="kw">fn</span> <span class="ident">struct_body</span>(<span class="ident">return_type</span>: <span class="kw-2">&amp;</span><span class="ident">Ident</span>, <span class="ident">fields</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Field</span>]) -&gt; (<span class="ident">TokenStream</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Ident</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="ident">field_names</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Ident</span><span class="op">&gt;</span> <span class="op">=</span>
         <span class="kw-2">&amp;</span><span class="ident">field_idents</span>(<span class="ident">fields</span>).<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> (<span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">f</span>).<span class="ident">clone</span>()).<span class="ident">collect</span>();
     <span class="kw">let</span> <span class="ident">vars</span> <span class="op">=</span> <span class="ident">field_names</span>;

@@ -278,7 +278,7 @@
 <span class="doccomment">/// let hash = &lt;[u8]&gt;::get_hash(&amp;bytes, &amp;hash_builder);</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">CallHasher</span> {
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span>;
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>))]</span>
@@ -287,7 +287,7 @@
     <span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
 {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">build_hasher</span>.<span class="ident">build_hasher</span>();
         <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
         <span class="ident">hasher</span>.<span class="ident">finish</span>()
@@ -300,7 +300,7 @@
     <span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
 {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="ident">default</span> <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="ident">default</span> <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">build_hasher</span>.<span class="ident">build_hasher</span>();
         <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
         <span class="ident">hasher</span>.<span class="ident">finish</span>()
@@ -308,11 +308,11 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">call_hasher_impl</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span>) =&gt; {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
         <span class="kw">impl</span> <span class="ident">CallHasher</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span> {
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+            <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
                 <span class="ident">build_hasher</span>.<span class="ident">hash_as_u64</span>(<span class="ident">value</span>)
             }
         }
@@ -330,7 +330,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">CallHasher</span> <span class="kw">for</span> <span class="ident">u128</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="ident">build_hasher</span>.<span class="ident">hash_as_fixed_length</span>(<span class="ident">value</span>)
     }
 }
@@ -338,7 +338,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">CallHasher</span> <span class="kw">for</span> <span class="ident">i128</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="ident">build_hasher</span>.<span class="ident">hash_as_fixed_length</span>(<span class="ident">value</span>)
     }
 }
@@ -346,7 +346,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">CallHasher</span> <span class="kw">for</span> <span class="ident">usize</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="ident">build_hasher</span>.<span class="ident">hash_as_fixed_length</span>(<span class="ident">value</span>)
     }
 }
@@ -354,7 +354,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">CallHasher</span> <span class="kw">for</span> <span class="ident">isize</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="ident">build_hasher</span>.<span class="ident">hash_as_fixed_length</span>(<span class="ident">value</span>)
     }
 }
@@ -362,7 +362,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">CallHasher</span> <span class="kw">for</span> [<span class="ident">u8</span>] {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="ident">build_hasher</span>.<span class="ident">hash_as_str</span>(<span class="ident">value</span>)
     }
 }
@@ -370,7 +370,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">CallHasher</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="ident">build_hasher</span>.<span class="ident">hash_as_str</span>(<span class="ident">value</span>)
     }
 }
@@ -378,7 +378,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">CallHasher</span> <span class="kw">for</span> <span class="ident">str</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="ident">build_hasher</span>.<span class="ident">hash_as_str</span>(<span class="ident">value</span>)
     }
 }
@@ -386,7 +386,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">CallHasher</span> <span class="kw">for</span> <span class="ident">String</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>, <span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">H</span>, <span class="ident">build_hasher</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="ident">u64</span> {
         <span class="ident">build_hasher</span>.<span class="ident">hash_as_str</span>(<span class="ident">value</span>)
     }
 }

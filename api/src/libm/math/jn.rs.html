@@ -381,7 +381,7 @@
 
 <span class="kw">const</span> <span class="ident">INVSQRTPI</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">5.64189583547756279280e-01</span>; <span class="comment">/* 0x3FE20DD7, 0x50429B6D */</span>
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">jn</span>(<span class="ident">n</span>: <span class="ident">i32</span>, <span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">jn</span>(<span class="ident">n</span>: <span class="ident">i32</span>, <span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ix</span>: <span class="ident">u32</span>;
     <span class="kw">let</span> <span class="ident">lx</span>: <span class="ident">u32</span>;
     <span class="kw">let</span> <span class="ident">nm1</span>: <span class="ident">i32</span>;
@@ -406,7 +406,7 @@
      * Thus, J(-n,x) = J(n,-x)
      */</span>
     <span class="comment">/* nm1 = |n|-1 is used instead of |n| to handle n==INT_MIN */</span>
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">n</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="ident">j0</span>(<span class="ident">x</span>);
     }
     <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;</span> <span class="number">0</span> {
@@ -416,13 +416,13 @@
     } <span class="kw">else</span> {
         <span class="ident">nm1</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>;
     }
-    <span class="kw">if</span> <span class="ident">nm1</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">nm1</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="ident">j1</span>(<span class="ident">x</span>);
     }
 
     <span class="ident">sign</span> <span class="op">&amp;=</span> (<span class="ident">n</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>; <span class="comment">/* even n: 0, odd n: signbit(x) */</span>
     <span class="ident">x</span> <span class="op">=</span> <span class="ident">fabs</span>(<span class="ident">x</span>);
-    <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">|</span> <span class="ident">lx</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> {
+    <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">|</span> <span class="ident">lx</span>) <span class="op">==</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x7ff00000</span> {
         <span class="comment">/* if x is 0 or inf */</span>
         <span class="ident">b</span> <span class="op">=</span> <span class="number">0.0</span>;
     } <span class="kw">else</span> <span class="kw">if</span> (<span class="ident">nm1</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">&lt;</span> <span class="ident">x</span> {
@@ -443,10 +443,10 @@
              *             3     s+c             c-s
              */</span>
             <span class="ident">temp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">nm1</span> <span class="op">&amp;</span> <span class="number">3</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">sin</span>(<span class="ident">x</span>),
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">sin</span>(<span class="ident">x</span>),
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">sin</span>(<span class="ident">x</span>),
-                <span class="number">3</span> <span class="op">|</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">sin</span>(<span class="ident">x</span>),
+                <span class="number">0</span> =&gt; <span class="op">-</span><span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">sin</span>(<span class="ident">x</span>),
+                <span class="number">1</span> =&gt; <span class="op">-</span><span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">sin</span>(<span class="ident">x</span>),
+                <span class="number">2</span> =&gt; <span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">sin</span>(<span class="ident">x</span>),
+                <span class="number">3</span> <span class="op">|</span> <span class="kw">_</span> =&gt; <span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">sin</span>(<span class="ident">x</span>),
             };
             <span class="ident">b</span> <span class="op">=</span> <span class="ident">INVSQRTPI</span> <span class="op">*</span> <span class="ident">temp</span> <span class="op">/</span> <span class="ident">sqrt</span>(<span class="ident">x</span>);
         } <span class="kw">else</span> {
@@ -594,7 +594,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">yn</span>(<span class="ident">n</span>: <span class="ident">i32</span>, <span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">yn</span>(<span class="ident">n</span>: <span class="ident">i32</span>, <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ix</span>: <span class="ident">u32</span>;
     <span class="kw">let</span> <span class="ident">lx</span>: <span class="ident">u32</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ib</span>: <span class="ident">u32</span>;
@@ -619,11 +619,11 @@
         <span class="comment">/* x &lt; 0 */</span>
         <span class="kw">return</span> <span class="number">0.0</span> <span class="op">/</span> <span class="number">0.0</span>;
     }
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> {
+    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x7ff00000</span> {
         <span class="kw">return</span> <span class="number">0.0</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">n</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="ident">y0</span>(<span class="ident">x</span>);
     }
     <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;</span> <span class="number">0</span> {
@@ -633,7 +633,7 @@
         <span class="ident">nm1</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>;
         <span class="ident">sign</span> <span class="op">=</span> <span class="bool-val">false</span>;
     }
-    <span class="kw">if</span> <span class="ident">nm1</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">nm1</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">if</span> <span class="ident">sign</span> {
             <span class="kw">return</span> <span class="op">-</span><span class="ident">y1</span>(<span class="ident">x</span>);
         } <span class="kw">else</span> {
@@ -657,10 +657,10 @@
          *             3     s+c             c-s
          */</span>
         <span class="ident">temp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">nm1</span> <span class="op">&amp;</span> <span class="number">3</span> {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">cos</span>(<span class="ident">x</span>),
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">cos</span>(<span class="ident">x</span>),
-            <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">cos</span>(<span class="ident">x</span>),
-            <span class="number">3</span> <span class="op">|</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">cos</span>(<span class="ident">x</span>),
+            <span class="number">0</span> =&gt; <span class="op">-</span><span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">cos</span>(<span class="ident">x</span>),
+            <span class="number">1</span> =&gt; <span class="op">-</span><span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">cos</span>(<span class="ident">x</span>),
+            <span class="number">2</span> =&gt; <span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">cos</span>(<span class="ident">x</span>),
+            <span class="number">3</span> <span class="op">|</span> <span class="kw">_</span> =&gt; <span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">cos</span>(<span class="ident">x</span>),
         };
         <span class="ident">b</span> <span class="op">=</span> <span class="ident">INVSQRTPI</span> <span class="op">*</span> <span class="ident">temp</span> <span class="op">/</span> <span class="ident">sqrt</span>(<span class="ident">x</span>);
     } <span class="kw">else</span> {

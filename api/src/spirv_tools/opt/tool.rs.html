@@ -201,7 +201,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Optimizer</span>;
 
 <span class="kw">impl</span> <span class="ident">Optimizer</span> <span class="kw">for</span> <span class="ident">ToolOptimizer</span> {
-    <span class="kw">fn</span> <span class="ident">with_env</span>(<span class="ident">target_env</span>: <span class="ident"><span class="kw">crate</span>::TargetEnv</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">with_env</span>(<span class="ident">target_env</span>: <span class="ident"><span class="kw">crate</span>::TargetEnv</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">target_env</span>,
             ..<span class="ident">Default::default</span>()
@@ -213,7 +213,7 @@
         <span class="ident">input</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>,
         <span class="ident">msg_callback</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">MC</span>,
         <span class="ident">options</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Options</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::binary::Binary</span>, <span class="ident"><span class="kw">crate</span>::Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::binary::Binary</span>, <span class="ident"><span class="kw">crate</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">std::process::Command::new</span>(<span class="string">&quot;spirv-opt&quot;</span>);
 
         <span class="comment">// Note here that we don&#39;t do cmd.arg(&quot;--target-env&quot;).arg(self.target_env.to_string());</span>
@@ -271,7 +271,7 @@
 
     <span class="doccomment">/// Register a single pass with the the optimizer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">register_pass</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pass</span>: <span class="ident"><span class="kw">super</span>::Passes</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">register_pass</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pass</span>: <span class="ident"><span class="kw">super</span>::Passes</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">passes</span>.<span class="ident">push</span>(<span class="ident">pass</span>);
         <span class="self">self</span>
     }
@@ -280,7 +280,7 @@
     <span class="doccomment">/// This sequence of passes is subject to constant review and will change</span>
     <span class="doccomment">/// from time to time.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">register_performance_passes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">register_performance_passes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">use_perf_passes</span> <span class="op">=</span> <span class="bool-val">true</span>;
         <span class="self">self</span>
     }
@@ -289,7 +289,7 @@
     <span class="doccomment">/// This sequence of passes is subject to constant review and will change</span>
     <span class="doccomment">/// from time to time.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">register_size_passes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">register_size_passes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">use_size_passes</span> <span class="op">=</span> <span class="bool-val">true</span>;
         <span class="self">self</span>
     }
@@ -303,73 +303,73 @@
     <span class="doccomment">/// This sequence of passes is subject to constant review and will change</span>
     <span class="doccomment">/// from time to time.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">register_hlsl_legalization_passes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">register_hlsl_legalization_passes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">legalize_hlsl</span> <span class="op">=</span> <span class="bool-val">true</span>;
         <span class="self">self</span>
     }
 }
 
-<span class="kw">fn</span> <span class="ident">pass_to_string</span>(<span class="ident">pass</span>: <span class="ident"><span class="kw">super</span>::Passes</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">pass_to_string</span>(<span class="ident">pass</span>: <span class="ident"><span class="kw">super</span>::Passes</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::enum_glob_use</span>)]</span>
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Passes</span>::<span class="kw-2">*</span>;
 
     <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">pass</span> {
-        <span class="ident">AggressiveDCE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-code-aggressive&quot;</span>,
-        <span class="ident">AmdExtToKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;amd-ext-to-khr&quot;</span>,
-        <span class="ident">BlockMerge</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;merge-blocks&quot;</span>,
-        <span class="ident">CFGCleanup</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;cfg-cleanup&quot;</span>,
-        <span class="ident">CodeSinking</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;code-sink&quot;</span>,
-        <span class="ident">CombineAccessChains</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;combine-access-chains&quot;</span>,
-        <span class="ident">CompactIds</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;compact-ids&quot;</span>,
-        <span class="ident">ConditionalConstantPropagation</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;ccp&quot;</span>,
-        <span class="ident">ConvertRelaxedToHalf</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;convert-relaxed-to-half&quot;</span>,
-        <span class="ident">CopyPropagateArrays</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;copy-propagate-arrays&quot;</span>,
-        <span class="ident">DeadBranchElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-branches&quot;</span>,
-        <span class="ident">DeadInsertElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-inserts&quot;</span>,
-        <span class="ident">DeadVariableElimination</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-variables&quot;</span>,
-        <span class="ident">DescriptorScalarReplacement</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;descriptor-scalar-replacement&quot;</span>,
-        <span class="ident">EliminateDeadConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-const&quot;</span>,
-        <span class="ident">EliminateDeadFunctions</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-functions&quot;</span>,
-        <span class="ident">EliminateDeadMembers</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-members&quot;</span>,
-        <span class="ident">FixStorageClass</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;fix-storage-class&quot;</span>,
-        <span class="ident">FlattenDecoration</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;flatten-decorations&quot;</span>,
-        <span class="ident">FoldSpecConstantOpAndComposite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;fold-spec-const-op-composite&quot;</span>,
-        <span class="ident">FreezeSpecConstantValue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;freeze-spec-const&quot;</span>,
-        <span class="ident">GraphicsRobustAccess</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;graphics-robust-access&quot;</span>,
-        <span class="ident">IfConversion</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;if-conversion&quot;</span>,
-        <span class="ident">InlineExhaustive</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;inline-entry-points-exhaustive&quot;</span>,
-        <span class="ident">InlineOpaque</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;inline-entry-points-opaque&quot;</span>,
-        <span class="ident">InsertExtractElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-insert-extract&quot;</span>,
+        <span class="ident">AggressiveDCE</span> =&gt; <span class="string">&quot;eliminate-dead-code-aggressive&quot;</span>,
+        <span class="ident">AmdExtToKhr</span> =&gt; <span class="string">&quot;amd-ext-to-khr&quot;</span>,
+        <span class="ident">BlockMerge</span> =&gt; <span class="string">&quot;merge-blocks&quot;</span>,
+        <span class="ident">CFGCleanup</span> =&gt; <span class="string">&quot;cfg-cleanup&quot;</span>,
+        <span class="ident">CodeSinking</span> =&gt; <span class="string">&quot;code-sink&quot;</span>,
+        <span class="ident">CombineAccessChains</span> =&gt; <span class="string">&quot;combine-access-chains&quot;</span>,
+        <span class="ident">CompactIds</span> =&gt; <span class="string">&quot;compact-ids&quot;</span>,
+        <span class="ident">ConditionalConstantPropagation</span> =&gt; <span class="string">&quot;ccp&quot;</span>,
+        <span class="ident">ConvertRelaxedToHalf</span> =&gt; <span class="string">&quot;convert-relaxed-to-half&quot;</span>,
+        <span class="ident">CopyPropagateArrays</span> =&gt; <span class="string">&quot;copy-propagate-arrays&quot;</span>,
+        <span class="ident">DeadBranchElim</span> =&gt; <span class="string">&quot;eliminate-dead-branches&quot;</span>,
+        <span class="ident">DeadInsertElim</span> =&gt; <span class="string">&quot;eliminate-dead-inserts&quot;</span>,
+        <span class="ident">DeadVariableElimination</span> =&gt; <span class="string">&quot;eliminate-dead-variables&quot;</span>,
+        <span class="ident">DescriptorScalarReplacement</span> =&gt; <span class="string">&quot;descriptor-scalar-replacement&quot;</span>,
+        <span class="ident">EliminateDeadConstant</span> =&gt; <span class="string">&quot;eliminate-dead-const&quot;</span>,
+        <span class="ident">EliminateDeadFunctions</span> =&gt; <span class="string">&quot;eliminate-dead-functions&quot;</span>,
+        <span class="ident">EliminateDeadMembers</span> =&gt; <span class="string">&quot;eliminate-dead-members&quot;</span>,
+        <span class="ident">FixStorageClass</span> =&gt; <span class="string">&quot;fix-storage-class&quot;</span>,
+        <span class="ident">FlattenDecoration</span> =&gt; <span class="string">&quot;flatten-decorations&quot;</span>,
+        <span class="ident">FoldSpecConstantOpAndComposite</span> =&gt; <span class="string">&quot;fold-spec-const-op-composite&quot;</span>,
+        <span class="ident">FreezeSpecConstantValue</span> =&gt; <span class="string">&quot;freeze-spec-const&quot;</span>,
+        <span class="ident">GraphicsRobustAccess</span> =&gt; <span class="string">&quot;graphics-robust-access&quot;</span>,
+        <span class="ident">IfConversion</span> =&gt; <span class="string">&quot;if-conversion&quot;</span>,
+        <span class="ident">InlineExhaustive</span> =&gt; <span class="string">&quot;inline-entry-points-exhaustive&quot;</span>,
+        <span class="ident">InlineOpaque</span> =&gt; <span class="string">&quot;inline-entry-points-opaque&quot;</span>,
+        <span class="ident">InsertExtractElim</span> =&gt; <span class="string">&quot;eliminate-insert-extract&quot;</span>,
         <span class="comment">// This is only part of the --legalize-hlsl meta pass</span>
-        <span class="ident">InterpolateFixup</span> <span class="op">|</span> <span class="ident">Null</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
-        <span class="ident">LocalAccessChainConvert</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;convert-local-access-chains&quot;</span>,
-        <span class="ident">LocalMultiStoreElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-local-multi-store&quot;</span>,
-        <span class="ident">LocalRedundancyElimination</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;local-redundancy-elimination&quot;</span>,
-        <span class="ident">LocalSingleBlockLoadStoreElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-local-single-block&quot;</span>,
-        <span class="ident">LocalSingleStoreElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-local-single-store&quot;</span>,
-        <span class="ident">LoopInvariantCodeMotion</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;loop-invariant-code-motion&quot;</span>,
-        <span class="ident">LoopPeeling</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;loop-peeling&quot;</span>,
-        <span class="ident">LoopUnswitch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;loop-unswitch&quot;</span>,
-        <span class="ident">MergeReturn</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;merge-return&quot;</span>,
-        <span class="ident">PrivateToLocal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;private-to-local&quot;</span>,
-        <span class="ident">PropagateLineInfo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;propagate-line-info&quot;</span>,
-        <span class="ident">ReduceLoadSize</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;reduce-load-size&quot;</span>,
-        <span class="ident">RedundancyElimination</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;redundancy-elimination&quot;</span>,
-        <span class="ident">RedundantLineInfoElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-redundant-line-info&quot;</span>,
-        <span class="ident">RemoveUnusedInterfaceVariables</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;remove-unused-interface-variables&quot;</span>,
-        <span class="ident">RelaxFloatOps</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;relax-float-ops&quot;</span>,
-        <span class="ident">RemoveDuplicates</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;remove-duplicates&quot;</span>,
-        <span class="ident">ReplaceInvalidOpcode</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;replace-invalid-opcode&quot;</span>,
-        <span class="ident">Simplification</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;simplify-instructions&quot;</span>,
-        <span class="ident">SSARewrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;ssa-rewrite&quot;</span>,
-        <span class="ident">StrengthReduction</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;strength-reduction&quot;</span>,
-        <span class="ident">StripDebugInfo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;strip-debug&quot;</span>,
-        <span class="ident">StripReflectInfo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;strip-reflect&quot;</span>,
-        <span class="ident">UnifyConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;unify-const&quot;</span>,
-        <span class="ident">UpgradeMemoryModel</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;upgrade-memory-model&quot;</span>,
-        <span class="ident">VectorDCE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;vector-dce&quot;</span>,
-        <span class="ident">Workaround1209</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;workaround-1209&quot;</span>,
-        <span class="ident">WrapOpKill</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;wrap-opkill&quot;</span>,
+        <span class="ident">InterpolateFixup</span> <span class="op">|</span> <span class="ident">Null</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+        <span class="ident">LocalAccessChainConvert</span> =&gt; <span class="string">&quot;convert-local-access-chains&quot;</span>,
+        <span class="ident">LocalMultiStoreElim</span> =&gt; <span class="string">&quot;eliminate-local-multi-store&quot;</span>,
+        <span class="ident">LocalRedundancyElimination</span> =&gt; <span class="string">&quot;local-redundancy-elimination&quot;</span>,
+        <span class="ident">LocalSingleBlockLoadStoreElim</span> =&gt; <span class="string">&quot;eliminate-local-single-block&quot;</span>,
+        <span class="ident">LocalSingleStoreElim</span> =&gt; <span class="string">&quot;eliminate-local-single-store&quot;</span>,
+        <span class="ident">LoopInvariantCodeMotion</span> =&gt; <span class="string">&quot;loop-invariant-code-motion&quot;</span>,
+        <span class="ident">LoopPeeling</span> =&gt; <span class="string">&quot;loop-peeling&quot;</span>,
+        <span class="ident">LoopUnswitch</span> =&gt; <span class="string">&quot;loop-unswitch&quot;</span>,
+        <span class="ident">MergeReturn</span> =&gt; <span class="string">&quot;merge-return&quot;</span>,
+        <span class="ident">PrivateToLocal</span> =&gt; <span class="string">&quot;private-to-local&quot;</span>,
+        <span class="ident">PropagateLineInfo</span> =&gt; <span class="string">&quot;propagate-line-info&quot;</span>,
+        <span class="ident">ReduceLoadSize</span> =&gt; <span class="string">&quot;reduce-load-size&quot;</span>,
+        <span class="ident">RedundancyElimination</span> =&gt; <span class="string">&quot;redundancy-elimination&quot;</span>,
+        <span class="ident">RedundantLineInfoElim</span> =&gt; <span class="string">&quot;eliminate-redundant-line-info&quot;</span>,
+        <span class="ident">RemoveUnusedInterfaceVariables</span> =&gt; <span class="string">&quot;remove-unused-interface-variables&quot;</span>,
+        <span class="ident">RelaxFloatOps</span> =&gt; <span class="string">&quot;relax-float-ops&quot;</span>,
+        <span class="ident">RemoveDuplicates</span> =&gt; <span class="string">&quot;remove-duplicates&quot;</span>,
+        <span class="ident">ReplaceInvalidOpcode</span> =&gt; <span class="string">&quot;replace-invalid-opcode&quot;</span>,
+        <span class="ident">Simplification</span> =&gt; <span class="string">&quot;simplify-instructions&quot;</span>,
+        <span class="ident">SSARewrite</span> =&gt; <span class="string">&quot;ssa-rewrite&quot;</span>,
+        <span class="ident">StrengthReduction</span> =&gt; <span class="string">&quot;strength-reduction&quot;</span>,
+        <span class="ident">StripDebugInfo</span> =&gt; <span class="string">&quot;strip-debug&quot;</span>,
+        <span class="ident">StripReflectInfo</span> =&gt; <span class="string">&quot;strip-reflect&quot;</span>,
+        <span class="ident">UnifyConstant</span> =&gt; <span class="string">&quot;unify-const&quot;</span>,
+        <span class="ident">UpgradeMemoryModel</span> =&gt; <span class="string">&quot;upgrade-memory-model&quot;</span>,
+        <span class="ident">VectorDCE</span> =&gt; <span class="string">&quot;vector-dce&quot;</span>,
+        <span class="ident">Workaround1209</span> =&gt; <span class="string">&quot;workaround-1209&quot;</span>,
+        <span class="ident">WrapOpKill</span> =&gt; <span class="string">&quot;wrap-opkill&quot;</span>,
     })
 }
 </code></pre></div>

@@ -68,7 +68,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Finds the nearest integer less than or equal to `x`.</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">floor</span>(<span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">floor</span>(<span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="comment">// On wasm32 we know that LLVM&#39;s intrinsic will compile to an optimized</span>
     <span class="comment">// `f64.floor` native instruction, so we can leverage this for both code size</span>
     <span class="comment">// and speed.</span>
@@ -80,7 +80,7 @@
     <span class="kw">let</span> <span class="ident">ui</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
     <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> ((<span class="ident">ui</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">52</span>) <span class="op">&amp;</span> <span class="number">0x7ff</span>) <span class="kw">as</span> <span class="ident">i32</span>;
 
-    <span class="kw">if</span> (<span class="ident">e</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x3ff</span> <span class="op">+</span> <span class="number">52</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="number">0.</span>) {
+    <span class="kw">if</span> (<span class="ident">e</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x3ff</span> <span class="op">+</span> <span class="number">52</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">x</span> <span class="op">==</span> <span class="number">0.</span>) {
         <span class="kw">return</span> <span class="ident">x</span>;
     }
     <span class="comment">/* y = int(x) - x, where int(x) is an integer neighbor of x */</span>

@@ -36,21 +36,21 @@
 <span id="36">36</span>
 <span id="37">37</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">nextafterf</span>(<span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">nextafterf</span>(<span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
     <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">is_nan</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">y</span>.<span class="ident">is_nan</span>() {
         <span class="kw">return</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">y</span>;
     }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ux_i</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
     <span class="kw">let</span> <span class="ident">uy_i</span> <span class="op">=</span> <span class="ident">y</span>.<span class="ident">to_bits</span>();
-    <span class="kw">if</span> <span class="ident">ux_i</span> <span class="op">=</span><span class="op">=</span> <span class="ident">uy_i</span> {
+    <span class="kw">if</span> <span class="ident">ux_i</span> <span class="op">==</span> <span class="ident">uy_i</span> {
         <span class="kw">return</span> <span class="ident">y</span>;
     }
 
     <span class="kw">let</span> <span class="ident">ax</span> <span class="op">=</span> <span class="ident">ux_i</span> <span class="op">&amp;</span> <span class="number">0x7fff_ffff_u32</span>;
     <span class="kw">let</span> <span class="ident">ay</span> <span class="op">=</span> <span class="ident">uy_i</span> <span class="op">&amp;</span> <span class="number">0x7fff_ffff_u32</span>;
-    <span class="kw">if</span> <span class="ident">ax</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">if</span> <span class="ident">ay</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">ax</span> <span class="op">==</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">ay</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="ident">y</span>;
         }
         <span class="ident">ux_i</span> <span class="op">=</span> (<span class="ident">uy_i</span> <span class="op">&amp;</span> <span class="number">0x8000_0000_u32</span>) <span class="op">|</span> <span class="number">1</span>;
@@ -62,12 +62,12 @@
 
     <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">ux_i</span>.<span class="ident">wrapping_shr</span>(<span class="number">0x7f80_0000_u32</span>);
     <span class="comment">// raise overflow if ux_f is infinite and x is finite</span>
-    <span class="kw">if</span> <span class="ident">e</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7f80_0000_u32</span> {
+    <span class="kw">if</span> <span class="ident">e</span> <span class="op">==</span> <span class="number">0x7f80_0000_u32</span> {
         <span class="macro">force_eval!</span>(<span class="ident">x</span> <span class="op">+</span> <span class="ident">x</span>);
     }
     <span class="kw">let</span> <span class="ident">ux_f</span> <span class="op">=</span> <span class="ident">f32::from_bits</span>(<span class="ident">ux_i</span>);
     <span class="comment">// raise underflow if ux_f is subnormal or zero</span>
-    <span class="kw">if</span> <span class="ident">e</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">e</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="macro">force_eval!</span>(<span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">ux_f</span> <span class="op">*</span> <span class="ident">ux_f</span>);
     }
     <span class="ident">ux_f</span>

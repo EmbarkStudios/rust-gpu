@@ -338,7 +338,7 @@
 <span class="comment">//const SHUFFLE_MASK: u128 = 0x040A0700_030E0106_0D050F08_020B0C09_u128;</span>
 
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">folded_multiply</span>(<span class="ident">s</span>: <span class="ident">u64</span>, <span class="ident">by</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">folded_multiply</span>(<span class="ident">s</span>: <span class="ident">u64</span>, <span class="ident">by</span>: <span class="ident">u64</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> (<span class="ident">s</span> <span class="kw">as</span> <span class="ident">u128</span>).<span class="ident">wrapping_mul</span>(<span class="ident">by</span> <span class="kw">as</span> <span class="ident">u128</span>);
     ((<span class="ident">result</span> <span class="op">&amp;</span> <span class="number">0xffff_ffff_ffff_ffff</span>) <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">^</span> ((<span class="ident">result</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">64</span>) <span class="kw">as</span> <span class="ident">u64</span>)
 }
@@ -347,7 +347,7 @@
 <span class="doccomment">/// Given a small (less than 8 byte slice) returns the same data stored in two u32s.</span>
 <span class="doccomment">/// (order of and non-duplication of bytes is NOT guaranteed)</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">read_small</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u64</span>; <span class="number">2</span>] {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">read_small</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; [<span class="ident">u64</span>; <span class="number">2</span>] {
     <span class="macro">debug_assert!</span>(<span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="number">8</span>);
     <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span> {
         <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">4</span> {
@@ -367,7 +367,7 @@
 }
 
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">shuffle</span>(<span class="ident">a</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">shuffle</span>(<span class="ident">a</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;ssse3&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
     {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
@@ -385,21 +385,21 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span> <span class="comment">//not used by fallback</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_and_shuffle</span>(<span class="ident">a</span>: <span class="ident">u128</span>, <span class="ident">b</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_and_shuffle</span>(<span class="ident">a</span>: <span class="ident">u128</span>, <span class="ident">b</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
     <span class="kw">let</span> <span class="ident">sum</span> <span class="op">=</span> <span class="ident">add_by_64s</span>(<span class="ident">a</span>.<span class="ident">convert</span>(), <span class="ident">b</span>.<span class="ident">convert</span>());
     <span class="ident">shuffle</span>(<span class="ident">sum</span>.<span class="ident">convert</span>())
 }
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span> <span class="comment">//not used by fallbac</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">shuffle_and_add</span>(<span class="ident">base</span>: <span class="ident">u128</span>, <span class="ident">to_add</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">shuffle_and_add</span>(<span class="ident">base</span>: <span class="ident">u128</span>, <span class="ident">to_add</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
     <span class="kw">let</span> <span class="ident">shuffled</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">base</span>).<span class="ident">convert</span>();
     <span class="ident">add_by_64s</span>(<span class="ident">shuffled</span>, <span class="ident">to_add</span>.<span class="ident">convert</span>()).<span class="ident">convert</span>()
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_by_64s</span>(<span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">2</span>], <span class="ident">b</span>: [<span class="ident">u64</span>; <span class="number">2</span>]) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u64</span>; <span class="number">2</span>] {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_by_64s</span>(<span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">2</span>], <span class="ident">b</span>: [<span class="ident">u64</span>; <span class="number">2</span>]) -&gt; [<span class="ident">u64</span>; <span class="number">2</span>] {
     <span class="kw">use</span> <span class="ident">core::mem::transmute</span>;
     <span class="kw">unsafe</span> {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
@@ -412,14 +412,14 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>))))]</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_by_64s</span>(<span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">2</span>], <span class="ident">b</span>: [<span class="ident">u64</span>; <span class="number">2</span>]) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u64</span>; <span class="number">2</span>] {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_by_64s</span>(<span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">2</span>], <span class="ident">b</span>: [<span class="ident">u64</span>; <span class="number">2</span>]) -&gt; [<span class="ident">u64</span>; <span class="number">2</span>] {
     [<span class="ident">a</span>[<span class="number">0</span>].<span class="ident">wrapping_add</span>(<span class="ident">b</span>[<span class="number">0</span>]), <span class="ident">a</span>[<span class="number">1</span>].<span class="ident">wrapping_add</span>(<span class="ident">b</span>[<span class="number">1</span>])]
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesenc</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesenc</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
@@ -434,7 +434,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;crypto&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stdsimd&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesenc</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesenc</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">core::arch::arm</span>::<span class="kw-2">*</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>)]</span>
@@ -449,7 +449,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesdec</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesdec</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
@@ -464,7 +464,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;crypto&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stdsimd&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
 <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesdec</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u128</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesdec</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">core::arch::arm</span>::<span class="kw-2">*</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>)]</span>

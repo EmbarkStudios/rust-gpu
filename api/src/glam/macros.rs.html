@@ -487,18 +487,18 @@
     <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;glam-assert&quot;</span>
 ))]</span>
 <span class="macro">macro_rules!</span> <span class="ident">glam_assert</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> ( <span class="macro">assert!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>)<span class="kw-2">*</span>); )
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) =&gt; ( <span class="macro">assert!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>)<span class="kw-2">*</span>); )
 }
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(
     <span class="ident">all</span>(<span class="ident">debug_assertions</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;debug-glam-assert&quot;</span>),
     <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;glam-assert&quot;</span>
 )))]</span>
 <span class="macro">macro_rules!</span> <span class="ident">glam_assert</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> {};
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) =&gt; {};
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">const_assert</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">expr</span> $(,)<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">expr</span> $(,)<span class="question-mark">?</span>) =&gt; {
         <span class="comment">// FIXME: everything is align 16 on spirv - ignore for now</span>
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>))]</span>
         <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unknown_lints</span>, <span class="ident">clippy::eq_op</span>)]</span>
@@ -510,29 +510,29 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">const_assert_eq</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">y</span>:<span class="ident">expr</span> $(,)<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="macro">const_assert!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span> <span class="op">=</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">y</span>);
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">y</span>:<span class="ident">expr</span> $(,)<span class="question-mark">?</span>) =&gt; {
+        <span class="macro">const_assert!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span> <span class="op">==</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">y</span>);
     };
 }
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>))]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_m128</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">m128</span> }
     };
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;scalar-math&quot;</span>)))]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_f32x4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">m128</span> }
     };
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;simd128&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;scalar-math&quot;</span>)))]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_f32x4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">v128</span> }
     };
 }
@@ -546,7 +546,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_vec2</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx2</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx2</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec2Cast</span> { <span class="ident">fx2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx2</span> }.<span class="ident">v2</span> }
     };
 }
@@ -560,7 +560,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_vec3</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec3Cast</span> { <span class="ident">fx3</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span> }.<span class="ident">v3</span> }
     };
 }
@@ -574,7 +574,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_vec3a</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec4Cast</span> {
                 <span class="ident">fx4</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span>[<span class="number">0</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span>[<span class="number">1</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span>[<span class="number">2</span>], <span class="number">0.0</span>],
@@ -593,7 +593,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_vec4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">v4</span> }
     };
 }
@@ -607,7 +607,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_mat2</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Mat2Cast</span> {
                 <span class="ident">v2x2</span>: [<span class="macro-nonterminal">$</span><span class="macro">crate::const_vec2!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>), <span class="macro-nonterminal">$</span><span class="macro">crate::const_vec2!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>)],
@@ -615,7 +615,7 @@
             .<span class="ident">m2</span>
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::const_mat2!</span>(
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">fx2x2</span>[<span class="number">0</span>],
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">fx2x2</span>[<span class="number">1</span>]
@@ -632,7 +632,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_mat3</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Mat3Cast</span> {
                 <span class="ident">v3x3</span>: [
@@ -644,7 +644,7 @@
             .<span class="ident">m3</span>
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span>:<span class="ident">expr</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::const_mat3!</span>(
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F32x9Cast</span> { <span class="ident">fx9</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span> }.<span class="ident">fx3x3</span>[<span class="number">0</span>],
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F32x9Cast</span> { <span class="ident">fx9</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span> }.<span class="ident">fx3x3</span>[<span class="number">1</span>],
@@ -662,7 +662,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_mat3a</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Mat3ACast</span> {
                 <span class="ident">v3x3</span>: [
@@ -674,7 +674,7 @@
             .<span class="ident">m3</span>
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span>:<span class="ident">expr</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::const_mat3a!</span>(
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F32x9Cast</span> { <span class="ident">fx9</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span> }.<span class="ident">fx3x3</span>[<span class="number">0</span>],
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F32x9Cast</span> { <span class="ident">fx9</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span> }.<span class="ident">fx3x3</span>[<span class="number">1</span>],
@@ -697,7 +697,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_mat4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col3</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col3</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Mat4Cast</span> {
                 <span class="ident">v4x4</span>: [
@@ -710,7 +710,7 @@
             .<span class="ident">m4</span>
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx16</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx16</span>:<span class="ident">expr</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::const_mat4!</span>(
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F32x16Cast</span> { <span class="ident">fx16</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx16</span> }.<span class="ident">fx4x4</span>[<span class="number">0</span>],
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F32x16Cast</span> { <span class="ident">fx16</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx16</span> }.<span class="ident">fx4x4</span>[<span class="number">1</span>],
@@ -729,7 +729,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_quat</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::Vec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">q</span> }
     };
 }
@@ -743,7 +743,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_dvec2</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx2</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx2</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::DVec2Cast</span> { <span class="ident">fx2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx2</span> }.<span class="ident">v2</span> }
     };
 }
@@ -757,7 +757,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_dvec3</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::DVec3Cast</span> { <span class="ident">fx3</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx3</span> }.<span class="ident">v3</span> }
     };
 }
@@ -771,7 +771,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_dvec4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::DVec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">v4</span> }
     };
 }
@@ -785,7 +785,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_dmat2</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::DMat2Cast</span> {
                 <span class="ident">v2x2</span>: [<span class="macro-nonterminal">$</span><span class="macro">crate::const_dvec2!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>), <span class="macro-nonterminal">$</span><span class="macro">crate::const_dvec2!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>)],
@@ -793,7 +793,7 @@
             .<span class="ident">m2</span>
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::const_dmat2!</span>(
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::DVec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">fx2x2</span>[<span class="number">0</span>],
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::DVec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">fx2x2</span>[<span class="number">1</span>]
@@ -811,7 +811,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_dmat3</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::DMat3Cast</span> {
                 <span class="ident">v3x3</span>: [
@@ -823,7 +823,7 @@
             .<span class="ident">m3</span>
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span>:<span class="ident">expr</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::const_dmat3!</span>(
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F64x9Cast</span> { <span class="ident">fx9</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span> }.<span class="ident">fx3x3</span>[<span class="number">0</span>],
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F64x9Cast</span> { <span class="ident">fx9</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx9</span> }.<span class="ident">fx3x3</span>[<span class="number">1</span>],
@@ -846,7 +846,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_dmat4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col3</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col3</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::DMat4Cast</span> {
                 <span class="ident">v4x4</span>: [
@@ -859,7 +859,7 @@
             .<span class="ident">m4</span>
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx16</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx16</span>:<span class="ident">expr</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::const_dmat4!</span>(
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F64x16Cast</span> { <span class="ident">fx16</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx16</span> }.<span class="ident">fx4x4</span>[<span class="number">0</span>],
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::F64x16Cast</span> { <span class="ident">fx16</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx16</span> }.<span class="ident">fx4x4</span>[<span class="number">1</span>],
@@ -878,7 +878,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_dquat</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::DVec4Cast</span> { <span class="ident">fx4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fx4</span> }.<span class="ident">q</span> }
     };
 }
@@ -892,7 +892,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_ivec2</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ix2</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ix2</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::IVec2Cast</span> { <span class="ident">ix2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ix2</span> }.<span class="ident">v2</span> }
     };
 }
@@ -906,7 +906,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_ivec3</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ix3</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ix3</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::IVec3Cast</span> { <span class="ident">ix3</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ix3</span> }.<span class="ident">v3</span> }
     };
 }
@@ -920,7 +920,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_ivec4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ix4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ix4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::IVec4Cast</span> { <span class="ident">ix4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ix4</span> }.<span class="ident">v4</span> }
     };
 }
@@ -934,7 +934,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_uvec2</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux2</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux2</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::UVec2Cast</span> { <span class="ident">ux2</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux2</span> }.<span class="ident">v2</span> }
     };
 }
@@ -948,7 +948,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_uvec3</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux3</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux3</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::UVec3Cast</span> { <span class="ident">ux3</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux3</span> }.<span class="ident">v3</span> }
     };
 }
@@ -962,7 +962,7 @@
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">const_uvec4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux4</span>:<span class="ident">expr</span>) =&gt; {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::cast::UVec4Cast</span> { <span class="ident">ux4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ux4</span> }.<span class="ident">v4</span> }
     };
 }

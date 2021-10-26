@@ -3,7 +3,7 @@ It can be used for creating typesafe wrappers around C APIs.</p>
 <p>The <code>bitflags!</code> macro generates a <code>struct</code> that manages a set of flags. The
 flags should only be defined for integer types, otherwise unexpected type
 errors may occur at compile time.</p>
-<h1 id="example" class="section-header"><a href="#example">Example</a></h1>
+<h2 id="example" class="section-header"><a href="#example">Example</a></h2>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">bitflags</span>;
 
@@ -49,7 +49,7 @@ implementations:</p>
 }
 
 <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Flags</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;hi!&quot;</span>)
     }
 }
@@ -62,7 +62,7 @@ implementations:</p>
     <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Flags::A</span> <span class="op">|</span> <span class="ident">Flags::B</span>), <span class="string">&quot;A | B&quot;</span>);
     <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Flags::B</span>), <span class="string">&quot;B&quot;</span>);
 }</code></pre></div>
-<h1 id="visibility" class="section-header"><a href="#visibility">Visibility</a></h1>
+<h2 id="visibility" class="section-header"><a href="#visibility">Visibility</a></h2>
 <p>The generated struct and its associated flag constants are not exported
 out of the current module by default. A definition can be exported out of
 the current module by adding <code>pub</code> before <code>flags</code>:</p>
@@ -87,10 +87,10 @@ the current module by adding <code>pub</code> before <code>flags</code>:</p>
     <span class="kw">let</span> <span class="ident">flag1</span> <span class="op">=</span> <span class="ident">example::Flags1::A</span>;
     <span class="kw">let</span> <span class="ident">flag2</span> <span class="op">=</span> <span class="ident">example::Flags2::B</span>; <span class="comment">// error: const `B` is private</span>
 }</code></pre></div>
-<h1 id="attributes" class="section-header"><a href="#attributes">Attributes</a></h1>
+<h2 id="attributes" class="section-header"><a href="#attributes">Attributes</a></h2>
 <p>Attributes can be attached to the generated <code>struct</code> by placing them
 before the <code>flags</code> keyword.</p>
-<h1 id="trait-implementations-1" class="section-header"><a href="#trait-implementations-1">Trait implementations</a></h1>
+<h2 id="trait-implementations-1" class="section-header"><a href="#trait-implementations-1">Trait implementations</a></h2>
 <p>The <code>Copy</code>, <code>Clone</code>, <code>PartialEq</code>, <code>Eq</code>, <code>PartialOrd</code>, <code>Ord</code> and <code>Hash</code>
 traits automatically derived for the <code>struct</code> using the <code>derive</code> attribute.
 Additional traits can be derived by providing an explicit <code>derive</code>
@@ -100,7 +100,7 @@ too: <code>Extend</code> adds the union of the instances of the <code>struct</co
 while <code>FromIterator</code> calculates the union.</p>
 <p>The <code>Binary</code>, <code>Debug</code>, <code>LowerHex</code>, <code>Octal</code> and <code>UpperHex</code> trait is also
 implemented by displaying the bits value of the internal struct.</p>
-<h2 id="operators" class="section-header"><a href="#operators">Operators</a></h2>
+<h3 id="operators" class="section-header"><a href="#operators">Operators</a></h3>
 <p>The following operator traits are implemented for the generated <code>struct</code>:</p>
 <ul>
 <li><code>BitOr</code> and <code>BitOrAssign</code>: union</li>
@@ -109,7 +109,7 @@ implemented by displaying the bits value of the internal struct.</p>
 <li><code>Sub</code> and <code>SubAssign</code>: set difference</li>
 <li><code>Not</code>: set complement</li>
 </ul>
-<h1 id="methods" class="section-header"><a href="#methods">Methods</a></h1>
+<h2 id="methods" class="section-header"><a href="#methods">Methods</a></h2>
 <p>The following methods are defined for the generated <code>struct</code>:</p>
 <ul>
 <li><code>empty</code>: an empty set of flags</li>
@@ -133,7 +133,7 @@ flags)</li>
 if they are.</li>
 <li><code>set</code>: inserts or removes the specified flags depending on the passed value</li>
 </ul>
-<h2 id="default" class="section-header"><a href="#default">Default</a></h2>
+<h3 id="default" class="section-header"><a href="#default">Default</a></h3>
 <p>The <code>Default</code> trait is not automatically implemented for the generated struct.</p>
 <p>If your default value is equal to <code>0</code> (which is the same value as calling <code>empty()</code>
 on the generated struct), you can simply derive <code>Default</code>:</p>
@@ -170,7 +170,7 @@ on the generated struct), you can simply derive <code>Default</code>:</p>
 
 <span class="comment">// explicit `Default` implementation</span>
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Flags</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Flags</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">Flags</span> {
         <span class="ident">Flags::A</span> <span class="op">|</span> <span class="ident">Flags::C</span>
     }
 }
@@ -179,7 +179,7 @@ on the generated struct), you can simply derive <code>Default</code>:</p>
     <span class="kw">let</span> <span class="ident">implemented_default</span>: <span class="ident">Flags</span> <span class="op">=</span> <span class="ident">Default::default</span>();
     <span class="macro">assert_eq!</span>(<span class="ident">implemented_default</span>, (<span class="ident">Flags::A</span> <span class="op">|</span> <span class="ident">Flags::C</span>));
 }</code></pre></div>
-<h1 id="zero-flags" class="section-header"><a href="#zero-flags">Zero Flags</a></h1>
+<h2 id="zero-flags" class="section-header"><a href="#zero-flags">Zero Flags</a></h2>
 <p>Flags with a value equal to zero will have some strange behavior that one should be aware of.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">macro_use</span>]</span>
@@ -206,7 +206,7 @@ on the generated struct), you can simply derive <code>Default</code>:</p>
     <span class="macro">assert!</span>(<span class="ident">none</span>.<span class="ident">is_empty</span>());
 }</code></pre></div>
 </div></details><h2 id="macros" class="section-header"><a href="#macros">Macros</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="macro" href="macro.bitflags.html" title="bitflags::bitflags macro">bitflags</a></div><div class="item-right docblock-short"><p>The macro used to generate the flag structure.</p>
-</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="bitflags" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.bitflags.html" title="bitflags::bitflags macro">bitflags</a></div><div class="item-right docblock-short"><p>The macro used to generate the flag structure.</p>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="bitflags" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
     <script src="../main.js"></script>
 </body></html>

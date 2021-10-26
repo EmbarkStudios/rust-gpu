@@ -423,7 +423,7 @@
     <span class="doccomment">/// Creates a new hasher keyed to the provided key.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span> <span class="comment">// Is not called if non-fallback hash is used.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_with_keys</span>(<span class="ident">key1</span>: <span class="ident">u128</span>, <span class="ident">key2</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AHasher</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_with_keys</span>(<span class="ident">key1</span>: <span class="ident">u128</span>, <span class="ident">key2</span>: <span class="ident">u128</span>) -&gt; <span class="ident">AHasher</span> {
         <span class="kw">let</span> <span class="ident">pi</span>: [<span class="ident">u128</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">PI</span>.<span class="ident">convert</span>();
         <span class="kw">let</span> <span class="ident">key1</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> (<span class="ident">key1</span> <span class="op">^</span> <span class="ident">pi</span>[<span class="number">0</span>]).<span class="ident">convert</span>();
         <span class="kw">let</span> <span class="ident">key2</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> (<span class="ident">key2</span> <span class="op">^</span> <span class="ident">pi</span>[<span class="number">1</span>]).<span class="ident">convert</span>();
@@ -435,7 +435,7 @@
     }
 
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span> <span class="comment">// False positive</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">test_with_keys</span>(<span class="ident">key1</span>: <span class="ident">u128</span>, <span class="ident">key2</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">test_with_keys</span>(<span class="ident">key1</span>: <span class="ident">u128</span>, <span class="ident">key2</span>: <span class="ident">u128</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">key1</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">key1</span>.<span class="ident">convert</span>();
         <span class="kw">let</span> <span class="ident">key2</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">key2</span>.<span class="ident">convert</span>();
         <span class="self">Self</span> {
@@ -447,7 +447,7 @@
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span> <span class="comment">// Is not called if non-fallback hash is used.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_random_state</span>(<span class="ident">rand_state</span>: <span class="kw-2">&amp;</span><span class="ident">RandomState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AHasher</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_random_state</span>(<span class="ident">rand_state</span>: <span class="kw-2">&amp;</span><span class="ident">RandomState</span>) -&gt; <span class="ident">AHasher</span> {
         <span class="ident">AHasher</span> {
             <span class="ident">buffer</span>: <span class="ident">rand_state</span>.<span class="ident">k0</span>,
             <span class="ident">pad</span>: <span class="ident">rand_state</span>.<span class="ident">k1</span>,
@@ -527,7 +527,7 @@
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">short_finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">short_finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">wrapping_add</span>(<span class="self">self</span>.<span class="ident">pad</span>)
     }
 }
@@ -601,14 +601,14 @@
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;folded_multiply&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="ident">rot</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">buffer</span> <span class="op">&amp;</span> <span class="number">63</span>) <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="ident">folded_multiply</span>(<span class="self">self</span>.<span class="ident">buffer</span>, <span class="self">self</span>.<span class="ident">pad</span>).<span class="ident">rotate_left</span>(<span class="ident">rot</span>)
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;folded_multiply&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="ident">rot</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">buffer</span> <span class="op">&amp;</span> <span class="number">63</span>) <span class="kw">as</span> <span class="ident">u32</span>;
         (<span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">wrapping_mul</span>(<span class="ident">MULTIPLE</span>) <span class="op">^</span> <span class="self">self</span>.<span class="ident">pad</span>).<span class="ident">rotate_left</span>(<span class="ident">rot</span>)
     }
@@ -624,7 +624,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">AHasherU64</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="ident">rot</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">pad</span> <span class="op">&amp;</span> <span class="number">63</span>) <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">rotate_left</span>(<span class="ident">rot</span>)
     }
@@ -672,7 +672,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">AHasherFixed</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">short_finish</span>()
     }
 
@@ -720,7 +720,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">AHasherStr</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">finish</span>()
     }
 

@@ -723,7 +723,7 @@
 <span class="kw">const</span> <span class="ident">IVLN2_L</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">1.92596299112661746887e-08</span>; <span class="comment">/* 0x3e54ae0b_f85ddf44 =1/ln2 tail*/</span>
 
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pow</span>(<span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">y</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pow</span>(<span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">y</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> <span class="ident">t1</span>: <span class="ident">f64</span>;
     <span class="kw">let</span> <span class="ident">t2</span>: <span class="ident">f64</span>;
 
@@ -734,20 +734,20 @@
     <span class="kw">let</span> <span class="ident">iy</span>: <span class="ident">i32</span> <span class="op">=</span> (<span class="ident">hy</span> <span class="op">&amp;</span> <span class="number">0x7fffffff</span>) <span class="kw">as</span> <span class="ident">i32</span>;
 
     <span class="comment">/* x**0 = 1, even if x is NaN */</span>
-    <span class="kw">if</span> ((<span class="ident">iy</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">|</span> <span class="ident">ly</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> ((<span class="ident">iy</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">|</span> <span class="ident">ly</span>) <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="number">1.0</span>;
     }
 
     <span class="comment">/* 1**y = 1, even if y is NaN */</span>
-    <span class="kw">if</span> <span class="ident">hx</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x3ff00000</span> <span class="op">&amp;&amp;</span> <span class="ident">lx</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">hx</span> <span class="op">==</span> <span class="number">0x3ff00000</span> <span class="op">&amp;&amp;</span> <span class="ident">lx</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="number">1.0</span>;
     }
 
     <span class="comment">/* NaN if either arg is NaN */</span>
     <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span> <span class="number">0x7ff00000</span>
-        <span class="op">|</span><span class="op">|</span> (<span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> <span class="op">&amp;&amp;</span> <span class="ident">lx</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>)
+        <span class="op">|</span><span class="op">|</span> (<span class="ident">ix</span> <span class="op">==</span> <span class="number">0x7ff00000</span> <span class="op">&amp;&amp;</span> <span class="ident">lx</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>)
         <span class="op">|</span><span class="op">|</span> <span class="ident">iy</span> <span class="op">&gt;</span> <span class="number">0x7ff00000</span>
-        <span class="op">|</span><span class="op">|</span> (<span class="ident">iy</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> <span class="op">&amp;&amp;</span> <span class="ident">ly</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>)
+        <span class="op">|</span><span class="op">|</span> (<span class="ident">iy</span> <span class="op">==</span> <span class="number">0x7ff00000</span> <span class="op">&amp;&amp;</span> <span class="ident">ly</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>)
     {
         <span class="kw">return</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">y</span>;
     }
@@ -769,25 +769,25 @@
             <span class="kw">if</span> <span class="ident">k</span> <span class="op">&gt;</span> <span class="number">20</span> {
                 <span class="ident">j</span> <span class="op">=</span> (<span class="ident">ly</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">52</span> <span class="op">-</span> <span class="ident">k</span>)) <span class="kw">as</span> <span class="ident">i32</span>;
 
-                <span class="kw">if</span> (<span class="ident">j</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">52</span> <span class="op">-</span> <span class="ident">k</span>)) <span class="op">=</span><span class="op">=</span> (<span class="ident">ly</span> <span class="kw">as</span> <span class="ident">i32</span>) {
+                <span class="kw">if</span> (<span class="ident">j</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">52</span> <span class="op">-</span> <span class="ident">k</span>)) <span class="op">==</span> (<span class="ident">ly</span> <span class="kw">as</span> <span class="ident">i32</span>) {
                     <span class="ident">yisint</span> <span class="op">=</span> <span class="number">2</span> <span class="op">-</span> (<span class="ident">j</span> <span class="op">&amp;</span> <span class="number">1</span>);
                 }
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ly</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ly</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">j</span> <span class="op">=</span> <span class="ident">iy</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">20</span> <span class="op">-</span> <span class="ident">k</span>);
 
-                <span class="kw">if</span> (<span class="ident">j</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">20</span> <span class="op">-</span> <span class="ident">k</span>)) <span class="op">=</span><span class="op">=</span> <span class="ident">iy</span> {
+                <span class="kw">if</span> (<span class="ident">j</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">20</span> <span class="op">-</span> <span class="ident">k</span>)) <span class="op">==</span> <span class="ident">iy</span> {
                     <span class="ident">yisint</span> <span class="op">=</span> <span class="number">2</span> <span class="op">-</span> (<span class="ident">j</span> <span class="op">&amp;</span> <span class="number">1</span>);
                 }
             }
         }
     }
 
-    <span class="kw">if</span> <span class="ident">ly</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">ly</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="comment">/* special value of y */</span>
-        <span class="kw">if</span> <span class="ident">iy</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> {
+        <span class="kw">if</span> <span class="ident">iy</span> <span class="op">==</span> <span class="number">0x7ff00000</span> {
             <span class="comment">/* y is +-inf */</span>
 
-            <span class="kw">return</span> <span class="kw">if</span> ((<span class="ident">ix</span> <span class="op">-</span> <span class="number">0x3ff00000</span>) <span class="op">|</span> (<span class="ident">lx</span> <span class="kw">as</span> <span class="ident">i32</span>)) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">return</span> <span class="kw">if</span> ((<span class="ident">ix</span> <span class="op">-</span> <span class="number">0x3ff00000</span>) <span class="op">|</span> (<span class="ident">lx</span> <span class="kw">as</span> <span class="ident">i32</span>)) <span class="op">==</span> <span class="number">0</span> {
                 <span class="comment">/* (-1)**+-inf is 1 */</span>
                 <span class="number">1.0</span>
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x3ff00000</span> {
@@ -807,17 +807,17 @@
             };
         }
 
-        <span class="kw">if</span> <span class="ident">iy</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x3ff00000</span> {
+        <span class="kw">if</span> <span class="ident">iy</span> <span class="op">==</span> <span class="number">0x3ff00000</span> {
             <span class="comment">/* y is +-1 */</span>
             <span class="kw">return</span> <span class="kw">if</span> <span class="ident">hy</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span> { <span class="ident">x</span> } <span class="kw">else</span> { <span class="number">1.0</span> <span class="op">/</span> <span class="ident">x</span> };
         }
 
-        <span class="kw">if</span> <span class="ident">hy</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x40000000</span> {
+        <span class="kw">if</span> <span class="ident">hy</span> <span class="op">==</span> <span class="number">0x40000000</span> {
             <span class="comment">/* y is 2 */</span>
             <span class="kw">return</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span>;
         }
 
-        <span class="kw">if</span> <span class="ident">hy</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x3fe00000</span> {
+        <span class="kw">if</span> <span class="ident">hy</span> <span class="op">==</span> <span class="number">0x3fe00000</span> {
             <span class="comment">/* y is 0.5 */</span>
             <span class="kw">if</span> <span class="ident">hx</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="comment">/* x &gt;= +0 */</span>
@@ -827,9 +827,9 @@
     }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ax</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">fabs</span>(<span class="ident">x</span>);
-    <span class="kw">if</span> <span class="ident">lx</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">lx</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="comment">/* special value of x */</span>
-        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x7ff00000</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x3ff00000</span> {
+        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x7ff00000</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x3ff00000</span> {
             <span class="comment">/* x is +-0,+-inf,+-1 */</span>
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">z</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">ax</span>;
 
@@ -839,9 +839,9 @@
             }
 
             <span class="kw">if</span> <span class="ident">hx</span> <span class="op">&lt;</span> <span class="number">0</span> {
-                <span class="kw">if</span> ((<span class="ident">ix</span> <span class="op">-</span> <span class="number">0x3ff00000</span>) <span class="op">|</span> <span class="ident">yisint</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="kw">if</span> ((<span class="ident">ix</span> <span class="op">-</span> <span class="number">0x3ff00000</span>) <span class="op">|</span> <span class="ident">yisint</span>) <span class="op">==</span> <span class="number">0</span> {
                     <span class="ident">z</span> <span class="op">=</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">z</span>) <span class="op">/</span> (<span class="ident">z</span> <span class="op">-</span> <span class="ident">z</span>); <span class="comment">/* (-1)**non-int is NaN */</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">yisint</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">yisint</span> <span class="op">==</span> <span class="number">1</span> {
                     <span class="ident">z</span> <span class="op">=</span> <span class="op">-</span><span class="ident">z</span>; <span class="comment">/* (x&lt;0)**odd = -(|x|**odd) */</span>
                 }
             }
@@ -852,12 +852,12 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">1.0</span>; <span class="comment">/* sign of result */</span>
     <span class="kw">if</span> <span class="ident">hx</span> <span class="op">&lt;</span> <span class="number">0</span> {
-        <span class="kw">if</span> <span class="ident">yisint</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">yisint</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="comment">/* (x&lt;0)**(non-int) is NaN */</span>
             <span class="kw">return</span> (<span class="ident">x</span> <span class="op">-</span> <span class="ident">x</span>) <span class="op">/</span> (<span class="ident">x</span> <span class="op">-</span> <span class="ident">x</span>);
         }
 
-        <span class="kw">if</span> <span class="ident">yisint</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+        <span class="kw">if</span> <span class="ident">yisint</span> <span class="op">==</span> <span class="number">1</span> {
             <span class="comment">/* (x&lt;0)**(odd int) */</span>
             <span class="ident">s</span> <span class="op">=</span> <span class="op">-</span><span class="number">1.0</span>;
         }
@@ -1091,7 +1091,7 @@
             <span class="kw">if</span> <span class="ident">expected</span>.<span class="ident">is_nan</span>() {
                 <span class="ident">res</span>.<span class="ident">is_nan</span>()
             } <span class="kw">else</span> {
-                <span class="ident">pow</span>(<span class="ident">base</span>, <span class="ident">exponent</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span>
+                <span class="ident">pow</span>(<span class="ident">base</span>, <span class="ident">exponent</span>) <span class="op">==</span> <span class="ident">expected</span>
             },
             <span class="string">&quot;{} ** {} was {} instead of {}&quot;</span>,
             <span class="ident">base</span>,
@@ -1111,7 +1111,7 @@
             .<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">val</span><span class="op">|</span> <span class="ident">pow_test</span>(<span class="ident">base</span>, <span class="kw-2">*</span><span class="ident">val</span>, <span class="ident">expected</span>)));
     }
 
-    <span class="kw">fn</span> <span class="ident">test_sets</span>(<span class="ident">sets</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">f64</span>]], <span class="ident">computed</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span>) {
+    <span class="kw">fn</span> <span class="ident">test_sets</span>(<span class="ident">sets</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">f64</span>]], <span class="ident">computed</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">f64</span>) -&gt; <span class="ident">f64</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">f64</span>) -&gt; <span class="ident">f64</span>) {
         <span class="ident">sets</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> {
             <span class="ident">s</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">val</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="ident">expected</span>(<span class="kw-2">*</span><span class="ident">val</span>);
@@ -1121,7 +1121,7 @@
                     <span class="kw">if</span> <span class="ident">exp</span>.<span class="ident">is_nan</span>() {
                         <span class="ident">res</span>.<span class="ident">is_nan</span>()
                     } <span class="kw">else</span> {
-                        <span class="ident">exp</span> <span class="op">=</span><span class="op">=</span> <span class="ident">res</span>
+                        <span class="ident">exp</span> <span class="op">==</span> <span class="ident">res</span>
                     },
                     <span class="string">&quot;test for {} was {} instead of {}&quot;</span>,
                     <span class="ident">val</span>,

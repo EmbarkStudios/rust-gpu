@@ -164,7 +164,7 @@
 <span class="kw">const</span> <span class="ident">PIO4_LO</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">3.06161699786838301793e-17</span>; <span class="comment">/* 3C81A626, 33145C07 */</span>
 
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">k_tan</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>, <span class="kw-2">mut</span> <span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">odd</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">k_tan</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>, <span class="kw-2">mut</span> <span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">odd</span>: <span class="ident">i32</span>) -&gt; <span class="ident">f64</span> {
     <span class="kw">let</span> <span class="ident">hx</span> <span class="op">=</span> (<span class="ident">f64::to_bits</span>(<span class="ident">x</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>;
     <span class="kw">let</span> <span class="ident">big</span> <span class="op">=</span> (<span class="ident">hx</span> <span class="op">&amp;</span> <span class="number">0x7fffffff</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x3FE59428</span>; <span class="comment">/* |x| &gt;= 0.6744 */</span>
     <span class="kw">if</span> <span class="ident">big</span> {
@@ -194,7 +194,7 @@
         <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">s</span> <span class="op">-</span> <span class="number">2.0</span> <span class="op">*</span> (<span class="ident">x</span> <span class="op">+</span> (<span class="ident">r</span> <span class="op">-</span> <span class="ident">w</span> <span class="op">*</span> <span class="ident">w</span> <span class="op">/</span> (<span class="ident">w</span> <span class="op">+</span> <span class="ident">s</span>)));
         <span class="kw">return</span> <span class="kw">if</span> <span class="ident">sign</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> { <span class="op">-</span><span class="ident">v</span> } <span class="kw">else</span> { <span class="ident">v</span> };
     }
-    <span class="kw">if</span> <span class="ident">odd</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">odd</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="ident">w</span>;
     }
     <span class="comment">/* -1.0/(x+r) has up to 2ulp error, so compute it accurately */</span>
@@ -205,7 +205,7 @@
     <span class="ident">a0</span> <span class="op">+</span> <span class="ident">a</span> <span class="op">*</span> (<span class="number">1.0</span> <span class="op">+</span> <span class="ident">a0</span> <span class="op">*</span> <span class="ident">w0</span> <span class="op">+</span> <span class="ident">a0</span> <span class="op">*</span> <span class="ident">v</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">zero_low_word</span>(<span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
+<span class="kw">fn</span> <span class="ident">zero_low_word</span>(<span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
     <span class="ident">f64::from_bits</span>(<span class="ident">f64::to_bits</span>(<span class="ident">x</span>) <span class="op">&amp;</span> <span class="number">0xFFFF_FFFF_0000_0000</span>)
 }
 </code></pre></div>
