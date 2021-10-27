@@ -527,6 +527,25 @@
 <span id="527">527</span>
 <span id="528">528</span>
 <span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.</span>
 <span class="doccomment">//! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a</span>
 <span class="doccomment">//! `StorageClass::Input` pointer. Our frontend definitely allows it, though, this is like taking a</span>
@@ -747,6 +766,25 @@
         <span class="op">|</span><span class="op">|</span> <span class="ident">disallowed_return_types</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">function</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">result_type</span>.<span class="ident">unwrap</span>())
 }
 
+<span class="comment">// This should be more general, but a very common problem is passing an OpAccessChain to an</span>
+<span class="comment">// OpFunctionCall (i.e. `f(&amp;s.x)`, or more commonly, `s.x.f()` where `f` takes `&amp;self`), so detect</span>
+<span class="comment">// that case and inline the call.</span>
+<span class="kw">fn</span> <span class="ident">args_invalid</span>(<span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>, <span class="ident">call</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>) -&gt; <span class="ident">bool</span> {
+    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">function</span>.<span class="ident">all_inst_iter</span>() {
+        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::AccessChain</span> {
+            <span class="kw">let</span> <span class="ident">inst_result</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>();
+            <span class="kw">if</span> <span class="ident">call</span>
+                .<span class="ident">operands</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">any</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">op</span> <span class="op">==</span> <span class="ident">Operand::IdRef</span>(<span class="ident">inst_result</span>))
+            {
+                <span class="kw">return</span> <span class="bool-val">true</span>;
+            }
+        }
+    }
+    <span class="bool-val">false</span>
+}
+
 <span class="comment">// Steps:</span>
 <span class="comment">// Move OpVariable decls</span>
 <span class="comment">// Rewrite return</span>
@@ -821,12 +859,12 @@
                         .<span class="ident">unwrap</span>(),
                 )
             })
-            .<span class="ident">find</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">f</span>)<span class="op">|</span> {
+            .<span class="ident">find</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">inst</span>, <span class="ident">f</span>)<span class="op">|</span> {
                 <span class="ident">should_inline</span>(
                     <span class="self">self</span>.<span class="ident">disallowed_argument_types</span>,
                     <span class="self">self</span>.<span class="ident">disallowed_return_types</span>,
                     <span class="ident">f</span>,
-                )
+                ) <span class="op">|</span><span class="op">|</span> <span class="ident">args_invalid</span>(<span class="ident">caller</span>, <span class="ident">inst</span>)
             });
         <span class="kw">let</span> (<span class="ident">call_index</span>, <span class="ident">call_inst</span>, <span class="ident">callee</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">call</span> {
             <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
