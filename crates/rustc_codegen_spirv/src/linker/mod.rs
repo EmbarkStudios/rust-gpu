@@ -266,6 +266,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         for func in &mut output.functions {
             peephole_opts::composite_construct(&types, func);
             peephole_opts::vector_ops(output.header.as_mut().unwrap(), &types, func);
+            peephole_opts::bool_fusion(output.header.as_mut().unwrap(), &types, func);
         }
     }
 
