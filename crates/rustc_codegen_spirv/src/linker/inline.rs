@@ -218,6 +218,25 @@ fn should_inline(
         || disallowed_return_types.contains(&function.def.as_ref().unwrap().result_type.unwrap())
 }
 
+// This should be more general, but a very common problem is passing an OpAccessChain to an
+// OpFunctionCall (i.e. `f(&s.x)`, or more commonly, `s.x.f()` where `f` takes `&self`), so detect
+// that case and inline the call.
+fn args_invalid(function: &Function, call: &Instruction) -> bool {
+    for inst in function.all_inst_iter() {
+        if inst.class.opcode == Op::AccessChain {
+            let inst_result = inst.result_id.unwrap();
+            if call
+                .operands
+                .iter()
+                .any(|op| *op == Operand::IdRef(inst_result))
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 // Steps:
 // Move OpVariable decls
 // Rewrite return
@@ -292,12 +311,12 @@ impl Inliner<'_, '_> {
                         .unwrap(),
                 )
             })
-            .find(|(_, _, f)| {
+            .find(|(_, inst, f)| {
                 should_inline(
                     self.disallowed_argument_types,
                     self.disallowed_return_types,
                     f,
-                )
+                ) || args_invalid(caller, inst)
             });
         let (call_index, call_inst, callee) = match call {
             None => return false,
