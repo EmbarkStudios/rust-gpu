@@ -36,7 +36,8 @@ There are two main ways to setup your shader project locally.
 If you're writing a bigger application and you want to integrate SPIR-V shader
 crates to display, it's recommended to use `spirv-builder` in a build script.
 
-1. Copy the [`rust-toolchain`] file to your project. (You must use the same version of Rust as `rust-gpu`.)
+1. Copy the [`rust-toolchain`] file to your project. (You must use the same
+   version of Rust as `rust-gpu`.)
 2. Reference `spirv-builder` in your Cargo.toml:
     ```toml
     [build-dependencies]
@@ -54,25 +55,47 @@ SpirvBuilder::new(path_to_shader, target)
         .build()?;
 ```
 
-The values available for the `target` parameter are available [here](./platform-support.md).
-For example, if building for vulkan 1.1, use `"spirv-unknown-vulkan1.1"`.
+The values available for the `target` parameter are available
+[here](./platform-support.md).  For example, if building for vulkan 1.1, use
+`"spirv-unknown-vulkan1.1"`.
 
-The `SpirvBuilder` struct has numerous configuration options available, see rustdoc for documentation.
+The `SpirvBuilder` struct has numerous configuration options available, see
+rustdoc for documentation.
 
 #### `main.rs`
 ```rust,no_run
 const SHADER: &[u8] = include_bytes!(env!("<shader_name>.spv"));
 ```
 
+Keep in mind that by default, build-dependencies are built in debug mode. This
+means that the rust-gpu compiler (`rustc_codegen_spirv`) will be built in debug
+mode, and will be *incredibly* slow. You can solve this by placing this bit of
+configuration in your workspace `Cargo.toml`:
+
+```toml
+# Compile build-dependencies in release mode with
+# the same settings as regular dependencies.
+[profile.release.build-override]
+opt-level = 3
+codegen-units = 16
+[profile.dev.build-override]
+opt-level = 3
+```
+
+Keep in mind this will optimize *all* build script dependencies as release,
+which may slow down full rebuilds a bit. Please read [this
+issue](https://github.com/EmbarkStudios/rust-gpu/issues/448) for more
+information, there's a few important caveats to know about this.
+
 ### Using `.cargo/config`
 
 > **Note** This method will require manually rebuilding `rust-gpu` each
   time there has been changes to the repository.
 
-If you just want to build a shader crate, and don't need to
-automatically compile the SPIR-V binary at build time, you can use
-`.cargo/config` to set the necessary flags. Before you can do that however you
-need to do a couple of steps first to build the compiler backend.
+If you just want to build a shader crate, and don't need to automatically
+compile the SPIR-V binary at build time, you can use `.cargo/config` to set the
+necessary flags. Before you can do that however you need to do a couple of steps
+first to build the compiler backend.
 
 1. Clone the `rust-gpu` repository
 3. `cargo build --release` in `rust-gpu`.
@@ -83,8 +106,9 @@ reference from your shader project.
 
 Now we need to add our `.cargo/config` file. This is a configuration file that
 tells cargo how to build for SPIR-V. You need provide the target you're
-compiling for (see [platform support](./platform-support.md)) and provide a path to your built `rustc_codegen_spirv` dynamic
-library. We have to also provide `-Zbuild-std`.
+compiling for (see [platform support](./platform-support.md)) and provide a path
+to your built `rustc_codegen_spirv` dynamic library. We have to also provide
+`-Zbuild-std`.
 
 ```toml
 [build]
