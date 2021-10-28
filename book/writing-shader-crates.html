@@ -164,7 +164,8 @@ shader crate.</li>
 <p>If you're writing a bigger application and you want to integrate SPIR-V shader
 crates to display, it's recommended to use <code>spirv-builder</code> in a build script.</p>
 <ol>
-<li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain"><code>rust-toolchain</code></a> file to your project. (You must use the same version of Rust as <code>rust-gpu</code>.)</li>
+<li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain"><code>rust-toolchain</code></a> file to your project. (You must use the same
+version of Rust as <code>rust-gpu</code>.)</li>
 <li>Reference <code>spirv-builder</code> in your Cargo.toml:
 <pre><code class="language-toml">[build-dependencies]
 spirv-builder = { git = &quot;https://github.com/EmbarkStudios/rust-gpu&quot; }
@@ -182,9 +183,11 @@ spirv-builder = { git = &quot;https://github.com/EmbarkStudios/rust-gpu&quot; }
         .build()?;
 <span class="boring">}
 </span></code></pre></pre>
-<p>The values available for the <code>target</code> parameter are available <a href="./platform-support.html">here</a>.
-For example, if building for vulkan 1.1, use <code>&quot;spirv-unknown-vulkan1.1&quot;</code>.</p>
-<p>The <code>SpirvBuilder</code> struct has numerous configuration options available, see rustdoc for documentation.</p>
+<p>The values available for the <code>target</code> parameter are available
+<a href="./platform-support.html">here</a>.  For example, if building for vulkan 1.1, use
+<code>&quot;spirv-unknown-vulkan1.1&quot;</code>.</p>
+<p>The <code>SpirvBuilder</code> struct has numerous configuration options available, see
+rustdoc for documentation.</p>
 <h4 id="mainrs"><a class="header" href="#mainrs"><code>main.rs</code></a></h4>
 <pre><pre class="playground"><code class="language-rust no_run">
 <span class="boring">#![allow(unused)]
@@ -192,15 +195,31 @@ For example, if building for vulkan 1.1, use <code>&quot;spirv-unknown-vulkan1.1
 </span>const SHADER: &amp;[u8] = include_bytes!(env!(&quot;&lt;shader_name&gt;.spv&quot;));
 <span class="boring">}
 </span></code></pre></pre>
+<p>Keep in mind that by default, build-dependencies are built in debug mode. This
+means that the rust-gpu compiler (<code>rustc_codegen_spirv</code>) will be built in debug
+mode, and will be <em>incredibly</em> slow. You can solve this by placing this bit of
+configuration in your workspace <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml"># Compile build-dependencies in release mode with
+# the same settings as regular dependencies.
+[profile.release.build-override]
+opt-level = 3
+codegen-units = 16
+[profile.dev.build-override]
+opt-level = 3
+</code></pre>
+<p>Keep in mind this will optimize <em>all</em> build script dependencies as release,
+which may slow down full rebuilds a bit. Please read <a href="https://github.com/EmbarkStudios/rust-gpu/issues/448">this
+issue</a> for more
+information, there's a few important caveats to know about this.</p>
 <h3 id="using-cargoconfig"><a class="header" href="#using-cargoconfig">Using <code>.cargo/config</code></a></h3>
 <blockquote>
 <p><strong>Note</strong> This method will require manually rebuilding <code>rust-gpu</code> each
 time there has been changes to the repository.</p>
 </blockquote>
-<p>If you just want to build a shader crate, and don't need to
-automatically compile the SPIR-V binary at build time, you can use
-<code>.cargo/config</code> to set the necessary flags. Before you can do that however you
-need to do a couple of steps first to build the compiler backend.</p>
+<p>If you just want to build a shader crate, and don't need to automatically
+compile the SPIR-V binary at build time, you can use <code>.cargo/config</code> to set the
+necessary flags. Before you can do that however you need to do a couple of steps
+first to build the compiler backend.</p>
 <ol>
 <li>Clone the <code>rust-gpu</code> repository</li>
 <li><code>cargo build --release</code> in <code>rust-gpu</code>.</li>
@@ -210,8 +229,9 @@ need to do a couple of steps first to build the compiler backend.</p>
 reference from your shader project.</p>
 <p>Now we need to add our <code>.cargo/config</code> file. This is a configuration file that
 tells cargo how to build for SPIR-V. You need provide the target you're
-compiling for (see <a href="./platform-support.html">platform support</a>) and provide a path to your built <code>rustc_codegen_spirv</code> dynamic
-library. We have to also provide <code>-Zbuild-std</code>.</p>
+compiling for (see <a href="./platform-support.html">platform support</a>) and provide a path
+to your built <code>rustc_codegen_spirv</code> dynamic library. We have to also provide
+<code>-Zbuild-std</code>.</p>
 <pre><code class="language-toml">[build]
 target = &quot;spirv-unknown-spv1.3&quot;
 rustflags = [
