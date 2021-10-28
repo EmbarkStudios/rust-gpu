@@ -90,6 +90,10 @@
     // The part of `adt_const_params` we're using (C-like enums) is not incomplete.
     incomplete_features,
 )]
+#![warn(missing_docs)]
+
+//! Core functions, traits, and more that make up a "standard library" for SPIR-V for use in
+//! rust-gpu.
 
 #[cfg_attr(not(target_arch = "spirv"), macro_use)]
 pub extern crate spirv_std_macros as macros;

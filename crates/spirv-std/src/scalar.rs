@@ -1,3 +1,5 @@
+//! Traits related to scalars.
+
 /// Abstract trait representing a SPIR-V scalar type.
 ///
 /// # Safety

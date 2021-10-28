@@ -159,19 +159,28 @@ bitflags::bitflags! {
     }
 }
 
+/// Describes the type of the intersection which is currently the candidate in a ray query,
+/// returned by [`RayQuery::get_candidate_intersection_type`].
 #[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum CandidateIntersection {
+    /// A potential intersection with a triangle is being considered.
     Triangle = 0,
+    /// A potential intersection with an axis-aligned bounding box is being considered.
     AABB = 1,
 }
 
+/// Describes the type of the intersection currently committed in a ray query, returned by
+/// [`RayQuery::get_committed_intersection_type`].
 #[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CommittedIntersection {
+    /// No intersection is committed.
     None = 0,
+    /// An intersection with a triangle has been committed.
     Triangle = 1,
+    /// A user-generated intersection has been committed.
     Generated = 2,
 }
 

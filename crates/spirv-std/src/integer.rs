@@ -1,10 +1,14 @@
+//! Traits related to integers.
+
 /// Abstract trait representing any SPIR-V integer type.
 ///
 /// # Safety
 /// Implementing this trait on non-primitive-integer types breaks assumptions of other unsafe code,
 /// and should not be done.
 pub unsafe trait Integer: num_traits::PrimInt + crate::scalar::Scalar {
+    /// Width of the integer, in bits.
     const WIDTH: usize;
+    /// If the integer is signed: true means signed, false means unsigned.
     const SIGNED: bool;
 }
 
