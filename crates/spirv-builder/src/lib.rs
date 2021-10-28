@@ -477,6 +477,15 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         }
     }
 
+    for (key, _) in env::vars_os() {
+        let remove = key.to_str().map_or(false, |s| {
+            s.starts_with("CARGO_FEATURES_") || s.starts_with("CARGO_CFG_")
+        });
+        if remove {
+            cargo.env_remove(key);
+        }
+    }
+
     let cargo_encoded_rustflags = join_checking_for_separators(rustflags, "\x1f");
 
     let build = cargo
