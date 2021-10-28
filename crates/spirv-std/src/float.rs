@@ -1,3 +1,5 @@
+//! Traits and helper functions related to floats.
+
 use crate::vector::Vector;
 
 /// Abstract trait representing a SPIR-V floating point type.
@@ -6,6 +8,7 @@ use crate::vector::Vector;
 /// Implementing this trait on non-primitive-float types breaks assumptions of other unsafe code,
 /// and should not be done.
 pub unsafe trait Float: num_traits::Float + crate::scalar::Scalar + Default {
+    /// Width of the float, in bits.
     const WIDTH: usize;
 }
 

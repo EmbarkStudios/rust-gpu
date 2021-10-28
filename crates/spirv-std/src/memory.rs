@@ -1,5 +1,7 @@
 //! Types for handling memory ordering constraints for concurrent memory access.
 
+/// Specification for how large of a scope some instructions should operate on - used when calling
+/// functions that take a configurable scope.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Scope {
     /// Crosses multiple devices.
@@ -22,6 +24,8 @@ pub enum Scope {
 }
 
 bitflags::bitflags! {
+    /// Memory semantics to determine how some operations should function - used when calling such
+    /// configurable operations.
     pub struct Semantics: u32 {
         /// No memory semantics.
         const NONE = 0;

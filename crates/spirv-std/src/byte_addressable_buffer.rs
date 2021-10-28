@@ -1,3 +1,5 @@
+//! Container for an untyped blob of data.
+
 use core::mem;
 
 #[spirv(buffer_load_intrinsic)]
@@ -18,11 +20,6 @@ unsafe extern "unadjusted" fn buffer_store_intrinsic<T>(
     unimplemented!()
 } // actually implemented in the compiler
 
-#[repr(transparent)]
-pub struct ByteAddressableBuffer<'a> {
-    pub data: &'a mut [u32],
-}
-
 /// `ByteAddressableBuffer` is an untyped blob of data, allowing loads and stores of arbitrary
 /// basic data types at arbitrary indicies. However, all data must be aligned to size 4, each
 /// element within the data (e.g. struct fields) must have a size and alignment of a multiple of 4,
@@ -30,7 +27,14 @@ pub struct ByteAddressableBuffer<'a> {
 /// rounded down to the nearest multiple of 4). So, it's not technically a *byte* addressable
 /// buffer, but rather a *word* buffer, but this naming and behavior was inhereted from HLSL (where
 /// it's UB to pass in an index not a multiple of 4).
+#[repr(transparent)]
+pub struct ByteAddressableBuffer<'a> {
+    /// The underlying array of bytes, able to be directly accessed.
+    pub data: &'a mut [u32],
+}
+
 impl<'a> ByteAddressableBuffer<'a> {
+    /// Creates a `ByteAddressableBuffer` from the untyped blob of data.
     #[inline]
     pub fn new(data: &'a mut [u32]) -> Self {
         Self { data }
