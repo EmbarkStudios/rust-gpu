@@ -500,6 +500,17 @@ fn dig_scalar_pointee<'tcx>(
 }
 
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
+    fn create_zst<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
+        SpirvType::Adt {
+            def_id: def_id_for_spirv_type_adt(ty),
+            size: Some(Size::ZERO),
+            align: Align::from_bytes(0).unwrap(),
+            field_types: Vec::new(),
+            field_offsets: Vec::new(),
+            field_names: None,
+        }
+        .def_with_name(cx, span, TyLayoutNameKey::from(ty))
+    }
     match ty.fields {
         FieldsShape::Primitive => span_bug!(
             span,
@@ -507,15 +518,18 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
             ty
         ),
         FieldsShape::Union(_) => {
-            assert_ne!(ty.size.bytes(), 0, "{:#?}", ty);
             assert!(!ty.is_unsized(), "{:#?}", ty);
-            let byte = SpirvType::Integer(8, false).def(span, cx);
-            let count = cx.constant_u32(span, ty.size.bytes() as u32);
-            SpirvType::Array {
-                element: byte,
-                count,
+            if ty.size.bytes() == 0 {
+                create_zst(cx, span, ty)
+            } else {
+                let byte = SpirvType::Integer(8, false).def(span, cx);
+                let count = cx.constant_u32(span, ty.size.bytes() as u32);
+                SpirvType::Array {
+                    element: byte,
+                    count,
+                }
+                .def(span, cx)
             }
-            .def(span, cx)
         }
         FieldsShape::Array { stride, count } => {
             let element_type = trans_type_impl(cx, span, ty.field(cx, 0), false);
@@ -529,15 +543,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
                 .def(span, cx)
             } else if count == 0 {
                 // spir-v doesn't support zero-sized arrays
-                SpirvType::Adt {
-                    def_id: def_id_for_spirv_type_adt(ty),
-                    size: Some(Size::ZERO),
-                    align: Align::from_bytes(0).unwrap(),
-                    field_types: Vec::new(),
-                    field_offsets: Vec::new(),
-                    field_names: None,
-                }
-                .def_with_name(cx, span, TyLayoutNameKey::from(ty))
+                create_zst(cx, span, ty)
             } else {
                 let count_const = cx.constant_u32(span, count as u32);
                 let element_spv = cx.lookup_type(element_type);
