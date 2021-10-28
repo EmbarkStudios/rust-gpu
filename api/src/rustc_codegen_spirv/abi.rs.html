@@ -876,6 +876,12 @@
 <span id="876">876</span>
 <span id="877">877</span>
 <span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s</span>
 <span class="doccomment">//! surprisingly difficult.</span>
 
@@ -1378,6 +1384,17 @@
 }
 
 <span class="kw">fn</span> <span class="ident">trans_aggregate</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) -&gt; <span class="ident">Word</span> {
+    <span class="kw">fn</span> <span class="ident">create_zst</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) -&gt; <span class="ident">Word</span> {
+        <span class="ident">SpirvType::Adt</span> {
+            <span class="ident">def_id</span>: <span class="ident">def_id_for_spirv_type_adt</span>(<span class="ident">ty</span>),
+            <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="ident">Size::ZERO</span>),
+            <span class="ident">align</span>: <span class="ident">Align::from_bytes</span>(<span class="number">0</span>).<span class="ident">unwrap</span>(),
+            <span class="ident">field_types</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">field_offsets</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
+        }
+        .<span class="ident">def_with_name</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">TyLayoutNameKey::from</span>(<span class="ident">ty</span>))
+    }
     <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">fields</span> {
         <span class="ident">FieldsShape::Primitive</span> =&gt; <span class="macro">span_bug!</span>(
             <span class="ident">span</span>,
@@ -1385,15 +1402,18 @@
             <span class="ident">ty</span>
         ),
         <span class="ident">FieldsShape::Union</span>(<span class="kw">_</span>) =&gt; {
-            <span class="macro">assert_ne!</span>(<span class="ident">ty</span>.<span class="ident">size</span>.<span class="ident">bytes</span>(), <span class="number">0</span>, <span class="string">&quot;{:#?}&quot;</span>, <span class="ident">ty</span>);
             <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">ty</span>.<span class="ident">is_unsized</span>(), <span class="string">&quot;{:#?}&quot;</span>, <span class="ident">ty</span>);
-            <span class="kw">let</span> <span class="ident">byte</span> <span class="op">=</span> <span class="ident">SpirvType::Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
-            <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">constant_u32</span>(<span class="ident">span</span>, <span class="ident">ty</span>.<span class="ident">size</span>.<span class="ident">bytes</span>() <span class="kw">as</span> <span class="ident">u32</span>);
-            <span class="ident">SpirvType::Array</span> {
-                <span class="ident">element</span>: <span class="ident">byte</span>,
-                <span class="ident">count</span>,
+            <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">size</span>.<span class="ident">bytes</span>() <span class="op">==</span> <span class="number">0</span> {
+                <span class="ident">create_zst</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ty</span>)
+            } <span class="kw">else</span> {
+                <span class="kw">let</span> <span class="ident">byte</span> <span class="op">=</span> <span class="ident">SpirvType::Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
+                <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">constant_u32</span>(<span class="ident">span</span>, <span class="ident">ty</span>.<span class="ident">size</span>.<span class="ident">bytes</span>() <span class="kw">as</span> <span class="ident">u32</span>);
+                <span class="ident">SpirvType::Array</span> {
+                    <span class="ident">element</span>: <span class="ident">byte</span>,
+                    <span class="ident">count</span>,
+                }
+                .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
             }
-            .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
         }
         <span class="ident">FieldsShape::Array</span> { <span class="ident">stride</span>, <span class="ident">count</span> } =&gt; {
             <span class="kw">let</span> <span class="ident">element_type</span> <span class="op">=</span> <span class="ident">trans_type_impl</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ty</span>.<span class="ident">field</span>(<span class="ident">cx</span>, <span class="number">0</span>), <span class="bool-val">false</span>);
@@ -1407,15 +1427,7 @@
                 .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">count</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="comment">// spir-v doesn&#39;t support zero-sized arrays</span>
-                <span class="ident">SpirvType::Adt</span> {
-                    <span class="ident">def_id</span>: <span class="ident">def_id_for_spirv_type_adt</span>(<span class="ident">ty</span>),
-                    <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="ident">Size::ZERO</span>),
-                    <span class="ident">align</span>: <span class="ident">Align::from_bytes</span>(<span class="number">0</span>).<span class="ident">unwrap</span>(),
-                    <span class="ident">field_types</span>: <span class="ident">Vec::new</span>(),
-                    <span class="ident">field_offsets</span>: <span class="ident">Vec::new</span>(),
-                    <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
-                }
-                .<span class="ident">def_with_name</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">TyLayoutNameKey::from</span>(<span class="ident">ty</span>))
+                <span class="ident">create_zst</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ty</span>)
             } <span class="kw">else</span> {
                 <span class="kw">let</span> <span class="ident">count_const</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">constant_u32</span>(<span class="ident">span</span>, <span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>);
                 <span class="kw">let</span> <span class="ident">element_spv</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">element_type</span>);
