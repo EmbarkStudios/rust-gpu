@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Scope",""]],"struct":[["Semantics",""]]});
+initSidebarItems({"enum":[["Scope","Specification for how large of a scope some instructions should operate on - used when calling functions that take a configurable scope."]],"struct":[["Semantics","Memory semantics to determine how some operations should function - used when calling such configurable operations."]]});

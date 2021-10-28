@@ -88,7 +88,13 @@
 <span id="88">88</span>
 <span id="89">89</span>
 <span id="90">90</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::mem</span>;
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Container for an untyped blob of data.</span>
+
+<span class="kw">use</span> <span class="ident">core::mem</span>;
 
 <span class="attribute">#[<span class="ident">spirv</span>(<span class="ident">buffer_load_intrinsic</span>)]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
@@ -108,11 +114,6 @@
     <span class="macro">unimplemented!</span>()
 } <span class="comment">// actually implemented in the compiler</span>
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ByteAddressableBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">u32</span>],
-}
-
 <span class="doccomment">/// `ByteAddressableBuffer` is an untyped blob of data, allowing loads and stores of arbitrary</span>
 <span class="doccomment">/// basic data types at arbitrary indicies. However, all data must be aligned to size 4, each</span>
 <span class="doccomment">/// element within the data (e.g. struct fields) must have a size and alignment of a multiple of 4,</span>
@@ -120,7 +121,14 @@
 <span class="doccomment">/// rounded down to the nearest multiple of 4). So, it&#39;s not technically a *byte* addressable</span>
 <span class="doccomment">/// buffer, but rather a *word* buffer, but this naming and behavior was inhereted from HLSL (where</span>
 <span class="doccomment">/// it&#39;s UB to pass in an index not a multiple of 4).</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ByteAddressableBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The underlying array of bytes, able to be directly accessed.</span>
+    <span class="kw">pub</span> <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">u32</span>],
+}
+
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ByteAddressableBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Creates a `ByteAddressableBuffer` from the untyped blob of data.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">u32</span>]) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">data</span> }
