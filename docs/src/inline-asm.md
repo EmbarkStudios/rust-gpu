@@ -62,6 +62,11 @@ pub unsafe fn vector_extract_dynamic<T: Scalar, V: Vector<T>>(vector: V, index: 
 }
 ```
 
+One potential hiccup is that in rustc, any booleans stored "in memory" behind a
+pointer (which includes local variables) are converted to u8 instead of bool. If
+passing booleans to/from `asm!` blocks, you probably need to treat it as a u8
+from within the `asm!` block, even if it's a `bool` in rust.
+
 ### Additional syntax
 
 | Syntax | Description |
