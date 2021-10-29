@@ -195,6 +195,10 @@ pub unsafe fn vector_extract_dynamic&lt;T: Scalar, V: Vector&lt;T&gt;&gt;(vector
 }
 <span class="boring">}
 </span></code></pre></pre>
+<p>One potential hiccup is that in rustc, any booleans stored &quot;in memory&quot; behind a
+pointer (which includes local variables) are converted to u8 instead of bool. If
+passing booleans to/from <code>asm!</code> blocks, you probably need to treat it as a u8
+from within the <code>asm!</code> block, even if it's a <code>bool</code> in rust.</p>
 <h3 id="additional-syntax"><a class="header" href="#additional-syntax">Additional syntax</a></h3>
 <table><thead><tr><th>Syntax</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>%&lt;name&gt;</code></td><td>Used to refer to an abstract ID, every unique <code>&lt;name&gt;</code> use generates a new ID.</td></tr>
