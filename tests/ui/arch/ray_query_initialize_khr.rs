@@ -1,5 +1,5 @@
 // build-pass
-// compile-flags: -Ctarget-feature=+RayQueryKHR,+ext:SPV_KHR_ray_query
+// compile-flags: -Ctarget-feature=+RayTracingKHR,+RayQueryKHR,+ext:SPV_KHR_ray_tracing,+ext:SPV_KHR_ray_query
 
 use glam::Vec3;
 use spirv_std::ray_tracing::{AccelerationStructure, RayFlags, RayQuery};
