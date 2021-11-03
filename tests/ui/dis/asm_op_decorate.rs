@@ -5,6 +5,11 @@
 // normalize-stderr-test "OpExtension .SPV_KHR_vulkan_memory_model.\n" -> ""
 // normalize-stderr-test "OpMemoryModel Logical Vulkan" -> "OpMemoryModel Logical Simple"
 
+// FIXME(eddyb) this should use revisions to track both the `vulkan1.2` output
+// and the pre-`vulkan1.2` output, but per-revisions `{only,ignore}-*` directives
+// are not supported in `compiletest-rs`.
+// ignore-vulkan1.2
+
 use spirv_std as _;
 
 fn add_decorate() {
