@@ -4,6 +4,7 @@ mod test;
 mod dce;
 mod destructure_composites;
 mod duplicates;
+mod entry_interface;
 mod import_export_link;
 mod inline;
 mod ipo;
@@ -268,6 +269,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             peephole_opts::vector_ops(output.header.as_mut().unwrap(), &types, func);
             peephole_opts::bool_fusion(output.header.as_mut().unwrap(), &types, func);
         }
+    }
+
+    {
+        let _timer = sess.timer("link_gather_all_interface_vars_from_uses");
+        entry_interface::gather_all_interface_vars_from_uses(&mut output);
     }
 
     if opts.spirv_metadata == SpirvMetadata::NameVariables {

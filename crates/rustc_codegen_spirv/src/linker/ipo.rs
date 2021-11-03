@@ -14,7 +14,7 @@ pub struct CallGraph {
     pub entry_points: IndexSet<FuncIdx>,
 
     /// `callees[i].contains(j)` implies `functions[i]` calls `functions[j]`.
-    callees: Vec<IndexSet<FuncIdx>>,
+    pub callees: Vec<IndexSet<FuncIdx>>,
 }
 
 impl CallGraph {
