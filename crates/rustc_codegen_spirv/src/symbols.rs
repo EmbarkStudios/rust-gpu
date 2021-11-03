@@ -57,22 +57,22 @@ const BUILTINS: &[(&str, BuiltIn)] = {
         ("frag_depth", FragDepth),
         ("helper_invocation", HelperInvocation),
         ("num_workgroups", NumWorkgroups),
-        ("workgroup_size", WorkgroupSize),
+        // ("workgroup_size", WorkgroupSize), -- constant
         ("workgroup_id", WorkgroupId),
         ("local_invocation_id", LocalInvocationId),
         ("global_invocation_id", GlobalInvocationId),
         ("local_invocation_index", LocalInvocationIndex),
-        ("work_dim", WorkDim),
-        ("global_size", GlobalSize),
-        ("enqueued_workgroup_size", EnqueuedWorkgroupSize),
-        ("global_offset", GlobalOffset),
-        ("global_linear_id", GlobalLinearId),
+        // ("work_dim", WorkDim), -- Kernel-only
+        // ("global_size", GlobalSize), -- Kernel-only
+        // ("enqueued_workgroup_size", EnqueuedWorkgroupSize), -- Kernel-only
+        // ("global_offset", GlobalOffset), -- Kernel-only
+        // ("global_linear_id", GlobalLinearId), -- Kernel-only
         ("subgroup_size", SubgroupSize),
-        ("subgroup_max_size", SubgroupMaxSize),
+        // ("subgroup_max_size", SubgroupMaxSize), -- Kernel-only
         ("num_subgroups", NumSubgroups),
-        ("num_enqueued_subgroups", NumEnqueuedSubgroups),
+        // ("num_enqueued_subgroups", NumEnqueuedSubgroups), -- Kernel-only
         ("subgroup_id", SubgroupId),
-        ("subgroup_local_invocation_id", SubgroupLocalInvocationId),
+        // ("subgroup_local_invocation_id", SubgroupLocalInvocationId), -- Kernel-only
         ("vertex_index", VertexIndex),
         ("instance_index", InstanceIndex),
         ("subgroup_eq_mask", SubgroupEqMask),
@@ -107,7 +107,7 @@ const BUILTINS: &[(&str, BuiltIn)] = {
         ("primitive_indices_nv", PrimitiveIndicesNV),
         ("clip_distance_per_view_nv", ClipDistancePerViewNV),
         ("cull_distance_per_view_nv", CullDistancePerViewNV),
-        ("layer_per_viewNV", LayerPerViewNV),
+        ("layer_per_view_nv", LayerPerViewNV),
         ("mesh_view_count_nv", MeshViewCountNV),
         ("mesh_view_indices_nv", MeshViewIndicesNV),
         ("bary_coord_nv", BaryCoordNV),

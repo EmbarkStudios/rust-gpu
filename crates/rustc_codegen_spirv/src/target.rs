@@ -56,7 +56,7 @@ impl SpirvTarget {
             TargetEnv::OpenGL_4_1 => (1, 0),
             TargetEnv::OpenGL_4_2 => (1, 0),
             TargetEnv::OpenGL_4_3 => (1, 0),
-            TargetEnv::OpenGL_4_5 => (1, 3),
+            TargetEnv::OpenGL_4_5 => (1, 0),
 
             TargetEnv::OpenCL_1_2 => (1, 0),
             TargetEnv::OpenCL_2_0 => (1, 0),
