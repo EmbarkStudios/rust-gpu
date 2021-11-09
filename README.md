@@ -119,6 +119,20 @@ We welcome community contributions to this project.
 
 Please read our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
 
+## Related Projects
+- 2016: [glassful](https://github.com/kmcallister/glassful) Compiles a subset of Rust to GLSL.
+- 2017: [inspirv-rust](https://github.com/msiglreith/inspirv-rust) Experimental Rust to SPIR-V compiler.
+- 2018: [nvptx](https://github.com/japaric-archived/nvptx) Rust to PTX compiler.
+- 2019: [ocl](https://github.com/cogciprocate/ocl/) Pure OpenCl bindings and interfaces for Rust.
+- 2020: [accel](https://github.com/termoshtt/accel) GPGPU library for Rust.
+- 2020: [rlsl](https://github.com/MaikKlein/rlsl) Predeccesor to rust_gpu, Rust to SPIR-V compiler.
+- 2021: [emu](https://github.com/calebwin/emu) GPGPU library for Rust focusing on portability, modularity, and performance. 
+- Maintainance: [gfx-rs](https://github.com/gfx-rs/gfx) low-level, cross-platform graphics abstraction library for Rust. Succeeded by [wgpu-hal](https://github.com/gfx-rs/wgpu/tree/6fc0587b2de7c481fcd70f9bc256af8fffbb56f3/wgpu-hal).
+- Ongoing: [wgpu](https://github.com/gfx-rs/wgpu) Pure-Rust graphics api that runs natively on multiple graphics APIs.
+- Ongoing: [pixels](https://github.com/parasyte/pixels) Minimal hardware-accelerated pixel frame buffer, support for most major graphics APIs.
+- Ongoing: [luminance-rs](https://github.com/phaazon/luminance-rs) Type safe, stateless graphics crate.
+- Ongoing: [RustaCuda](https://github.com/bheisler/RustaCUDA) High-level interface for the NVIDIA CUDA API in Rust. 
+
 ## License
 
 Licensed under either of
