@@ -580,6 +580,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 SpirvType::Float(64) | SpirvType::Integer(64, _) => 2,
                 _ => 1,
             },
+            SpirvType::Matrix { element, count } => count * self.location_size_of_type(element),
             _ => 1,
         }
     }
