@@ -563,7 +563,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     .lookup_const_u64(count)
                     .expect("Array type has invalid count value") as u32
             }
-            // Structs take up per component.
+            // Structs take up one location per field.
             SpirvType::Adt { field_types, .. } => {
                 let mut size = 0;
 
