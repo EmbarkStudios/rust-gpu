@@ -557,7 +557,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
     fn location_size_of_type(&self, ty: Word) -> u32 {
         match self.lookup_type(ty) {
-            // Arrays take up multiple locations.git 
+            // Arrays take up multiple locations.
             SpirvType::Array { count, .. } => {
                 self.builder
                     .lookup_const_u64(count)
@@ -577,7 +577,7 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Vector { count: 2, .. } => 1,
             // 3 or 4 component vectors take up 2 locations if they have a 64-bit scalar type.
             SpirvType::Vector { element, .. } => match self.lookup_type(element) {
-                SpirvType::Float(64) | Spirv::Integer(64, _) => 2,
+                SpirvType::Float(64) | SpirvType::Integer(64, _) => 2,
                 _ => 1,
             },
             _ => 1,
