@@ -535,14 +535,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 Decoration::Location,
                 std::iter::once(Operand::LiteralInt32(*location)),
             );
-            // Arrays take up multiple locations
-            *location += if let SpirvType::Array { count, .. } = self.lookup_type(value_spirv_type) {
-                self.builder
-                    .lookup_const_u64(count)
-                    .expect("Array type has invalid count value") as u32
-            } else {
-                1
-            }
+            *location += self.location_size_of_type(value_spirv_type);
         }
 
         // Emit the `OpVariable` with its *Result* ID set to `var`.
@@ -559,6 +552,35 @@ impl<'tcx> CodegenCx<'tcx> {
             if storage_class == StorageClass::Input || storage_class == StorageClass::Output {
                 op_entry_point_interface_operands.push(var);
             }
+        }
+    }
+
+    fn location_size_of_type(&self, ty: Word) -> u32 {
+        match self.lookup_type(ty) {
+            // Arrays take up multiple locations.git 
+            SpirvType::Array { count, .. } => {
+                self.builder
+                    .lookup_const_u64(count)
+                    .expect("Array type has invalid count value") as u32
+            }
+            // Structs take up per component.
+            SpirvType::Adt { field_types, .. } => {
+                let mut size = 0;
+
+                for field_type in field_types {
+                    size += self.location_size_of_type(field_type);
+                }
+
+                size
+            }
+            // 2 component vectors always take up 1 location.
+            SpirvType::Vector { count: 2, .. } => 1,
+            // 3 or 4 component vectors take up 2 locations if they have a 64-bit scalar type.
+            SpirvType::Vector { element, .. } => match self.lookup_type(element) {
+                SpirvType::Float(64) | Spirv::Integer(64, _) => 2,
+                _ => 1,
+            },
+            _ => 1,
         }
     }
 }
