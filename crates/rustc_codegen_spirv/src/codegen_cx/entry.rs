@@ -573,13 +573,17 @@ impl<'tcx> CodegenCx<'tcx> {
 
                 size
             }
-            // 2 component vectors always take up 1 location.
-            SpirvType::Vector { count: 2, .. } => 1,
-            // 3 or 4 component vectors take up 2 locations if they have a 64-bit scalar type.
-            SpirvType::Vector { element, .. } => match self.lookup_type(element) {
-                SpirvType::Float(64) | SpirvType::Integer(64, _) => 2,
-                _ => 1,
-            },
+            SpirvType::Vector { element, count } => {
+                // 3 or 4 component vectors take up 2 locations if they have a 64-bit scalar type.
+                if count > 2 {
+                    match self.lookup_type(element) {
+                        SpirvType::Float(64) | SpirvType::Integer(64, _) => 2,
+                        _ => 1,
+                    }
+                } else {
+                    1
+                }
+            }
             SpirvType::Matrix { element, count } => count * self.location_size_of_type(element),
             _ => 1,
         }

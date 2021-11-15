@@ -3,6 +3,7 @@
 // normalize-stderr-test "OpCapability VulkanMemoryModel\n" -> ""
 // normalize-stderr-test "OpExtension .SPV_KHR_vulkan_memory_model.\n" -> ""
 // normalize-stderr-test "OpMemoryModel Logical Vulkan" -> "OpMemoryModel Logical Simple"
+// normalize-stderr-test "OpMemberName %12 0 .0.\n" -> ""
 
 use spirv_std::{
     self as _,
