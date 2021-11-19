@@ -116,11 +116,8 @@ Historical and other related projects for compiling Rust code to GPUs.
 - 2016: [glassful](https://github.com/kmcallister/glassful) Compiles a subset of Rust to GLSL.
 - 2017: [inspirv-rust](https://github.com/msiglreith/inspirv-rust) Experimental Rust to SPIR-V compiler.
 - 2018: [nvptx](https://github.com/japaric-archived/nvptx) Rust to PTX compiler.
-- 2019: [ocl](https://github.com/cogciprocate/ocl/) Pure OpenCl bindings and interfaces for Rust.
 - 2020: [accel](https://github.com/termoshtt/accel) GPGPU library for Rust.
 - 2020: [rlsl](https://github.com/MaikKlein/rlsl) Predeccesor to rust_gpu, Rust to SPIR-V compiler.
-- 2021: [emu](https://github.com/calebwin/emu) GPGPU library for Rust focusing on portability, modularity, and performance. 
-- Ongoing: [RustaCuda](https://github.com/bheisler/RustaCUDA) High-level interface for the NVIDIA CUDA API in Rust. 
 
 ## Contributing
 
