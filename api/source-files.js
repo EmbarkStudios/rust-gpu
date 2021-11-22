@@ -9,7 +9,6 @@ sourcesIndex["fxhash"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["getrandom"] = {"name":"","files":["error.rs","error_impls.rs","lib.rs","macos.rs","use_file.rs","util.rs","util_libc.rs"]};
 sourcesIndex["glam"] = {"name":"","dirs":[{"name":"core","dirs":[{"name":"scalar","files":["mask.rs","matrix.rs","mod.rs","quaternion.rs","vector.rs"]},{"name":"sse2","files":["float.rs","matrix.rs","mod.rs","quaternion.rs","vector.rs"]},{"name":"traits","files":["matrix.rs","mod.rs","projection.rs","quaternion.rs","scalar.rs","vector.rs"]}],"files":["mod.rs","storage.rs"]},{"name":"features","files":["mod.rs"]},{"name":"swizzles","files":["dvec2_impl_scalar.rs","dvec3_impl_scalar.rs","dvec4_impl_scalar.rs","ivec2_impl_scalar.rs","ivec3_impl_scalar.rs","ivec4_impl_scalar.rs","mod.rs","uvec2_impl_scalar.rs","uvec3_impl_scalar.rs","uvec4_impl_scalar.rs","vec2_impl_scalar.rs","vec3_impl_scalar.rs","vec3a_impl_sse2.rs","vec4_impl_sse2.rs","vec_traits.rs"]}],"files":["affine2.rs","affine3.rs","cast.rs","euler.rs","lib.rs","macros.rs","mat.rs","mat2.rs","mat3.rs","mat4.rs","quat.rs","vec.rs","vec2.rs","vec3.rs","vec4.rs","vec_mask.rs"]};
 sourcesIndex["hashbrown"] = {"name":"","dirs":[{"name":"external_trait_impls","files":["mod.rs"]},{"name":"raw","files":["alloc.rs","bitmask.rs","mod.rs","sse2.rs"]}],"files":["lib.rs","macros.rs","map.rs","scopeguard.rs","set.rs"]};
-sourcesIndex["heck"] = {"name":"","files":["camel.rs","kebab.rs","lib.rs","mixed.rs","shouty_kebab.rs","shouty_snake.rs","snake.rs","title.rs"]};
 sourcesIndex["indexmap"] = {"name":"","dirs":[{"name":"map","dirs":[{"name":"core","files":["raw.rs"]}],"files":["core.rs"]}],"files":["equivalent.rs","lib.rs","macros.rs","map.rs","mutable_keys.rs","set.rs","util.rs"]};
 sourcesIndex["itoa"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["lazy_static"] = {"name":"","files":["inline_lazy.rs","lib.rs"]};
@@ -46,7 +45,5 @@ sourcesIndex["spirv_tools_sys"] = {"name":"","files":["assembler.rs","diagnostic
 sourcesIndex["spirv_types"] = {"name":"","files":["image_params.rs","lib.rs"]};
 sourcesIndex["syn"] = {"name":"","dirs":[{"name":"gen","files":["clone.rs","gen_helper.rs","visit.rs","visit_mut.rs"]}],"files":["attr.rs","await.rs","bigint.rs","buffer.rs","custom_keyword.rs","custom_punctuation.rs","data.rs","derive.rs","discouraged.rs","error.rs","export.rs","expr.rs","ext.rs","generics.rs","group.rs","ident.rs","lib.rs","lifetime.rs","lit.rs","lookahead.rs","mac.rs","macros.rs","op.rs","parse.rs","parse_macro_input.rs","parse_quote.rs","path.rs","print.rs","punctuated.rs","sealed.rs","span.rs","spanned.rs","thread.rs","token.rs","ty.rs","verbatim.rs"]};
 sourcesIndex["tempfile"] = {"name":"","dirs":[{"name":"file","dirs":[{"name":"imp","files":["mod.rs","unix.rs"]}],"files":["mod.rs"]}],"files":["dir.rs","error.rs","lib.rs","spooled.rs","util.rs"]};
-sourcesIndex["topological_sort"] = {"name":"","files":["lib.rs"]};
-sourcesIndex["unicode_segmentation"] = {"name":"","files":["grapheme.rs","lib.rs","sentence.rs","tables.rs","word.rs"]};
 sourcesIndex["unicode_xid"] = {"name":"","files":["lib.rs","tables.rs"]};
 createSourceSidebar();
