@@ -1540,6 +1540,17 @@
 <span id="1540">1540</span>
 <span id="1541">1541</span>
 <span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
+<span id="1545">1545</span>
+<span id="1546">1546</span>
+<span id="1547">1547</span>
+<span id="1548">1548</span>
+<span id="1549">1549</span>
+<span id="1550">1550</span>
+<span id="1551">1551</span>
+<span id="1552">1552</span>
+<span id="1553">1553</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvValue</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx::CodegenCx</span>;
@@ -1558,6 +1569,7 @@
 <span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
 <span class="kw">use</span> <span class="ident">rustc_target::asm</span>::{<span class="ident">InlineAsmRegClass</span>, <span class="ident">InlineAsmRegOrRegClass</span>, <span class="ident">SpirVInlineAsmRegClass</span>};
+<span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstructionTable</span> {
     <span class="ident">table</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">rspirv::grammar::Instruction</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -2240,13 +2252,23 @@
 
                 <span class="ident">TyPat::IndexComposite</span>(<span class="ident">pat</span>) =&gt; {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">subst_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">pat</span>, <span class="ident">ty_vars</span>, <span class="ident">leftover_operands</span>)<span class="question-mark">?</span>;
-                    <span class="kw">for</span> <span class="ident">_index</span> <span class="kw">in</span> <span class="ident">leftover_operands</span> {
-                        <span class="comment">// FIXME(eddyb) support more than just arrays, by looking</span>
-                        <span class="comment">// up the indices (of struct fields) as constant integers.</span>
+                    <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="ident">leftover_operands</span> {
+                        <span class="kw">let</span> <span class="ident">index_to_usize</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">index</span> {
+                            <span class="comment">// FIXME(eddyb) support more than just literals,</span>
+                            <span class="comment">// by looking up `IdRef`s as constant integers.</span>
+                            <span class="ident">dr::Operand::LiteralInt32</span>(<span class="ident">i</span>) =&gt; <span class="ident">usize::try_from</span>(<span class="ident">i</span>).<span class="ident">ok</span>(),
+
+                            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+                        };
                         <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
                             <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. }
                             <span class="op">|</span> <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span> } =&gt; <span class="ident">element</span>,
 
+                            <span class="ident">SpirvType::Adt</span> { <span class="ident">field_types</span>, .. } =&gt; <span class="kw-2">*</span><span class="ident">index_to_usize</span>()
+                                .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">field_types</span>.<span class="ident">get</span>(<span class="ident">i</span>))
+                                .<span class="ident">ok_or</span>(<span class="ident">Ambiguous</span>)<span class="question-mark">?</span>,
+
+                            <span class="comment">// FIXME(eddyb) support more than just arrays and structs.</span>
                             <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Ambiguous</span>),
                         };
                     }
