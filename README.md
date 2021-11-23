@@ -1,16 +1,21 @@
-# 🐉 Rust GPU
+<div align="center">
 
+# `🐉 rust-gpu`
+
+**Rust as a first-class language and ecosystem for GPU graphics & compute shaders**    
+    
 [![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](https://embark.dev)
 [![Discord](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
 [![Documentation](https://img.shields.io/badge/docs-API-blue)](https://embarkstudios.github.io/rust-gpu/api/rustc_codegen_spirv)
 [![dependency status](https://deps.rs/repo/github/EmbarkStudios/rust-gpu/status.svg)](https://deps.rs/repo/github/EmbarkStudios/rust-gpu)
 [![Build status](https://github.com/EmbarkStudios/rust-gpu/workflows/Continuous%20integration/badge.svg?branch=main)](https://github.com/EmbarkStudios/rust-gpu/actions)
+</div>
+    
+### Current Status 🚧
 
-This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
+Note: This project is still heavily in development and is at an early stage. 
 
-### Current Status: v0.3
-
-Compiling and running very simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
+Compiling and running simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
 
 However, many things aren't implemented yet. That means that while being technically usable, this project is far from being production-ready. Support for specific features in [Rust][rust-support] and [SPIR-V][spirv-support] are tracked on GitHub.
 
@@ -50,7 +55,9 @@ See [source](examples/shaders/sky-shader/src/lib.rs) for full details.
 
 ## Our Vision & Community Contributions
 
-`rust-gpu` is a project that we at Embark think has the potential to change the way GPU programming works in multiple ways. One of the primary things we think it can change is opening the door to leverage the open source culture of sharing and improving each others' code, and our end goal and vision for `rust-gpu` is to develop it very much in tandem with the community. However, the project is still in quite early stages and has a very small team, so in order to be productive and guide the project to where we ultimately want it to go, as of right now, we need to focus on the use-cases which we have on our own projects and which we personally believe in. What this means practically is that it is unlikely that we'll be able to accept major changes from community members at this time. If you have a large change you would like to make, please file an issue and/or ask on our Discord in the #rust-gpu channel to see if it is something we'll be able to accept *before* working on it, as it really stinks to have to turn down stuff that community members have poured their time and effort into. As the project matures, we'll in theory be able to accept more input from the community and move closer and closer to the goals outlined above. Thank you so much for your understanding!
+`rust-gpu` is a project that we at Embark think has the potential to change the way GPU programming works in multiple ways. One of the primary things we think it can change is opening the door to leverage the open source culture of sharing and improving each others' code, and our end goal and vision for `rust-gpu` is to develop it very much in tandem with the community. However, the project is still in quite early stages and has a very small team working on it, so in order to be productive and guide the project to where we ultimately want it to go, as of right now, we need to focus on our own primary use cases for our projects at Embark. 
+
+What this means practically is that it is unlikely that we'll be able to accept major changes from community members at this time. If you have a large change you would like to make, please file an issue and/or ask on our Discord in the `#rust-gpu` channel to see if it is something we'll be able to accept *before* working on it, as it is not great to have to turn down stuff that community members have poured their time and effort into. As the project matures, we'll in theory be able to accept more input from the community and move closer and closer to the goals outlined above. Thank you so much for your understanding!
 
 ## Getting started
 
@@ -100,7 +107,7 @@ We have a [#rust-gpu Discord channel](https://discord.gg/dAuKfZS) for fast discu
 
 ## Backwards compatibility, breaking changes and deprecation
 
-Right now because the project is in a very early state of development, we might introduce temporary changes as stop-gap measures, or implement features or APIs that might not work exactly in a way we end up liking. Therefore it is expected that some (if not most) of the user facing code will change and evolve over time. At the moment this means that we make no guarantees about backwards compatibility and have no formal deprecation model in place. Effectively meaning that currently we only support building from source with the latest `main` branch in our repository. We appreciate our early adopters and would ask them to evolve their code along with ours.
+Right now because the project is in an early state of development, we might introduce temporary changes as stop-gap measures, or implement features or APIs that might not work exactly in a way we end up liking. Therefore it is expected that some (if not most) of the user facing code will change and evolve over time. At the moment this means that we make no guarantees about backwards compatibility and have no formal deprecation model in place. Effectively meaning that currently we only support building from source with the latest `main` branch in our repository. We appreciate our early adopters and would ask them to evolve their code along with ours.
 
 ## Structure
 
