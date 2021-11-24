@@ -249,8 +249,14 @@ pub fn signed_max<T: SignedInteger>(a: T, b: T) -> T {
 /// Index into an array or `RuntimeArray` without bounds checking.
 pub trait IndexUnchecked<T> {
     /// Returns a reference to the element at `index`. The equivalent of `get_unchecked`.
+    ///
+    /// # Safety
+    /// Behavior is undefined if the `index` value is greater than or equal to the length of the array.
     unsafe fn index_unchecked(&self, index: usize) -> &T;
     /// Returns a mutable reference to the element at `index`. The equivalent of `get_unchecked_mut`.
+    ///
+    /// # Safety
+    /// Behavior is undefined if the `index` value is greater than or equal to the length of the array.
     unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T;
 }
 
