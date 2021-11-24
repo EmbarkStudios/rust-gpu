@@ -561,7 +561,8 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Array { count, element } => {
                 self.builder
                     .lookup_const_u64(count)
-                    .expect("Array type has invalid count value") as u32 * self.location_slots_per_type(element)
+                    .expect("Array type has invalid count value") as u32
+                    * self.location_slots_per_type(element)
             }
             // Structs take up one location per field.
             SpirvType::Adt { field_types, .. } => {
