@@ -245,3 +245,59 @@ pub fn signed_min<T: SignedInteger>(a: T, b: T) -> T {
 pub fn signed_max<T: SignedInteger>(a: T, b: T) -> T {
     unsafe { call_glsl_op_with_ints::<_, 42>(a, b) }
 }
+
+/// Index into an array or RuntiemArray without bounds checking.
+pub trait IndexUnchecked<T> {
+    /// Returns a reference to the element at `index`. The equivalent of `get_unchecked`.
+    unsafe fn index_unchecked(&self, index: usize) -> &T;
+    /// Returns a mutable reference to the element at `index`. The equivalent of `get_unchecked_mut`.
+    unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T;
+}
+
+impl<T> IndexUnchecked<T> for [T] {
+    unsafe fn index_unchecked(&self, index: usize) -> &T {
+        asm!(
+            "%slice_ptr = OpLoad _ {slice_ptr_ptr}",
+            "%data_ptr = OpCompositeExtract _ %slice_ptr 0",
+            "%val_ptr = OpAccessChain _ %data_ptr {index}",
+            "OpReturnValue %val_ptr",
+            slice_ptr_ptr = in(reg) &self,
+            index = in(reg) index,
+            options(noreturn)
+        )
+    }
+
+    unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
+        asm!(
+            "%slice_ptr = OpLoad _ {slice_ptr_ptr}",
+            "%data_ptr = OpCompositeExtract _ %slice_ptr 0",
+            "%val_ptr = OpAccessChain _ %data_ptr {index}",
+            "OpReturnValue %val_ptr",
+            slice_ptr_ptr = in(reg) &self,
+            index = in(reg) index,
+            options(noreturn)
+        )
+    }
+}
+
+impl<T, const N: usize> IndexUnchecked<T> for [T; N] {
+    unsafe fn index_unchecked(&self, index: usize) -> &T {
+        asm!(
+            "%val_ptr = OpAccessChain _ {array_ptr} {index}",
+            "OpReturnValue %val_ptr",
+            array_ptr = in(reg) self,
+            index = in(reg) index,
+            options(noreturn)
+        )
+    }
+
+    unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
+        asm!(
+            "%val_ptr = OpAccessChain _ {array_ptr} {index}",
+            "OpReturnValue %val_ptr",
+            array_ptr = in(reg) self,
+            index = in(reg) index,
+            options(noreturn)
+        )
+    }
+}
