@@ -535,7 +535,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 Decoration::Location,
                 std::iter::once(Operand::LiteralInt32(*location)),
             );
-            *location += self.location_size_of_type(value_spirv_type);
+            *location += self.location_slots_per_type(value_spirv_type);
         }
 
         // Emit the `OpVariable` with its *Result* ID set to `var`.
@@ -555,20 +555,20 @@ impl<'tcx> CodegenCx<'tcx> {
         }
     }
 
-    fn location_size_of_type(&self, ty: Word) -> u32 {
+    fn location_slots_per_type(&self, ty: Word) -> u32 {
         match self.lookup_type(ty) {
             // Arrays take up multiple locations.
-            SpirvType::Array { count, .. } => {
+            SpirvType::Array { count, element } => {
                 self.builder
                     .lookup_const_u64(count)
-                    .expect("Array type has invalid count value") as u32
+                    .expect("Array type has invalid count value") as u32 * self.location_slots_per_type(element)
             }
             // Structs take up one location per field.
             SpirvType::Adt { field_types, .. } => {
                 let mut size = 0;
 
                 for field_type in field_types {
-                    size += self.location_size_of_type(field_type);
+                    size += self.location_slots_per_type(field_type);
                 }
 
                 size
@@ -584,7 +584,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     1
                 }
             }
-            SpirvType::Matrix { element, count } => count * self.location_size_of_type(element),
+            SpirvType::Matrix { element, count } => count * self.location_slots_per_type(element),
             _ => 1,
         }
     }
