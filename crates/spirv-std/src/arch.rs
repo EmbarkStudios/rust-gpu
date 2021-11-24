@@ -246,7 +246,7 @@ pub fn signed_max<T: SignedInteger>(a: T, b: T) -> T {
     unsafe { call_glsl_op_with_ints::<_, 42>(a, b) }
 }
 
-/// Index into an array or RuntiemArray without bounds checking.
+/// Index into an array or `RuntimeArray` without bounds checking.
 pub trait IndexUnchecked<T> {
     /// Returns a reference to the element at `index`. The equivalent of `get_unchecked`.
     unsafe fn index_unchecked(&self, index: usize) -> &T;
