@@ -255,6 +255,7 @@ pub trait IndexUnchecked<T> {
 }
 
 impl<T> IndexUnchecked<T> for [T] {
+    #[spirv_std_macros::gpu_only]
     unsafe fn index_unchecked(&self, index: usize) -> &T {
         asm!(
             "%slice_ptr = OpLoad _ {slice_ptr_ptr}",
@@ -267,6 +268,7 @@ impl<T> IndexUnchecked<T> for [T] {
         )
     }
 
+    #[spirv_std_macros::gpu_only]
     unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
         asm!(
             "%slice_ptr = OpLoad _ {slice_ptr_ptr}",
@@ -281,6 +283,7 @@ impl<T> IndexUnchecked<T> for [T] {
 }
 
 impl<T, const N: usize> IndexUnchecked<T> for [T; N] {
+    #[spirv_std_macros::gpu_only]
     unsafe fn index_unchecked(&self, index: usize) -> &T {
         asm!(
             "%val_ptr = OpAccessChain _ {array_ptr} {index}",
@@ -291,6 +294,7 @@ impl<T, const N: usize> IndexUnchecked<T> for [T; N] {
         )
     }
 
+    #[spirv_std_macros::gpu_only]
     unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
         asm!(
             "%val_ptr = OpAccessChain _ {array_ptr} {index}",
