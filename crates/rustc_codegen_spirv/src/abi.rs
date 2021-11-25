@@ -20,7 +20,9 @@ use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_span::DUMMY_SP;
 use rustc_target::abi::call::{ArgAbi, ArgAttributes, FnAbi, PassMode};
-use rustc_target::abi::{Abi, Align, FieldsShape, Primitive, Scalar, Size, VariantIdx, Variants};
+use rustc_target::abi::{
+    Abi, Align, FieldsShape, Layout, Primitive, Scalar, Size, TagEncoding, VariantIdx, Variants,
+};
 use rustc_target::spec::abi::Abi as SpecAbi;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
@@ -88,6 +90,80 @@ pub(crate) fn provide(providers: &mut Providers) {
     providers.fn_abi_of_instance = |tcx, key| {
         let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_abi_of_instance)(tcx, key);
         Ok(readjust_fn_abi(tcx, result?))
+    };
+
+    // FIXME(eddyb) remove this by deriving `Clone` for `Layout` upstream.
+    fn clone_layout(layout: &Layout) -> Layout {
+        let Layout {
+            ref fields,
+            ref variants,
+            abi,
+            largest_niche,
+            align,
+            size,
+        } = *layout;
+        Layout {
+            fields: match *fields {
+                FieldsShape::Primitive => FieldsShape::Primitive,
+                FieldsShape::Union(count) => FieldsShape::Union(count),
+                FieldsShape::Array { stride, count } => FieldsShape::Array { stride, count },
+                FieldsShape::Arbitrary {
+                    ref offsets,
+                    ref memory_index,
+                } => FieldsShape::Arbitrary {
+                    offsets: offsets.clone(),
+                    memory_index: memory_index.clone(),
+                },
+            },
+            variants: match *variants {
+                Variants::Single { index } => Variants::Single { index },
+                Variants::Multiple {
+                    tag,
+                    ref tag_encoding,
+                    tag_field,
+                    ref variants,
+                } => Variants::Multiple {
+                    tag,
+                    tag_encoding: match *tag_encoding {
+                        TagEncoding::Direct => TagEncoding::Direct,
+                        TagEncoding::Niche {
+                            dataful_variant,
+                            ref niche_variants,
+                            niche_start,
+                        } => TagEncoding::Niche {
+                            dataful_variant,
+                            niche_variants: niche_variants.clone(),
+                            niche_start,
+                        },
+                    },
+                    tag_field,
+                    variants: variants.iter().map(clone_layout).collect(),
+                },
+            },
+            abi,
+            largest_niche,
+            align,
+            size,
+        }
+    }
+    providers.layout_of = |tcx, key| {
+        let TyAndLayout { ty, mut layout } =
+            (rustc_interface::DEFAULT_QUERY_PROVIDERS.layout_of)(tcx, key)?;
+
+        // FIXME(eddyb) make use of this - at this point, it's just a placeholder.
+        #[allow(clippy::match_single_binding)]
+        let hide_niche = match ty.kind() {
+            _ => false,
+        };
+
+        if hide_niche {
+            layout = tcx.arena.alloc(Layout {
+                largest_niche: None,
+                ..clone_layout(layout)
+            });
+        }
+
+        Ok(TyAndLayout { ty, layout })
     };
 }
 
