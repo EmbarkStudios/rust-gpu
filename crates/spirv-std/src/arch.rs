@@ -31,22 +31,11 @@ pub fn any<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
 
     unsafe {
         asm! {
-            // Types & Constants
             "%bool = OpTypeBool",
-            "%u8 = OpTypeInt 8 0",
-            "%u8_0 = OpConstant %u8 0",
-            "%u8_1 = OpConstant %u8 1",
-            "%glam_vec_type = OpTypeVector %u8 {len}",
-            "%bool_vec_type = OpTypeVector %bool {len}",
-            "%false_vec = OpConstantNull %glam_vec_type",
-            // Code
-            "%vector = OpLoad %glam_vec_type {vector}",
-            "%bool_vec = OpINotEqual %bool_vec_type %vector %false_vec",
-            "%result = OpAny %bool %bool_vec",
-            "%boolean = OpSelect %u8 %result %u8_1 %u8_0",
-            "OpStore {result} %boolean",
+            "%vector = OpLoad _ {vector}",
+            "%result = OpAny %bool %vector",
+            "OpStore {result} %result",
             vector = in(reg) &vector,
-            len = const N,
             result = in(reg) &mut result
         }
     }
@@ -64,23 +53,12 @@ pub fn all<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
 
     unsafe {
         asm! {
-            // Types & Constants
             "%bool = OpTypeBool",
-            "%u8 = OpTypeInt 8 0",
-            "%u8_0 = OpConstant %u8 0",
-            "%u8_1 = OpConstant %u8 1",
-            "%glam_vec_type = OpTypeVector %u8 {len}",
-            "%bool_vec_type = OpTypeVector %bool {len}",
-            "%false_vec = OpConstantNull %glam_vec_type",
-            // Code
-            "%vector = OpLoad %glam_vec_type {vector}",
-            "%bool_vec = OpINotEqual %bool_vec_type %vector %false_vec",
-            "%result = OpAll %bool %bool_vec",
-            "%boolean = OpSelect %u8 %result %u8_1 %u8_0",
-            "OpStore {element} %boolean",
+            "%vector = OpLoad _ {vector}",
+            "%result = OpAll %bool %vector",
+            "OpStore {result} %result",
             vector = in(reg) &vector,
-            len = const N,
-            element = in(reg) &mut result
+            result = in(reg) &mut result
         }
     }
 

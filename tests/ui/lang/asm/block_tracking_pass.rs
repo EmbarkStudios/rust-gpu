@@ -7,7 +7,7 @@ use spirv_std as _;
 fn asm_label() {
     unsafe {
         asm!(
-            "OpReturn", // close active block
+            "OpReturn",          // close active block
             "%unused = OpLabel", // open new block
         );
     }

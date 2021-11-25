@@ -782,22 +782,24 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         result
     }
 
+    // rustc has the concept of an immediate vs. memory type - bools are compiled to LLVM bools as
+    // immediates, but if they're behind a pointer, they're compiled to u8. The reason for this is
+    // because LLVM is bad at bools behind pointers (something something u1 bitmasking on load).
+    //
+    // SPIR-V allows bools behind *some* pointers, and disallows others - specifically, it allows
+    // bools behind the storage classes Workgroup, CrossWorkgroup, Private, Function, Input, and
+    // Output. In other words, "stuff the CPU can't see, bools are OK, stuff the CPU can't see, no
+    // bools". So, we always compile bools to bools, even if they're behind a pointer, and error if
+    // bools are in an interface (the user should choose u8, u32, or something else instead). That
+    // means that immediate types and memory types are the same, and no conversion needs to happen
+    // here.
     fn from_immediate(&mut self, val: Self::Value) -> Self::Value {
-        if self.lookup_type(val.ty) == SpirvType::Bool {
-            let i8 = SpirvType::Integer(8, false).def(self.span(), self);
-            self.zext(val, i8)
-        } else {
-            val
-        }
+        val
     }
 
     // silly clippy, we can't rename this!
     #[allow(clippy::wrong_self_convention)]
-    fn to_immediate_scalar(&mut self, val: Self::Value, scalar: Scalar) -> Self::Value {
-        if scalar.is_bool() {
-            let bool = SpirvType::Bool.def(self.span(), self);
-            return self.trunc(val, bool);
-        }
+    fn to_immediate_scalar(&mut self, val: Self::Value, _scalar: Scalar) -> Self::Value {
         val
     }
 

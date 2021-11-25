@@ -150,9 +150,9 @@ pub(crate) fn provide(providers: &mut Providers) {
         let TyAndLayout { ty, mut layout } =
             (rustc_interface::DEFAULT_QUERY_PROVIDERS.layout_of)(tcx, key)?;
 
-        // FIXME(eddyb) make use of this - at this point, it's just a placeholder.
-        #[allow(clippy::match_single_binding)]
+        #[allow(clippy::match_like_matches_macro)]
         let hide_niche = match ty.kind() {
+            ty::Bool => true,
             _ => false,
         };
 
@@ -284,13 +284,6 @@ enum PointeeDefState {
 /// provides a uniform way of translating them.
 pub trait ConvSpirvType<'tcx> {
     fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word;
-    /// spirv (and llvm) do not allow storing booleans in memory, they are abstract unsized values.
-    /// So, if we're dealing with a "memory type", convert bool to u8. The opposite is an
-    /// "immediate type", which keeps bools as bools. See also the functions `from_immediate` and
-    /// `to_immediate`, which convert between the two.
-    fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        self.spirv_type(span, cx)
-    }
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
@@ -302,14 +295,6 @@ impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
                 .spirv_type(span, cx),
         }
     }
-    fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        match *self {
-            PointeeTy::Ty(ty) => ty.spirv_type_immediate(span, cx),
-            PointeeTy::Fn(ty) => cx
-                .fn_abi_of_fn_ptr(ty, ty::List::empty())
-                .spirv_type_immediate(span, cx),
-        }
-    }
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
@@ -318,9 +303,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
 
         let return_type = match self.ret.mode {
             PassMode::Ignore => SpirvType::Void.def(span, cx),
-            PassMode::Direct(_) | PassMode::Pair(..) => {
-                self.ret.layout.spirv_type_immediate(span, cx)
-            }
+            PassMode::Direct(_) | PassMode::Pair(..) => self.ret.layout.spirv_type(span, cx),
             PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
                 span,
                 "query hooks should've made this `PassMode` impossible: {:#?}",
@@ -331,14 +314,10 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
         for arg in &self.args {
             let arg_type = match arg.mode {
                 PassMode::Ignore => continue,
-                PassMode::Direct(_) => arg.layout.spirv_type_immediate(span, cx),
+                PassMode::Direct(_) => arg.layout.spirv_type(span, cx),
                 PassMode::Pair(_, _) => {
-                    argument_types.push(scalar_pair_element_backend_type(
-                        cx, span, arg.layout, 0, true,
-                    ));
-                    argument_types.push(scalar_pair_element_backend_type(
-                        cx, span, arg.layout, 1, true,
-                    ));
+                    argument_types.push(scalar_pair_element_backend_type(cx, span, arg.layout, 0));
+                    argument_types.push(scalar_pair_element_backend_type(cx, span, arg.layout, 1));
                     continue;
                 }
                 PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
@@ -359,77 +338,69 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
-    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        trans_type_impl(cx, span, *self, false)
-    }
-    fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        trans_type_impl(cx, span, *self, true)
-    }
-}
+    fn spirv_type(&self, mut span: Span, cx: &CodegenCx<'tcx>) -> Word {
+        if let TyKind::Adt(adt, substs) = *self.ty.kind() {
+            if span == DUMMY_SP {
+                span = cx.tcx.def_span(adt.did);
+            }
 
-fn trans_type_impl<'tcx>(
-    cx: &CodegenCx<'tcx>,
-    mut span: Span,
-    ty: TyAndLayout<'tcx>,
-    is_immediate: bool,
-) -> Word {
-    if let TyKind::Adt(adt, substs) = *ty.ty.kind() {
-        if span == DUMMY_SP {
-            span = cx.tcx.def_span(adt.did);
-        }
+            let attrs = AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did));
 
-        let attrs = AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did));
-
-        if let Some(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
-            if let Ok(spirv_type) = trans_intrinsic_type(cx, span, ty, substs, intrinsic_type_attr)
-            {
-                return spirv_type;
+            if let Some(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
+                if let Ok(spirv_type) =
+                    trans_intrinsic_type(cx, span, *self, substs, intrinsic_type_attr)
+                {
+                    return spirv_type;
+                }
             }
         }
-    }
 
-    // Note: ty.layout is orthogonal to ty.ty, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
-    // `ScalarPair`.
-    // There's a few layers that we go through here. First we inspect layout.abi, then if relevant, layout.fields, etc.
-    match ty.abi {
-        Abi::Uninhabited => SpirvType::Adt {
-            def_id: def_id_for_spirv_type_adt(ty),
-            size: Some(Size::ZERO),
-            align: Align::from_bytes(0).unwrap(),
-            field_types: Vec::new(),
-            field_offsets: Vec::new(),
-            field_names: None,
-        }
-        .def_with_name(cx, span, TyLayoutNameKey::from(ty)),
-        Abi::Scalar(ref scalar) => trans_scalar(cx, span, ty, scalar, Size::ZERO, is_immediate),
-        Abi::ScalarPair(ref a, ref b) => {
-            // Note: We can't use auto_struct_layout here because the spirv types here might be undefined due to
-            // recursive pointer types.
-            let a_offset = Size::ZERO;
-            let b_offset = a.value.size(cx).align_to(b.value.align(cx).abi);
-            // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
-            let a = trans_scalar(cx, span, ty, a, a_offset, false);
-            let b = trans_scalar(cx, span, ty, b, b_offset, false);
-            let size = if ty.is_unsized() { None } else { Some(ty.size) };
-            SpirvType::Adt {
-                def_id: def_id_for_spirv_type_adt(ty),
-                size,
-                align: ty.align.abi,
-                field_types: vec![a, b],
-                field_offsets: vec![a_offset, b_offset],
+        // Note: ty.layout is orthogonal to ty.ty, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
+        // `ScalarPair`.
+        // There's a few layers that we go through here. First we inspect layout.abi, then if relevant, layout.fields, etc.
+        match self.abi {
+            Abi::Uninhabited => SpirvType::Adt {
+                def_id: def_id_for_spirv_type_adt(*self),
+                size: Some(Size::ZERO),
+                align: Align::from_bytes(0).unwrap(),
+                field_types: Vec::new(),
+                field_offsets: Vec::new(),
                 field_names: None,
             }
-            .def_with_name(cx, span, TyLayoutNameKey::from(ty))
-        }
-        Abi::Vector { ref element, count } => {
-            let elem_spirv = trans_scalar(cx, span, ty, element, Size::ZERO, false);
-            SpirvType::Vector {
-                element: elem_spirv,
-                count: count as u32,
+            .def_with_name(cx, span, TyLayoutNameKey::from(*self)),
+            Abi::Scalar(ref scalar) => trans_scalar(cx, span, *self, scalar, Size::ZERO),
+            Abi::ScalarPair(ref a, ref b) => {
+                // Note: We can't use auto_struct_layout here because the spirv types here might be undefined due to
+                // recursive pointer types.
+                let a_offset = Size::ZERO;
+                let b_offset = a.value.size(cx).align_to(b.value.align(cx).abi);
+                let a = trans_scalar(cx, span, *self, a, a_offset);
+                let b = trans_scalar(cx, span, *self, b, b_offset);
+                let size = if self.is_unsized() {
+                    None
+                } else {
+                    Some(self.size)
+                };
+                SpirvType::Adt {
+                    def_id: def_id_for_spirv_type_adt(*self),
+                    size,
+                    align: self.align.abi,
+                    field_types: vec![a, b],
+                    field_offsets: vec![a_offset, b_offset],
+                    field_names: None,
+                }
+                .def_with_name(cx, span, TyLayoutNameKey::from(*self))
             }
-            .def(span, cx)
+            Abi::Vector { ref element, count } => {
+                let elem_spirv = trans_scalar(cx, span, *self, element, Size::ZERO);
+                SpirvType::Vector {
+                    element: elem_spirv,
+                    count: count as u32,
+                }
+                .def(span, cx)
+            }
+            Abi::Aggregate { sized: _ } => trans_aggregate(cx, span, *self),
         }
-        Abi::Aggregate { sized: _ } => trans_aggregate(cx, span, ty),
     }
 }
 
@@ -440,7 +411,6 @@ pub fn scalar_pair_element_backend_type<'tcx>(
     span: Span,
     ty: TyAndLayout<'tcx>,
     index: usize,
-    is_immediate: bool,
 ) -> Word {
     let [a, b] = match &ty.layout.abi {
         Abi::ScalarPair(a, b) => [a, b],
@@ -455,7 +425,7 @@ pub fn scalar_pair_element_backend_type<'tcx>(
         1 => a.value.size(cx).align_to(b.value.align(cx).abi),
         _ => unreachable!(),
     };
-    trans_scalar(cx, span, ty, [a, b][index], offset, is_immediate)
+    trans_scalar(cx, span, ty, [a, b][index], offset)
 }
 
 /// A "scalar" is a basic building block: bools, ints, floats, pointers. (i.e. not something complex like a struct)
@@ -471,9 +441,8 @@ fn trans_scalar<'tcx>(
     ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
     offset: Size,
-    is_immediate: bool,
 ) -> Word {
-    if is_immediate && scalar.is_bool() {
+    if scalar.is_bool() {
         return SpirvType::Bool.def(span, cx);
     }
 
@@ -608,7 +577,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
             }
         }
         FieldsShape::Array { stride, count } => {
-            let element_type = trans_type_impl(cx, span, ty.field(cx, 0), false);
+            let element_type = ty.field(cx, 0).spirv_type(span, cx);
             if ty.is_unsized() {
                 // There's a potential for this array to be sized, but the element to be unsized, e.g. `[[u8]; 5]`.
                 // However, I think rust disallows all these cases, so assert this here.
@@ -676,7 +645,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
     let mut field_names = Vec::new();
     for i in ty.fields.index_by_increasing_offset() {
         let field_ty = ty.field(cx, i);
-        field_types.push(trans_type_impl(cx, span, field_ty, false));
+        field_types.push(field_ty.spirv_type(span, cx));
         let offset = ty.fields.offset(i);
         field_offsets.push(offset);
         if let Variants::Single { index } = ty.variants {
@@ -887,7 +856,7 @@ fn trans_intrinsic_type<'tcx>(
             // The spirv type of it will be generated by querying the type of the first generic.
             if let Some(image_ty) = substs.types().next() {
                 // TODO: enforce that the generic param is an image type?
-                let image_type = trans_type_impl(cx, span, cx.layout_of(image_ty), false);
+                let image_type = cx.layout_of(image_ty).spirv_type(span, cx);
                 Ok(SpirvType::SampledImage { image_type }.def(span, cx))
             } else {
                 cx.tcx
@@ -907,7 +876,7 @@ fn trans_intrinsic_type<'tcx>(
             // We use a generic to indicate the underlying element type.
             // The spirv type of it will be generated by querying the type of the first generic.
             if let Some(elem_ty) = substs.types().next() {
-                let element = trans_type_impl(cx, span, cx.layout_of(elem_ty), false);
+                let element = cx.layout_of(elem_ty).spirv_type(span, cx);
                 Ok(SpirvType::RuntimeArray { element }.def(span, cx))
             } else {
                 cx.tcx
@@ -922,7 +891,7 @@ fn trans_intrinsic_type<'tcx>(
                 .expect("#[spirv(matrix)] must be added to a type which has DefId");
 
             let field_types = (0..ty.fields.count())
-                .map(|i| trans_type_impl(cx, span, ty.field(cx, i), false))
+                .map(|i| ty.field(cx, i).spirv_type(span, cx))
                 .collect::<Vec<_>>();
             if field_types.len() < 2 {
                 cx.tcx
