@@ -37,12 +37,26 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         .iter()
         .find(|inst| inst.class.opcode == Op::TypeVoid)
         .map_or(0, |inst| inst.result_id.unwrap());
+    let ptr_map: FxHashMap<_, _> = module
+        .types_global_values
+        .iter()
+        .filter_map(|inst| {
+            if inst.class.opcode == Op::TypePointer
+                && inst.operands[0].unwrap_storage_class() == StorageClass::Function
+            {
+                Some((inst.operands[1].unwrap_id_ref(), inst.result_id.unwrap()))
+            } else {
+                None
+            }
+        })
+        .collect();
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
     let mut inliner = Inliner {
         header: module.header.as_mut().unwrap(),
         types_global_values: &mut module.types_global_values,
         void,
+        ptr_map,
         functions: &functions,
         disallowed_argument_types: &disallowed_argument_types,
         disallowed_return_types: &disallowed_return_types,
@@ -281,6 +295,7 @@ struct Inliner<'m, 'map> {
     header: &'m mut ModuleHeader,
     types_global_values: &'m mut Vec<Instruction>,
     void: Word,
+    ptr_map: FxHashMap<Word, Word>,
     functions: &'map FunctionMap,
     disallowed_argument_types: &'map FxHashSet<Word>,
     disallowed_return_types: &'map FxHashSet<Word>,
@@ -295,14 +310,9 @@ impl Inliner<'_, '_> {
     }
 
     fn ptr_ty(&mut self, pointee: Word) -> Word {
-        // TODO: This is horribly slow, fix this
-        let existing = self.types_global_values.iter().find(|inst| {
-            inst.class.opcode == Op::TypePointer
-                && inst.operands[0].unwrap_storage_class() == StorageClass::Function
-                && inst.operands[1].unwrap_id_ref() == pointee
-        });
+        let existing = self.ptr_map.get(&pointee);
         if let Some(existing) = existing {
-            return existing.result_id.unwrap();
+            return *existing;
         }
         let inst_id = self.id();
         self.types_global_values.push(Instruction::new(
@@ -314,6 +324,7 @@ impl Inliner<'_, '_> {
                 Operand::IdRef(pointee),
             ],
         ));
+        self.ptr_map.insert(pointee, inst_id);
         inst_id
     }
 
