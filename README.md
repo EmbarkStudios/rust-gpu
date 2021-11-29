@@ -125,6 +125,7 @@ Historical and other related projects for compiling Rust code to GPUs.
 - 2018: [nvptx](https://github.com/japaric-archived/nvptx) Rust to PTX compiler.
 - 2020: [accel](https://github.com/termoshtt/accel) GPGPU library for Rust.
 - 2020: [rlsl](https://github.com/MaikKlein/rlsl) Predeccesor to rust_gpu, Rust to SPIR-V compiler.
+- 2021: [Rust CUDA](https://github.com/Rust-GPU/Rust-CUDA) Rust to PTX compiler, similar mechanism to rustc_codegen_spirv.
 
 ## Contributing
 
