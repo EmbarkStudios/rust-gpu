@@ -37,28 +37,17 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         .iter()
         .find(|inst| inst.class.opcode == Op::TypeVoid)
         .map_or(0, |inst| inst.result_id.unwrap());
-    let ptr_map: FxHashMap<_, _> = module
-        .types_global_values
-        .iter()
-        .filter_map(|inst| {
-            if inst.class.opcode == Op::TypePointer
-                && inst.operands[0].unwrap_storage_class() == StorageClass::Function
-            {
-                Some((inst.operands[1].unwrap_id_ref(), inst.result_id.unwrap()))
-            } else {
-                None
-            }
-        })
-        .collect();
+
+    let invalid_args = module.functions.iter().flat_map(get_invalid_args).collect();
+
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
     let mut inliner = Inliner {
         header: module.header.as_mut().unwrap(),
-        types_global_values: &mut module.types_global_values,
         void,
-        ptr_map,
         functions: &functions,
         needs_inline: &to_delete,
+        invalid_args,
     };
     for index in postorder {
         inliner.inline_fn(&mut module.functions, index);
@@ -268,20 +257,21 @@ fn should_inline(
 // This should be more general, but a very common problem is passing an OpAccessChain to an
 // OpFunctionCall (i.e. `f(&s.x)`, or more commonly, `s.x.f()` where `f` takes `&self`), so detect
 // that case and inline the call.
-fn args_invalid(function: &Function, call: &Instruction) -> bool {
-    for inst in function.all_inst_iter() {
+fn get_invalid_args<'a>(function: &'a Function) -> impl Iterator<Item = Word> + 'a {
+    function.all_inst_iter().filter_map(|inst| {
         if inst.class.opcode == Op::AccessChain {
-            let inst_result = inst.result_id.unwrap();
-            if call
-                .operands
-                .iter()
-                .any(|op| *op == Operand::IdRef(inst_result))
-            {
-                return true;
-            }
+            inst.result_id
+        } else {
+            None
         }
-    }
-    false
+    })
+}
+
+fn args_invalid(invalid_args: &FxHashSet<Word>, call: &Instruction) -> bool {
+    call.operands.iter().skip(1).any(|op| {
+        op.id_ref_any()
+            .map_or(false, |arg| invalid_args.contains(&arg))
+    })
 }
 
 // Steps:
@@ -292,11 +282,10 @@ fn args_invalid(function: &Function, call: &Instruction) -> bool {
 
 struct Inliner<'m, 'map> {
     header: &'m mut ModuleHeader,
-    types_global_values: &'m mut Vec<Instruction>,
     void: Word,
-    ptr_map: FxHashMap<Word, Word>,
     functions: &'map FunctionMap,
     needs_inline: &'map [bool],
+    invalid_args: FxHashSet<Word>,
 }
 
 impl Inliner<'_, '_> {
@@ -304,25 +293,6 @@ impl Inliner<'_, '_> {
         let result = self.header.bound;
         self.header.bound += 1;
         result
-    }
-
-    fn ptr_ty(&mut self, pointee: Word) -> Word {
-        let existing = self.ptr_map.get(&pointee);
-        if let Some(existing) = existing {
-            return *existing;
-        }
-        let inst_id = self.id();
-        self.types_global_values.push(Instruction::new(
-            Op::TypePointer,
-            None,
-            Some(inst_id),
-            vec![
-                Operand::StorageClass(StorageClass::Function),
-                Operand::IdRef(pointee),
-            ],
-        ));
-        self.ptr_map.insert(pointee, inst_id);
-        inst_id
     }
 
     fn inline_fn(&mut self, functions: &mut [Function], index: usize) {
@@ -359,8 +329,8 @@ impl Inliner<'_, '_> {
                     self.functions[&inst.operands[0].id_ref_any().unwrap()],
                 )
             })
-            .find(|(index, inst, func_idx)| {
-                self.needs_inline[*func_idx] || args_invalid(caller, inst)
+            .find(|(_, inst, func_idx)| {
+                self.needs_inline[*func_idx] || args_invalid(&self.invalid_args, inst)
             });
         let (call_index, call_inst, callee_idx) = match call {
             None => return false,
@@ -388,18 +358,23 @@ impl Inliner<'_, '_> {
         });
         let mut rewrite_rules = callee_parameters.zip(call_arguments).collect();
 
-        let return_variable = if call_result_type.is_some() {
-            Some(self.id())
-        } else {
-            None
-        };
         let return_jump = self.id();
         // Rewrite OpReturns of the callee.
-        let mut inlined_blocks = get_inlined_blocks(callee, return_variable, return_jump);
+        let (mut inlined_blocks, phi_pairs) = get_inlined_blocks(callee, return_jump);
         // Clone the IDs of the callee, because otherwise they'd be defined multiple times if the
         // fn is inlined multiple times.
         self.add_clone_id_rules(&mut rewrite_rules, &inlined_blocks);
+        // If any of the OpReturns were invalid, return will also be invalid.
+        for (value, _) in &phi_pairs {
+            if self.invalid_args.contains(value) {
+                self.invalid_args.insert(call_result_id);
+                self.invalid_args
+                    .insert(*rewrite_rules.get(value).unwrap_or(value));
+            }
+        }
         apply_rewrite_rules(&rewrite_rules, &mut inlined_blocks);
+        // unnecessary: invalidate_more_args(&rewrite_rules, &mut self.invalid_args);
+        // as no values from inside the inlined function ever make it directly out.
 
         // Split the block containing the OpFunctionCall into two, around the call.
         let mut post_call_block_insts = caller.blocks[block_idx]
@@ -409,32 +384,27 @@ impl Inliner<'_, '_> {
         let call = caller.blocks[block_idx].instructions.pop().unwrap();
         assert!(call.class.opcode == Op::FunctionCall);
 
-        if let Some(call_result_type) = call_result_type {
-            // Generate the storage space for the return value: Do this *after* the split above,
-            // because if block_idx=0, inserting a variable here shifts call_index.
-            insert_opvariable(
-                &mut caller.blocks[0],
-                self.ptr_ty(call_result_type),
-                return_variable.unwrap(),
-            );
-        }
-
         // Move the variables over from the inlined function to here.
         let mut callee_header = take(&mut inlined_blocks[0]).instructions;
         // TODO: OpLine handling
         let num_variables = callee_header.partition_point(|inst| inst.class.opcode == Op::Variable);
         // Rather than fuse blocks, generate a new jump here. Branch fusing will take care of
         // it, and we maintain the invariant that current block has finished processing.
-        let jump_to = self.id();
+        let first_block_id = self.id();
         inlined_blocks[0] = Block {
-            label: Some(Instruction::new(Op::Label, None, Some(jump_to), vec![])),
+            label: Some(Instruction::new(
+                Op::Label,
+                None,
+                Some(first_block_id),
+                vec![],
+            )),
             instructions: callee_header.split_off(num_variables),
         };
         caller.blocks[block_idx].instructions.push(Instruction::new(
             Op::Branch,
             None,
             None,
-            vec![Operand::IdRef(jump_to)],
+            vec![Operand::IdRef(first_block_id)],
         ));
         // Move the OpVariables of the callee to the caller.
         insert_opvariables(&mut caller.blocks[0], callee_header);
@@ -445,10 +415,17 @@ impl Inliner<'_, '_> {
             post_call_block_insts.insert(
                 0,
                 Instruction::new(
-                    Op::Load,
+                    Op::Phi,
                     Some(call_result_type),
                     Some(call_result_id),
-                    vec![Operand::IdRef(return_variable.unwrap())],
+                    phi_pairs
+                        .into_iter()
+                        .flat_map(|(value, parent)| {
+                            use std::iter;
+                            iter::once(Operand::IdRef(*rewrite_rules.get(&value).unwrap_or(&value)))
+                                .chain(iter::once(Operand::IdRef(rewrite_rules[&parent])))
+                        })
+                        .collect(),
                 ),
             );
         }
@@ -481,51 +458,21 @@ impl Inliner<'_, '_> {
     }
 }
 
-fn get_inlined_blocks(
-    function: &Function,
-    return_variable: Option<Word>,
-    return_jump: Word,
-) -> Vec<Block> {
+fn get_inlined_blocks(function: &Function, return_jump: Word) -> (Vec<Block>, Vec<(Word, Word)>) {
     let mut blocks = function.blocks.clone();
+    let mut phipairs = Vec::new();
     for block in &mut blocks {
         let last = block.instructions.last().unwrap();
         if let Op::Return | Op::ReturnValue = last.class.opcode {
             if Op::ReturnValue == last.class.opcode {
                 let return_value = last.operands[0].id_ref_any().unwrap();
-                block.instructions.insert(
-                    block.instructions.len() - 1,
-                    Instruction::new(
-                        Op::Store,
-                        None,
-                        None,
-                        vec![
-                            Operand::IdRef(return_variable.unwrap()),
-                            Operand::IdRef(return_value),
-                        ],
-                    ),
-                );
-            } else {
-                assert!(return_variable.is_none());
+                phipairs.push((return_value, block.label_id().unwrap()))
             }
             *block.instructions.last_mut().unwrap() =
                 Instruction::new(Op::Branch, None, None, vec![Operand::IdRef(return_jump)]);
         }
     }
-    blocks
-}
-
-fn insert_opvariable(block: &mut Block, ptr_ty: Word, result_id: Word) {
-    let index = block
-        .instructions
-        .partition_point(|inst| inst.class.opcode == Op::Variable);
-
-    let inst = Instruction::new(
-        Op::Variable,
-        Some(ptr_ty),
-        Some(result_id),
-        vec![Operand::StorageClass(StorageClass::Function)],
-    );
-    block.instructions.insert(index, inst)
+    (blocks, phipairs)
 }
 
 fn insert_opvariables(block: &mut Block, insts: Vec<Instruction>) {
@@ -537,6 +484,7 @@ fn insert_opvariables(block: &mut Block, insts: Vec<Instruction>) {
 
 fn fuse_trivial_branches(function: &mut Function) {
     let all_preds = compute_preds(&function.blocks);
+    let mut rewrite_rules = FxHashMap::default();
     'outer: for (dest_block, mut preds) in all_preds.iter().enumerate() {
         // if there's two trivial branches in a row, the middle one might get inlined before the
         // last one, so when processing the last one, skip through to the first one.
@@ -553,12 +501,22 @@ fn fuse_trivial_branches(function: &mut Function) {
         let pred_insts = &function.blocks[pred].instructions;
         if pred_insts.last().unwrap().class.opcode == Op::Branch {
             let mut dest_insts = take(&mut function.blocks[dest_block].instructions);
+            dest_insts.retain(|inst| {
+                if inst.class.opcode == Op::Phi {
+                    assert_eq!(inst.operands.len(), 2);
+                    rewrite_rules.insert(inst.result_id.unwrap(), inst.operands[0].unwrap_id_ref());
+                    false
+                } else {
+                    true
+                }
+            });
             let pred_insts = &mut function.blocks[pred].instructions;
             pred_insts.pop(); // pop the branch
             pred_insts.append(&mut dest_insts);
         }
     }
     function.blocks.retain(|b| !b.instructions.is_empty());
+    apply_rewrite_rules(&rewrite_rules, &mut function.blocks);
 }
 
 fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
