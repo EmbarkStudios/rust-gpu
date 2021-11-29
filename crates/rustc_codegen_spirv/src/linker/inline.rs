@@ -483,52 +483,77 @@ fn insert_opvariables(block: &mut Block, insts: Vec<Instruction>) {
 }
 
 fn fuse_trivial_branches(function: &mut Function) {
-    let all_preds = compute_preds(&function.blocks);
+    let mut chain_list = compute_outgoing_1to1_branches(&function.blocks);
     let mut rewrite_rules = FxHashMap::default();
-    'outer: for (dest_block, mut preds) in all_preds.iter().enumerate() {
-        // if there's two trivial branches in a row, the middle one might get inlined before the
-        // last one, so when processing the last one, skip through to the first one.
-        let pred = loop {
-            if preds.len() != 1 || preds[0] == dest_block {
-                continue 'outer;
-            }
-            let pred = preds[0];
-            if !function.blocks[pred].instructions.is_empty() {
-                break pred;
-            }
-            preds = &all_preds[pred];
-        };
-        let pred_insts = &function.blocks[pred].instructions;
-        if pred_insts.last().unwrap().class.opcode == Op::Branch {
-            let mut dest_insts = take(&mut function.blocks[dest_block].instructions);
-            dest_insts.retain(|inst| {
-                if inst.class.opcode == Op::Phi {
-                    assert_eq!(inst.operands.len(), 2);
-                    rewrite_rules.insert(inst.result_id.unwrap(), inst.operands[0].unwrap_id_ref());
-                    false
-                } else {
-                    true
+
+    for block_idx in 0..chain_list.len() {
+        let mut next = chain_list[block_idx].take();
+        loop {
+            match next {
+                None => {
+                    // end of the chain list
+                    break;
                 }
-            });
-            let pred_insts = &mut function.blocks[pred].instructions;
-            pred_insts.pop(); // pop the branch
-            pred_insts.append(&mut dest_insts);
+                Some(x) if x == block_idx => {
+                    // loop detected
+                    break;
+                }
+                Some(next_idx) => {
+                    let mut dest_insts = take(&mut function.blocks[next_idx].instructions);
+                    dest_insts.retain(|inst| {
+                        if inst.class.opcode == Op::Phi {
+                            assert_eq!(inst.operands.len(), 2);
+                            rewrite_rules
+                                .insert(inst.result_id.unwrap(), inst.operands[0].unwrap_id_ref());
+                            false
+                        } else {
+                            true
+                        }
+                    });
+                    let self_insts = &mut function.blocks[block_idx].instructions;
+                    self_insts.pop(); // pop the branch
+                    self_insts.append(&mut dest_insts);
+                    next = chain_list[next_idx].take();
+                }
+            }
         }
     }
     function.blocks.retain(|b| !b.instructions.is_empty());
     apply_rewrite_rules(&rewrite_rules, &mut function.blocks);
 }
 
-fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
-    let mut result = vec![vec![]; blocks.len()];
+fn compute_outgoing_1to1_branches(blocks: &[Block]) -> Vec<Option<usize>> {
+    let block_id_to_idx: FxHashMap<_, _> = blocks
+        .iter()
+        .enumerate()
+        .map(|(idx, block)| (block.label_id().unwrap(), idx))
+        .collect();
+    #[derive(Clone)]
+    enum NumIncoming {
+        Zero,
+        One(usize),
+        TooMany,
+    }
+    let mut incoming = vec![NumIncoming::Zero; blocks.len()];
     for (source_idx, source) in blocks.iter().enumerate() {
         for dest_id in outgoing_edges(source) {
-            let dest_idx = blocks
-                .iter()
-                .position(|b| b.label_id().unwrap() == dest_id)
-                .unwrap();
-            result[dest_idx].push(source_idx);
+            let dest_idx = block_id_to_idx[&dest_id];
+            incoming[dest_idx] = match incoming[dest_idx] {
+                NumIncoming::Zero => NumIncoming::One(source_idx),
+                _ => NumIncoming::TooMany,
+            }
         }
     }
+
+    let mut result = vec![None; blocks.len()];
+
+    for (dest_idx, inc) in incoming.iter().enumerate() {
+        if let &NumIncoming::One(source_idx) = inc {
+            if blocks[source_idx].instructions.last().unwrap().class.opcode == Op::Branch {
+                result[source_idx] = Some(dest_idx);
+            }
+        }
+    }
+
     result
 }
