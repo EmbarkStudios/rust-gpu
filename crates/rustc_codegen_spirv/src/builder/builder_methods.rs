@@ -788,11 +788,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     //
     // SPIR-V allows bools behind *some* pointers, and disallows others - specifically, it allows
     // bools behind the storage classes Workgroup, CrossWorkgroup, Private, Function, Input, and
-    // Output. In other words, "stuff the CPU can't see, bools are OK, stuff the CPU can't see, no
-    // bools". So, we always compile bools to bools, even if they're behind a pointer, and error if
-    // bools are in an interface (the user should choose u8, u32, or something else instead). That
-    // means that immediate types and memory types are the same, and no conversion needs to happen
-    // here.
+    // Output. In other words, "For stuff the CPU can't see, bools are OK. For stuff the CPU *can*
+    // see, no bools allowed". So, we always compile rust bools to SPIR-V bools instead of u8 as
+    // rustc does, even if they're behind a pointer, and error if bools are in an interface (the
+    // user should choose u8, u32, or something else instead). That means that immediate types and
+    // memory types are the same, and no conversion needs to happen here.
     fn from_immediate(&mut self, val: Self::Value) -> Self::Value {
         val
     }
