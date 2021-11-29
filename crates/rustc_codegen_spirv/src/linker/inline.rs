@@ -14,19 +14,24 @@ use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
 use std::mem::take;
 
-type FunctionMap = FxHashMap<Word, Function>;
+type FunctionMap = FxHashMap<Word, usize>;
 
 pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
+    let (disallowed_argument_types, disallowed_return_types) =
+        compute_disallowed_argument_and_return_types(module);
+    let mut to_delete: Vec<_> = module
+        .functions
+        .iter()
+        .map(|f| should_inline(&disallowed_argument_types, &disallowed_return_types, f))
+        .collect();
     // This algorithm gets real sad if there's recursion - but, good news, SPIR-V bans recursion
-    deny_recursion_in_module(sess, module)?;
-
+    let postorder = compute_function_postorder(sess, module, &mut to_delete)?;
     let functions = module
         .functions
         .iter()
-        .map(|f| (f.def_id().unwrap(), f.clone()))
+        .enumerate()
+        .map(|(idx, f)| (f.def_id().unwrap(), idx))
         .collect();
-    let (disallowed_argument_types, disallowed_return_types) =
-        compute_disallowed_argument_and_return_types(module);
     let void = module
         .types_global_values
         .iter()
@@ -34,23 +39,6 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         .map_or(0, |inst| inst.result_id.unwrap());
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
-    let mut dropped_ids = FxHashSet::default();
-    module.functions.retain(|f| {
-        if should_inline(&disallowed_argument_types, &disallowed_return_types, f) {
-            // TODO: We should insert all defined IDs in this function.
-            dropped_ids.insert(f.def_id().unwrap());
-            false
-        } else {
-            true
-        }
-    });
-    // Drop OpName etc. for inlined functions
-    module.debug_names.retain(|inst| {
-        !inst.operands.iter().any(|op| {
-            op.id_ref_any()
-                .map_or(false, |id| dropped_ids.contains(&id))
-        })
-    });
     let mut inliner = Inliner {
         header: module.header.as_mut().unwrap(),
         types_global_values: &mut module.types_global_values,
@@ -59,35 +47,77 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         disallowed_argument_types: &disallowed_argument_types,
         disallowed_return_types: &disallowed_return_types,
     };
-    for function in &mut module.functions {
-        inliner.inline_fn(function);
-        fuse_trivial_branches(function);
+    for index in postorder {
+        inliner.inline_fn(&mut module.functions, index);
+        fuse_trivial_branches(&mut module.functions[index]);
     }
+    let mut dropped_ids = FxHashSet::default();
+    for i in (0..module.functions.len()).rev() {
+        if to_delete[i] {
+            dropped_ids.insert(module.functions.remove(i).def_id().unwrap());
+        }
+    }
+    // Drop OpName etc. for inlined functions
+    module.debug_names.retain(|inst| {
+        !inst.operands.iter().any(|op| {
+            op.id_ref_any()
+                .map_or(false, |id| dropped_ids.contains(&id))
+        })
+    });
     Ok(())
 }
 
-// https://stackoverflow.com/a/53995651
-fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()> {
+/// Topological sorting algorithm due to T. Cormen
+/// Starts from module's entry points, so only reachable functions will be returned
+/// in post-traversal order of DFS. For all unvisited functions `module.functions[i]`,
+/// `to_delete[i]` is set to true.
+fn compute_function_postorder(
+    sess: &Session,
+    module: &Module,
+    to_delete: &mut [bool],
+) -> super::Result<Vec<usize>> {
     let func_to_index: FxHashMap<Word, usize> = module
         .functions
         .iter()
         .enumerate()
         .map(|(index, func)| (func.def_id().unwrap(), index))
         .collect();
-    let mut discovered = vec![false; module.functions.len()];
-    let mut finished = vec![false; module.functions.len()];
+    /// Possible node states for cycle-discovering DFS.
+    #[derive(Clone, PartialEq)]
+    enum NodeState {
+        /// Normal, not visited.
+        NotVisited,
+        /// Currently being visited.
+        Discovered,
+        /// DFS returned.
+        Finished,
+        /// Not visited, entry point.
+        Entry,
+    }
+    let mut states = vec![NodeState::NotVisited; module.functions.len()];
+    for opep in module.entry_points.iter() {
+        let func_id = opep.operands[1].unwrap_id_ref();
+        states[func_to_index[&func_id]] = NodeState::Entry;
+    }
     let mut has_recursion = None;
+    let mut postorder = vec![];
     for index in 0..module.functions.len() {
-        if !discovered[index] && !finished[index] {
+        if NodeState::Entry == states[index] {
             visit(
                 sess,
                 module,
                 index,
-                &mut discovered,
-                &mut finished,
+                &mut states[..],
                 &mut has_recursion,
+                &mut postorder,
                 &func_to_index,
             );
+        }
+    }
+
+    for index in 0..module.functions.len() {
+        if NodeState::NotVisited == states[index] {
+            to_delete[index] = true;
         }
     }
 
@@ -95,40 +125,43 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
         sess: &Session,
         module: &Module,
         current: usize,
-        discovered: &mut Vec<bool>,
-        finished: &mut Vec<bool>,
+        states: &mut [NodeState],
         has_recursion: &mut Option<ErrorGuaranteed>,
+        postorder: &mut Vec<usize>,
         func_to_index: &FxHashMap<Word, usize>,
     ) {
-        discovered[current] = true;
+        states[current] = NodeState::Discovered;
 
         for next in calls(&module.functions[current], func_to_index) {
-            if discovered[next] {
-                let names = get_names(module);
-                let current_name = get_name(&names, module.functions[current].def_id().unwrap());
-                let next_name = get_name(&names, module.functions[next].def_id().unwrap());
-                *has_recursion = Some(sess.err(&format!(
-                    "module has recursion, which is not allowed: `{}` calls `{}`",
-                    current_name, next_name
-                )));
-                break;
-            }
-
-            if !finished[next] {
-                visit(
-                    sess,
-                    module,
-                    next,
-                    discovered,
-                    finished,
-                    has_recursion,
-                    func_to_index,
-                );
+            match states[next] {
+                NodeState::Discovered => {
+                    let names = get_names(module);
+                    let current_name =
+                        get_name(&names, module.functions[current].def_id().unwrap());
+                    let next_name = get_name(&names, module.functions[next].def_id().unwrap());
+                    *has_recursion = Some(sess.err(&format!(
+                        "module has recursion, which is not allowed: `{}` calls `{}`",
+                        current_name, next_name
+                    )));
+                    break;
+                }
+                NodeState::NotVisited | NodeState::Entry => {
+                    visit(
+                        sess,
+                        module,
+                        next,
+                        states,
+                        has_recursion,
+                        postorder,
+                        func_to_index,
+                    );
+                }
+                NodeState::Finished => {}
             }
         }
 
-        discovered[current] = false;
-        finished[current] = true;
+        states[current] = NodeState::Finished;
+        postorder.push(current)
     }
 
     fn calls<'a>(
@@ -146,7 +179,7 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
 
     match has_recursion {
         Some(err) => Err(err),
-        None => Ok(()),
+        None => Ok(postorder),
     }
 }
 
@@ -284,19 +317,27 @@ impl Inliner<'_, '_> {
         inst_id
     }
 
-    fn inline_fn(&mut self, function: &mut Function) {
+    fn inline_fn(&mut self, functions: &mut [Function], index: usize) {
+        let mut function = take(&mut functions[index]);
         let mut block_idx = 0;
         while block_idx < function.blocks.len() {
-            // If we successfully inlined a block, then repeat processing on the same block, in
-            // case the newly inlined block has more inlined calls.
-            // TODO: This is quadratic
-            if !self.inline_block(function, block_idx) {
-                block_idx += 1;
-            }
+            // If we successfully inlined a block, then continue processing on the next block or its tail.
+            // TODO: this is quadratic in cases where [`Op::AccessChain`]s cascade into inner arguments.
+            // For the common case of "we knew which functions to inline", it is linear.
+            self.inline_block(&mut function, &functions, block_idx);
+            block_idx += 1;
         }
+        functions[index] = function;
     }
 
-    fn inline_block(&mut self, caller: &mut Function, block_idx: usize) -> bool {
+    /// Inlines one block and returns whether inlining actually occurred.
+    /// After calling this, blocks[block_idx] is finished processing.
+    fn inline_block(
+        &mut self,
+        caller: &mut Function,
+        functions: &[Function],
+        block_idx: usize,
+    ) -> bool {
         // Find the first inlined OpFunctionCall
         let call = caller.blocks[block_idx]
             .instructions
@@ -304,13 +345,11 @@ impl Inliner<'_, '_> {
             .enumerate()
             .filter(|(_, inst)| inst.class.opcode == Op::FunctionCall)
             .map(|(index, inst)| {
-                (
-                    index,
-                    inst,
-                    self.functions
-                        .get(&inst.operands[0].id_ref_any().unwrap())
-                        .unwrap(),
-                )
+                let idx = self
+                    .functions
+                    .get(&inst.operands[0].id_ref_any().unwrap())
+                    .unwrap();
+                (index, inst, &functions[*idx])
             })
             .find(|(_, inst, f)| {
                 should_inline(
@@ -375,17 +414,23 @@ impl Inliner<'_, '_> {
             );
         }
 
-        // Fuse the first block of the callee into the block of the caller. This is okay because
-        // it's illegal to branch to the first BB in a function.
-        let mut callee_header = inlined_blocks.remove(0).instructions;
+        // Move the variables over from the inlined function to here.
+        let mut callee_header = take(&mut inlined_blocks[0]).instructions;
         // TODO: OpLine handling
-        let num_variables = callee_header
-            .iter()
-            .position(|inst| inst.class.opcode != Op::Variable)
-            .unwrap_or(callee_header.len());
-        caller.blocks[block_idx]
-            .instructions
-            .append(&mut callee_header.split_off(num_variables));
+        let num_variables = callee_header.partition_point(|inst| inst.class.opcode == Op::Variable);
+        // Rather than fuse blocks, generate a new jump here. Branch fusing will take care of
+        // it, and we maintain the invariant that current block has finished processing.
+        let jump_to = self.id();
+        inlined_blocks[0] = Block {
+            label: Some(Instruction::new(Op::Label, None, Some(jump_to), vec![])),
+            instructions: callee_header.split_off(num_variables),
+        };
+        caller.blocks[block_idx].instructions.push(Instruction::new(
+            Op::Branch,
+            None,
+            None,
+            vec![Operand::IdRef(jump_to)],
+        ));
         // Move the OpVariables of the callee to the caller.
         insert_opvariables(&mut caller.blocks[0], callee_header);
 
@@ -467,45 +512,22 @@ fn get_inlined_blocks(
 fn insert_opvariable(block: &mut Block, ptr_ty: Word, result_id: Word) {
     let index = block
         .instructions
-        .iter()
-        .enumerate()
-        .find_map(|(index, inst)| {
-            if inst.class.opcode != Op::Variable {
-                Some(index)
-            } else {
-                None
-            }
-        });
+        .partition_point(|inst| inst.class.opcode == Op::Variable);
+
     let inst = Instruction::new(
         Op::Variable,
         Some(ptr_ty),
         Some(result_id),
         vec![Operand::StorageClass(StorageClass::Function)],
     );
-    match index {
-        Some(index) => block.instructions.insert(index, inst),
-        None => block.instructions.push(inst),
-    }
+    block.instructions.insert(index, inst)
 }
 
-fn insert_opvariables(block: &mut Block, mut insts: Vec<Instruction>) {
+fn insert_opvariables(block: &mut Block, insts: Vec<Instruction>) {
     let index = block
         .instructions
-        .iter()
-        .enumerate()
-        .find_map(|(index, inst)| {
-            if inst.class.opcode != Op::Variable {
-                Some(index)
-            } else {
-                None
-            }
-        });
-    match index {
-        Some(index) => {
-            block.instructions.splice(index..index, insts);
-        }
-        None => block.instructions.append(&mut insts),
-    }
+        .partition_point(|inst| inst.class.opcode == Op::Variable);
+    block.instructions.splice(index..index, insts);
 }
 
 fn fuse_trivial_branches(function: &mut Function) {
