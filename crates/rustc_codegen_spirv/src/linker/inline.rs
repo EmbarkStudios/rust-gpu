@@ -58,8 +58,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         void,
         ptr_map,
         functions: &functions,
-        disallowed_argument_types: &disallowed_argument_types,
-        disallowed_return_types: &disallowed_return_types,
+        needs_inline: &to_delete,
     };
     for index in postorder {
         inliner.inline_fn(&mut module.functions, index);
@@ -297,9 +296,7 @@ struct Inliner<'m, 'map> {
     void: Word,
     ptr_map: FxHashMap<Word, Word>,
     functions: &'map FunctionMap,
-    disallowed_argument_types: &'map FxHashSet<Word>,
-    disallowed_return_types: &'map FxHashSet<Word>,
-    // rewrite_rules: FxHashMap<Word, Word>,
+    needs_inline: &'map [bool],
 }
 
 impl Inliner<'_, '_> {
@@ -356,23 +353,20 @@ impl Inliner<'_, '_> {
             .enumerate()
             .filter(|(_, inst)| inst.class.opcode == Op::FunctionCall)
             .map(|(index, inst)| {
-                let idx = self
-                    .functions
-                    .get(&inst.operands[0].id_ref_any().unwrap())
-                    .unwrap();
-                (index, inst, &functions[*idx])
+                (
+                    index,
+                    inst,
+                    self.functions[&inst.operands[0].id_ref_any().unwrap()],
+                )
             })
-            .find(|(_, inst, f)| {
-                should_inline(
-                    self.disallowed_argument_types,
-                    self.disallowed_return_types,
-                    f,
-                ) || args_invalid(caller, inst)
+            .find(|(index, inst, func_idx)| {
+                self.needs_inline[*func_idx] || args_invalid(caller, inst)
             });
-        let (call_index, call_inst, callee) = match call {
+        let (call_index, call_inst, callee_idx) = match call {
             None => return false,
             Some(call) => call,
         };
+        let callee = &functions[callee_idx];
         let call_result_type = {
             let ty = call_inst.result_type.unwrap();
             if ty == self.void {
