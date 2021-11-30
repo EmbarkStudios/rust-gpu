@@ -116,7 +116,7 @@ fn compute_function_postorder(
                 &mut states[..],
                 &mut has_recursion,
                 &mut postorder,
-                &func_to_index,
+                func_to_index,
             );
         }
     }
@@ -520,7 +520,7 @@ fn insert_opvariable(block: &mut Block, ptr_ty: Word, result_id: Word) {
         Some(result_id),
         vec![Operand::StorageClass(StorageClass::Function)],
     );
-    block.instructions.insert(index, inst)
+    block.instructions.insert(index, inst);
 }
 
 fn insert_opvariables(block: &mut Block, insts: Vec<Instruction>) {
