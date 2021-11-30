@@ -519,7 +519,14 @@ fn fuse_trivial_branches(function: &mut Function) {
         }
     }
     function.blocks.retain(|b| !b.instructions.is_empty());
-    apply_rewrite_rules(&rewrite_rules, &mut function.blocks);
+    // Calculate a closure, as these rules can be transitive
+    let mut rewrite_rules_new = rewrite_rules.clone();
+    for value in rewrite_rules_new.values_mut() {
+        while let Some(next) = rewrite_rules.get(value) {
+            *value = *next;
+        }
+    }
+    apply_rewrite_rules(&rewrite_rules_new, &mut function.blocks);
 }
 
 fn compute_outgoing_1to1_branches(blocks: &[Block]) -> Vec<Option<usize>> {
