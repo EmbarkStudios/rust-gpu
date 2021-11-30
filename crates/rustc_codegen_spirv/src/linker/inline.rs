@@ -386,10 +386,11 @@ impl Inliner<'_, '_> {
         self.add_clone_id_rules(&mut rewrite_rules, &inlined_blocks);
         // If any of the OpReturns were invalid, return will also be invalid.
         for value in &return_values {
-            if self.invalid_args.contains(value) {
+            let value_rewritten = *rewrite_rules.get(value).unwrap_or(value);
+            // value_rewritten might be originally a function argument
+            if self.invalid_args.contains(value) || self.invalid_args.contains(&value_rewritten) {
                 self.invalid_args.insert(call_result_id);
-                self.invalid_args
-                    .insert(*rewrite_rules.get(value).unwrap_or(value));
+                self.invalid_args.insert(value_rewritten);
             }
         }
         apply_rewrite_rules(&rewrite_rules, &mut inlined_blocks);
