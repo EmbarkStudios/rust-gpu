@@ -151,7 +151,7 @@ fn compute_function_postorder(
         }
 
         states[current] = NodeState::Finished;
-        postorder.push(current)
+        postorder.push(current);
     }
 
     fn calls<'a>(
@@ -245,7 +245,7 @@ fn should_inline(
 // This should be more general, but a very common problem is passing an OpAccessChain to an
 // OpFunctionCall (i.e. `f(&s.x)`, or more commonly, `s.x.f()` where `f` takes `&self`), so detect
 // that case and inline the call.
-fn get_invalid_args<'a>(function: &'a Function) -> impl Iterator<Item = Word> + 'a {
+fn get_invalid_args(function: &Function) -> impl Iterator<Item = Word> + '_ {
     function.all_inst_iter().filter_map(|inst| {
         if inst.class.opcode == Op::AccessChain {
             inst.result_id
@@ -290,14 +290,14 @@ impl Inliner<'_, '_> {
             // If we successfully inlined a block, then continue processing on the next block or its tail.
             // TODO: this is quadratic in cases where [`Op::AccessChain`]s cascade into inner arguments.
             // For the common case of "we knew which functions to inline", it is linear.
-            self.inline_block(&mut function, &functions, block_idx);
+            self.inline_block(&mut function, functions, block_idx);
             block_idx += 1;
         }
         functions[index] = function;
     }
 
     /// Inlines one block and returns whether inlining actually occurred.
-    /// After calling this, blocks[block_idx] is finished processing.
+    /// After calling this, `blocks[block_idx]` is finished processing.
     fn inline_block(
         &mut self,
         caller: &mut Function,
@@ -454,7 +454,7 @@ fn get_inlined_blocks(function: &Function, return_jump: Word) -> (Vec<Block>, Ve
         if let Op::Return | Op::ReturnValue = last.class.opcode {
             if Op::ReturnValue == last.class.opcode {
                 let return_value = last.operands[0].id_ref_any().unwrap();
-                phipairs.push((return_value, block.label_id().unwrap()))
+                phipairs.push((return_value, block.label_id().unwrap()));
             }
             *block.instructions.last_mut().unwrap() =
                 Instruction::new(Op::Branch, None, None, vec![Operand::IdRef(return_jump)]);
