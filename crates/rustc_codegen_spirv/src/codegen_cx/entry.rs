@@ -517,6 +517,13 @@ impl<'tcx> CodegenCx<'tcx> {
             );
         }
 
+        self.check_for_bools(
+            hir_param.ty_span,
+            var_ptr_spirv_type,
+            storage_class,
+            attrs.builtin.is_some(),
+        );
+
         // Assign locations from left to right, incrementing each storage class
         // individually.
         // TODO: Is this right for UniformConstant? Do they share locations with
@@ -551,6 +558,48 @@ impl<'tcx> CodegenCx<'tcx> {
             // SPIR-V <= v1.3 only includes Input and Output in the interface.
             if storage_class == StorageClass::Input || storage_class == StorageClass::Output {
                 op_entry_point_interface_operands.push(var);
+            }
+        }
+    }
+
+    // Booleans are only allowed in some storage classes. Error if they're in others.
+    fn check_for_bools(&self, span: Span, ty: Word, storage_class: StorageClass, is_builtin: bool) {
+        // private and function are allowed here, but they can't happen.
+        // SPIR-V technically allows all input/output variables to be booleans, not just builtins,
+        // but has a note:
+        // > Khronos Issue #363: OpTypeBool can be used in the Input and Output storage classes,
+        //   but the client APIs still only allow built-in Boolean variables (e.g. FrontFacing),
+        //   not user variables.
+        // spirv-val disallows non-builtin inputs/outputs, so we do too, I guess.
+        if matches!(
+            storage_class,
+            StorageClass::Workgroup | StorageClass::CrossWorkgroup
+        ) || is_builtin && matches!(storage_class, StorageClass::Input | StorageClass::Output)
+        {
+            return;
+        }
+        if recurse(self, ty) {
+            self.tcx
+                .sess
+                .span_err(span, "entrypoint parameter cannot contain a boolean");
+        }
+        fn recurse(cx: &CodegenCx<'_>, ty: Word) -> bool {
+            match cx.lookup_type(ty) {
+                SpirvType::Bool => true,
+                SpirvType::Adt { field_types, .. } => field_types.iter().any(|&f| recurse(cx, f)),
+                SpirvType::Vector { element, .. }
+                | SpirvType::Matrix { element, .. }
+                | SpirvType::Array { element, .. }
+                | SpirvType::RuntimeArray { element }
+                | SpirvType::Pointer { pointee: element }
+                | SpirvType::InterfaceBlock {
+                    inner_type: element,
+                } => recurse(cx, element),
+                SpirvType::Function {
+                    return_type,
+                    arguments,
+                } => recurse(cx, return_type) || arguments.iter().any(|&a| recurse(cx, a)),
+                _ => false,
             }
         }
     }

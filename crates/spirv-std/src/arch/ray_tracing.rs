@@ -19,21 +19,18 @@
 #[doc(alias = "OpReportIntersectionKHR")]
 #[inline]
 pub unsafe fn report_intersection(hit: f32, hit_kind: u32) -> bool {
-    let result: u32;
+    let mut result = false;
 
     asm! {
         "%bool = OpTypeBool",
-        "%u32 = OpTypeInt 32 0",
-        "%zero = OpConstant %u32 0",
-        "%one = OpConstant %u32 1",
         "%result = OpReportIntersectionKHR %bool {hit} {hit_kind}",
-        "{result} = OpSelect %u32 %result %one %zero",
-        result = out(reg) result,
+        "OpStore {result} %result",
+        result = in(reg) &mut result,
         hit = in(reg) hit,
         hit_kind = in(reg) hit_kind,
     };
 
-    result != 0
+    result
 }
 
 /// Ignores the current potential intersection, terminating the invocation that

@@ -407,25 +407,15 @@ impl BuilderSpirv {
     }
 
     pub fn dump_module_str(&self) -> String {
-        let mut module = self.builder.borrow().module_ref().clone();
-        let mut header = rspirv::dr::ModuleHeader::new(0);
-        header.set_version(0, 0);
-        module.header = Some(header);
-        module.disassemble()
+        self.builder.borrow().module_ref().disassemble()
     }
 
     /// Helper function useful to place right before a crash, to debug the module state.
     pub fn dump_module(&self, path: impl AsRef<Path>) {
-        let mut module = self.builder.borrow().module_ref().clone();
-        let mut header = rspirv::dr::ModuleHeader::new(0);
-        header.set_version(0, 0);
-        module.header = Some(header);
-        let disas = module.disassemble();
-        println!("{}", disas);
-        let spirv_module = module.assemble();
+        let module = self.builder.borrow().module_ref().assemble();
         File::create(path)
             .unwrap()
-            .write_all(spirv_tools::binary::from_binary(&spirv_module))
+            .write_all(spirv_tools::binary::from_binary(&module))
             .unwrap();
     }
 

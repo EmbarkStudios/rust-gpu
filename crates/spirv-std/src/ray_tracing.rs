@@ -274,20 +274,17 @@ impl RayQuery {
     #[doc(alias = "OpRayQueryProceedKHR")]
     #[inline]
     pub unsafe fn proceed(&self) -> bool {
-        let result: u32;
+        let mut result = false;
 
         asm! {
-            "%u32 = OpTypeInt 32 0",
             "%bool = OpTypeBool",
-            "%u32_0 = OpConstant %u32 0",
-            "%u32_1 = OpConstant %u32 1",
             "%result = OpRayQueryProceedKHR %bool {ray_query}",
-            "{result} = OpSelect %u32 %result %u32_1 %u32_0",
+            "OpStore {result} %result",
             ray_query = in(reg) self,
-            result = out(reg) result,
+            result = in(reg) &mut result,
         }
 
-        result != 0
+        result
     }
 
     /// Terminates further execution of a ray query; further calls to

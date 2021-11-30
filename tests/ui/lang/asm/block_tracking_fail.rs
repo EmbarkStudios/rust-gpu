@@ -14,9 +14,7 @@ fn asm_noreturn_open() {
 // No active basic block without `noreturn`.
 fn asm_closed() {
     unsafe {
-        asm!(
-            "OpUnreachable",
-        );
+        asm!("OpUnreachable");
     }
 }
 

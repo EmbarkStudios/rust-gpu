@@ -82,9 +82,6 @@ pub fn vertex(
     #[spirv(viewport_mask_per_view_nv)] viewport_mask_per_view_nv: u32,
     #[spirv(warp_id_nv)] warp_id_nv: u32,
     #[spirv(warps_per_sm_nv)] warps_per_sm_nv: u32,
-    // #[spirv(front_facing)] front_facing: bool, -- ICE
-    // #[spirv(fully_covered_ext)] fully_covered_ext: bool, -- ICE
-    // #[spirv(helper_invocation)] helper_invocation: bool, -- ICE
     // #[spirv(vertex_id)] vertex_id: u32, -- not allowed with vulkan
 ) {
 }
@@ -96,6 +93,9 @@ pub fn fragment(
     #[spirv(frag_coord)] frag_coord: Vec4,
     #[spirv(frag_invocation_count_ext)] frag_invocation_count_ext: u32,
     #[spirv(frag_size_ext)] frag_size_ext: UVec2,
+    #[spirv(front_facing)] front_facing: bool,
+    #[spirv(fully_covered_ext)] fully_covered_ext: bool,
+    #[spirv(helper_invocation)] helper_invocation: bool,
     #[spirv(layer)] layer: u32,
     #[spirv(point_coord)] point_coord: Vec2,
     #[spirv(primitive_id)] primitive_id: u32,

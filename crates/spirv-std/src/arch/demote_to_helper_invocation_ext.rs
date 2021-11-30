@@ -30,19 +30,16 @@ pub unsafe fn demote_to_helper_invocation() {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpIsHelperInvocationEXT")]
 pub fn is_helper_invocation() -> bool {
-    let result: u32;
+    let mut result = false;
 
     unsafe {
         asm! {
             "%bool = OpTypeBool",
-            "%u32 = OpTypeInt 32 0",
-            "%zero = OpConstant %u32 0",
-            "%one = OpConstant %u32 1",
             "%result = OpIsHelperInvocationEXT %bool",
-            "{} = OpSelect %u32 %result %one %zero",
-            out(reg) result
+            "OpStore {result} %result",
+            result = in(reg) &mut result,
         };
     }
 
-    result != 0
+    result
 }
