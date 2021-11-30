@@ -24,14 +24,15 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         .iter()
         .map(|f| should_inline(&disallowed_argument_types, &disallowed_return_types, f))
         .collect();
-    // This algorithm gets real sad if there's recursion - but, good news, SPIR-V bans recursion
-    let postorder = compute_function_postorder(sess, module, &to_delete)?;
-    let functions = module
+    // This algorithm gets real sad if there's recursion - but, good news, SPIR-V bans recursion,
+    // so we exit with an error if [`compute_function_postorder`] finds it.
+    let function_to_index = module
         .functions
         .iter()
         .enumerate()
         .map(|(idx, f)| (f.def_id().unwrap(), idx))
         .collect();
+    let postorder = compute_function_postorder(sess, module, &function_to_index, &to_delete)?;
     let void = module
         .types_global_values
         .iter()
@@ -56,10 +57,13 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         types_global_values: &mut module.types_global_values,
         void,
         ptr_map,
-        functions: &functions,
+        function_to_index: &function_to_index,
         needs_inline: &to_delete,
         invalid_args,
     };
+    // Processing functions in post-order of call tree we ensure that
+    // inlined functions already have all of the inner functions inlined, so we don't do
+    // the same work multiple times.
     for index in postorder {
         inliner.inline_fn(&mut module.functions, index);
         fuse_trivial_branches(&mut module.functions[index]);
@@ -87,14 +91,9 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
 fn compute_function_postorder(
     sess: &Session,
     module: &Module,
+    func_to_index: &FxHashMap<Word, usize>,
     to_delete: &[bool],
 ) -> super::Result<Vec<usize>> {
-    let func_to_index: FxHashMap<Word, usize> = module
-        .functions
-        .iter()
-        .enumerate()
-        .map(|(index, func)| (func.def_id().unwrap(), index))
-        .collect();
     /// Possible node states for cycle-discovering DFS.
     #[derive(Clone, PartialEq)]
     enum NodeState {
@@ -284,7 +283,7 @@ struct Inliner<'m, 'map> {
     types_global_values: &'m mut Vec<Instruction>,
     void: Word,
     ptr_map: FxHashMap<Word, Word>,
-    functions: &'map FunctionMap,
+    function_to_index: &'map FunctionMap,
     needs_inline: &'map [bool],
     invalid_args: FxHashSet<Word>,
 }
@@ -328,14 +327,9 @@ impl Inliner<'_, '_> {
         functions[index] = function;
     }
 
-    /// Inlines one block and returns whether inlining actually occurred.
+    /// Inlines one block.
     /// After calling this, `blocks[block_idx]` is finished processing.
-    fn inline_block(
-        &mut self,
-        caller: &mut Function,
-        functions: &[Function],
-        block_idx: usize,
-    ) -> bool {
+    fn inline_block(&mut self, caller: &mut Function, functions: &[Function], block_idx: usize) {
         // Find the first inlined OpFunctionCall
         let call = caller.blocks[block_idx]
             .instructions
@@ -346,14 +340,14 @@ impl Inliner<'_, '_> {
                 (
                     index,
                     inst,
-                    self.functions[&inst.operands[0].id_ref_any().unwrap()],
+                    self.function_to_index[&inst.operands[0].id_ref_any().unwrap()],
                 )
             })
             .find(|(_, inst, func_idx)| {
                 self.needs_inline[*func_idx] || args_invalid(&self.invalid_args, inst)
             });
         let (call_index, call_inst, callee_idx) = match call {
-            None => return false,
+            None => return,
             Some(call) => call,
         };
         let callee = &functions[callee_idx];
@@ -422,7 +416,8 @@ impl Inliner<'_, '_> {
         let mut callee_header = take(&mut inlined_blocks[0]).instructions;
         // TODO: OpLine handling
         let num_variables = callee_header.partition_point(|inst| inst.class.opcode == Op::Variable);
-        // Rather than fuse blocks, generate a new jump here. Branch fusing will take care of
+        // Rather than fuse the first block of the inline function to the current block,
+        // generate a new jump here. Branch fusing will take care of
         // it, and we maintain the invariant that current block has finished processing.
         let jump_to = self.id();
         inlined_blocks[0] = Block {
@@ -463,8 +458,6 @@ impl Inliner<'_, '_> {
         caller
             .blocks
             .splice((block_idx + 1)..(block_idx + 1), inlined_blocks);
-
-        true
     }
 
     fn add_clone_id_rules(&mut self, rewrite_rules: &mut FxHashMap<Word, Word>, blocks: &[Block]) {
