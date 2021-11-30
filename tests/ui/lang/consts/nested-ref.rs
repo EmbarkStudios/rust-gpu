@@ -28,6 +28,6 @@ pub fn main(
     vec_out: &mut Vec2,
 ) {
     *scalar_out = deep_load(&&123);
-    *bool_out = if vec_in == &Vec2::ZERO { 1 } else { 0 };
+    *bool_out = (vec_in == &Vec2::ZERO) as u32;
     *vec_out = deep_transpose(&ROT90) * *vec_in;
 }
