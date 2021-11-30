@@ -19,13 +19,13 @@ type FunctionMap = FxHashMap<Word, usize>;
 pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     let (disallowed_argument_types, disallowed_return_types) =
         compute_disallowed_argument_and_return_types(module);
-    let mut to_delete: Vec<_> = module
+    let to_delete: Vec<_> = module
         .functions
         .iter()
         .map(|f| should_inline(&disallowed_argument_types, &disallowed_return_types, f))
         .collect();
     // This algorithm gets real sad if there's recursion - but, good news, SPIR-V bans recursion
-    let postorder = compute_function_postorder(sess, module, &mut to_delete)?;
+    let postorder = compute_function_postorder(sess, module, &to_delete)?;
     let functions = module
         .functions
         .iter()
@@ -76,7 +76,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
 fn compute_function_postorder(
     sess: &Session,
     module: &Module,
-    to_delete: &mut [bool],
+    to_delete: &[bool],
 ) -> super::Result<Vec<usize>> {
     let func_to_index: FxHashMap<Word, usize> = module
         .functions
@@ -93,18 +93,12 @@ fn compute_function_postorder(
         Discovered,
         /// DFS returned.
         Finished,
-        /// Not visited, entry point.
-        Entry,
     }
     let mut states = vec![NodeState::NotVisited; module.functions.len()];
-    for opep in module.entry_points.iter() {
-        let func_id = opep.operands[1].unwrap_id_ref();
-        states[func_to_index[&func_id]] = NodeState::Entry;
-    }
     let mut has_recursion = None;
     let mut postorder = vec![];
     for index in 0..module.functions.len() {
-        if NodeState::Entry == states[index] {
+        if NodeState::NotVisited == states[index] && !to_delete[index] {
             visit(
                 sess,
                 module,
@@ -114,12 +108,6 @@ fn compute_function_postorder(
                 &mut postorder,
                 &func_to_index,
             );
-        }
-    }
-
-    for index in 0..module.functions.len() {
-        if NodeState::NotVisited == states[index] {
-            to_delete[index] = true;
         }
     }
 
@@ -147,7 +135,7 @@ fn compute_function_postorder(
                     )));
                     break;
                 }
-                NodeState::NotVisited | NodeState::Entry => {
+                NodeState::NotVisited => {
                     visit(
                         sess,
                         module,
