@@ -721,8 +721,6 @@
 <span id="721">721</span>
 <span id="722">722</span>
 <span id="723">723</span>
-<span id="724">724</span>
-<span id="725">725</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi</span>::{<span class="ident">RecursivePointeeCache</span>, <span class="ident">TyLayoutNameKey</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv::SpirvValue</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx::CodegenCx</span>;
@@ -826,9 +824,7 @@
             <span class="ident"><span class="self">Self</span>::Void</span> =&gt; <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_void_id</span>(<span class="ident">id</span>),
             <span class="ident"><span class="self">Self</span>::Bool</span> =&gt; <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_bool_id</span>(<span class="ident">id</span>),
             <span class="ident"><span class="self">Self</span>::Integer</span>(<span class="ident">width</span>, <span class="ident">signedness</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-                    <span class="ident">cx</span>.<span class="ident">emit_global</span>()
-                        .<span class="ident">type_int_id</span>(<span class="ident">id</span>, <span class="ident">width</span>, <span class="kw">if</span> <span class="ident">signedness</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> });
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_int_id</span>(<span class="ident">id</span>, <span class="ident">width</span>, <span class="ident">signedness</span> <span class="kw">as</span> <span class="ident">u32</span>);
                 <span class="kw">match</span> <span class="ident">width</span> {
                     <span class="number">8</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int8</span>) =&gt; <span class="ident">cx</span>
                         .<span class="ident">zombie_even_in_user_code</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u8 without OpCapability Int8&quot;</span>),

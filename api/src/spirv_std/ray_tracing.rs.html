@@ -959,9 +959,6 @@
 <span id="959">959</span>
 <span id="960">960</span>
 <span id="961">961</span>
-<span id="962">962</span>
-<span id="963">963</span>
-<span id="964">964</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Ray-tracing data types</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vector::Vector</span>;
 
@@ -1238,20 +1235,17 @@
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryProceedKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">proceed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">u32</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
         <span class="macro">asm!</span> {
-            <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
             <span class="string">&quot;%bool = OpTypeBool&quot;</span>,
-            <span class="string">&quot;%u32_0 = OpConstant %u32 0&quot;</span>,
-            <span class="string">&quot;%u32_1 = OpConstant %u32 1&quot;</span>,
             <span class="string">&quot;%result = OpRayQueryProceedKHR %bool {ray_query}&quot;</span>,
-            <span class="string">&quot;{result} = OpSelect %u32 %result %u32_1 %u32_0&quot;</span>,
+            <span class="string">&quot;OpStore {result} %result&quot;</span>,
             <span class="ident">ray_query</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="self">self</span>,
-            <span class="ident">result</span> <span class="op">=</span> <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">result</span>,
+            <span class="ident">result</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result</span>,
         }
 
-        <span class="ident">result</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
+        <span class="ident">result</span>
     }
 
     <span class="doccomment">/// Terminates further execution of a ray query; further calls to</span>

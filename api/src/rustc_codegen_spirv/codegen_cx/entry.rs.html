@@ -555,6 +555,55 @@
 <span id="555">555</span>
 <span id="556">556</span>
 <span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::CodegenCx</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::attr</span>::{<span class="ident">AggregatedSpirvAttributes</span>, <span class="ident">Entry</span>};
@@ -1074,6 +1123,13 @@
             );
         }
 
+        <span class="self">self</span>.<span class="ident">check_for_bools</span>(
+            <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
+            <span class="ident">var_ptr_spirv_type</span>,
+            <span class="ident">storage_class</span>,
+            <span class="ident">attrs</span>.<span class="ident">builtin</span>.<span class="ident">is_some</span>(),
+        );
+
         <span class="comment">// Assign locations from left to right, incrementing each storage class</span>
         <span class="comment">// individually.</span>
         <span class="comment">// TODO: Is this right for UniformConstant? Do they share locations with</span>
@@ -1108,6 +1164,48 @@
             <span class="comment">// SPIR-V &lt;= v1.3 only includes Input and Output in the interface.</span>
             <span class="kw">if</span> <span class="ident">storage_class</span> <span class="op">==</span> <span class="ident">StorageClass::Input</span> <span class="op">|</span><span class="op">|</span> <span class="ident">storage_class</span> <span class="op">==</span> <span class="ident">StorageClass::Output</span> {
                 <span class="ident">op_entry_point_interface_operands</span>.<span class="ident">push</span>(<span class="ident">var</span>);
+            }
+        }
+    }
+
+    <span class="comment">// Booleans are only allowed in some storage classes. Error if they&#39;re in others.</span>
+    <span class="kw">fn</span> <span class="ident">check_for_bools</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">Word</span>, <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>, <span class="ident">is_builtin</span>: <span class="ident">bool</span>) {
+        <span class="comment">// private and function are allowed here, but they can&#39;t happen.</span>
+        <span class="comment">// SPIR-V technically allows all input/output variables to be booleans, not just builtins,</span>
+        <span class="comment">// but has a note:</span>
+        <span class="comment">// &gt; Khronos Issue #363: OpTypeBool can be used in the Input and Output storage classes,</span>
+        <span class="comment">//   but the client APIs still only allow built-in Boolean variables (e.g. FrontFacing),</span>
+        <span class="comment">//   not user variables.</span>
+        <span class="comment">// spirv-val disallows non-builtin inputs/outputs, so we do too, I guess.</span>
+        <span class="kw">if</span> <span class="macro">matches!</span>(
+            <span class="ident">storage_class</span>,
+            <span class="ident">StorageClass::Workgroup</span> <span class="op">|</span> <span class="ident">StorageClass::CrossWorkgroup</span>
+        ) <span class="op">|</span><span class="op">|</span> <span class="ident">is_builtin</span> <span class="op">&amp;&amp;</span> <span class="macro">matches!</span>(<span class="ident">storage_class</span>, <span class="ident">StorageClass::Input</span> <span class="op">|</span> <span class="ident">StorageClass::Output</span>)
+        {
+            <span class="kw">return</span>;
+        }
+        <span class="kw">if</span> <span class="ident">recurse</span>(<span class="self">self</span>, <span class="ident">ty</span>) {
+            <span class="self">self</span>.<span class="ident">tcx</span>
+                .<span class="ident">sess</span>
+                .<span class="ident">span_err</span>(<span class="ident">span</span>, <span class="string">&quot;entrypoint parameter cannot contain a boolean&quot;</span>);
+        }
+        <span class="kw">fn</span> <span class="ident">recurse</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) -&gt; <span class="ident">bool</span> {
+            <span class="kw">match</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
+                <span class="ident">SpirvType::Bool</span> =&gt; <span class="bool-val">true</span>,
+                <span class="ident">SpirvType::Adt</span> { <span class="ident">field_types</span>, .. } =&gt; <span class="ident">field_types</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">f</span><span class="op">|</span> <span class="ident">recurse</span>(<span class="ident">cx</span>, <span class="ident">f</span>)),
+                <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. }
+                <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, .. }
+                <span class="op">|</span> <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. }
+                <span class="op">|</span> <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span> }
+                <span class="op">|</span> <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span>: <span class="ident">element</span> }
+                <span class="op">|</span> <span class="ident">SpirvType::InterfaceBlock</span> {
+                    <span class="ident">inner_type</span>: <span class="ident">element</span>,
+                } =&gt; <span class="ident">recurse</span>(<span class="ident">cx</span>, <span class="ident">element</span>),
+                <span class="ident">SpirvType::Function</span> {
+                    <span class="ident">return_type</span>,
+                    <span class="ident">arguments</span>,
+                } =&gt; <span class="ident">recurse</span>(<span class="ident">cx</span>, <span class="ident">return_type</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">arguments</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">a</span><span class="op">|</span> <span class="ident">recurse</span>(<span class="ident">cx</span>, <span class="ident">a</span>)),
+                <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
             }
         }
     }

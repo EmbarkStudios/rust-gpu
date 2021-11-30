@@ -2235,6 +2235,8 @@
 <span id="2235">2235</span>
 <span id="2236">2236</span>
 <span id="2237">2237</span>
+<span id="2238">2238</span>
+<span id="2239">2239</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
@@ -3019,22 +3021,24 @@
         <span class="ident">result</span>
     }
 
+    <span class="comment">// rustc has the concept of an immediate vs. memory type - bools are compiled to LLVM bools as</span>
+    <span class="comment">// immediates, but if they&#39;re behind a pointer, they&#39;re compiled to u8. The reason for this is</span>
+    <span class="comment">// because LLVM is bad at bools behind pointers (something something u1 bitmasking on load).</span>
+    <span class="comment">//</span>
+    <span class="comment">// SPIR-V allows bools behind *some* pointers, and disallows others - specifically, it allows</span>
+    <span class="comment">// bools behind the storage classes Workgroup, CrossWorkgroup, Private, Function, Input, and</span>
+    <span class="comment">// Output. In other words, &quot;For stuff the CPU can&#39;t see, bools are OK. For stuff the CPU *can*</span>
+    <span class="comment">// see, no bools allowed&quot;. So, we always compile rust bools to SPIR-V bools instead of u8 as</span>
+    <span class="comment">// rustc does, even if they&#39;re behind a pointer, and error if bools are in an interface (the</span>
+    <span class="comment">// user should choose u8, u32, or something else instead). That means that immediate types and</span>
+    <span class="comment">// memory types are the same, and no conversion needs to happen here.</span>
     <span class="kw">fn</span> <span class="ident">from_immediate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>) <span class="op">==</span> <span class="ident">SpirvType::Bool</span> {
-            <span class="kw">let</span> <span class="ident">i8</span> <span class="op">=</span> <span class="ident">SpirvType::Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
-            <span class="self">self</span>.<span class="ident">zext</span>(<span class="ident">val</span>, <span class="ident">i8</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">val</span>
-        }
+        <span class="ident">val</span>
     }
 
     <span class="comment">// silly clippy, we can&#39;t rename this!</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::wrong_self_convention</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">to_immediate_scalar</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">scalar</span>: <span class="ident">Scalar</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
-        <span class="kw">if</span> <span class="ident">scalar</span>.<span class="ident">is_bool</span>() {
-            <span class="kw">let</span> <span class="ident">bool</span> <span class="op">=</span> <span class="ident">SpirvType::Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
-            <span class="kw">return</span> <span class="self">self</span>.<span class="ident">trunc</span>(<span class="ident">val</span>, <span class="ident">bool</span>);
-        }
+    <span class="kw">fn</span> <span class="ident">to_immediate_scalar</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_scalar</span>: <span class="ident">Scalar</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="ident">val</span>
     }
 

@@ -312,28 +312,6 @@
 <span id="312">312</span>
 <span id="313">313</span>
 <span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
-<span id="323">323</span>
-<span id="324">324</span>
-<span id="325">325</span>
-<span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
-<span id="335">335</span>
-<span id="336">336</span>
 </pre><pre class="rust"><code><span class="doccomment">//! SPIR-V Instrinics</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module is intended as a low level abstraction over SPIR-V instructions.</span>
@@ -367,22 +345,11 @@
 
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span> {
-            <span class="comment">// Types &amp; Constants</span>
             <span class="string">&quot;%bool = OpTypeBool&quot;</span>,
-            <span class="string">&quot;%u8 = OpTypeInt 8 0&quot;</span>,
-            <span class="string">&quot;%u8_0 = OpConstant %u8 0&quot;</span>,
-            <span class="string">&quot;%u8_1 = OpConstant %u8 1&quot;</span>,
-            <span class="string">&quot;%glam_vec_type = OpTypeVector %u8 {len}&quot;</span>,
-            <span class="string">&quot;%bool_vec_type = OpTypeVector %bool {len}&quot;</span>,
-            <span class="string">&quot;%false_vec = OpConstantNull %glam_vec_type&quot;</span>,
-            <span class="comment">// Code</span>
-            <span class="string">&quot;%vector = OpLoad %glam_vec_type {vector}&quot;</span>,
-            <span class="string">&quot;%bool_vec = OpINotEqual %bool_vec_type %vector %false_vec&quot;</span>,
-            <span class="string">&quot;%result = OpAny %bool %bool_vec&quot;</span>,
-            <span class="string">&quot;%boolean = OpSelect %u8 %result %u8_1 %u8_0&quot;</span>,
-            <span class="string">&quot;OpStore {result} %boolean&quot;</span>,
+            <span class="string">&quot;%vector = OpLoad _ {vector}&quot;</span>,
+            <span class="string">&quot;%result = OpAny %bool %vector&quot;</span>,
+            <span class="string">&quot;OpStore {result} %result&quot;</span>,
             <span class="ident">vector</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">vector</span>,
-            <span class="ident">len</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">N</span>,
             <span class="ident">result</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result</span>
         }
     }
@@ -400,23 +367,12 @@
 
     <span class="kw">unsafe</span> {
         <span class="macro">asm!</span> {
-            <span class="comment">// Types &amp; Constants</span>
             <span class="string">&quot;%bool = OpTypeBool&quot;</span>,
-            <span class="string">&quot;%u8 = OpTypeInt 8 0&quot;</span>,
-            <span class="string">&quot;%u8_0 = OpConstant %u8 0&quot;</span>,
-            <span class="string">&quot;%u8_1 = OpConstant %u8 1&quot;</span>,
-            <span class="string">&quot;%glam_vec_type = OpTypeVector %u8 {len}&quot;</span>,
-            <span class="string">&quot;%bool_vec_type = OpTypeVector %bool {len}&quot;</span>,
-            <span class="string">&quot;%false_vec = OpConstantNull %glam_vec_type&quot;</span>,
-            <span class="comment">// Code</span>
-            <span class="string">&quot;%vector = OpLoad %glam_vec_type {vector}&quot;</span>,
-            <span class="string">&quot;%bool_vec = OpINotEqual %bool_vec_type %vector %false_vec&quot;</span>,
-            <span class="string">&quot;%result = OpAll %bool %bool_vec&quot;</span>,
-            <span class="string">&quot;%boolean = OpSelect %u8 %result %u8_1 %u8_0&quot;</span>,
-            <span class="string">&quot;OpStore {element} %boolean&quot;</span>,
+            <span class="string">&quot;%vector = OpLoad _ {vector}&quot;</span>,
+            <span class="string">&quot;%result = OpAll %bool %vector&quot;</span>,
+            <span class="string">&quot;OpStore {result} %result&quot;</span>,
             <span class="ident">vector</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">vector</span>,
-            <span class="ident">len</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">N</span>,
-            <span class="ident">element</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result</span>
+            <span class="ident">result</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result</span>
         }
     }
 

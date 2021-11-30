@@ -81,9 +81,6 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
 </pre><pre class="rust"><code><span class="doccomment">/// Reports an intersection back to the traversal infrastructure.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// If the intersection occurred within the current ray interval, the</span>
@@ -105,21 +102,18 @@
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpReportIntersectionKHR&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">report_intersection</span>(<span class="ident">hit</span>: <span class="ident">f32</span>, <span class="ident">hit_kind</span>: <span class="ident">u32</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">u32</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
     <span class="macro">asm!</span> {
         <span class="string">&quot;%bool = OpTypeBool&quot;</span>,
-        <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
-        <span class="string">&quot;%zero = OpConstant %u32 0&quot;</span>,
-        <span class="string">&quot;%one = OpConstant %u32 1&quot;</span>,
         <span class="string">&quot;%result = OpReportIntersectionKHR %bool {hit} {hit_kind}&quot;</span>,
-        <span class="string">&quot;{result} = OpSelect %u32 %result %one %zero&quot;</span>,
-        <span class="ident">result</span> <span class="op">=</span> <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">result</span>,
+        <span class="string">&quot;OpStore {result} %result&quot;</span>,
+        <span class="ident">result</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result</span>,
         <span class="ident">hit</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">hit</span>,
         <span class="ident">hit_kind</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">hit_kind</span>,
     };
 
-    <span class="ident">result</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
+    <span class="ident">result</span>
 }
 
 <span class="doccomment">/// Ignores the current potential intersection, terminating the invocation that</span>
