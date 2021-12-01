@@ -381,13 +381,26 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
                 } else {
                     Some(self.size)
                 };
+                let mut field_names = Vec::new();
+                if let TyKind::Adt(adt, _) = self.ty.kind() {
+                    if let Variants::Single { index } = self.variants {
+                        for i in self.fields.index_by_increasing_offset() {
+                            let field = &adt.variants[index].fields[i];
+                            field_names.push(field.ident.name.to_ident_string());
+                        }
+                    }
+                }
                 SpirvType::Adt {
                     def_id: def_id_for_spirv_type_adt(*self),
                     size,
                     align: self.align.abi,
                     field_types: vec![a, b],
                     field_offsets: vec![a_offset, b_offset],
-                    field_names: None,
+                    field_names: if field_names.len() == 2 {
+                        Some(field_names)
+                    } else {
+                        None
+                    },
                 }
                 .def_with_name(cx, span, TyLayoutNameKey::from(*self))
             }
