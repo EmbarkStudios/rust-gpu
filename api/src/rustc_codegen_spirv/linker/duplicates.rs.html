@@ -290,6 +290,12 @@
 <span id="290">290</span>
 <span id="291">291</span>
 <span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::decorations</span>::{<span class="ident">CustomDecoration</span>, <span class="ident">ZombieDecoration</span>};
 <span class="kw">use</span> <span class="ident">rspirv::binary::Assemble</span>;
 <span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
@@ -561,8 +567,14 @@
         .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">anno_set</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">assemble</span>()));
     <span class="comment">// Same thing with OpName</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name_ids</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">member_name_ids</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
     <span class="ident">module</span>.<span class="ident">debug_names</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-        <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Name</span> <span class="op">|</span><span class="op">|</span> <span class="ident">name_ids</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>())
+        (<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Name</span> <span class="op">|</span><span class="op">|</span> <span class="ident">name_ids</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>()))
+            <span class="op">&amp;&amp;</span> (<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::MemberName</span>
+                <span class="op">|</span><span class="op">|</span> <span class="ident">member_name_ids</span>.<span class="ident">insert</span>((
+                    <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
+                    <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_int32</span>(),
+                )))
     });
 }
 
