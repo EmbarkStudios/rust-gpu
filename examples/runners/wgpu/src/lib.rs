@@ -90,7 +90,7 @@ fn maybe_watch(
 ) -> wgpu::ShaderModuleDescriptorSpirV<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
-        use spirv_builder::{Capability, CompileResult, MetadataPrintout, SpirvBuilder};
+        use spirv_builder::{CompileResult, MetadataPrintout, SpirvBuilder};
         use std::borrow::Cow;
         use std::path::PathBuf;
         // Hack: spirv_builder builds into a custom directory if running under cargo, to not
@@ -101,22 +101,19 @@ fn maybe_watch(
         // under cargo by setting these environment variables.
         std::env::set_var("OUT_DIR", env!("OUT_DIR"));
         std::env::set_var("PROFILE", env!("PROFILE"));
-        let (crate_name, capabilities): (_, &[Capability]) = match shader {
-            RustGPUShader::Simplest => ("simplest-shader", &[]),
-            RustGPUShader::Sky => ("sky-shader", &[]),
-            RustGPUShader::Compute => ("compute-shader", &[Capability::Int8]),
-            RustGPUShader::Mouse => ("mouse-shader", &[]),
+        let crate_name = match shader {
+            RustGPUShader::Simplest => "simplest-shader",
+            RustGPUShader::Sky => "sky-shader",
+            RustGPUShader::Compute => "compute-shader",
+            RustGPUShader::Mouse => "mouse-shader",
         };
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
         let crate_path = [manifest_dir, "..", "..", "shaders", crate_name]
             .iter()
             .copied()
             .collect::<PathBuf>();
-        let mut builder = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.1")
+        let builder = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.1")
             .print_metadata(MetadataPrintout::None);
-        for &cap in capabilities {
-            builder = builder.capability(cap);
-        }
         let initial_result = if let Some(mut f) = on_watch {
             builder
                 .watch(move |compile_result| f(handle_compile_result(compile_result)))
