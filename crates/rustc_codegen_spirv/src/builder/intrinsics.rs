@@ -350,9 +350,8 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         cond
     }
 
-    fn sideeffect(&mut self) {
-        // TODO: This is currently ignored.
-        // It corresponds to the llvm.sideeffect intrinsic - does spir-v have an equivalent?
+    fn type_test(&mut self, _pointer: Self::Value, _typeid: Self::Value) -> Self::Value {
+        todo!()
     }
 
     fn va_start(&mut self, _val: Self::Value) -> Self::Value {

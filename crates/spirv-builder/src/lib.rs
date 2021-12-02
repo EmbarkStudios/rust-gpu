@@ -68,7 +68,7 @@
 )]
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
-#![allow()]
+// #![allow()]
 
 mod depfile;
 #[cfg(feature = "watch")]
