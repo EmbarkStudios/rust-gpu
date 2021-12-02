@@ -178,11 +178,13 @@ pub fn main_vs(#[spirv(vertex_index)] vert_idx: i32, #[spirv(position)] builtin_
 
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
     #[test]
     fn test_tonemap() {
-        assert_eq!(tonemap(vec3(1_f32,1_f32,1_f32)), vec3(0.001261625, 0.001261625, 0.001261625));
+        assert_eq!(
+            tonemap(vec3(1_f32, 1_f32, 1_f32)),
+            vec3(0.001261625, 0.001261625, 0.001261625)
+        );
     }
 }
