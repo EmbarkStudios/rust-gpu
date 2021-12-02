@@ -1,15 +1,20 @@
 error[E0277]: the trait bound `Image<f32, 1_u32, 2_u32, 0_u32, 0_u32, 1_u32, 0_u32>: HasQuerySize` is not satisfied
-  --> $DIR/query_size_err.rs:12:21
-   |
-12 |     *output = image.query_size();
-   |                     ^^^^^^^^^^ the trait `HasQuerySize` is not implemented for `Image<f32, 1_u32, 2_u32, 0_u32, 0_u32, 1_u32, 0_u32>`
-   |
-   = help: the following implementations were found:
-             <Image<SampledType, 0_u32, DEPTH, ARRAYED, 0_u32, 0_u32, FORMAT> as HasQuerySize>
-             <Image<SampledType, 0_u32, DEPTH, ARRAYED, 0_u32, 2_u32, FORMAT> as HasQuerySize>
-             <Image<SampledType, 0_u32, DEPTH, ARRAYED, 1_u32, SAMPLED, FORMAT> as HasQuerySize>
-             <Image<SampledType, 1_u32, DEPTH, ARRAYED, 0_u32, 0_u32, FORMAT> as HasQuerySize>
-           and 10 others
+   --> $DIR/query_size_err.rs:12:21
+    |
+12  |     *output = image.query_size();
+    |                     ^^^^^^^^^^ the trait `HasQuerySize` is not implemented for `Image<f32, 1_u32, 2_u32, 0_u32, 0_u32, 1_u32, 0_u32>`
+    |
+    = help: the following implementations were found:
+              <Image<SampledType, 0_u32, DEPTH, ARRAYED, 0_u32, 0_u32, FORMAT> as HasQuerySize>
+              <Image<SampledType, 0_u32, DEPTH, ARRAYED, 0_u32, 2_u32, FORMAT> as HasQuerySize>
+              <Image<SampledType, 0_u32, DEPTH, ARRAYED, 1_u32, SAMPLED, FORMAT> as HasQuerySize>
+              <Image<SampledType, 1_u32, DEPTH, ARRAYED, 0_u32, 0_u32, FORMAT> as HasQuerySize>
+            and 10 others
+note: required by a bound in `Image::<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT>::query_size`
+   --> $SPIRV_STD_SRC/image.rs:875:15
+    |
+875 |         Self: HasQuerySize,
+    |               ^^^^^^^^^^^^ required by this bound in `Image::<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT>::query_size`
 
 error: aborting due to previous error
 
