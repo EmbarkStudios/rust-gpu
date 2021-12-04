@@ -33,9 +33,9 @@ fn mouse_button_index(button: MouseButton) -> usize {
 }
 
 async fn run(
-    event_loop: EventLoop<wgpu::ShaderModuleDescriptorSpirV<'static>>,
+    event_loop: EventLoop<wgpu::ShaderModuleDescriptor<'static>>,
     window: Window,
-    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
+    shader_binary: wgpu::ShaderModuleDescriptor<'static>,
 ) {
     let instance = wgpu::Instance::new(wgpu::Backends::VULKAN | wgpu::Backends::METAL);
 
@@ -57,7 +57,7 @@ async fn run(
         .await
         .expect("Failed to find an appropriate adapter");
 
-    let features = wgpu::Features::PUSH_CONSTANTS | wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
+    let features = wgpu::Features::PUSH_CONSTANTS;
     let limits = wgpu::Limits {
         max_push_constant_size: 256,
         ..Default::default()
@@ -284,9 +284,9 @@ fn create_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &wgpu::PipelineLayout,
     surface_format: wgpu::TextureFormat,
-    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'_>,
+    shader_binary: wgpu::ShaderModuleDescriptor<'_>,
 ) -> wgpu::RenderPipeline {
-    let module = unsafe { device.create_shader_module_spirv(&shader_binary) };
+    let module = device.create_shader_module(&shader_binary);
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(pipeline_layout),

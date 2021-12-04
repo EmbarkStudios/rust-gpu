@@ -22,7 +22,7 @@ pub fn start(options: &Options) {
 
 pub async fn start_internal(
     _options: &Options,
-    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
+    shader_binary: wgpu::ShaderModuleDescriptor<'static>,
 ) {
     let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
     let adapter = instance
@@ -38,8 +38,7 @@ pub async fn start_internal(
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features: wgpu::Features::TIMESTAMP_QUERY
-                    | wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
+                features: wgpu::Features::TIMESTAMP_QUERY,
                 limits: wgpu::Limits::default(),
             },
             None,
@@ -52,7 +51,7 @@ pub async fn start_internal(
     let timestamp_period = queue.get_timestamp_period();
 
     // Load the shaders from disk
-    let module = unsafe { device.create_shader_module_spirv(&shader_binary) };
+    let module = device.create_shader_module(&shader_binary);
 
     let top = 2u32.pow(20);
     let src_range = 1..top;
@@ -66,20 +65,16 @@ pub async fn start_internal(
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
-        entries: &[
-            // XXX - some graphics cards do not support empty bind layout groups, so
-            // create a dummy entry.
-            wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                count: None,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    has_dynamic_offset: false,
-                    min_binding_size: Some(NonZeroU64::new(1).unwrap()),
-                    ty: wgpu::BufferBindingType::Storage { read_only: false },
-                },
+        entries: &[wgpu::BindGroupLayoutEntry {
+            binding: 0,
+            count: None,
+            visibility: wgpu::ShaderStages::COMPUTE,
+            ty: wgpu::BindingType::Buffer {
+                has_dynamic_offset: false,
+                min_binding_size: Some(NonZeroU64::new(4).unwrap()),
+                ty: wgpu::BufferBindingType::Storage { read_only: false },
             },
-        ],
+        }],
     });
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
