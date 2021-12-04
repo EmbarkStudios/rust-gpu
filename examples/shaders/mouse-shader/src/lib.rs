@@ -224,7 +224,8 @@ pub fn main_fs(
     };
 
     // FIXME: Naga does not like for loops
-    let mut paint_for_button = |i| {
+    let mut i = 0;
+    while i < 3 {
         painter.fill(
             mouse_button(i),
             RED.lerp(
@@ -237,11 +238,9 @@ pub fn main_fs(
                     constants.time - constants.mouse_button_press_time[i],
                 ),
             ),
-        )
-    };
-    paint_for_button(0);
-    paint_for_button(1);
-    paint_for_button(2);
+        );
+        i += 1;
+    }
 
     painter.fill_with_contrast_border(
         mouse_circle
