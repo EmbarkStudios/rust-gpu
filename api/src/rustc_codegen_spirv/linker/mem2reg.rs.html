@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;rustc_codegen_spirv&#x2F;src&#x2F;linker&#x2F;mem2reg.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mem2reg.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;rustc_codegen_spirv&#x2F;src&#x2F;linker&#x2F;mem2reg.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mem2reg.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css"disabled><link rel="stylesheet" type="text/css" href="../../../dark.css"disabled><link rel="stylesheet" type="text/css" href="../../../light.css"id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -622,11 +623,11 @@
 <span class="kw">use</span> <span class="ident">std::collections::hash_map</span>;
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mem2reg</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">types_global_values</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
+    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleHeader</span>,
+    <span class="ident">types_global_values</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
     <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="ident">func</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Function</span>,
+    <span class="ident">func</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Function</span>,
 ) {
     <span class="kw">let</span> <span class="ident">reachable</span> <span class="op">=</span> <span class="ident">compute_reachable</span>(<span class="kw-2">&amp;</span><span class="ident">func</span>.<span class="ident">blocks</span>);
     <span class="kw">let</span> <span class="ident">preds</span> <span class="op">=</span> <span class="ident">compute_preds</span>(<span class="kw-2">&amp;</span><span class="ident">func</span>.<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">reachable</span>);
@@ -638,7 +639,7 @@
             <span class="ident">types_global_values</span>,
             <span class="ident">pointer_to_pointee</span>,
             <span class="ident">constants</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func</span>.<span class="ident">blocks</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">func</span>.<span class="ident">blocks</span>,
             <span class="kw-2">&amp;</span><span class="ident">dominance_frontier</span>,
         );
         <span class="kw">if</span> <span class="op">!</span><span class="ident">changed</span> {
@@ -657,7 +658,7 @@
 }
 
 <span class="kw">fn</span> <span class="ident">compute_reachable</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">recurse</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">reachable</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">bool</span>], <span class="ident">block</span>: <span class="ident">usize</span>) {
+    <span class="kw">fn</span> <span class="ident">recurse</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">reachable</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">bool</span>], <span class="ident">block</span>: <span class="ident">usize</span>) {
         <span class="kw">if</span> <span class="op">!</span><span class="ident">reachable</span>[<span class="ident">block</span>] {
             <span class="ident">reachable</span>[<span class="ident">block</span>] <span class="op">=</span> <span class="bool-val">true</span>;
             <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">block</span>]) {
@@ -667,7 +668,7 @@
         }
     }
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reachable</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="bool-val">false</span>; <span class="ident">blocks</span>.<span class="ident">len</span>()];
-    <span class="ident">recurse</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">reachable</span>, <span class="number">0</span>);
+    <span class="ident">recurse</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;mut</span> <span class="ident">reachable</span>, <span class="number">0</span>);
     <span class="ident">reachable</span>
 }
 
@@ -760,11 +761,11 @@
 
 <span class="comment">// Returns true if variables were rewritten</span>
 <span class="kw">fn</span> <span class="ident">insert_phis_all</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">types_global_values</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
+    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleHeader</span>,
+    <span class="ident">types_global_values</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
     <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>],
+    <span class="ident">blocks</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">Block</span>],
     <span class="ident">dominance_frontier</span>: <span class="kw-2">&amp;</span>[<span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>],
 ) -&gt; <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="ident">var_maps_and_types</span> <span class="op">=</span> <span class="ident">blocks</span>[<span class="number">0</span>]
@@ -909,8 +910,8 @@
 <span class="comment">// Finally, an edge case to keep in mind is that an OpCopyMemory can happen between two vars in the</span>
 <span class="comment">// same var map (e.g. `s.x = s.y;`).</span>
 <span class="kw">fn</span> <span class="ident">split_copy_memory</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>],
+    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleHeader</span>,
+    <span class="ident">blocks</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">Block</span>],
     <span class="ident">var_map</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>,
 ) {
     <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span> {
@@ -999,8 +1000,8 @@
 
 <span class="comment">// These can&#39;t be part of the Renamer impl due to borrowck rules.</span>
 <span class="kw">fn</span> <span class="ident">undef_for</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">types_global_values</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
+    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleHeader</span>,
+    <span class="ident">types_global_values</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="ident">ty</span>: <span class="ident">Word</span>,
 ) -&gt; <span class="ident">Word</span> {
     <span class="comment">// TODO: This is horribly slow, fix this</span>
@@ -1015,8 +1016,8 @@
     <span class="ident">inst_id</span>
 }
 <span class="kw">fn</span> <span class="ident">top_stack_or_undef</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">types_global_values</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
+    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleHeader</span>,
+    <span class="ident">types_global_values</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="ident">stack</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
     <span class="ident">ty</span>: <span class="ident">Word</span>,
 ) -&gt; <span class="ident">Word</span> {
@@ -1041,7 +1042,7 @@
 
 <span class="kw">impl</span> <span class="ident">Renamer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
     <span class="comment">// Returns the phi definition.</span>
-    <span class="kw">fn</span> <span class="ident">insert_phi_value</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">usize</span>, <span class="ident">from_block</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Word</span> {
+    <span class="kw">fn</span> <span class="ident">insert_phi_value</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">usize</span>, <span class="ident">from_block</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Word</span> {
         <span class="kw">let</span> <span class="ident">from_block_label</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">blocks</span>[<span class="ident">from_block</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">phi_defs</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">phi_defs</span>;
         <span class="kw">let</span> <span class="ident">existing_phi</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">blocks</span>[<span class="ident">block</span>].<span class="ident">instructions</span>.<span class="ident">iter_mut</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
@@ -1078,7 +1079,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">rename</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">usize</span>, <span class="ident">from_block</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">rename</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">usize</span>, <span class="ident">from_block</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">original_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">from_block</span>) <span class="op">=</span> <span class="ident">from_block</span> {
@@ -1095,7 +1096,7 @@
             <span class="kw">return</span>;
         }
 
-        <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">blocks</span>[<span class="ident">block</span>].<span class="ident">instructions</span> {
+        <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">blocks</span>[<span class="ident">block</span>].<span class="ident">instructions</span> {
             <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::Variable</span> <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
                 <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>();
@@ -1173,7 +1174,7 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">remove_nops</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>]) {
+<span class="kw">fn</span> <span class="ident">remove_nops</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">Block</span>]) {
     <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span> {
         <span class="ident">block</span>
             .<span class="ident">instructions</span>
@@ -1182,7 +1183,7 @@
 }
 
 <span class="kw">fn</span> <span class="ident">remove_old_variables</span>(
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>],
+    <span class="ident">blocks</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">Block</span>],
     <span class="ident">var_maps_and_types</span>: <span class="kw-2">&amp;</span>[(<span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>, <span class="ident">u32</span>)],
 ) {
     <span class="ident">blocks</span>[<span class="number">0</span>].<span class="ident">instructions</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
@@ -1207,6 +1208,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (48a5999fc 2021-12-01)" ></div>
 </body></html>

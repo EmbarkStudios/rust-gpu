@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;rustc_codegen_spirv&#x2F;src&#x2F;builder&#x2F;builder_methods.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>builder_methods.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;rustc_codegen_spirv&#x2F;src&#x2F;builder&#x2F;builder_methods.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>builder_methods.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css"disabled><link rel="stylesheet" type="text/css" href="../../../dark.css"disabled><link rel="stylesheet" type="text/css" href="../../../light.css"id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -2237,6 +2238,14 @@
 <span id="2237">2237</span>
 <span id="2238">2238</span>
 <span id="2239">2239</span>
+<span id="2240">2240</span>
+<span id="2241">2241</span>
+<span id="2242">2242</span>
+<span id="2243">2243</span>
+<span id="2244">2244</span>
+<span id="2245">2245</span>
+<span id="2246">2246</span>
+<span id="2247">2247</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
@@ -2266,7 +2275,7 @@
             $(<span class="ident">int</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fold_int_lhs</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fold_int_rhs</span>:<span class="ident">ident</span>) =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fold_int</span>:<span class="ident">expr</span>)<span class="question-mark">?</span>
         })<span class="question-mark">?</span>
     ) =&gt; {
-        <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+        <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
             <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
             <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">ty</span>;
 
@@ -2309,7 +2318,7 @@
 <span class="comment">// shl and shr allow different types as their operands</span>
 <span class="macro">macro_rules!</span> <span class="ident">simple_op_unchecked_type</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst_name</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+        <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
             <span class="self">self</span>.<span class="ident">emit</span>()
                 .<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst_name</span>(<span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">lhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">rhs</span>.<span class="ident">def</span>(<span class="self">self</span>))
                 .<span class="ident">unwrap</span>()
@@ -2320,7 +2329,7 @@
 
 <span class="macro">macro_rules!</span> <span class="ident">simple_uni_op</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst_name</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+        <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
             <span class="self">self</span>.<span class="ident">emit</span>()
                 .<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst_name</span>(<span class="ident">val</span>.<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">val</span>.<span class="ident">def</span>(<span class="self">self</span>))
                 .<span class="ident">unwrap</span>()
@@ -2541,7 +2550,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">memset_constant_size</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ptr</span>: <span class="ident">SpirvValue</span>, <span class="ident">pat</span>: <span class="ident">SpirvValue</span>, <span class="ident">size_bytes</span>: <span class="ident">u64</span>) {
+    <span class="kw">fn</span> <span class="ident">memset_constant_size</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ptr</span>: <span class="ident">SpirvValue</span>, <span class="ident">pat</span>: <span class="ident">SpirvValue</span>, <span class="ident">size_bytes</span>: <span class="ident">u64</span>) {
         <span class="kw">let</span> <span class="ident">size_elem</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">lookup_type</span>(<span class="ident">pat</span>.<span class="ident">ty</span>)
             .<span class="ident">sizeof</span>(<span class="self">self</span>)
@@ -2559,7 +2568,7 @@
     }
 
     <span class="comment">// TODO: Test this is correct</span>
-    <span class="kw">fn</span> <span class="ident">memset_dynamic_size</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ptr</span>: <span class="ident">SpirvValue</span>, <span class="ident">pat</span>: <span class="ident">SpirvValue</span>, <span class="ident">size_bytes</span>: <span class="ident">SpirvValue</span>) {
+    <span class="kw">fn</span> <span class="ident">memset_dynamic_size</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ptr</span>: <span class="ident">SpirvValue</span>, <span class="ident">pat</span>: <span class="ident">SpirvValue</span>, <span class="ident">size_bytes</span>: <span class="ident">SpirvValue</span>) {
         <span class="kw">let</span> <span class="ident">size_elem</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">lookup_type</span>(<span class="ident">pat</span>.<span class="ident">ty</span>)
             .<span class="ident">sizeof</span>(<span class="self">self</span>)
@@ -2713,7 +2722,7 @@
         <span class="self">self</span>.<span class="ident">basic_block</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">set_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>) {
+    <span class="kw">fn</span> <span class="ident">set_span</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>) {
         <span class="self">self</span>.<span class="ident">current_span</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">span</span>);
         <span class="kw">let</span> <span class="ident">loc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">source_map</span>().<span class="ident">lookup_char_pos</span>(<span class="ident">span</span>.<span class="ident">lo</span>());
         <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="self">self</span>
@@ -2733,7 +2742,7 @@
         <span class="ident">cx</span>.<span class="ident">emit_with_cursor</span>(<span class="ident">cursor_fn</span>).<span class="ident">begin_block</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">append_sibling_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident"><span class="self">Self</span>::BasicBlock</span> {
+    <span class="kw">fn</span> <span class="ident">append_sibling_block</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident"><span class="self">Self</span>::BasicBlock</span> {
         <span class="self">self</span>.<span class="ident">emit_with_cursor</span>(<span class="ident">BuilderCursor</span> {
             <span class="ident">function</span>: <span class="self">self</span>.<span class="ident">cursor</span>.<span class="ident">function</span>,
             <span class="ident">block</span>: <span class="prelude-val">None</span>,
@@ -2742,7 +2751,7 @@
         .<span class="ident">unwrap</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">build_sibling_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">build_sibling_block</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit_with_cursor</span>(<span class="ident">BuilderCursor</span> {
             <span class="ident">function</span>: <span class="self">self</span>.<span class="ident">cursor</span>.<span class="ident">function</span>,
             <span class="ident">block</span>: <span class="prelude-val">None</span>,
@@ -2761,20 +2770,20 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">ret_void</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">ret_void</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">ret</span>().<span class="ident">unwrap</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">ret</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
+    <span class="kw">fn</span> <span class="ident">ret</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
         <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">ret_value</span>(<span class="ident">value</span>.<span class="ident">def</span>(<span class="self">self</span>)).<span class="ident">unwrap</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">br</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="ident"><span class="self">Self</span>::BasicBlock</span>) {
+    <span class="kw">fn</span> <span class="ident">br</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="ident"><span class="self">Self</span>::BasicBlock</span>) {
         <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">branch</span>(<span class="ident">dest</span>).<span class="ident">unwrap</span>();
     }
 
     <span class="kw">fn</span> <span class="ident">cond_br</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">cond</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">then_llbb</span>: <span class="ident"><span class="self">Self</span>::BasicBlock</span>,
         <span class="ident">else_llbb</span>: <span class="ident"><span class="self">Self</span>::BasicBlock</span>,
@@ -2785,7 +2794,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">switch</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">v</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">else_llbb</span>: <span class="ident"><span class="self">Self</span>::BasicBlock</span>,
         <span class="ident">cases</span>: <span class="kw">impl</span> <span class="ident">ExactSizeIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">u128</span>, <span class="ident"><span class="self">Self</span>::BasicBlock</span>)<span class="op">&gt;</span>,
@@ -2862,7 +2871,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">invoke</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">llty</span>: <span class="ident"><span class="self">Self</span>::Type</span>,
         <span class="ident">llfn</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Value</span>],
@@ -2876,7 +2885,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">unreachable</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">unreachable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">unreachable</span>().<span class="ident">unwrap</span>();
     }
 
@@ -2921,7 +2930,7 @@
     <span class="macro">simple_uni_op!</span> {<span class="ident">neg</span>, <span class="ident">s_negate</span>}
     <span class="macro">simple_uni_op!</span> {<span class="ident">fneg</span>, <span class="ident">f_negate</span>}
 
-    <span class="kw">fn</span> <span class="ident">and</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">and</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">ty</span>;
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
@@ -2940,7 +2949,7 @@
         .<span class="ident">unwrap</span>()
         .<span class="ident">with_type</span>(<span class="ident">ty</span>)
     }
-    <span class="kw">fn</span> <span class="ident">or</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">or</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">ty</span>;
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
@@ -2959,7 +2968,7 @@
         .<span class="ident">unwrap</span>()
         .<span class="ident">with_type</span>(<span class="ident">ty</span>)
     }
-    <span class="kw">fn</span> <span class="ident">xor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">xor</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">ty</span>;
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
@@ -2979,7 +2988,7 @@
         .<span class="ident">unwrap</span>()
         .<span class="ident">with_type</span>(<span class="ident">ty</span>)
     }
-    <span class="kw">fn</span> <span class="ident">not</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">not</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Integer</span>(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">not</span>(<span class="ident">val</span>.<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">val</span>.<span class="ident">def</span>(<span class="self">self</span>)),
             <span class="ident">SpirvType::Bool</span> =&gt; {
@@ -2998,7 +3007,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">checked_binop</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">oop</span>: <span class="ident">OverflowOp</span>,
         <span class="ident">_ty</span>: <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
         <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
@@ -3032,17 +3041,17 @@
     <span class="comment">// rustc does, even if they&#39;re behind a pointer, and error if bools are in an interface (the</span>
     <span class="comment">// user should choose u8, u32, or something else instead). That means that immediate types and</span>
     <span class="comment">// memory types are the same, and no conversion needs to happen here.</span>
-    <span class="kw">fn</span> <span class="ident">from_immediate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">from_immediate</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="ident">val</span>
     }
 
     <span class="comment">// silly clippy, we can&#39;t rename this!</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::wrong_self_convention</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">to_immediate_scalar</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_scalar</span>: <span class="ident">Scalar</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">to_immediate_scalar</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_scalar</span>: <span class="ident">Scalar</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="ident">val</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">alloca</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">alloca</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">let</span> <span class="ident">ptr_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span>: <span class="ident">ty</span> }.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="comment">// &quot;All OpVariable instructions in a function must be the first instructions in the first block.&quot;</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit</span>();
@@ -3075,17 +3084,17 @@
         <span class="ident">result_id</span>.<span class="ident">with_type</span>(<span class="ident">ptr_ty</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">dynamic_alloca</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">dynamic_alloca</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">alloca</span>(<span class="ident">ty</span>, <span class="ident">align</span>);
         <span class="self">self</span>.<span class="ident">err</span>(<span class="string">&quot;dynamic alloca is not supported yet&quot;</span>);
         <span class="ident">result</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">array_alloca</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">_len</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">array_alloca</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">_len</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;array alloca not supported yet&quot;</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">load</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">const_fold_load</span>(<span class="self">self</span>) {
             <span class="kw">return</span> <span class="ident">value</span>;
         }
@@ -3105,7 +3114,7 @@
             .<span class="ident">with_type</span>(<span class="ident">ty</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">volatile_load</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">volatile_load</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="comment">// TODO: Implement this</span>
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">load</span>(<span class="ident">ty</span>, <span class="ident">ptr</span>, <span class="ident">Align::from_bytes</span>(<span class="number">0</span>).<span class="ident">unwrap</span>());
         <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;volatile load is not supported yet&quot;</span>);
@@ -3113,7 +3122,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">atomic_load</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>,
         <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">order</span>: <span class="ident">AtomicOrdering</span>,
@@ -3148,7 +3157,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">load_operand</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">place</span>: <span class="ident">PlaceRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">OperandRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">place</span>.<span class="ident">layout</span>.<span class="ident">is_zst</span>() {
@@ -3205,7 +3214,7 @@
         <span class="ident">dest</span>: <span class="ident">PlaceRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span>,
     ) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">const_usize</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">dest</span>.<span class="ident">project_index</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">zero</span>).<span class="ident">llval</span>;
+        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">dest</span>.<span class="ident">project_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">zero</span>).<span class="ident">llval</span>;
 
         <span class="kw">let</span> <span class="ident">elem_layout</span> <span class="op">=</span> <span class="ident">dest</span>.<span class="ident">layout</span>.<span class="ident">field</span>(<span class="self">self</span>.<span class="ident">cx</span>(), <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">elem_ty</span> <span class="op">=</span> <span class="ident">elem_layout</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="kw-2">&amp;</span><span class="self">self</span>);
@@ -3214,7 +3223,7 @@
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">count</span> {
             <span class="kw">let</span> <span class="ident">current</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inbounds_gep</span>(<span class="ident">elem_ty</span>, <span class="ident">start</span>, <span class="kw-2">&amp;</span>[<span class="self">self</span>.<span class="ident">const_usize</span>(<span class="ident">i</span>)]);
             <span class="ident">cg_elem</span>.<span class="ident">val</span>.<span class="ident">store</span>(
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+                <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
                 <span class="ident">PlaceRef::new_sized_aligned</span>(<span class="ident">current</span>, <span class="ident">cg_elem</span>.<span class="ident">layout</span>, <span class="ident">align</span>),
             );
         }
@@ -3222,15 +3231,23 @@
         <span class="self">self</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">range_metadata</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_load</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_range</span>: <span class="ident">WrappingRange</span>) {
+    <span class="kw">fn</span> <span class="ident">range_metadata</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_load</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_range</span>: <span class="ident">WrappingRange</span>) {
         <span class="comment">// ignore</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">nonnull_metadata</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_load</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
+    <span class="kw">fn</span> <span class="ident">nonnull_metadata</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_load</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
         <span class="comment">// ignore</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">store</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">type_metadata</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_function</span>: <span class="ident"><span class="self">Self</span>::Function</span>, <span class="ident">_typeid</span>: <span class="ident">String</span>) {
+        <span class="comment">// ignore</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">typeid_metadata</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_typeid</span>: <span class="ident">String</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+        <span class="macro">todo!</span>()
+    }
+
+    <span class="kw">fn</span> <span class="ident">store</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">let</span> <span class="ident">ptr_elem_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } =&gt; <span class="ident">pointee</span>,
             <span class="ident">ty</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
@@ -3246,7 +3263,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">store_with_flags</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">align</span>: <span class="ident">Align</span>,
@@ -3262,7 +3279,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">atomic_store</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">order</span>: <span class="ident">AtomicOrdering</span>,
@@ -3290,12 +3307,12 @@
             .<span class="ident">unwrap</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">gep</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">indices</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Value</span>]) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">gep</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">indices</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Value</span>]) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="self">self</span>.<span class="ident">gep_help</span>(<span class="ident">ty</span>, <span class="ident">ptr</span>, <span class="ident">indices</span>, <span class="bool-val">false</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">inbounds_gep</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>,
         <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">indices</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Value</span>],
@@ -3303,7 +3320,7 @@
         <span class="self">self</span>.<span class="ident">gep_help</span>(<span class="ident">ty</span>, <span class="ident">ptr</span>, <span class="ident">indices</span>, <span class="bool-val">true</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">struct_gep</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">idx</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">struct_gep</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">idx</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">let</span> <span class="ident">pointee</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } =&gt; {
                 <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">ty</span>, <span class="ident">pointee</span>);
@@ -3390,21 +3407,21 @@
     }
 
     <span class="comment">// intcast has the logic for dealing with bools, so use that</span>
-    <span class="kw">fn</span> <span class="ident">trunc</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">trunc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="self">self</span>.<span class="ident">intcast</span>(<span class="ident">val</span>, <span class="ident">dest_ty</span>, <span class="bool-val">false</span>)
     }
-    <span class="kw">fn</span> <span class="ident">sext</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">sext</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="self">self</span>.<span class="ident">intcast</span>(<span class="ident">val</span>, <span class="ident">dest_ty</span>, <span class="bool-val">true</span>)
     }
-    <span class="kw">fn</span> <span class="ident">fptoui_sat</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fptoui_sat</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span> {
         <span class="prelude-val">None</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">fptosi_sat</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fptosi_sat</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span> {
         <span class="prelude-val">None</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">fptoui</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">fptoui</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">ty</span> <span class="op">==</span> <span class="ident">dest_ty</span> {
             <span class="ident">val</span>
         } <span class="kw">else</span> {
@@ -3415,7 +3432,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">fptosi</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">fptosi</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">ty</span> <span class="op">==</span> <span class="ident">dest_ty</span> {
             <span class="ident">val</span>
         } <span class="kw">else</span> {
@@ -3426,7 +3443,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">uitofp</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">uitofp</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">ty</span> <span class="op">==</span> <span class="ident">dest_ty</span> {
             <span class="ident">val</span>
         } <span class="kw">else</span> {
@@ -3437,7 +3454,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">sitofp</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">sitofp</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">ty</span> <span class="op">==</span> <span class="ident">dest_ty</span> {
             <span class="ident">val</span>
         } <span class="kw">else</span> {
@@ -3448,7 +3465,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">fptrunc</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">fptrunc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">ty</span> <span class="op">==</span> <span class="ident">dest_ty</span> {
             <span class="ident">val</span>
         } <span class="kw">else</span> {
@@ -3459,7 +3476,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">fpext</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">fpext</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">ty</span> <span class="op">==</span> <span class="ident">dest_ty</span> {
             <span class="ident">val</span>
         } <span class="kw">else</span> {
@@ -3470,7 +3487,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">ptrtoint</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">ptrtoint</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Pointer</span> { .. } =&gt; (),
             <span class="ident">other</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
@@ -3491,7 +3508,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">inttoptr</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">inttoptr</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">dest_ty</span>) {
             <span class="ident">SpirvType::Pointer</span> { .. } =&gt; (),
             <span class="ident">other</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
@@ -3512,7 +3529,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">bitcast</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">bitcast</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">ty</span> <span class="op">==</span> <span class="ident">dest_ty</span> {
             <span class="ident">val</span>
         } <span class="kw">else</span> {
@@ -3552,7 +3569,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">intcast</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">is_signed</span>: <span class="ident">bool</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">intcast</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>, <span class="ident">is_signed</span>: <span class="ident">bool</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">ty</span> <span class="op">==</span> <span class="ident">dest_ty</span> {
             <span class="comment">// I guess?</span>
             <span class="kw">return</span> <span class="ident">val</span>;
@@ -3610,7 +3627,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">pointercast</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">pointercast</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">let</span> (<span class="ident">val</span>, <span class="ident">val_pointee</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">val</span>.<span class="ident">kind</span> {
             <span class="comment">// Strip a previous `pointercast`, to reveal the original pointer type.</span>
             <span class="ident">SpirvValueKind::LogicalPtrCast</span> {
@@ -3668,7 +3685,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">icmp</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">op</span>: <span class="ident">IntPredicate</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">icmp</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">op</span>: <span class="ident">IntPredicate</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="comment">// Note: the signedness of the opcode doesn&#39;t have to match the signedness of the operands.</span>
         <span class="kw">use</span> <span class="ident">IntPredicate</span>::<span class="kw-2">*</span>;
         <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
@@ -3871,7 +3888,7 @@
         .<span class="ident">with_type</span>(<span class="ident">b</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">fcmp</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">op</span>: <span class="ident">RealPredicate</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">fcmp</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">op</span>: <span class="ident">RealPredicate</span>, <span class="ident">lhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">rhs</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">use</span> <span class="ident">RealPredicate</span>::<span class="kw-2">*</span>;
         <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
         <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">SpirvType::Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
@@ -3923,7 +3940,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">memcpy</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">dst</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">_dst_align</span>: <span class="ident">Align</span>,
         <span class="ident">src</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
@@ -3971,7 +3988,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">memmove</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">dst</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">dst_align</span>: <span class="ident">Align</span>,
         <span class="ident">src</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
@@ -3983,7 +4000,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">memset</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">fill_byte</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">size</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
@@ -4016,7 +4033,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">select</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">cond</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">then_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">else_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
@@ -4035,11 +4052,11 @@
             .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">va_arg</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_list</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">va_arg</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_list</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">extract_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">vec</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">idx</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">extract_element</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vec</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">idx</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">vec</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. } =&gt; <span class="ident">element</span>,
             <span class="ident">other</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
@@ -4063,7 +4080,7 @@
         .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">vector_splat</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">num_elts</span>: <span class="ident">usize</span>, <span class="ident">elt</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">vector_splat</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">num_elts</span>: <span class="ident">usize</span>, <span class="ident">elt</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="ident">SpirvType::Vector</span> {
             <span class="ident">element</span>: <span class="ident">elt</span>.<span class="ident">ty</span>,
             <span class="ident">count</span>: <span class="ident">num_elts</span> <span class="kw">as</span> <span class="ident">u32</span>,
@@ -4083,7 +4100,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">extract_value</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">agg_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">idx</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">extract_value</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">agg_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">idx</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">agg_val</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Adt</span> { <span class="ident">field_types</span>, .. } =&gt; <span class="ident">field_types</span>[<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>],
             <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. }
@@ -4105,7 +4122,7 @@
             .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">insert_value</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">agg_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">elt</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">idx</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">insert_value</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">agg_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">elt</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">idx</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">agg_val</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Adt</span> { <span class="ident">field_types</span>, .. } =&gt; {
                 <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">field_types</span>[<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">elt</span>.<span class="ident">ty</span>);
@@ -4125,7 +4142,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">landing_pad</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>,
         <span class="ident">_pers_fn</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">_num_clauses</span>: <span class="ident">usize</span>,
@@ -4133,16 +4150,16 @@
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">set_cleanup</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_landing_pad</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
+    <span class="kw">fn</span> <span class="ident">set_cleanup</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_landing_pad</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_exn</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_exn</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="macro">todo!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">cleanup_pad</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">_parent</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span>,
         <span class="ident">_args</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Value</span>],
     ) -&gt; <span class="ident"><span class="self">Self</span>::Funclet</span> {
@@ -4150,19 +4167,19 @@
     }
 
     <span class="kw">fn</span> <span class="ident">cleanup_ret</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">_funclet</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Funclet</span>,
         <span class="ident">_unwind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::BasicBlock</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">catch_pad</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_parent</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_args</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Value</span>]) -&gt; <span class="ident"><span class="self">Self</span>::Funclet</span> {
+    <span class="kw">fn</span> <span class="ident">catch_pad</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_parent</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_args</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Value</span>]) -&gt; <span class="ident"><span class="self">Self</span>::Funclet</span> {
         <span class="macro">todo!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">catch_switch</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">_parent</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span>,
         <span class="ident">_unwind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::BasicBlock</span><span class="op">&gt;</span>,
         <span class="ident">_num_handlers</span>: <span class="ident">usize</span>,
@@ -4170,16 +4187,16 @@
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">add_handler</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_catch_switch</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_handler</span>: <span class="ident"><span class="self">Self</span>::BasicBlock</span>) {
+    <span class="kw">fn</span> <span class="ident">add_handler</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_catch_switch</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_handler</span>: <span class="ident"><span class="self">Self</span>::BasicBlock</span>) {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">set_personality_fn</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_personality</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
+    <span class="kw">fn</span> <span class="ident">set_personality_fn</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_personality</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
         <span class="macro">todo!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">atomic_cmpxchg</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">dst</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">cmp</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">src</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
@@ -4218,7 +4235,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">atomic_rmw</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">op</span>: <span class="ident">AtomicRmwBinOp</span>,
         <span class="ident">dst</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">src</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
@@ -4327,7 +4344,7 @@
         .<span class="ident">with_type</span>(<span class="ident">src</span>.<span class="ident">ty</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">atomic_fence</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">order</span>: <span class="ident">AtomicOrdering</span>, <span class="ident">_scope</span>: <span class="ident">SynchronizationScope</span>) {
+    <span class="kw">fn</span> <span class="ident">atomic_fence</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">order</span>: <span class="ident">AtomicOrdering</span>, <span class="ident">_scope</span>: <span class="ident">SynchronizationScope</span>) {
         <span class="comment">// Ignore sync scope (it only has &quot;single thread&quot; and &quot;cross thread&quot;)</span>
         <span class="comment">// TODO: Default to device scope</span>
         <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>
@@ -4337,22 +4354,22 @@
         <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">memory_barrier</span>(<span class="ident">memory</span>, <span class="ident">semantics</span>).<span class="ident">unwrap</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">set_invariant_load</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_load</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
+    <span class="kw">fn</span> <span class="ident">set_invariant_load</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_load</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
         <span class="comment">// ignore</span>
     }
 
     <span class="doccomment">/// Called for `StorageLive`</span>
-    <span class="kw">fn</span> <span class="ident">lifetime_start</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_size</span>: <span class="ident">Size</span>) {
+    <span class="kw">fn</span> <span class="ident">lifetime_start</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_size</span>: <span class="ident">Size</span>) {
         <span class="comment">// ignore</span>
     }
 
     <span class="doccomment">/// Called for `StorageDead`</span>
-    <span class="kw">fn</span> <span class="ident">lifetime_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_size</span>: <span class="ident">Size</span>) {
+    <span class="kw">fn</span> <span class="ident">lifetime_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_ptr</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_size</span>: <span class="ident">Size</span>) {
         <span class="comment">// ignore</span>
     }
 
     <span class="kw">fn</span> <span class="ident">instrprof_increment</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">_fn_name</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">_hash</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">_num_counters</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
@@ -4362,7 +4379,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">call</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">callee_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>,
         <span class="ident">callee</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
         <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Value</span>],
@@ -4468,15 +4485,14 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">zext</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">zext</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">dest_ty</span>: <span class="ident"><span class="self">Self</span>::Type</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="self">self</span>.<span class="ident">intcast</span>(<span class="ident">val</span>, <span class="ident">dest_ty</span>, <span class="bool-val">false</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">do_not_inline</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_llret</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
+    <span class="kw">fn</span> <span class="ident">do_not_inline</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_llret</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
         <span class="comment">// Ignore</span>
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (48a5999fc 2021-12-01)" ></div>
 </body></html>

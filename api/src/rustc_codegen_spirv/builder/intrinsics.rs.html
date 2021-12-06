@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;rustc_codegen_spirv&#x2F;src&#x2F;builder&#x2F;intrinsics.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>intrinsics.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;rustc_codegen_spirv&#x2F;src&#x2F;builder&#x2F;intrinsics.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>intrinsics.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css"disabled><link rel="stylesheet" type="text/css" href="../../../dark.css"disabled><link rel="stylesheet" type="text/css" href="../../../light.css"id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -362,7 +363,6 @@
 <span id="362">362</span>
 <span id="363">363</span>
 <span id="364">364</span>
-<span id="365">365</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
@@ -397,7 +397,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">copysign</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">SpirvValue</span>, <span class="ident">sign</span>: <span class="ident">SpirvValue</span>) -&gt; <span class="ident">SpirvValue</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">copysign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">SpirvValue</span>, <span class="ident">sign</span>: <span class="ident">SpirvValue</span>) -&gt; <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Float</span>(<span class="ident">width</span>) =&gt; <span class="ident">width</span>,
             <span class="ident">other</span> =&gt; <span class="macro">bug!</span>(
@@ -428,7 +428,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">IntrinsicCallMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">codegen_intrinsic_call</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
         <span class="ident">fn_abi</span>: <span class="kw-2">&amp;</span><span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">OperandRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span>],
@@ -696,7 +696,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">abort</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">abort</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="comment">// HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,</span>
         <span class="comment">// so the best thing we can do is inject an infinite loop.</span>
         <span class="comment">// (While there is `OpKill`, it doesn&#39;t really have the right semantics)</span>
@@ -706,29 +706,27 @@
         <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_sibling_block</span>(<span class="string">&quot;abort_continue&quot;</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">assume</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
+    <span class="kw">fn</span> <span class="ident">assume</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
         <span class="comment">// TODO: llvm.assume</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">expect</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">cond</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_expected</span>: <span class="ident">bool</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">expect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">cond</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_expected</span>: <span class="ident">bool</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="comment">// TODO: llvm.expect</span>
         <span class="ident">cond</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">sideeffect</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="comment">// TODO: This is currently ignored.</span>
-        <span class="comment">// It corresponds to the llvm.sideeffect intrinsic - does spir-v have an equivalent?</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">va_start</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">type_test</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_pointer</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_typeid</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">va_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">va_start</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+        <span class="macro">todo!</span>()
+    }
+
+    <span class="kw">fn</span> <span class="ident">va_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="macro">todo!</span>()
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (48a5999fc 2021-12-01)" ></div>
 </body></html>
