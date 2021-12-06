@@ -25,6 +25,6 @@ impl<T: Num + Ord + Copy> Iterator for RangeIter<T> {
 }
 
 #[spirv(fragment)]
-pub fn main(i: i32) {
+pub fn main(#[spirv(flat)] i: i32) {
     for _ in RangeIter(0..i) {}
 }

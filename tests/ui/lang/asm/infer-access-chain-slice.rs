@@ -10,7 +10,7 @@ use glam::Vec4;
 #[spirv(fragment)]
 pub fn main(
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] slice_in: &[Vec4],
-    i: u32,
+    #[spirv(flat)] i: u32,
     out: &mut Vec4,
 ) {
     unsafe {

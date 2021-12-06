@@ -517,11 +517,12 @@ impl<'tcx> CodegenCx<'tcx> {
             );
         }
 
-        self.check_for_bools(
+        self.check_for_bad_types(
             hir_param.ty_span,
             var_ptr_spirv_type,
             storage_class,
             attrs.builtin.is_some(),
+            attrs.flat.is_some(),
         );
 
         // Assign locations from left to right, incrementing each storage class
@@ -563,7 +564,15 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     // Booleans are only allowed in some storage classes. Error if they're in others.
-    fn check_for_bools(&self, span: Span, ty: Word, storage_class: StorageClass, is_builtin: bool) {
+    // Integers and f64s must be decorated with `#[spirv(flat)]`.
+    fn check_for_bad_types(
+        &self,
+        span: Span,
+        ty: Word,
+        storage_class: StorageClass,
+        is_builtin: bool,
+        is_flat: bool,
+    ) {
         // private and function are allowed here, but they can't happen.
         // SPIR-V technically allows all input/output variables to be booleans, not just builtins,
         // but has a note:
@@ -578,15 +587,31 @@ impl<'tcx> CodegenCx<'tcx> {
         {
             return;
         }
-        if recurse(self, ty) {
+        let mut has_bool = false;
+        let mut must_be_flat = false;
+        recurse(self, ty, &mut has_bool, &mut must_be_flat);
+        if has_bool {
             self.tcx
                 .sess
                 .span_err(span, "entrypoint parameter cannot contain a boolean");
         }
-        fn recurse(cx: &CodegenCx<'_>, ty: Word) -> bool {
+        if matches!(storage_class, StorageClass::Input | StorageClass::Output)
+            && must_be_flat
+            && !is_flat
+        {
+            self.tcx
+                .sess
+                .span_err(span, "parameter must be decorated with #[spirv(flat)]");
+        }
+        fn recurse(cx: &CodegenCx<'_>, ty: Word, has_bool: &mut bool, must_be_flat: &mut bool) {
             match cx.lookup_type(ty) {
-                SpirvType::Bool => true,
-                SpirvType::Adt { field_types, .. } => field_types.iter().any(|&f| recurse(cx, f)),
+                SpirvType::Bool => *has_bool = true,
+                SpirvType::Integer(_, _) | SpirvType::Float(64) => *must_be_flat = true,
+                SpirvType::Adt { field_types, .. } => {
+                    for f in field_types {
+                        recurse(cx, f, has_bool, must_be_flat);
+                    }
+                }
                 SpirvType::Vector { element, .. }
                 | SpirvType::Matrix { element, .. }
                 | SpirvType::Array { element, .. }
@@ -594,12 +619,17 @@ impl<'tcx> CodegenCx<'tcx> {
                 | SpirvType::Pointer { pointee: element }
                 | SpirvType::InterfaceBlock {
                     inner_type: element,
-                } => recurse(cx, element),
+                } => recurse(cx, element, has_bool, must_be_flat),
                 SpirvType::Function {
                     return_type,
                     arguments,
-                } => recurse(cx, return_type) || arguments.iter().any(|&a| recurse(cx, a)),
-                _ => false,
+                } => {
+                    recurse(cx, return_type, has_bool, must_be_flat);
+                    for a in arguments {
+                        recurse(cx, a, has_bool, must_be_flat);
+                    }
+                }
+                _ => (),
             }
         }
     }
