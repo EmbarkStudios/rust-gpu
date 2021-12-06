@@ -991,6 +991,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // ignore
     }
 
+    fn type_metadata(&mut self, _function: Self::Function, _typeid: String) {
+        // ignore
+    }
+
+    fn typeid_metadata(&mut self, _typeid: String) -> Self::Value {
+        todo!()
+    }
+
     fn store(&mut self, val: Self::Value, ptr: Self::Value, _align: Align) -> Self::Value {
         let ptr_elem_ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee } => pointee,

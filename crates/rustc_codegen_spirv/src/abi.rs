@@ -9,7 +9,7 @@ use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
 use rustc_index::vec::Idx;
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
-use rustc_middle::ty::query::Providers;
+use rustc_middle::ty::query::{ExternProviders, Providers};
 use rustc_middle::ty::subst::SubstsRef;
 use rustc_middle::ty::{
     self, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
@@ -167,7 +167,7 @@ pub(crate) fn provide(providers: &mut Providers) {
     };
 }
 
-pub(crate) fn provide_extern(providers: &mut Providers) {
+pub(crate) fn provide_extern(providers: &mut ExternProviders) {
     // Reset providers overriden in `provide`, that need to still go through the
     // `rustc_metadata::rmeta` decoding, as opposed to being locally computed.
     providers.fn_sig = rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig;

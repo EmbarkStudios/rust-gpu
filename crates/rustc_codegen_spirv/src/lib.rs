@@ -290,7 +290,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         crate::attr::provide(providers);
     }
 
-    fn provide_extern(&self, providers: &mut query::Providers) {
+    fn provide_extern(&self, providers: &mut query::ExternProviders) {
         crate::abi::provide_extern(providers);
     }
 

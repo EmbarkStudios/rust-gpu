@@ -2,12 +2,14 @@
 #![cfg_attr(
     target_arch = "spirv",
     feature(
+        abi_unadjusted,
         asm,
-        register_attr,
-        repr_simd,
+        asm_const,
+        asm_experimental_arch,
         core_intrinsics,
         lang_items,
-        abi_unadjusted
+        register_attr,
+        repr_simd,
     ),
     register_attr(spirv)
 )]

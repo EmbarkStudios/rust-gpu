@@ -13,7 +13,7 @@ use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{AsmBuilderMethods, InlineAsmOperandRef};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_hir::LlvmInlineAsmInner;
-use rustc_middle::bug;
+use rustc_middle::{bug, ty::Instance};
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
 use std::convert::TryFrom;
@@ -70,6 +70,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         operands: &[InlineAsmOperandRef<'tcx, Self>],
         options: InlineAsmOptions,
         _line_spans: &[Span],
+        _instance: Instance<'_>,
     ) {
         const SUPPORTED_OPTIONS: InlineAsmOptions = InlineAsmOptions::NORETURN;
         let unsupported_options = options & !SUPPORTED_OPTIONS;
