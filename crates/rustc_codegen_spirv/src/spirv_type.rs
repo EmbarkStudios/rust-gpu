@@ -92,7 +92,7 @@ pub enum SpirvType {
 }
 
 /// ABI kind, categorizes valid bitcasts. TODO: should bools be included?
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum AbiMemoryKind {
     Pointer,
     Numeric(Size),
@@ -424,6 +424,14 @@ impl SpirvType {
             Self::Pointer { .. } => Some(AbiMemoryKind::Pointer),
             _ => None,
         }
+    }
+}
+
+impl AbiMemoryKind {
+    pub fn bitcast_compatible(self, other: Self) -> bool {
+        self == other
+            || self == Self::Bool && other == Self::Numeric(Size::from_bytes(1))
+            || self == Self::Numeric(Size::from_bytes(1)) && other == Self::Bool
     }
 }
 

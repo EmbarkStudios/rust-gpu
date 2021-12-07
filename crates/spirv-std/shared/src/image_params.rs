@@ -70,7 +70,7 @@ pub enum ImageDepth {
     Unknown = 2,
 }
 
-#[cfg(not(target_arch = "spirv"))]
+#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<Option<bool>> for ImageDepth {
     fn from(val: Option<bool>) -> Self {
         match val {

@@ -483,7 +483,12 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 _ => return None,
             }
 
-            if offset == Size::ZERO && abi_kind.is_some() && ty_kind.abi_kind(self) == abi_kind {
+            if offset == Size::ZERO
+                && abi_kind.is_some()
+                && ty_kind
+                    .abi_kind(self)
+                    .map_or(false, |x| x.bitcast_compatible(abi_kind.unwrap()))
+            {
                 return Some((indices, ty));
             }
             if offset == Size::ZERO && ty == leaf_ty {
