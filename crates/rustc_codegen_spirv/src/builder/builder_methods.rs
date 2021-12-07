@@ -1,7 +1,7 @@
 use super::Builder;
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
-use crate::spirv_type::SpirvType;
+use crate::spirv_type::{AbiMemoryKind, SpirvType};
 use rspirv::dr::{InsertPoint, Instruction, Operand};
 use rspirv::spirv::{Capability, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word};
 use rustc_codegen_ssa::common::{
@@ -374,13 +374,46 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     ///
     /// That is, try to turn `((_: *T) as *u8).add(offset) as *Leaf` into a series
     /// of struct field and array/vector element accesses.
+    fn auto_access_chain(
+        &mut self,
+        ptr: Word,
+        ty: Word,
+        leaf_ptr_ty: Word,
+        leaf_ty: Word,
+        offset: Size,
+    ) -> Option<SpirvValue> {
+        if let Some((indices, result_ty)) =
+            self.recover_access_chain_from_offset(ty, leaf_ty, offset)
+        {
+            let result_pointer_ty =
+                SpirvType::Pointer { pointee: result_ty }.def(self.span(), self);
+            let ptr = if indices.is_empty() {
+                ptr
+            } else {
+                let indices = indices
+                    .into_iter()
+                    .map(|idx| self.constant_u32(self.span(), idx).def(self))
+                    .collect::<Vec<_>>();
+                self.emit()
+                    .access_chain(result_pointer_ty, None, ptr, indices)
+                    .unwrap()
+            }
+            .with_type(result_pointer_ty);
+            Some(self.bitcast(ptr, leaf_ptr_ty))
+        } else {
+            None
+        }
+    }
+
+    // Returns (access indices, target type).
     fn recover_access_chain_from_offset(
         &self,
         mut ty: Word,
         leaf_ty: Word,
         mut offset: Size,
-    ) -> Option<Vec<u32>> {
+    ) -> Option<(Vec<u32>, Word)> {
         assert_ne!(ty, leaf_ty);
+        let abi_kind = self.lookup_type(leaf_ty).abi_kind(self);
 
         // NOTE(eddyb) `ty` and `ty_kind` should be kept in sync.
         let mut ty_kind = self.lookup_type(ty);
@@ -389,14 +422,26 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         loop {
             match ty_kind {
                 SpirvType::Adt {
+                    is_enum,
                     field_types,
                     field_offsets,
                     ..
                 } => {
-                    let (i, field_ty, field_ty_kind, offset_in_field) = field_offsets
-                        .iter()
-                        .enumerate()
-                        .find_map(|(i, &field_offset)| {
+                    let mut iter = field_offsets.iter();
+                    // Grab the first offset
+                    let discr = if is_enum && Some(&offset) == iter.next() {
+                        Some((
+                            0,
+                            field_types[0],
+                            self.lookup_type(field_types[0]),
+                            Size::ZERO,
+                        ))
+                    } else {
+                        None
+                    };
+
+                    let (i, field_ty, field_ty_kind, offset_in_field) = discr.or_else(|| {
+                        iter.enumerate().find_map(|(i, &field_offset)| {
                             if field_offset > offset {
                                 return None;
                             }
@@ -415,7 +460,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                             } else {
                                 None
                             }
-                        })?;
+                        })
+                    })?;
 
                     ty = field_ty;
                     ty_kind = field_ty_kind;
@@ -437,8 +483,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 _ => return None,
             }
 
+            if offset == Size::ZERO && abi_kind.is_some() && ty_kind.abi_kind(self) == abi_kind {
+                return Some((indices, ty));
+            }
             if offset == Size::ZERO && ty == leaf_ty {
-                return Some(indices);
+                return Some((indices, leaf_ty));
             }
         }
     }
@@ -860,10 +909,23 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 ty
             )),
         };
-        self.emit()
-            .load(ty, None, ptr.def(self), None, empty())
-            .unwrap()
-            .with_type(ty)
+        let loaded = if let SpirvValueKind::LogicalPtrCast {
+            original_ptr,
+            original_pointee_ty,
+            zombie_target_undef: _,
+        } = ptr.kind
+        {
+            self.emit()
+                .load(original_pointee_ty, None, original_ptr, None, empty())
+                .unwrap()
+                .with_type(original_pointee_ty)
+        } else {
+            self.emit()
+                .load(ty, None, ptr.def(self), None, empty())
+                .unwrap()
+                .with_type(ty)
+        };
+        self.bitcast(loaded, ty)
     }
 
     fn volatile_load(&mut self, ty: Self::Type, ptr: Self::Value) -> Self::Value {
@@ -1008,8 +1070,18 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )),
         };
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
+        let (ptr, to_store) = if let SpirvValueKind::LogicalPtrCast {
+            original_ptr,
+            original_pointee_ty,
+            zombie_target_undef: _,
+        } = ptr.kind
+        {
+            (original_ptr, self.bitcast(val, original_pointee_ty))
+        } else {
+            (ptr.def(self), val)
+        };
         self.emit()
-            .store(ptr.def(self), val.def(self), None, empty())
+            .store(ptr, to_store.def(self), None, empty())
             .unwrap();
         val
     }
@@ -1086,8 +1158,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let pointee_kind = self.lookup_type(pointee);
         let result_pointee_type = match pointee_kind {
             SpirvType::Adt {
-                ref field_types, ..
-            } => field_types[idx as usize],
+                is_enum,
+                ref field_types,
+                ..
+            } if !is_enum || idx == 0 => field_types[idx as usize],
             SpirvType::Array { element, .. }
             | SpirvType::RuntimeArray { element, .. }
             | SpirvType::Vector { element, .. }
@@ -1124,20 +1198,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 }
                 _ => unreachable!(),
             };
-            if let Some(indices) = self.recover_access_chain_from_offset(
+            if let Some(val) = self.auto_access_chain(
+                original_ptr,
                 original_pointee_ty,
+                result_type,
                 result_pointee_type,
                 offset,
             ) {
-                let indices = indices
-                    .into_iter()
-                    .map(|idx| self.constant_u32(self.span(), idx).def(self))
-                    .collect::<Vec<_>>();
-                return self
-                    .emit()
-                    .access_chain(result_type, None, original_ptr, indices)
-                    .unwrap()
-                    .with_type(result_type);
+                return val;
             }
         }
 
@@ -1285,39 +1353,63 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if val.ty == dest_ty {
             val
         } else {
-            let val_is_ptr = matches!(self.lookup_type(val.ty), SpirvType::Pointer { .. });
-            let dest_is_ptr = matches!(self.lookup_type(dest_ty), SpirvType::Pointer { .. });
+            let val_kind = self.lookup_type(val.ty).abi_kind(self.cx);
+            let dest_kind = self.lookup_type(dest_ty).abi_kind(self.cx);
 
-            // Reuse the pointer-specific logic in `pointercast` for `*T -> *U`.
-            if val_is_ptr && dest_is_ptr {
-                return self.pointercast(val, dest_ty);
-            }
+            let do_bitcast = || {
+                self.emit()
+                    .bitcast(dest_ty, None, val.def(self))
+                    .unwrap()
+                    .with_type(dest_ty)
+            };
 
-            let result = self
-                .emit()
-                .bitcast(dest_ty, None, val.def(self))
-                .unwrap()
-                .with_type(dest_ty);
-
-            if val_is_ptr || dest_is_ptr {
-                if self.is_system_crate() {
+            match val_kind.zip(dest_kind) {
+                Some((AbiMemoryKind::Pointer, AbiMemoryKind::Pointer)) => {
+                    self.pointercast(val, dest_ty)
+                }
+                Some((AbiMemoryKind::Numeric(sz1), AbiMemoryKind::Numeric(sz2))) if sz1 == sz2 => {
+                    do_bitcast()
+                }
+                Some((
+                    AbiMemoryKind::Numeric(_) | AbiMemoryKind::Bool,
+                    AbiMemoryKind::Numeric(_) | AbiMemoryKind::Bool,
+                )) => {
+                    // XXX (mobius): without this, compiling sys crates panics with casting u32 as u8 or somesuch
+                    // intcast will infer its own signedness
+                    self.intcast(val, dest_ty, false)
+                }
+                Some((AbiMemoryKind::Pointer, _) | (_, AbiMemoryKind::Pointer)) => {
+                    let result = do_bitcast();
+                    if self.is_system_crate() {
+                        self.zombie(
+                            result.def(self),
+                            &format!(
+                                "Cannot cast between pointer and non-pointer types. From: {}. To: {}.",
+                                self.debug_type(val.ty),
+                                self.debug_type(dest_ty)
+                            ),
+                        );
+                    } else {
+                        self.struct_err("Cannot cast between pointer and non-pointer types")
+                            .note(&format!("from: {}", self.debug_type(val.ty)))
+                            .note(&format!("to: {}", self.debug_type(dest_ty)))
+                            .emit();
+                    }
+                    result
+                }
+                None => {
+                    let result = do_bitcast();
                     self.zombie(
                         result.def(self),
                         &format!(
-                            "Cannot cast between pointer and non-pointer types. From: {}. To: {}.",
+                            "bitcast between non-bitcastable types: {} and {}",
                             self.debug_type(val.ty),
                             self.debug_type(dest_ty)
                         ),
                     );
-                } else {
-                    self.struct_err("Cannot cast between pointer and non-pointer types")
-                        .note(&format!("from: {}", self.debug_type(val.ty)))
-                        .note(&format!("to: {}", self.debug_type(dest_ty)))
-                        .emit();
+                    result
                 }
             }
-
-            result
         }
     }
 
@@ -1380,6 +1472,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        if let Some(constant @ SpirvConst::Null) = self.builder.lookup_const(val) {
+            // the primary usecase is OpConstantNull casting, but this is probably valid
+            // in general
+            return self.builder.def_constant(dest_ty, constant);
+        }
         let (val, val_pointee) = match val.kind {
             // Strip a previous `pointercast`, to reveal the original pointer type.
             SpirvValueKind::LogicalPtrCast {
@@ -1413,17 +1510,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         if val.ty == dest_ty {
             val
-        } else if let Some(indices) =
-            self.recover_access_chain_from_offset(val_pointee, dest_pointee, Size::ZERO)
-        {
-            let indices = indices
-                .into_iter()
-                .map(|idx| self.constant_u32(self.span(), idx).def(self))
-                .collect::<Vec<_>>();
-            self.emit()
-                .access_chain(dest_ty, None, val.def(self), indices)
-                .unwrap()
-                .with_type(dest_ty)
+        } else if let Some(val) = self.auto_access_chain(
+            val.def(self),
+            val_pointee,
+            dest_ty,
+            dest_pointee,
+            Size::ZERO,
+        ) {
+            val
         } else {
             // Defer the cast so that it has a chance to be avoided.
             SpirvValue {
@@ -1475,7 +1569,38 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             },
             SpirvType::Pointer { .. } => match op {
                 IntEQ => {
+                    if let (Some(SpirvConst::Null), Some(SpirvConst::Null)) = (
+                        self.builder.lookup_const(lhs),
+                        self.builder.lookup_const(rhs),
+                    ) {
+                        return self.constant_bool(self.span(), true);
+                    }
                     if self.emit().version().unwrap() > (1, 3) {
+                        // HACK(mobius): SSA likes to generate bonkers types for discriminant
+                        // if it is a Pointer (specifically, *mut ()); we can ignore the type
+                        // for null constants
+                        let (lhs, rhs) = if let (
+                            SpirvValueKind::LogicalPtrCast {
+                                original_ptr,
+                                original_pointee_ty,
+                                ..
+                            },
+                            Some(SpirvConst::Null),
+                        ) = (lhs.kind, self.builder.lookup_const(rhs))
+                        {
+                            let actual_ptr_ty = SpirvType::Pointer {
+                                pointee: original_pointee_ty,
+                            }
+                            .def(self.span(), self);
+                            let actual_const =
+                                self.builder.def_constant(actual_ptr_ty, SpirvConst::Null);
+                            (original_ptr.with_type(actual_ptr_ty), actual_const)
+                        } else {
+                            (lhs, rhs)
+                        };
+                        // FIXME (mobius): generating an OpPtrEqual with OpVariable as an argument
+                        // is invalid (and should just resolve to false); when to detect & resolve
+                        // that?
                         let ptr_equal =
                             self.emit().ptr_equal(b, None, lhs.def(self), rhs.def(self));
 
@@ -1495,31 +1620,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                             .convert_ptr_to_u(int_ty, None, rhs.def(self))
                             .unwrap();
                         self.zombie_convert_ptr_to_u(rhs);
-                        self.emit().i_not_equal(b, None, lhs, rhs)
+                        self.emit().i_equal(b, None, lhs, rhs)
                     }
                 }
                 IntNE => {
-                    if self.emit().version().unwrap() > (1, 3) {
-                        self.emit()
-                            .ptr_not_equal(b, None, lhs.def(self), rhs.def(self))
-                            .map(|result| {
-                                self.zombie_ptr_equal(result, "OpPtrNotEqual");
-                                result
-                            })
-                    } else {
-                        let int_ty = self.type_usize();
-                        let lhs = self
-                            .emit()
-                            .convert_ptr_to_u(int_ty, None, lhs.def(self))
-                            .unwrap();
-                        self.zombie_convert_ptr_to_u(lhs);
-                        let rhs = self
-                            .emit()
-                            .convert_ptr_to_u(int_ty, None, rhs.def(self))
-                            .unwrap();
-                        self.zombie_convert_ptr_to_u(rhs);
-                        self.emit().i_not_equal(b, None, lhs, rhs)
-                    }
+                    let eq = self.icmp(IntEQ, lhs, rhs);
+                    let true_ = self.constant_bool(self.span(), true);
+                    self.emit()
+                        .logical_not_equal(b, None, eq.def(self), true_.def(self))
                 }
                 IntUGT => {
                     let int_ty = self.type_usize();

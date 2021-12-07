@@ -29,6 +29,7 @@ pub enum SpirvType {
     Float(u32),
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
+        is_enum: bool,
         /// Not emitted into SPIR-V, but used to avoid too much deduplication,
         /// which could result in one SPIR-V `OpType*` having many names
         /// (not in itself an issue, but it makes error reporting harder).
@@ -37,6 +38,7 @@ pub enum SpirvType {
         align: Align,
         size: Option<Size>,
         field_types: Vec<Word>,
+        /// In ascending order, with possible exception of first element, in case is_enum is true
         field_offsets: Vec<Size>,
         field_names: Option<Vec<String>>,
     },
@@ -87,6 +89,14 @@ pub enum SpirvType {
 
     AccelerationStructureKhr,
     RayQueryKhr,
+}
+
+/// ABI kind, categorizes valid bitcasts. TODO: should bools be included?
+#[derive(Eq, PartialEq)]
+pub enum AbiMemoryKind {
+    Pointer,
+    Numeric(Size),
+    Bool,
 }
 
 impl SpirvType {
@@ -146,6 +156,7 @@ impl SpirvType {
                 result
             }
             Self::Adt {
+                is_enum: _,
                 def_id: _,
                 align: _,
                 size: _,
@@ -391,6 +402,29 @@ impl SpirvType {
             Self::InterfaceBlock { inner_type } => cx.lookup_type(inner_type).alignof(cx),
         }
     }
+
+    pub fn zst(def_id: Option<DefId>) -> Self {
+        Self::Adt {
+            is_enum: false,
+            def_id,
+            size: Some(Size::ZERO),
+            align: Align::from_bytes(0).unwrap(),
+            field_types: Vec::new(),
+            field_offsets: Vec::new(),
+            field_names: None,
+        }
+    }
+
+    pub fn abi_kind<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Option<AbiMemoryKind> {
+        match *self {
+            Self::Bool => Some(AbiMemoryKind::Bool),
+            Self::Integer(_, _) | Self::Float(_) | Self::Vector { .. } => {
+                Some(AbiMemoryKind::Numeric(self.sizeof(cx).unwrap()))
+            }
+            Self::Pointer { .. } => Some(AbiMemoryKind::Pointer),
+            _ => None,
+        }
+    }
 }
 
 pub struct SpirvTypePrinter<'cx, 'tcx> {
@@ -429,6 +463,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("width", &width)
                 .finish(),
             SpirvType::Adt {
+                is_enum,
                 def_id,
                 align,
                 size,
@@ -441,6 +476,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                     .map(|&f| self.cx.debug_type(f))
                     .collect::<Vec<_>>();
                 f.debug_struct("Adt")
+                    .field("is_enum", &is_enum)
                     .field("id", &self.id)
                     .field("def_id", &def_id)
                     .field("align", &align)
@@ -577,6 +613,7 @@ impl SpirvTypePrinter<'_, '_> {
             }
             SpirvType::Float(width) => write!(f, "f{}", width),
             SpirvType::Adt {
+                is_enum,
                 def_id: _,
                 align: _,
                 size: _,
@@ -584,7 +621,8 @@ impl SpirvTypePrinter<'_, '_> {
                 field_offsets: _,
                 ref field_names,
             } => {
-                write!(f, "struct")?;
+                // FIXME(mobius): it's useful bit of info, but kinda invalid Rust, should we care?
+                write!(f, "{}", if is_enum { "enum" } else { "struct" })?;
 
                 // HACK(eddyb) use the first name (in insertion order, i.e.
                 // from the first invocation of `def_with_name` for this type)
