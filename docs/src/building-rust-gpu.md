@@ -19,6 +19,13 @@
 
     This will build `rustc_codegen_spirv`, the compiler, then use that compiler to build [`sky-shader`](examples/shaders/sky-shader) into a SPIR-V module, then finally, build a `wgpu` sample app (modified from [`wgpu`'s examples](https://github.com/gfx-rs/wgpu-rs/tree/master/examples/hello-triangle)) using the built SPIR-V module to display the shader in a window.
 
+## Prerequisite linux packages recommended to install before building Rust-GPU
+
+You may need the development version (i.e. headers/etc. included) of some packages in some distributions to be able to
+build the examples - specifically, x11 and libxkbcommon, as well as gcc/clang with c++ support. These packages may be
+called (fedora) `libX11-devel`, `libxkbcommon-x11-devel`, and `gcc-c++`, or (ubuntu) `libxkbcommon-x11-dev`,
+`libx11-dev`, and `gcc`.
+
 ## Using installed SPIRV-Tools
 
 By default, all of the crates and examples in this repo will compile the [`spirv-tools-sys`](https://crates.io/crates/spirv-tools-sys) crate, including a lot of C++ code from [SPIRV-Tools](https://github.com/EmbarkStudios/SPIRV-Tools). If you don't want to build the C++ code because you already have [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools#downloads) installed, or just don't want to spend more time compiling, you can build/run the crate with the `use-installed-tools` feature.
