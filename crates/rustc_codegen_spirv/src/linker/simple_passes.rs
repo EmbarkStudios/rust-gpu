@@ -241,7 +241,7 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
                 visited[index] = false;
 
                 let names = names.get_or_insert_with(|| get_names(module));
-                let stack = stack.iter().map(|&s| get_name(names, s).into_owned());
+                let stack = stack.iter().rev().map(|&s| get_name(names, s).into_owned());
                 let note = once("Stack:".to_string())
                     .chain(stack)
                     .collect::<Vec<_>>()
