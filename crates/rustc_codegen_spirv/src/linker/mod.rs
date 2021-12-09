@@ -157,6 +157,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         import_export_link::run(sess, &mut output)?;
     }
 
+    {
+        let _timer = sess.timer("link_fragment_inst_check");
+        simple_passes::check_fragment_insts(sess, &output)?;
+    }
+
     // HACK(eddyb) this has to run before the `remove_zombies` pass, so that any
     // zombies that are passed as call arguments, but eventually unused, won't
     // be (incorrectly) considered used.

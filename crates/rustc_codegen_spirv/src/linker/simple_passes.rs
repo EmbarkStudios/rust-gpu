@@ -1,6 +1,10 @@
+use super::{get_name, get_names, Result};
 use rspirv::dr::{Block, Function, Module};
-use rspirv::spirv::{Op, Word};
+use rspirv::spirv::{ExecutionModel, Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_errors::ErrorReported;
+use rustc_session::Session;
+use std::iter::once;
 use std::mem::take;
 
 pub fn shift_ids(module: &mut Module, add: u32) {
@@ -149,5 +153,109 @@ pub fn name_variables_pass(module: &mut Module) {
                 .instructions
                 .retain(|inst| inst.class.opcode != Op::Line);
         }
+    }
+}
+
+// Some instructions are only valid in fragment shaders. Check them.
+pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
+    let mut visited = vec![false; module.functions.len()];
+    let mut stack = Vec::new();
+    let mut names = None;
+    let func_id_to_idx: FxHashMap<Word, usize> = module
+        .functions
+        .iter()
+        .enumerate()
+        .map(|(index, func)| (func.def_id().unwrap(), index))
+        .collect();
+    let entries = module
+        .entry_points
+        .iter()
+        .filter(|i| i.operands[0].unwrap_execution_model() != ExecutionModel::Fragment)
+        .map(|i| func_id_to_idx[&i.operands[1].unwrap_id_ref()]);
+    let mut okay = true;
+    for entry in entries {
+        okay &= visit(
+            sess,
+            module,
+            &mut visited,
+            &mut stack,
+            &mut names,
+            entry,
+            &func_id_to_idx,
+        );
+    }
+    return if okay { Ok(()) } else { Err(ErrorReported) };
+
+    // returns false if error
+    fn visit<'m>(
+        sess: &Session,
+        module: &'m Module,
+        visited: &mut Vec<bool>,
+        stack: &mut Vec<Word>,
+        names: &mut Option<FxHashMap<Word, &'m str>>,
+        index: usize,
+        func_id_to_idx: &FxHashMap<Word, usize>,
+    ) -> bool {
+        if visited[index] {
+            return true;
+        }
+        visited[index] = true;
+        stack.push(module.functions[index].def_id().unwrap());
+        let mut okay = true;
+        for inst in module.functions[index].all_inst_iter() {
+            if inst.class.opcode == Op::FunctionCall {
+                let called_func = func_id_to_idx[&inst.operands[0].unwrap_id_ref()];
+                okay &= visit(
+                    sess,
+                    module,
+                    visited,
+                    stack,
+                    names,
+                    called_func,
+                    func_id_to_idx,
+                );
+            }
+            if matches!(
+                inst.class.opcode,
+                Op::ImageSampleImplicitLod
+                    | Op::ImageSampleDrefImplicitLod
+                    | Op::ImageSampleProjImplicitLod
+                    | Op::ImageSampleProjDrefImplicitLod
+                    | Op::ImageQueryLod
+                    | Op::ImageSparseSampleImplicitLod
+                    | Op::ImageSparseSampleDrefImplicitLod
+                    | Op::DPdx
+                    | Op::DPdy
+                    | Op::Fwidth
+                    | Op::DPdxFine
+                    | Op::DPdyFine
+                    | Op::FwidthFine
+                    | Op::DPdxCoarse
+                    | Op::DPdyCoarse
+                    | Op::FwidthCoarse
+                    | Op::Kill
+            ) {
+                // These instructions are (usually) in system functions - if we get an error, allow
+                // the system function to be visited again from elsewhere to emit another error
+                // from another callsite.
+                visited[index] = false;
+
+                let names = names.get_or_insert_with(|| get_names(module));
+                let stack = stack.iter().map(|&s| get_name(names, s).into_owned());
+                let note = once("Stack:".to_string())
+                    .chain(stack)
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                sess.struct_err(&format!(
+                    "{} cannot be used outside a fragment shader",
+                    inst.class.opname
+                ))
+                .note(&note)
+                .emit();
+                okay = false;
+            }
+        }
+        stack.pop();
+        okay
     }
 }
