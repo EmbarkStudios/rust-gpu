@@ -288,14 +288,28 @@ impl RayQuery {
     }
 
     /// Terminates further execution of a ray query; further calls to
-    /// [`Self::proceed`] will return `false`.The value returned by any prior
+    /// [`Self::proceed`] will return `false`. The value returned by any prior
     /// execution of [`Self::proceed`] with the same ray query object must have
-    /// been true. Refer to the client API specification for more details.
+    /// been true.
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryTerminateKHR")]
     #[inline]
     pub unsafe fn terminate(&self) {
         asm!("OpRayQueryTerminateKHR {}", in(reg) self)
+    }
+
+    /// Confirms a triangle intersection to be included in the determination
+    /// of the closest hit for a ray query.
+    ///
+    /// [`Self::proceed()`] must have been called on this object, and it must
+    /// have returned true. The current intersection candidate must have a
+    /// [`Self::get_candidate_intersection_type()`] of
+    /// [`CandidateIntersection::Triangle`].
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpRayQueryConfirmIntersectionKHR")]
+    #[inline]
+    pub unsafe fn confirm_intersection(&self) {
+        asm!("OpRayQueryConfirmIntersectionKHR {}", in(reg) self)
     }
 
     /// Returns the type of the current candidate intersection.
