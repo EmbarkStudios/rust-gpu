@@ -960,6 +960,20 @@
 <span id="959">959</span>
 <span id="960">960</span>
 <span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Ray-tracing data types</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vector::Vector</span>;
 
@@ -1250,14 +1264,28 @@
     }
 
     <span class="doccomment">/// Terminates further execution of a ray query; further calls to</span>
-    <span class="doccomment">/// [`Self::proceed`] will return `false`.The value returned by any prior</span>
+    <span class="doccomment">/// [`Self::proceed`] will return `false`. The value returned by any prior</span>
     <span class="doccomment">/// execution of [`Self::proceed`] with the same ray query object must have</span>
-    <span class="doccomment">/// been true. Refer to the client API specification for more details.</span>
+    <span class="doccomment">/// been true.</span>
     <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryTerminateKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">terminate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="macro">asm!</span>(<span class="string">&quot;OpRayQueryTerminateKHR {}&quot;</span>, <span class="kw">in</span>(<span class="ident">reg</span>) <span class="self">self</span>)
+    }
+
+    <span class="doccomment">/// Confirms a triangle intersection to be included in the determination</span>
+    <span class="doccomment">/// of the closest hit for a ray query.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Self::proceed()`] must have been called on this object, and it must</span>
+    <span class="doccomment">/// have returned true. The current intersection candidate must have a</span>
+    <span class="doccomment">/// [`Self::get_candidate_intersection_type()`] of</span>
+    <span class="doccomment">/// [`CandidateIntersection::Triangle`].</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryConfirmIntersectionKHR&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">confirm_intersection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="macro">asm!</span>(<span class="string">&quot;OpRayQueryConfirmIntersectionKHR {}&quot;</span>, <span class="kw">in</span>(<span class="ident">reg</span>) <span class="self">self</span>)
     }
 
     <span class="doccomment">/// Returns the type of the current candidate intersection.</span>
