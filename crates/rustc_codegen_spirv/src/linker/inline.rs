@@ -31,8 +31,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         .types_global_values
         .iter()
         .find(|inst| inst.class.opcode == Op::TypeVoid)
-        .map(|inst| inst.result_id.unwrap())
-        .unwrap_or(0);
+        .map_or(0, |inst| inst.result_id.unwrap());
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
     let mut dropped_ids = FxHashSet::default();

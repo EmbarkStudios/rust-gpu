@@ -89,8 +89,6 @@
     // We deblierately provide an unimplemented version of our API on CPU
     // platforms so that code completion still works.
     clippy::unimplemented,
-    // The part of `adt_const_params` we're using (C-like enums) is not incomplete.
-    incomplete_features,
 )]
 #![warn(missing_docs)]
 

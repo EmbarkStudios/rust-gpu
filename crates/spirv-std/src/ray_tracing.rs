@@ -15,7 +15,6 @@ impl AccelerationStructure {
     /// The 64-bit integer must point to a valid acceleration structure.
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpConvertUToAccelerationStructureKHR")]
-    #[allow(clippy::empty_loop)]
     #[inline]
     pub unsafe fn from_u64(id: u64) -> AccelerationStructure {
         // Since we can't represent an uninitalized opaque type in Rust at the
@@ -35,7 +34,6 @@ impl AccelerationStructure {
     /// The combination must point to a valid acceleration structure.
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpConvertUToAccelerationStructureKHR")]
-    #[allow(clippy::empty_loop)]
     #[inline]
     pub unsafe fn from_vec(id: impl Vector<u32, 2>) -> AccelerationStructure {
         // Since we can't represent an uninitalized opaque type in Rust at the

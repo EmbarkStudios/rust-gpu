@@ -1,7 +1,6 @@
 use super::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
-use core::array::IntoIter;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 use rustc_span::DUMMY_SP;
@@ -43,7 +42,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 u32_ptr,
                 None,
                 array.def(self),
-                IntoIter::new([actual_index.def(self)]),
+                IntoIterator::into_iter([actual_index.def(self)]),
             )
             .unwrap()
             .with_type(u32_ptr);
@@ -222,7 +221,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 u32_ptr,
                 None,
                 array.def(self),
-                IntoIter::new([actual_index.def(self)]),
+                IntoIterator::into_iter([actual_index.def(self)]),
             )
             .unwrap()
             .with_type(u32_ptr);

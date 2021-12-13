@@ -446,19 +446,17 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                             ));
                         }
                     };
-                    sym.attributes
-                        .get(&name.name)
-                        .map(|a| {
+                    sym.attributes.get(&name.name).map_or_else(
+                        || Err((name.span, "unknown argument to spirv attribute".to_string())),
+                        |a| {
                             Ok(match a {
                                 SpirvAttribute::Entry(entry) => SpirvAttribute::Entry(
                                     parse_entry_attrs(sym, arg, &name, entry.execution_model)?,
                                 ),
                                 _ => a.clone(),
                             })
-                        })
-                        .unwrap_or_else(|| {
-                            Err((name.span, "unknown argument to spirv attribute".to_string()))
-                        })?
+                        },
+                    )?
                 };
                 Ok((span, parsed_attr))
             }))
