@@ -38,12 +38,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let u32_ptr = self.type_ptr_to(u32_ty);
         let ptr = self
             .emit()
-            .in_bounds_access_chain(
-                u32_ptr,
-                None,
-                array.def(self),
-                IntoIterator::into_iter([actual_index.def(self)]),
-            )
+            .in_bounds_access_chain(u32_ptr, None, array.def(self), [actual_index.def(self)])
             .unwrap()
             .with_type(u32_ptr);
         self.load(u32_ty, ptr, Align::ONE)
@@ -217,12 +212,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let u32_ptr = self.type_ptr_to(u32_ty);
         let ptr = self
             .emit()
-            .in_bounds_access_chain(
-                u32_ptr,
-                None,
-                array.def(self),
-                IntoIterator::into_iter([actual_index.def(self)]),
-            )
+            .in_bounds_access_chain(u32_ptr, None, array.def(self), [actual_index.def(self)])
             .unwrap()
             .with_type(u32_ptr);
         self.store(value, ptr, Align::ONE);

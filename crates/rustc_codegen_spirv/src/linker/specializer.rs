@@ -1091,25 +1091,25 @@ impl<'a> Match<'a> {
 
         *ambiguous |= other.ambiguous;
         for (i, self_found) in storage_class_var_found {
-            let other_found: &[_] = other
+            let other_found = other
                 .storage_class_var_found
                 .get(i)
-                .map_or(&[], |xs| &xs[..]);
+                .map_or(&[][..], |xs| &xs[..]);
             self_found.retain(|x| other_found.contains(x));
         }
         for (i, self_found) in ty_var_found {
-            let other_found: &[_] = other.ty_var_found.get(i).map_or(&[], |xs| &xs[..]);
+            let other_found = other.ty_var_found.get(i).map_or(&[][..], |xs| &xs[..]);
             self_found.retain(|x| other_found.contains(x));
         }
         for (i, self_found) in index_composite_ty_var_found {
-            let other_found: &[_] = other
+            let other_found = other
                 .index_composite_ty_var_found
                 .get(i)
-                .map_or(&[], |xs| &xs[..]);
+                .map_or(&[][..], |xs| &xs[..]);
             self_found.retain(|x| other_found.contains(x));
         }
         for (i, self_found) in ty_list_var_found {
-            let other_found: &[_] = other.ty_list_var_found.get(i).map_or(&[], |xs| &xs[..]);
+            let other_found = other.ty_list_var_found.get(i).map_or(&[][..], |xs| &xs[..]);
             self_found.retain(|x| other_found.contains(x));
         }
         self
