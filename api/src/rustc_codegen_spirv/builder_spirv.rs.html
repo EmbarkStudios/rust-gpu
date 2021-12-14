@@ -1210,7 +1210,7 @@
 
             <span class="ident">SpirvConst::Composite</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="prelude-val">Ok</span>(()), <span class="op">|</span><span class="ident">composite_legal</span>, <span class="ident">field</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">field_entry</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>()[<span class="ident">field</span>];
-                <span class="kw">let</span> <span class="ident">field_legal_in_composite</span> <span class="op">=</span> <span class="ident">field_entry</span>.<span class="ident">legal</span>.<span class="ident">and_then</span>(<span class="op">|</span>()<span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">field_legal_in_composite</span> <span class="op">=</span> <span class="ident">field_entry</span>.<span class="ident">legal</span>.<span class="ident">and</span>(
                     <span class="comment">// `field` is itself some legal `SpirvConst`, but can we have</span>
                     <span class="comment">// it as part of an `OpConstantComposite`?</span>
                     <span class="kw">match</span> <span class="ident">field_entry</span>.<span class="ident">val</span> {
@@ -1218,8 +1218,8 @@
                             <span class="ident">LeafIllegalConst::CompositeContainsPtrTo</span>,
                         )),
                         <span class="kw">_</span> =&gt; <span class="prelude-val">Ok</span>(()),
-                    }
-                });
+                    },
+                );
 
                 <span class="kw">match</span> (<span class="ident">composite_legal</span>, <span class="ident">field_legal_in_composite</span>) {
                     (<span class="prelude-val">Ok</span>(()), <span class="prelude-val">Ok</span>(())) =&gt; <span class="prelude-val">Ok</span>(()),

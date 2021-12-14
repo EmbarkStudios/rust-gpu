@@ -337,21 +337,9 @@
 <span id="336">336</span>
 <span id="337">337</span>
 <span id="338">338</span>
-<span id="339">339</span>
-<span id="340">340</span>
-<span id="341">341</span>
-<span id="342">342</span>
-<span id="343">343</span>
-<span id="344">344</span>
-<span id="345">345</span>
-<span id="346">346</span>
-<span id="347">347</span>
-<span id="348">348</span>
-<span id="349">349</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv_type::SpirvType</span>;
-<span class="kw">use</span> <span class="ident">core::array::IntoIter</span>;
 <span class="kw">use</span> <span class="ident">rspirv::spirv::Word</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">BuilderMethods</span>};
 <span class="kw">use</span> <span class="ident">rustc_span::DUMMY_SP</span>;
@@ -389,12 +377,7 @@
         <span class="kw">let</span> <span class="ident">u32_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">u32_ty</span>);
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">emit</span>()
-            .<span class="ident">in_bounds_access_chain</span>(
-                <span class="ident">u32_ptr</span>,
-                <span class="prelude-val">None</span>,
-                <span class="ident">array</span>.<span class="ident">def</span>(<span class="self">self</span>),
-                <span class="ident">IntoIter::new</span>([<span class="ident">actual_index</span>.<span class="ident">def</span>(<span class="self">self</span>)]),
-            )
+            .<span class="ident">in_bounds_access_chain</span>(<span class="ident">u32_ptr</span>, <span class="prelude-val">None</span>, <span class="ident">array</span>.<span class="ident">def</span>(<span class="self">self</span>), [<span class="ident">actual_index</span>.<span class="ident">def</span>(<span class="self">self</span>)])
             .<span class="ident">unwrap</span>()
             .<span class="ident">with_type</span>(<span class="ident">u32_ptr</span>);
         <span class="self">self</span>.<span class="ident">load</span>(<span class="ident">u32_ty</span>, <span class="ident">ptr</span>, <span class="ident">Align::ONE</span>)
@@ -568,12 +551,7 @@
         <span class="kw">let</span> <span class="ident">u32_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">u32_ty</span>);
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">emit</span>()
-            .<span class="ident">in_bounds_access_chain</span>(
-                <span class="ident">u32_ptr</span>,
-                <span class="prelude-val">None</span>,
-                <span class="ident">array</span>.<span class="ident">def</span>(<span class="self">self</span>),
-                <span class="ident">IntoIter::new</span>([<span class="ident">actual_index</span>.<span class="ident">def</span>(<span class="self">self</span>)]),
-            )
+            .<span class="ident">in_bounds_access_chain</span>(<span class="ident">u32_ptr</span>, <span class="prelude-val">None</span>, <span class="ident">array</span>.<span class="ident">def</span>(<span class="self">self</span>), [<span class="ident">actual_index</span>.<span class="ident">def</span>(<span class="self">self</span>)])
             .<span class="ident">unwrap</span>()
             .<span class="ident">with_type</span>(<span class="ident">u32_ptr</span>);
         <span class="self">self</span>.<span class="ident">store</span>(<span class="ident">value</span>, <span class="ident">ptr</span>, <span class="ident">Align::ONE</span>);

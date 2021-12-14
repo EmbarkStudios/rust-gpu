@@ -2555,12 +2555,6 @@
 <span id="2554">2554</span>
 <span id="2555">2555</span>
 <span id="2556">2556</span>
-<span id="2557">2557</span>
-<span id="2558">2558</span>
-<span id="2559">2559</span>
-<span id="2560">2560</span>
-<span id="2561">2561</span>
-<span id="2562">2562</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Specialize globals (types, constants and module-scoped variables) and functions,</span>
 <span class="doccomment">//! to legalize a SPIR-V module representing a &quot;family&quot; of types with a single type,</span>
 <span class="doccomment">//! by treating some globals and functions as &quot;generic&quot;, inferring minimal sets</span>
@@ -3657,28 +3651,22 @@
             <span class="kw">let</span> <span class="ident">other_found</span> <span class="op">=</span> <span class="ident">other</span>
                 .<span class="ident">storage_class_var_found</span>
                 .<span class="ident">get</span>(<span class="ident">i</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">xs</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">xs</span>[..])
-                .<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[]);
+                .<span class="ident">map_or</span>(<span class="kw-2">&amp;</span>[][..], <span class="op">|</span><span class="ident">xs</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">xs</span>[..]);
             <span class="ident">self_found</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">other_found</span>.<span class="ident">contains</span>(<span class="ident">x</span>));
         }
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">self_found</span>) <span class="kw">in</span> <span class="ident">ty_var_found</span> {
-            <span class="kw">let</span> <span class="ident">other_found</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">ty_var_found</span>.<span class="ident">get</span>(<span class="ident">i</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">xs</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">xs</span>[..]).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[]);
+            <span class="kw">let</span> <span class="ident">other_found</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">ty_var_found</span>.<span class="ident">get</span>(<span class="ident">i</span>).<span class="ident">map_or</span>(<span class="kw-2">&amp;</span>[][..], <span class="op">|</span><span class="ident">xs</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">xs</span>[..]);
             <span class="ident">self_found</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">other_found</span>.<span class="ident">contains</span>(<span class="ident">x</span>));
         }
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">self_found</span>) <span class="kw">in</span> <span class="ident">index_composite_ty_var_found</span> {
             <span class="kw">let</span> <span class="ident">other_found</span> <span class="op">=</span> <span class="ident">other</span>
                 .<span class="ident">index_composite_ty_var_found</span>
                 .<span class="ident">get</span>(<span class="ident">i</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">xs</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">xs</span>[..])
-                .<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[]);
+                .<span class="ident">map_or</span>(<span class="kw-2">&amp;</span>[][..], <span class="op">|</span><span class="ident">xs</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">xs</span>[..]);
             <span class="ident">self_found</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">other_found</span>.<span class="ident">contains</span>(<span class="ident">x</span>));
         }
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">self_found</span>) <span class="kw">in</span> <span class="ident">ty_list_var_found</span> {
-            <span class="kw">let</span> <span class="ident">other_found</span> <span class="op">=</span> <span class="ident">other</span>
-                .<span class="ident">ty_list_var_found</span>
-                .<span class="ident">get</span>(<span class="ident">i</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">xs</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">xs</span>[..])
-                .<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[]);
+            <span class="kw">let</span> <span class="ident">other_found</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">ty_list_var_found</span>.<span class="ident">get</span>(<span class="ident">i</span>).<span class="ident">map_or</span>(<span class="kw-2">&amp;</span>[][..], <span class="op">|</span><span class="ident">xs</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">xs</span>[..]);
             <span class="ident">self_found</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">other_found</span>.<span class="ident">contains</span>(<span class="ident">x</span>));
         }
         <span class="self">self</span>
