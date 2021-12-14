@@ -81,7 +81,17 @@ fn apply_rewrite_rules(rewrite_rules: &FxHashMap<Word, Word>, blocks: &mut [Bloc
 }
 
 fn get_names(module: &Module) -> FxHashMap<Word, &str> {
-    module
+    let entry_names = module
+        .entry_points
+        .iter()
+        .filter(|i| i.class.opcode == Op::EntryPoint)
+        .map(|i| {
+            (
+                i.operands[1].unwrap_id_ref(),
+                i.operands[2].unwrap_literal_string(),
+            )
+        });
+    let debug_names = module
         .debug_names
         .iter()
         .filter(|i| i.class.opcode == Op::Name)
@@ -90,8 +100,9 @@ fn get_names(module: &Module) -> FxHashMap<Word, &str> {
                 i.operands[0].unwrap_id_ref(),
                 i.operands[1].unwrap_literal_string(),
             )
-        })
-        .collect()
+        });
+    // items later on take priority
+    entry_names.chain(debug_names).collect()
 }
 
 fn get_name<'a>(names: &FxHashMap<Word, &'a str>, id: Word) -> Cow<'a, str> {
@@ -155,6 +166,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     {
         let _timer = sess.timer("link_find_pairs");
         import_export_link::run(sess, &mut output)?;
+    }
+
+    {
+        let _timer = sess.timer("link_fragment_inst_check");
+        simple_passes::check_fragment_insts(sess, &output)?;
     }
 
     // HACK(eddyb) this has to run before the `remove_zombies` pass, so that any
