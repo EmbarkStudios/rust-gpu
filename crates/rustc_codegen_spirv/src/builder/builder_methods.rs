@@ -797,8 +797,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         val
     }
 
-    // silly clippy, we can't rename this!
-    #[allow(clippy::wrong_self_convention)]
     fn to_immediate_scalar(&mut self, val: Self::Value, _scalar: Scalar) -> Self::Value {
         val
     }

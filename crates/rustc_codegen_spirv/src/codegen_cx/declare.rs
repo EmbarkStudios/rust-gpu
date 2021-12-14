@@ -113,8 +113,7 @@ impl<'tcx> CodegenCx<'tcx> {
             let entry_name = entry
                 .name
                 .as_ref()
-                .map(ToString::to_string)
-                .unwrap_or_else(|| instance.to_string());
+                .map_or_else(|| instance.to_string(), ToString::to_string);
             self.entry_stub(&instance, fn_abi, declared, entry_name, entry);
         }
         if attrs.unroll_loops.is_some() {

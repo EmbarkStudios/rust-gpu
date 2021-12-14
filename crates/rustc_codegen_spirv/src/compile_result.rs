@@ -120,10 +120,9 @@ pub const a: &str = "x::a";
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::array::IntoIter;
 
     fn test<const N: usize>(arr: [&str; N], expected: &str) {
-        let trie = Trie::create_from(IntoIter::new(arr));
+        let trie = Trie::create_from(IntoIterator::into_iter(arr));
         let mut builder = String::new();
         trie.emit(&mut builder, String::new(), 0);
         assert_eq!(builder, expected);

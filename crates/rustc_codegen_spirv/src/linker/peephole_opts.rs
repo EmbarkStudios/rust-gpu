@@ -289,7 +289,7 @@ fn match_operands(
             let parameters = (2..results[0].operands.len())
                 .map(|i| match_vector_or_scalars_operand(types, defs, results, i, vector_width));
             // Do some trickery to reduce allocations.
-            let operands = std::array::IntoIter::new([
+            let operands = IntoIterator::into_iter([
                 Some(IdentifiedOperand::NonValue(set)),
                 Some(IdentifiedOperand::NonValue(instruction)),
             ])

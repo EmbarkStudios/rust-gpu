@@ -39,7 +39,6 @@ pub unsafe fn report_intersection(hit: f32, hit_kind: u32) -> bool {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpIgnoreIntersectionKHR")]
 #[inline]
-#[allow(clippy::empty_loop)]
 pub unsafe fn ignore_intersection() -> ! {
     asm!("OpIgnoreIntersectionKHR", options(noreturn));
 }
@@ -51,7 +50,6 @@ pub unsafe fn ignore_intersection() -> ! {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpTerminateRayKHR")]
 #[inline]
-#[allow(clippy::empty_loop)]
 pub unsafe fn terminate_ray() -> ! {
     asm!("OpTerminateRayKHR", options(noreturn));
 }

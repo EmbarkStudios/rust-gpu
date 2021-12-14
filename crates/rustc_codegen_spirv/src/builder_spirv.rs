@@ -518,7 +518,7 @@ impl BuilderSpirv {
 
             SpirvConst::Composite(ref v) => v.iter().fold(Ok(()), |composite_legal, field| {
                 let field_entry = &self.id_to_const.borrow()[field];
-                let field_legal_in_composite = field_entry.legal.and_then(|()| {
+                let field_legal_in_composite = field_entry.legal.and(
                     // `field` is itself some legal `SpirvConst`, but can we have
                     // it as part of an `OpConstantComposite`?
                     match field_entry.val {
@@ -526,8 +526,8 @@ impl BuilderSpirv {
                             LeafIllegalConst::CompositeContainsPtrTo,
                         )),
                         _ => Ok(()),
-                    }
-                });
+                    },
+                );
 
                 match (composite_legal, field_legal_in_composite) {
                     (Ok(()), Ok(())) => Ok(()),

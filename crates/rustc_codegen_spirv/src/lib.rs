@@ -89,13 +89,11 @@
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
 #![allow(
-    unsafe_code,                // still quite a bit of unsafe
-    clippy::map_unwrap_or,      // TODO: test enabling
-    clippy::match_on_vec_items, // TODO: test enabling
-    clippy::enum_glob_use,
+    unsafe_code,                // rustc_codegen_ssa requires unsafe functions in traits to be impl'd
+    clippy::match_on_vec_items, // rustc_codegen_spirv has less strict panic requirements than other embark projects
+    clippy::enum_glob_use,      // pretty useful pattern with some codegen'd enums (e.g. rspirv::spirv::Op)
     clippy::todo,               // still lots to implement :)
 )]
-#![deny(clippy::unimplemented, clippy::ok_expect)]
 
 // Unfortunately, this will not fail fast when compiling, but rather will wait for
 // rustc_codegen_spirv to be compiled. Putting this in build.rs will solve that problem, however,

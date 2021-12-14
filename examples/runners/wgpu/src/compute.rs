@@ -59,9 +59,7 @@ pub async fn start_internal(
 
     let src = src_range
         .clone()
-        // Not sure which endianness is correct to use here
-        .map(u32::to_ne_bytes)
-        .flat_map(core::array::IntoIter::new)
+        .flat_map(u32::to_ne_bytes)
         .collect::<Vec<_>>();
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {

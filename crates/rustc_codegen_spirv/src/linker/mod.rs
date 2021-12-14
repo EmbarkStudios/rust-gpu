@@ -95,10 +95,10 @@ fn get_names(module: &Module) -> FxHashMap<Word, &str> {
 }
 
 fn get_name<'a>(names: &FxHashMap<Word, &'a str>, id: Word) -> Cow<'a, str> {
-    names
-        .get(&id)
-        .map(|&s| Cow::Borrowed(s))
-        .unwrap_or_else(|| Cow::Owned(format!("Unnamed function ID %{}", id)))
+    names.get(&id).map_or_else(
+        || Cow::Owned(format!("Unnamed function ID %{}", id)),
+        |&s| Cow::Borrowed(s),
+    )
 }
 
 pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<LinkResult> {

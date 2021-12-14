@@ -1094,28 +1094,22 @@ impl<'a> Match<'a> {
             let other_found = other
                 .storage_class_var_found
                 .get(i)
-                .map(|xs| &xs[..])
-                .unwrap_or(&[]);
+                .map_or(&[][..], |xs| &xs[..]);
             self_found.retain(|x| other_found.contains(x));
         }
         for (i, self_found) in ty_var_found {
-            let other_found = other.ty_var_found.get(i).map(|xs| &xs[..]).unwrap_or(&[]);
+            let other_found = other.ty_var_found.get(i).map_or(&[][..], |xs| &xs[..]);
             self_found.retain(|x| other_found.contains(x));
         }
         for (i, self_found) in index_composite_ty_var_found {
             let other_found = other
                 .index_composite_ty_var_found
                 .get(i)
-                .map(|xs| &xs[..])
-                .unwrap_or(&[]);
+                .map_or(&[][..], |xs| &xs[..]);
             self_found.retain(|x| other_found.contains(x));
         }
         for (i, self_found) in ty_list_var_found {
-            let other_found = other
-                .ty_list_var_found
-                .get(i)
-                .map(|xs| &xs[..])
-                .unwrap_or(&[]);
+            let other_found = other.ty_list_var_found.get(i).map_or(&[][..], |xs| &xs[..]);
             self_found.retain(|x| other_found.contains(x));
         }
         self

@@ -68,8 +68,7 @@
 )]
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
-// `or_patterns` is not stable yet.
-#![allow(clippy::unnested_or_patterns)]
+// #![allow()]
 
 mod image;
 
