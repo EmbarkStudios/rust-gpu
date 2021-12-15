@@ -297,16 +297,6 @@
 <span id="296">296</span>
 <span id="297">297</span>
 <span id="298">298</span>
-<span id="299">299</span>
-<span id="300">300</span>
-<span id="301">301</span>
-<span id="302">302</span>
-<span id="303">303</span>
-<span id="304">304</span>
-<span id="305">305</span>
-<span id="306">306</span>
-<span id="307">307</span>
-<span id="308">308</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::CodegenCx</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::attr::AggregatedSpirvAttributes</span>;
@@ -572,7 +562,6 @@
 
     <span class="kw">fn</span> <span class="ident">codegen_static</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <span class="ident">DefId</span>, <span class="ident">_is_mutable</span>: <span class="ident">bool</span>) {
         <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_static</span>(<span class="ident">def_id</span>);
-        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">def_id</span>);
 
         <span class="kw">let</span> <span class="ident">alloc</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">eval_static_initializer</span>(<span class="ident">def_id</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">alloc</span>) =&gt; <span class="ident">alloc</span>,
@@ -586,16 +575,7 @@
                 <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">g</span>.<span class="ident">ty</span>, <span class="self">self</span>)
             )),
         };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_const_alloc</span>(<span class="ident">alloc</span>, <span class="ident">value_ty</span>);
-
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">v</span>.<span class="ident">ty</span>) <span class="op">==</span> <span class="ident">SpirvType::Bool</span> {
-            <span class="kw">let</span> <span class="ident">val_int</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const</span>(<span class="ident">v</span>).<span class="ident">unwrap</span>() {
-                <span class="ident">SpirvConst::Bool</span>(<span class="ident">val</span>) =&gt; <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u8</span>,
-                <span class="kw">_</span> =&gt; <span class="macro">bug!</span>(),
-            };
-            <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u8</span>(<span class="ident">span</span>, <span class="ident">val_int</span>);
-        }
-
+        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_const_alloc</span>(<span class="ident">alloc</span>, <span class="ident">value_ty</span>);
         <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">value_ty</span>, <span class="ident">v</span>.<span class="ident">ty</span>);
         <span class="self">self</span>.<span class="ident">builder</span>
             .<span class="ident">set_global_initializer</span>(<span class="ident">g</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="ident">v</span>.<span class="ident">def_cx</span>(<span class="self">self</span>));

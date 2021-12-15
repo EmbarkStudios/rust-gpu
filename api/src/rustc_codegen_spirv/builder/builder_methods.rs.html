@@ -2238,12 +2238,6 @@
 <span id="2237">2237</span>
 <span id="2238">2238</span>
 <span id="2239">2239</span>
-<span id="2240">2240</span>
-<span id="2241">2241</span>
-<span id="2242">2242</span>
-<span id="2243">2243</span>
-<span id="2244">2244</span>
-<span id="2245">2245</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
@@ -3180,13 +3174,7 @@
                     <span class="ident">llptr</span>,
                     <span class="ident">align</span>,
                 );
-                <span class="comment">// WARN! This does not go through to_immediate due to only having a Scalar, not a Ty, but it still does</span>
-                <span class="comment">// whatever to_immediate does!</span>
-                <span class="kw">if</span> <span class="ident">scalar</span>.<span class="ident">is_bool</span>() {
-                    <span class="self">self</span>.<span class="ident">trunc</span>(<span class="ident">load</span>, <span class="ident">SpirvType::Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>))
-                } <span class="kw">else</span> {
-                    <span class="ident">load</span>
-                }
+                <span class="self">self</span>.<span class="ident">to_immediate_scalar</span>(<span class="ident">load</span>, <span class="kw-2">*</span><span class="ident">scalar</span>)
             };
 
             <span class="ident">OperandValue::Pair</span>(
