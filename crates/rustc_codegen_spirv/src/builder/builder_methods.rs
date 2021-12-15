@@ -934,13 +934,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     llptr,
                     align,
                 );
-                // WARN! This does not go through to_immediate due to only having a Scalar, not a Ty, but it still does
-                // whatever to_immediate does!
-                if scalar.is_bool() {
-                    self.trunc(load, SpirvType::Bool.def(self.span(), self))
-                } else {
-                    load
-                }
+                self.to_immediate_scalar(load, *scalar)
             };
 
             OperandValue::Pair(
