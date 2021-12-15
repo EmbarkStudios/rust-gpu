@@ -927,20 +927,16 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             let b_offset = a.value.size(self).align_to(b.value.align(self).abi);
 
             let pair_ty = place.layout.spirv_type(self.span(), self);
-            let mut load = |i, scalar: &Scalar, align| {
+            let mut load = |i, _: &Scalar, align| {
                 let llptr = self.struct_gep(pair_ty, place.llval, i as u64);
-                let load = self.load(
+                // WARN! This should go through to_immediate, but because we only have a Scalar,
+                // not a Ty, we can't call to_immediate here (even though we implement it as a
+                // no-op), so "inline" the no-op here and do nothing.
+                self.load(
                     self.scalar_pair_element_backend_type(place.layout, i, false),
                     llptr,
                     align,
-                );
-                // WARN! This does not go through to_immediate due to only having a Scalar, not a Ty, but it still does
-                // whatever to_immediate does!
-                if scalar.is_bool() {
-                    self.trunc(load, SpirvType::Bool.def(self.span(), self))
-                } else {
-                    load
-                }
+                )
             };
 
             OperandValue::Pair(

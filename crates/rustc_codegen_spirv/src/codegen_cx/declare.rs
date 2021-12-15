@@ -263,7 +263,6 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
 
     fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
         let g = self.get_static(def_id);
-        let span = self.tcx.def_span(def_id);
 
         let alloc = match self.tcx.eval_static_initializer(def_id) {
             Ok(alloc) => alloc,
@@ -277,16 +276,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
                 other.debug(g.ty, self)
             )),
         };
-        let mut v = self.create_const_alloc(alloc, value_ty);
-
-        if self.lookup_type(v.ty) == SpirvType::Bool {
-            let val_int = match self.builder.lookup_const(v).unwrap() {
-                SpirvConst::Bool(val) => val as u8,
-                _ => bug!(),
-            };
-            v = self.constant_u8(span, val_int);
-        }
-
+        let v = self.create_const_alloc(alloc, value_ty);
         assert_ty_eq!(self, value_ty, v.ty);
         self.builder
             .set_global_initializer(g.def_cx(self), v.def_cx(self));
