@@ -2238,6 +2238,11 @@
 <span id="2237">2237</span>
 <span id="2238">2238</span>
 <span id="2239">2239</span>
+<span id="2240">2240</span>
+<span id="2241">2241</span>
+<span id="2242">2242</span>
+<span id="2243">2243</span>
+<span id="2244">2244</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
@@ -2881,7 +2886,12 @@
         <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">unreachable</span>().<span class="ident">unwrap</span>();
     }
 
-    <span class="macro">simple_op!</span> {<span class="ident">add</span>, <span class="ident">i_add</span>}
+    <span class="macro">simple_op!</span> {
+        <span class="ident">add</span>, <span class="ident">i_add</span>,
+        <span class="ident">fold_const</span> {
+            <span class="ident">int</span>(<span class="ident">a</span>, <span class="ident">b</span>) =&gt; <span class="ident">a</span>.<span class="ident">wrapping_add</span>(<span class="ident">b</span>)
+        }
+    }
     <span class="macro">simple_op!</span> {<span class="ident">fadd</span>, <span class="ident">f_add</span>}
     <span class="macro">simple_op!</span> {<span class="ident">fadd_fast</span>, <span class="ident">f_add</span>} <span class="comment">// fast=normal</span>
     <span class="macro">simple_op!</span> {<span class="ident">sub</span>, <span class="ident">i_sub</span>}
@@ -2892,7 +2902,7 @@
         <span class="comment">// HACK(eddyb) `rustc_codegen_ssa` relies on `Builder` methods doing</span>
         <span class="comment">// on-the-fly constant-folding, for e.g. intrinsics that copy memory.</span>
         <span class="ident">fold_const</span> {
-            <span class="ident">int</span>(<span class="ident">a</span>, <span class="ident">b</span>) =&gt; <span class="ident">a</span> <span class="op">*</span> <span class="ident">b</span>
+            <span class="ident">int</span>(<span class="ident">a</span>, <span class="ident">b</span>) =&gt; <span class="ident">a</span>.<span class="ident">wrapping_mul</span>(<span class="ident">b</span>)
         }
     }
     <span class="macro">simple_op!</span> {<span class="ident">fmul</span>, <span class="ident">f_mul</span>}

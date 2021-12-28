@@ -403,6 +403,43 @@
 <span id="402">402</span>
 <span id="403">403</span>
 <span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">builder_methods</span>;
 <span class="kw">mod</span> <span class="ident">byte_addressable_buffer</span>;
 <span class="kw">mod</span> <span class="ident">ext_inst</span>;
@@ -418,7 +455,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx::CodegenCx</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv_type::SpirvType</span>;
-<span class="kw">use</span> <span class="ident">rspirv::spirv::Word</span>;
+<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="self">self</span>, <span class="ident">Word</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::operand::OperandValue</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::place::PlaceRef</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{
@@ -503,8 +540,29 @@
         <span class="self">self</span>.<span class="ident">current_span</span>.<span class="ident">unwrap_or</span>(<span class="ident">DUMMY_SP</span>)
     }
 
+    <span class="comment">// Given an ID, check if it&#39;s defined by an OpAccessChain, and if it is, return its ptr/indices</span>
+    <span class="kw">fn</span> <span class="ident">find_access_chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">spirv::Word</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">spirv::Word</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">emit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit</span>();
+        <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">module_ref</span>();
+        <span class="kw">let</span> <span class="ident">func</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">emit</span>.<span class="ident">selected_function</span>().<span class="ident">unwrap</span>()];
+        <span class="kw">let</span> <span class="ident">ptr_def_inst</span> <span class="op">=</span> <span class="ident">func</span>.<span class="ident">all_inst_iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">result_id</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>));
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ptr_def_inst</span>) <span class="op">=</span> <span class="ident">ptr_def_inst</span> {
+            <span class="kw">if</span> <span class="ident">ptr_def_inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">spirv::Op::AccessChain</span>
+                <span class="op">|</span><span class="op">|</span> <span class="ident">ptr_def_inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">spirv::Op::InBoundsAccessChain</span>
+            {
+                <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr_def_inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>();
+                <span class="kw">let</span> <span class="ident">indices</span> <span class="op">=</span> <span class="ident">ptr_def_inst</span>.<span class="ident">operands</span>[<span class="number">1</span>..]
+                    .<span class="ident">iter</span>()
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">unwrap_id_ref</span>())
+                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+                <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">ptr</span>, <span class="ident">indices</span>));
+            }
+        }
+        <span class="prelude-val">None</span>
+    }
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gep_help</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">ty</span>: <span class="ident">Word</span>,
         <span class="ident">ptr</span>: <span class="ident">SpirvValue</span>,
         <span class="ident">indices</span>: <span class="kw-2">&amp;</span>[<span class="ident">SpirvValue</span>],
@@ -539,42 +597,58 @@
             <span class="ident">pointee</span>: <span class="ident">result_pointee_type</span>,
         }
         .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">indices</span>[<span class="number">0</span>]) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="number">0</span>) {
+
+        <span class="kw">let</span> <span class="ident">ptr_id</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">def</span>(<span class="self">self</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">original_ptr</span>, <span class="kw-2">mut</span> <span class="ident">original_indices</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_access_chain</span>(<span class="ident">ptr_id</span>) {
+            <span class="comment">// Transform the following:</span>
+            <span class="comment">// OpAccessChain original_ptr [a, b, c]</span>
+            <span class="comment">// OpPtrAccessChain ptr base [d, e, f]</span>
+            <span class="comment">// into</span>
+            <span class="comment">// OpAccessChain original_ptr [a, b, c + base, d, e, f]</span>
+            <span class="comment">// to remove the need for OpPtrAccessChain</span>
+            <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">original_indices</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
+            <span class="kw-2">*</span><span class="ident">last</span> <span class="op">=</span> <span class="self">self</span>
+                .<span class="ident">add</span>(<span class="ident">last</span>.<span class="ident">with_type</span>(<span class="ident">indices</span>[<span class="number">0</span>].<span class="ident">ty</span>), <span class="ident">indices</span>[<span class="number">0</span>])
+                .<span class="ident">def</span>(<span class="self">self</span>);
+            <span class="ident">original_indices</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">result_indices</span>);
+            <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">indices</span>[<span class="number">0</span>].<span class="ident">ty</span>, <span class="number">0</span>);
+            <span class="self">self</span>.<span class="ident">emit_access_chain</span>(
+                <span class="ident">result_type</span>,
+                <span class="ident">original_ptr</span>,
+                <span class="ident">zero</span>,
+                <span class="ident">original_indices</span>,
+                <span class="ident">is_inbounds</span>,
+            )
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">emit_access_chain</span>(<span class="ident">result_type</span>, <span class="ident">ptr_id</span>, <span class="ident">indices</span>[<span class="number">0</span>], <span class="ident">result_indices</span>, <span class="ident">is_inbounds</span>)
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">emit_access_chain</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>,
+        <span class="ident">pointer</span>: <span class="ident">spirv::Word</span>,
+        <span class="ident">base</span>: <span class="ident">SpirvValue</span>,
+        <span class="ident">indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>,
+        <span class="ident">is_inbounds</span>: <span class="ident">bool</span>,
+    ) -&gt; <span class="ident">SpirvValue</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit</span>();
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">base</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="number">0</span>) {
             <span class="kw">if</span> <span class="ident">is_inbounds</span> {
-                <span class="self">self</span>.<span class="ident">emit</span>()
-                    .<span class="ident">in_bounds_access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">ptr</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">result_indices</span>)
-                    .<span class="ident">unwrap</span>()
-                    .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
+                <span class="ident">emit</span>.<span class="ident">in_bounds_access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">pointer</span>, <span class="ident">indices</span>)
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">emit</span>()
-                    .<span class="ident">access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">ptr</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">result_indices</span>)
-                    .<span class="ident">unwrap</span>()
-                    .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
+                <span class="ident">emit</span>.<span class="ident">access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">pointer</span>, <span class="ident">indices</span>)
             }
+            .<span class="ident">unwrap</span>()
+            .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_inbounds</span> {
-                <span class="self">self</span>.<span class="ident">emit</span>()
-                    .<span class="ident">in_bounds_ptr_access_chain</span>(
-                        <span class="ident">result_type</span>,
-                        <span class="prelude-val">None</span>,
-                        <span class="ident">ptr</span>.<span class="ident">def</span>(<span class="self">self</span>),
-                        <span class="ident">indices</span>[<span class="number">0</span>].<span class="ident">def</span>(<span class="self">self</span>),
-                        <span class="ident">result_indices</span>,
-                    )
-                    .<span class="ident">unwrap</span>()
-                    .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
+                <span class="ident">emit</span>.<span class="ident">in_bounds_ptr_access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">pointer</span>, <span class="ident">base</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">indices</span>)
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">emit</span>()
-                    .<span class="ident">ptr_access_chain</span>(
-                        <span class="ident">result_type</span>,
-                        <span class="prelude-val">None</span>,
-                        <span class="ident">ptr</span>.<span class="ident">def</span>(<span class="self">self</span>),
-                        <span class="ident">indices</span>[<span class="number">0</span>].<span class="ident">def</span>(<span class="self">self</span>),
-                        <span class="ident">result_indices</span>,
-                    )
-                    .<span class="ident">unwrap</span>()
-                    .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
-            };
+                <span class="ident">emit</span>.<span class="ident">ptr_access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">pointer</span>, <span class="ident">base</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">indices</span>)
+            }
+            .<span class="ident">unwrap</span>()
+            .<span class="ident">with_type</span>(<span class="ident">result_type</span>);
             <span class="self">self</span>.<span class="ident">zombie</span>(
                 <span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>),
                 <span class="string">&quot;Cannot offset a pointer to an arbitrary element&quot;</span>,
