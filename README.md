@@ -63,7 +63,7 @@ What this means practically is that it is unlikely that we'll be able to accept 
 
 Check out [The `rust-gpu` Dev Guide][gpu-guide] for information on how to get started with using it in your projects.
 
-Experiment with rust-gpu shaders in-bowser at [SHADERed][shadered].
+Experiment with rust-gpu shaders in-browser at [SHADERed][shadered].
 
 [gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
 [shadered]: https://shadered.org/shaders?language=rust&sort=hot
