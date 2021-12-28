@@ -641,7 +641,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.emit().unreachable().unwrap();
     }
 
-    simple_op! {add, i_add}
+    simple_op! {
+        add, i_add,
+        fold_const {
+            int(a, b) => a.wrapping_add(b)
+        }
+    }
     simple_op! {fadd, f_add}
     simple_op! {fadd_fast, f_add} // fast=normal
     simple_op! {sub, i_sub}
@@ -652,7 +657,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // HACK(eddyb) `rustc_codegen_ssa` relies on `Builder` methods doing
         // on-the-fly constant-folding, for e.g. intrinsics that copy memory.
         fold_const {
-            int(a, b) => a * b
+            int(a, b) => a.wrapping_mul(b)
         }
     }
     simple_op! {fmul, f_mul}
