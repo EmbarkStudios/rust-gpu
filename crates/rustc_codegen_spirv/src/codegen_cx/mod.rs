@@ -251,6 +251,9 @@ pub struct CodegenArgs {
     pub uniform_buffer_standard_layout: bool,
     pub scalar_block_layout: bool,
     pub skip_block_layout: bool,
+
+    // spirv-opt flags
+    pub preserve_bindings: bool,
 }
 
 impl CodegenArgs {
@@ -289,6 +292,8 @@ impl CodegenArgs {
         opts.optflagopt("", "scalar-block-layout", "Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.", "");
         opts.optflagopt("", "skip-block-layout", "Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.", "");
 
+        opts.optflagopt("", "preserve-bindings", "Preserve unused descriptor bindings. Useful for reflection.", "");
+
         let matches = opts.parse(args)?;
         let module_output_type =
             matches.opt_get_default("module-output", ModuleOutputType::Single)?;
@@ -305,6 +310,8 @@ impl CodegenArgs {
         let uniform_buffer_standard_layout = matches.opt_present("uniform-buffer-standard-layout");
         let scalar_block_layout = matches.opt_present("scalar-block-layout");
         let skip_block_layout = matches.opt_present("skip-block-layout");
+
+        let preserve_bindings = matches.opt_present("preserve-bindings");
 
         let relax_block_layout = if relax_block_layout { Some(true) } else { None };
 
@@ -334,6 +341,8 @@ impl CodegenArgs {
             uniform_buffer_standard_layout,
             scalar_block_layout,
             skip_block_layout,
+
+            preserve_bindings,
         })
     }
 
