@@ -292,7 +292,12 @@ impl CodegenArgs {
         opts.optflagopt("", "scalar-block-layout", "Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.", "");
         opts.optflagopt("", "skip-block-layout", "Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.", "");
 
-        opts.optflagopt("", "preserve-bindings", "Preserve unused descriptor bindings. Useful for reflection.", "");
+        opts.optflagopt(
+            "",
+            "preserve-bindings",
+            "Preserve unused descriptor bindings. Useful for reflection.",
+            "",
+        );
 
         let matches = opts.parse(args)?;
         let module_output_type =
