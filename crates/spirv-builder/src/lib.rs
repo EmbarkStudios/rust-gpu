@@ -166,6 +166,9 @@ pub struct SpirvBuilder {
     pub uniform_buffer_standard_layout: bool,
     pub scalar_block_layout: bool,
     pub skip_block_layout: bool,
+
+    // spirv-opt flags
+    pub preserve_bindings: bool,
 }
 
 impl SpirvBuilder {
@@ -187,6 +190,8 @@ impl SpirvBuilder {
             uniform_buffer_standard_layout: false,
             scalar_block_layout: false,
             skip_block_layout: false,
+
+            preserve_bindings: false,
         }
     }
 
@@ -275,6 +280,12 @@ impl SpirvBuilder {
     /// --scalar-block-layout option.
     pub fn skip_block_layout(mut self, v: bool) -> Self {
         self.skip_block_layout = v;
+        self
+    }
+
+    /// Preserve unused descriptor bindings. Useful for reflection.
+    pub fn preserve_bindings(mut self, v: bool) -> Self {
+        self.preserve_bindings = v;
         self
     }
 
@@ -423,6 +434,9 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     }
     if builder.skip_block_layout {
         llvm_args.push("--skip-block-layout");
+    }
+    if builder.preserve_bindings {
+        llvm_args.push("--preserve-bindings");
     }
     let llvm_args = join_checking_for_separators(llvm_args, " ");
     if !llvm_args.is_empty() {
