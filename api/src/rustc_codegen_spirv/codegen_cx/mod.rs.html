@@ -669,6 +669,20 @@
 <span id="668">668</span>
 <span id="669">669</span>
 <span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
 <span class="kw">mod</span> <span class="ident">entry</span>;
@@ -922,6 +936,9 @@
     <span class="kw">pub</span> <span class="ident">uniform_buffer_standard_layout</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">scalar_block_layout</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">skip_block_layout</span>: <span class="ident">bool</span>,
+
+    <span class="comment">// spirv-opt flags</span>
+    <span class="kw">pub</span> <span class="ident">preserve_bindings</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">CodegenArgs</span> {
@@ -960,6 +977,13 @@
         <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;scalar-block-layout&quot;</span>, <span class="string">&quot;Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.&quot;</span>, <span class="string">&quot;&quot;</span>);
         <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;skip-block-layout&quot;</span>, <span class="string">&quot;Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.&quot;</span>, <span class="string">&quot;&quot;</span>);
 
+        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(
+            <span class="string">&quot;&quot;</span>,
+            <span class="string">&quot;preserve-bindings&quot;</span>,
+            <span class="string">&quot;Preserve unused descriptor bindings. Useful for reflection.&quot;</span>,
+            <span class="string">&quot;&quot;</span>,
+        );
+
         <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span> <span class="ident">opts</span>.<span class="ident">parse</span>(<span class="ident">args</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">module_output_type</span> <span class="op">=</span>
             <span class="ident">matches</span>.<span class="ident">opt_get_default</span>(<span class="string">&quot;module-output&quot;</span>, <span class="ident">ModuleOutputType::Single</span>)<span class="question-mark">?</span>;
@@ -976,6 +1000,8 @@
         <span class="kw">let</span> <span class="ident">uniform_buffer_standard_layout</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;uniform-buffer-standard-layout&quot;</span>);
         <span class="kw">let</span> <span class="ident">scalar_block_layout</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;scalar-block-layout&quot;</span>);
         <span class="kw">let</span> <span class="ident">skip_block_layout</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;skip-block-layout&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">preserve_bindings</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;preserve-bindings&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">relax_block_layout</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">relax_block_layout</span> { <span class="prelude-val">Some</span>(<span class="bool-val">true</span>) } <span class="kw">else</span> { <span class="prelude-val">None</span> };
 
@@ -1005,6 +1031,8 @@
             <span class="ident">uniform_buffer_standard_layout</span>,
             <span class="ident">scalar_block_layout</span>,
             <span class="ident">skip_block_layout</span>,
+
+            <span class="ident">preserve_bindings</span>,
         })
     }
 

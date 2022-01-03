@@ -564,6 +564,20 @@
 <span id="563">563</span>
 <span id="564">564</span>
 <span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
 </pre><pre class="rust"><code><span class="comment">// BEGIN - Embark standard lints v0.4</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
 <span class="comment">// for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;</span>
@@ -732,6 +746,9 @@
     <span class="kw">pub</span> <span class="ident">uniform_buffer_standard_layout</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">scalar_block_layout</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">skip_block_layout</span>: <span class="ident">bool</span>,
+
+    <span class="comment">// spirv-opt flags</span>
+    <span class="kw">pub</span> <span class="ident">preserve_bindings</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">SpirvBuilder</span> {
@@ -753,6 +770,8 @@
             <span class="ident">uniform_buffer_standard_layout</span>: <span class="bool-val">false</span>,
             <span class="ident">scalar_block_layout</span>: <span class="bool-val">false</span>,
             <span class="ident">skip_block_layout</span>: <span class="bool-val">false</span>,
+
+            <span class="ident">preserve_bindings</span>: <span class="bool-val">false</span>,
         }
     }
 
@@ -841,6 +860,12 @@
     <span class="doccomment">/// --scalar-block-layout option.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">skip_block_layout</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">skip_block_layout</span> <span class="op">=</span> <span class="ident">v</span>;
+        <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// Preserve unused descriptor bindings. Useful for reflection.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">preserve_bindings</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">preserve_bindings</span> <span class="op">=</span> <span class="ident">v</span>;
         <span class="self">self</span>
     }
 
@@ -989,6 +1014,9 @@
     }
     <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">skip_block_layout</span> {
         <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--skip-block-layout&quot;</span>);
+    }
+    <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">preserve_bindings</span> {
+        <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--preserve-bindings&quot;</span>);
     }
     <span class="kw">let</span> <span class="ident">llvm_args</span> <span class="op">=</span> <span class="ident">join_checking_for_separators</span>(<span class="ident">llvm_args</span>, <span class="string">&quot; &quot;</span>);
     <span class="kw">if</span> <span class="op">!</span><span class="ident">llvm_args</span>.<span class="ident">is_empty</span>() {
