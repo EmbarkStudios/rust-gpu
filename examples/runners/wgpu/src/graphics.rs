@@ -300,7 +300,7 @@ fn create_pipeline(
             strip_index_format: None,
             front_face: wgpu::FrontFace::Ccw,
             cull_mode: None,
-            clamp_depth: false,
+            unclipped_depth: false,
             polygon_mode: wgpu::PolygonMode::Fill,
             conservative: false,
         },
@@ -319,6 +319,7 @@ fn create_pipeline(
                 write_mask: wgpu::ColorWrites::ALL,
             }],
         }),
+        multiview: None,
     })
 }
 
