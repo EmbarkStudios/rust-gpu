@@ -66,7 +66,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 }
                 // FIXME(eddyb) support these (by just ignoring them) - if there
                 // is any validation concern, it should be done on the types.
-                PassMode::Ignore => self.tcx.sess.span_err(
+                PassMode::Ignore => self.tcx.sess.span_fatal(
                     hir_param.ty_span,
                     &format!(
                         "entry point parameter type not yet supported \

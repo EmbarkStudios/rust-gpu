@@ -5,18 +5,14 @@ use core::mem;
 #[spirv(buffer_load_intrinsic)]
 #[spirv_std_macros::gpu_only]
 #[allow(improper_ctypes_definitions)]
-unsafe extern "unadjusted" fn buffer_load_intrinsic<T>(_buffer: &[u32], _offset: u32) -> T {
+unsafe fn buffer_load_intrinsic<T>(_buffer: &[u32], _offset: u32) -> T {
     unimplemented!()
 } // actually implemented in the compiler
 
 #[spirv(buffer_store_intrinsic)]
 #[spirv_std_macros::gpu_only]
 #[allow(improper_ctypes_definitions)]
-unsafe extern "unadjusted" fn buffer_store_intrinsic<T>(
-    _buffer: &mut [u32],
-    _offset: u32,
-    _value: T,
-) {
+unsafe fn buffer_store_intrinsic<T>(_buffer: &mut [u32], _offset: u32, _value: T) {
     unimplemented!()
 } // actually implemented in the compiler
 

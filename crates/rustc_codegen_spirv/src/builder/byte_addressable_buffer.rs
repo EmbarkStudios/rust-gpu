@@ -1,10 +1,12 @@
 use super::Builder;
-use crate::builder_spirv::{SpirvValue, SpirvValueExt};
+use crate::builder_spirv::{SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
+use rustc_errors::ErrorReported;
 use rustc_span::DUMMY_SP;
-use rustc_target::abi::Align;
+use rustc_target::abi::call::PassMode;
+use rustc_target::abi::{Align, Size};
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
     fn load_err(&mut self, original_type: Word, invalid_type: Word) -> SpirvValue {
@@ -168,7 +170,25 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         &mut self,
         result_type: Word,
         args: &[SpirvValue],
+        pass_mode: PassMode,
     ) -> SpirvValue {
+        match pass_mode {
+            PassMode::Ignore => {
+                return SpirvValue {
+                    kind: SpirvValueKind::IllegalTypeUsed(result_type),
+                    ty: result_type,
+                }
+            }
+            // PassMode::Pair is identical to PassMode::Direct - it's returned as a struct
+            PassMode::Direct(_) | PassMode::Pair(_, _) => (),
+            PassMode::Cast(_) => {
+                self.fatal("PassMode::Cast not supported in codegen_buffer_load_intrinsic")
+            }
+            PassMode::Indirect { .. } => {
+                self.fatal("PassMode::Indirect not supported in codegen_buffer_load_intrinsic")
+            }
+        }
+
         // Signature: fn load<T>(array: &[u32], index: u32) -> T;
         if args.len() != 3 {
             self.fatal(&format!(
@@ -184,15 +204,16 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         self.recurse_load_type(result_type, result_type, array, word_index, 0)
     }
 
-    fn store_err(&mut self, original_type: Word, value: SpirvValue) {
+    fn store_err(&mut self, original_type: Word, value: SpirvValue) -> Result<(), ErrorReported> {
         let mut err = self.struct_err(&format!(
-            "Cannot load type {} in an untyped buffer store",
+            "Cannot store type {} in an untyped buffer store",
             self.debug_type(original_type)
         ));
         if original_type != value.ty {
             err.note(&format!("due to containing type {}", value.ty));
         }
         err.emit();
+        Err(ErrorReported)
     }
 
     fn store_u32(
@@ -201,7 +222,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         dynamic_index: SpirvValue,
         constant_offset: u32,
         value: SpirvValue,
-    ) {
+    ) -> Result<(), ErrorReported> {
         let actual_index = if constant_offset != 0 {
             let const_offset_val = self.constant_u32(DUMMY_SP, constant_offset);
             self.add(dynamic_index, const_offset_val)
@@ -216,6 +237,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             .unwrap()
             .with_type(u32_ptr);
         self.store(value, ptr, Align::ONE);
+        Ok(())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -228,7 +250,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         constant_word_offset: u32,
         element: Word,
         count: u32,
-    ) {
+    ) -> Result<(), ErrorReported> {
         let element_size_bytes = match self.lookup_type(element).sizeof(self) {
             Some(size) => size,
             None => return self.store_err(original_type, value),
@@ -245,8 +267,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 array,
                 dynamic_word_index,
                 constant_word_offset + element_size_words * index,
-            );
+            )?;
         }
+        Ok(())
     }
 
     fn recurse_store_type(
@@ -256,17 +279,17 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         array: SpirvValue,
         dynamic_word_index: SpirvValue,
         constant_word_offset: u32,
-    ) {
+    ) -> Result<(), ErrorReported> {
         match self.lookup_type(value.ty) {
             SpirvType::Integer(32, signed) => {
                 let u32_ty = SpirvType::Integer(32, false).def(DUMMY_SP, self);
                 let value_u32 = self.intcast(value, u32_ty, signed);
-                self.store_u32(array, dynamic_word_index, constant_word_offset, value_u32);
+                self.store_u32(array, dynamic_word_index, constant_word_offset, value_u32)
             }
             SpirvType::Float(32) => {
                 let u32_ty = SpirvType::Integer(32, false).def(DUMMY_SP, self);
                 let value_u32 = self.bitcast(value, u32_ty);
-                self.store_u32(array, dynamic_word_index, constant_word_offset, value_u32);
+                self.store_u32(array, dynamic_word_index, constant_word_offset, value_u32)
             }
             SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => self
                 .store_vec_mat_arr(
@@ -291,7 +314,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     constant_word_offset,
                     element,
                     count,
-                );
+                )
             }
             SpirvType::Adt {
                 size: Some(_),
@@ -310,8 +333,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         array,
                         dynamic_word_index,
                         constant_word_offset + word_offset,
-                    );
+                    )?;
                 }
+                Ok(())
             }
 
             _ => self.store_err(original_type, value),
@@ -319,11 +343,25 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     /// Note: DOES NOT do bounds checking! Bounds checking is expected to be done in the caller.
-    pub fn codegen_buffer_store_intrinsic(&mut self, args: &[SpirvValue]) {
+    pub fn codegen_buffer_store_intrinsic(&mut self, args: &[SpirvValue], pass_mode: PassMode) {
         // Signature: fn store<T>(array: &[u32], index: u32, value: T);
-        if args.len() != 4 {
+        let is_pair = match pass_mode {
+            // haha shrug
+            PassMode::Ignore => return,
+            PassMode::Direct(_) => false,
+            PassMode::Pair(_, _) => true,
+            PassMode::Cast(_) => {
+                self.fatal("PassMode::Cast not supported in codegen_buffer_store_intrinsic")
+            }
+            PassMode::Indirect { .. } => {
+                self.fatal("PassMode::Indirect not supported in codegen_buffer_store_intrinsic")
+            }
+        };
+        let expected_args = if is_pair { 5 } else { 4 };
+        if args.len() != expected_args {
             self.fatal(&format!(
-                "buffer_store_intrinsic should have 4 args, it has {}",
+                "buffer_store_intrinsic should have {} args, it has {}",
+                expected_args,
                 args.len()
             ));
         }
@@ -332,7 +370,20 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let byte_index = args[2];
         let two = self.constant_u32(DUMMY_SP, 2);
         let word_index = self.lshr(byte_index, two);
-        let value = args[3];
-        self.recurse_store_type(value.ty, value, array, word_index, 0);
+        if is_pair {
+            let value_one = args[3];
+            let value_two = args[4];
+            let one_result = self.recurse_store_type(value_one.ty, value_one, array, word_index, 0);
+
+            let size_of_one = self.lookup_type(value_one.ty).sizeof(self);
+            if one_result.is_ok() && size_of_one != Some(Size::from_bytes(4)) {
+                self.fatal("Expected PassMode::Pair first element to have size 4");
+            }
+
+            let _ = self.recurse_store_type(value_two.ty, value_two, array, word_index, 1);
+        } else {
+            let value = args[3];
+            let _ = self.recurse_store_type(value.ty, value, array, word_index, 0);
+        }
     }
 }
