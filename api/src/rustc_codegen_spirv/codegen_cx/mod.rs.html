@@ -714,7 +714,7 @@
 <span class="kw">use</span> <span class="ident">rustc_span::def_id</span>::{<span class="ident">DefId</span>, <span class="ident">LOCAL_CRATE</span>};
 <span class="kw">use</span> <span class="ident">rustc_span::symbol</span>::{<span class="ident">sym</span>, <span class="ident">Symbol</span>};
 <span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">SourceFile</span>, <span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
-<span class="kw">use</span> <span class="ident">rustc_target::abi::call::FnAbi</span>;
+<span class="kw">use</span> <span class="ident">rustc_target::abi::call</span>::{<span class="ident">FnAbi</span>, <span class="ident">PassMode</span>};
 <span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{<span class="ident">HasDataLayout</span>, <span class="ident">TargetDataLayout</span>};
 <span class="kw">use</span> <span class="ident">rustc_target::spec</span>::{<span class="ident">HasTargetSpec</span>, <span class="ident">Target</span>};
 <span class="kw">use</span> <span class="ident">std::cell</span>::{<span class="ident">Cell</span>, <span class="ident">RefCell</span>};
@@ -751,10 +751,10 @@
 
     <span class="doccomment">/// Simple `panic!(&quot;...&quot;)` and builtin panics (from MIR `Assert`s) call `#[lang = &quot;panic&quot;]`.</span>
     <span class="kw">pub</span> <span class="ident">panic_fn_id</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Intrinsic for loading a &lt;T&gt; from a &amp;[u32]</span>
-    <span class="kw">pub</span> <span class="ident">buffer_load_intrinsic_fn_id</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Intrinsic for storing a &lt;T&gt; into a &amp;[u32]</span>
-    <span class="kw">pub</span> <span class="ident">buffer_store_intrinsic_fn_id</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Intrinsic for loading a &lt;T&gt; from a &amp;[u32]. The PassMode is the mode of the &lt;T&gt;.</span>
+    <span class="kw">pub</span> <span class="ident">buffer_load_intrinsic_fn_id</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">PassMode</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Intrinsic for storing a &lt;T&gt; into a &amp;[u32]. The PassMode is the mode of the &lt;T&gt;.</span>
+    <span class="kw">pub</span> <span class="ident">buffer_store_intrinsic_fn_id</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">PassMode</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = &quot;panic_bounds_check&quot;]`.</span>
     <span class="kw">pub</span> <span class="ident">panic_bounds_check_fn_id</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 
