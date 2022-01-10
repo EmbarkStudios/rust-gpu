@@ -181,6 +181,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         let field_types = elts.iter().map(|f| f.ty).collect::<Vec<_>>();
         let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, &field_types);
         let struct_ty = SpirvType::Adt {
+            is_enum: false,
             def_id: None,
             size,
             align,

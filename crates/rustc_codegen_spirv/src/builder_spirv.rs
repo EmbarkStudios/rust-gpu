@@ -180,7 +180,7 @@ impl SpirvValue {
                         zombie_target_undef,
                         span,
                         &format!(
-                            "Cannot cast between pointer types. From: {}. To: {}.",
+                            "Cannot cast between pointer types. From: *{}. To: {}.",
                             cx.debug_type(original_pointee_ty),
                             cx.debug_type(self.ty)
                         ),
