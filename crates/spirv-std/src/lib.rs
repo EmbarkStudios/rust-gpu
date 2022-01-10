@@ -2,7 +2,6 @@
 #![cfg_attr(
     target_arch = "spirv",
     feature(
-        abi_unadjusted,
         asm,
         asm_const,
         asm_experimental_arch,

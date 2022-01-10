@@ -120,10 +120,16 @@ impl<'tcx> CodegenCx<'tcx> {
             self.unroll_loops_decorations.borrow_mut().insert(fn_id);
         }
         if attrs.buffer_load_intrinsic.is_some() {
-            self.buffer_load_intrinsic_fn_id.borrow_mut().insert(fn_id);
+            let mode = fn_abi.ret.mode;
+            self.buffer_load_intrinsic_fn_id
+                .borrow_mut()
+                .insert(fn_id, mode);
         }
         if attrs.buffer_store_intrinsic.is_some() {
-            self.buffer_store_intrinsic_fn_id.borrow_mut().insert(fn_id);
+            let mode = fn_abi.args.last().unwrap().mode;
+            self.buffer_store_intrinsic_fn_id
+                .borrow_mut()
+                .insert(fn_id, mode);
         }
 
         let instance_def_id = instance.def_id();

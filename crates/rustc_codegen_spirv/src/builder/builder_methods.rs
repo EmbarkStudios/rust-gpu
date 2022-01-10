@@ -2188,7 +2188,17 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         for (argument, argument_type) in args.iter().zip(argument_types) {
             assert_ty_eq!(self, argument.ty, argument_type);
         }
-        let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).cloned();
+        let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).copied();
+        let buffer_load_intrinsic = self
+            .buffer_load_intrinsic_fn_id
+            .borrow()
+            .get(&callee_val)
+            .copied();
+        let buffer_store_intrinsic = self
+            .buffer_store_intrinsic_fn_id
+            .borrow()
+            .get(&callee_val)
+            .copied();
         if let Some(libm_intrinsic) = libm_intrinsic {
             let result = self.call_libm_intrinsic(libm_intrinsic, result_type, args);
             if result_type != result.ty {
@@ -2207,18 +2217,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // needing to materialize `&core::panic::Location` or `format_args!`.
             self.abort();
             self.undef(result_type)
-        } else if self
-            .buffer_load_intrinsic_fn_id
-            .borrow()
-            .contains(&callee_val)
-        {
-            self.codegen_buffer_load_intrinsic(result_type, args)
-        } else if self
-            .buffer_store_intrinsic_fn_id
-            .borrow()
-            .contains(&callee_val)
-        {
-            self.codegen_buffer_store_intrinsic(args);
+        } else if let Some(mode) = buffer_load_intrinsic {
+            self.codegen_buffer_load_intrinsic(result_type, args, mode)
+        } else if let Some(mode) = buffer_store_intrinsic {
+            self.codegen_buffer_store_intrinsic(args, mode);
 
             let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
             SpirvValue {

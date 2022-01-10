@@ -29,7 +29,7 @@ use rustc_session::Session;
 use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use rustc_span::{SourceFile, Span, DUMMY_SP};
-use rustc_target::abi::call::FnAbi;
+use rustc_target::abi::call::{FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
@@ -66,10 +66,10 @@ pub struct CodegenCx<'tcx> {
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
     pub panic_fn_id: Cell<Option<Word>>,
-    /// Intrinsic for loading a <T> from a &[u32]
-    pub buffer_load_intrinsic_fn_id: RefCell<FxHashSet<Word>>,
-    /// Intrinsic for storing a <T> into a &[u32]
-    pub buffer_store_intrinsic_fn_id: RefCell<FxHashSet<Word>>,
+    /// Intrinsic for loading a <T> from a &[u32]. The PassMode is the mode of the <T>.
+    pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, PassMode>>,
+    /// Intrinsic for storing a <T> into a &[u32]. The PassMode is the mode of the <T>.
+    pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, PassMode>>,
     /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
     pub panic_bounds_check_fn_id: Cell<Option<Word>>,
 
