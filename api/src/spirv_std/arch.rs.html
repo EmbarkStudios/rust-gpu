@@ -317,6 +317,29 @@
 <span id="314">314</span>
 <span id="315">315</span>
 <span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
 </pre><pre class="rust"><code><span class="doccomment">//! SPIR-V Instrinics</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module is intended as a low level abstraction over SPIR-V instructions.</span>
@@ -543,6 +566,29 @@
 <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">signed_max</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">SignedInteger</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="ident">T</span>, <span class="ident">b</span>: <span class="ident">T</span>) -&gt; <span class="ident">T</span> {
     <span class="kw">unsafe</span> { <span class="ident">call_glsl_op_with_ints</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="number">42</span><span class="op">&gt;</span>(<span class="ident">a</span>, <span class="ident">b</span>) }
+}
+
+<span class="doccomment">/// Atomically increment an integer and return the old value.</span>
+<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicIIncrement&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_i_increment</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Integer</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
+    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>,
+) -&gt; <span class="ident">I</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">I::default</span>();
+
+    <span class="macro">asm!</span> {
+        <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
+        <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
+        <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
+        <span class="string">&quot;%old = OpAtomicIIncrement _ {ptr} %scope %semantics&quot;</span>,
+        <span class="string">&quot;OpStore {old} %old&quot;</span>,
+        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
+        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
+        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
+        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
+    }
+
+    <span class="ident">old</span>
 }
 
 <span class="doccomment">/// Index into an array without bounds checking.</span>
