@@ -1,3 +1,5 @@
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
 use core::marker::PhantomData;
 
 /// Dynamically-sized arrays in Rust carry around their length as the second half of a tuple.

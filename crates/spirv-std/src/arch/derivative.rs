@@ -5,7 +5,7 @@ macro_rules! deriv_fn {
     ($p:ident, $inst:ident) => {
         unsafe {
             let mut o = Default::default();
-            asm!(
+            ::core::arch::asm!(
                 "%input = OpLoad _ {0}",
                 concat!("%result = ", stringify!($inst), " _ %input"),
                 "OpStore {1} %result",

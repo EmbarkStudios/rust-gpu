@@ -2,6 +2,7 @@
 // within the `asm!` macro.
 // build-pass
 
+use core::arch::asm;
 use spirv_std as _;
 
 fn asm_label() {

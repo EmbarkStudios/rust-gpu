@@ -3,9 +3,9 @@
 
 // build-pass
 
-use spirv_std as _;
-
+use core::arch::asm;
 use glam::Vec4;
+use spirv_std as _;
 
 #[spirv(fragment)]
 pub fn main(

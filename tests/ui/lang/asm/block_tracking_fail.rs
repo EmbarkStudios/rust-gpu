@@ -2,6 +2,7 @@
 // within the `asm!` macro.
 // build-fail
 
+use core::arch::asm;
 use spirv_std as _;
 
 // Active basic block with `noreturn`.

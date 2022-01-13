@@ -91,7 +91,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
         // HACK(eddyb) this is a bit roundabout, but the easiest way to get a
         // fully absolute path that contains at least as much information as
-        // `instance.to_string()` (at least with `-Z symbol-mangling-version=v0`).
+        // `instance.to_string()` (at least with `-C symbol-mangling-version=v0`).
         // While we could use the mangled symbol instead, like we do for linkage,
         // `OpName` is more of a debugging aid, so not having to separately
         // demangle the SPIR-V can help. However, if some tools assume `OpName`

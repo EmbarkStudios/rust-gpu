@@ -1,3 +1,6 @@
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
+
 /// Reports an intersection back to the traversal infrastructure.
 ///
 /// If the intersection occurred within the current ray interval, the

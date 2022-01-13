@@ -8,6 +8,8 @@ use crate::{
     scalar::Scalar,
     vector::Vector,
 };
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
 
 mod barrier;
 mod demote_to_helper_invocation_ext;

@@ -1,6 +1,7 @@
 // Tests using `asm!` with a const argument.
 // build-pass
 
+use core::arch::asm;
 use spirv_std as _;
 
 fn asm() {
