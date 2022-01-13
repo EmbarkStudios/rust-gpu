@@ -2,7 +2,6 @@
 #![cfg_attr(
     target_arch = "spirv",
     feature(
-        asm,
         asm_const,
         asm_experimental_arch,
         core_intrinsics,

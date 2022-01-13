@@ -1,5 +1,7 @@
 //! Ray-tracing data types
 use crate::vector::Vector;
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
 
 /// An acceleration structure type which is an opaque reference to an
 /// acceleration structure handle as defined in the client API specification.
@@ -201,7 +203,7 @@ macro_rules! ray_query {
     (@inner $name:ident $(, $mut:tt)?) => {
         let $name: &$($mut)? RayQuery = unsafe {
             let $name : *mut RayQuery;
-            asm! {
+            ::core::arch::asm! {
                 "%ray_query = OpTypeRayQueryKHR",
                 "%ray_query_ptr = OpTypePointer Generic %ray_query",
                 "{name} = OpVariable %ray_query_ptr Function",

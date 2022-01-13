@@ -1,6 +1,7 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=asm::asm
 
+use core::arch::asm;
 use spirv_std as _;
 
 fn asm() {

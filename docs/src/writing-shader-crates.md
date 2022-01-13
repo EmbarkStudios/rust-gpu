@@ -115,7 +115,7 @@ to your built `rustc_codegen_spirv` dynamic library. We have to also provide
 target = "spirv-unknown-spv1.3"
 rustflags = [
    "-Zcodegen-backend=<path_to_librustc_codegen_spirv>",
-   "-Zsymbol-mangling-version=v0"
+   "-Csymbol-mangling-version=v0"
 ]
 
 [unstable]

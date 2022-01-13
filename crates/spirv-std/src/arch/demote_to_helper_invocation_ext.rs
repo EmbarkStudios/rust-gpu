@@ -1,3 +1,6 @@
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
+
 /// Demote fragment shader invocation to a helper invocation. Equivalvent to
 /// `discard()` in HLSL. Any stores to memory after this instruction are
 /// suppressed and the fragment does not write outputs to the framebuffer.

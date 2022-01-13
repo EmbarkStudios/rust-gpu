@@ -10,6 +10,7 @@
 // are not supported in `compiletest-rs`.
 // ignore-vulkan1.2
 
+use core::arch::asm;
 use spirv_std as _;
 
 fn add_decorate() {

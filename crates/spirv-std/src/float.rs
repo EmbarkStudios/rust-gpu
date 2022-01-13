@@ -1,6 +1,8 @@
 //! Traits and helper functions related to floats.
 
 use crate::vector::Vector;
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
 
 /// Abstract trait representing a SPIR-V floating point type.
 ///

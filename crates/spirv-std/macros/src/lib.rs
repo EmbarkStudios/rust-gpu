@@ -600,7 +600,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     let op_string = format!("%string = OpString {:?}", format_string);
 
     let output = quote::quote! {
-        asm!(
+        ::core::arch::asm!(
             "%void = OpTypeVoid",
             #op_string,
             "%debug_printf = OpExtInstImport \"NonSemantic.DebugPrintf\"",
