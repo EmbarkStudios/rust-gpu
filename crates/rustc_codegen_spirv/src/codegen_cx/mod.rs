@@ -97,7 +97,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // target_features is a HashSet, not a Vec, so we need to sort to have deterministic
         // compilation - otherwise, the order of capabilities in binaries depends on the iteration
         // order of the hashset. Sort by the string, since that's easy.
-        feature_names.sort();
+        feature_names.sort_unstable();
 
         let features = feature_names
             .into_iter()

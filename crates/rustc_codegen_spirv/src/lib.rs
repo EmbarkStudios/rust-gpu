@@ -316,6 +316,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         &self,
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
+        _outputs: &OutputFilenames,
     ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorReported> {
         let (codegen_results, work_products) = ongoing_codegen
             .downcast::<OngoingCodegen<Self>>()
@@ -338,7 +339,7 @@ impl CodegenBackend for SpirvCodegenBackend {
             sess,
             &codegen_results,
             outputs,
-            &codegen_results.crate_info.local_crate_name.as_str(),
+            codegen_results.crate_info.local_crate_name.as_str(),
         );
         drop(timer);
 
@@ -452,15 +453,6 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 impl ExtraBackendMethods for SpirvCodegenBackend {
     fn new_metadata(&self, _: TyCtxt<'_>, _: &str) -> Self::Module {
         Self::Module::new()
-    }
-
-    fn write_compressed_metadata<'tcx>(
-        &self,
-        _: TyCtxt<'tcx>,
-        _: &EncodedMetadata,
-        _: &mut Self::Module,
-    ) {
-        // Ignore for now.
     }
 
     fn codegen_allocator<'tcx>(

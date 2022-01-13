@@ -196,17 +196,20 @@ impl SpirvBuilder {
     }
 
     /// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to [`MetadataPrintout::Full`].
+    #[must_use]
     pub fn print_metadata(mut self, v: MetadataPrintout) -> Self {
         self.print_metadata = v;
         self
     }
 
+    #[must_use]
     pub fn deny_warnings(mut self, v: bool) -> Self {
         self.deny_warnings = v;
         self
     }
 
     /// Build in release. Defaults to true.
+    #[must_use]
     pub fn release(mut self, v: bool) -> Self {
         self.release = v;
         self
@@ -215,6 +218,7 @@ impl SpirvBuilder {
     /// Splits the resulting SPIR-V file into one module per entry point. This is useful in cases
     /// where ecosystem tooling has bugs around multiple entry points per module - having all entry
     /// points bundled into a single file is the preferred system.
+    #[must_use]
     pub fn multimodule(mut self, v: bool) -> Self {
         self.multimodule = v;
         self
@@ -222,6 +226,7 @@ impl SpirvBuilder {
 
     /// Sets the level of metadata (primarily `OpName` and `OpLine`) included in the SPIR-V binary.
     /// Including metadata significantly increases binary size.
+    #[must_use]
     pub fn spirv_metadata(mut self, v: SpirvMetadata) -> Self {
         self.spirv_metadata = v;
         self
@@ -229,6 +234,7 @@ impl SpirvBuilder {
 
     /// Adds a capability to the SPIR-V module. Checking if a capability is enabled in code can be
     /// done via `#[cfg(target_feature = "TheCapability")]`.
+    #[must_use]
     pub fn capability(mut self, capability: Capability) -> Self {
         self.capabilities.push(capability);
         self
@@ -236,12 +242,14 @@ impl SpirvBuilder {
 
     /// Adds an extension to the SPIR-V module. Checking if an extension is enabled in code can be
     /// done via `#[cfg(target_feature = "ext:the_extension")]`.
+    #[must_use]
     pub fn extension(mut self, extension: impl Into<String>) -> Self {
         self.extensions.push(extension.into());
         self
     }
 
     /// Allow store from one struct type to a different type with compatible layout and members.
+    #[must_use]
     pub fn relax_struct_store(mut self, v: bool) -> Self {
         self.relax_struct_store = v;
         self
@@ -249,6 +257,7 @@ impl SpirvBuilder {
 
     /// Allow allocating an object of a pointer type and returning a pointer value from a function
     /// in logical addressing mode
+    #[must_use]
     pub fn relax_logical_pointer(mut self, v: bool) -> Self {
         self.relax_logical_pointer = v;
         self
@@ -256,6 +265,7 @@ impl SpirvBuilder {
 
     /// Enable `VK_KHR_relaxed_block_layout` when checking standard uniform, storage buffer, and
     /// push constant layouts. This is the default when targeting Vulkan 1.1 or later.
+    #[must_use]
     pub fn relax_block_layout(mut self, v: bool) -> Self {
         self.relax_block_layout = v;
         self
@@ -263,6 +273,7 @@ impl SpirvBuilder {
 
     /// Enable `VK_KHR_uniform_buffer_standard_layout` when checking standard uniform buffer
     /// layouts.
+    #[must_use]
     pub fn uniform_buffer_standard_layout(mut self, v: bool) -> Self {
         self.uniform_buffer_standard_layout = v;
         self
@@ -271,6 +282,7 @@ impl SpirvBuilder {
     /// Enable `VK_EXT_scalar_block_layout` when checking standard uniform, storage buffer, and
     /// push constant layouts. Scalar layout rules are more permissive than relaxed block layout so
     /// in effect this will override the --relax-block-layout option.
+    #[must_use]
     pub fn scalar_block_layout(mut self, v: bool) -> Self {
         self.scalar_block_layout = v;
         self
@@ -278,12 +290,14 @@ impl SpirvBuilder {
 
     /// Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or
     /// --scalar-block-layout option.
+    #[must_use]
     pub fn skip_block_layout(mut self, v: bool) -> Self {
         self.skip_block_layout = v;
         self
     }
 
     /// Preserve unused descriptor bindings. Useful for reflection.
+    #[must_use]
     pub fn preserve_bindings(mut self, v: bool) -> Self {
         self.preserve_bindings = v;
         self

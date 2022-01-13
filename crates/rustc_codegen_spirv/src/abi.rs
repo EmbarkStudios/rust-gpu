@@ -386,7 +386,7 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
                     if let Variants::Single { index } = self.variants {
                         for i in self.fields.index_by_increasing_offset() {
                             let field = &adt.variants[index].fields[i];
-                            field_names.push(field.ident.name.to_ident_string());
+                            field_names.push(field.name.to_ident_string());
                         }
                     }
                 }
@@ -664,7 +664,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
         if let Variants::Single { index } = ty.variants {
             if let TyKind::Adt(adt, _) = ty.ty.kind() {
                 let field = &adt.variants[index].fields[i];
-                field_names.push(field.ident.name.to_ident_string());
+                field_names.push(field.name.to_ident_string());
             } else {
                 field_names.push(format!("{}", i));
             }
@@ -729,7 +729,7 @@ impl fmt::Display for TyLayoutNameKey<'_> {
         write!(f, "{}", self.ty)?;
         if let (TyKind::Adt(def, _), Some(index)) = (self.ty.kind(), self.variant) {
             if def.is_enum() && !def.variants.is_empty() {
-                write!(f, "::{}", def.variants[index].ident)?;
+                write!(f, "::{}", def.variants[index].name)?;
             }
         }
         if let (TyKind::Generator(_, _, _), Some(index)) = (self.ty.kind(), self.variant) {
