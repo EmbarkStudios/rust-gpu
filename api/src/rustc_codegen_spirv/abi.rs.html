@@ -943,6 +943,40 @@
 <span id="940">940</span>
 <span id="941">941</span>
 <span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s</span>
 <span class="doccomment">//! surprisingly difficult.</span>
 
@@ -1315,6 +1349,40 @@
             .<span class="ident">def_with_name</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">TyLayoutNameKey::from</span>(<span class="kw-2">*</span><span class="self">self</span>)),
             <span class="ident">Abi::Scalar</span>(<span class="kw-2">ref</span> <span class="ident">scalar</span>) =&gt; <span class="ident">trans_scalar</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="kw-2">*</span><span class="self">self</span>, <span class="ident">scalar</span>, <span class="ident">Size::ZERO</span>),
             <span class="ident">Abi::ScalarPair</span>(<span class="kw-2">ref</span> <span class="ident">a</span>, <span class="kw-2">ref</span> <span class="ident">b</span>) =&gt; {
+                <span class="comment">// NOTE(eddyb) unlike `Abi::Scalar`&#39;s simpler newtype-unpacking</span>
+                <span class="comment">// behavior, `Abi::ScalarPair` can be composed in two ways:</span>
+                <span class="comment">// * two `Abi::Scalar` fields (and any number of ZST fields),</span>
+                <span class="comment">//   gets handled the same as a `struct { a, b }`, further below</span>
+                <span class="comment">// * an `Abi::ScalarPair` field (and any number of ZST fields),</span>
+                <span class="comment">//   which requires more work to allow taking a reference to</span>
+                <span class="comment">//   that field, and there are two potential approaches:</span>
+                <span class="comment">//   1. wrapping that field&#39;s SPIR-V type in a single-field</span>
+                <span class="comment">//      `OpTypeStruct` - this has the disadvantage that GEPs</span>
+                <span class="comment">//      would have to inject an extra `0` field index, and other</span>
+                <span class="comment">//      field-related operations would also need additional work</span>
+                <span class="comment">//   2. reusing that field&#39;s SPIR-V type, instead of defining</span>
+                <span class="comment">//      a new one, offering the `(a, b)` shape `rustc_codegen_ssa`</span>
+                <span class="comment">//      expects, while letting noop pointercasts access the sole</span>
+                <span class="comment">//      `Abi::ScalarPair` field - this is the approach taken here</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">non_zst_fields</span> <span class="op">=</span> (<span class="number">0</span>..<span class="self">self</span>.<span class="ident">fields</span>.<span class="ident">count</span>())
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> (<span class="ident">i</span>, <span class="self">self</span>.<span class="ident">field</span>(<span class="ident">cx</span>, <span class="ident">i</span>)))
+                    .<span class="ident">filter</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">field</span>)<span class="op">|</span> <span class="op">!</span><span class="ident">field</span>.<span class="ident">is_zst</span>());
+                <span class="kw">let</span> <span class="ident">sole_non_zst_field</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">non_zst_fields</span>.<span class="ident">next</span>(), <span class="ident">non_zst_fields</span>.<span class="ident">next</span>()) {
+                    (<span class="prelude-val">Some</span>(<span class="ident">field</span>), <span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">field</span>),
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+                };
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">field</span>)) <span class="op">=</span> <span class="ident">sole_non_zst_field</span> {
+                    <span class="comment">// Only unpack a newtype if the field and the newtype line up</span>
+                    <span class="comment">// perfectly, in every way that could potentially affect ABI.</span>
+                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">fields</span>.<span class="ident">offset</span>(<span class="ident">i</span>) <span class="op">==</span> <span class="ident">Size::ZERO</span>
+                        <span class="op">&amp;&amp;</span> <span class="ident">field</span>.<span class="ident">size</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">size</span>
+                        <span class="op">&amp;&amp;</span> <span class="ident">field</span>.<span class="ident">align</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">align</span>
+                        <span class="op">&amp;&amp;</span> <span class="ident">field</span>.<span class="ident">abi</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">abi</span>
+                    {
+                        <span class="kw">return</span> <span class="ident">field</span>.<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
+                    }
+                }
+
                 <span class="comment">// Note: We can&#39;t use auto_struct_layout here because the spirv types here might be undefined due to</span>
                 <span class="comment">// recursive pointer types.</span>
                 <span class="kw">let</span> <span class="ident">a_offset</span> <span class="op">=</span> <span class="ident">Size::ZERO</span>;
