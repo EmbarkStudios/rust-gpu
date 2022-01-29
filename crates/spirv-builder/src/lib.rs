@@ -215,9 +215,9 @@ impl SpirvBuilder {
         self
     }
 
-    /// Splits the resulting SPIR-V file into one module per entry point. This is useful in cases
-    /// where ecosystem tooling has bugs around multiple entry points per module - having all entry
-    /// points bundled into a single file is the preferred system.
+    /// Splits the resulting SPIR-V file into one module per entry point and rename the entry point name to "main".
+    /// This is useful in cases where ecosystem tooling has bugs around multiple entry points per module - having
+    /// all entry points bundled into a single file is the preferred system.
     #[must_use]
     pub fn multimodule(mut self, v: bool) -> Self {
         self.multimodule = v;

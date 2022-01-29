@@ -309,7 +309,9 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             .map(|entry| {
                 let mut module = output.clone();
                 module.entry_points.clear();
-                module.entry_points.push(entry.clone());
+                let mut new_entry = entry.clone();
+                new_entry.operands[2] = Operand::LiteralString("main".to_string());
+                module.entry_points.push(new_entry);
                 let name = entry.operands[2].unwrap_literal_string();
                 (name.to_string(), module)
             })
