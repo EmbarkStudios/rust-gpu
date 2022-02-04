@@ -153,6 +153,7 @@ pub struct SpirvBuilder {
     print_metadata: MetadataPrintout,
     release: bool,
     target: String,
+    target_dir: Option<String>,
     deny_warnings: bool,
     multimodule: bool,
     spirv_metadata: SpirvMetadata,
@@ -179,6 +180,7 @@ impl SpirvBuilder {
             release: true,
             target: target.into(),
             deny_warnings: false,
+            target_dir: None,
             multimodule: false,
             spirv_metadata: SpirvMetadata::None,
             capabilities: Vec::new(),
@@ -212,6 +214,12 @@ impl SpirvBuilder {
     #[must_use]
     pub fn release(mut self, v: bool) -> Self {
         self.release = v;
+        self
+    }
+
+    #[must_use]
+    pub fn target_dir(mut self, v: impl Into<String>) -> Self {
+        self.target_dir = Some(v.into());
         self
     }
 
@@ -484,14 +492,16 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         cargo.arg("--release");
     }
 
-    // If we're nested in `cargo` invocation, use a different `--target-dir`,
-    // to avoid waiting on the same lock (which effectively dead-locks us).
-    // This also helps with e.g. RLS, which uses `--target target/rls`,
-    // so we'll have a separate `target/rls/spirv-builder` for it.
-    if let (Ok(profile), Some(mut dir)) = (
+    if let Some(target_dir) = builder.target_dir.as_ref() {
+        cargo.arg("--target-dir").arg(target_dir);
+    } else if let (Ok(profile), Some(mut dir)) = (
         env::var("PROFILE"),
         env::var_os("OUT_DIR").map(PathBuf::from),
     ) {
+        // If we're nested in `cargo` invocation, use a different `--target-dir`,
+        // to avoid waiting on the same lock (which effectively dead-locks us).
+        // This also helps with e.g. RLS, which uses `--target target/rls`,
+        // so we'll have a separate `target/rls/spirv-builder` for it.
         // Strip `$profile/build/*/out`.
         if dir.ends_with("out")
             && dir.pop()
