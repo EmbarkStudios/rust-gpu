@@ -29,10 +29,12 @@ pub fn tessellation_evaluation(#[spirv(tess_coord)] tess_coord: Vec3) {}
 pub fn compute(
     #[spirv(global_invocation_id)] global_invocation_id: UVec3,
     #[spirv(local_invocation_id)] local_invocation_id: UVec3,
+    #[spirv(subgroup_local_invocation_id)] subgroup_local_invocation_id: u32,
     #[spirv(num_subgroups)] num_subgroups: u32,
     #[spirv(num_workgroups)] num_workgroups: UVec3,
     #[spirv(subgroup_id)] subgroup_id: u32,
     #[spirv(workgroup_id)] workgroup_id: UVec3,
+    #[spirv(workgroup)] workgroup_local_memory: &mut [u32; 256],
 ) {
 }
 
