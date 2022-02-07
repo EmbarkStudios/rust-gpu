@@ -57,7 +57,7 @@ const BUILTINS: &[(&str, BuiltIn)] = {
         ("frag_depth", FragDepth),
         ("helper_invocation", HelperInvocation),
         ("num_workgroups", NumWorkgroups),
-        // ("workgroup_size", WorkgroupSize), -- constant
+        ("workgroup_size", WorkgroupSize),
         ("workgroup_id", WorkgroupId),
         ("local_invocation_id", LocalInvocationId),
         ("global_invocation_id", GlobalInvocationId),
@@ -72,7 +72,7 @@ const BUILTINS: &[(&str, BuiltIn)] = {
         ("num_subgroups", NumSubgroups),
         // ("num_enqueued_subgroups", NumEnqueuedSubgroups), -- Kernel-only
         ("subgroup_id", SubgroupId),
-        // ("subgroup_local_invocation_id", SubgroupLocalInvocationId), -- Kernel-only
+        ("subgroup_local_invocation_id", SubgroupLocalInvocationId),
         ("vertex_index", VertexIndex),
         ("instance_index", InstanceIndex),
         ("subgroup_eq_mask", SubgroupEqMask),
