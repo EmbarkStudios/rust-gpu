@@ -57,7 +57,7 @@ const BUILTINS: &[(&str, BuiltIn)] = {
         ("frag_depth", FragDepth),
         ("helper_invocation", HelperInvocation),
         ("num_workgroups", NumWorkgroups),
-        ("workgroup_size", WorkgroupSize),
+        // ("workgroup_size", WorkgroupSize), -- constant
         ("workgroup_id", WorkgroupId),
         ("local_invocation_id", LocalInvocationId),
         ("global_invocation_id", GlobalInvocationId),
