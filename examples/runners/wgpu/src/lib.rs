@@ -86,8 +86,8 @@ pub enum RustGPUShader {
 
 fn maybe_watch(
     shader: RustGPUShader,
-    on_watch: Option<Box<dyn FnMut(wgpu::ShaderModuleDescriptorSpirV<'static>) + Send + 'static>>,
-) -> wgpu::ShaderModuleDescriptorSpirV<'static> {
+    on_watch: Option<Box<dyn FnMut(wgpu::ShaderModuleDescriptor<'static>) + Send + 'static>>,
+) -> wgpu::ShaderModuleDescriptor<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
         use spirv_builder::{CompileResult, MetadataPrintout, SpirvBuilder};
@@ -123,13 +123,13 @@ fn maybe_watch(
         };
         fn handle_compile_result(
             compile_result: CompileResult,
-        ) -> wgpu::ShaderModuleDescriptorSpirV<'static> {
+        ) -> wgpu::ShaderModuleDescriptor<'static> {
             let module_path = compile_result.module.unwrap_single();
             let data = std::fs::read(module_path).unwrap();
             let spirv = Cow::Owned(wgpu::util::make_spirv_raw(&data).into_owned());
-            wgpu::ShaderModuleDescriptorSpirV {
+            wgpu::ShaderModuleDescriptor {
                 label: None,
-                source: spirv,
+                source: wgpu::ShaderSource::SpirV(spirv),
             }
         }
         handle_compile_result(initial_result)
