@@ -10,11 +10,11 @@ in with pkgs; stdenv.mkDerivation rec {
   SSL_CERT_FILE = "${cacert}/etc/ssl/certs/ca-bundle.crt";
 
   buildInputs = [
-    pkgconfig rustup x11 libxkbcommon
+    pkgconfig rustup xlibsWrapper libxkbcommon
   ];
 
   # Runtime dependencies.
-  LD_LIBRARY_PATH = with xlibs; lib.makeLibraryPath [
+  LD_LIBRARY_PATH = with xorg; lib.makeLibraryPath [
     libX11 libXcursor libXi libXrandr vulkan-loader
   ];
 }
