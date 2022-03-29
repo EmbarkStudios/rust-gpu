@@ -59,7 +59,7 @@ async fn run(
 
     let features = wgpu::Features::PUSH_CONSTANTS | wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
     let limits = wgpu::Limits {
-        max_push_constant_size: 256,
+        max_push_constant_size: 128,
         ..Default::default()
     };
 
