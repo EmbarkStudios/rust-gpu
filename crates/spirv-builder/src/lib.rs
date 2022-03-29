@@ -86,8 +86,8 @@ use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-pub use rustc_codegen_spirv::rspirv::spirv::Capability;
-pub use rustc_codegen_spirv::{CompileResult, ModuleResult};
+pub use rustc_codegen_spirv_types::Capability;
+pub use rustc_codegen_spirv_types::{CompileResult, ModuleResult};
 
 #[derive(Debug)]
 #[non_exhaustive]

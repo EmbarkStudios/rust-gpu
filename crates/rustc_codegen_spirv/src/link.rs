@@ -1,13 +1,12 @@
 use crate::codegen_cx::{CodegenArgs, ModuleOutputType, SpirvMetadata};
-use crate::{
-    linker, CompileResult, ModuleResult, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer,
-};
+use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use ar::{Archive, GnuBuilder, Header};
 use rspirv::binary::Assemble;
+use rustc_codegen_spirv_types::{CompileResult, ModuleResult};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::{CodegenResults, NativeLib, METADATA_FILENAME};
-use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_data_structures::fx::FxHashSet;
 use rustc_errors::FatalError;
 use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
@@ -156,15 +155,22 @@ fn link_exe(
             }
         }
         linker::LinkResult::MultipleModules(map) => {
-            let mut hashmap = FxHashMap::default();
             let entry_points = map.keys().cloned().collect();
-            for (name, spv_binary) in map {
-                let mut module_filename = out_dir.clone();
-                module_filename.push(sanitize_filename::sanitize(&name));
-                post_link_single_module(sess, &cg_args, spv_binary.assemble(), &module_filename);
-                hashmap.insert(name, module_filename);
-            }
-            let module_result = ModuleResult::MultiModule(hashmap);
+            let map = map
+                .into_iter()
+                .map(|(name, spv_binary)| {
+                    let mut module_filename = out_dir.clone();
+                    module_filename.push(sanitize_filename::sanitize(&name));
+                    post_link_single_module(
+                        sess,
+                        &cg_args,
+                        spv_binary.assemble(),
+                        &module_filename,
+                    );
+                    (name, module_filename)
+                })
+                .collect();
+            let module_result = ModuleResult::MultiModule(map);
             CompileResult {
                 module: module_result,
                 entry_points,
