@@ -598,16 +598,21 @@
 <span id="595">595</span>
 <span id="596">596</span>
 <span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx</span>::{<span class="ident">CodegenArgs</span>, <span class="ident">ModuleOutputType</span>, <span class="ident">SpirvMetadata</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">linker</span>, <span class="ident">CompileResult</span>, <span class="ident">ModuleResult</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>,
-};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">linker</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>};
 <span class="kw">use</span> <span class="ident">ar</span>::{<span class="ident">Archive</span>, <span class="ident">GnuBuilder</span>, <span class="ident">Header</span>};
 <span class="kw">use</span> <span class="ident">rspirv::binary::Assemble</span>;
+<span class="kw">use</span> <span class="ident">rustc_codegen_spirv_types</span>::{<span class="ident">CompileResult</span>, <span class="ident">ModuleResult</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::back::lto</span>::{<span class="ident">LtoModuleCodegen</span>, <span class="ident">SerializedModule</span>, <span class="ident">ThinModule</span>, <span class="ident">ThinShared</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::back::write::CodegenContext</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::{<span class="ident">CodegenResults</span>, <span class="ident">NativeLib</span>, <span class="ident">METADATA_FILENAME</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures::fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
+<span class="kw">use</span> <span class="ident">rustc_data_structures::fx::FxHashSet</span>;
 <span class="kw">use</span> <span class="ident">rustc_errors::FatalError</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::dep_graph::WorkProduct</span>;
@@ -756,15 +761,22 @@
             }
         }
         <span class="ident">linker::LinkResult::MultipleModules</span>(<span class="ident">map</span>) =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashmap</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
             <span class="kw">let</span> <span class="ident">entry_points</span> <span class="op">=</span> <span class="ident">map</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
-            <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">spv_binary</span>) <span class="kw">in</span> <span class="ident">map</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module_filename</span> <span class="op">=</span> <span class="ident">out_dir</span>.<span class="ident">clone</span>();
-                <span class="ident">module_filename</span>.<span class="ident">push</span>(<span class="ident">sanitize_filename::sanitize</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>));
-                <span class="ident">post_link_single_module</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">cg_args</span>, <span class="ident">spv_binary</span>.<span class="ident">assemble</span>(), <span class="kw-2">&amp;</span><span class="ident">module_filename</span>);
-                <span class="ident">hashmap</span>.<span class="ident">insert</span>(<span class="ident">name</span>, <span class="ident">module_filename</span>);
-            }
-            <span class="kw">let</span> <span class="ident">module_result</span> <span class="op">=</span> <span class="ident">ModuleResult::MultiModule</span>(<span class="ident">hashmap</span>);
+            <span class="kw">let</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">map</span>
+                .<span class="ident">into_iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">spv_binary</span>)<span class="op">|</span> {
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module_filename</span> <span class="op">=</span> <span class="ident">out_dir</span>.<span class="ident">clone</span>();
+                    <span class="ident">module_filename</span>.<span class="ident">push</span>(<span class="ident">sanitize_filename::sanitize</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>));
+                    <span class="ident">post_link_single_module</span>(
+                        <span class="ident">sess</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">cg_args</span>,
+                        <span class="ident">spv_binary</span>.<span class="ident">assemble</span>(),
+                        <span class="kw-2">&amp;</span><span class="ident">module_filename</span>,
+                    );
+                    (<span class="ident">name</span>, <span class="ident">module_filename</span>)
+                })
+                .<span class="ident">collect</span>();
+            <span class="kw">let</span> <span class="ident">module_result</span> <span class="op">=</span> <span class="ident">ModuleResult::MultiModule</span>(<span class="ident">map</span>);
             <span class="ident">CompileResult</span> {
                 <span class="ident">module</span>: <span class="ident">module_result</span>,
                 <span class="ident">entry_points</span>,

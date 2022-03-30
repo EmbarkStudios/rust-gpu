@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["a",""]],"enum":[["ModuleResult",""]],"fn":[["__rustc_codegen_backend","This is the entrypoint for a hot plugged `rustc_codegen_spirv`"]],"struct":[["CompileResult",""]]});
+initSidebarItems({"fn":[["__rustc_codegen_backend","This is the entrypoint for a hot plugged `rustc_codegen_spirv`"]]});
