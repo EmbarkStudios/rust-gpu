@@ -137,7 +137,6 @@ mod attr;
 mod builder;
 mod builder_spirv;
 mod codegen_cx;
-mod compile_result;
 mod decorations;
 mod link;
 mod linker;
@@ -149,8 +148,6 @@ mod target_feature;
 
 use builder::Builder;
 use codegen_cx::CodegenCx;
-pub use compile_result::*;
-pub use rspirv;
 use rspirv::binary::Assemble;
 use rustc_ast::expand::allocator::AllocatorKind;
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule};

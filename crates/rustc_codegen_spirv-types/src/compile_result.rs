@@ -1,5 +1,5 @@
-use rustc_data_structures::fx::FxHashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::fmt::Write;
 use std::path::{Path, PathBuf};
 
@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 #[serde(untagged)]
 pub enum ModuleResult {
     SingleModule(PathBuf),
-    MultiModule(FxHashMap<String, PathBuf>),
+    MultiModule(BTreeMap<String, PathBuf>),
 }
 
 impl ModuleResult {
@@ -20,7 +20,7 @@ impl ModuleResult {
         }
     }
 
-    pub fn unwrap_multi(&self) -> &FxHashMap<String, PathBuf> {
+    pub fn unwrap_multi(&self) -> &BTreeMap<String, PathBuf> {
         match self {
             ModuleResult::MultiModule(result) => result,
             ModuleResult::SingleModule(_) => {
@@ -46,28 +46,24 @@ impl CompileResult {
 }
 
 #[derive(Default)]
-struct Trie {
+struct Trie<'a> {
     present: bool,
-    children: FxHashMap<String, Box<Trie>>,
+    children: BTreeMap<&'a str, Trie<'a>>,
 }
 
-impl Trie {
-    fn create_from<'a>(entry_points: impl IntoIterator<Item = &'a str>) -> Self {
+impl<'a> Trie<'a> {
+    fn create_from(entry_points: impl IntoIterator<Item = &'a str>) -> Self {
         let mut result = Trie::default();
         for entry in entry_points {
-            result.insert(entry.split("::").map(|x| x.to_owned()));
+            result.insert(entry.split("::"));
         }
         result
     }
 
-    fn insert(&mut self, mut sequence: impl Iterator<Item = String>) {
+    fn insert(&mut self, mut sequence: impl Iterator<Item = &'a str>) {
         match sequence.next() {
             None => self.present = true,
-            Some(next) => self
-                .children
-                .entry(next)
-                .or_insert_with(Default::default)
-                .insert(sequence),
+            Some(next) => self.children.entry(next).or_default().insert(sequence),
         }
     }
 
