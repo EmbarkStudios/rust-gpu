@@ -6,6 +6,8 @@ mod destructure_composites;
 mod duplicates;
 mod entry_interface;
 mod import_export_link;
+mod simpl_op_store_var;
+mod inline_globals;
 mod inline;
 mod ipo;
 mod mem2reg;
@@ -20,7 +22,7 @@ use std::borrow::Cow;
 
 use crate::codegen_cx::SpirvMetadata;
 use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
-use rspirv::binary::{Assemble, Consumer};
+use rspirv::binary::{Assemble, Consumer, Disassemble};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
@@ -152,6 +154,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         std::fs::write(path, spirv_tools::binary::from_binary(&output.assemble())).unwrap();
     }
 
+
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     {
         let _timer = sess.timer("link_remove_duplicates");
@@ -214,6 +217,22 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
                 concrete_fallback: Operand::StorageClass(StorageClass::Function),
             },
         );
+    }
+
+    // this is needed so we can inline more global variables
+    {
+        let _timer = sess.timer("simpl_op_store_var");
+        simpl_op_store_var::simpl_op_store_var(sess, &mut output)?;
+    }
+
+    {
+        let _timer = sess.timer("link_inline_global");
+        inline_globals::inline_global_varaibles(sess, &mut output)?;
+    }
+
+    {
+        let _timer = sess.timer("link_inline_global");
+        inline_globals::inline_global_varaibles(sess, &mut output)?;
     }
 
     {
@@ -302,6 +321,8 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         simple_passes::sort_globals(&mut output);
     }
 
+    std::fs::write("res.txt", output.disassemble());
+
     let mut output = if opts.emit_multiple_modules {
         let modules = output
             .entry_points
@@ -347,6 +368,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             output.header.as_mut().unwrap().bound = simple_passes::compact_ids(output);
         };
     }
+
 
     Ok(output)
 }

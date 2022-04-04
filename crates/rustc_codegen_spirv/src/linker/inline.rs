@@ -231,12 +231,16 @@ fn should_inline(
 ) -> bool {
     let def = function.def.as_ref().unwrap();
     let control = def.operands[0].unwrap_function_control();
-    control.contains(FunctionControl::INLINE)
+    let should = control.contains(FunctionControl::INLINE)
         || function
             .parameters
             .iter()
             .any(|inst| disallowed_argument_types.contains(inst.result_type.as_ref().unwrap()))
-        || disallowed_return_types.contains(&function.def.as_ref().unwrap().result_type.unwrap())
+        || disallowed_return_types.contains(&function.def.as_ref().unwrap().result_type.unwrap());
+    // if should && control.contains(FunctionControl::DONT_INLINE) {
+    //     println!("should not be inlined!");
+    // }
+    should
 }
 
 // This should be more general, but a very common problem is passing an OpAccessChain to an
