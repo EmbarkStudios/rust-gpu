@@ -3,7 +3,6 @@ use rspirv::spirv::{Op};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_session::Session;
 
-// bool is if this needs stored
 #[derive(Debug, Clone, PartialEq)]
 struct NormalizedInstructions {
     vars: Vec<Instruction>,
@@ -38,6 +37,7 @@ impl NormalizedInstructions {
         for inst in &mut self.insts {
             Self::fix_instruction(self.root, inst, &mut id_map, bound, new_root);
         }
+        self.root = new_root;
     }
 
     fn fix_instruction(
@@ -139,16 +139,17 @@ fn inline_global_varaibles_rec(module: &mut Module) -> super::Result<bool> {
                     };
                     for i in 1..inst.operands.len() {
                         let key = (function_id, i as u32 - 1);
+                        // default to invalid to avoid duplicated code
+                        let mut is_invalid = true;
                         match &inst.operands[i] {
                             &Operand::IdRef(w) => match &function_args.get(&key) {
                                 None => {
                                     match get_const_arg_insts(bound, &variables, &insts, &ref_stores, w) {
                                         Some(insts) => {
+                                            is_invalid = false;
                                             function_args.insert(key, FunctionArg::Insts(insts));
                                         }
-                                        None => {
-                                            function_args.insert(key, FunctionArg::Invalid);
-                                        }
+                                        None => {}
                                     }
                                 }
                                 Some(FunctionArg::Insts(w2)) => {
@@ -156,23 +157,18 @@ fn inline_global_varaibles_rec(module: &mut Module) -> super::Result<bool> {
                                         get_const_arg_insts(bound, &variables, &insts, &ref_stores, w);
                                     match new_insts {
                                         Some(new_insts) => {
-                                            if new_insts != *w2 {
-                                                function_args.insert(key, FunctionArg::Invalid);
-                                            }
+                                            is_invalid = new_insts != *w2;
                                         }
-                                        None => {
-                                            function_args.insert(key, FunctionArg::Invalid);
-                                        }
+                                        None => {}
                                     }
                                 }
-                                _ => {
-                                    function_args.insert(key, FunctionArg::Invalid);
-                                }
+                                _ => {}
                             },
-                            _ => {
-                                function_args.insert(key, FunctionArg::Invalid);
-                            }
+                            _ => {}
                         };
+                        if is_invalid {
+                            function_args.insert(key, FunctionArg::Invalid);
+                        }
                     }
                 }
             }
@@ -312,7 +308,6 @@ fn get_const_arg_insts(
     let fake_root = bound;
     bound += 1;
     res.fix_ids(&mut bound, fake_root);
-    res.root = fake_root;
     Some(res)
 }
 
