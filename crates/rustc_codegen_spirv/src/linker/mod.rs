@@ -230,12 +230,6 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         inline_globals::inline_global_varaibles(sess, &mut output)?;
     }
 
-    // needed because inline global create duplicate types...
-    {
-        let _timer = sess.timer("link_remove_duplicate_types_round_2");
-        duplicates::remove_duplicate_types(&mut output);
-    }
-
     {
         let _timer = sess.timer("link_inline");
         inline::inline(sess, &mut output)?;

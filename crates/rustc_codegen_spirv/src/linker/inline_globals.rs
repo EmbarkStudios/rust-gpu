@@ -80,11 +80,18 @@ enum FunctionArg {
 pub fn inline_global_varaibles(sess: &Session, module: &mut Module) -> super::Result<()> {
     let mut i = 0;
     let mut cont = true;
+    let mut has_run = false;
     //std::fs::write("res0.txt", module.disassemble());
     while cont {
         cont = inline_global_varaibles_rec(sess, module)?;
+        has_run = has_run || cont;
         i += 1;
         //std::fs::write(format!("res{}.txt", i), module.disassemble());
+    }
+    // needed because inline global create duplicate types...
+    if has_run {
+        let _timer = sess.timer("link_remove_duplicate_types_round_2");
+        super::duplicates::remove_duplicate_types(&mut module);
     }
     Ok(())
 }
@@ -172,6 +179,7 @@ fn inline_global_varaibles_rec(sess: &Session, module: &mut Module) -> super::Re
             }
         }
     }
+    // retain ones can rewrite
     function_args.retain(|_, k| match k {
         FunctionArg::Invalid => false,
         FunctionArg::Insts(v) => !v.is_empty(),
@@ -179,6 +187,7 @@ fn inline_global_varaibles_rec(sess: &Session, module: &mut Module) -> super::Re
     if function_args.is_empty() {
         return Ok(false);
     }
+    // start rewrite
     for function in &mut module.functions {
         let def = function.def.as_mut().unwrap();
         let fid = def.result_id.unwrap();
