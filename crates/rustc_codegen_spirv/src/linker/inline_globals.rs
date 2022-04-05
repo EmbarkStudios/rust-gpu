@@ -80,11 +80,11 @@ enum FunctionArg {
 pub fn inline_global_varaibles(sess: &Session, module: &mut Module) -> super::Result<()> {
     let mut i = 0;
     let mut cont = true;
-    std::fs::write("res0.txt", module.disassemble());
+    //std::fs::write("res0.txt", module.disassemble());
     while cont {
         cont = inline_global_varaibles_rec(sess, module)?;
         i += 1;
-        std::fs::write(format!("res{}.txt", i), module.disassemble());
+        //std::fs::write(format!("res{}.txt", i), module.disassemble());
     }
     Ok(())
 }

@@ -321,8 +321,6 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         let _timer = sess.timer("link_sort_globals");
         simple_passes::sort_globals(&mut output);
     }
-    
-    // std::fs::write("res.txt", output.disassemble());
 
     let mut output = if opts.emit_multiple_modules {
         let modules = output

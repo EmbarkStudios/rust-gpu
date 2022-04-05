@@ -10,7 +10,6 @@ use super::{get_name, get_names};
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
 use std::mem::take;
 
@@ -18,8 +17,9 @@ type FunctionMap = FxHashMap<Word, Function>;
 
 pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     // This algorithm gets real sad if there's recursion - but, good news, SPIR-V bans recursion
-    deny_recursion_in_module(sess, module)?;
-
+    if module_has_recursion(sess, module) {
+        return Err(rustc_errors::ErrorReported);
+    }
     let functions = module
         .functions
         .iter()
@@ -35,11 +35,13 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
     let mut dropped_ids = FxHashSet::default();
-    let mut inlined_dont_inlines = Vec::new();
     module.functions.retain(|f| {
         if should_inline(&disallowed_argument_types, &disallowed_return_types, f) {
             if has_dont_inline(f) {
-                inlined_dont_inlines.push(f.def_id().unwrap());
+                sess.warn(&format!(
+                    "Function `{}` has `dont_inline` attribute, but need to be inlined because it has illegal argument or return types",
+                    get_name(&get_names(module), f.def_id().unwrap())
+                ));
             }
             // TODO: We should insert all defined IDs in this function.
             dropped_ids.insert(f.def_id().unwrap());
@@ -48,16 +50,6 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
             true
         }
     });
-    if !inlined_dont_inlines.is_empty() {
-        let names = get_names(module);
-        for f in inlined_dont_inlines {
-            sess.warn(&format!(
-                    "function `{}` has `dont_inline` attribute, but need to be inlined because it has illegal argument or return types",
-                    get_name(&names, f)
-                ));
-        }
-    }
-
     // Drop OpName etc. for inlined functions
     module.debug_names.retain(|inst| {
         !inst.operands.iter().any(|op| {
@@ -81,7 +73,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
 }
 
 // https://stackoverflow.com/a/53995651
-fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()> {
+fn module_has_recursion(sess: &Session, module: &Module) -> bool {
     let func_to_index: FxHashMap<Word, usize> = module
         .functions
         .iter()
@@ -90,7 +82,7 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
         .collect();
     let mut discovered = vec![false; module.functions.len()];
     let mut finished = vec![false; module.functions.len()];
-    let mut has_recursion = None;
+    let mut has_recursion = false;
     for index in 0..module.functions.len() {
         if !discovered[index] && !finished[index] {
             visit(
@@ -111,7 +103,7 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
         current: usize,
         discovered: &mut Vec<bool>,
         finished: &mut Vec<bool>,
-        has_recursion: &mut Option<ErrorGuaranteed>,
+        has_recursion: &mut bool,
         func_to_index: &FxHashMap<Word, usize>,
     ) {
         discovered[current] = true;
@@ -121,10 +113,11 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
                 let names = get_names(module);
                 let current_name = get_name(&names, module.functions[current].def_id().unwrap());
                 let next_name = get_name(&names, module.functions[next].def_id().unwrap());
-                *has_recursion = Some(sess.err(&format!(
+                sess.err(&format!(
                     "module has recursion, which is not allowed: `{}` calls `{}`",
                     current_name, next_name
-                )));
+                ));
+                *has_recursion = true;
                 break;
             }
 
@@ -158,10 +151,7 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
             })
     }
 
-    match has_recursion {
-        Some(err) => Err(err),
-        None => Ok(()),
-    }
+    has_recursion
 }
 
 fn compute_disallowed_argument_and_return_types(
@@ -218,11 +208,14 @@ fn compute_disallowed_argument_and_return_types(
     (disallowed_argument_types, disallowed_return_types)
 }
 
-fn has_dont_inline(function: &Function) -> bool {
+fn has_dont_inline(
+    function: &Function,
+) -> bool {
     let def = function.def.as_ref().unwrap();
     let control = def.operands[0].unwrap_function_control();
     control.contains(FunctionControl::DONT_INLINE)
 }
+
 
 fn should_inline(
     disallowed_argument_types: &FxHashSet<Word>,
@@ -231,16 +224,12 @@ fn should_inline(
 ) -> bool {
     let def = function.def.as_ref().unwrap();
     let control = def.operands[0].unwrap_function_control();
-    let should = control.contains(FunctionControl::INLINE)
+    control.contains(FunctionControl::INLINE)
         || function
             .parameters
             .iter()
             .any(|inst| disallowed_argument_types.contains(inst.result_type.as_ref().unwrap()))
-        || disallowed_return_types.contains(&function.def.as_ref().unwrap().result_type.unwrap());
-    // if should && control.contains(FunctionControl::DONT_INLINE) {
-    //     println!("should not be inlined!");
-    // }
-    should
+        || disallowed_return_types.contains(&function.def.as_ref().unwrap().result_type.unwrap())
 }
 
 // This should be more general, but a very common problem is passing an OpAccessChain to an
