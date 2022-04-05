@@ -220,19 +220,20 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     }
 
     // this is needed so we can inline more global variables
-    {
-        let _timer = sess.timer("simpl_op_store_var");
-        simpl_op_store_var::simpl_op_store_var(sess, &mut output)?;
-    }
+    // {
+    //     let _timer = sess.timer("simpl_op_store_var");
+    //     simpl_op_store_var::simpl_op_store_var(sess, &mut output)?;
+    // }
 
     {
         let _timer = sess.timer("link_inline_global");
         inline_globals::inline_global_varaibles(sess, &mut output)?;
     }
 
+    // needed because inline global create duplicate types...
     {
-        let _timer = sess.timer("link_inline_global");
-        inline_globals::inline_global_varaibles(sess, &mut output)?;
+        let _timer = sess.timer("link_remove_duplicate_types_round_2");
+        duplicates::remove_duplicate_types(&mut output);
     }
 
     {
@@ -320,8 +321,8 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         let _timer = sess.timer("link_sort_globals");
         simple_passes::sort_globals(&mut output);
     }
-
-    std::fs::write("res.txt", output.disassemble());
+    
+    // std::fs::write("res.txt", output.disassemble());
 
     let mut output = if opts.emit_multiple_modules {
         let modules = output
