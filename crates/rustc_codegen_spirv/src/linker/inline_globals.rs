@@ -77,14 +77,14 @@ enum FunctionArg {
 }
 
 pub fn inline_global_varaibles(sess: &Session, module: &mut Module) -> super::Result<()> {
-    let mut i = 0;
     let mut cont = true;
     let mut has_run = false;
+    //let mut i = 0;
     //std::fs::write("res0.txt", module.disassemble());
     while cont {
         cont = inline_global_varaibles_rec(module)?;
         has_run = has_run || cont;
-        i += 1;
+        // i += 1;
         //std::fs::write(format!("res{}.txt", i), module.disassemble());
     }
     // needed because inline global create duplicate types...
