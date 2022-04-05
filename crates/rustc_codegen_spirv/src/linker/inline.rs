@@ -35,13 +35,11 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
     let mut dropped_ids = FxHashSet::default();
+    let mut inlined_dont_inlines = Vec::new();
     module.functions.retain(|f| {
         if should_inline(&disallowed_argument_types, &disallowed_return_types, f) {
             if has_dont_inline(f) {
-                sess.warn(&format!(
-                    "Function `{}` has `dont_inline` attribute, but need to be inlined because it has illegal argument or return types",
-                    get_name(&get_names(module), f.def_id().unwrap())
-                ));
+                inlined_dont_inlines.push(f.def_id().unwrap());
             }
             // TODO: We should insert all defined IDs in this function.
             dropped_ids.insert(f.def_id().unwrap());
@@ -50,6 +48,16 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
             true
         }
     });
+    if !inlined_dont_inlines.is_empty() {
+        let names = get_names(module);
+        for f in inlined_dont_inlines {
+            sess.warn(&format!(
+                    "Function `{}` has `dont_inline` attribute, but need to be inlined because it has illegal argument or return types",
+                    get_name(&names, f)
+                ));
+        }
+    }
+
     // Drop OpName etc. for inlined functions
     module.debug_names.retain(|inst| {
         !inst.operands.iter().any(|op| {
@@ -208,14 +216,11 @@ fn compute_disallowed_argument_and_return_types(
     (disallowed_argument_types, disallowed_return_types)
 }
 
-fn has_dont_inline(
-    function: &Function,
-) -> bool {
+fn has_dont_inline(function: &Function) -> bool {
     let def = function.def.as_ref().unwrap();
     let control = def.operands[0].unwrap_function_control();
     control.contains(FunctionControl::DONT_INLINE)
 }
-
 
 fn should_inline(
     disallowed_argument_types: &FxHashSet<Word>,

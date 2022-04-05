@@ -1,6 +1,5 @@
-use rspirv::binary::Disassemble;
 use rspirv::dr::{Instruction, Module, Operand};
-use rspirv::spirv::{Op, StorageClass};
+use rspirv::spirv::{Op};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_session::Session;
 
@@ -83,7 +82,7 @@ pub fn inline_global_varaibles(sess: &Session, module: &mut Module) -> super::Re
     let mut has_run = false;
     //std::fs::write("res0.txt", module.disassemble());
     while cont {
-        cont = inline_global_varaibles_rec(sess, module)?;
+        cont = inline_global_varaibles_rec(module)?;
         has_run = has_run || cont;
         i += 1;
         //std::fs::write(format!("res{}.txt", i), module.disassemble());
@@ -91,12 +90,12 @@ pub fn inline_global_varaibles(sess: &Session, module: &mut Module) -> super::Re
     // needed because inline global create duplicate types...
     if has_run {
         let _timer = sess.timer("link_remove_duplicate_types_round_2");
-        super::duplicates::remove_duplicate_types(&mut module);
+        super::duplicates::remove_duplicate_types(module);
     }
     Ok(())
 }
 
-fn inline_global_varaibles_rec(sess: &Session, module: &mut Module) -> super::Result<bool> {
+fn inline_global_varaibles_rec(module: &mut Module) -> super::Result<bool> {
     // first collect global stuff
     let mut variables: FxHashSet<u32> = FxHashSet::default();
     let mut function_types: FxHashMap<u32, Instruction> = FxHashMap::default();

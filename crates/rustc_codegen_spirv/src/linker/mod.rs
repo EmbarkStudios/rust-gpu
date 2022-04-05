@@ -218,12 +218,6 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         );
     }
 
-    // this is needed so we can inline more global variables
-    // {
-    //     let _timer = sess.timer("simpl_op_store_var");
-    //     simpl_op_store_var::simpl_op_store_var(sess, &mut output)?;
-    // }
-
     {
         let _timer = sess.timer("link_inline_global");
         inline_globals::inline_global_varaibles(sess, &mut output)?;
