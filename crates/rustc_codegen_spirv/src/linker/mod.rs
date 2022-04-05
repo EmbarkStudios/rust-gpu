@@ -6,7 +6,6 @@ mod destructure_composites;
 mod duplicates;
 mod entry_interface;
 mod import_export_link;
-mod simpl_op_store_var;
 mod inline_globals;
 mod inline;
 mod ipo;
@@ -22,7 +21,7 @@ use std::borrow::Cow;
 
 use crate::codegen_cx::SpirvMetadata;
 use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
-use rspirv::binary::{Assemble, Consumer, Disassemble};
+use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
