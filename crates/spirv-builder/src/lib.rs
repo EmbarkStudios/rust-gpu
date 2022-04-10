@@ -74,15 +74,13 @@ mod depfile;
 #[cfg(feature = "watch")]
 mod watch;
 
+use nanoserde::DeJson;
 use raw_string::{RawStr, RawString};
-use serde::Deserialize;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::fmt;
-use std::fs::File;
-use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -97,7 +95,7 @@ pub enum SpirvBuilderError {
     MultiModuleWithPrintMetadata,
     WatchWithPrintMetadata,
     MetadataFileMissing(std::io::Error),
-    MetadataFileMalformed(serde_json::Error),
+    MetadataFileMalformed(nanoserde::DeJsonErr),
 }
 
 impl fmt::Display for SpirvBuilderError {
@@ -339,15 +337,16 @@ impl SpirvBuilder {
         &self,
         at: &Path,
     ) -> Result<CompileResult, SpirvBuilderError> {
-        let metadata_contents = File::open(&at).map_err(SpirvBuilderError::MetadataFileMissing)?;
-        let metadata: CompileResult = serde_json::from_reader(BufReader::new(metadata_contents))
+        let metadata_contents =
+            std::fs::read_to_string(&at).map_err(SpirvBuilderError::MetadataFileMissing)?;
+        let metadata = CompileResult::deserialize_json(&metadata_contents)
             .map_err(SpirvBuilderError::MetadataFileMalformed)?;
         match &metadata.module {
             ModuleResult::SingleModule(spirv_module) => {
                 assert!(!self.multimodule);
                 let env_var = at.file_name().unwrap().to_str().unwrap();
                 if self.print_metadata == MetadataPrintout::Full {
-                    println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
+                    println!("cargo:rustc-env={env_var}={spirv_module}");
                 }
             }
             ModuleResult::MultiModule(_) => {
@@ -535,7 +534,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(DeJson)]
 struct RustcOutput {
     reason: String,
     filenames: Option<Vec<String>>,
@@ -544,7 +543,7 @@ struct RustcOutput {
 fn get_last_artifact(out: &str) -> Option<PathBuf> {
     let last = out
         .lines()
-        .filter_map(|line| match serde_json::from_str::<RustcOutput>(line) {
+        .filter_map(|line| match RustcOutput::deserialize_json(line) {
             Ok(line) => Some(line),
             Err(_) => {
                 // Pass through invalid lines
