@@ -544,9 +544,10 @@ struct RustcOutput {
 fn get_last_artifact(out: &str) -> Option<PathBuf> {
     let last = out
         .lines()
-        .filter_map(|line| match serde_json::from_str::<RustcOutput>(line) {
-            Ok(line) => Some(line),
-            Err(_) => {
+        .filter_map(|line| {
+            if let Ok(line) = serde_json::from_str::<RustcOutput>(line) {
+                Some(line)
+            } else {
                 // Pass through invalid lines
                 println!("{}", line);
                 None

@@ -439,19 +439,16 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Some(result_id) => result_id,
                 None => return,
             };
-            match tokens.next() {
-                Some(Token::Word("=")) => (),
-                _ => {
-                    self.err("expected equals after result id specifier");
-                    return;
-                }
+            if let Some(Token::Word("=")) = tokens.next() {
+            } else {
+                self.err("expected equals after result id specifier");
+                return;
             }
-            first_token = match tokens.next() {
-                Some(tok) => tok,
-                None => {
-                    self.err("expected instruction after equals");
-                    return;
-                }
+            first_token = if let Some(tok) = tokens.next() {
+                tok
+            } else {
+                self.err("expected instruction after equals");
+                return;
             };
             Some(result_id)
         } else {
@@ -473,12 +470,11 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         let inst_class = inst_name
             .strip_prefix("Op")
             .and_then(|n| self.instruction_table.table.get(n));
-        let inst_class = match inst_class {
-            Some(inst) => inst,
-            None => {
-                self.err(&format!("unknown spirv instruction {}", inst_name));
-                return;
-            }
+        let inst_class = if let Some(inst) = inst_class {
+            inst
+        } else {
+            self.err(&format!("unknown spirv instruction {}", inst_name));
+            return;
         };
         let result_id = match out_register {
             Some(OutRegister::Regular(reg)) => Some(reg),
@@ -819,19 +815,20 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<OutRegister<'a>> {
         match token {
-            Token::Word(word) => match word.strip_prefix('%') {
-                Some(id) => Some(OutRegister::Regular({
-                    let num = *id_map.entry(id).or_insert_with(|| self.emit().id());
-                    if !defined_ids.insert(num) {
-                        self.err(&format!("%{} is defined more than once", id));
-                    }
-                    num
-                })),
-                None => {
+            Token::Word(word) => {
+                if let Some(id) = word.strip_prefix('%') {
+                    Some(OutRegister::Regular({
+                        let num = *id_map.entry(id).or_insert_with(|| self.emit().id());
+                        if !defined_ids.insert(num) {
+                            self.err(&format!("%{} is defined more than once", id));
+                        }
+                        num
+                    }))
+                } else {
                     self.err("expected ID");
                     None
                 }
-            },
+            }
             Token::String(_) => {
                 self.err("expected ID, not string");
                 None
@@ -907,13 +904,14 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<Word> {
         match token {
-            Token::Word(word) => match word.strip_prefix('%') {
-                Some(id) => Some(*id_map.entry(id).or_insert_with(|| self.emit().id())),
-                None => {
+            Token::Word(word) => {
+                if let Some(id) = word.strip_prefix('%') {
+                    Some(*id_map.entry(id).or_insert_with(|| self.emit().id()))
+                } else {
                     self.err("expected ID");
                     None
                 }
-            },
+            }
             Token::String(_) => {
                 self.err("expected ID, not string");
                 None

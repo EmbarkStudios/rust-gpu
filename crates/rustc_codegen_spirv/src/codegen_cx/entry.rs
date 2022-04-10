@@ -33,14 +33,13 @@ impl<'tcx> CodegenCx<'tcx> {
     ) {
         let span = self.tcx.def_span(instance.def_id());
         let hir_params = {
-            let fn_local_def_id = match instance.def_id().as_local() {
-                Some(id) => id,
-                None => {
-                    self.tcx
-                        .sess
-                        .span_err(span, &format!("Cannot declare {} as an entry point", name));
-                    return;
-                }
+            let fn_local_def_id = if let Some(id) = instance.def_id().as_local() {
+                id
+            } else {
+                self.tcx
+                    .sess
+                    .span_err(span, &format!("Cannot declare {} as an entry point", name));
+                return;
             };
             let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(fn_local_def_id);
             let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));

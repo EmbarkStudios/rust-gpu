@@ -849,14 +849,13 @@ fn trans_intrinsic_type<'tcx>(
             ) -> Result<P, ErrorReported> {
                 assert!(const_.ty.is_integral());
                 let value = const_.eval_bits(cx.tcx, ParamEnv::reveal_all(), const_.ty);
-                match P::from_u128(value) {
-                    Some(v) => Ok(v),
-                    None => {
-                        cx.tcx
-                            .sess
-                            .err(&format!("Invalid value for Image const generic: {}", value));
-                        Err(ErrorReported)
-                    }
+                if let Some(v) = P::from_u128(value) {
+                    Ok(v)
+                } else {
+                    cx.tcx
+                        .sess
+                        .err(&format!("Invalid value for Image const generic: {}", value));
+                    Err(ErrorReported)
                 }
             }
 
