@@ -335,10 +335,14 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         // HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
         // so the best thing we can do is inject an infinite loop.
         // (While there is `OpKill`, it doesn't really have the right semantics)
-        let mut abort_loop_bx = self.build_sibling_block("abort_loop");
-        abort_loop_bx.br(abort_loop_bx.llbb());
-        self.br(abort_loop_bx.llbb());
-        *self = self.build_sibling_block("abort_continue");
+        let abort_loop_bb = self.append_sibling_block("abort_loop");
+        let abort_continue_bb = self.append_sibling_block("abort_continue");
+        self.br(abort_loop_bb);
+
+        self.switch_to_block(abort_loop_bb);
+        self.br(abort_loop_bb);
+
+        self.switch_to_block(abort_continue_bb);
     }
 
     fn assume(&mut self, _val: Self::Value) {

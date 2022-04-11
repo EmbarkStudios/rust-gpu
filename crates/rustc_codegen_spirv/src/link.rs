@@ -297,8 +297,10 @@ fn do_spirv_opt(
             // TODO: Adds spans here? Not sure how useful with binary, but maybe?
 
             let mut err = match msg.level {
-                Level::Fatal | Level::InternalError => sess.struct_fatal(&msg.message),
-                Level::Error => sess.struct_err(&msg.message),
+                Level::Fatal | Level::InternalError => {
+                    sess.struct_fatal(&msg.message).forget_guarantee()
+                }
+                Level::Error => sess.struct_err(&msg.message).forget_guarantee(),
                 Level::Warning => sess.struct_warn(&msg.message),
                 Level::Info | Level::Debug => sess.struct_note_without_error(&msg.message),
             };
