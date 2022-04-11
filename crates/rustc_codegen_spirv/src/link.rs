@@ -317,10 +317,8 @@ fn do_spirv_opt(
     );
 
     match result {
-        Ok(binary) => match binary {
-            spirv_tools::binary::Binary::OwnedU32(words) => words,
-            _ => binary.as_words().to_vec(),
-        },
+        Ok(spirv_tools::binary::Binary::OwnedU32(words)) => words,
+        Ok(binary) => binary.as_words().to_vec(),
         Err(e) => {
             let mut err = sess.struct_warn(&e.to_string());
             err.note("spirv-opt failed, leaving as unoptimized");

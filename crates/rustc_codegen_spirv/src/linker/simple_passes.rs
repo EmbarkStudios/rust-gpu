@@ -173,7 +173,7 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
         .map(|i| func_id_to_idx[&i.operands[1].unwrap_id_ref()]);
     let mut any_err = None;
     for entry in entries {
-        any_err = any_err.or(visit(
+        let entry_had_err = visit(
             sess,
             module,
             &mut visited,
@@ -182,7 +182,8 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
             entry,
             &func_id_to_idx,
         )
-        .err());
+        .err();
+        any_err = any_err.or(entry_had_err);
     }
     return match any_err {
         Some(err) => Err(err),
@@ -206,17 +207,10 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
         let mut any_err = None;
         for inst in module.functions[index].all_inst_iter() {
             if inst.class.opcode == Op::FunctionCall {
-                let called_func = func_id_to_idx[&inst.operands[0].unwrap_id_ref()];
-                any_err = any_err.or(visit(
-                    sess,
-                    module,
-                    visited,
-                    stack,
-                    names,
-                    called_func,
-                    func_id_to_idx,
-                )
-                .err());
+                let callee = func_id_to_idx[&inst.operands[0].unwrap_id_ref()];
+                let callee_had_err =
+                    visit(sess, module, visited, stack, names, callee, func_id_to_idx).err();
+                any_err = any_err.or(callee_had_err);
             }
             if matches!(
                 inst.class.opcode,
