@@ -330,26 +330,28 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let one = self.constant_int(size_bytes.ty, 1);
         let zero_align = Align::from_bytes(0).unwrap();
 
-        let mut header = self.build_sibling_block("memset_header");
-        let mut body = self.build_sibling_block("memset_body");
-        let exit = self.build_sibling_block("memset_exit");
+        let header_bb = self.append_sibling_block("memset_header");
+        let body_bb = self.append_sibling_block("memset_body");
+        let exit_bb = self.append_sibling_block("memset_exit");
 
         let count = self.udiv(size_bytes, size_elem_const);
         let index = self.alloca(count.ty, zero_align);
         self.store(zero, index, zero_align);
-        self.br(header.llbb());
+        self.br(header_bb);
 
-        let current_index = header.load(count.ty, index, zero_align);
-        let cond = header.icmp(IntPredicate::IntULT, current_index, count);
-        header.cond_br(cond, body.llbb(), exit.llbb());
+        self.switch_to_block(header_bb);
+        let current_index = self.load(count.ty, index, zero_align);
+        let cond = self.icmp(IntPredicate::IntULT, current_index, count);
+        self.cond_br(cond, body_bb, exit_bb);
 
-        let gep_ptr = body.gep(pat.ty, ptr, &[current_index]);
-        body.store(pat, gep_ptr, zero_align);
-        let current_index_plus_1 = body.add(current_index, one);
-        body.store(current_index_plus_1, index, zero_align);
-        body.br(header.llbb());
+        self.switch_to_block(body_bb);
+        let gep_ptr = self.gep(pat.ty, ptr, &[current_index]);
+        self.store(pat, gep_ptr, zero_align);
+        let current_index_plus_1 = self.add(current_index, one);
+        self.store(current_index_plus_1, index, zero_align);
+        self.br(header_bb);
 
-        *self = exit;
+        self.switch_to_block(exit_bb);
     }
 
     fn zombie_convert_ptr_to_u(&self, def: Word) {
@@ -503,23 +505,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         .unwrap()
     }
 
-    fn build_sibling_block(&mut self, _name: &str) -> Self {
-        let mut builder = self.emit_with_cursor(BuilderCursor {
-            function: self.cursor.function,
-            block: None,
-        });
-        let new_bb = builder.begin_block(None).unwrap();
-        let new_cursor = BuilderCursor {
-            function: self.cursor.function,
-            block: builder.selected_block(),
-        };
-        Self {
-            cx: self.cx,
-            cursor: new_cursor,
-            current_fn: self.current_fn,
-            basic_block: new_bb,
-            current_span: Default::default(),
-        }
+    fn switch_to_block(&mut self, llbb: Self::BasicBlock) {
+        // FIXME(eddyb) this could be more efficient by having an index in
+        // `Self::BasicBlock`, not just a SPIR-V ID.
+        *self = Self::build(self.cx, llbb);
     }
 
     fn ret_void(&mut self) {

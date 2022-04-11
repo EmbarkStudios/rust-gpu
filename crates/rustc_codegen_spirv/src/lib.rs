@@ -509,10 +509,10 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         };
         if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
             let module_dumper = DumpModuleOnPanic { cx: &cx, path };
-            with_no_trimmed_paths(do_codegen);
+            with_no_trimmed_paths!(do_codegen());
             drop(module_dumper);
         } else {
-            with_no_trimmed_paths(do_codegen);
+            with_no_trimmed_paths!(do_codegen());
         }
         let spirv_module = cx.finalize_module().assemble();
 

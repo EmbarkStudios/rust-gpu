@@ -792,7 +792,7 @@ fn trans_intrinsic_type<'tcx>(
 
             // fn type_from_variant_discriminant<'tcx, P: FromPrimitive>(
             //     cx: &CodegenCx<'tcx>,
-            //     const_: &'tcx Const<'tcx>,
+            //     const_: Const<'tcx>,
             // ) -> P {
             //     let adt_def = const_.ty.ty_adt_def().unwrap();
             //     assert!(adt_def.is_enum());
@@ -845,10 +845,10 @@ fn trans_intrinsic_type<'tcx>(
 
             fn const_int_value<'tcx, P: FromPrimitive>(
                 cx: &CodegenCx<'tcx>,
-                const_: &'tcx Const<'tcx>,
+                const_: Const<'tcx>,
             ) -> Result<P, ErrorReported> {
-                assert!(const_.ty.is_integral());
-                let value = const_.eval_bits(cx.tcx, ParamEnv::reveal_all(), const_.ty);
+                assert!(const_.ty().is_integral());
+                let value = const_.eval_bits(cx.tcx, ParamEnv::reveal_all(), const_.ty());
                 match P::from_u128(value) {
                     Some(v) => Ok(v),
                     None => {

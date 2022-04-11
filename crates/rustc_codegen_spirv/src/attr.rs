@@ -375,15 +375,19 @@ impl CheckSpirvAttrVisitor<'_> {
                     Err(MultipleAttrs {
                         prev_span,
                         category,
-                    }) => self
-                        .tcx
-                        .sess
-                        .struct_span_err(
-                            span,
-                            &format!("only one {} attribute is allowed on a {}", category, target),
-                        )
-                        .span_note(prev_span, &format!("previous {} attribute", category))
-                        .emit(),
+                    }) => {
+                        self.tcx
+                            .sess
+                            .struct_span_err(
+                                span,
+                                &format!(
+                                    "only one {} attribute is allowed on a {}",
+                                    category, target
+                                ),
+                            )
+                            .span_note(prev_span, &format!("previous {} attribute", category))
+                            .emit();
+                    }
                 },
             }
         }
