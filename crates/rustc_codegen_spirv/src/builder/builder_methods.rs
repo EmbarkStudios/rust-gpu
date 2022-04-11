@@ -918,7 +918,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             );
             OperandValue::Immediate(self.to_immediate(llval, place.layout))
         } else if let Abi::ScalarPair(a, b) = place.layout.abi {
-            let b_offset = a.value.size(self).align_to(b.value.align(self).abi);
+            let b_offset = a
+                .primitive()
+                .size(self)
+                .align_to(b.primitive().align(self).abi);
 
             let pair_ty = place.layout.spirv_type(self.span(), self);
             let mut load = |i, scalar: Scalar, align| {
