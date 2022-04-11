@@ -363,13 +363,15 @@ impl CheckSpirvAttrVisitor<'_> {
                 }
             };
             match valid_target {
-                Err(Expected(expected_target)) => self.tcx.sess.span_err(
-                    span,
-                    &format!(
-                        "attribute is only valid on a {}, not on a {}",
-                        expected_target, target
-                    ),
-                ),
+                Err(Expected(expected_target)) => {
+                    self.tcx.sess.span_err(
+                        span,
+                        &format!(
+                            "attribute is only valid on a {}, not on a {}",
+                            expected_target, target
+                        ),
+                    );
+                }
                 Ok(()) => match aggregated_attrs.try_insert_attr(parsed_attr, span) {
                     Ok(()) => {}
                     Err(MultipleAttrs {
