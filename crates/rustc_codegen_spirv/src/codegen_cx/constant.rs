@@ -20,6 +20,11 @@ impl<'tcx> CodegenCx<'tcx> {
         self.builder.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
+    pub fn constant_i16(&self, span: Span, val: i16) -> SpirvValue {
+        let ty = SpirvType::Integer(16, true).def(span, self);
+        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
+    }
+
     pub fn constant_u16(&self, span: Span, val: u16) -> SpirvValue {
         let ty = SpirvType::Integer(16, false).def(span, self);
         self.builder.def_constant(ty, SpirvConst::U32(val as u32))
@@ -139,6 +144,9 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     fn const_bool(&self, val: bool) -> Self::Value {
         self.constant_bool(DUMMY_SP, val)
     }
+    fn const_i16(&self, i: i16) -> Self::Value {
+        self.constant_i16(DUMMY_SP, i)
+    }
     fn const_i32(&self, i: i32) -> Self::Value {
         self.constant_i32(DUMMY_SP, i)
     }
@@ -213,10 +221,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     ) -> Self::Value {
         match scalar {
             Scalar::Int(int) => {
-                assert_eq!(int.size(), layout.value.size(self));
+                assert_eq!(int.size(), layout.primitive().size(self));
                 let data = int.to_bits(int.size()).unwrap();
 
-                match layout.value {
+                match layout.primitive() {
                     Primitive::Int(int_size, int_signedness) => match self.lookup_type(ty) {
                         SpirvType::Integer(width, spirv_signedness) => {
                             assert_eq!(width as u64, int_size.size().bits());
@@ -297,7 +305,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     // let offset = self.constant_u64(ptr.offset.bytes());
                     // self.gep(base_addr, once(offset))
                 };
-                if layout.value != Primitive::Pointer {
+                if layout.primitive() != Primitive::Pointer {
                     self.tcx
                         .sess
                         .fatal("Non-pointer-typed scalar_to_backend Scalar::Ptr not supported");
@@ -347,7 +355,7 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn primitive_to_scalar(&self, value: Primitive) -> abi::Scalar {
         let bits = value.size(self.data_layout()).bits();
         assert!(bits <= 128);
-        abi::Scalar {
+        abi::Scalar::Initialized {
             value,
             valid_range: abi::WrappingRange {
                 start: 0,

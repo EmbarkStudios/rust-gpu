@@ -224,7 +224,7 @@ fn is_blocklisted_fn<'tcx>(
                 return true;
             }
 
-            if tcx.opt_item_name(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
+            if tcx.opt_item_ident(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
                 if let Some(parent_def_id) = tcx.parent(def.did) {
                     if is_debug_fmt_method(parent_def_id) {
                         return true;
@@ -308,7 +308,7 @@ impl CodegenBackend for SpirvCodegenBackend {
                 .cg
                 .target_cpu
                 .clone()
-                .unwrap_or_else(|| tcx.sess.target.cpu.clone()),
+                .unwrap_or_else(|| tcx.sess.target.cpu.to_string()),
             metadata,
             need_metadata_module,
         ))
