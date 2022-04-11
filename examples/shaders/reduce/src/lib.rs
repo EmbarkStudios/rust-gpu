@@ -4,6 +4,7 @@
     feature(register_attr),
     register_attr(spirv)
 )]
+#![allow(clippy::too_many_arguments, clippy::missing_safety_doc)]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 use spirv_std::glam::UVec3;
