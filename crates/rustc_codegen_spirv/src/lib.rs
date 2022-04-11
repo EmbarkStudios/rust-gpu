@@ -210,7 +210,7 @@ fn is_blocklisted_fn<'tcx>(
         if let Some(debug_trait_def_id) = tcx.get_diagnostic_item(sym::Debug) {
             // Helper for detecting `<_ as core::fmt::Debug>::fmt` (in impls).
             let is_debug_fmt_method = |def_id| match tcx.opt_associated_item(def_id) {
-                Some(assoc) if assoc.ident.name == sym::fmt => match assoc.container {
+                Some(assoc) if assoc.ident(tcx).name == sym::fmt => match assoc.container {
                     ty::ImplContainer(impl_def_id) => {
                         tcx.impl_trait_ref(impl_def_id).map(|tr| tr.def_id)
                             == Some(debug_trait_def_id)
