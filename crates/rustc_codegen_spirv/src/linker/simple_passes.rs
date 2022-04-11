@@ -2,7 +2,6 @@ use super::{get_name, get_names, Result};
 use rspirv::dr::{Block, Function, Module};
 use rspirv::spirv::{ExecutionModel, Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_errors::ErrorReported;
 use rustc_session::Session;
 use std::iter::once;
 use std::mem::take;
@@ -172,9 +171,9 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
         .iter()
         .filter(|i| i.operands[0].unwrap_execution_model() != ExecutionModel::Fragment)
         .map(|i| func_id_to_idx[&i.operands[1].unwrap_id_ref()]);
-    let mut okay = true;
+    let mut any_err = None;
     for entry in entries {
-        okay &= visit(
+        any_err = any_err.or(visit(
             sess,
             module,
             &mut visited,
@@ -182,11 +181,14 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
             &mut names,
             entry,
             &func_id_to_idx,
-        );
+        )
+        .err());
     }
-    return if okay { Ok(()) } else { Err(ErrorReported) };
+    return match any_err {
+        Some(err) => Err(err),
+        None => Ok(()),
+    };
 
-    // returns false if error
     fn visit<'m>(
         sess: &Session,
         module: &'m Module,
@@ -195,17 +197,17 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
         names: &mut Option<FxHashMap<Word, &'m str>>,
         index: usize,
         func_id_to_idx: &FxHashMap<Word, usize>,
-    ) -> bool {
+    ) -> Result<()> {
         if visited[index] {
-            return true;
+            return Ok(());
         }
         visited[index] = true;
         stack.push(module.functions[index].def_id().unwrap());
-        let mut okay = true;
+        let mut any_err = None;
         for inst in module.functions[index].all_inst_iter() {
             if inst.class.opcode == Op::FunctionCall {
                 let called_func = func_id_to_idx[&inst.operands[0].unwrap_id_ref()];
-                okay &= visit(
+                any_err = any_err.or(visit(
                     sess,
                     module,
                     visited,
@@ -213,7 +215,8 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
                     names,
                     called_func,
                     func_id_to_idx,
-                );
+                )
+                .err());
             }
             if matches!(
                 inst.class.opcode,
@@ -246,16 +249,21 @@ pub fn check_fragment_insts(sess: &Session, module: &Module) -> Result<()> {
                     .chain(stack)
                     .collect::<Vec<_>>()
                     .join("\n");
-                sess.struct_err(&format!(
-                    "{} cannot be used outside a fragment shader",
-                    inst.class.opname
-                ))
-                .note(&note)
-                .emit();
-                okay = false;
+                any_err = Some(
+                    sess.struct_err(&format!(
+                        "{} cannot be used outside a fragment shader",
+                        inst.class.opname
+                    ))
+                    .note(&note)
+                    .emit(),
+                );
             }
         }
         stack.pop();
-        okay
+
+        match any_err {
+            Some(err) => Err(err),
+            None => Ok(()),
+        }
     }
 }

@@ -7,7 +7,7 @@ use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
 use rustc_middle::mir::interpret::{
-    alloc_range, Allocation, GlobalAlloc, Scalar, ScalarMaybeUninit,
+    alloc_range, ConstAllocation, GlobalAlloc, Scalar, ScalarMaybeUninit,
 };
 use rustc_middle::ty::layout::{LayoutOf, TyAndLayout};
 use rustc_span::symbol::Symbol;
@@ -275,7 +275,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             )),
                         };
                         let init = self.create_const_alloc(alloc, pointee);
-                        let value = self.static_addr_of(init, alloc.align, None);
+                        let value = self.static_addr_of(init, alloc.inner().align, None);
                         (value, AddressSpace::DATA)
                     }
                     GlobalAlloc::Function(fn_instance) => (
@@ -311,7 +311,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     }
     // FIXME(eddyb) this shouldn't exist, and is only used by vtable creation,
     // see https://github.com/rust-lang/rust/pull/86475#discussion_r680792727.
-    fn const_data_from_alloc(&self, _alloc: &Allocation) -> Self::Value {
+    fn const_data_from_alloc(&self, _alloc: ConstAllocation<'tcx>) -> Self::Value {
         let undef = self.undef(SpirvType::Void.def(DUMMY_SP, self));
         self.zombie_no_span(undef.def_cx(self), "const_data_from_alloc");
         undef
@@ -319,13 +319,13 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     fn from_const_alloc(
         &self,
         layout: TyAndLayout<'tcx>,
-        alloc: &Allocation,
+        alloc: ConstAllocation<'tcx>,
         offset: Size,
     ) -> PlaceRef<'tcx, Self::Value> {
         assert_eq!(offset, Size::ZERO);
         let ty = layout.spirv_type(DUMMY_SP, self);
         let init = self.create_const_alloc(alloc, ty);
-        let result = self.static_addr_of(init, alloc.align, None);
+        let result = self.static_addr_of(init, alloc.inner().align, None);
         PlaceRef::new_sized(result, layout)
     }
 
@@ -356,7 +356,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
     }
 
-    pub fn create_const_alloc(&self, alloc: &Allocation, ty: Word) -> SpirvValue {
+    pub fn create_const_alloc(&self, alloc: ConstAllocation<'tcx>, ty: Word) -> SpirvValue {
         // println!(
         //     "Creating const alloc of type {} with {} bytes",
         //     self.debug_type(ty),
@@ -366,14 +366,19 @@ impl<'tcx> CodegenCx<'tcx> {
         let result = self.create_const_alloc2(alloc, &mut offset, ty);
         assert_eq!(
             offset.bytes_usize(),
-            alloc.len(),
+            alloc.inner().len(),
             "create_const_alloc must consume all bytes of an Allocation"
         );
         // println!("Done creating alloc of type {}", self.debug_type(ty));
         result
     }
 
-    fn create_const_alloc2(&self, alloc: &Allocation, offset: &mut Size, ty: Word) -> SpirvValue {
+    fn create_const_alloc2(
+        &self,
+        alloc: ConstAllocation<'tcx>,
+        offset: &mut Size,
+        ty: Word,
+    ) -> SpirvValue {
         let ty_concrete = self.lookup_type(ty);
         *offset = offset.align_to(ty_concrete.alignof(self));
         // these print statements are really useful for debugging, so leave them easily available
@@ -425,7 +430,11 @@ impl<'tcx> CodegenCx<'tcx> {
                 // only uses the input alloc_id in the case that the scalar is uninitilized
                 // as part of the error output
                 // tldr, the pointer here is only needed for the offset
-                let value = match alloc.read_scalar(self, alloc_range(*offset, size)).unwrap() {
+                let value = match alloc
+                    .inner()
+                    .read_scalar(self, alloc_range(*offset, size))
+                    .unwrap()
+                {
                     ScalarMaybeUninit::Scalar(scalar) => {
                         self.scalar_to_backend(scalar, self.primitive_to_scalar(primitive), ty)
                     }
@@ -457,7 +466,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 } else {
                     assert_eq!(
                     offset.bytes_usize(),
-                    alloc.len(),
+                    alloc.inner().len(),
                     "create_const_alloc must consume all bytes of an Allocation after an unsized struct"
                 );
                 }
@@ -503,7 +512,7 @@ impl<'tcx> CodegenCx<'tcx> {
             }
             SpirvType::RuntimeArray { element } => {
                 let mut values = Vec::new();
-                while offset.bytes_usize() != alloc.len() {
+                while offset.bytes_usize() != alloc.inner().len() {
                     values.push(
                         self.create_const_alloc2(alloc, offset, element)
                             .def_cx(self),

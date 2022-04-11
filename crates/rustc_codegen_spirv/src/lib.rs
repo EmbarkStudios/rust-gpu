@@ -162,14 +162,14 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_data_structures::fx::FxHashMap;
-use rustc_errors::{ErrorReported, FatalError, Handler};
+use rustc_errors::{ErrorGuaranteed, FatalError, Handler};
 use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::mir::pretty::write_mir_pretty;
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::{self, query, DefIdTree, Instance, InstanceDef, TyCtxt};
-use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
+use rustc_session::config::{self, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::{Target, TargetTriple};
@@ -281,6 +281,11 @@ impl CodegenBackend for SpirvCodegenBackend {
     }
 
     fn provide(&self, providers: &mut query::Providers) {
+        // FIXME(eddyb) this is currently only passed back to us, specifically
+        // into `target_machine_factory` (which is a noop), but it might make
+        // sense to move some of the target feature parsing into here.
+        providers.global_backend_features = |_tcx, ()| vec![];
+
         crate::abi::provide(providers);
         crate::attr::provide(providers);
     }
@@ -314,7 +319,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
         _outputs: &OutputFilenames,
-    ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorReported> {
+    ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorGuaranteed> {
         let (codegen_results, work_products) = ongoing_codegen
             .downcast::<OngoingCodegen<Self>>()
             .expect("Expected OngoingCodegen, found Box<Any>")
@@ -330,7 +335,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         sess: &Session,
         codegen_results: CodegenResults,
         outputs: &OutputFilenames,
-    ) -> Result<(), ErrorReported> {
+    ) -> Result<(), ErrorGuaranteed> {
         let timer = sess.timer("link_crate");
         link::link(
             sess,
@@ -528,8 +533,9 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
 
     fn target_machine_factory(
         &self,
-        _: &Session,
-        _: OptLevel,
+        _sess: &Session,
+        _opt_level: config::OptLevel,
+        _target_features: &[String],
     ) -> Arc<(dyn Fn(TargetMachineFactoryConfig) -> Result<(), String> + Send + Sync + 'static)>
     {
         Arc::new(|_| Ok(()))

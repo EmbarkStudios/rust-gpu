@@ -2,7 +2,6 @@ use super::Result;
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_errors::ErrorReported;
 use rustc_session::Session;
 
 pub fn run(sess: &Session, module: &mut Module) -> Result<()> {
@@ -35,11 +34,10 @@ fn find_import_export_pairs_and_killed_params(
         };
         let type_id = *type_map.get(&id).expect("Unexpected op");
         if exports.insert(name, (id, type_id)).is_some() {
-            sess.err(&format!("Multiple exports found for {:?}", name));
-            return Err(ErrorReported);
+            return Err(sess.err(&format!("Multiple exports found for {:?}", name)));
         }
     }
-    let mut has_err = false;
+    let mut any_err = None;
     // Then, collect all the imports, and create the rewrite rules.
     for annotation in &module.annotations {
         let (import_id, name) = match get_linkage_inst(annotation) {
@@ -48,8 +46,7 @@ fn find_import_export_pairs_and_killed_params(
         };
         let (export_id, export_type) = match exports.get(name) {
             None => {
-                sess.err(&format!("Unresolved symbol {:?}", name));
-                has_err = true;
+                any_err = Some(sess.err(&format!("Unresolved symbol {:?}", name)));
                 continue;
             }
             Some(&x) => x,
@@ -64,11 +61,11 @@ fn find_import_export_pairs_and_killed_params(
             }
         }
     }
-    if has_err {
-        return Err(ErrorReported);
-    }
 
-    Ok((rewrite_rules, killed_parameters))
+    match any_err {
+        Some(err) => Err(err),
+        None => Ok((rewrite_rules, killed_parameters)),
+    }
 }
 
 fn get_linkage_inst(inst: &Instruction) -> Option<(Word, &str, LinkageType)> {
@@ -148,7 +145,8 @@ fn check_tys_equal(
             format_ty(ty_defs, ty, &mut result);
             result
         }
-        sess.struct_err(&format!("Types mismatch for {:?}", name))
+        Err(sess
+            .struct_err(&format!("Types mismatch for {:?}", name))
             .note(&format!(
                 "import type: {}",
                 format_ty_(&ty_defs, import_type)
@@ -157,8 +155,7 @@ fn check_tys_equal(
                 "export type: {}",
                 format_ty_(&ty_defs, export_type)
             ))
-            .emit();
-        Err(ErrorReported)
+            .emit())
     }
 }
 

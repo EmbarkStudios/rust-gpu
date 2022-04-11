@@ -24,10 +24,10 @@ use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_errors::ErrorReported;
+use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
 
-pub type Result<T> = std::result::Result<T, ErrorReported>;
+pub type Result<T> = std::result::Result<T, ErrorGuaranteed>;
 
 pub struct Options {
     pub compact_ids: bool,

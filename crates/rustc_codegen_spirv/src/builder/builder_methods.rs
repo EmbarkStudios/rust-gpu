@@ -917,18 +917,18 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 place.align,
             );
             OperandValue::Immediate(self.to_immediate(llval, place.layout))
-        } else if let Abi::ScalarPair(ref a, ref b) = place.layout.abi {
+        } else if let Abi::ScalarPair(a, b) = place.layout.abi {
             let b_offset = a.value.size(self).align_to(b.value.align(self).abi);
 
             let pair_ty = place.layout.spirv_type(self.span(), self);
-            let mut load = |i, scalar: &Scalar, align| {
+            let mut load = |i, scalar: Scalar, align| {
                 let llptr = self.struct_gep(pair_ty, place.llval, i as u64);
                 let load = self.load(
                     self.scalar_pair_element_backend_type(place.layout, i, false),
                     llptr,
                     align,
                 );
-                self.to_immediate_scalar(load, *scalar)
+                self.to_immediate_scalar(load, scalar)
             };
 
             OperandValue::Pair(
@@ -2214,7 +2214,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.intcast(val, dest_ty, false)
     }
 
-    fn apply_attrs_to_cleanup_callsite(&mut self, _llret: Self::Value) {
+    fn do_not_inline(&mut self, _llret: Self::Value) {
         // Ignore
     }
 }

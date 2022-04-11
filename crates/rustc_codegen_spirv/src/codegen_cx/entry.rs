@@ -328,10 +328,12 @@ impl<'tcx> CodegenCx<'tcx> {
                 let value_len = if is_unsized_with_len {
                     match self.lookup_type(value_spirv_type) {
                         SpirvType::RuntimeArray { .. } => {}
-                        _ => self.tcx.sess.span_err(
-                            hir_param.ty_span,
-                            "only plain slices are supported as unsized types",
-                        ),
+                        _ => {
+                            self.tcx.sess.span_err(
+                                hir_param.ty_span,
+                                "only plain slices are supported as unsized types",
+                            );
+                        }
                     }
 
                     // FIXME(eddyb) shouldn't this be `usize`?

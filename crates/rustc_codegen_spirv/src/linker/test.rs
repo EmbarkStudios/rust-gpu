@@ -97,7 +97,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
                 spirv_metadata: SpirvMetadata::None,
             },
         );
-        assert_eq!(compiler.session().has_errors(), res.is_err());
+        assert_eq!(compiler.session().has_errors(), res.as_ref().err().copied());
         res.map(|res| match res {
             LinkResult::SingleModule(m) => *m,
             LinkResult::MultipleModules(_) => unreachable!(),
