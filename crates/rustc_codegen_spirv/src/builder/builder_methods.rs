@@ -1890,23 +1890,20 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .with_type(agg_val.ty)
     }
 
-    fn landing_pad(
-        &mut self,
-        _ty: Self::Type,
-        _pers_fn: Self::Value,
-        _num_clauses: usize,
-    ) -> Self::Value {
+    fn set_personality_fn(&mut self, _personality: Self::Value) {
         todo!()
     }
 
-    fn set_cleanup(&mut self, _landing_pad: Self::Value) {
+    // These are used by everyone except msvc
+    fn cleanup_landing_pad(&mut self, _ty: Self::Type, _pers_fn: Self::Value) -> Self::Value {
         todo!()
     }
 
-    fn resume(&mut self, _exn: Self::Value) -> Self::Value {
+    fn resume(&mut self, _exn: Self::Value) {
         todo!()
     }
 
+    // These are used only by msvc
     fn cleanup_pad(
         &mut self,
         _parent: Option<Self::Value>,
@@ -1915,11 +1912,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         todo!()
     }
 
-    fn cleanup_ret(
-        &mut self,
-        _funclet: &Self::Funclet,
-        _unwind: Option<Self::BasicBlock>,
-    ) -> Self::Value {
+    fn cleanup_ret(&mut self, _funclet: &Self::Funclet, _unwind: Option<Self::BasicBlock>) {
         todo!()
     }
 
@@ -1931,16 +1924,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         &mut self,
         _parent: Option<Self::Value>,
         _unwind: Option<Self::BasicBlock>,
-        _num_handlers: usize,
+        _handlers: &[Self::BasicBlock],
     ) -> Self::Value {
-        todo!()
-    }
-
-    fn add_handler(&mut self, _catch_switch: Self::Value, _handler: Self::BasicBlock) {
-        todo!()
-    }
-
-    fn set_personality_fn(&mut self, _personality: Self::Value) {
         todo!()
     }
 

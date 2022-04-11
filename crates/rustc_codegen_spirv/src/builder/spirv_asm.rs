@@ -12,7 +12,6 @@ use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{AsmBuilderMethods, InlineAsmOperandRef};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::{bug, ty::Instance};
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
@@ -32,17 +31,6 @@ impl InstructionTable {
 }
 
 impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
-    fn codegen_llvm_inline_asm(
-        &mut self,
-        _: &LlvmInlineAsmInner,
-        _: Vec<PlaceRef<'tcx, Self::Value>>,
-        _: Vec<Self::Value>,
-        _: Span,
-    ) -> bool {
-        self.err("LLVM asm not supported");
-        true
-    }
-
     /* Example asm and the template it compiles to:
     asm!(
         "mov {0}, {1}",
