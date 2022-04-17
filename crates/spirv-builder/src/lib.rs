@@ -544,9 +544,10 @@ struct RustcOutput {
 fn get_last_artifact(out: &str) -> Option<PathBuf> {
     let last = out
         .lines()
-        .filter_map(|line| match RustcOutput::deserialize_json(line) {
-            Ok(line) => Some(line),
-            Err(_) => {
+        .filter_map(|line| {
+            if let Ok(line) = RustcOutput::deserialize_json(line) {
+                Some(line)
+            } else {
                 // Pass through invalid lines
                 println!("{}", line);
                 None

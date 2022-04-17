@@ -94,6 +94,7 @@ struct Runner {
 impl Runner {
     /// Runs the given `mode` on the directory that matches that name, using the
     /// backend provided by `codegen_backend_path`.
+    #[allow(clippy::string_add)]
     fn run_mode(&self, mode: &'static str) {
         /// RUSTFLAGS passed to all test files.
         fn test_rustc_flags(

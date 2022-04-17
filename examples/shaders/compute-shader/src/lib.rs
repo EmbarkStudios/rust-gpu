@@ -7,8 +7,6 @@
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 
-extern crate spirv_std;
-
 use glam::UVec3;
 use spirv_std::glam;
 #[cfg(not(target_arch = "spirv"))]
