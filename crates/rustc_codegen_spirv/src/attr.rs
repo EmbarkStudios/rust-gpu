@@ -8,9 +8,9 @@ use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::Attribute;
 use rustc_hir as hir;
 use rustc_hir::def_id::LocalDefId;
-use rustc_hir::intravisit::{self, NestedVisitorMap, Visitor};
+use rustc_hir::intravisit::{self, Visitor};
 use rustc_hir::{HirId, MethodKind, Target, CRATE_HIR_ID};
-use rustc_middle::hir::map::Map;
+use rustc_middle::hir::nested_filter;
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::{Span, Symbol};
@@ -235,8 +235,7 @@ fn target_from_impl_item<'tcx>(tcx: TyCtxt<'tcx>, impl_item: &hir::ImplItem<'_>)
     match impl_item.kind {
         hir::ImplItemKind::Const(..) => Target::AssocConst,
         hir::ImplItemKind::Fn(..) => {
-            let parent_hir_id = tcx.hir().get_parent_item(impl_item.hir_id());
-            let parent_local_def_id = tcx.hir().local_def_id(parent_hir_id);
+            let parent_local_def_id = tcx.hir().get_parent_item(impl_item.hir_id());
             let containing_item = tcx.hir().expect_item(parent_local_def_id);
             let containing_impl_is_for_trait = match &containing_item.kind {
                 hir::ItemKind::Impl(hir::Impl { of_trait, .. }) => of_trait.is_some(),
@@ -364,27 +363,33 @@ impl CheckSpirvAttrVisitor<'_> {
                 }
             };
             match valid_target {
-                Err(Expected(expected_target)) => self.tcx.sess.span_err(
-                    span,
-                    &format!(
-                        "attribute is only valid on a {}, not on a {}",
-                        expected_target, target
-                    ),
-                ),
+                Err(Expected(expected_target)) => {
+                    self.tcx.sess.span_err(
+                        span,
+                        &format!(
+                            "attribute is only valid on a {}, not on a {}",
+                            expected_target, target
+                        ),
+                    );
+                }
                 Ok(()) => match aggregated_attrs.try_insert_attr(parsed_attr, span) {
                     Ok(()) => {}
                     Err(MultipleAttrs {
                         prev_span,
                         category,
-                    }) => self
-                        .tcx
-                        .sess
-                        .struct_span_err(
-                            span,
-                            &format!("only one {} attribute is allowed on a {}", category, target),
-                        )
-                        .span_note(prev_span, &format!("previous {} attribute", category))
-                        .emit(),
+                    }) => {
+                        self.tcx
+                            .sess
+                            .struct_span_err(
+                                span,
+                                &format!(
+                                    "only one {} attribute is allowed on a {}",
+                                    category, target
+                                ),
+                            )
+                            .span_note(prev_span, &format!("previous {} attribute", category))
+                            .emit();
+                    }
                 },
             }
         }
@@ -403,10 +408,10 @@ impl CheckSpirvAttrVisitor<'_> {
 
 // FIXME(eddyb) DRY this somehow and make it reusable from somewhere in `rustc`.
 impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
-    type Map = Map<'tcx>;
+    type NestedFilter = nested_filter::OnlyBodies;
 
-    fn nested_visit_map(&mut self) -> NestedVisitorMap<Self::Map> {
-        NestedVisitorMap::OnlyBodies(self.tcx.hir())
+    fn nested_visit_map(&mut self) -> Self::Map {
+        self.tcx.hir()
     }
 
     fn visit_item(&mut self, item: &'tcx hir::Item<'tcx>) {

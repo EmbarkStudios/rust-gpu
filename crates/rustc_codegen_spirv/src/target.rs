@@ -77,23 +77,23 @@ impl SpirvTarget {
 
     pub fn rustc_target(&self) -> Target {
         Target {
-            llvm_target: self.to_string(),
+            llvm_target: self.to_string().into(),
             pointer_width: 32,
-            data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".to_string(),
-            arch: String::from(ARCH),
+            data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".into(),
+            arch: ARCH.into(),
             options: TargetOptions {
                 simd_types_indirect: false,
                 allows_weak_linkage: false,
                 crt_static_allows_dylibs: true,
-                dll_prefix: "".to_string(),
-                dll_suffix: ".spv".to_string(),
+                dll_prefix: "".into(),
+                dll_suffix: ".spv".into(),
                 dynamic_linking: true,
                 emit_debug_gdb_scripts: false,
                 linker_flavor: LinkerFlavor::Ld,
                 panic_strategy: PanicStrategy::Abort,
-                os: "unknown".to_string(),
-                env: self.env.to_string(),
-                vendor: self.vendor.clone(),
+                os: "unknown".into(),
+                env: self.env.to_string().into(),
+                vendor: self.vendor.clone().into(),
                 // TODO: Investigate if main_needs_argc_argv is useful (for building exes)
                 main_needs_argc_argv: false,
                 ..Default::default()
