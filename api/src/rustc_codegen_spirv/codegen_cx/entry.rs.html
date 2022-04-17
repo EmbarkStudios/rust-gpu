@@ -641,7 +641,6 @@
 <span id="636">636</span>
 <span id="637">637</span>
 <span id="638">638</span>
-<span id="639">639</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::CodegenCx</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::attr</span>::{<span class="ident">AggregatedSpirvAttributes</span>, <span class="ident">Entry</span>};
@@ -677,14 +676,13 @@
     ) {
         <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>());
         <span class="kw">let</span> <span class="ident">hir_params</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">fn_local_def_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">instance</span>.<span class="ident">def_id</span>().<span class="ident">as_local</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">id</span>) =&gt; <span class="ident">id</span>,
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">tcx</span>
-                        .<span class="ident">sess</span>
-                        .<span class="ident">span_err</span>(<span class="ident">span</span>, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Cannot declare {} as an entry point&quot;</span>, <span class="ident">name</span>));
-                    <span class="kw">return</span>;
-                }
+            <span class="kw">let</span> <span class="ident">fn_local_def_id</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">def_id</span>().<span class="ident">as_local</span>() {
+                <span class="ident">id</span>
+            } <span class="kw">else</span> {
+                <span class="self">self</span>.<span class="ident">tcx</span>
+                    .<span class="ident">sess</span>
+                    .<span class="ident">span_err</span>(<span class="ident">span</span>, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Cannot declare {} as an entry point&quot;</span>, <span class="ident">name</span>));
+                <span class="kw">return</span>;
             };
             <span class="kw">let</span> <span class="ident">fn_hir_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">local_def_id_to_hir_id</span>(<span class="ident">fn_local_def_id</span>);
             <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">body</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">body_owned_by</span>(<span class="ident">fn_hir_id</span>));

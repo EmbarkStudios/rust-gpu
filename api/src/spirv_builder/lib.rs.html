@@ -596,6 +596,7 @@
 <span id="591">591</span>
 <span id="592">592</span>
 <span id="593">593</span>
+<span id="594">594</span>
 </pre><pre class="rust"><code><span class="comment">// BEGIN - Embark standard lints v0.4</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
 <span class="comment">// for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;</span>
@@ -1142,9 +1143,10 @@
 <span class="kw">fn</span> <span class="ident">get_last_artifact</span>(<span class="ident">out</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">out</span>
         .<span class="ident">lines</span>()
-        .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">line</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">RustcOutput</span><span class="op">&gt;</span>(<span class="ident">line</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">line</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">line</span>),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
+        .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">line</span><span class="op">|</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">line</span>) <span class="op">=</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">RustcOutput</span><span class="op">&gt;</span>(<span class="ident">line</span>) {
+                <span class="prelude-val">Some</span>(<span class="ident">line</span>)
+            } <span class="kw">else</span> {
                 <span class="comment">// Pass through invalid lines</span>
                 <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">line</span>);
                 <span class="prelude-val">None</span>
