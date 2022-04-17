@@ -1,6 +1,8 @@
 //! SPIR-V decorations specific to `rustc_codegen_spirv`, produced during
 //! the original codegen of a crate, and consumed by the `linker`.
 
+#![allow(clippy::question_mark)] // warning from inside the nanoserde macro
+
 use nanoserde::{DeJson, SerJson};
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Decoration, Op, Word};

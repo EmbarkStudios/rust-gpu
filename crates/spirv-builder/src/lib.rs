@@ -69,6 +69,7 @@
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
 // #![allow()]
+#![allow(clippy::question_mark)] // warning from inside the nanoserde macro
 
 mod depfile;
 #[cfg(feature = "watch")]
