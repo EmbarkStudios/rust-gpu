@@ -1,19 +1,27 @@
+<!-- Allow this file to not have a first line heading -->
+<!-- markdownlint-disable-file MD041 -->
+<!-- Disable warning om emphasis after first heading -->
+<!-- markdownlint-disable-file MD036 -->
+
+<!-- inline html -->
+<!-- markdownlint-disable-file MD033 -->
+
 <div align="center">
 
 # `🐉 rust-gpu`
 
-**Rust as a first-class language and ecosystem for GPU graphics & compute shaders**    
-    
+**Rust as a first-class language and ecosystem for GPU graphics & compute shaders**
+
 [![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](https://embark.dev)
 [![Discord](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
 [![Documentation](https://img.shields.io/badge/docs-API-blue)](https://embarkstudios.github.io/rust-gpu/api/rustc_codegen_spirv)
 [![dependency status](https://deps.rs/repo/github/EmbarkStudios/rust-gpu/status.svg)](https://deps.rs/repo/github/EmbarkStudios/rust-gpu)
 [![Build status](https://github.com/EmbarkStudios/rust-gpu/workflows/Continuous%20integration/badge.svg?branch=main)](https://github.com/EmbarkStudios/rust-gpu/actions)
 </div>
-    
-### Current Status 🚧
 
-Note: This project is still heavily in development and is at an early stage. 
+## Current Status 🚧
+
+Note: This project is still heavily in development and is at an early stage.
 
 Compiling and running simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
 
@@ -22,7 +30,7 @@ However, many things aren't implemented yet. That means that while being technic
 [rust-support]: https://github.com/EmbarkStudios/rust-gpu/issues/78
 [spirv-support]: https://github.com/EmbarkStudios/rust-gpu/issues/383
 
-### Example
+## Example
 
 ![Sky shader](docs/assets/sky.jpg)
 
@@ -55,7 +63,7 @@ See [source](examples/shaders/sky-shader/src/lib.rs) for full details.
 
 ## Our Vision & Community Contributions
 
-`rust-gpu` is a project that we at Embark think has the potential to change the way GPU programming works in multiple ways. One of the primary things we think it can change is opening the door to leverage the open source culture of sharing and improving each others' code, and our end goal and vision for `rust-gpu` is to develop it very much in tandem with the community. However, the project is still in quite early stages and has a very small team working on it, so in order to be productive and guide the project to where we ultimately want it to go, as of right now, we need to focus on our own primary use cases for our projects at Embark. 
+`rust-gpu` is a project that we at Embark think has the potential to change the way GPU programming works in multiple ways. One of the primary things we think it can change is opening the door to leverage the open source culture of sharing and improving each others' code, and our end goal and vision for `rust-gpu` is to develop it very much in tandem with the community. However, the project is still in quite early stages and has a very small team working on it, so in order to be productive and guide the project to where we ultimately want it to go, as of right now, we need to focus on our own primary use cases for our projects at Embark.
 
 What this means practically is that it is unlikely that we'll be able to accept major changes from community members at this time. If you have a large change you would like to make, please file an issue and/or ask on our Discord in the `#rust-gpu` channel to see if it is something we'll be able to accept *before* working on it, as it is not great to have to turn down stuff that community members have poured their time and effort into. As the project matures, we'll in theory be able to accept more input from the community and move closer and closer to the goals outlined above. Thank you so much for your understanding!
 
@@ -67,7 +75,6 @@ Experiment with rust-gpu shaders in-browser at [SHADERed][shadered].
 
 [gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
 [shadered]: https://shadered.org/shaders?language=rust&sort=hot
-
 
 ## Background
 
@@ -119,7 +126,9 @@ There are a few different components to this repo:
 - [spirv-builder](crates/spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
 
 ## Related Projects
+
 Historical and other related projects for compiling Rust code to GPUs.
+
 - 2016: [glassful](https://github.com/kmcallister/glassful) Compiles a subset of Rust to GLSL.
 - 2017: [inspirv-rust](https://github.com/msiglreith/inspirv-rust) Experimental Rust to SPIR-V compiler.
 - 2018: [nvptx](https://github.com/japaric-archived/nvptx) Rust to PTX compiler.
@@ -139,8 +148,8 @@ Please read our [Contributor Guide](CONTRIBUTING.md) for more information on how
 
 Licensed under either of
 
-- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
 
