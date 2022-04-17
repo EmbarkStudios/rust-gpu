@@ -12,7 +12,6 @@ use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{AsmBuilderMethods, InlineAsmOperandRef};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::{bug, ty::Instance};
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
@@ -32,17 +31,6 @@ impl InstructionTable {
 }
 
 impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
-    fn codegen_llvm_inline_asm(
-        &mut self,
-        _: &LlvmInlineAsmInner,
-        _: Vec<PlaceRef<'tcx, Self::Value>>,
-        _: Vec<Self::Value>,
-        _: Span,
-    ) -> bool {
-        self.err("LLVM asm not supported");
-        true
-    }
-
     /* Example asm and the template it compiles to:
     asm!(
         "mov {0}, {1}",
@@ -805,10 +793,11 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             InlineAsmRegOrRegClass::RegClass(InlineAsmRegClass::SpirV(
                 SpirVInlineAsmRegClass::reg,
             )) => {}
-            _ => self
-                .tcx
-                .sess
-                .span_err(span, &format!("invalid register: {}", reg)),
+            _ => {
+                self.tcx
+                    .sess
+                    .span_err(span, &format!("invalid register: {}", reg));
+            }
         }
     }
 
@@ -1159,21 +1148,34 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     match tokens.next() {
                         Some(Token::Word(word)) => match word.parse() {
                             Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
-                            Err(e) => self.err(&format!("invalid integer: {}", e)),
+                            Err(e) => {
+                                self.err(&format!("invalid integer: {}", e));
+                            }
                         },
-                        Some(Token::String(_)) => self.err(&format!(
-                            "expected a literal, not a string for a {:?}",
-                            kind
-                        )),
-                        Some(Token::Placeholder(_, span)) => self.tcx.sess.span_err(
-                            span,
-                            &format!("expected a literal, not a dynamic value for a {:?}", kind),
-                        ),
-                        Some(Token::Typeof(_, span, _)) => self.tcx.sess.span_err(
-                            span,
-                            &format!("expected a literal, not a type for a {:?}", kind),
-                        ),
-                        None => self.err("expected operand after instruction"),
+                        Some(Token::String(_)) => {
+                            self.err(&format!(
+                                "expected a literal, not a string for a {:?}",
+                                kind
+                            ));
+                        }
+                        Some(Token::Placeholder(_, span)) => {
+                            self.tcx.sess.span_err(
+                                span,
+                                &format!(
+                                    "expected a literal, not a dynamic value for a {:?}",
+                                    kind
+                                ),
+                            );
+                        }
+                        Some(Token::Typeof(_, span, _)) => {
+                            self.tcx.sess.span_err(
+                                span,
+                                &format!("expected a literal, not a type for a {:?}", kind),
+                            );
+                        }
+                        None => {
+                            self.err("expected operand after instruction");
+                        }
                     }
                 }
             }

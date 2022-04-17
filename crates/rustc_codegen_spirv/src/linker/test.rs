@@ -71,13 +71,13 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
     let config = rustc_interface::Config {
         opts: sopts,
         crate_cfg: Default::default(),
+        crate_check_cfg: Default::default(),
         input: Input::File(PathBuf::new()),
         input_path: None,
         output_file: None,
         output_dir: None,
         file_loader: None,
         diagnostic_output: DiagnosticOutput::Raw(Box::new(write_diags)),
-        stderr: None,
         lint_caps: Default::default(),
         parse_sess_created: None,
         register_lints: None,
@@ -97,7 +97,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
                 spirv_metadata: SpirvMetadata::None,
             },
         );
-        assert_eq!(compiler.session().has_errors(), res.is_err());
+        assert_eq!(compiler.session().has_errors(), res.as_ref().err().copied());
         res.map(|res| match res {
             LinkResult::SingleModule(m) => *m,
             LinkResult::MultipleModules(_) => unreachable!(),

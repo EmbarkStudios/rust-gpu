@@ -3,6 +3,7 @@ use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use ar::{Archive, GnuBuilder, Header};
 use nanoserde::SerJson;
 use rspirv::binary::Assemble;
+use rustc_ast::CRATE_NODE_ID;
 use rustc_codegen_spirv_types::{CompileResult, ModuleResult};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
@@ -64,7 +65,9 @@ pub fn link<'a>(
                 CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => {
                     link_exe(sess, crate_type, &out_filename, codegen_results);
                 }
-                other => sess.err(&format!("CrateType {:?} not supported yet", other)),
+                other => {
+                    sess.err(&format!("CrateType {:?} not supported yet", other));
+                }
             }
         }
     }
@@ -298,8 +301,12 @@ fn do_spirv_opt(
             // TODO: Adds spans here? Not sure how useful with binary, but maybe?
 
             let mut err = match msg.level {
-                Level::Fatal | Level::InternalError => sess.struct_fatal(&msg.message),
-                Level::Error => sess.struct_err(&msg.message),
+                Level::Fatal | Level::InternalError => {
+                    // FIXME(eddyb) this was `struct_fatal` but that doesn't seem
+                    // necessary and also lacks `.forget_guarantee()`.
+                    sess.struct_err(&msg.message).forget_guarantee()
+                }
+                Level::Error => sess.struct_err(&msg.message).forget_guarantee(),
                 Level::Warning => sess.struct_warn(&msg.message),
                 Level::Info | Level::Debug => sess.struct_note_without_error(&msg.message),
             };
@@ -311,7 +318,8 @@ fn do_spirv_opt(
     );
 
     match result {
-        Ok(binary) => Vec::from(binary.as_ref()),
+        Ok(spirv_tools::binary::Binary::OwnedU32(words)) => words,
+        Ok(binary) => binary.as_words().to_vec(),
         Err(e) => {
             let mut err = sess.struct_warn(&e.to_string());
             err.note("spirv-opt failed, leaving as unoptimized");
@@ -382,7 +390,9 @@ fn add_upstream_rust_crates(
             Linkage::NotLinked | Linkage::IncludedFromDylib => {}
             Linkage::Static => rlibs.push(src.rlib.as_ref().unwrap().0.clone()),
             //Linkage::Dynamic => rlibs.push(src.dylib.as_ref().unwrap().0.clone()),
-            Linkage::Dynamic => sess.err("TODO: Linkage::Dynamic not supported yet"),
+            Linkage::Dynamic => {
+                sess.err("TODO: Linkage::Dynamic not supported yet");
+            }
         }
     }
 }
@@ -440,9 +450,11 @@ fn add_upstream_native_libraries(
     }
 }
 
+// FIXME(eddyb) upstream has code like this already, maybe we can reuse most of it?
+// (see `compiler/rustc_codegen_ssa/src/back/link.rs`)
 fn relevant_lib(sess: &Session, lib: &NativeLib) -> bool {
     match lib.cfg {
-        Some(ref cfg) => rustc_attr::cfg_matches(cfg, &sess.parse_sess, None),
+        Some(ref cfg) => rustc_attr::cfg_matches(cfg, &sess.parse_sess, CRATE_NODE_ID, None),
         None => true,
     }
 }
@@ -546,7 +558,7 @@ fn do_link(
 
     match link_result {
         Ok(v) => v,
-        Err(rustc_errors::ErrorReported) => {
+        Err(rustc_errors::ErrorGuaranteed { .. }) => {
             sess.abort_if_errors();
             bug!("Linker errored, but no error reported")
         }

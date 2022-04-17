@@ -142,10 +142,12 @@ impl<'tcx> CodegenCx<'tcx> {
                     Some(&intrinsic) => {
                         self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
                     }
-                    None => self.tcx.sess.err(&format!(
-                        "missing libm intrinsic {}, which is {}",
-                        symbol_name, instance
-                    )),
+                    None => {
+                        self.tcx.sess.err(&format!(
+                            "missing libm intrinsic {}, which is {}",
+                            symbol_name, instance
+                        ));
+                    }
                 }
             }
         }

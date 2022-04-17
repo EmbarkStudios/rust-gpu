@@ -3,7 +3,7 @@ use crate::builder_spirv::{SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
-use rustc_errors::ErrorReported;
+use rustc_errors::ErrorGuaranteed;
 use rustc_span::DUMMY_SP;
 use rustc_target::abi::call::PassMode;
 use rustc_target::abi::{Align, Size};
@@ -204,7 +204,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         self.recurse_load_type(result_type, result_type, array, word_index, 0)
     }
 
-    fn store_err(&mut self, original_type: Word, value: SpirvValue) -> Result<(), ErrorReported> {
+    fn store_err(&mut self, original_type: Word, value: SpirvValue) -> Result<(), ErrorGuaranteed> {
         let mut err = self.struct_err(&format!(
             "Cannot store type {} in an untyped buffer store",
             self.debug_type(original_type)
@@ -212,8 +212,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         if original_type != value.ty {
             err.note(&format!("due to containing type {}", value.ty));
         }
-        err.emit();
-        Err(ErrorReported)
+        Err(err.emit())
     }
 
     fn store_u32(
@@ -222,7 +221,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         dynamic_index: SpirvValue,
         constant_offset: u32,
         value: SpirvValue,
-    ) -> Result<(), ErrorReported> {
+    ) -> Result<(), ErrorGuaranteed> {
         let actual_index = if constant_offset != 0 {
             let const_offset_val = self.constant_u32(DUMMY_SP, constant_offset);
             self.add(dynamic_index, const_offset_val)
@@ -250,7 +249,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         constant_word_offset: u32,
         element: Word,
         count: u32,
-    ) -> Result<(), ErrorReported> {
+    ) -> Result<(), ErrorGuaranteed> {
         let element_size_bytes = match self.lookup_type(element).sizeof(self) {
             Some(size) => size,
             None => return self.store_err(original_type, value),
@@ -279,7 +278,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         array: SpirvValue,
         dynamic_word_index: SpirvValue,
         constant_word_offset: u32,
-    ) -> Result<(), ErrorReported> {
+    ) -> Result<(), ErrorGuaranteed> {
         match self.lookup_type(value.ty) {
             SpirvType::Integer(32, signed) => {
                 let u32_ty = SpirvType::Integer(32, false).def(DUMMY_SP, self);

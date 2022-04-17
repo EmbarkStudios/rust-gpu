@@ -162,14 +162,14 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_data_structures::fx::FxHashMap;
-use rustc_errors::{ErrorReported, FatalError, Handler};
+use rustc_errors::{ErrorGuaranteed, FatalError, Handler};
 use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::mir::pretty::write_mir_pretty;
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::{self, query, DefIdTree, Instance, InstanceDef, TyCtxt};
-use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
+use rustc_session::config::{self, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::{Target, TargetTriple};
@@ -210,7 +210,7 @@ fn is_blocklisted_fn<'tcx>(
         if let Some(debug_trait_def_id) = tcx.get_diagnostic_item(sym::Debug) {
             // Helper for detecting `<_ as core::fmt::Debug>::fmt` (in impls).
             let is_debug_fmt_method = |def_id| match tcx.opt_associated_item(def_id) {
-                Some(assoc) if assoc.ident.name == sym::fmt => match assoc.container {
+                Some(assoc) if assoc.ident(tcx).name == sym::fmt => match assoc.container {
                     ty::ImplContainer(impl_def_id) => {
                         tcx.impl_trait_ref(impl_def_id).map(|tr| tr.def_id)
                             == Some(debug_trait_def_id)
@@ -224,7 +224,7 @@ fn is_blocklisted_fn<'tcx>(
                 return true;
             }
 
-            if tcx.opt_item_name(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
+            if tcx.opt_item_ident(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
                 if let Some(parent_def_id) = tcx.parent(def.did) {
                     if is_debug_fmt_method(parent_def_id) {
                         return true;
@@ -281,6 +281,11 @@ impl CodegenBackend for SpirvCodegenBackend {
     }
 
     fn provide(&self, providers: &mut query::Providers) {
+        // FIXME(eddyb) this is currently only passed back to us, specifically
+        // into `target_machine_factory` (which is a noop), but it might make
+        // sense to move some of the target feature parsing into here.
+        providers.global_backend_features = |_tcx, ()| vec![];
+
         crate::abi::provide(providers);
         crate::attr::provide(providers);
     }
@@ -303,7 +308,7 @@ impl CodegenBackend for SpirvCodegenBackend {
                 .cg
                 .target_cpu
                 .clone()
-                .unwrap_or_else(|| tcx.sess.target.cpu.clone()),
+                .unwrap_or_else(|| tcx.sess.target.cpu.to_string()),
             metadata,
             need_metadata_module,
         ))
@@ -314,7 +319,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
         _outputs: &OutputFilenames,
-    ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorReported> {
+    ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorGuaranteed> {
         let (codegen_results, work_products) = ongoing_codegen
             .downcast::<OngoingCodegen<Self>>()
             .expect("Expected OngoingCodegen, found Box<Any>")
@@ -330,7 +335,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         sess: &Session,
         codegen_results: CodegenResults,
         outputs: &OutputFilenames,
-    ) -> Result<(), ErrorReported> {
+    ) -> Result<(), ErrorGuaranteed> {
         let timer = sess.timer("link_crate");
         link::link(
             sess,
@@ -509,10 +514,10 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         };
         if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
             let module_dumper = DumpModuleOnPanic { cx: &cx, path };
-            with_no_trimmed_paths(do_codegen);
+            with_no_trimmed_paths!(do_codegen());
             drop(module_dumper);
         } else {
-            with_no_trimmed_paths(do_codegen);
+            with_no_trimmed_paths!(do_codegen());
         }
         let spirv_module = cx.finalize_module().assemble();
 
@@ -528,8 +533,9 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
 
     fn target_machine_factory(
         &self,
-        _: &Session,
-        _: OptLevel,
+        _sess: &Session,
+        _opt_level: config::OptLevel,
+        _target_features: &[String],
     ) -> Arc<(dyn Fn(TargetMachineFactoryConfig) -> Result<(), String> + Send + Sync + 'static)>
     {
         Arc::new(|_| Ok(()))

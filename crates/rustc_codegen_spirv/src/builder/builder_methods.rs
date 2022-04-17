@@ -330,26 +330,28 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let one = self.constant_int(size_bytes.ty, 1);
         let zero_align = Align::from_bytes(0).unwrap();
 
-        let mut header = self.build_sibling_block("memset_header");
-        let mut body = self.build_sibling_block("memset_body");
-        let exit = self.build_sibling_block("memset_exit");
+        let header_bb = self.append_sibling_block("memset_header");
+        let body_bb = self.append_sibling_block("memset_body");
+        let exit_bb = self.append_sibling_block("memset_exit");
 
         let count = self.udiv(size_bytes, size_elem_const);
         let index = self.alloca(count.ty, zero_align);
         self.store(zero, index, zero_align);
-        self.br(header.llbb());
+        self.br(header_bb);
 
-        let current_index = header.load(count.ty, index, zero_align);
-        let cond = header.icmp(IntPredicate::IntULT, current_index, count);
-        header.cond_br(cond, body.llbb(), exit.llbb());
+        self.switch_to_block(header_bb);
+        let current_index = self.load(count.ty, index, zero_align);
+        let cond = self.icmp(IntPredicate::IntULT, current_index, count);
+        self.cond_br(cond, body_bb, exit_bb);
 
-        let gep_ptr = body.gep(pat.ty, ptr, &[current_index]);
-        body.store(pat, gep_ptr, zero_align);
-        let current_index_plus_1 = body.add(current_index, one);
-        body.store(current_index_plus_1, index, zero_align);
-        body.br(header.llbb());
+        self.switch_to_block(body_bb);
+        let gep_ptr = self.gep(pat.ty, ptr, &[current_index]);
+        self.store(pat, gep_ptr, zero_align);
+        let current_index_plus_1 = self.add(current_index, one);
+        self.store(current_index_plus_1, index, zero_align);
+        self.br(header_bb);
 
-        *self = exit;
+        self.switch_to_block(exit_bb);
     }
 
     fn zombie_convert_ptr_to_u(&self, def: Word) {
@@ -503,23 +505,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         .unwrap()
     }
 
-    fn build_sibling_block(&mut self, _name: &str) -> Self {
-        let mut builder = self.emit_with_cursor(BuilderCursor {
-            function: self.cursor.function,
-            block: None,
-        });
-        let new_bb = builder.begin_block(None).unwrap();
-        let new_cursor = BuilderCursor {
-            function: self.cursor.function,
-            block: builder.selected_block(),
-        };
-        Self {
-            cx: self.cx,
-            cursor: new_cursor,
-            current_fn: self.current_fn,
-            basic_block: new_bb,
-            current_span: Default::default(),
-        }
+    fn switch_to_block(&mut self, llbb: Self::BasicBlock) {
+        // FIXME(eddyb) this could be more efficient by having an index in
+        // `Self::BasicBlock`, not just a SPIR-V ID.
+        *self = Self::build(self.cx, llbb);
     }
 
     fn ret_void(&mut self) {
@@ -928,18 +917,21 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 place.align,
             );
             OperandValue::Immediate(self.to_immediate(llval, place.layout))
-        } else if let Abi::ScalarPair(ref a, ref b) = place.layout.abi {
-            let b_offset = a.value.size(self).align_to(b.value.align(self).abi);
+        } else if let Abi::ScalarPair(a, b) = place.layout.abi {
+            let b_offset = a
+                .primitive()
+                .size(self)
+                .align_to(b.primitive().align(self).abi);
 
             let pair_ty = place.layout.spirv_type(self.span(), self);
-            let mut load = |i, scalar: &Scalar, align| {
+            let mut load = |i, scalar: Scalar, align| {
                 let llptr = self.struct_gep(pair_ty, place.llval, i as u64);
                 let load = self.load(
                     self.scalar_pair_element_backend_type(place.layout, i, false),
                     llptr,
                     align,
                 );
-                self.to_immediate_scalar(load, *scalar)
+                self.to_immediate_scalar(load, scalar)
             };
 
             OperandValue::Pair(
@@ -1890,23 +1882,20 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .with_type(agg_val.ty)
     }
 
-    fn landing_pad(
-        &mut self,
-        _ty: Self::Type,
-        _pers_fn: Self::Value,
-        _num_clauses: usize,
-    ) -> Self::Value {
+    fn set_personality_fn(&mut self, _personality: Self::Value) {
         todo!()
     }
 
-    fn set_cleanup(&mut self, _landing_pad: Self::Value) {
+    // These are used by everyone except msvc
+    fn cleanup_landing_pad(&mut self, _ty: Self::Type, _pers_fn: Self::Value) -> Self::Value {
         todo!()
     }
 
-    fn resume(&mut self, _exn: Self::Value) -> Self::Value {
+    fn resume(&mut self, _exn: Self::Value) {
         todo!()
     }
 
+    // These are used only by msvc
     fn cleanup_pad(
         &mut self,
         _parent: Option<Self::Value>,
@@ -1915,11 +1904,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         todo!()
     }
 
-    fn cleanup_ret(
-        &mut self,
-        _funclet: &Self::Funclet,
-        _unwind: Option<Self::BasicBlock>,
-    ) -> Self::Value {
+    fn cleanup_ret(&mut self, _funclet: &Self::Funclet, _unwind: Option<Self::BasicBlock>) {
         todo!()
     }
 
@@ -1931,16 +1916,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         &mut self,
         _parent: Option<Self::Value>,
         _unwind: Option<Self::BasicBlock>,
-        _num_handlers: usize,
+        _handlers: &[Self::BasicBlock],
     ) -> Self::Value {
-        todo!()
-    }
-
-    fn add_handler(&mut self, _catch_switch: Self::Value, _handler: Self::BasicBlock) {
-        todo!()
-    }
-
-    fn set_personality_fn(&mut self, _personality: Self::Value) {
         todo!()
     }
 
@@ -2240,7 +2217,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.intcast(val, dest_ty, false)
     }
 
-    fn apply_attrs_to_cleanup_callsite(&mut self, _llret: Self::Value) {
+    fn do_not_inline(&mut self, _llret: Self::Value) {
         // Ignore
     }
 }

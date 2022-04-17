@@ -24,7 +24,7 @@ use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
-use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TyS};
+use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 use rustc_session::Session;
 use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
@@ -602,7 +602,7 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
 }
 
 impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
-    fn create_vtable_metadata(
+    fn create_vtable_debuginfo(
         &self,
         _ty: Ty<'tcx>,
         _trait_ref: Option<PolyExistentialTraitRef<'tcx>>,
@@ -614,7 +614,7 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
     fn dbg_scope_fn(
         &self,
         _: rustc_middle::ty::Instance<'tcx>,
-        _: &FnAbi<'tcx, &'tcx TyS<'tcx>>,
+        _: &FnAbi<'tcx, Ty<'tcx>>,
         _: Option<Self::Function>,
     ) -> Self::DIScope {
         todo!()
