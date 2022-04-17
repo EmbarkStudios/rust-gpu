@@ -323,6 +323,7 @@ fn create_pipeline(
     })
 }
 
+#[allow(clippy::match_wild_err_arm)]
 pub fn start(options: &Options) {
     // Build the shader before we pop open a window, since it might take a while.
     let event_loop = EventLoop::with_user_event();
@@ -332,7 +333,7 @@ pub fn start(options: &Options) {
         Some(Box::new(move |res| match proxy.send_event(res) {
             Ok(it) => it,
             // ShaderModuleDescriptor is not `Debug`, so can't use unwrap/expect
-            Err(_) => panic!("Event loop dead"),
+            Err(_err) => panic!("Event loop dead"),
         })),
     );
 

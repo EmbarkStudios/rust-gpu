@@ -14,13 +14,12 @@ pub struct ExtInst {
 
 impl ExtInst {
     pub fn import_glsl<'a, 'tcx>(&mut self, bx: &Builder<'a, 'tcx>) -> Word {
-        match self.glsl {
-            Some(id) => id,
-            None => {
-                let id = bx.emit_global().ext_inst_import(GLSL_STD_450);
-                self.glsl = Some(id);
-                id
-            }
+        if let Some(id) = self.glsl {
+            id
+        } else {
+            let id = bx.emit_global().ext_inst_import(GLSL_STD_450);
+            self.glsl = Some(id);
+            id
         }
     }
 

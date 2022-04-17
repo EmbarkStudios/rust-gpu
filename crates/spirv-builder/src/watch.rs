@@ -21,36 +21,35 @@ impl SpirvBuilder {
         }
         let metadata_result = crate::invoke_rustc(&self);
         // Load the dependencies of the thing
-        let metadata_file = match metadata_result {
-            Ok(path) => path,
-            Err(_) => {
-                let (tx, rx) = sync_channel(0);
-                // Fall back to watching from the crate root if the inital compilation fails
-                let mut watcher =
-                    notify::recommended_watcher(move |event: notify::Result<Event>| match event {
-                        Ok(e) => match e.kind {
-                            notify::EventKind::Access(_) => (),
-                            notify::EventKind::Any
-                            | notify::EventKind::Create(_)
-                            | notify::EventKind::Modify(_)
-                            | notify::EventKind::Remove(_)
-                            | notify::EventKind::Other => {
-                                let _ = tx.try_send(());
-                            }
-                        },
-                        Err(e) => println!("notify error: {:?}", e),
-                    })
-                    .expect("Could create watcher");
-                // This is likely to notice changes in the `target` dir, however, given that `cargo watch` doesn't seem to handle that,
-                watcher
-                    .watch(&self.path_to_crate, RecursiveMode::Recursive)
-                    .expect("Could watch crate root");
-                loop {
-                    rx.recv().expect("Watcher still alive");
-                    let metadata_file = crate::invoke_rustc(&self);
-                    if let Ok(f) = metadata_file {
-                        break f;
-                    }
+        let metadata_file = if let Ok(path) = metadata_result {
+            path
+        } else {
+            let (tx, rx) = sync_channel(0);
+            // Fall back to watching from the crate root if the inital compilation fails
+            let mut watcher =
+                notify::recommended_watcher(move |event: notify::Result<Event>| match event {
+                    Ok(e) => match e.kind {
+                        notify::EventKind::Access(_) => (),
+                        notify::EventKind::Any
+                        | notify::EventKind::Create(_)
+                        | notify::EventKind::Modify(_)
+                        | notify::EventKind::Remove(_)
+                        | notify::EventKind::Other => {
+                            let _ = tx.try_send(());
+                        }
+                    },
+                    Err(e) => println!("notify error: {:?}", e),
+                })
+                .expect("Could create watcher");
+            // This is likely to notice changes in the `target` dir, however, given that `cargo watch` doesn't seem to handle that,
+            watcher
+                .watch(&self.path_to_crate, RecursiveMode::Recursive)
+                .expect("Could watch crate root");
+            loop {
+                rx.recv().expect("Watcher still alive");
+                let metadata_file = crate::invoke_rustc(&self);
+                if let Ok(f) = metadata_file {
+                    break f;
                 }
             }
         };

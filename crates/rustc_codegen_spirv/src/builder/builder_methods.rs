@@ -2134,18 +2134,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     return_type,
                     arguments,
                 } => (
-                    match callee.kind {
-                        SpirvValueKind::FnAddr { function } => {
-                            assert_ty_eq!(self, callee_ty, pointee);
-                            function
-                        }
-
-                        // Truly indirect call.
-                        _ => {
-                            let fn_ptr_val = callee.def(self);
-                            self.zombie(fn_ptr_val, "indirect calls are not supported in SPIR-V");
-                            fn_ptr_val
-                        }
+                    if let SpirvValueKind::FnAddr { function } = callee.kind {
+                        assert_ty_eq!(self, callee_ty, pointee);
+                        function
+                    }
+                    // Truly indirect call.
+                    else {
+                        let fn_ptr_val = callee.def(self);
+                        self.zombie(fn_ptr_val, "indirect calls are not supported in SPIR-V");
+                        fn_ptr_val
                     },
                     return_type,
                     arguments,
