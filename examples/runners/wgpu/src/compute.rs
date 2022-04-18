@@ -63,18 +63,16 @@ pub async fn start_internal(
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
-        entries: &[
-            wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                count: None,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                    ty: wgpu::BufferBindingType::Storage { read_only: false },
-                },
+        entries: &[wgpu::BindGroupLayoutEntry {
+            binding: 0,
+            count: None,
+            visibility: wgpu::ShaderStages::COMPUTE,
+            ty: wgpu::BindingType::Buffer {
+                has_dynamic_offset: false,
+                min_binding_size: None,
+                ty: wgpu::BufferBindingType::Storage { read_only: false },
             },
-        ],
+        }],
     });
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
