@@ -2,7 +2,7 @@ use wgpu::util::DeviceExt;
 
 use super::Options;
 use futures::future::join;
-use std::{convert::TryInto, future::Future, num::NonZeroU64, time::Duration};
+use std::{convert::TryInto, future::Future, time::Duration};
 
 fn block_on<T>(future: impl Future<Output = T>) -> T {
     cfg_if::cfg_if! {
@@ -63,20 +63,16 @@ pub async fn start_internal(
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
-        entries: &[
-            // XXX - some graphics cards do not support empty bind layout groups, so
-            // create a dummy entry.
-            wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                count: None,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    has_dynamic_offset: false,
-                    min_binding_size: Some(NonZeroU64::new(1).unwrap()),
-                    ty: wgpu::BufferBindingType::Storage { read_only: false },
-                },
+        entries: &[wgpu::BindGroupLayoutEntry {
+            binding: 0,
+            count: None,
+            visibility: wgpu::ShaderStages::COMPUTE,
+            ty: wgpu::BindingType::Buffer {
+                has_dynamic_offset: false,
+                min_binding_size: None,
+                ty: wgpu::BufferBindingType::Storage { read_only: false },
             },
-        ],
+        }],
     });
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
