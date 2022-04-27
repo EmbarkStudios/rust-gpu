@@ -412,6 +412,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                             if field_ty_kind
                                 .sizeof(self)
                                 .map_or(true, |size| offset_in_field < size)
+                                // If the field is a zero sized type, check the type to
+                                // get the correct entry
+                                || offset_in_field == Size::ZERO && leaf_ty == field_ty
                             {
                                 Some((i, field_ty, field_ty_kind, offset_in_field))
                             } else {
