@@ -660,7 +660,7 @@ fn parse_entry_attrs(
                 return Err((
                     arg.span(),
                     String::from(
-                        "The `threads` argument must be specified when using `#[spirv(compute)]`, '#[spirv(mesh_nv)]' or '#[spirv(task_nv)]'",
+                        "The `threads` argument must be specified when using `#[spirv(compute)]`, `#[spirv(mesh_nv)]` or `#[spirv(task_nv)]`",
                     ),
                 ));
             }
