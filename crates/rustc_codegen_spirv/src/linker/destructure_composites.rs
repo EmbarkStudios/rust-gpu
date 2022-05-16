@@ -14,29 +14,31 @@ pub fn destructure_composites(function: &mut Function) {
         .all_inst_iter()
         .filter_map(|inst| match inst.class.opcode {
             Op::CompositeConstruct => Some((inst.result_id.unwrap(), inst.clone())),
-            Op::CompositeInsert if inst.operands.len() == 3 => {
+            Op::CompositeInsert => {
                 Some((inst.result_id.unwrap(), inst.clone()))
             }
             _ => None,
         })
         .collect();
     for inst in function.all_inst_iter_mut() {
-        if inst.class.opcode == Op::CompositeExtract && inst.operands.len() == 2 {
+        if inst.class.opcode == Op::CompositeExtract {
             let mut composite = inst.operands[0].unwrap_id_ref();
-            let index = inst.operands[1].unwrap_literal_int32();
+            let index: Vec<u32> = inst.operands[1..].iter().map(|i| i.unwrap_literal_int32()).collect();
 
             let origin = loop {
                 if let Some(inst) = reference.get(&composite) {
                     match inst.class.opcode {
                         Op::CompositeInsert => {
-                            let insert_index = inst.operands[2].unwrap_literal_int32();
+                            let insert_index: Vec<u32> = inst.operands[2..].iter().map(|i| i.unwrap_literal_int32()).collect();
                             if insert_index == index {
                                 break Some(inst.operands[0].unwrap_id_ref());
                             }
                             composite = inst.operands[1].unwrap_id_ref();
                         }
                         Op::CompositeConstruct => {
-                            break inst.operands.get(index as usize).map(|o| o.unwrap_id_ref());
+                            if index.len() ==1 {
+                                break inst.operands.get(index[0] as usize).map(|o| o.unwrap_id_ref());
+                            }
                         }
                         _ => unreachable!(),
                     }
