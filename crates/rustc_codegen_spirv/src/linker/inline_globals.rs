@@ -1,5 +1,5 @@
 use rspirv::dr::{Instruction, Module, Operand};
-use rspirv::spirv::{Op};
+use rspirv::spirv::Op;
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_session::Session;
 
@@ -47,17 +47,17 @@ impl NormalizedInstructions {
         bound: &mut u32,
         new_root: u32,
     ) {
-            for op in &mut inst.operands {
-                match op {
-                    Operand::IdRef(id) => match id_map.get(id) {
-                        Some(new_id) => {
-                            *id = *new_id;
-                        }
-                        _ => {}
-                    },
+        for op in &mut inst.operands {
+            match op {
+                Operand::IdRef(id) => match id_map.get(id) {
+                    Some(new_id) => {
+                        *id = *new_id;
+                    }
                     _ => {}
-                }
+                },
+                _ => {}
             }
+        }
         if let Some(id) = &mut inst.result_id {
             if *id != root {
                 id_map.insert(*id, *bound);
@@ -144,7 +144,13 @@ fn inline_global_varaibles_rec(module: &mut Module) -> super::Result<bool> {
                         match &inst.operands[i] {
                             &Operand::IdRef(w) => match &function_args.get(&key) {
                                 None => {
-                                    match get_const_arg_insts(bound, &variables, &insts, &ref_stores, w) {
+                                    match get_const_arg_insts(
+                                        bound,
+                                        &variables,
+                                        &insts,
+                                        &ref_stores,
+                                        w,
+                                    ) {
                                         Some(insts) => {
                                             is_invalid = false;
                                             function_args.insert(key, FunctionArg::Insts(insts));
@@ -153,8 +159,13 @@ fn inline_global_varaibles_rec(module: &mut Module) -> super::Result<bool> {
                                     }
                                 }
                                 Some(FunctionArg::Insts(w2)) => {
-                                    let new_insts =
-                                        get_const_arg_insts(bound, &variables, &insts, &ref_stores, w);
+                                    let new_insts = get_const_arg_insts(
+                                        bound,
+                                        &variables,
+                                        &insts,
+                                        &ref_stores,
+                                        w,
+                                    );
                                     match new_insts {
                                         Some(new_insts) => {
                                             is_invalid = new_insts != *w2;

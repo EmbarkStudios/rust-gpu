@@ -6,8 +6,8 @@ mod destructure_composites;
 mod duplicates;
 mod entry_interface;
 mod import_export_link;
-mod inline_globals;
 mod inline;
+mod inline_globals;
 mod ipo;
 mod mem2reg;
 mod param_weakening;
@@ -152,7 +152,6 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     if let Ok(ref path) = std::env::var("DUMP_POST_MERGE") {
         std::fs::write(path, spirv_tools::binary::from_binary(&output.assemble())).unwrap();
     }
-
 
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     {
@@ -354,7 +353,6 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             output.header.as_mut().unwrap().bound = simple_passes::compact_ids(output);
         };
     }
-
 
     Ok(output)
 }
