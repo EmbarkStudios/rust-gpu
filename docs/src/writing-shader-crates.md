@@ -67,6 +67,8 @@ rustdoc for documentation.
 const SHADER: &[u8] = include_bytes!(env!("<shader_name>.spv"));
 ```
 
+> **Note** If your shader name contains hyphens, the name of environment variable will be the name with hyphens changed to underscores.
+
 Keep in mind that by default, build-dependencies are built in debug mode. This
 means that the rust-gpu compiler (`rustc_codegen_spirv`) will be built in debug
 mode, and will be *incredibly* slow. You can solve this by placing this bit of
