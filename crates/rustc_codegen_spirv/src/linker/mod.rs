@@ -7,6 +7,7 @@ mod duplicates;
 mod entry_interface;
 mod import_export_link;
 mod inline;
+mod inline_globals;
 mod ipo;
 mod mem2reg;
 mod param_weakening;
@@ -214,6 +215,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
                 concrete_fallback: Operand::StorageClass(StorageClass::Function),
             },
         );
+    }
+
+    {
+        let _timer = sess.timer("link_inline_global");
+        inline_globals::inline_global_varaibles(sess, &mut output)?;
     }
 
     {
