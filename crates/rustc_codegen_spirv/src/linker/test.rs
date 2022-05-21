@@ -505,3 +505,117 @@ fn names_and_decorations() {
 
     without_header_eq(result, expect);
 }
+
+#[test]
+fn cascade_inlining_of_ptr_args() {
+    let a = assemble_spirv(
+        r#"OpCapability Linkage
+        OpDecorate %1 LinkageAttributes "foo" Export
+        %2 = OpTypeInt 32 0
+        %8 = OpConstant %2 0
+        %3 = OpTypeStruct %2 %2
+        %4 = OpTypePointer Function %2
+        %5 = OpTypePointer Function %3
+        %6 = OpTypeFunction %4 %5
+        %1 = OpFunction %4 Const %6
+        %7 = OpFunctionParameter %5
+        %10 = OpLabel
+        %9 = OpAccessChain %4 %7 %8
+        OpReturnValue %9
+        OpFunctionEnd
+        "#,
+    );
+
+    let b = assemble_spirv(
+        r#"OpCapability Linkage
+        OpDecorate %1 LinkageAttributes "bar" Export
+        %2 = OpTypeInt 32 0
+        %4 = OpTypePointer Function %2
+        %6 = OpTypeFunction %2 %4
+        %1 = OpFunction %2 None %6
+        %7 = OpFunctionParameter %4
+        %10 = OpLabel
+        %8 = OpLoad %2 %7
+        OpReturnValue %8
+        OpFunctionEnd
+        "#,
+    );
+
+    let c = assemble_spirv(
+        r#"OpCapability Linkage
+        OpDecorate %1 LinkageAttributes "baz" Export
+        %2 = OpTypeInt 32 0
+        %4 = OpTypePointer Function %2
+        %6 = OpTypeFunction %4 %4
+        %1 = OpFunction %4 None %6
+        %7 = OpFunctionParameter %4
+        %10 = OpLabel
+        OpReturnValue %7
+        OpFunctionEnd
+        "#,
+    );
+
+    // In here, inlining foo should mark its return result as a not-fit-for-function-consumption
+    // pointer and inline "baz" as well. That would lead to inlining "bar" too.
+    let d = assemble_spirv(
+        r#"OpCapability Linkage
+        OpDecorate %10 LinkageAttributes "foo" Import
+        OpDecorate %12 LinkageAttributes "bar" Import
+        OpDecorate %14 LinkageAttributes "baz" Import
+        OpName %1 "main"
+        %2 = OpTypeInt 32 0
+        %3 = OpTypeStruct %2 %2
+        %4 = OpTypePointer Function %2
+        %5 = OpTypePointer Function %3
+        %6 = OpTypeFunction %4 %5
+        %7 = OpTypeFunction %2 %4
+        %8 = OpTypeFunction %4 %4
+        %10 = OpFunction %4 Const %6
+        %11 = OpFunctionParameter %5
+        OpFunctionEnd
+        %12 = OpFunction %2 None %7
+        %13 = OpFunctionParameter %4
+        OpFunctionEnd
+        %14 = OpFunction %4 None %8
+        %15 = OpFunctionParameter %4
+        OpFunctionEnd
+        %21 = OpTypeFunction %2 %5
+        %1 = OpFunction %2 None %14
+        %22 = OpFunctionParameter %5
+        %23 = OpLabel
+        %24 = OpFunctionCall %4 %10 %22
+        %25 = OpFunctionCall %4 %14 %24
+        %26 = OpFunctionCall %2 %12 %25
+        OpReturnValue %26
+        OpFunctionEnd
+        "#,
+    );
+
+    let result = assemble_and_link(&[&a, &b, &c, &d]).unwrap();
+    let expect = r#"OpName %1 "main"
+        %2 = OpTypeInt 32 0
+        %3 = OpConstant %2 0
+        %4 = OpTypeStruct %2 %2
+        %5 = OpTypePointer Function %2
+        %6 = OpTypePointer Function %4
+        %7 = OpTypeFunction %5 %6
+        %8 = OpTypeFunction %2 %5
+        %9 = OpTypeFunction %5 %5
+        %10 = OpTypeFunction %2 %6
+        %11 = OpTypePointer Function %5
+        %12 = OpFunction %2 None %8
+        %13 = OpFunctionParameter %5
+        %14 = OpLabel
+        %15 = OpLoad %2 %13
+        OpReturnValue %15
+        OpFunctionEnd
+        %1 = OpFunction %2 None %16
+        %17 = OpFunctionParameter %6
+        %18 = OpLabel
+        %19 = OpAccessChain %5 %17 %3
+        %20 = OpLoad %2 %19
+        OpReturnValue %20
+        OpFunctionEnd"#;
+
+    without_header_eq(result, expect);
+}
