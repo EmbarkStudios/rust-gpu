@@ -23,7 +23,7 @@ pub fn destructure_composites(function: &mut Function) {
     for inst in function.all_inst_iter_mut() {
         if inst.class.opcode == Op::CompositeExtract {
             let mut composite = inst.operands[0].unwrap_id_ref();
-            let index: Vec<u32> = inst.operands[1..].iter().map(|i| i.unwrap_literal_int32()).collect();
+            let indices = &inst.operands[1..];
 
             let origin = loop {
                 if let Some(inst) = reference.get(&composite) {
