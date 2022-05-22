@@ -36,7 +36,7 @@ pub fn destructure_composites(function: &mut Function) {
                             composite = inst.operands[1].unwrap_id_ref();
                         }
                         Op::CompositeConstruct => {
-                            if index.len() ==1 {
+                            if index.len() == 1 {
                                 break inst.operands.get(index[0] as usize).map(|o| o.unwrap_id_ref());
                             }
                         }
