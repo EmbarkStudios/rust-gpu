@@ -29,7 +29,7 @@ pub fn destructure_composites(function: &mut Function) {
                 if let Some(inst) = reference.get(&composite) {
                     match inst.class.opcode {
                         Op::CompositeInsert => {
-                            let insert_index: Vec<u32> = inst.operands[2..].iter().map(|i| i.unwrap_literal_int32()).collect();
+                            let insert_indices = &inst.operands[2..];
                             if insert_index == index {
                                 break Some(inst.operands[0].unwrap_id_ref());
                             }
