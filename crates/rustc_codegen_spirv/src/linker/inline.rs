@@ -52,9 +52,10 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         let names = get_names(module);
         for f in inlined_dont_inlines {
             sess.warn(&format!(
-                    "function `{}` has `dont_inline` attribute, but need to be inlined because it has illegal argument or return types",
-                    get_name(&names, f)
-                ));
+                "`#[inline(never)]` function `{}` needs to be inlined \
+                 because it has illegal argument or return types",
+                get_name(&names, f)
+            ));
         }
     }
 
