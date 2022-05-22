@@ -14,9 +14,7 @@ pub fn destructure_composites(function: &mut Function) {
         .all_inst_iter()
         .filter_map(|inst| match inst.class.opcode {
             Op::CompositeConstruct => Some((inst.result_id.unwrap(), inst.clone())),
-            Op::CompositeInsert => {
-                Some((inst.result_id.unwrap(), inst.clone()))
-            }
+            Op::CompositeInsert => Some((inst.result_id.unwrap(), inst.clone())),
             _ => None,
         })
         .collect();
@@ -37,7 +35,10 @@ pub fn destructure_composites(function: &mut Function) {
                         }
                         Op::CompositeConstruct => {
                             if index.len() == 1 {
-                                break inst.operands.get(index[0] as usize).map(|o| o.unwrap_id_ref());
+                                break inst
+                                    .operands
+                                    .get(index[0] as usize)
+                                    .map(|o| o.unwrap_id_ref());
                             }
                         }
                         _ => unreachable!(),

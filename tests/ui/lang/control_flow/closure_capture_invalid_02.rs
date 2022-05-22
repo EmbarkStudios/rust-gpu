@@ -1,4 +1,4 @@
-// build-pass
+// build-fail
 // compile-flags: -Ctarget-feature=+RayTracingKHR,+RayQueryKHR,+ext:SPV_KHR_ray_tracing,+ext:SPV_KHR_ray_query
 
 #[cfg(not(target_arch = "spirv"))]
