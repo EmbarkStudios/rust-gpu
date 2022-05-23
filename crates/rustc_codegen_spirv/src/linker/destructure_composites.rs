@@ -28,16 +28,16 @@ pub fn destructure_composites(function: &mut Function) {
                     match inst.class.opcode {
                         Op::CompositeInsert => {
                             let insert_indices = &inst.operands[2..];
-                            if insert_index == index {
+                            if insert_indices == indices {
                                 break Some(inst.operands[0].unwrap_id_ref());
                             }
                             composite = inst.operands[1].unwrap_id_ref();
                         }
                         Op::CompositeConstruct => {
-                            if index.len() == 1 {
+                            if indices.len() == 1 {
                                 break inst
                                     .operands
-                                    .get(index[0] as usize)
+                                    .get(indices[0].unwrap_literal_int32() as usize)
                                     .map(|o| o.unwrap_id_ref());
                             }
                         }
