@@ -409,7 +409,7 @@ pub unsafe fn atomic_xor<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicFMinEXT")]
 #[inline]
-pub unsafe fn atomic_f_min_ext<F: Float, const SCOPE: u32, const SEMANTICS: u32>(
+pub unsafe fn atomic_f_min<F: Float, const SCOPE: u32, const SEMANTICS: u32>(
     ptr: &mut F,
     value: F,
 ) -> F {
@@ -436,7 +436,7 @@ pub unsafe fn atomic_f_min_ext<F: Float, const SCOPE: u32, const SEMANTICS: u32>
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicFMaxEXT")]
 #[inline]
-pub unsafe fn atomic_f_max_ext<F: Float, const SCOPE: u32, const SEMANTICS: u32>(
+pub unsafe fn atomic_f_max<F: Float, const SCOPE: u32, const SEMANTICS: u32>(
     ptr: &mut F,
     value: F,
 ) -> F {
@@ -463,7 +463,7 @@ pub unsafe fn atomic_f_max_ext<F: Float, const SCOPE: u32, const SEMANTICS: u32>
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicFAddEXT")]
 #[inline]
-pub unsafe fn atomic_f_add_ext<F: Float, const SCOPE: u32, const SEMANTICS: u32>(
+pub unsafe fn atomic_f_add<F: Float, const SCOPE: u32, const SEMANTICS: u32>(
     ptr: &mut F,
     value: F,
 ) -> F {
