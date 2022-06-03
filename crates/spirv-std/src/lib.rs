@@ -102,6 +102,7 @@ pub mod float;
 pub mod image;
 pub mod integer;
 pub mod memory;
+pub mod number;
 pub mod ray_tracing;
 mod runtime_array;
 mod sampler;
