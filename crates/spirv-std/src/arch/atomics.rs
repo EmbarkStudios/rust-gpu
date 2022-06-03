@@ -4,15 +4,17 @@ use core::arch::asm;
 use crate::{
     float::Float,
     integer::{Integer, SignedInteger, UnsignedInteger},
-    scalar::Scalar,
+    number::Number,
 };
 
-/// Atomically load a scalar and return the value.
+/// Atomically load through `ptr` using the given `SEMANTICS`. All subparts of
+/// the value that is loaded are read atomically with respect to all other
+/// atomic accesses to it within `SCOPE`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicLoad")]
 #[inline]
-pub unsafe fn atomic_load<T: Scalar, const SCOPE: u32, const SEMANTICS: u32>(ptr: &T) -> T {
-    let mut result = T::default();
+pub unsafe fn atomic_load<N: Number, const SCOPE: u32, const SEMANTICS: u32>(ptr: &N) -> N {
+    let mut result = N::default();
 
     asm! {
         "%u32 = OpTypeInt 32 0",
@@ -29,13 +31,15 @@ pub unsafe fn atomic_load<T: Scalar, const SCOPE: u32, const SEMANTICS: u32>(ptr
     result
 }
 
-/// Atomically store a scalar.
+/// Atomically store through `ptr` using the given `SEMANTICS`. All subparts of
+/// `value` are written atomically with respect to all other atomic accesses to
+/// it within `SCOPE`.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicStore")]
 #[inline]
-pub unsafe fn atomic_store<T: Scalar, const SCOPE: u32, const SEMANTICS: u32>(
-    ptr: &mut T,
-    value: T,
+pub unsafe fn atomic_store<N: Number, const SCOPE: u32, const SEMANTICS: u32>(
+    ptr: &mut N,
+    value: N,
 ) {
     asm! {
         "%u32 = OpTypeInt 32 0",
@@ -50,15 +54,22 @@ pub unsafe fn atomic_store<T: Scalar, const SCOPE: u32, const SEMANTICS: u32>(
     }
 }
 
-/// Atomically exchange a scalar and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1. Load through `ptr` to get the original value,
+/// 2. Get a new value from copying `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicExchange")]
 #[inline]
-pub unsafe fn atomic_exchange<T: Scalar, const SCOPE: u32, const SEMANTICS: u32>(
-    ptr: &mut T,
-    value: T,
-) -> T {
-    let mut old = T::default();
+pub unsafe fn atomic_exchange<N: Number, const SCOPE: u32, const SEMANTICS: u32>(
+    ptr: &mut N,
+    value: N,
+) -> N {
+    let mut old = N::default();
 
     asm! {
         "%u32 = OpTypeInt 32 0",
@@ -77,7 +88,16 @@ pub unsafe fn atomic_exchange<T: Scalar, const SCOPE: u32, const SEMANTICS: u32>
     old
 }
 
-/// Atomically compare and exchange an integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1. Load through `ptr` to get the original value
+/// 2. Get a new value from `value` only if the original value equals
+///    `comparator`, and
+/// 3. Store the new value back through `ptr`, only if the original value
+///    equaled `comparator`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicCompareExchange")]
 #[inline]
@@ -114,7 +134,14 @@ pub unsafe fn atomic_compare_exchange<
     old
 }
 
-/// Atomically increment an integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value through integer addition of 1 to original value, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicIIncrement")]
 #[inline]
@@ -138,7 +165,14 @@ pub unsafe fn atomic_i_increment<I: Integer, const SCOPE: u32, const SEMANTICS: 
     old
 }
 
-/// Atomically decrement an integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1) load through `ptr` to get an original value,
+/// 2) get a new value through integer subtraction of 1 from original value, and
+/// 3) store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicIDecrement")]
 #[inline]
@@ -162,7 +196,14 @@ pub unsafe fn atomic_i_decrement<I: Integer, const SCOPE: u32, const SEMANTICS: 
     old
 }
 
-/// Atomically add an integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1) load through `ptr` to get an original value,
+/// 2) get a new value by integer addition of original value and `value`, and
+/// 3) store the new value back through `ptr`.
+///
+/// The result is the Original Value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicIAdd")]
 #[inline]
@@ -189,7 +230,14 @@ pub unsafe fn atomic_i_add<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
     old
 }
 
-/// Atomically sub an integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1) load through `ptr` to get an original value,
+/// 2) get a new value by integer subtraction of original value and `value`, and
+/// 3) store the new value back through `ptr`.
+///
+/// The result is the Original Value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicISub")]
 #[inline]
@@ -216,7 +264,15 @@ pub unsafe fn atomic_i_sub<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
     old
 }
 
-/// Atomically min a signed integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the smallest signed integer of original value
+///    and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicSMin")]
 #[inline]
@@ -243,7 +299,15 @@ pub unsafe fn atomic_s_min<S: SignedInteger, const SCOPE: u32, const SEMANTICS: 
     old
 }
 
-/// Atomically min an unsigned integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the smallest unsigned integer of original
+///    value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicUMin")]
 #[inline]
@@ -270,7 +334,15 @@ pub unsafe fn atomic_u_min<U: UnsignedInteger, const SCOPE: u32, const SEMANTICS
     old
 }
 
-/// Atomically max a signed integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the largest signed integer of original value
+///    and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicSMax")]
 #[inline]
@@ -297,7 +369,15 @@ pub unsafe fn atomic_s_max<S: SignedInteger, const SCOPE: u32, const SEMANTICS: 
     old
 }
 
-/// Atomically max an unsigned integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the largest unsigned integer of original
+///    value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicUMax")]
 #[inline]
@@ -324,7 +404,14 @@ pub unsafe fn atomic_u_max<U: UnsignedInteger, const SCOPE: u32, const SEMANTICS
     old
 }
 
-/// Atomically and an integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by the bitwise AND of the original value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicAnd")]
 #[inline]
@@ -351,7 +438,14 @@ pub unsafe fn atomic_and<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
     old
 }
 
-/// Atomically or an integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by the bitwise OR of the original value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicOr")]
 #[inline]
@@ -378,7 +472,14 @@ pub unsafe fn atomic_or<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
     old
 }
 
-/// Atomically xor an integer and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by the bitwise XOR of the original value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicXor")]
 #[inline]
@@ -405,7 +506,15 @@ pub unsafe fn atomic_xor<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
     old
 }
 
-/// Atomically min a float and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the smallest signed integer of original value
+///    and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicFMinEXT")]
 #[inline]
@@ -432,7 +541,15 @@ pub unsafe fn atomic_f_min<F: Float, const SCOPE: u32, const SEMANTICS: u32>(
     old
 }
 
-/// Atomically max a float and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the largest signed integer of original value
+///    and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicFMaxEXT")]
 #[inline]
@@ -459,7 +576,14 @@ pub unsafe fn atomic_f_max<F: Float, const SCOPE: u32, const SEMANTICS: u32>(
     old
 }
 
-/// Atomically add a float and return the old value.
+/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1) load through `ptr` to get an original value,
+/// 2) get a new value by integer addition of original value and `value`, and
+/// 3) store the new value back through `ptr`.
+///
+/// The result is the Original Value.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicFAddEXT")]
 #[inline]
