@@ -1,6 +1,6 @@
 //! Traits and helper functions related to numbers.
 
-/// Abstract trait representing a SPIR-V integer type.
+/// Abstract trait representing a SPIR-V integer or floating-point type.
 pub trait Number: crate::scalar::Scalar {}
 
 impl Number for u8 {}
