@@ -545,7 +545,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 Decoration::Location,
                 std::iter::once(Operand::LiteralInt32(*location)),
             );
-            *location += self.location_slots_per_type(value_spirv_type);
+            *location += self.location_count_of_type(value_spirv_type);
         }
 
         // Emit the `OpVariable` with its *Result* ID set to `var`.
@@ -565,7 +565,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
     }
 
-    fn location_slots_per_type(&self, ty: Word) -> u32 {
+    fn location_count_of_type(&self, ty: Word) -> u32 {
         match self.lookup_type(ty) {
             // Arrays take up multiple locations.
             SpirvType::Array { count, element } => {
