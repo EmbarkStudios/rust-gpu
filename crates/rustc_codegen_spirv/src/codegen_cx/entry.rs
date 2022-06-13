@@ -33,14 +33,13 @@ impl<'tcx> CodegenCx<'tcx> {
     ) {
         let span = self.tcx.def_span(instance.def_id());
         let hir_params = {
-            let fn_local_def_id = match instance.def_id().as_local() {
-                Some(id) => id,
-                None => {
-                    self.tcx
-                        .sess
-                        .span_err(span, &format!("Cannot declare {} as an entry point", name));
-                    return;
-                }
+            let fn_local_def_id = if let Some(id) = instance.def_id().as_local() {
+                id
+            } else {
+                self.tcx
+                    .sess
+                    .span_err(span, &format!("Cannot declare {} as an entry point", name));
+                return;
             };
             let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(fn_local_def_id);
             let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
@@ -66,7 +65,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 }
                 // FIXME(eddyb) support these (by just ignoring them) - if there
                 // is any validation concern, it should be done on the types.
-                PassMode::Ignore => self.tcx.sess.span_err(
+                PassMode::Ignore => self.tcx.sess.span_fatal(
                     hir_param.ty_span,
                     &format!(
                         "entry point parameter type not yet supported \
@@ -239,26 +238,27 @@ impl<'tcx> CodegenCx<'tcx> {
                     storage_class_attr.span,
                     "redundant storage class specifier, storage class is inferred from type",
                 ),
-                Some(inferred) => self
-                    .tcx
-                    .sess
-                    .struct_span_err(hir_param.span, "storage class mismatch")
-                    .span_label(
-                        storage_class_attr.span,
-                        format!("{:?} specified in attribute", storage_class),
-                    )
-                    .span_label(
-                        hir_param.ty_span,
-                        format!("{:?} inferred from type", inferred),
-                    )
-                    .span_help(
-                        storage_class_attr.span,
-                        &format!(
-                            "remove storage class attribute to use {:?} as storage class",
-                            inferred
-                        ),
-                    )
-                    .emit(),
+                Some(inferred) => {
+                    self.tcx
+                        .sess
+                        .struct_span_err(hir_param.span, "storage class mismatch")
+                        .span_label(
+                            storage_class_attr.span,
+                            format!("{:?} specified in attribute", storage_class),
+                        )
+                        .span_label(
+                            hir_param.ty_span,
+                            format!("{:?} inferred from type", inferred),
+                        )
+                        .span_help(
+                            storage_class_attr.span,
+                            &format!(
+                                "remove storage class attribute to use {:?} as storage class",
+                                inferred
+                            ),
+                        )
+                        .emit();
+                }
                 None => (),
             }
 
@@ -327,10 +327,12 @@ impl<'tcx> CodegenCx<'tcx> {
                 let value_len = if is_unsized_with_len {
                     match self.lookup_type(value_spirv_type) {
                         SpirvType::RuntimeArray { .. } => {}
-                        _ => self.tcx.sess.span_err(
-                            hir_param.ty_span,
-                            "only plain slices are supported as unsized types",
-                        ),
+                        _ => {
+                            self.tcx.sess.span_err(
+                                hir_param.ty_span,
+                                "only plain slices are supported as unsized types",
+                            );
+                        }
                     }
 
                     // FIXME(eddyb) shouldn't this be `usize`?
@@ -517,6 +519,14 @@ impl<'tcx> CodegenCx<'tcx> {
             );
         }
 
+        self.check_for_bad_types(
+            hir_param.ty_span,
+            var_ptr_spirv_type,
+            storage_class,
+            attrs.builtin.is_some(),
+            attrs.flat.is_some(),
+        );
+
         // Assign locations from left to right, incrementing each storage class
         // individually.
         // TODO: Is this right for UniformConstant? Do they share locations with
@@ -587,6 +597,77 @@ impl<'tcx> CodegenCx<'tcx> {
             }
             SpirvType::Matrix { element, count } => count * self.location_slots_per_type(element),
             _ => 1,
+        }
+    }
+
+    // Booleans are only allowed in some storage classes. Error if they're in others.
+    // Integers and f64s must be decorated with `#[spirv(flat)]`.
+    fn check_for_bad_types(
+        &self,
+        span: Span,
+        ty: Word,
+        storage_class: StorageClass,
+        is_builtin: bool,
+        is_flat: bool,
+    ) {
+        // private and function are allowed here, but they can't happen.
+        // SPIR-V technically allows all input/output variables to be booleans, not just builtins,
+        // but has a note:
+        // > Khronos Issue #363: OpTypeBool can be used in the Input and Output storage classes,
+        //   but the client APIs still only allow built-in Boolean variables (e.g. FrontFacing),
+        //   not user variables.
+        // spirv-val disallows non-builtin inputs/outputs, so we do too, I guess.
+        if matches!(
+            storage_class,
+            StorageClass::Workgroup | StorageClass::CrossWorkgroup
+        ) || is_builtin && matches!(storage_class, StorageClass::Input | StorageClass::Output)
+        {
+            return;
+        }
+        let mut has_bool = false;
+        let mut must_be_flat = false;
+        recurse(self, ty, &mut has_bool, &mut must_be_flat);
+        if has_bool {
+            self.tcx
+                .sess
+                .span_err(span, "entrypoint parameter cannot contain a boolean");
+        }
+        if matches!(storage_class, StorageClass::Input | StorageClass::Output)
+            && must_be_flat
+            && !is_flat
+        {
+            self.tcx
+                .sess
+                .span_err(span, "parameter must be decorated with #[spirv(flat)]");
+        }
+        fn recurse(cx: &CodegenCx<'_>, ty: Word, has_bool: &mut bool, must_be_flat: &mut bool) {
+            match cx.lookup_type(ty) {
+                SpirvType::Bool => *has_bool = true,
+                SpirvType::Integer(_, _) | SpirvType::Float(64) => *must_be_flat = true,
+                SpirvType::Adt { field_types, .. } => {
+                    for f in field_types {
+                        recurse(cx, f, has_bool, must_be_flat);
+                    }
+                }
+                SpirvType::Vector { element, .. }
+                | SpirvType::Matrix { element, .. }
+                | SpirvType::Array { element, .. }
+                | SpirvType::RuntimeArray { element }
+                | SpirvType::Pointer { pointee: element }
+                | SpirvType::InterfaceBlock {
+                    inner_type: element,
+                } => recurse(cx, element, has_bool, must_be_flat),
+                SpirvType::Function {
+                    return_type,
+                    arguments,
+                } => {
+                    recurse(cx, return_type, has_bool, must_be_flat);
+                    for a in arguments {
+                        recurse(cx, a, has_bool, must_be_flat);
+                    }
+                }
+                _ => (),
+            }
         }
     }
 }

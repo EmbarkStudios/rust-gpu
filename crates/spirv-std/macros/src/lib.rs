@@ -68,8 +68,7 @@
 )]
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
-// `or_patterns` is not stable yet.
-#![allow(clippy::unnested_or_patterns)]
+// #![allow()]
 
 mod image;
 
@@ -601,7 +600,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     let op_string = format!("%string = OpString {:?}", format_string);
 
     let output = quote::quote! {
-        asm!(
+        ::core::arch::asm!(
             "%void = OpTypeVoid",
             #op_string,
             "%debug_printf = OpExtInstImport \"NonSemantic.DebugPrintf\"",

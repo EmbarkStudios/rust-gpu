@@ -101,9 +101,7 @@ impl SpirvType {
             Self::Void => cx.emit_global().type_void_id(id),
             Self::Bool => cx.emit_global().type_bool_id(id),
             Self::Integer(width, signedness) => {
-                let result =
-                    cx.emit_global()
-                        .type_int_id(id, width, if signedness { 1 } else { 0 });
+                let result = cx.emit_global().type_int_id(id, width, signedness as u32);
                 match width {
                     8 if !cx.builder.has_capability(Capability::Int8) => cx
                         .zombie_even_in_user_code(result, def_span, "u8 without OpCapability Int8"),

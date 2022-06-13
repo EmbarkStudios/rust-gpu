@@ -15,8 +15,13 @@ fn scalar_load(r: &'static u32) -> u32 {
 const ROT90: Mat2 = const_mat2![[0.0, 1.0], [-1.0, 0.0]];
 
 #[spirv(fragment)]
-pub fn main(scalar_out: &mut u32, vec_in: Vec2, bool_out: &mut bool, vec_out: &mut Vec2) {
+pub fn main(
+    #[spirv(flat)] scalar_out: &mut u32,
+    vec_in: Vec2,
+    #[spirv(flat)] bool_out: &mut u32,
+    vec_out: &mut Vec2,
+) {
     *scalar_out = scalar_load(&123);
-    *bool_out = vec_in == Vec2::ZERO;
+    *bool_out = (vec_in == Vec2::ZERO) as u32;
     *vec_out = ROT90.transpose() * vec_in;
 }

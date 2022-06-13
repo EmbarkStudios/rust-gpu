@@ -10,6 +10,7 @@ use super::{get_name, get_names};
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
 use std::mem::take;
 
@@ -17,9 +18,8 @@ type FunctionMap = FxHashMap<Word, Function>;
 
 pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     // This algorithm gets real sad if there's recursion - but, good news, SPIR-V bans recursion
-    if module_has_recursion(sess, module) {
-        return Err(rustc_errors::ErrorReported);
-    }
+    deny_recursion_in_module(sess, module)?;
+
     let functions = module
         .functions
         .iter()
@@ -31,13 +31,16 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         .types_global_values
         .iter()
         .find(|inst| inst.class.opcode == Op::TypeVoid)
-        .map(|inst| inst.result_id.unwrap())
-        .unwrap_or(0);
+        .map_or(0, |inst| inst.result_id.unwrap());
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
     let mut dropped_ids = FxHashSet::default();
+    let mut inlined_dont_inlines = Vec::new();
     module.functions.retain(|f| {
         if should_inline(&disallowed_argument_types, &disallowed_return_types, f) {
+            if has_dont_inline(f) {
+                inlined_dont_inlines.push(f.def_id().unwrap());
+            }
             // TODO: We should insert all defined IDs in this function.
             dropped_ids.insert(f.def_id().unwrap());
             false
@@ -45,6 +48,17 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
             true
         }
     });
+    if !inlined_dont_inlines.is_empty() {
+        let names = get_names(module);
+        for f in inlined_dont_inlines {
+            sess.warn(&format!(
+                "`#[inline(never)]` function `{}` needs to be inlined \
+                 because it has illegal argument or return types",
+                get_name(&names, f)
+            ));
+        }
+    }
+
     // Drop OpName etc. for inlined functions
     module.debug_names.retain(|inst| {
         !inst.operands.iter().any(|op| {
@@ -68,7 +82,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
 }
 
 // https://stackoverflow.com/a/53995651
-fn module_has_recursion(sess: &Session, module: &Module) -> bool {
+fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()> {
     let func_to_index: FxHashMap<Word, usize> = module
         .functions
         .iter()
@@ -77,7 +91,7 @@ fn module_has_recursion(sess: &Session, module: &Module) -> bool {
         .collect();
     let mut discovered = vec![false; module.functions.len()];
     let mut finished = vec![false; module.functions.len()];
-    let mut has_recursion = false;
+    let mut has_recursion = None;
     for index in 0..module.functions.len() {
         if !discovered[index] && !finished[index] {
             visit(
@@ -98,7 +112,7 @@ fn module_has_recursion(sess: &Session, module: &Module) -> bool {
         current: usize,
         discovered: &mut Vec<bool>,
         finished: &mut Vec<bool>,
-        has_recursion: &mut bool,
+        has_recursion: &mut Option<ErrorGuaranteed>,
         func_to_index: &FxHashMap<Word, usize>,
     ) {
         discovered[current] = true;
@@ -108,11 +122,10 @@ fn module_has_recursion(sess: &Session, module: &Module) -> bool {
                 let names = get_names(module);
                 let current_name = get_name(&names, module.functions[current].def_id().unwrap());
                 let next_name = get_name(&names, module.functions[next].def_id().unwrap());
-                sess.err(&format!(
+                *has_recursion = Some(sess.err(&format!(
                     "module has recursion, which is not allowed: `{}` calls `{}`",
                     current_name, next_name
-                ));
-                *has_recursion = true;
+                )));
                 break;
             }
 
@@ -146,7 +159,10 @@ fn module_has_recursion(sess: &Session, module: &Module) -> bool {
             })
     }
 
-    has_recursion
+    match has_recursion {
+        Some(err) => Err(err),
+        None => Ok(()),
+    }
 }
 
 fn compute_disallowed_argument_and_return_types(
@@ -201,6 +217,12 @@ fn compute_disallowed_argument_and_return_types(
         }
     }
     (disallowed_argument_types, disallowed_return_types)
+}
+
+fn has_dont_inline(function: &Function) -> bool {
+    let def = function.def.as_ref().unwrap();
+    let control = def.operands[0].unwrap_function_control();
+    control.contains(FunctionControl::DONT_INLINE)
 }
 
 fn should_inline(

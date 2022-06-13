@@ -2,6 +2,7 @@
 // compile-flags: -Ctarget-feature=+RuntimeDescriptorArray,+ext:SPV_EXT_descriptor_indexing
 // compile-flags: -C llvm-args=--disassemble-fn=complex_image_sample_inst::sample_proj_lod
 
+use core::arch::asm;
 use spirv_std as _;
 
 fn sample_proj_lod(

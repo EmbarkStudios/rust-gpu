@@ -175,3 +175,16 @@ pub fn main_vs(#[spirv(vertex_index)] vert_idx: i32, #[spirv(position)] builtin_
 
     *builtin_pos = pos.extend(0.0).extend(1.0);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tonemap() {
+        assert_eq!(
+            tonemap(vec3(1_f32, 1_f32, 1_f32)),
+            vec3(0.001261625, 0.001261625, 0.001261625)
+        );
+    }
+}

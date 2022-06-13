@@ -1,3 +1,6 @@
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
+
 /// Demote fragment shader invocation to a helper invocation. Equivalvent to
 /// `discard()` in HLSL. Any stores to memory after this instruction are
 /// suppressed and the fragment does not write outputs to the framebuffer.
@@ -30,19 +33,16 @@ pub unsafe fn demote_to_helper_invocation() {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpIsHelperInvocationEXT")]
 pub fn is_helper_invocation() -> bool {
-    let result: u32;
+    let mut result = false;
 
     unsafe {
         asm! {
             "%bool = OpTypeBool",
-            "%u32 = OpTypeInt 32 0",
-            "%zero = OpConstant %u32 0",
-            "%one = OpConstant %u32 1",
             "%result = OpIsHelperInvocationEXT %bool",
-            "{} = OpSelect %u32 %result %one %zero",
-            out(reg) result
+            "OpStore {result} %result",
+            result = in(reg) &mut result,
         };
     }
 
-    result != 0
+    result
 }

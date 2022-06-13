@@ -33,9 +33,9 @@ fn mouse_button_index(button: MouseButton) -> usize {
 }
 
 async fn run(
-    event_loop: EventLoop<wgpu::ShaderModuleDescriptorSpirV<'static>>,
+    event_loop: EventLoop<wgpu::ShaderModuleDescriptor<'static>>,
     window: Window,
-    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
+    shader_binary: wgpu::ShaderModuleDescriptor<'static>,
 ) {
     let instance = wgpu::Instance::new(wgpu::Backends::VULKAN | wgpu::Backends::METAL);
 
@@ -57,9 +57,9 @@ async fn run(
         .await
         .expect("Failed to find an appropriate adapter");
 
-    let features = wgpu::Features::PUSH_CONSTANTS | wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
+    let features = wgpu::Features::PUSH_CONSTANTS;
     let limits = wgpu::Limits {
-        max_push_constant_size: 256,
+        max_push_constant_size: 128,
         ..Default::default()
     };
 
@@ -82,7 +82,7 @@ async fn run(
         label: None,
         bind_group_layouts: &[],
         push_constant_ranges: &[wgpu::PushConstantRange {
-            stages: wgpu::ShaderStages::all(),
+            stages: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
             range: 0..std::mem::size_of::<ShaderConstants>() as u32,
         }],
     });
@@ -214,7 +214,7 @@ async fn run(
 
                         rpass.set_pipeline(render_pipeline);
                         rpass.set_push_constants(
-                            wgpu::ShaderStages::all(),
+                            wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                             0,
                             bytemuck::bytes_of(&push_constants),
                         );
@@ -284,9 +284,9 @@ fn create_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &wgpu::PipelineLayout,
     surface_format: wgpu::TextureFormat,
-    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'_>,
+    shader_binary: wgpu::ShaderModuleDescriptor<'_>,
 ) -> wgpu::RenderPipeline {
-    let module = unsafe { device.create_shader_module_spirv(&shader_binary) };
+    let module = device.create_shader_module(&shader_binary);
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(pipeline_layout),
@@ -300,7 +300,7 @@ fn create_pipeline(
             strip_index_format: None,
             front_face: wgpu::FrontFace::Ccw,
             cull_mode: None,
-            clamp_depth: false,
+            unclipped_depth: false,
             polygon_mode: wgpu::PolygonMode::Fill,
             conservative: false,
         },
@@ -319,9 +319,11 @@ fn create_pipeline(
                 write_mask: wgpu::ColorWrites::ALL,
             }],
         }),
+        multiview: None,
     })
 }
 
+#[allow(clippy::match_wild_err_arm)]
 pub fn start(options: &Options) {
     // Build the shader before we pop open a window, since it might take a while.
     let event_loop = EventLoop::with_user_event();
@@ -331,7 +333,7 @@ pub fn start(options: &Options) {
         Some(Box::new(move |res| match proxy.send_event(res) {
             Ok(it) => it,
             // ShaderModuleDescriptor is not `Debug`, so can't use unwrap/expect
-            Err(_) => panic!("Event loop dead"),
+            Err(_err) => panic!("Event loop dead"),
         })),
     );
 

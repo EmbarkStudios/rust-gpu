@@ -94,7 +94,7 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn immediate_backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
-        layout.spirv_type_immediate(DUMMY_SP, self)
+        layout.spirv_type(DUMMY_SP, self)
     }
 
     fn is_backend_immediate(&self, layout: TyAndLayout<'tcx>) -> bool {
@@ -133,9 +133,9 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
         &self,
         layout: TyAndLayout<'tcx>,
         index: usize,
-        immediate: bool,
+        _immediate: bool,
     ) -> Self::Type {
-        crate::abi::scalar_pair_element_backend_type(self, DUMMY_SP, layout, index, immediate)
+        crate::abi::scalar_pair_element_backend_type(self, DUMMY_SP, layout, index)
     }
 }
 

@@ -7,6 +7,6 @@
 use spirv_std as _;
 
 #[spirv(fragment)]
-pub fn main(out: &mut u32) {
+pub fn main(#[spirv(flat)] out: &mut u32) {
     *out = None.unwrap_or(15);
 }

@@ -68,7 +68,7 @@
 )]
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
-#![allow()]
+// #![allow()]
 
 use structopt::StructOpt;
 use strum::{Display, EnumString};
@@ -86,11 +86,11 @@ pub enum RustGPUShader {
 
 fn maybe_watch(
     shader: RustGPUShader,
-    on_watch: Option<Box<dyn FnMut(wgpu::ShaderModuleDescriptorSpirV<'static>) + Send + 'static>>,
-) -> wgpu::ShaderModuleDescriptorSpirV<'static> {
+    on_watch: Option<Box<dyn FnMut(wgpu::ShaderModuleDescriptor<'static>) + Send + 'static>>,
+) -> wgpu::ShaderModuleDescriptor<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
-        use spirv_builder::{Capability, CompileResult, MetadataPrintout, SpirvBuilder};
+        use spirv_builder::{CompileResult, MetadataPrintout, SpirvBuilder};
         use std::borrow::Cow;
         use std::path::PathBuf;
         // Hack: spirv_builder builds into a custom directory if running under cargo, to not
@@ -101,22 +101,19 @@ fn maybe_watch(
         // under cargo by setting these environment variables.
         std::env::set_var("OUT_DIR", env!("OUT_DIR"));
         std::env::set_var("PROFILE", env!("PROFILE"));
-        let (crate_name, capabilities): (_, &[Capability]) = match shader {
-            RustGPUShader::Simplest => ("simplest-shader", &[]),
-            RustGPUShader::Sky => ("sky-shader", &[]),
-            RustGPUShader::Compute => ("compute-shader", &[Capability::Int8]),
-            RustGPUShader::Mouse => ("mouse-shader", &[]),
+        let crate_name = match shader {
+            RustGPUShader::Simplest => "simplest-shader",
+            RustGPUShader::Sky => "sky-shader",
+            RustGPUShader::Compute => "compute-shader",
+            RustGPUShader::Mouse => "mouse-shader",
         };
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
         let crate_path = [manifest_dir, "..", "..", "shaders", crate_name]
             .iter()
             .copied()
             .collect::<PathBuf>();
-        let mut builder = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.1")
+        let builder = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.1")
             .print_metadata(MetadataPrintout::None);
-        for &cap in capabilities {
-            builder = builder.capability(cap);
-        }
         let initial_result = if let Some(mut f) = on_watch {
             builder
                 .watch(move |compile_result| f(handle_compile_result(compile_result)))
@@ -126,13 +123,13 @@ fn maybe_watch(
         };
         fn handle_compile_result(
             compile_result: CompileResult,
-        ) -> wgpu::ShaderModuleDescriptorSpirV<'static> {
+        ) -> wgpu::ShaderModuleDescriptor<'static> {
             let module_path = compile_result.module.unwrap_single();
             let data = std::fs::read(module_path).unwrap();
             let spirv = Cow::Owned(wgpu::util::make_spirv_raw(&data).into_owned());
-            wgpu::ShaderModuleDescriptorSpirV {
+            wgpu::ShaderModuleDescriptor {
                 label: None,
-                source: spirv,
+                source: wgpu::ShaderSource::SpirV(spirv),
             }
         }
         handle_compile_result(initial_result)
@@ -140,10 +137,10 @@ fn maybe_watch(
     #[cfg(any(target_os = "android", target_arch = "wasm32"))]
     {
         match shader {
-            RustGPUShader::Simplest => wgpu::include_spirv_raw!(env!("simplest_shader.spv")),
-            RustGPUShader::Sky => wgpu::include_spirv_raw!(env!("sky_shader.spv")),
-            RustGPUShader::Compute => wgpu::include_spirv_raw!(env!("compute_shader.spv")),
-            RustGPUShader::Mouse => wgpu::include_spirv_raw!(env!("mouse_shader.spv")),
+            RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),
+            RustGPUShader::Sky => wgpu::include_spirv!(env!("sky_shader.spv")),
+            RustGPUShader::Compute => wgpu::include_spirv!(env!("compute_shader.spv")),
+            RustGPUShader::Mouse => wgpu::include_spirv!(env!("mouse_shader.spv")),
         }
     }
 }

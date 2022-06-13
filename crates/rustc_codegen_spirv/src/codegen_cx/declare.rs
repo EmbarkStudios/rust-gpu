@@ -91,7 +91,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
         // HACK(eddyb) this is a bit roundabout, but the easiest way to get a
         // fully absolute path that contains at least as much information as
-        // `instance.to_string()` (at least with `-Z symbol-mangling-version=v0`).
+        // `instance.to_string()` (at least with `-C symbol-mangling-version=v0`).
         // While we could use the mangled symbol instead, like we do for linkage,
         // `OpName` is more of a debugging aid, so not having to separately
         // demangle the SPIR-V can help. However, if some tools assume `OpName`
@@ -113,18 +113,23 @@ impl<'tcx> CodegenCx<'tcx> {
             let entry_name = entry
                 .name
                 .as_ref()
-                .map(ToString::to_string)
-                .unwrap_or_else(|| instance.to_string());
+                .map_or_else(|| instance.to_string(), ToString::to_string);
             self.entry_stub(&instance, fn_abi, declared, entry_name, entry);
         }
         if attrs.unroll_loops.is_some() {
             self.unroll_loops_decorations.borrow_mut().insert(fn_id);
         }
         if attrs.buffer_load_intrinsic.is_some() {
-            self.buffer_load_intrinsic_fn_id.borrow_mut().insert(fn_id);
+            let mode = fn_abi.ret.mode;
+            self.buffer_load_intrinsic_fn_id
+                .borrow_mut()
+                .insert(fn_id, mode);
         }
         if attrs.buffer_store_intrinsic.is_some() {
-            self.buffer_store_intrinsic_fn_id.borrow_mut().insert(fn_id);
+            let mode = fn_abi.args.last().unwrap().mode;
+            self.buffer_store_intrinsic_fn_id
+                .borrow_mut()
+                .insert(fn_id, mode);
         }
 
         let instance_def_id = instance.def_id();
@@ -137,10 +142,12 @@ impl<'tcx> CodegenCx<'tcx> {
                     Some(&intrinsic) => {
                         self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
                     }
-                    None => self.tcx.sess.err(&format!(
-                        "missing libm intrinsic {}, which is {}",
-                        symbol_name, instance
-                    )),
+                    None => {
+                        self.tcx.sess.err(&format!(
+                            "missing libm intrinsic {}, which is {}",
+                            symbol_name, instance
+                        ));
+                    }
                 }
             }
         }
@@ -264,7 +271,6 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
 
     fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
         let g = self.get_static(def_id);
-        let span = self.tcx.def_span(def_id);
 
         let alloc = match self.tcx.eval_static_initializer(def_id) {
             Ok(alloc) => alloc,
@@ -278,16 +284,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
                 other.debug(g.ty, self)
             )),
         };
-        let mut v = self.create_const_alloc(alloc, value_ty);
-
-        if self.lookup_type(v.ty) == SpirvType::Bool {
-            let val_int = match self.builder.lookup_const(v).unwrap() {
-                SpirvConst::Bool(val) => val as u8,
-                _ => bug!(),
-            };
-            v = self.constant_u8(span, val_int);
-        }
-
+        let v = self.create_const_alloc(alloc, value_ty);
         assert_ty_eq!(self, value_ty, v.ty);
         self.builder
             .set_global_initializer(g.def_cx(self), v.def_cx(self));

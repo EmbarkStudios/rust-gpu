@@ -1,3 +1,5 @@
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
 use core::marker::PhantomData;
 
 /// Dynamically-sized arrays in Rust carry around their length as the second half of a tuple.
@@ -22,7 +24,6 @@ impl<T> RuntimeArray<T> {
     /// Bounds checking is not performed, and indexing outside the bounds of the array can happen,
     /// and lead to UB.
     #[spirv_std_macros::gpu_only]
-    #[allow(clippy::empty_loop)]
     pub unsafe fn index(&self, index: usize) -> &T {
         asm! {
             "%result = OpAccessChain _ {arr} {index}",
@@ -41,7 +42,6 @@ impl<T> RuntimeArray<T> {
     /// Bounds checking is not performed, and indexing outside the bounds of the array can happen,
     /// and lead to UB.
     #[spirv_std_macros::gpu_only]
-    #[allow(clippy::empty_loop)]
     pub unsafe fn index_mut(&mut self, index: usize) -> &mut T {
         asm! {
             "%result = OpAccessChain _ {arr} {index}",

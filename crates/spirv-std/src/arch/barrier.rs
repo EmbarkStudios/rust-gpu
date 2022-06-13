@@ -1,3 +1,6 @@
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
+
 /// Wait for other invocations of this module to reach the current point
 /// of execution.
 ///

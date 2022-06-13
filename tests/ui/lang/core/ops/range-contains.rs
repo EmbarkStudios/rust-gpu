@@ -11,6 +11,6 @@ fn has_two_decimal_digits(x: u32) -> bool {
 }
 
 #[spirv(fragment)]
-pub fn main(i: u32, o: &mut bool) {
-    *o = has_two_decimal_digits(i);
+pub fn main(#[spirv(flat)] i: u32, #[spirv(flat)] o: &mut u32) {
+    *o = has_two_decimal_digits(i) as u32;
 }

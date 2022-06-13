@@ -6,10 +6,10 @@ use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
-use rustc_errors::ErrorReported;
+use rustc_errors::ErrorGuaranteed;
 use rustc_index::vec::Idx;
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
-use rustc_middle::ty::query::Providers;
+use rustc_middle::ty::query::{ExternProviders, Providers};
 use rustc_middle::ty::subst::SubstsRef;
 use rustc_middle::ty::{
     self, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
@@ -20,7 +20,9 @@ use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_span::DUMMY_SP;
 use rustc_target::abi::call::{ArgAbi, ArgAttributes, FnAbi, PassMode};
-use rustc_target::abi::{Abi, Align, FieldsShape, Primitive, Scalar, Size, VariantIdx, Variants};
+use rustc_target::abi::{
+    Abi, Align, FieldsShape, LayoutS, Primitive, Scalar, Size, TagEncoding, VariantIdx, Variants,
+};
 use rustc_target::spec::abi::Abi as SpecAbi;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
@@ -89,9 +91,84 @@ pub(crate) fn provide(providers: &mut Providers) {
         let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_abi_of_instance)(tcx, key);
         Ok(readjust_fn_abi(tcx, result?))
     };
+
+    // FIXME(eddyb) remove this by deriving `Clone` for `LayoutS` upstream.
+    // FIXME(eddyb) the `S` suffix is a naming antipattern, rename upstream.
+    fn clone_layout<'a>(layout: &LayoutS<'a>) -> LayoutS<'a> {
+        let LayoutS {
+            ref fields,
+            ref variants,
+            abi,
+            largest_niche,
+            align,
+            size,
+        } = *layout;
+        LayoutS {
+            fields: match *fields {
+                FieldsShape::Primitive => FieldsShape::Primitive,
+                FieldsShape::Union(count) => FieldsShape::Union(count),
+                FieldsShape::Array { stride, count } => FieldsShape::Array { stride, count },
+                FieldsShape::Arbitrary {
+                    ref offsets,
+                    ref memory_index,
+                } => FieldsShape::Arbitrary {
+                    offsets: offsets.clone(),
+                    memory_index: memory_index.clone(),
+                },
+            },
+            variants: match *variants {
+                Variants::Single { index } => Variants::Single { index },
+                Variants::Multiple {
+                    tag,
+                    ref tag_encoding,
+                    tag_field,
+                    ref variants,
+                } => Variants::Multiple {
+                    tag,
+                    tag_encoding: match *tag_encoding {
+                        TagEncoding::Direct => TagEncoding::Direct,
+                        TagEncoding::Niche {
+                            dataful_variant,
+                            ref niche_variants,
+                            niche_start,
+                        } => TagEncoding::Niche {
+                            dataful_variant,
+                            niche_variants: niche_variants.clone(),
+                            niche_start,
+                        },
+                    },
+                    tag_field,
+                    variants: variants.clone(),
+                },
+            },
+            abi,
+            largest_niche,
+            align,
+            size,
+        }
+    }
+    providers.layout_of = |tcx, key| {
+        let TyAndLayout { ty, mut layout } =
+            (rustc_interface::DEFAULT_QUERY_PROVIDERS.layout_of)(tcx, key)?;
+
+        #[allow(clippy::match_like_matches_macro)]
+        let hide_niche = match ty.kind() {
+            ty::Bool => true,
+            _ => false,
+        };
+
+        if hide_niche {
+            layout = tcx.intern_layout(LayoutS {
+                largest_niche: None,
+                ..clone_layout(layout.0 .0)
+            });
+        }
+
+        Ok(TyAndLayout { ty, layout })
+    };
 }
 
-pub(crate) fn provide_extern(providers: &mut Providers) {
+pub(crate) fn provide_extern(providers: &mut ExternProviders) {
     // Reset providers overriden in `provide`, that need to still go through the
     // `rustc_metadata::rmeta` decoding, as opposed to being locally computed.
     providers.fn_sig = rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig;
@@ -208,13 +285,6 @@ enum PointeeDefState {
 /// provides a uniform way of translating them.
 pub trait ConvSpirvType<'tcx> {
     fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word;
-    /// spirv (and llvm) do not allow storing booleans in memory, they are abstract unsized values.
-    /// So, if we're dealing with a "memory type", convert bool to u8. The opposite is an
-    /// "immediate type", which keeps bools as bools. See also the functions `from_immediate` and
-    /// `to_immediate`, which convert between the two.
-    fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        self.spirv_type(span, cx)
-    }
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
@@ -226,14 +296,6 @@ impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
                 .spirv_type(span, cx),
         }
     }
-    fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        match *self {
-            PointeeTy::Ty(ty) => ty.spirv_type_immediate(span, cx),
-            PointeeTy::Fn(ty) => cx
-                .fn_abi_of_fn_ptr(ty, ty::List::empty())
-                .spirv_type_immediate(span, cx),
-        }
-    }
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
@@ -242,9 +304,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
 
         let return_type = match self.ret.mode {
             PassMode::Ignore => SpirvType::Void.def(span, cx),
-            PassMode::Direct(_) | PassMode::Pair(..) => {
-                self.ret.layout.spirv_type_immediate(span, cx)
-            }
+            PassMode::Direct(_) | PassMode::Pair(..) => self.ret.layout.spirv_type(span, cx),
             PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
                 span,
                 "query hooks should've made this `PassMode` impossible: {:#?}",
@@ -255,14 +315,10 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
         for arg in &self.args {
             let arg_type = match arg.mode {
                 PassMode::Ignore => continue,
-                PassMode::Direct(_) => arg.layout.spirv_type_immediate(span, cx),
+                PassMode::Direct(_) => arg.layout.spirv_type(span, cx),
                 PassMode::Pair(_, _) => {
-                    argument_types.push(scalar_pair_element_backend_type(
-                        cx, span, arg.layout, 0, true,
-                    ));
-                    argument_types.push(scalar_pair_element_backend_type(
-                        cx, span, arg.layout, 1, true,
-                    ));
+                    argument_types.push(scalar_pair_element_backend_type(cx, span, arg.layout, 0));
+                    argument_types.push(scalar_pair_element_backend_type(cx, span, arg.layout, 1));
                     continue;
                 }
                 PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
@@ -283,77 +339,116 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
-    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        trans_type_impl(cx, span, *self, false)
-    }
-    fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        trans_type_impl(cx, span, *self, true)
-    }
-}
+    fn spirv_type(&self, mut span: Span, cx: &CodegenCx<'tcx>) -> Word {
+        if let TyKind::Adt(adt, substs) = *self.ty.kind() {
+            if span == DUMMY_SP {
+                span = cx.tcx.def_span(adt.did());
+            }
 
-fn trans_type_impl<'tcx>(
-    cx: &CodegenCx<'tcx>,
-    mut span: Span,
-    ty: TyAndLayout<'tcx>,
-    is_immediate: bool,
-) -> Word {
-    if let TyKind::Adt(adt, substs) = *ty.ty.kind() {
-        if span == DUMMY_SP {
-            span = cx.tcx.def_span(adt.did);
-        }
+            let attrs = AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did()));
 
-        let attrs = AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did));
-
-        if let Some(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
-            if let Ok(spirv_type) = trans_intrinsic_type(cx, span, ty, substs, intrinsic_type_attr)
-            {
-                return spirv_type;
+            if let Some(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
+                if let Ok(spirv_type) =
+                    trans_intrinsic_type(cx, span, *self, substs, intrinsic_type_attr)
+                {
+                    return spirv_type;
+                }
             }
         }
-    }
 
-    // Note: ty.layout is orthogonal to ty.ty, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
-    // `ScalarPair`.
-    // There's a few layers that we go through here. First we inspect layout.abi, then if relevant, layout.fields, etc.
-    match ty.abi {
-        Abi::Uninhabited => SpirvType::Adt {
-            def_id: def_id_for_spirv_type_adt(ty),
-            size: Some(Size::ZERO),
-            align: Align::from_bytes(0).unwrap(),
-            field_types: Vec::new(),
-            field_offsets: Vec::new(),
-            field_names: None,
-        }
-        .def_with_name(cx, span, TyLayoutNameKey::from(ty)),
-        Abi::Scalar(ref scalar) => trans_scalar(cx, span, ty, scalar, Size::ZERO, is_immediate),
-        Abi::ScalarPair(ref a, ref b) => {
-            // Note: We can't use auto_struct_layout here because the spirv types here might be undefined due to
-            // recursive pointer types.
-            let a_offset = Size::ZERO;
-            let b_offset = a.value.size(cx).align_to(b.value.align(cx).abi);
-            // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
-            let a = trans_scalar(cx, span, ty, a, a_offset, false);
-            let b = trans_scalar(cx, span, ty, b, b_offset, false);
-            let size = if ty.is_unsized() { None } else { Some(ty.size) };
-            SpirvType::Adt {
-                def_id: def_id_for_spirv_type_adt(ty),
-                size,
-                align: ty.align.abi,
-                field_types: vec![a, b],
-                field_offsets: vec![a_offset, b_offset],
+        // Note: ty.layout is orthogonal to ty.ty, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
+        // `ScalarPair`.
+        // There's a few layers that we go through here. First we inspect layout.abi, then if relevant, layout.fields, etc.
+        match self.abi {
+            Abi::Uninhabited => SpirvType::Adt {
+                def_id: def_id_for_spirv_type_adt(*self),
+                size: Some(Size::ZERO),
+                align: Align::from_bytes(0).unwrap(),
+                field_types: Vec::new(),
+                field_offsets: Vec::new(),
                 field_names: None,
             }
-            .def_with_name(cx, span, TyLayoutNameKey::from(ty))
-        }
-        Abi::Vector { ref element, count } => {
-            let elem_spirv = trans_scalar(cx, span, ty, element, Size::ZERO, false);
-            SpirvType::Vector {
-                element: elem_spirv,
-                count: count as u32,
+            .def_with_name(cx, span, TyLayoutNameKey::from(*self)),
+            Abi::Scalar(scalar) => trans_scalar(cx, span, *self, scalar, Size::ZERO),
+            Abi::ScalarPair(a, b) => {
+                // NOTE(eddyb) unlike `Abi::Scalar`'s simpler newtype-unpacking
+                // behavior, `Abi::ScalarPair` can be composed in two ways:
+                // * two `Abi::Scalar` fields (and any number of ZST fields),
+                //   gets handled the same as a `struct { a, b }`, further below
+                // * an `Abi::ScalarPair` field (and any number of ZST fields),
+                //   which requires more work to allow taking a reference to
+                //   that field, and there are two potential approaches:
+                //   1. wrapping that field's SPIR-V type in a single-field
+                //      `OpTypeStruct` - this has the disadvantage that GEPs
+                //      would have to inject an extra `0` field index, and other
+                //      field-related operations would also need additional work
+                //   2. reusing that field's SPIR-V type, instead of defining
+                //      a new one, offering the `(a, b)` shape `rustc_codegen_ssa`
+                //      expects, while letting noop pointercasts access the sole
+                //      `Abi::ScalarPair` field - this is the approach taken here
+                let mut non_zst_fields = (0..self.fields.count())
+                    .map(|i| (i, self.field(cx, i)))
+                    .filter(|(_, field)| !field.is_zst());
+                let sole_non_zst_field = match (non_zst_fields.next(), non_zst_fields.next()) {
+                    (Some(field), None) => Some(field),
+                    _ => None,
+                };
+                if let Some((i, field)) = sole_non_zst_field {
+                    // Only unpack a newtype if the field and the newtype line up
+                    // perfectly, in every way that could potentially affect ABI.
+                    if self.fields.offset(i) == Size::ZERO
+                        && field.size == self.size
+                        && field.align == self.align
+                        && field.abi == self.abi
+                    {
+                        return field.spirv_type(span, cx);
+                    }
+                }
+
+                // Note: We can't use auto_struct_layout here because the spirv types here might be undefined due to
+                // recursive pointer types.
+                let a_offset = Size::ZERO;
+                let b_offset = a.primitive().size(cx).align_to(b.primitive().align(cx).abi);
+                let a = trans_scalar(cx, span, *self, a, a_offset);
+                let b = trans_scalar(cx, span, *self, b, b_offset);
+                let size = if self.is_unsized() {
+                    None
+                } else {
+                    Some(self.size)
+                };
+                let mut field_names = Vec::new();
+                if let TyKind::Adt(adt, _) = self.ty.kind() {
+                    if let Variants::Single { index } = self.variants {
+                        for i in self.fields.index_by_increasing_offset() {
+                            let field = &adt.variants()[index].fields[i];
+                            field_names.push(field.name.to_ident_string());
+                        }
+                    }
+                }
+                SpirvType::Adt {
+                    def_id: def_id_for_spirv_type_adt(*self),
+                    size,
+                    align: self.align.abi,
+                    field_types: vec![a, b],
+                    field_offsets: vec![a_offset, b_offset],
+                    field_names: if field_names.len() == 2 {
+                        Some(field_names)
+                    } else {
+                        None
+                    },
+                }
+                .def_with_name(cx, span, TyLayoutNameKey::from(*self))
             }
-            .def(span, cx)
+            Abi::Vector { element, count } => {
+                let elem_spirv = trans_scalar(cx, span, *self, element, Size::ZERO);
+                SpirvType::Vector {
+                    element: elem_spirv,
+                    count: count as u32,
+                }
+                .def(span, cx)
+            }
+            Abi::Aggregate { sized: _ } => trans_aggregate(cx, span, *self),
         }
-        Abi::Aggregate { sized: _ } => trans_aggregate(cx, span, ty),
     }
 }
 
@@ -364,9 +459,8 @@ pub fn scalar_pair_element_backend_type<'tcx>(
     span: Span,
     ty: TyAndLayout<'tcx>,
     index: usize,
-    is_immediate: bool,
 ) -> Word {
-    let [a, b] = match &ty.layout.abi {
+    let [a, b] = match ty.layout.abi() {
         Abi::ScalarPair(a, b) => [a, b],
         other => span_bug!(
             span,
@@ -376,10 +470,10 @@ pub fn scalar_pair_element_backend_type<'tcx>(
     };
     let offset = match index {
         0 => Size::ZERO,
-        1 => a.value.size(cx).align_to(b.value.align(cx).abi),
+        1 => a.primitive().size(cx).align_to(b.primitive().align(cx).abi),
         _ => unreachable!(),
     };
-    trans_scalar(cx, span, ty, [a, b][index], offset, is_immediate)
+    trans_scalar(cx, span, ty, [a, b][index], offset)
 }
 
 /// A "scalar" is a basic building block: bools, ints, floats, pointers. (i.e. not something complex like a struct)
@@ -393,15 +487,14 @@ fn trans_scalar<'tcx>(
     cx: &CodegenCx<'tcx>,
     span: Span,
     ty: TyAndLayout<'tcx>,
-    scalar: &Scalar,
+    scalar: Scalar,
     offset: Size,
-    is_immediate: bool,
 ) -> Word {
-    if is_immediate && scalar.is_bool() {
+    if scalar.is_bool() {
         return SpirvType::Bool.def(span, cx);
     }
 
-    match scalar.value {
+    match scalar.primitive() {
         Primitive::Int(width, signedness) => {
             SpirvType::Integer(width.size().bits() as u32, signedness).def(span, cx)
         }
@@ -532,7 +625,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
             }
         }
         FieldsShape::Array { stride, count } => {
-            let element_type = trans_type_impl(cx, span, ty.field(cx, 0), false);
+            let element_type = ty.field(cx, 0).spirv_type(span, cx);
             if ty.is_unsized() {
                 // There's a potential for this array to be sized, but the element to be unsized, e.g. `[[u8]; 5]`.
                 // However, I think rust disallows all these cases, so assert this here.
@@ -600,13 +693,13 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
     let mut field_names = Vec::new();
     for i in ty.fields.index_by_increasing_offset() {
         let field_ty = ty.field(cx, i);
-        field_types.push(trans_type_impl(cx, span, field_ty, false));
+        field_types.push(field_ty.spirv_type(span, cx));
         let offset = ty.fields.offset(i);
         field_offsets.push(offset);
         if let Variants::Single { index } = ty.variants {
             if let TyKind::Adt(adt, _) = ty.ty.kind() {
-                let field = &adt.variants[index].fields[i];
-                field_names.push(field.ident.name.to_ident_string());
+                let field = &adt.variants()[index].fields[i];
+                field_names.push(field.name.to_ident_string());
             } else {
                 field_names.push(format!("{}", i));
             }
@@ -638,7 +731,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
 /// (not in itself an issue, but it makes error reporting harder).
 fn def_id_for_spirv_type_adt(layout: TyAndLayout<'_>) -> Option<DefId> {
     match *layout.ty.kind() {
-        TyKind::Adt(def, _) => Some(def.did),
+        TyKind::Adt(def, _) => Some(def.did()),
         TyKind::Foreign(def_id) | TyKind::Closure(def_id, _) | TyKind::Generator(def_id, ..) => {
             Some(def_id)
         }
@@ -670,8 +763,8 @@ impl fmt::Display for TyLayoutNameKey<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.ty)?;
         if let (TyKind::Adt(def, _), Some(index)) = (self.ty.kind(), self.variant) {
-            if def.is_enum() && !def.variants.is_empty() {
-                write!(f, "::{}", def.variants[index].ident)?;
+            if def.is_enum() && !def.variants().is_empty() {
+                write!(f, "::{}", def.variants()[index].name)?;
             }
         }
         if let (TyKind::Generator(_, _, _), Some(index)) = (self.ty.kind(), self.variant) {
@@ -687,20 +780,20 @@ fn trans_intrinsic_type<'tcx>(
     ty: TyAndLayout<'tcx>,
     substs: SubstsRef<'tcx>,
     intrinsic_type_attr: IntrinsicType,
-) -> Result<Word, ErrorReported> {
+) -> Result<Word, ErrorGuaranteed> {
     match intrinsic_type_attr {
         IntrinsicType::GenericImageType => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
-                cx.tcx
+                return Err(cx
+                    .tcx
                     .sess
-                    .err("#[spirv(generic_image)] type must have size 4");
-                return Err(ErrorReported);
+                    .err("#[spirv(generic_image)] type must have size 4"));
             }
 
             // fn type_from_variant_discriminant<'tcx, P: FromPrimitive>(
             //     cx: &CodegenCx<'tcx>,
-            //     const_: &'tcx Const<'tcx>,
+            //     const_: Const<'tcx>,
             // ) -> P {
             //     let adt_def = const_.ty.ty_adt_def().unwrap();
             //     assert!(adt_def.is_enum());
@@ -736,10 +829,10 @@ fn trans_intrinsic_type<'tcx>(
                 TyKind::Float(FloatTy::F32) => SpirvType::Float(32).def(span, cx),
                 TyKind::Float(FloatTy::F64) => SpirvType::Float(64).def(span, cx),
                 _ => {
-                    cx.tcx
+                    return Err(cx
+                        .tcx
                         .sess
-                        .span_err(span, "Invalid sampled type to `Image`.");
-                    return Err(ErrorReported);
+                        .span_err(span, "Invalid sampled type to `Image`."));
                 }
             };
 
@@ -753,18 +846,16 @@ fn trans_intrinsic_type<'tcx>(
 
             fn const_int_value<'tcx, P: FromPrimitive>(
                 cx: &CodegenCx<'tcx>,
-                const_: &'tcx Const<'tcx>,
-            ) -> Result<P, ErrorReported> {
-                assert!(const_.ty.is_integral());
-                let value = const_.eval_bits(cx.tcx, ParamEnv::reveal_all(), const_.ty);
+                const_: Const<'tcx>,
+            ) -> Result<P, ErrorGuaranteed> {
+                assert!(const_.ty().is_integral());
+                let value = const_.eval_bits(cx.tcx, ParamEnv::reveal_all(), const_.ty());
                 match P::from_u128(value) {
                     Some(v) => Ok(v),
-                    None => {
-                        cx.tcx
-                            .sess
-                            .err(&format!("Invalid value for Image const generic: {}", value));
-                        Err(ErrorReported)
-                    }
+                    None => Err(cx
+                        .tcx
+                        .sess
+                        .err(&format!("Invalid value for Image const generic: {}", value))),
                 }
             }
 
@@ -789,8 +880,7 @@ fn trans_intrinsic_type<'tcx>(
         IntrinsicType::Sampler => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
-                cx.tcx.sess.err("#[spirv(sampler)] type must have size 4");
-                return Err(ErrorReported);
+                return Err(cx.tcx.sess.err("#[spirv(sampler)] type must have size 4"));
             }
             Ok(SpirvType::Sampler.def(span, cx))
         }
@@ -801,43 +891,43 @@ fn trans_intrinsic_type<'tcx>(
         IntrinsicType::SampledImage => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
-                cx.tcx
+                return Err(cx
+                    .tcx
                     .sess
-                    .err("#[spirv(sampled_image)] type must have size 4");
-                return Err(ErrorReported);
+                    .err("#[spirv(sampled_image)] type must have size 4"));
             }
 
             // We use a generic to indicate the underlying image type of the sampled image.
             // The spirv type of it will be generated by querying the type of the first generic.
             if let Some(image_ty) = substs.types().next() {
                 // TODO: enforce that the generic param is an image type?
-                let image_type = trans_type_impl(cx, span, cx.layout_of(image_ty), false);
+                let image_type = cx.layout_of(image_ty).spirv_type(span, cx);
                 Ok(SpirvType::SampledImage { image_type }.def(span, cx))
             } else {
-                cx.tcx
+                Err(cx
+                    .tcx
                     .sess
-                    .err("#[spirv(sampled_image)] type must have a generic image type");
-                Err(ErrorReported)
+                    .err("#[spirv(sampled_image)] type must have a generic image type"))
             }
         }
         IntrinsicType::RuntimeArray => {
             if ty.size != Size::from_bytes(4) {
-                cx.tcx
+                return Err(cx
+                    .tcx
                     .sess
-                    .err("#[spirv(runtime_array)] type must have size 4");
-                return Err(ErrorReported);
+                    .err("#[spirv(runtime_array)] type must have size 4"));
             }
 
             // We use a generic to indicate the underlying element type.
             // The spirv type of it will be generated by querying the type of the first generic.
             if let Some(elem_ty) = substs.types().next() {
-                let element = trans_type_impl(cx, span, cx.layout_of(elem_ty), false);
+                let element = cx.layout_of(elem_ty).spirv_type(span, cx);
                 Ok(SpirvType::RuntimeArray { element }.def(span, cx))
             } else {
-                cx.tcx
+                Err(cx
+                    .tcx
                     .sess
-                    .err("#[spirv(runtime_array)] type must have a generic element type");
-                Err(ErrorReported)
+                    .err("#[spirv(runtime_array)] type must have a generic element type"))
             }
         }
         IntrinsicType::Matrix => {
@@ -846,31 +936,30 @@ fn trans_intrinsic_type<'tcx>(
                 .expect("#[spirv(matrix)] must be added to a type which has DefId");
 
             let field_types = (0..ty.fields.count())
-                .map(|i| trans_type_impl(cx, span, ty.field(cx, i), false))
+                .map(|i| ty.field(cx, i).spirv_type(span, cx))
                 .collect::<Vec<_>>();
             if field_types.len() < 2 {
-                cx.tcx
+                return Err(cx
+                    .tcx
                     .sess
-                    .span_err(span, "#[spirv(matrix)] type must have at least two fields");
-                return Err(ErrorReported);
+                    .span_err(span, "#[spirv(matrix)] type must have at least two fields"));
             }
             let elem_type = field_types[0];
             if !field_types.iter().all(|&ty| ty == elem_type) {
-                cx.tcx.sess.span_err(
+                return Err(cx.tcx.sess.span_err(
                     span,
                     "#[spirv(matrix)] type fields must all be the same type",
-                );
-                return Err(ErrorReported);
+                ));
             }
             match cx.lookup_type(elem_type) {
                 SpirvType::Vector { .. } => (),
                 ty => {
-                    cx.tcx
+                    return Err(cx
+                        .tcx
                         .sess
                         .struct_span_err(span, "#[spirv(matrix)] type fields must all be vectors")
                         .note(&format!("field type is {}", ty.debug(elem_type, cx)))
-                        .emit();
-                    return Err(ErrorReported);
+                        .emit());
                 }
             }
 

@@ -24,10 +24,10 @@ use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_errors::ErrorReported;
+use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
 
-pub type Result<T> = std::result::Result<T, ErrorReported>;
+pub type Result<T> = std::result::Result<T, ErrorGuaranteed>;
 
 pub struct Options {
     pub compact_ids: bool,
@@ -81,7 +81,17 @@ fn apply_rewrite_rules(rewrite_rules: &FxHashMap<Word, Word>, blocks: &mut [Bloc
 }
 
 fn get_names(module: &Module) -> FxHashMap<Word, &str> {
-    module
+    let entry_names = module
+        .entry_points
+        .iter()
+        .filter(|i| i.class.opcode == Op::EntryPoint)
+        .map(|i| {
+            (
+                i.operands[1].unwrap_id_ref(),
+                i.operands[2].unwrap_literal_string(),
+            )
+        });
+    let debug_names = module
         .debug_names
         .iter()
         .filter(|i| i.class.opcode == Op::Name)
@@ -90,15 +100,16 @@ fn get_names(module: &Module) -> FxHashMap<Word, &str> {
                 i.operands[0].unwrap_id_ref(),
                 i.operands[1].unwrap_literal_string(),
             )
-        })
-        .collect()
+        });
+    // items later on take priority
+    entry_names.chain(debug_names).collect()
 }
 
 fn get_name<'a>(names: &FxHashMap<Word, &'a str>, id: Word) -> Cow<'a, str> {
-    names
-        .get(&id)
-        .map(|&s| Cow::Borrowed(s))
-        .unwrap_or_else(|| Cow::Owned(format!("Unnamed function ID %{}", id)))
+    names.get(&id).map_or_else(
+        || Cow::Owned(format!("Unnamed function ID %{}", id)),
+        |&s| Cow::Borrowed(s),
+    )
 }
 
 pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<LinkResult> {
@@ -155,6 +166,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     {
         let _timer = sess.timer("link_find_pairs");
         import_export_link::run(sess, &mut output)?;
+    }
+
+    {
+        let _timer = sess.timer("link_fragment_inst_check");
+        simple_passes::check_fragment_insts(sess, &output)?;
     }
 
     // HACK(eddyb) this has to run before the `remove_zombies` pass, so that any

@@ -23,7 +23,6 @@ pub enum Arrayed {
     True = 1,
 }
 
-#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<bool> for Arrayed {
     fn from(val: bool) -> Self {
         if val {
@@ -71,7 +70,7 @@ pub enum ImageDepth {
     Unknown = 2,
 }
 
-#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
+#[cfg(not(target_arch = "spirv"))]
 impl From<Option<bool>> for ImageDepth {
     fn from(val: Option<bool>) -> Self {
         match val {
@@ -82,7 +81,6 @@ impl From<Option<bool>> for ImageDepth {
     }
 }
 
-#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<bool> for ImageDepth {
     fn from(val: bool) -> Self {
         match val {
@@ -102,7 +100,6 @@ pub enum Multisampled {
     True = 1,
 }
 
-#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<bool> for Multisampled {
     fn from(val: bool) -> Self {
         if val {
@@ -126,7 +123,7 @@ pub enum Sampled {
     No = 2,
 }
 
-#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
+#[cfg(not(target_arch = "spirv"))]
 impl From<Option<bool>> for Sampled {
     fn from(val: Option<bool>) -> Self {
         match val {
@@ -137,7 +134,6 @@ impl From<Option<bool>> for Sampled {
     }
 }
 
-#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<bool> for Sampled {
     fn from(val: bool) -> Self {
         match val {

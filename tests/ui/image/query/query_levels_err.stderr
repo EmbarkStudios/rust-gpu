@@ -1,14 +1,19 @@
 error[E0277]: the trait bound `Image<f32, 4_u32, 2_u32, 0_u32, 0_u32, 1_u32, 0_u32>: HasQueryLevels` is not satisfied
-  --> $DIR/query_levels_err.rs:12:21
-   |
-12 |     *output = image.query_levels();
-   |                     ^^^^^^^^^^^^ the trait `HasQueryLevels` is not implemented for `Image<f32, 4_u32, 2_u32, 0_u32, 0_u32, 1_u32, 0_u32>`
-   |
-   = help: the following implementations were found:
-             <Image<SampledType, 0_u32, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT> as HasQueryLevels>
-             <Image<SampledType, 1_u32, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT> as HasQueryLevels>
-             <Image<SampledType, 2_u32, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT> as HasQueryLevels>
-             <Image<SampledType, 3_u32, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT> as HasQueryLevels>
+   --> $DIR/query_levels_err.rs:12:21
+    |
+12  |     *output = image.query_levels();
+    |                     ^^^^^^^^^^^^ the trait `HasQueryLevels` is not implemented for `Image<f32, 4_u32, 2_u32, 0_u32, 0_u32, 1_u32, 0_u32>`
+    |
+    = help: the following other types implement trait `HasQueryLevels`:
+              Image<SampledType, 0_u32, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT>
+              Image<SampledType, 1_u32, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT>
+              Image<SampledType, 2_u32, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT>
+              Image<SampledType, 3_u32, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT>
+note: required by a bound in `Image::<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT>::query_levels`
+   --> $SPIRV_STD_SRC/image.rs:821:15
+    |
+821 |         Self: HasQueryLevels,
+    |               ^^^^^^^^^^^^^^ required by this bound in `Image::<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT>::query_levels`
 
 error: aborting due to previous error
 

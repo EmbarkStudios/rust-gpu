@@ -22,7 +22,7 @@ jobs:
             target: aarch64-linux-android
     runs-on: ${{ matrix.os }}
     env:
-      spirv_tools_version: "20210805"
+      spirv_tools_version: "20220414" # get platform-specific download link from https://github.com/KhronosGroup/SPIRV-Tools/blob/master/docs/downloads.md
       RUSTUP_UNPACK_RAM: "26214400"
       RUSTUP_IO_THREADS: "1"
     steps:
@@ -33,8 +33,8 @@ jobs:
         name: Linux - Install native dependencies
         run: |
           sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
-          mkdir "${HOME}/spirv-tools"
-          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1530/20210805-040049/install.tgz | tar -xz -C "${HOME}/spirv-tools"
+          mkdir "${HOME}/spirv-tools"          
+          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1744/20220414-060821/install.tgz | tar -xz -C "${HOME}/spirv-tools"
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - if: ${{ runner.os == 'macOS' }}
         name: Mac - Install spirv-tools
@@ -47,7 +47,7 @@ jobs:
         run: |
           tmparch=$(mktemp)
           mkdir "${HOME}/spirv-tools"
-          curl -fL -o "$tmparch" https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1517/20210805-040116/install.zip
+          curl -fL -o "$tmparch" https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1732/20220414-060824/install.zip
           unzip "$tmparch" -d "${HOME}/spirv-tools"
       - if: ${{ runner.os == 'Windows' }}
         # Runs separately to add spir-v tools to Powershell's Path.

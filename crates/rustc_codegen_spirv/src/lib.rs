@@ -18,84 +18,13 @@
 #![feature(rustc_private)]
 #![feature(assert_matches)]
 #![feature(once_cell)]
-// BEGIN - Embark standard lints v0.4
-// do not change or add/remove here, but one can add exceptions after this section
-// for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
-#![deny(unsafe_code)]
-#![warn(
-    clippy::all,
-    clippy::await_holding_lock,
-    clippy::char_lit_as_u8,
-    clippy::checked_conversions,
-    clippy::dbg_macro,
-    clippy::debug_assert_with_mut_call,
-    clippy::doc_markdown,
-    clippy::empty_enum,
-    clippy::enum_glob_use,
-    clippy::exit,
-    clippy::expl_impl_clone_on_copy,
-    clippy::explicit_deref_methods,
-    clippy::explicit_into_iter_loop,
-    clippy::fallible_impl_from,
-    clippy::filter_map_next,
-    clippy::float_cmp_const,
-    clippy::fn_params_excessive_bools,
-    clippy::if_let_mutex,
-    clippy::implicit_clone,
-    clippy::imprecise_flops,
-    clippy::inefficient_to_string,
-    clippy::invalid_upcast_comparisons,
-    clippy::large_types_passed_by_value,
-    clippy::let_unit_value,
-    clippy::linkedlist,
-    clippy::lossy_float_literal,
-    clippy::macro_use_imports,
-    clippy::manual_ok_or,
-    clippy::map_err_ignore,
-    clippy::map_flatten,
-    clippy::map_unwrap_or,
-    clippy::match_on_vec_items,
-    clippy::match_same_arms,
-    clippy::match_wildcard_for_single_variants,
-    clippy::mem_forget,
-    clippy::mismatched_target_os,
-    clippy::mut_mut,
-    clippy::mutex_integer,
-    clippy::needless_borrow,
-    clippy::needless_continue,
-    clippy::option_option,
-    clippy::path_buf_push_overwrite,
-    clippy::ptr_as_ptr,
-    clippy::ref_option_ref,
-    clippy::rest_pat_in_fully_bound_structs,
-    clippy::same_functions_in_if_condition,
-    clippy::semicolon_if_nothing_returned,
-    clippy::string_add_assign,
-    clippy::string_add,
-    clippy::string_lit_as_bytes,
-    clippy::string_to_string,
-    clippy::todo,
-    clippy::trait_duplication_in_bounds,
-    clippy::unimplemented,
-    clippy::unnested_or_patterns,
-    clippy::unused_self,
-    clippy::useless_transmute,
-    clippy::verbose_file_reads,
-    clippy::zero_sized_map_values,
-    future_incompatible,
-    nonstandard_style,
-    rust_2018_idioms
-)]
-// END - Embark standard lints v0.4
 // crate-specific exceptions:
 #![allow(
-    unsafe_code,                // still quite a bit of unsafe
-    clippy::map_unwrap_or,      // TODO: test enabling
-    clippy::match_on_vec_items, // TODO: test enabling
-    clippy::enum_glob_use,
+    unsafe_code,                // rustc_codegen_ssa requires unsafe functions in traits to be impl'd
+    clippy::match_on_vec_items, // rustc_codegen_spirv has less strict panic requirements than other embark projects
+    clippy::enum_glob_use,      // pretty useful pattern with some codegen'd enums (e.g. rspirv::spirv::Op)
     clippy::todo,               // still lots to implement :)
 )]
-#![deny(clippy::unimplemented, clippy::ok_expect)]
 
 // Unfortunately, this will not fail fast when compiling, but rather will wait for
 // rustc_codegen_spirv to be compiled. Putting this in build.rs will solve that problem, however,
@@ -139,7 +68,6 @@ mod attr;
 mod builder;
 mod builder_spirv;
 mod codegen_cx;
-mod compile_result;
 mod decorations;
 mod link;
 mod linker;
@@ -151,8 +79,6 @@ mod target_feature;
 
 use builder::Builder;
 use codegen_cx::CodegenCx;
-pub use compile_result::*;
-pub use rspirv;
 use rspirv::binary::Assemble;
 use rustc_ast::expand::allocator::AllocatorKind;
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule};
@@ -167,14 +93,14 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_data_structures::fx::FxHashMap;
-use rustc_errors::{ErrorReported, FatalError, Handler};
+use rustc_errors::{ErrorGuaranteed, FatalError, Handler};
 use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::mir::pretty::write_mir_pretty;
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::{self, query, DefIdTree, Instance, InstanceDef, TyCtxt};
-use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
+use rustc_session::config::{self, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::{Target, TargetTriple};
@@ -215,7 +141,7 @@ fn is_blocklisted_fn<'tcx>(
         if let Some(debug_trait_def_id) = tcx.get_diagnostic_item(sym::Debug) {
             // Helper for detecting `<_ as core::fmt::Debug>::fmt` (in impls).
             let is_debug_fmt_method = |def_id| match tcx.opt_associated_item(def_id) {
-                Some(assoc) if assoc.ident.name == sym::fmt => match assoc.container {
+                Some(assoc) if assoc.ident(tcx).name == sym::fmt => match assoc.container {
                     ty::ImplContainer(impl_def_id) => {
                         tcx.impl_trait_ref(impl_def_id).map(|tr| tr.def_id)
                             == Some(debug_trait_def_id)
@@ -229,7 +155,7 @@ fn is_blocklisted_fn<'tcx>(
                 return true;
             }
 
-            if tcx.opt_item_name(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
+            if tcx.opt_item_ident(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
                 if let Some(parent_def_id) = tcx.parent(def.did) {
                     if is_debug_fmt_method(parent_def_id) {
                         return true;
@@ -286,11 +212,16 @@ impl CodegenBackend for SpirvCodegenBackend {
     }
 
     fn provide(&self, providers: &mut query::Providers) {
+        // FIXME(eddyb) this is currently only passed back to us, specifically
+        // into `target_machine_factory` (which is a noop), but it might make
+        // sense to move some of the target feature parsing into here.
+        providers.global_backend_features = |_tcx, ()| vec![];
+
         crate::abi::provide(providers);
         crate::attr::provide(providers);
     }
 
-    fn provide_extern(&self, providers: &mut query::Providers) {
+    fn provide_extern(&self, providers: &mut query::ExternProviders) {
         crate::abi::provide_extern(providers);
     }
 
@@ -308,7 +239,7 @@ impl CodegenBackend for SpirvCodegenBackend {
                 .cg
                 .target_cpu
                 .clone()
-                .unwrap_or_else(|| tcx.sess.target.cpu.clone()),
+                .unwrap_or_else(|| tcx.sess.target.cpu.to_string()),
             metadata,
             need_metadata_module,
         ))
@@ -318,7 +249,8 @@ impl CodegenBackend for SpirvCodegenBackend {
         &self,
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
-    ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorReported> {
+        _outputs: &OutputFilenames,
+    ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorGuaranteed> {
         let (codegen_results, work_products) = ongoing_codegen
             .downcast::<OngoingCodegen<Self>>()
             .expect("Expected OngoingCodegen, found Box<Any>")
@@ -334,13 +266,13 @@ impl CodegenBackend for SpirvCodegenBackend {
         sess: &Session,
         codegen_results: CodegenResults,
         outputs: &OutputFilenames,
-    ) -> Result<(), ErrorReported> {
+    ) -> Result<(), ErrorGuaranteed> {
         let timer = sess.timer("link_crate");
         link::link(
             sess,
             &codegen_results,
             outputs,
-            &codegen_results.crate_info.local_crate_name.as_str(),
+            codegen_results.crate_info.local_crate_name.as_str(),
         );
         drop(timer);
 
@@ -456,15 +388,6 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         Self::Module::new()
     }
 
-    fn write_compressed_metadata<'tcx>(
-        &self,
-        _: TyCtxt<'tcx>,
-        _: &EncodedMetadata,
-        _: &mut Self::Module,
-    ) {
-        // Ignore for now.
-    }
-
     fn codegen_allocator<'tcx>(
         &self,
         _: TyCtxt<'tcx>,
@@ -522,10 +445,10 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         };
         if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
             let module_dumper = DumpModuleOnPanic { cx: &cx, path };
-            with_no_trimmed_paths(do_codegen);
+            with_no_trimmed_paths!(do_codegen());
             drop(module_dumper);
         } else {
-            with_no_trimmed_paths(do_codegen);
+            with_no_trimmed_paths!(do_codegen());
         }
         let spirv_module = cx.finalize_module().assemble();
 
@@ -541,8 +464,9 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
 
     fn target_machine_factory(
         &self,
-        _: &Session,
-        _: OptLevel,
+        _sess: &Session,
+        _opt_level: config::OptLevel,
+        _target_features: &[String],
     ) -> Arc<(dyn Fn(TargetMachineFactoryConfig) -> Result<(), String> + Send + Sync + 'static)>
     {
         Arc::new(|_| Ok(()))

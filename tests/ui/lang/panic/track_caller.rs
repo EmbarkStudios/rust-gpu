@@ -12,6 +12,6 @@ fn track_caller_maybe_panic(x: u32) {
 }
 
 #[spirv(fragment)]
-pub fn main(x: u32) {
+pub fn main(#[spirv(flat)] x: u32) {
     track_caller_maybe_panic(x);
 }

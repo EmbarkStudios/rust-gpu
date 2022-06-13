@@ -7,10 +7,8 @@ unmaintained = "warn"
 yanked = "warn"
 notice = "warn"
 ignore = [
-    # Potential Unix segfault if setting env vars in threaded context. The only use of the chrono crate is within
-    # ash-molten's build script, so can safely ignore.
-    # https://github.com/chronotope/chrono/issues/499
-    "RUSTSEC-2020-0159",
+    # Regex advisory, from some dependency
+    "RUSTSEC-2022-0013"
 ]
 
 # This section is considered when running `cargo deny check bans`.
@@ -38,11 +36,11 @@ skip = [
 # by default infinite
 skip-tree = [
     # we don't really care if our example brings in some duplicate dependencies, for now
-    { name = "example-runner-ash", depth = 20 },
-    { name = "example-runner-cpu", depth = 20 },
-    { name = "example-runner-wgpu", depth = 20 },
-    { name = "compiletests", depth = 20 },
-    { name = "compiletests-deps-helper", depth = 20 },
+    { name = "example-runner-ash", version = "0.4.0-alpha.12", depth = 20 },
+    { name = "example-runner-cpu", version = "0.4.0-alpha.12", depth = 20 },
+    { name = "example-runner-wgpu", version = "0.4.0-alpha.12", depth = 20 },
+    { name = "compiletests", version = "0.4.0-alpha.12", depth = 20 },
+    { name = "compiletests-deps-helper", version = "0.4.0-alpha.12", depth = 20 },
 ]
 
 
@@ -74,12 +72,19 @@ exceptions = [
     # CC0 is a permissive license but somewhat unclear status for source code
     # so we prefer to not have dependencies using it
     # https://tldrlegal.com/license/creative-commons-cc0-1.0-universal
-    { allow = ["CC0-1.0"], name = "notify" },
+    { allow = ["CC0-1.0"], name = "notify", version = "5.0.0-pre.13" },
     { allow = ["CC0-1.0"], name = "hexf-parse" },
 ]
 copyleft = "deny"
 
-
+# See note in encoding_rs's readme! This clarification is copied directly from there.
+[[licenses.clarify]]
+name = "encoding_rs"
+version = "*"
+expression = "(Apache-2.0 OR MIT) AND BSD-3-Clause"
+license-files = [
+    { path = "COPYRIGHT", hash = 0x39f8ad31 }
+]
 
 # This section is considered when running `cargo deny check sources`.
 # More documentation about the 'sources' section can be found here:
@@ -91,6 +96,3 @@ unknown-registry = "warn"
 # Lint level for what to happen when a crate from a git repository that is not
 # in the allow list is encountered
 unknown-git = "allow"
-
-[sources.allow-org]
-github = ["EmbarkStudios"]

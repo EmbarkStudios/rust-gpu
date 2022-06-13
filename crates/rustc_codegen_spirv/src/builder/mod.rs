@@ -13,14 +13,14 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::Word;
+use rspirv::spirv::{self, Word};
 use rustc_codegen_ssa::mir::operand::OperandValue;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, BackendTypes, BuilderMethods, CoverageInfoBuilderMethods,
     DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods,
 };
-use rustc_errors::DiagnosticBuilder;
+use rustc_errors::{DiagnosticBuilder, ErrorGuaranteed};
 use rustc_middle::mir::coverage::{
     CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionId, Op,
 };
@@ -70,7 +70,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    pub fn struct_err(&self, msg: &str) -> DiagnosticBuilder<'_> {
+    pub fn struct_err(&self, msg: &str) -> DiagnosticBuilder<'_, ErrorGuaranteed> {
         if let Some(current_span) = self.current_span {
             self.tcx.sess.struct_span_err(current_span, msg)
         } else {
@@ -98,8 +98,29 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         self.current_span.unwrap_or(DUMMY_SP)
     }
 
+    // Given an ID, check if it's defined by an OpAccessChain, and if it is, return its ptr/indices
+    fn find_access_chain(&self, id: spirv::Word) -> Option<(spirv::Word, Vec<spirv::Word>)> {
+        let emit = self.emit();
+        let module = emit.module_ref();
+        let func = &module.functions[emit.selected_function().unwrap()];
+        let ptr_def_inst = func.all_inst_iter().find(|inst| inst.result_id == Some(id));
+        if let Some(ptr_def_inst) = ptr_def_inst {
+            if ptr_def_inst.class.opcode == spirv::Op::AccessChain
+                || ptr_def_inst.class.opcode == spirv::Op::InBoundsAccessChain
+            {
+                let ptr = ptr_def_inst.operands[0].unwrap_id_ref();
+                let indices = ptr_def_inst.operands[1..]
+                    .iter()
+                    .map(|op| op.unwrap_id_ref())
+                    .collect::<Vec<spirv::Word>>();
+                return Some((ptr, indices));
+            }
+        }
+        None
+    }
+
     pub fn gep_help(
-        &self,
+        &mut self,
         ty: Word,
         ptr: SpirvValue,
         indices: &[SpirvValue],
@@ -134,42 +155,58 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             pointee: result_pointee_type,
         }
         .def(self.span(), self);
-        if self.builder.lookup_const_u64(indices[0]) == Some(0) {
+
+        let ptr_id = ptr.def(self);
+        if let Some((original_ptr, mut original_indices)) = self.find_access_chain(ptr_id) {
+            // Transform the following:
+            // OpAccessChain original_ptr [a, b, c]
+            // OpPtrAccessChain ptr base [d, e, f]
+            // into
+            // OpAccessChain original_ptr [a, b, c + base, d, e, f]
+            // to remove the need for OpPtrAccessChain
+            let last = original_indices.last_mut().unwrap();
+            *last = self
+                .add(last.with_type(indices[0].ty), indices[0])
+                .def(self);
+            original_indices.append(&mut result_indices);
+            let zero = self.constant_int(indices[0].ty, 0);
+            self.emit_access_chain(
+                result_type,
+                original_ptr,
+                zero,
+                original_indices,
+                is_inbounds,
+            )
+        } else {
+            self.emit_access_chain(result_type, ptr_id, indices[0], result_indices, is_inbounds)
+        }
+    }
+
+    fn emit_access_chain(
+        &self,
+        result_type: spirv::Word,
+        pointer: spirv::Word,
+        base: SpirvValue,
+        indices: Vec<spirv::Word>,
+        is_inbounds: bool,
+    ) -> SpirvValue {
+        let mut emit = self.emit();
+        if self.builder.lookup_const_u64(base) == Some(0) {
             if is_inbounds {
-                self.emit()
-                    .in_bounds_access_chain(result_type, None, ptr.def(self), result_indices)
-                    .unwrap()
-                    .with_type(result_type)
+                emit.in_bounds_access_chain(result_type, None, pointer, indices)
             } else {
-                self.emit()
-                    .access_chain(result_type, None, ptr.def(self), result_indices)
-                    .unwrap()
-                    .with_type(result_type)
+                emit.access_chain(result_type, None, pointer, indices)
             }
+            .unwrap()
+            .with_type(result_type)
         } else {
             let result = if is_inbounds {
-                self.emit()
-                    .in_bounds_ptr_access_chain(
-                        result_type,
-                        None,
-                        ptr.def(self),
-                        indices[0].def(self),
-                        result_indices,
-                    )
-                    .unwrap()
-                    .with_type(result_type)
+                emit.in_bounds_ptr_access_chain(result_type, None, pointer, base.def(self), indices)
             } else {
-                self.emit()
-                    .ptr_access_chain(
-                        result_type,
-                        None,
-                        ptr.def(self),
-                        indices[0].def(self),
-                        result_indices,
-                    )
-                    .unwrap()
-                    .with_type(result_type)
-            };
+                emit.ptr_access_chain(result_type, None, pointer, base.def(self), indices)
+            }
+            .unwrap()
+            .with_type(result_type);
             self.zombie(
                 result.def(self),
                 "Cannot offset a pointer to an arbitrary element",
@@ -329,7 +366,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
 impl<'a, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'tcx> {
     fn apply_attrs_callsite(&mut self, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>, _callsite: Self::Value) {}
 
-    fn get_param(&self, index: usize) -> Self::Value {
+    fn get_param(&mut self, index: usize) -> Self::Value {
         self.function_parameter_values.borrow()[&self.current_fn.def(self)][index]
     }
 }

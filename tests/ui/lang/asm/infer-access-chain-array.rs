@@ -3,12 +3,12 @@
 
 // build-pass
 
+use core::arch::asm;
+use glam::Vec4;
 use spirv_std as _;
 
-use glam::Vec4;
-
 #[spirv(fragment)]
-pub fn main(#[spirv(push_constant)] array_in: &[Vec4; 16], i: u32, out: &mut Vec4) {
+pub fn main(#[spirv(push_constant)] array_in: &[Vec4; 16], #[spirv(flat)] i: u32, out: &mut Vec4) {
     unsafe {
         asm!(
             "%val_ptr = OpAccessChain _ {array_ptr} {index}",

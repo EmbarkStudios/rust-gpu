@@ -1,13 +1,13 @@
 use crate::codegen_cx::{CodegenArgs, ModuleOutputType, SpirvMetadata};
-use crate::{
-    linker, CompileResult, ModuleResult, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer,
-};
+use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use ar::{Archive, GnuBuilder, Header};
 use rspirv::binary::Assemble;
+use rustc_ast::CRATE_NODE_ID;
+use rustc_codegen_spirv_types::{CompileResult, ModuleResult};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::{CodegenResults, NativeLib, METADATA_FILENAME};
-use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_data_structures::fx::FxHashSet;
 use rustc_errors::FatalError;
 use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
@@ -64,7 +64,9 @@ pub fn link<'a>(
                 CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => {
                     link_exe(sess, crate_type, &out_filename, codegen_results);
                 }
-                other => sess.err(&format!("CrateType {:?} not supported yet", other)),
+                other => {
+                    sess.err(&format!("CrateType {:?} not supported yet", other));
+                }
             }
         }
     }
@@ -156,15 +158,22 @@ fn link_exe(
             }
         }
         linker::LinkResult::MultipleModules(map) => {
-            let mut hashmap = FxHashMap::default();
             let entry_points = map.keys().cloned().collect();
-            for (name, spv_binary) in map {
-                let mut module_filename = out_dir.clone();
-                module_filename.push(sanitize_filename::sanitize(&name));
-                post_link_single_module(sess, &cg_args, spv_binary.assemble(), &module_filename);
-                hashmap.insert(name, module_filename);
-            }
-            let module_result = ModuleResult::MultiModule(hashmap);
+            let map = map
+                .into_iter()
+                .map(|(name, spv_binary)| {
+                    let mut module_filename = out_dir.clone();
+                    module_filename.push(sanitize_filename::sanitize(&name));
+                    post_link_single_module(
+                        sess,
+                        &cg_args,
+                        spv_binary.assemble(),
+                        &module_filename,
+                    );
+                    (name, module_filename)
+                })
+                .collect();
+            let module_result = ModuleResult::MultiModule(map);
             CompileResult {
                 module: module_result,
                 entry_points,
@@ -209,7 +218,7 @@ fn post_link_single_module(
     let opt_options = spirv_tools::opt::Options {
         validator_options: Some(val_options.clone()),
         max_id_bound: None,
-        preserve_bindings: false,
+        preserve_bindings: cg_args.preserve_bindings,
         preserve_spec_constants: false,
     };
 
@@ -291,8 +300,12 @@ fn do_spirv_opt(
             // TODO: Adds spans here? Not sure how useful with binary, but maybe?
 
             let mut err = match msg.level {
-                Level::Fatal | Level::InternalError => sess.struct_fatal(&msg.message),
-                Level::Error => sess.struct_err(&msg.message),
+                Level::Fatal | Level::InternalError => {
+                    // FIXME(eddyb) this was `struct_fatal` but that doesn't seem
+                    // necessary and also lacks `.forget_guarantee()`.
+                    sess.struct_err(&msg.message).forget_guarantee()
+                }
+                Level::Error => sess.struct_err(&msg.message).forget_guarantee(),
                 Level::Warning => sess.struct_warn(&msg.message),
                 Level::Info | Level::Debug => sess.struct_note_without_error(&msg.message),
             };
@@ -304,7 +317,8 @@ fn do_spirv_opt(
     );
 
     match result {
-        Ok(binary) => Vec::from(binary.as_ref()),
+        Ok(spirv_tools::binary::Binary::OwnedU32(words)) => words,
+        Ok(binary) => binary.as_words().to_vec(),
         Err(e) => {
             let mut err = sess.struct_warn(&e.to_string());
             err.note("spirv-opt failed, leaving as unoptimized");
@@ -375,7 +389,9 @@ fn add_upstream_rust_crates(
             Linkage::NotLinked | Linkage::IncludedFromDylib => {}
             Linkage::Static => rlibs.push(src.rlib.as_ref().unwrap().0.clone()),
             //Linkage::Dynamic => rlibs.push(src.dylib.as_ref().unwrap().0.clone()),
-            Linkage::Dynamic => sess.err("TODO: Linkage::Dynamic not supported yet"),
+            Linkage::Dynamic => {
+                sess.err("TODO: Linkage::Dynamic not supported yet");
+            }
         }
     }
 }
@@ -433,9 +449,11 @@ fn add_upstream_native_libraries(
     }
 }
 
+// FIXME(eddyb) upstream has code like this already, maybe we can reuse most of it?
+// (see `compiler/rustc_codegen_ssa/src/back/link.rs`)
 fn relevant_lib(sess: &Session, lib: &NativeLib) -> bool {
     match lib.cfg {
-        Some(ref cfg) => rustc_attr::cfg_matches(cfg, &sess.parse_sess, None),
+        Some(ref cfg) => rustc_attr::cfg_matches(cfg, &sess.parse_sess, CRATE_NODE_ID, None),
         None => true,
     }
 }
@@ -539,7 +557,7 @@ fn do_link(
 
     match link_result {
         Ok(v) => v,
-        Err(rustc_errors::ErrorReported) => {
+        Err(rustc_errors::ErrorGuaranteed { .. }) => {
             sess.abort_if_errors();
             bug!("Linker errored, but no error reported")
         }
@@ -548,7 +566,6 @@ fn do_link(
 
 /// As of right now, this is essentially a no-op, just plumbing through all the files.
 // TODO: WorkProduct impl
-#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn run_thin(
     cgcx: &CodegenContext<SpirvCodegenBackend>,
     modules: Vec<(String, SpirvThinBuffer)>,

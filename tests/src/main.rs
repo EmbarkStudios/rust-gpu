@@ -94,6 +94,7 @@ struct Runner {
 impl Runner {
     /// Runs the given `mode` on the directory that matches that name, using the
     /// backend provided by `codegen_backend_path`.
+    #[allow(clippy::string_add)]
     fn run_mode(&self, mode: &'static str) {
         /// RUSTFLAGS passed to all test files.
         fn test_rustc_flags(
@@ -122,7 +123,7 @@ impl Runner {
                 "--crate-type dylib",
                 "-Zunstable-options",
                 "-Zcrate-attr=no_std",
-                "-Zcrate-attr=feature(register_attr,asm)",
+                "-Zcrate-attr=feature(register_attr,asm_const,asm_experimental_arch)",
                 "-Zcrate-attr=register_attr(spirv)",
             ]
             .join(" ")
@@ -311,7 +312,7 @@ fn rust_flags(codegen_backend_path: &Path) -> String {
         "-Cdebuginfo=2",
         "-Cembed-bitcode=no",
         &format!("-Ctarget-feature=+{}", target_features.join(",+")),
-        "-Zsymbol-mangling-version=v0",
+        "-Csymbol-mangling-version=v0",
     ]
     .join(" ")
 }

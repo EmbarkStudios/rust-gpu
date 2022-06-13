@@ -2,12 +2,12 @@
 #![cfg_attr(
     target_arch = "spirv",
     feature(
-        asm,
-        register_attr,
-        repr_simd,
+        asm_const,
+        asm_experimental_arch,
         core_intrinsics,
         lang_items,
-        abi_unadjusted
+        register_attr,
+        repr_simd,
     ),
     register_attr(spirv)
 )]
@@ -87,8 +87,6 @@
     // We deblierately provide an unimplemented version of our API on CPU
     // platforms so that code completion still works.
     clippy::unimplemented,
-    // The part of `adt_const_params` we're using (C-like enums) is not incomplete.
-    incomplete_features,
 )]
 #![warn(missing_docs)]
 

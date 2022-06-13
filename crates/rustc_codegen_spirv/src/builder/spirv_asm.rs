@@ -12,10 +12,10 @@ use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{AsmBuilderMethods, InlineAsmOperandRef};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_hir::LlvmInlineAsmInner;
-use rustc_middle::bug;
+use rustc_middle::{bug, ty::Instance};
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
+use std::convert::TryFrom;
 
 pub struct InstructionTable {
     table: FxHashMap<&'static str, &'static rspirv::grammar::Instruction<'static>>,
@@ -31,17 +31,6 @@ impl InstructionTable {
 }
 
 impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
-    fn codegen_llvm_inline_asm(
-        &mut self,
-        _: &LlvmInlineAsmInner,
-        _: Vec<PlaceRef<'tcx, Self::Value>>,
-        _: Vec<Self::Value>,
-        _: Span,
-    ) -> bool {
-        self.err("LLVM asm not supported");
-        true
-    }
-
     /* Example asm and the template it compiles to:
     asm!(
         "mov {0}, {1}",
@@ -69,6 +58,8 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         operands: &[InlineAsmOperandRef<'tcx, Self>],
         options: InlineAsmOptions,
         _line_spans: &[Span],
+        _instance: Instance<'_>,
+        _dest_catch_funclet: Option<(Self::BasicBlock, Self::BasicBlock, Option<&Self::Funclet>)>,
     ) {
         const SUPPORTED_OPTIONS: InlineAsmOptions = InlineAsmOptions::NORETURN;
         let unsupported_options = options & !SUPPORTED_OPTIONS;
@@ -436,19 +427,16 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Some(result_id) => result_id,
                 None => return,
             };
-            match tokens.next() {
-                Some(Token::Word("=")) => (),
-                _ => {
-                    self.err("expected equals after result id specifier");
-                    return;
-                }
+            if let Some(Token::Word("=")) = tokens.next() {
+            } else {
+                self.err("expected equals after result id specifier");
+                return;
             }
-            first_token = match tokens.next() {
-                Some(tok) => tok,
-                None => {
-                    self.err("expected instruction after equals");
-                    return;
-                }
+            first_token = if let Some(tok) = tokens.next() {
+                tok
+            } else {
+                self.err("expected instruction after equals");
+                return;
             };
             Some(result_id)
         } else {
@@ -470,12 +458,11 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         let inst_class = inst_name
             .strip_prefix("Op")
             .and_then(|n| self.instruction_table.table.get(n));
-        let inst_class = match inst_class {
-            Some(inst) => inst,
-            None => {
-                self.err(&format!("unknown spirv instruction {}", inst_name));
-                return;
-            }
+        let inst_class = if let Some(inst) = inst_class {
+            inst
+        } else {
+            self.err(&format!("unknown spirv instruction {}", inst_name));
+            return;
         };
         let result_id = match out_register {
             Some(OutRegister::Regular(reg)) => Some(reg),
@@ -698,13 +685,23 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
                 TyPat::IndexComposite(pat) => {
                     let mut ty = subst_ty_pat(cx, pat, ty_vars, leftover_operands)?;
-                    for _index in leftover_operands {
-                        // FIXME(eddyb) support more than just arrays, by looking
-                        // up the indices (of struct fields) as constant integers.
+                    for index in leftover_operands {
+                        let index_to_usize = || match *index {
+                            // FIXME(eddyb) support more than just literals,
+                            // by looking up `IdRef`s as constant integers.
+                            dr::Operand::LiteralInt32(i) => usize::try_from(i).ok(),
+
+                            _ => None,
+                        };
                         ty = match cx.lookup_type(ty) {
                             SpirvType::Array { element, .. }
                             | SpirvType::RuntimeArray { element } => element,
 
+                            SpirvType::Adt { field_types, .. } => *index_to_usize()
+                                .and_then(|i| field_types.get(i))
+                                .ok_or(Ambiguous)?,
+
+                            // FIXME(eddyb) support more than just arrays and structs.
                             _ => return Err(Ambiguous),
                         };
                     }
@@ -792,10 +789,11 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             InlineAsmRegOrRegClass::RegClass(InlineAsmRegClass::SpirV(
                 SpirVInlineAsmRegClass::reg,
             )) => {}
-            _ => self
-                .tcx
-                .sess
-                .span_err(span, &format!("invalid register: {}", reg)),
+            _ => {
+                self.tcx
+                    .sess
+                    .span_err(span, &format!("invalid register: {}", reg));
+            }
         }
     }
 
@@ -806,19 +804,20 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<OutRegister<'a>> {
         match token {
-            Token::Word(word) => match word.strip_prefix('%') {
-                Some(id) => Some(OutRegister::Regular({
-                    let num = *id_map.entry(id).or_insert_with(|| self.emit().id());
-                    if !defined_ids.insert(num) {
-                        self.err(&format!("%{} is defined more than once", id));
-                    }
-                    num
-                })),
-                None => {
+            Token::Word(word) => {
+                if let Some(id) = word.strip_prefix('%') {
+                    Some(OutRegister::Regular({
+                        let num = *id_map.entry(id).or_insert_with(|| self.emit().id());
+                        if !defined_ids.insert(num) {
+                            self.err(&format!("%{} is defined more than once", id));
+                        }
+                        num
+                    }))
+                } else {
                     self.err("expected ID");
                     None
                 }
-            },
+            }
             Token::String(_) => {
                 self.err("expected ID, not string");
                 None
@@ -894,13 +893,14 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<Word> {
         match token {
-            Token::Word(word) => match word.strip_prefix('%') {
-                Some(id) => Some(*id_map.entry(id).or_insert_with(|| self.emit().id())),
-                None => {
+            Token::Word(word) => {
+                if let Some(id) = word.strip_prefix('%') {
+                    Some(*id_map.entry(id).or_insert_with(|| self.emit().id()))
+                } else {
                     self.err("expected ID");
                     None
                 }
-            },
+            }
             Token::String(_) => {
                 self.err("expected ID, not string");
                 None
@@ -1146,21 +1146,34 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     match tokens.next() {
                         Some(Token::Word(word)) => match word.parse() {
                             Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
-                            Err(e) => self.err(&format!("invalid integer: {}", e)),
+                            Err(e) => {
+                                self.err(&format!("invalid integer: {}", e));
+                            }
                         },
-                        Some(Token::String(_)) => self.err(&format!(
-                            "expected a literal, not a string for a {:?}",
-                            kind
-                        )),
-                        Some(Token::Placeholder(_, span)) => self.tcx.sess.span_err(
-                            span,
-                            &format!("expected a literal, not a dynamic value for a {:?}", kind),
-                        ),
-                        Some(Token::Typeof(_, span, _)) => self.tcx.sess.span_err(
-                            span,
-                            &format!("expected a literal, not a type for a {:?}", kind),
-                        ),
-                        None => self.err("expected operand after instruction"),
+                        Some(Token::String(_)) => {
+                            self.err(&format!(
+                                "expected a literal, not a string for a {:?}",
+                                kind
+                            ));
+                        }
+                        Some(Token::Placeholder(_, span)) => {
+                            self.tcx.sess.span_err(
+                                span,
+                                &format!(
+                                    "expected a literal, not a dynamic value for a {:?}",
+                                    kind
+                                ),
+                            );
+                        }
+                        Some(Token::Typeof(_, span, _)) => {
+                            self.tcx.sess.span_err(
+                                span,
+                                &format!("expected a literal, not a type for a {:?}", kind),
+                            );
+                        }
+                        None => {
+                            self.err("expected operand after instruction");
+                        }
                     }
                 }
             }

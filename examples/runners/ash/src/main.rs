@@ -68,7 +68,7 @@
 )]
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
-#![allow()]
+// #![allow()]
 
 use ash::{
     extensions::{ext, khr},
@@ -221,9 +221,6 @@ pub struct SpvFile {
 pub struct RenderBase {
     pub window: winit::window::Window,
 
-    #[cfg(target_os = "macos")]
-    pub entry: ash_molten::MoltenEntry,
-    #[cfg(not(target_os = "macos"))]
     pub entry: ash::Entry,
 
     pub instance: ash::Instance,
@@ -246,9 +243,9 @@ impl RenderBase {
     pub fn new(window: winit::window::Window, options: &Options) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(target_os = "macos")] {
-                let entry = ash_molten::MoltenEntry::load();
+                let entry = ash_molten::load();
             } else {
-                let entry = unsafe { ash::Entry::new().unwrap() };
+                let entry = unsafe{ash::Entry::load()}.unwrap();
             }
         }
 
@@ -279,7 +276,7 @@ impl RenderBase {
                 .application_version(0)
                 .engine_name(&app_name)
                 .engine_version(0)
-                .api_version(vk::make_api_version(1, 2, 0, 0));
+                .api_version(vk::make_api_version(0, 1, 2, 0));
 
             let instance_create_info = vk::InstanceCreateInfo::builder()
                 .application_info(&appinfo)
@@ -305,7 +302,11 @@ impl RenderBase {
                             | vk::DebugUtilsMessageSeverityFlagsEXT::WARNING
                             | vk::DebugUtilsMessageSeverityFlagsEXT::INFO,
                     )
-                    .message_type(vk::DebugUtilsMessageTypeFlagsEXT::all())
+                    .message_type(
+                        vk::DebugUtilsMessageTypeFlagsEXT::GENERAL
+                            | vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION
+                            | vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE,
+                    )
                     .pfn_user_callback(Some(vulkan_debug_callback));
 
                 unsafe {
@@ -680,7 +681,7 @@ impl RenderCtx {
         let push_constant_range = vk::PushConstantRange::builder()
             .offset(0)
             .size(std::mem::size_of::<ShaderConstants>() as u32)
-            .stage_flags(vk::ShaderStageFlags::all())
+            .stage_flags(vk::ShaderStageFlags::ALL)
             .build();
         let layout_create_info = vk::PipelineLayoutCreateInfo::builder()
             .push_constant_ranges(&[push_constant_range])
@@ -956,7 +957,7 @@ impl RenderCtx {
                 device.cmd_push_constants(
                     draw_command_buffer,
                     pipeline.pipeline_layout,
-                    ash::vk::ShaderStageFlags::all(),
+                    ash::vk::ShaderStageFlags::ALL,
                     0,
                     any_as_u8_slice(&push_constants),
                 );
@@ -1202,7 +1203,10 @@ impl PipelineDescriptor {
             src_alpha_blend_factor: vk::BlendFactor::ZERO,
             dst_alpha_blend_factor: vk::BlendFactor::ZERO,
             alpha_blend_op: vk::BlendOp::ADD,
-            color_write_mask: vk::ColorComponentFlags::all(),
+            color_write_mask: vk::ColorComponentFlags::R
+                | vk::ColorComponentFlags::G
+                | vk::ColorComponentFlags::B
+                | vk::ColorComponentFlags::A,
         }]);
         let color_blend = vk::PipelineColorBlendStateCreateInfo::builder()
             .logic_op(vk::LogicOp::CLEAR)

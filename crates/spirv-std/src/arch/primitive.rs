@@ -1,3 +1,6 @@
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
+
 /// Emits the current values of all output variables to the current output
 /// primitive. After execution, the values of all output variables
 /// are undefined.  Requires capability `Geometry`.

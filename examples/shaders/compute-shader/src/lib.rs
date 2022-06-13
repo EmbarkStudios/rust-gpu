@@ -7,8 +7,6 @@
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 
-extern crate spirv_std;
-
 use glam::UVec3;
 use spirv_std::glam;
 #[cfg(not(target_arch = "spirv"))]
@@ -44,13 +42,5 @@ pub fn main_cs(
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] prime_indices: &mut [u32],
 ) {
     let index = id.x as usize;
-    prime_indices[index] = unwrap_or_max(collatz(prime_indices[index]));
-}
-
-// Work around https://github.com/EmbarkStudios/rust-gpu/issues/677
-fn unwrap_or_max(option: Option<u32>) -> u32 {
-    match option {
-        Some(inner) => inner,
-        None => u32::MAX,
-    }
+    prime_indices[index] = collatz(prime_indices[index]).unwrap_or(u32::MAX);
 }

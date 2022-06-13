@@ -72,7 +72,7 @@ const BUILTINS: &[(&str, BuiltIn)] = {
         ("num_subgroups", NumSubgroups),
         // ("num_enqueued_subgroups", NumEnqueuedSubgroups), -- Kernel-only
         ("subgroup_id", SubgroupId),
-        // ("subgroup_local_invocation_id", SubgroupLocalInvocationId), -- Kernel-only
+        ("subgroup_local_invocation_id", SubgroupLocalInvocationId),
         ("vertex_index", VertexIndex),
         ("instance_index", InstanceIndex),
         ("subgroup_eq_mask", SubgroupEqMask),
@@ -446,19 +446,17 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                             ));
                         }
                     };
-                    sym.attributes
-                        .get(&name.name)
-                        .map(|a| {
+                    sym.attributes.get(&name.name).map_or_else(
+                        || Err((name.span, "unknown argument to spirv attribute".to_string())),
+                        |a| {
                             Ok(match a {
                                 SpirvAttribute::Entry(entry) => SpirvAttribute::Entry(
                                     parse_entry_attrs(sym, arg, &name, entry.execution_model)?,
                                 ),
                                 _ => a.clone(),
                             })
-                        })
-                        .unwrap_or_else(|| {
-                            Err((name.span, "unknown argument to spirv attribute".to_string()))
-                        })?
+                        },
+                    )?
                 };
                 Ok((span, parsed_attr))
             }))
@@ -653,7 +651,7 @@ fn parse_entry_attrs(
                 .execution_modes
                 .push((origin_mode, ExecutionModeExtra::new([])));
         }
-        GLCompute => {
+        GLCompute | MeshNV | TaskNV => {
             if let Some(local_size) = local_size {
                 entry
                     .execution_modes
@@ -662,7 +660,7 @@ fn parse_entry_attrs(
                 return Err((
                     arg.span(),
                     String::from(
-                        "The `threads` argument must be specified when using `#[spirv(compute)]`",
+                        "The `threads` argument must be specified when using `#[spirv(compute)]`, `#[spirv(mesh_nv)]` or `#[spirv(task_nv)]`",
                     ),
                 ));
             }

@@ -407,25 +407,15 @@ impl BuilderSpirv {
     }
 
     pub fn dump_module_str(&self) -> String {
-        let mut module = self.builder.borrow().module_ref().clone();
-        let mut header = rspirv::dr::ModuleHeader::new(0);
-        header.set_version(0, 0);
-        module.header = Some(header);
-        module.disassemble()
+        self.builder.borrow().module_ref().disassemble()
     }
 
     /// Helper function useful to place right before a crash, to debug the module state.
     pub fn dump_module(&self, path: impl AsRef<Path>) {
-        let mut module = self.builder.borrow().module_ref().clone();
-        let mut header = rspirv::dr::ModuleHeader::new(0);
-        header.set_version(0, 0);
-        module.header = Some(header);
-        let disas = module.disassemble();
-        println!("{}", disas);
-        let spirv_module = module.assemble();
+        let module = self.builder.borrow().module_ref().assemble();
         File::create(path)
             .unwrap()
-            .write_all(spirv_tools::binary::from_binary(&spirv_module))
+            .write_all(spirv_tools::binary::from_binary(&module))
             .unwrap();
     }
 
@@ -528,7 +518,7 @@ impl BuilderSpirv {
 
             SpirvConst::Composite(ref v) => v.iter().fold(Ok(()), |composite_legal, field| {
                 let field_entry = &self.id_to_const.borrow()[field];
-                let field_legal_in_composite = field_entry.legal.and_then(|()| {
+                let field_legal_in_composite = field_entry.legal.and(
                     // `field` is itself some legal `SpirvConst`, but can we have
                     // it as part of an `OpConstantComposite`?
                     match field_entry.val {
@@ -536,8 +526,8 @@ impl BuilderSpirv {
                             LeafIllegalConst::CompositeContainsPtrTo,
                         )),
                         _ => Ok(()),
-                    }
-                });
+                    },
+                );
 
                 match (composite_legal, field_legal_in_composite) {
                     (Ok(()), Ok(())) => Ok(()),

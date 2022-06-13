@@ -1,5 +1,8 @@
 //! Image types
 
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
+
 // Rustfmt formats long marker trait impls over multiple lines which makes them
 // harder to read.
 #[rustfmt::skip]

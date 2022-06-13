@@ -330,26 +330,28 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let one = self.constant_int(size_bytes.ty, 1);
         let zero_align = Align::from_bytes(0).unwrap();
 
-        let mut header = self.build_sibling_block("memset_header");
-        let mut body = self.build_sibling_block("memset_body");
-        let exit = self.build_sibling_block("memset_exit");
+        let header_bb = self.append_sibling_block("memset_header");
+        let body_bb = self.append_sibling_block("memset_body");
+        let exit_bb = self.append_sibling_block("memset_exit");
 
         let count = self.udiv(size_bytes, size_elem_const);
         let index = self.alloca(count.ty, zero_align);
         self.store(zero, index, zero_align);
-        self.br(header.llbb());
+        self.br(header_bb);
 
-        let current_index = header.load(count.ty, index, zero_align);
-        let cond = header.icmp(IntPredicate::IntULT, current_index, count);
-        header.cond_br(cond, body.llbb(), exit.llbb());
+        self.switch_to_block(header_bb);
+        let current_index = self.load(count.ty, index, zero_align);
+        let cond = self.icmp(IntPredicate::IntULT, current_index, count);
+        self.cond_br(cond, body_bb, exit_bb);
 
-        let gep_ptr = body.gep(pat.ty, ptr, &[current_index]);
-        body.store(pat, gep_ptr, zero_align);
-        let current_index_plus_1 = body.add(current_index, one);
-        body.store(current_index_plus_1, index, zero_align);
-        body.br(header.llbb());
+        self.switch_to_block(body_bb);
+        let gep_ptr = self.gep(pat.ty, ptr, &[current_index]);
+        self.store(pat, gep_ptr, zero_align);
+        let current_index_plus_1 = self.add(current_index, one);
+        self.store(current_index_plus_1, index, zero_align);
+        self.br(header_bb);
 
-        *self = exit;
+        self.switch_to_block(exit_bb);
     }
 
     fn zombie_convert_ptr_to_u(&self, def: Word) {
@@ -410,6 +412,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                             if field_ty_kind
                                 .sizeof(self)
                                 .map_or(true, |size| offset_in_field < size)
+                                // If the field is a zero sized type, check the type to
+                                // get the correct entry
+                                || offset_in_field == Size::ZERO && leaf_ty == field_ty
                             {
                                 Some((i, field_ty, field_ty_kind, offset_in_field))
                             } else {
@@ -503,23 +508,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         .unwrap()
     }
 
-    fn build_sibling_block(&mut self, _name: &str) -> Self {
-        let mut builder = self.emit_with_cursor(BuilderCursor {
-            function: self.cursor.function,
-            block: None,
-        });
-        let new_bb = builder.begin_block(None).unwrap();
-        let new_cursor = BuilderCursor {
-            function: self.cursor.function,
-            block: builder.selected_block(),
-        };
-        Self {
-            cx: self.cx,
-            cursor: new_cursor,
-            current_fn: self.current_fn,
-            basic_block: new_bb,
-            current_span: Default::default(),
-        }
+    fn switch_to_block(&mut self, llbb: Self::BasicBlock) {
+        // FIXME(eddyb) this could be more efficient by having an index in
+        // `Self::BasicBlock`, not just a SPIR-V ID.
+        *self = Self::build(self.cx, llbb);
     }
 
     fn ret_void(&mut self) {
@@ -641,7 +633,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.emit().unreachable().unwrap();
     }
 
-    simple_op! {add, i_add}
+    simple_op! {
+        add, i_add,
+        fold_const {
+            int(a, b) => a.wrapping_add(b)
+        }
+    }
     simple_op! {fadd, f_add}
     simple_op! {fadd_fast, f_add} // fast=normal
     simple_op! {sub, i_sub}
@@ -652,7 +649,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // HACK(eddyb) `rustc_codegen_ssa` relies on `Builder` methods doing
         // on-the-fly constant-folding, for e.g. intrinsics that copy memory.
         fold_const {
-            int(a, b) => a * b
+            int(a, b) => a.wrapping_mul(b)
         }
     }
     simple_op! {fmul, f_mul}
@@ -782,22 +779,22 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         result
     }
 
+    // rustc has the concept of an immediate vs. memory type - bools are compiled to LLVM bools as
+    // immediates, but if they're behind a pointer, they're compiled to u8. The reason for this is
+    // because LLVM is bad at bools behind pointers (something something u1 bitmasking on load).
+    //
+    // SPIR-V allows bools behind *some* pointers, and disallows others - specifically, it allows
+    // bools behind the storage classes Workgroup, CrossWorkgroup, Private, Function, Input, and
+    // Output. In other words, "For stuff the CPU can't see, bools are OK. For stuff the CPU *can*
+    // see, no bools allowed". So, we always compile rust bools to SPIR-V bools instead of u8 as
+    // rustc does, even if they're behind a pointer, and error if bools are in an interface (the
+    // user should choose u8, u32, or something else instead). That means that immediate types and
+    // memory types are the same, and no conversion needs to happen here.
     fn from_immediate(&mut self, val: Self::Value) -> Self::Value {
-        if self.lookup_type(val.ty) == SpirvType::Bool {
-            let i8 = SpirvType::Integer(8, false).def(self.span(), self);
-            self.zext(val, i8)
-        } else {
-            val
-        }
+        val
     }
 
-    // silly clippy, we can't rename this!
-    #[allow(clippy::wrong_self_convention)]
-    fn to_immediate_scalar(&mut self, val: Self::Value, scalar: Scalar) -> Self::Value {
-        if scalar.is_bool() {
-            let bool = SpirvType::Bool.def(self.span(), self);
-            return self.trunc(val, bool);
-        }
+    fn to_immediate_scalar(&mut self, val: Self::Value, _scalar: Scalar) -> Self::Value {
         val
     }
 
@@ -923,24 +920,21 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 place.align,
             );
             OperandValue::Immediate(self.to_immediate(llval, place.layout))
-        } else if let Abi::ScalarPair(ref a, ref b) = place.layout.abi {
-            let b_offset = a.value.size(self).align_to(b.value.align(self).abi);
+        } else if let Abi::ScalarPair(a, b) = place.layout.abi {
+            let b_offset = a
+                .primitive()
+                .size(self)
+                .align_to(b.primitive().align(self).abi);
 
             let pair_ty = place.layout.spirv_type(self.span(), self);
-            let mut load = |i, scalar: &Scalar, align| {
+            let mut load = |i, scalar: Scalar, align| {
                 let llptr = self.struct_gep(pair_ty, place.llval, i as u64);
                 let load = self.load(
                     self.scalar_pair_element_backend_type(place.layout, i, false),
                     llptr,
                     align,
                 );
-                // WARN! This does not go through to_immediate due to only having a Scalar, not a Ty, but it still does
-                // whatever to_immediate does!
-                if scalar.is_bool() {
-                    self.trunc(load, SpirvType::Bool.def(self.span(), self))
-                } else {
-                    load
-                }
+                self.to_immediate_scalar(load, scalar)
             };
 
             OperandValue::Pair(
@@ -987,6 +981,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn nonnull_metadata(&mut self, _load: Self::Value) {
         // ignore
+    }
+
+    fn type_metadata(&mut self, _function: Self::Function, _typeid: String) {
+        // ignore
+    }
+
+    fn typeid_metadata(&mut self, _typeid: String) -> Self::Value {
+        todo!()
     }
 
     fn store(&mut self, val: Self::Value, ptr: Self::Value, _align: Align) -> Self::Value {
@@ -1883,23 +1885,20 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .with_type(agg_val.ty)
     }
 
-    fn landing_pad(
-        &mut self,
-        _ty: Self::Type,
-        _pers_fn: Self::Value,
-        _num_clauses: usize,
-    ) -> Self::Value {
+    fn set_personality_fn(&mut self, _personality: Self::Value) {
         todo!()
     }
 
-    fn set_cleanup(&mut self, _landing_pad: Self::Value) {
+    // These are used by everyone except msvc
+    fn cleanup_landing_pad(&mut self, _ty: Self::Type, _pers_fn: Self::Value) -> Self::Value {
         todo!()
     }
 
-    fn resume(&mut self, _exn: Self::Value) -> Self::Value {
+    fn resume(&mut self, _exn: Self::Value) {
         todo!()
     }
 
+    // These are used only by msvc
     fn cleanup_pad(
         &mut self,
         _parent: Option<Self::Value>,
@@ -1908,11 +1907,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         todo!()
     }
 
-    fn cleanup_ret(
-        &mut self,
-        _funclet: &Self::Funclet,
-        _unwind: Option<Self::BasicBlock>,
-    ) -> Self::Value {
+    fn cleanup_ret(&mut self, _funclet: &Self::Funclet, _unwind: Option<Self::BasicBlock>) {
         todo!()
     }
 
@@ -1924,16 +1919,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         &mut self,
         _parent: Option<Self::Value>,
         _unwind: Option<Self::BasicBlock>,
-        _num_handlers: usize,
+        _handlers: &[Self::BasicBlock],
     ) -> Self::Value {
-        todo!()
-    }
-
-    fn add_handler(&mut self, _catch_switch: Self::Value, _handler: Self::BasicBlock) {
-        todo!()
-    }
-
-    fn set_personality_fn(&mut self, _personality: Self::Value) {
         todo!()
     }
 
@@ -2150,18 +2137,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     return_type,
                     arguments,
                 } => (
-                    match callee.kind {
-                        SpirvValueKind::FnAddr { function } => {
-                            assert_ty_eq!(self, callee_ty, pointee);
-                            function
-                        }
-
-                        // Truly indirect call.
-                        _ => {
-                            let fn_ptr_val = callee.def(self);
-                            self.zombie(fn_ptr_val, "indirect calls are not supported in SPIR-V");
-                            fn_ptr_val
-                        }
+                    if let SpirvValueKind::FnAddr { function } = callee.kind {
+                        assert_ty_eq!(self, callee_ty, pointee);
+                        function
+                    }
+                    // Truly indirect call.
+                    else {
+                        let fn_ptr_val = callee.def(self);
+                        self.zombie(fn_ptr_val, "indirect calls are not supported in SPIR-V");
+                        fn_ptr_val
                     },
                     return_type,
                     arguments,
@@ -2181,7 +2165,17 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         for (argument, argument_type) in args.iter().zip(argument_types) {
             assert_ty_eq!(self, argument.ty, argument_type);
         }
-        let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).cloned();
+        let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).copied();
+        let buffer_load_intrinsic = self
+            .buffer_load_intrinsic_fn_id
+            .borrow()
+            .get(&callee_val)
+            .copied();
+        let buffer_store_intrinsic = self
+            .buffer_store_intrinsic_fn_id
+            .borrow()
+            .get(&callee_val)
+            .copied();
         if let Some(libm_intrinsic) = libm_intrinsic {
             let result = self.call_libm_intrinsic(libm_intrinsic, result_type, args);
             if result_type != result.ty {
@@ -2200,18 +2194,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // needing to materialize `&core::panic::Location` or `format_args!`.
             self.abort();
             self.undef(result_type)
-        } else if self
-            .buffer_load_intrinsic_fn_id
-            .borrow()
-            .contains(&callee_val)
-        {
-            self.codegen_buffer_load_intrinsic(result_type, args)
-        } else if self
-            .buffer_store_intrinsic_fn_id
-            .borrow()
-            .contains(&callee_val)
-        {
-            self.codegen_buffer_store_intrinsic(args);
+        } else if let Some(mode) = buffer_load_intrinsic {
+            self.codegen_buffer_load_intrinsic(result_type, args, mode)
+        } else if let Some(mode) = buffer_store_intrinsic {
+            self.codegen_buffer_store_intrinsic(args, mode);
 
             let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
             SpirvValue {

@@ -1,5 +1,7 @@
 //! Ray-tracing data types
 use crate::vector::Vector;
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
 
 /// An acceleration structure type which is an opaque reference to an
 /// acceleration structure handle as defined in the client API specification.
@@ -15,7 +17,6 @@ impl AccelerationStructure {
     /// The 64-bit integer must point to a valid acceleration structure.
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpConvertUToAccelerationStructureKHR")]
-    #[allow(clippy::empty_loop)]
     #[inline]
     pub unsafe fn from_u64(id: u64) -> AccelerationStructure {
         // Since we can't represent an uninitalized opaque type in Rust at the
@@ -35,7 +36,6 @@ impl AccelerationStructure {
     /// The combination must point to a valid acceleration structure.
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpConvertUToAccelerationStructureKHR")]
-    #[allow(clippy::empty_loop)]
     #[inline]
     pub unsafe fn from_vec(id: impl Vector<u32, 2>) -> AccelerationStructure {
         // Since we can't represent an uninitalized opaque type in Rust at the
@@ -203,7 +203,7 @@ macro_rules! ray_query {
     (@inner $name:ident $(, $mut:tt)?) => {
         let $name: &$($mut)? RayQuery = unsafe {
             let $name : *mut RayQuery;
-            asm! {
+            ::core::arch::asm! {
                 "%ray_query = OpTypeRayQueryKHR",
                 "%ray_query_ptr = OpTypePointer Generic %ray_query",
                 "{name} = OpVariable %ray_query_ptr Function",
@@ -274,31 +274,42 @@ impl RayQuery {
     #[doc(alias = "OpRayQueryProceedKHR")]
     #[inline]
     pub unsafe fn proceed(&self) -> bool {
-        let result: u32;
+        let mut result = false;
 
         asm! {
-            "%u32 = OpTypeInt 32 0",
             "%bool = OpTypeBool",
-            "%u32_0 = OpConstant %u32 0",
-            "%u32_1 = OpConstant %u32 1",
             "%result = OpRayQueryProceedKHR %bool {ray_query}",
-            "{result} = OpSelect %u32 %result %u32_1 %u32_0",
+            "OpStore {result} %result",
             ray_query = in(reg) self,
-            result = out(reg) result,
+            result = in(reg) &mut result,
         }
 
-        result != 0
+        result
     }
 
     /// Terminates further execution of a ray query; further calls to
-    /// [`Self::proceed`] will return `false`.The value returned by any prior
+    /// [`Self::proceed`] will return `false`. The value returned by any prior
     /// execution of [`Self::proceed`] with the same ray query object must have
-    /// been true. Refer to the client API specification for more details.
+    /// been true.
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryTerminateKHR")]
     #[inline]
     pub unsafe fn terminate(&self) {
         asm!("OpRayQueryTerminateKHR {}", in(reg) self)
+    }
+
+    /// Confirms a triangle intersection to be included in the determination
+    /// of the closest hit for a ray query.
+    ///
+    /// [`Self::proceed()`] must have been called on this object, and it must
+    /// have returned true. The current intersection candidate must have a
+    /// [`Self::get_candidate_intersection_type()`] of
+    /// [`CandidateIntersection::Triangle`].
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpRayQueryConfirmIntersectionKHR")]
+    #[inline]
+    pub unsafe fn confirm_intersection(&self) {
+        asm!("OpRayQueryConfirmIntersectionKHR {}", in(reg) self)
     }
 
     /// Returns the type of the current candidate intersection.

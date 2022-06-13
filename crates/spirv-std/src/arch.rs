@@ -8,6 +8,8 @@ use crate::{
     scalar::Scalar,
     vector::Vector,
 };
+#[cfg(target_arch = "spirv")]
+use core::arch::asm;
 
 mod barrier;
 mod demote_to_helper_invocation_ext;
@@ -31,22 +33,11 @@ pub fn any<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
 
     unsafe {
         asm! {
-            // Types & Constants
             "%bool = OpTypeBool",
-            "%u8 = OpTypeInt 8 0",
-            "%u8_0 = OpConstant %u8 0",
-            "%u8_1 = OpConstant %u8 1",
-            "%glam_vec_type = OpTypeVector %u8 {len}",
-            "%bool_vec_type = OpTypeVector %bool {len}",
-            "%false_vec = OpConstantNull %glam_vec_type",
-            // Code
-            "%vector = OpLoad %glam_vec_type {vector}",
-            "%bool_vec = OpINotEqual %bool_vec_type %vector %false_vec",
-            "%result = OpAny %bool %bool_vec",
-            "%boolean = OpSelect %u8 %result %u8_1 %u8_0",
-            "OpStore {result} %boolean",
+            "%vector = OpLoad _ {vector}",
+            "%result = OpAny %bool %vector",
+            "OpStore {result} %result",
             vector = in(reg) &vector,
-            len = const N,
             result = in(reg) &mut result
         }
     }
@@ -64,23 +55,12 @@ pub fn all<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
 
     unsafe {
         asm! {
-            // Types & Constants
             "%bool = OpTypeBool",
-            "%u8 = OpTypeInt 8 0",
-            "%u8_0 = OpConstant %u8 0",
-            "%u8_1 = OpConstant %u8 1",
-            "%glam_vec_type = OpTypeVector %u8 {len}",
-            "%bool_vec_type = OpTypeVector %bool {len}",
-            "%false_vec = OpConstantNull %glam_vec_type",
-            // Code
-            "%vector = OpLoad %glam_vec_type {vector}",
-            "%bool_vec = OpINotEqual %bool_vec_type %vector %false_vec",
-            "%result = OpAll %bool %bool_vec",
-            "%boolean = OpSelect %u8 %result %u8_1 %u8_0",
-            "OpStore {element} %boolean",
+            "%vector = OpLoad _ {vector}",
+            "%result = OpAll %bool %vector",
+            "OpStore {result} %result",
             vector = in(reg) &vector,
-            len = const N,
-            element = in(reg) &mut result
+            result = in(reg) &mut result
         }
     }
 
@@ -244,4 +224,116 @@ pub fn signed_min<T: SignedInteger>(a: T, b: T) -> T {
 #[spirv_std_macros::gpu_only]
 pub fn signed_max<T: SignedInteger>(a: T, b: T) -> T {
     unsafe { call_glsl_op_with_ints::<_, 42>(a, b) }
+}
+
+/// Atomically increment an integer and return the old value.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "OpAtomicIIncrement")]
+pub unsafe fn atomic_i_increment<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
+    ptr: &mut I,
+) -> I {
+    let mut old = I::default();
+
+    asm! {
+        "%u32 = OpTypeInt 32 0",
+        "%scope = OpConstant %u32 {scope}",
+        "%semantics = OpConstant %u32 {semantics}",
+        "%old = OpAtomicIIncrement _ {ptr} %scope %semantics",
+        "OpStore {old} %old",
+        scope = const SCOPE,
+        semantics = const SEMANTICS,
+        ptr = in(reg) ptr,
+        old = in(reg) &mut old,
+    }
+
+    old
+}
+
+/// Index into an array without bounds checking.
+///
+/// The main purpose of this trait is to work around the fact that the regular `get_unchecked*`
+/// methods do not work in in SPIR-V.
+pub trait IndexUnchecked<T> {
+    /// Returns a reference to the element at `index`. The equivalent of `get_unchecked`.
+    ///
+    /// # Safety
+    /// Behavior is undefined if the `index` value is greater than or equal to the length of the array.
+    unsafe fn index_unchecked(&self, index: usize) -> &T;
+    /// Returns a mutable reference to the element at `index`. The equivalent of `get_unchecked_mut`.
+    ///
+    /// # Safety
+    /// Behavior is undefined if the `index` value is greater than or equal to the length of the array.
+    unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T;
+}
+
+impl<T> IndexUnchecked<T> for [T] {
+    #[cfg(target_arch = "spirv")]
+    unsafe fn index_unchecked(&self, index: usize) -> &T {
+        asm!(
+            "%slice_ptr = OpLoad _ {slice_ptr_ptr}",
+            "%data_ptr = OpCompositeExtract _ %slice_ptr 0",
+            "%val_ptr = OpAccessChain _ %data_ptr {index}",
+            "OpReturnValue %val_ptr",
+            slice_ptr_ptr = in(reg) &self,
+            index = in(reg) index,
+            options(noreturn)
+        )
+    }
+
+    #[cfg(not(target_arch = "spirv"))]
+    unsafe fn index_unchecked(&self, index: usize) -> &T {
+        self.get_unchecked(index)
+    }
+
+    #[cfg(target_arch = "spirv")]
+    unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
+        asm!(
+            "%slice_ptr = OpLoad _ {slice_ptr_ptr}",
+            "%data_ptr = OpCompositeExtract _ %slice_ptr 0",
+            "%val_ptr = OpAccessChain _ %data_ptr {index}",
+            "OpReturnValue %val_ptr",
+            slice_ptr_ptr = in(reg) &self,
+            index = in(reg) index,
+            options(noreturn)
+        )
+    }
+
+    #[cfg(not(target_arch = "spirv"))]
+    unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
+        self.get_unchecked_mut(index)
+    }
+}
+
+impl<T, const N: usize> IndexUnchecked<T> for [T; N] {
+    #[cfg(target_arch = "spirv")]
+    unsafe fn index_unchecked(&self, index: usize) -> &T {
+        asm!(
+            "%val_ptr = OpAccessChain _ {array_ptr} {index}",
+            "OpReturnValue %val_ptr",
+            array_ptr = in(reg) self,
+            index = in(reg) index,
+            options(noreturn)
+        )
+    }
+
+    #[cfg(not(target_arch = "spirv"))]
+    unsafe fn index_unchecked(&self, index: usize) -> &T {
+        self.get_unchecked(index)
+    }
+
+    #[cfg(target_arch = "spirv")]
+    unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
+        asm!(
+            "%val_ptr = OpAccessChain _ {array_ptr} {index}",
+            "OpReturnValue %val_ptr",
+            array_ptr = in(reg) self,
+            index = in(reg) index,
+            options(noreturn)
+        )
+    }
+
+    #[cfg(not(target_arch = "spirv"))]
+    unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
+        self.get_unchecked_mut(index)
+    }
 }
