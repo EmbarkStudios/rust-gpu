@@ -18,6 +18,7 @@
 #![feature(rustc_private)]
 #![feature(assert_matches)]
 #![feature(result_flattening)]
+#![feature(lint_reasons)]
 #![feature(once_cell)]
 // crate-specific exceptions:
 #![allow(
