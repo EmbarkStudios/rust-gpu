@@ -12,6 +12,8 @@ use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
+use smallvec::SmallVec;
+use std::convert::TryInto;
 use std::mem::take;
 
 type FunctionMap = FxHashMap<Word, Function>;
@@ -372,18 +374,24 @@ impl Inliner<'_, '_> {
         };
         let return_jump = self.id();
         // Rewrite OpReturns of the callee.
-        let mut inlined_blocks = get_inlined_blocks(callee, return_variable, return_jump);
+        let mut inlined_callee_blocks = get_inlined_blocks(callee, return_variable, return_jump);
         // Clone the IDs of the callee, because otherwise they'd be defined multiple times if the
         // fn is inlined multiple times.
-        self.add_clone_id_rules(&mut rewrite_rules, &inlined_blocks);
-        apply_rewrite_rules(&rewrite_rules, &mut inlined_blocks);
+        self.add_clone_id_rules(&mut rewrite_rules, &inlined_callee_blocks);
+        apply_rewrite_rules(&rewrite_rules, &mut inlined_callee_blocks);
 
-        // Split the block containing the OpFunctionCall into two, around the call.
-        let mut post_call_block_insts = caller.blocks[block_idx]
+        // Split the block containing the `OpFunctionCall` into pre-call vs post-call.
+        let pre_call_block_idx = block_idx;
+        #[expect(unused)]
+        let block_idx: usize; // HACK(eddyb) disallowing using the unrenamed variable.
+        let mut post_call_block_insts = caller.blocks[pre_call_block_idx]
             .instructions
             .split_off(call_index + 1);
         // pop off OpFunctionCall
-        let call = caller.blocks[block_idx].instructions.pop().unwrap();
+        let call = caller.blocks[pre_call_block_idx]
+            .instructions
+            .pop()
+            .unwrap();
         assert!(call.class.opcode == Op::FunctionCall);
 
         if let Some(call_result_type) = call_result_type {
@@ -396,19 +404,13 @@ impl Inliner<'_, '_> {
             );
         }
 
-        // Fuse the first block of the callee into the block of the caller. This is okay because
-        // it's illegal to branch to the first BB in a function.
-        let mut callee_header = inlined_blocks.remove(0).instructions;
-        // TODO: OpLine handling
-        let num_variables = callee_header
-            .iter()
-            .position(|inst| inst.class.opcode != Op::Variable)
-            .unwrap_or(callee_header.len());
-        caller.blocks[block_idx]
-            .instructions
-            .append(&mut callee_header.split_off(num_variables));
-        // Move the OpVariables of the callee to the caller.
-        insert_opvariables(&mut caller.blocks[0], callee_header);
+        // Insert non-entry inlined callee blocks just after the pre-call block.
+        let non_entry_inlined_callee_blocks = inlined_callee_blocks.drain(1..);
+        let num_non_entry_inlined_callee_blocks = non_entry_inlined_callee_blocks.len();
+        caller.blocks.splice(
+            (pre_call_block_idx + 1)..(pre_call_block_idx + 1),
+            non_entry_inlined_callee_blocks,
+        );
 
         if let Some(call_result_type) = call_result_type {
             // Add the load of the result value after the inlined function. Note there's guaranteed no
@@ -423,18 +425,67 @@ impl Inliner<'_, '_> {
                 ),
             );
         }
-        // Insert the second half of the split block.
-        let continue_block = Block {
-            label: Some(Instruction::new(Op::Label, None, Some(return_jump), vec![])),
-            instructions: post_call_block_insts,
-        };
-        caller.blocks.insert(block_idx + 1, continue_block);
 
-        // Insert the rest of the blocks (i.e. not the first) between the original block that was
-        // split.
-        caller
-            .blocks
-            .splice((block_idx + 1)..(block_idx + 1), inlined_blocks);
+        // Insert the post-call block, after all the inlined callee blocks.
+        {
+            let post_call_block_idx = pre_call_block_idx + num_non_entry_inlined_callee_blocks + 1;
+            let post_call_block = Block {
+                label: Some(Instruction::new(Op::Label, None, Some(return_jump), vec![])),
+                instructions: post_call_block_insts,
+            };
+            caller.blocks.insert(post_call_block_idx, post_call_block);
+
+            // Adjust any `OpPhi`s in the (caller) targets of the original call block,
+            // to refer to post-call block (the new source of those CFG edges).
+            rewrite_phi_sources(
+                caller.blocks[pre_call_block_idx].label_id().unwrap(),
+                &mut caller.blocks,
+                post_call_block_idx,
+            );
+        }
+
+        // Fuse the inlined callee entry block into the pre-call block.
+        // This is okay because it's illegal to branch to the first BB in a function.
+        {
+            // Take a prefix sequence of `OpVariable`s from the start of `insts`,
+            // and return it as a new `Vec` (while keeping the rest in `insts`).
+            let steal_vars = |insts: &mut Vec<Instruction>| {
+                let mut vars_and_non_vars = take(insts);
+
+                // TODO: OpLine handling
+                let num_vars = vars_and_non_vars
+                    .iter()
+                    .position(|inst| inst.class.opcode != Op::Variable)
+                    .unwrap_or(vars_and_non_vars.len());
+                let (non_vars, vars) = (vars_and_non_vars.split_off(num_vars), vars_and_non_vars);
+
+                // Keep non-`OpVariable`s in `insts` while returning `OpVariable`s.
+                *insts = non_vars;
+                vars
+            };
+
+            let [mut inlined_callee_entry_block]: [_; 1] =
+                inlined_callee_blocks.try_into().unwrap();
+
+            // Move the `OpVariable`s of the callee to the caller.
+            insert_opvariables(
+                &mut caller.blocks[0],
+                steal_vars(&mut inlined_callee_entry_block.instructions),
+            );
+
+            caller.blocks[pre_call_block_idx]
+                .instructions
+                .append(&mut inlined_callee_entry_block.instructions);
+
+            // Adjust any `OpPhi`s in the (inlined callee) targets of the
+            // inlined callee entry block, to refer to the pre-call block
+            // (the new source of those CFG edges).
+            rewrite_phi_sources(
+                inlined_callee_entry_block.label_id().unwrap(),
+                &mut caller.blocks,
+                pre_call_block_idx,
+            );
+        }
 
         true
     }
@@ -532,6 +583,21 @@ fn insert_opvariables(block: &mut Block, mut insts: Vec<Instruction>) {
 fn fuse_trivial_branches(function: &mut Function) {
     let all_preds = compute_preds(&function.blocks);
     'outer: for (dest_block, mut preds) in all_preds.iter().enumerate() {
+        // Don't fuse branches into blocks with `OpPhi`s.
+        let any_phis = function.blocks[dest_block]
+            .instructions
+            .iter()
+            .filter(|inst| {
+                // These are the only instructions that are allowed before `OpPhi`.
+                !matches!(inst.class.opcode, Op::Line | Op::NoLine)
+            })
+            .take_while(|inst| inst.class.opcode == Op::Phi)
+            .next()
+            .is_some();
+        if any_phis {
+            continue;
+        }
+
         // if there's two trivial branches in a row, the middle one might get inlined before the
         // last one, so when processing the last one, skip through to the first one.
         let pred = loop {
@@ -550,6 +616,14 @@ fn fuse_trivial_branches(function: &mut Function) {
             let pred_insts = &mut function.blocks[pred].instructions;
             pred_insts.pop(); // pop the branch
             pred_insts.append(&mut dest_insts);
+
+            // Adjust any `OpPhi`s in the targets of the original block, to refer
+            // to the sole predecessor (the new source of those CFG edges).
+            rewrite_phi_sources(
+                function.blocks[dest_block].label_id().unwrap(),
+                &mut function.blocks,
+                pred,
+            );
         }
     }
     function.blocks.retain(|b| !b.instructions.is_empty());
@@ -567,4 +641,37 @@ fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
         }
     }
     result
+}
+
+/// Helper for adjusting `OpPhi` source label IDs, when the terminator of the
+/// `original_label_id`-labeled block got moved to `blocks[original_block_idx]`.
+fn rewrite_phi_sources(original_label_id: Word, blocks: &mut [Block], new_block_idx: usize) {
+    let new_label_id = blocks[new_block_idx].label_id().unwrap();
+
+    // HACK(eddyb) can't keep `blocks` borrowed, the loop needs mutable access.
+    let target_ids: SmallVec<[_; 4]> = outgoing_edges(&blocks[new_block_idx]).collect();
+
+    for target_id in target_ids {
+        let target_block = blocks
+            .iter_mut()
+            .find(|b| b.label_id().unwrap() == target_id)
+            .unwrap();
+        let phis = target_block
+            .instructions
+            .iter_mut()
+            .filter(|inst| {
+                // These are the only instructions that are allowed before `OpPhi`.
+                !matches!(inst.class.opcode, Op::Line | Op::NoLine)
+            })
+            .take_while(|inst| inst.class.opcode == Op::Phi);
+        for phi in phis {
+            for value_and_source_id in phi.operands.chunks_mut(2) {
+                let source_id = value_and_source_id[1].id_ref_any_mut().unwrap();
+                if *source_id == original_label_id {
+                    *source_id = new_label_id;
+                    break;
+                }
+            }
+        }
+    }
 }
