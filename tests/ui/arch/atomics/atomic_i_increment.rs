@@ -1,6 +1,11 @@
 // build-pass
 
-use spirv_std::arch::IndexUnchecked;
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs)]
+use spirv_std::{
+    arch::IndexUnchecked,
+    memory::{Scope, Semantics},
+};
 
 #[spirv(compute(threads(64)))]
 pub fn main(#[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffer: &mut [u32]) {
@@ -9,9 +14,8 @@ pub fn main(#[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffer: &m
     let old = unsafe {
         spirv_std::arch::atomic_i_increment::<
             _,
-            { spirv_std::memory::Scope::Workgroup as u32 },
-            { spirv_std::memory::Semantics::NONE.bits() as u32 },
+            { Scope::Workgroup as u8 },
+            { Semantics::NONE.bits() as u8 },
         >(reference)
     };
-    assert!(old == 0);
 }
