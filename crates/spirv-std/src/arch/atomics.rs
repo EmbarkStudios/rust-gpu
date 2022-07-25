@@ -503,3 +503,61 @@ pub unsafe fn atomic_xor<I: Integer, const SCOPE: u8, const SEMANTICS: u8>(
 
     old
 }
+
+/// Atomically sets the flag value pointed to by Pointer to the set state.
+/// Pointer must be a pointer to a 32-bit integer type representing an atomic flag.
+/// The instruction’s result is true if the flag was in the set state or false if the flag was in the clear state immediately before the operation.
+/// **Important:** Kernel capabilities have to be set beforehand.
+///
+/// Result Type must be a Boolean type.
+/// The resulting values are undefined if an atomic flag is modified by an instruction other than OpAtomicFlagTestAndSet or OpAtomicFlagClear.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "OpAtomicFlagTestAndSet")]
+#[inline]
+pub unsafe fn atomic_flag_test_and_set<I: Integer, const SCOPE: u8, const SEMANTICS: u8>(
+    ptr: &mut I,
+) -> bool {
+    let mut old: bool = false;
+
+    asm! {
+        "%bool = OpTypeBool",
+        "%u32 = OpTypeInt 32 0",
+        "%scope = OpConstant %u32 {scope}",
+        "%semantics = OpConstant %u32 {semantics}",
+        "%old = OpAtomicFlagTestAndSet %bool {ptr} %scope %semantics",
+        "OpStore {old} %old",
+        scope = const SCOPE,
+        semantics = const SEMANTICS,
+        ptr = in(reg) ptr,
+        old = in(reg) &mut old,
+    }
+
+    old
+}
+
+/// Atomically sets the flag value pointed to by Pointer to the clear state.
+///
+/// Pointer must be a pointer to a 32-bit integer type representing an atomic flag.
+/// **Important:** Memory Semantics must not be Acquire or AcquireRelease
+///
+/// The resulting values are undefined if an atomic flag is modified by an instruction other than OpAtomicFlagTestAndSet or OpAtomicFlagClear.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "OpAtomicFlagClear")]
+#[inline]
+pub unsafe fn atomic_flag_clear<I: Integer, const SCOPE: u8, const SEMANTICS: u8>(ptr: &mut I) {
+    // Ensure the memory semantic is not Acquire or AcquireRelease
+    assert!(
+        SEMANTICS
+            != (crate::memory::Semantics::ACQUIRE.bits() as u8
+                | crate::memory::Semantics::ACQUIRE_RELEASE.bits() as u8)
+    );
+    asm! {
+        "%u32 = OpTypeInt 32 0",
+        "%semantics = OpConstant %u32 {semantics}",
+        "%scope = OpConstant %u32 {scope}",
+        "OpAtomicFlagClear {ptr} %scope %semantics",
+        scope = const SCOPE,
+        semantics = const SEMANTICS,
+        ptr = in(reg) ptr,
+    }
+}
