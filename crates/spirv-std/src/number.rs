@@ -1,4 +1,7 @@
-/// Abstract trait representing a SPIR-V integer type.
+//! SPIR-V Numerical Type
+//!
+//! Used to represent either an integer type or floating-point type.
+/// Abstract trait representing a SPIR-V numerical type.
 pub trait Number: crate::scalar::Scalar {}
 
 impl Number for u8 {}
