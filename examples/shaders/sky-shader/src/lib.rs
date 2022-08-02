@@ -13,7 +13,7 @@
 use spirv_std::macros::spirv;
 
 use core::f32::consts::PI;
-use glam::{const_vec3, vec2, vec3, Vec2, Vec3, Vec4};
+use glam::{vec2, vec3, Vec2, Vec3, Vec4};
 use shared::*;
 
 // Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
@@ -24,11 +24,11 @@ use spirv_std::num_traits::Float;
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const MIE_COEFFICIENT: f32 = 0.005;
 const MIE_DIRECTIONAL_G: f32 = 0.8;
-const MIE_K_COEFFICIENT: Vec3 = const_vec3!([0.686, 0.678, 0.666]);
+const MIE_K_COEFFICIENT: Vec3 = Vec3::from_array([0.686, 0.678, 0.666]);
 const MIE_V: f32 = 4.0;
 const MIE_ZENITH_LENGTH: f32 = 1.25e3;
 const NUM_MOLECULES: f32 = 2.542e25f32;
-const PRIMARIES: Vec3 = const_vec3!([6.8e-7f32, 5.5e-7f32, 4.5e-7f32]);
+const PRIMARIES: Vec3 = Vec3::from_array([6.8e-7f32, 5.5e-7f32, 4.5e-7f32]);
 const RAYLEIGH: f32 = 1.0;
 const RAYLEIGH_ZENITH_LENGTH: f32 = 8.4e3;
 const REFRACTIVE_INDEX: f32 = 1.0003;
