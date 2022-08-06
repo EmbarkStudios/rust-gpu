@@ -35,6 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             "--target-dir",
         ])
         .arg(dir)
+        .env_remove("CARGO_ENCODED_RUSTFLAGS")
         .stderr(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .status()?;
