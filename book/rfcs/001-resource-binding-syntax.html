@@ -142,7 +142,7 @@
 Historically resources such as buffers, textures and samplers have been special in hardware where they were bound to specific slots on the shader core. Usually a limited number of such slots existed, leading to platform and vendor specific limits.
 <h3 id="directx"><a class="header" href="#directx">DirectX</a></h3>
 <p>In recent years most Desktop platforms have switched to loading resource descriptors from GPU memory instead, this has the major advantage that there is no real limit on the amount of Textures, Buffers and other resource anymore because they all can come from memory. In DirectX12 hardware is divided up into several Tiers which each denominate the amount of descriptors available.</p>
-<table><thead><tr><th>Resources Available to the Pipeline</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Resources Available to the Pipeline</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th></tr></thead><tbody>
 <tr><td>Feature levels</td><td>11.0+</td><td>11.0+</td><td>11.1+</td></tr>
 <tr><td>Maximum number of descriptors in a Constant Buffer View (CBV), Shader Resource View (SRV), or Unordered  Access View(UAV) heap used for rendering</td><td>1,000,000</td><td>1,000,000</td><td>1,000,000+</td></tr>
 <tr><td>Maximum number of Constant Buffer Views in all descriptor tables per shader stage</td><td>14</td><td>14</td><td>full heap</td></tr>
@@ -150,6 +150,7 @@ Historically resources such as buffers, textures and samplers have been special 
 <tr><td>Maximum number of Unordered Access Views in all descriptor tables across all stages</td><td>64 for feature levels 11.1+ or 8 for feature level</td><td>64</td><td>full heap</td></tr>
 <tr><td>Maximum number of Samplers in all descriptor tables per shader stage</td><td>16</td><td>full heap</td><td>full heap</td></tr>
 </tbody></table>
+</div>
 <h3 id="vulkan"><a class="header" href="#vulkan">Vulkan</a></h3>
 <p>On the other hand in Vulkan resource descriptor binding is designed in such a way that it can accomodate hardware that still relies on descriptor slots instead of memory, because still a lot of such hardware exists in the wild. Especially in the Mobile space.</p>
 <p>There are some constraints that currently exist when it comes to binding resources to shaders that we may need to take into account, Vulkan has <code>maxBoundDescriptorSets</code> for example (between 4 and 32). However for the sake of argument we'll ignore these practical limitations for now.</p>
@@ -166,8 +167,7 @@ Historically resources such as buffers, textures and samplers have been special 
 <p>I would like us to have an easy way to connect bindings on the GPU and CPU side together, in a way that's as ergonomic to use as possible.</p>
 <h2 id="globals"><a class="header" href="#globals">Globals</a></h2>
 <details>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span>#![feature(const_generics)]
 #![feature(const_fn)]
 <span class="boring">fn main() {
@@ -217,8 +217,7 @@ fn main() {
 <li>Globals can be accessed anywhere in the program, easily.</li>
 </ul>
 <p>Alternative would be to remove the <code>const_generic</code> parameters potentially by moving them into the constructor.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>static ALBEDO : Texture::&lt;f32&gt; = Texture::new(0, 0);
 static NORMAL_MAP : Texture::&lt;f32&gt; = Texture::new(0, 1);
@@ -227,8 +226,7 @@ static LIGHTMAP : Texture::&lt;f32&gt; = Texture::new(0, 3);
 <span class="boring">}
 </span></code></pre></pre>
 <p>This would make it easier to pass textures to functions (even if they're in different slots) because you'd get something like this:</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn some_system(tex: &amp;Texture::&lt;f32&gt;) {
     let v = tex.sample(0.0, 0.0);
@@ -236,8 +234,7 @@ static LIGHTMAP : Texture::&lt;f32&gt; = Texture::new(0, 3);
 <span class="boring">}
 </span></code></pre></pre>
 <p>Instead of this, which would tightly couple the whole downstream system to have a texture bound to a specific set and slot. This would make changing the bindings later on a nightmare, and wouldn't allow you to conditionally invoke <code>some_system</code> with textures bound to different locations.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn some_system(tex: &amp;Texture::&lt;f32, 0, 0&gt;) {
     let v = tex.sample(0.0, 0.0);
@@ -328,8 +325,7 @@ layout(std430) buffer mesh_vertex_buf {
 <p>In OpenCL resources are marked up with their address spaces and also passed as function arguments to the executing kernel. Resources like buffers look like pointers but a lot of compiler magic is going on to turn them from resource descriptors (such as the GCN V#) into something that can emulate pointers.</p>
 <h2 id="rlsl"><a class="header" href="#rlsl">RLSL</a></h2>
 <p>RLSL also passes resource bindings as arguments to the kernel, with two template parameters. One for the <code>set</code> and one for the <code>space</code>.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[spirv(compute)]
 fn compute(compute: Compute, buffer: Buffer&lt;N0, N0, RuntimeArray&lt;f32&gt;&gt;)

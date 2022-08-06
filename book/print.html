@@ -360,19 +360,21 @@ embark's token) - crates to be published, in order:
 <li><strong>Tertiary —</strong> Present in the codebase but not built or tested.</li>
 </ul>
 <h2 id="operating-system"><a class="header" href="#operating-system">Operating System</a></h2>
-<table><thead><tr><th>Operating System</th><th>Version</th><th>Support</th><th>Notes</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Operating System</th><th>Version</th><th>Support</th><th>Notes</th></tr></thead><tbody>
 <tr><td>Windows</td><td>10+</td><td>Primary</td><td></td></tr>
 <tr><td>Linux</td><td>Ubuntu 18.04+</td><td>Primary</td><td></td></tr>
 <tr><td>macOS</td><td>Catalina (10.15)+</td><td>Secondary</td><td>Using <a href="https://github.com/KhronosGroup/MoltenVK">MoltenVK</a>, requires v1.1.2+</td></tr>
 <tr><td>Android</td><td>Tested 10-11</td><td>Secondary</td><td></td></tr>
 </tbody></table>
+</div>
 <h2 id="graphics-apis"><a class="header" href="#graphics-apis">Graphics APIs</a></h2>
-<table><thead><tr><th>Name</th><th>Version</th><th>Support</th><th>Notes</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Version</th><th>Support</th><th>Notes</th></tr></thead><tbody>
 <tr><td>SPIR-V</td><td>1.3+</td><td>Primary</td><td></td></tr>
 <tr><td>Vulkan</td><td>1.1+</td><td>Primary</td><td></td></tr>
 <tr><td>WGPU</td><td>0.6</td><td>Primary</td><td>Uses a translation layer to Metal/DX12</td></tr>
 <tr><td>OpenGL</td><td>???</td><td>Tertiary</td><td></td></tr>
 </tbody></table>
+</div>
 <h3 id="spir-v-targets"><a class="header" href="#spir-v-targets">SPIR-V Targets</a></h3>
 <ul>
 <li><code>spirv-unknown-spv1.0</code></li>
@@ -461,8 +463,7 @@ spirv-builder = { git = &quot;https://github.com/EmbarkStudios/rust-gpu&quot; }
 </ol>
 <h4 id="buildrs"><a class="header" href="#buildrs"><code>build.rs</code></a></h4>
 <p>Paste the following into the <code>main</code> for your build script.</p>
-<pre><pre class="playground"><code class="language-rust no_run">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>SpirvBuilder::new(path_to_shader, target)
         .print_metadata(MetadataPrintout::Full)
@@ -475,8 +476,7 @@ spirv-builder = { git = &quot;https://github.com/EmbarkStudios/rust-gpu&quot; }
 <p>The <code>SpirvBuilder</code> struct has numerous configuration options available, see
 rustdoc for documentation.</p>
 <h4 id="mainrs"><a class="header" href="#mainrs"><code>main.rs</code></a></h4>
-<pre><pre class="playground"><code class="language-rust no_run">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>const SHADER: &amp;[u8] = include_bytes!(env!(&quot;&lt;shader_name&gt;.spv&quot;));
 <span class="boring">}
@@ -550,8 +550,7 @@ fn main() { }
 <h3 id="compute-shader-dimensions"><a class="header" href="#compute-shader-dimensions">Compute shader dimensions</a></h3>
 <p>The dimensions (<code>local_size_*</code> in openGL, <code>numthreads</code> in DX) of a compute shader must be specified (eg. <code>#[spirv(compute(threads(32, 16, 97)))]</code>).  Trailing ones may be elided.</p>
 <p>Example:</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// the x dimension is required
 // same as threads(32, 1, 1)
@@ -613,8 +612,7 @@ refer to the <a href="https://www.khronos.org/registry/spir-v/specs/unified1/SPI
 <code>asm</code> feature on nightly. Refer to the <a href="https://doc.rust-lang.org/unstable-book/library-features/asm.html">Rust unstable book</a> for more
 information on how to use the macro.</p>
 <p>Non-ID arguments are written as-is, e.g.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asm! {
     &quot;OpCapability DerivativeControl&quot;
@@ -623,8 +621,7 @@ information on how to use the macro.</p>
 </span></code></pre></pre>
 <p>ID based arguments are prefixed with <code>%</code> and their name. <code>Result&lt;id&gt;</code>s accessed
 with a <code>=</code> and a ID on the left hand side of the expression. E.g.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let vector = spirv_std::glam::Vec2::new(1.0, 0.0);
 let mut result = f32::default();
@@ -642,8 +639,7 @@ asm! {
 <p><code>asm!</code> only accepts integers, floats, SIMD vectors, pointers and
 function pointers as input variables. However you can have the pointer point
 to a generic variable, so you can write generic assembly code like so.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use spirv_std::{scalar::Scalar, vector::Vector};
 
@@ -665,12 +661,12 @@ pub unsafe fn vector_extract_dynamic&lt;T: Scalar, V: Vector&lt;T&gt;&gt;(vector
 <span class="boring">}
 </span></code></pre></pre>
 <h3 id="additional-syntax"><a class="header" href="#additional-syntax">Additional syntax</a></h3>
-<table><thead><tr><th>Syntax</th><th>Description</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Syntax</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>%&lt;name&gt;</code></td><td>Used to refer to an abstract ID, every unique <code>&lt;name&gt;</code> use generates a new ID.</td></tr>
 <tr><td><code>typeof{&lt;variable&gt;}</code></td><td>Returns the type of <code>variable</code></td></tr>
 <tr><td><code>_</code> (underscore)</td><td>Equivalent to <code>typeof{&lt;variable&gt;}</code>, but uses inference to determine the variable</td></tr>
 </tbody></table>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="image-type-syntax"><a class="header" href="#image-type-syntax">Image type syntax</a></h1>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="image-type-syntax"><a class="header" href="#image-type-syntax">Image type syntax</a></h1>
 <p>There are a huge number of combinations of image types in SPIR-V. They are represented by a const
 generic type called <code>spirv_std::image::Image</code>, however, specifying the generic parameters of this
 type is incredibly tedious, so a wrapper macro, <code>spirv_std::Image!</code> can be used to write the type
@@ -681,8 +677,7 @@ instead.</p>
 <a href="https://embarkstudios.github.io/rust-gpu/api/spirv_std/image/index.html"><code>spirv_std::image</code></a>
 module. For example, <code>Image2d</code> is a very commonly used type, corresponding to <code>texture2D</code> in GLSL,
 and is likely what you want if you want a regular old sampled texture.</p>
-<pre><pre class="playground"><code class="language-rust no_run">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>type Image2d = Image!(2D, type=f32, sampled);
 <span class="boring">}
@@ -695,7 +690,7 @@ and is likely what you want if you want a regular old sampled texture.</p>
 Historically resources such as buffers, textures and samplers have been special in hardware where they were bound to specific slots on the shader core. Usually a limited number of such slots existed, leading to platform and vendor specific limits.
 <h3 id="directx"><a class="header" href="#directx">DirectX</a></h3>
 <p>In recent years most Desktop platforms have switched to loading resource descriptors from GPU memory instead, this has the major advantage that there is no real limit on the amount of Textures, Buffers and other resource anymore because they all can come from memory. In DirectX12 hardware is divided up into several Tiers which each denominate the amount of descriptors available.</p>
-<table><thead><tr><th>Resources Available to the Pipeline</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Resources Available to the Pipeline</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th></tr></thead><tbody>
 <tr><td>Feature levels</td><td>11.0+</td><td>11.0+</td><td>11.1+</td></tr>
 <tr><td>Maximum number of descriptors in a Constant Buffer View (CBV), Shader Resource View (SRV), or Unordered  Access View(UAV) heap used for rendering</td><td>1,000,000</td><td>1,000,000</td><td>1,000,000+</td></tr>
 <tr><td>Maximum number of Constant Buffer Views in all descriptor tables per shader stage</td><td>14</td><td>14</td><td>full heap</td></tr>
@@ -703,6 +698,7 @@ Historically resources such as buffers, textures and samplers have been special 
 <tr><td>Maximum number of Unordered Access Views in all descriptor tables across all stages</td><td>64 for feature levels 11.1+ or 8 for feature level</td><td>64</td><td>full heap</td></tr>
 <tr><td>Maximum number of Samplers in all descriptor tables per shader stage</td><td>16</td><td>full heap</td><td>full heap</td></tr>
 </tbody></table>
+</div>
 <h3 id="vulkan"><a class="header" href="#vulkan">Vulkan</a></h3>
 <p>On the other hand in Vulkan resource descriptor binding is designed in such a way that it can accomodate hardware that still relies on descriptor slots instead of memory, because still a lot of such hardware exists in the wild. Especially in the Mobile space.</p>
 <p>There are some constraints that currently exist when it comes to binding resources to shaders that we may need to take into account, Vulkan has <code>maxBoundDescriptorSets</code> for example (between 4 and 32). However for the sake of argument we'll ignore these practical limitations for now.</p>
@@ -719,8 +715,7 @@ Historically resources such as buffers, textures and samplers have been special 
 <p>I would like us to have an easy way to connect bindings on the GPU and CPU side together, in a way that's as ergonomic to use as possible.</p>
 <h2 id="globals"><a class="header" href="#globals">Globals</a></h2>
 <details>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span>#![feature(const_generics)]
 #![feature(const_fn)]
 <span class="boring">fn main() {
@@ -770,8 +765,7 @@ fn main() {
 <li>Globals can be accessed anywhere in the program, easily.</li>
 </ul>
 <p>Alternative would be to remove the <code>const_generic</code> parameters potentially by moving them into the constructor.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>static ALBEDO : Texture::&lt;f32&gt; = Texture::new(0, 0);
 static NORMAL_MAP : Texture::&lt;f32&gt; = Texture::new(0, 1);
@@ -780,8 +774,7 @@ static LIGHTMAP : Texture::&lt;f32&gt; = Texture::new(0, 3);
 <span class="boring">}
 </span></code></pre></pre>
 <p>This would make it easier to pass textures to functions (even if they're in different slots) because you'd get something like this:</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn some_system(tex: &amp;Texture::&lt;f32&gt;) {
     let v = tex.sample(0.0, 0.0);
@@ -789,8 +782,7 @@ static LIGHTMAP : Texture::&lt;f32&gt; = Texture::new(0, 3);
 <span class="boring">}
 </span></code></pre></pre>
 <p>Instead of this, which would tightly couple the whole downstream system to have a texture bound to a specific set and slot. This would make changing the bindings later on a nightmare, and wouldn't allow you to conditionally invoke <code>some_system</code> with textures bound to different locations.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn some_system(tex: &amp;Texture::&lt;f32, 0, 0&gt;) {
     let v = tex.sample(0.0, 0.0);
@@ -881,8 +873,7 @@ layout(std430) buffer mesh_vertex_buf {
 <p>In OpenCL resources are marked up with their address spaces and also passed as function arguments to the executing kernel. Resources like buffers look like pointers but a lot of compiler magic is going on to turn them from resource descriptors (such as the GCN V#) into something that can emulate pointers.</p>
 <h2 id="rlsl"><a class="header" href="#rlsl">RLSL</a></h2>
 <p>RLSL also passes resource bindings as arguments to the kernel, with two template parameters. One for the <code>set</code> and one for the <code>space</code>.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[spirv(compute)]
 fn compute(compute: Compute, buffer: Buffer&lt;N0, N0, RuntimeArray&lt;f32&gt;&gt;)
