@@ -11,7 +11,7 @@ use crate::{
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;
 
-pub mod atomics;
+mod atomics;
 mod barrier;
 mod demote_to_helper_invocation_ext;
 mod derivative;
