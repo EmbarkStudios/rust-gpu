@@ -12,8 +12,8 @@ pub fn main(#[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffer: &m
     unsafe {
         let output = spirv_std::arch::atomic_load::<
             _,
-            { Scope::CrossDevice as u8 },
-            { Semantics::UNIFORM_MEMORY.bits() as u8 },
+            { Scope::CrossDevice as u32 },
+            { Semantics::UNIFORM_MEMORY.bits() as u32 },
         >(&mut *buffer.index_unchecked_mut(0));
     }
 }

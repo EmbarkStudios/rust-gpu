@@ -14,8 +14,8 @@ pub fn main(#[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffer: &m
     let old = unsafe {
         spirv_std::arch::atomic_i_increment::<
             _,
-            { Scope::Workgroup as u8 },
-            { Semantics::NONE.bits() as u8 },
+            { Scope::Workgroup as u32 },
+            { Semantics::NONE.bits() as u32 },
         >(reference)
     };
 }

@@ -18,8 +18,8 @@ pub fn main(#[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffer: &m
     let old = unsafe {
         spirv_std::arch::atomic_flag_test_and_set::<
             _,
-            { Scope::Workgroup as u8 },
-            { Semantics::UNIFORM_MEMORY.bits() as u8 },
+            { Scope::Workgroup as u32 },
+            { Semantics::UNIFORM_MEMORY.bits() as u32 },
         >(&mut *buffer.index_unchecked_mut(0))
     };
 }
