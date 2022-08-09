@@ -516,7 +516,7 @@ pub unsafe fn atomic_xor<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicFlagTestAndSet")]
 #[inline]
-pub unsafe fn atomic_flag_test_and_set<I: Integer, const SCOPE: u8, const SEMANTICS: u8>(
+pub unsafe fn atomic_flag_test_and_set<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
     ptr: &mut I,
 ) -> bool {
     let mut old: bool = false;
@@ -546,12 +546,12 @@ pub unsafe fn atomic_flag_test_and_set<I: Integer, const SCOPE: u8, const SEMANT
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAtomicFlagClear")]
 #[inline]
-pub unsafe fn atomic_flag_clear<I: Integer, const SCOPE: u8, const SEMANTICS: u8>(ptr: &mut I) {
+pub unsafe fn atomic_flag_clear<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(ptr: &mut I) {
     // Ensure the memory semantic is not Acquire or AcquireRelease
     assert!(
         SEMANTICS
-            != (crate::memory::Semantics::ACQUIRE.bits() as u8
-                | crate::memory::Semantics::ACQUIRE_RELEASE.bits() as u8)
+            != (crate::memory::Semantics::ACQUIRE.bits() as u32
+                | crate::memory::Semantics::ACQUIRE_RELEASE.bits() as u32)
     );
     asm! {
         "%u32 = OpTypeInt 32 0",
