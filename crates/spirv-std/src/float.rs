@@ -1,6 +1,6 @@
 //! Traits and helper functions related to floats.
 
-use crate::vector::Vector;
+use crate::vector::{Vector, VectorTypeRef};
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;
 
@@ -71,7 +71,10 @@ struct F32x2 {
     x: f32,
     y: f32,
 }
-unsafe impl Vector<f32, 2> for F32x2 {}
+unsafe impl Vector<f32, 2> for F32x2 { type VectorTypeLib = F32x2TypeLib; }
+
+struct F32x2TypeLib;
+impl VectorTypeRef<f32, 2> for F32x2TypeLib { type Vector = F32x2; }
 
 /// Converts an f32 (float) into an f16 (half). The result is a u32, not a u16, due to GPU support
 /// for u16 not being universal - the upper 16 bits will always be zero.

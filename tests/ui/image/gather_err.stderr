@@ -9,26 +9,90 @@ error[E0277]: the trait bound `Image<f32, 0, 2, 0, 0, 1, 0>: HasGather` is not s
               Image<SampledType, 3, DEPTH, ARRAYED, 0, SAMPLED, FORMAT>
               Image<SampledType, 4, DEPTH, ARRAYED, 0, SAMPLED, FORMAT>
 note: required by a bound in `Image::<SampledType, DIM, DEPTH, ARRAYED, _, SAMPLED, FORMAT>::gather`
-   --> $SPIRV_STD_SRC/image.rs:164:15
+   --> $SPIRV_STD_SRC/image.rs:173:15
     |
-164 |         Self: HasGather,
+173 |         Self: HasGather,
     |               ^^^^^^^^^ required by this bound in `Image::<SampledType, DIM, DEPTH, ARRAYED, _, SAMPLED, FORMAT>::gather`
 
-error[E0277]: the trait bound `Image<f32, 2, 2, 0, 0, 1, 0>: HasGather` is not satisfied
-   --> $DIR/gather_err.rs:16:34
-    |
-16  |     let r2: glam::Vec4 = image3d.gather(*sampler, v3, 0);
-    |                                  ^^^^^^ the trait `HasGather` is not implemented for `Image<f32, 2, 2, 0, 0, 1, 0>`
-    |
-    = help: the following other types implement trait `HasGather`:
-              Image<SampledType, 1, DEPTH, ARRAYED, 0, SAMPLED, FORMAT>
-              Image<SampledType, 3, DEPTH, ARRAYED, 0, SAMPLED, FORMAT>
-              Image<SampledType, 4, DEPTH, ARRAYED, 0, SAMPLED, FORMAT>
-note: required by a bound in `Image::<SampledType, DIM, DEPTH, ARRAYED, _, SAMPLED, FORMAT>::gather`
-   --> $SPIRV_STD_SRC/image.rs:164:15
-    |
-164 |         Self: HasGather,
-    |               ^^^^^^^^^ required by this bound in `Image::<SampledType, DIM, DEPTH, ARRAYED, _, SAMPLED, FORMAT>::gather`
+error: internal compiler error: /rustc/0468a00ae3fd6ef1a6a0f9eaf637d7aa9e604acc/compiler/rustc_middle/src/ty/relate.rs:638:13: var types encountered in super_relate_consts: Const { ty: usize, kind: Param(N/#8) } Const { ty: usize, kind: Infer(Var(_#5c)) }
+
+thread 'rustc' panicked at 'Box<dyn Any>', /rustc/0468a00ae3fd6ef1a6a0f9eaf637d7aa9e604acc/compiler/rustc_errors/src/lib.rs:1576:9
+stack backtrace:
+   0:     0x7ffd34a29de2 - <std::sys_common::backtrace::_print::DisplayBacktrace as core::fmt::Display>::fmt::hea3121a92230cef2
+   1:     0x7ffd34a65d0b - core::fmt::write::h0bc3f53e8dca163a
+   2:     0x7ffd34a1c8fa - <std::io::IoSlice as core::fmt::Debug>::fmt::h7890ee78f4472cf6
+   3:     0x7ffd34a29b2b - std::sys::common::alloc::realloc_fallback::h2905b67a6dea1c71
+   4:     0x7ffd34a2d459 - std::panicking::default_hook::h111ce7f1b363c3ab
+   5:     0x7ffd34a2d0db - std::panicking::default_hook::h111ce7f1b363c3ab
+   6:     0x7ffd137949f6 - _rustc_codegen_backend
+   7:     0x7ffd34a2ddc0 - std::panicking::rust_panic_with_hook::hfc6ef76eb93085aa
+   8:     0x7ffd175fff83 - <rustc_middle[2d97b4190bb00205]::mir::coverage::ExpressionOperandId as rustc_middle[2d97b4190bb00205]::ty::context::Lift>::lift_to_tcx
+   9:     0x7ffd175ff939 - <rustc_middle[2d97b4190bb00205]::mir::coverage::ExpressionOperandId as rustc_middle[2d97b4190bb00205]::ty::context::Lift>::lift_to_tcx
+  10:     0x7ffd17641fc9 - <rustc_middle[2d97b4190bb00205]::ty::subst::UserSubsts as rustc_middle[2d97b4190bb00205]::ty::context::Lift>::lift_to_tcx
+  11:     0x7ffd175fe849 - <rustc_middle[2d97b4190bb00205]::mir::coverage::ExpressionOperandId as rustc_middle[2d97b4190bb00205]::ty::context::Lift>::lift_to_tcx
+  12:     0x7ffd175fd590 - <rustc_middle[2d97b4190bb00205]::mir::coverage::ExpressionOperandId as rustc_middle[2d97b4190bb00205]::ty::context::Lift>::lift_to_tcx
+  13:     0x7ffd175fd0a2 - <rustc_middle[2d97b4190bb00205]::mir::coverage::ExpressionOperandId as rustc_middle[2d97b4190bb00205]::ty::context::Lift>::lift_to_tcx
+  14:     0x7ffd176c7da8 - <rustc_middle[2d97b4190bb00205]::ty::consts::valtree::ValTree>::try_to_raw_bytes
+  15:     0x7ffd176c80b8 - rustc_middle[2d97b4190bb00205]::util::bug::bug_fmt
+  16:     0x7ffd176c8035 - rustc_middle[2d97b4190bb00205]::util::bug::bug_fmt
+  17:     0x7ffd17d5cb9e - <rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::method_chain::CollectAllMismatches as rustc_middle[2d97b4190bb00205]::ty::relate::TypeRelation>::consts
+  18:     0x7ffd17e2b3eb - <rustc_infer[b622840728d78c35]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::InferCtxtPrivExt>::maybe_suggest_unsized_generics
+  19:     0x7ffd17da21fc - <rustc_trait_selection[49c09980fcea1f95]::traits::query::type_op::implied_outlives_bounds::ImpliedOutlivesBounds as core[c581a5698e0001c6]::fmt::Debug>::fmt
+  20:     0x7ffd17dd11c2 - <rustc_middle[2d97b4190bb00205]::ty::sty::Binder<rustc_middle[2d97b4190bb00205]::ty::sty::FnSig> as rustc_trait_selection[49c09980fcea1f95]::traits::query::type_op::normalize::Normalizable>::type_op_method
+  21:     0x7ffd17df7e87 - <rustc_trait_selection[49c09980fcea1f95]::traits::select::ProvisionalEvaluation as core[c581a5698e0001c6]::fmt::Debug>::fmt
+  22:     0x7ffd17dcbb4c - <rustc_middle[2d97b4190bb00205]::ty::sty::Binder<rustc_middle[2d97b4190bb00205]::ty::sty::FnSig> as rustc_trait_selection[49c09980fcea1f95]::traits::query::type_op::normalize::Normalizable>::type_op_method
+  23:     0x7ffd17d6a6c8 - <rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::suggestions::GeneratorData as core[c581a5698e0001c6]::fmt::Debug>::fmt
+  24:     0x7ffd17dc4c9f - <rustc_trait_selection[49c09980fcea1f95]::traits::util::TraitAliasExpansionInfo as core[c581a5698e0001c6]::fmt::Debug>::fmt
+  25:     0x7ffd17dd935c - <rustc_trait_selection[49c09980fcea1f95]::traits::TraitQueryMode as core[c581a5698e0001c6]::fmt::Debug>::fmt
+  26:     0x7ffd17d5ce23 - <rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::method_chain::CollectAllMismatches as rustc_middle[2d97b4190bb00205]::ty::relate::TypeRelation>::consts
+  27:     0x7ffd17dc678b - <rustc_trait_selection[49c09980fcea1f95]::traits::util::TraitAliasExpansionInfo as core[c581a5698e0001c6]::fmt::Debug>::fmt
+  28:     0x7ffd17e1167b - <rustc_infer[b622840728d78c35]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::suggestions::TypeErrCtxtExt>::function_argument_obligation
+  29:     0x7ffd17e0cba8 - <rustc_infer[b622840728d78c35]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::suggestions::TypeErrCtxtExt>::suggest_fully_qualified_path
+  30:     0x7ffd17e1fbe0 - <rustc_infer[b622840728d78c35]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::InferCtxtPrivExt>::note_obligation_cause
+  31:     0x7ffd17e15e2f - <rustc_infer[b622840728d78c35]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::TypeErrCtxtExt>::report_selection_error
+  32:     0x7ffd17e23377 - <rustc_infer[b622840728d78c35]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::InferCtxtPrivExt>::report_fulfillment_error
+  33:     0x7ffd17e140b6 - <rustc_infer[b622840728d78c35]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[49c09980fcea1f95]::traits::error_reporting::TypeErrCtxtExt>::report_fulfillment_errors
+  34:     0x7ffd1566abf3 - <rustc_hir_typeck[f0addf0c856a1637]::fn_ctxt::FnCtxt>::probe_instantiate_query_response
+  35:     0x7ffd1564ed19 - <rustc_hir_typeck[f0addf0c856a1637]::fn_ctxt::FnCtxt>::probe_instantiate_query_response
+  36:     0x7ffd15626e43 - <rustc_hir_typeck[f0addf0c856a1637]::fn_ctxt::FnCtxt>::demand_coerce
+  37:     0x7ffd1567dfc6 - <rustc_hir_typeck[f0addf0c856a1637]::fn_ctxt::FnCtxt>::check_struct_path
+  38:     0x7ffd1567f5d1 - <rustc_hir_typeck[f0addf0c856a1637]::fn_ctxt::FnCtxt>::check_struct_path
+  39:     0x7ffd15626871 - <rustc_hir_typeck[f0addf0c856a1637]::fn_ctxt::FnCtxt>::demand_coerce
+  40:     0x7ffd156391ff - <rustc_hir_typeck[f0addf0c856a1637]::fn_ctxt::FnCtxt>::demand_coerce
+  41:     0x7ffd157394d8 - <rustc_hir_typeck[f0addf0c856a1637]::upvar::InferBorrowKindVisitor as rustc_hir[ec2a4f92b6f487f7]::intravisit::Visitor>::visit_expr
+  42:     0x7ffd156ee929 - <rustc_hir_typeck[f0addf0c856a1637]::inherited::Inherited>::build
+  43:     0x7ffd1570b64e - <rustc_hir_typeck[f0addf0c856a1637]::gather_locals::GatherLocalsVisitor as rustc_hir[ec2a4f92b6f487f7]::intravisit::Visitor>::visit_pat
+  44:     0x7ffd15e32234 - <rustc_middle[2d97b4190bb00205]::ty::Visibility as rustc_privacy[6422734b6ac716cf]::VisibilityLike>::new_min
+  45:     0x7ffd1573f812 - <rustc_hir_typeck[f0addf0c856a1637]::upvar::InferBorrowKindVisitor as rustc_hir[ec2a4f92b6f487f7]::intravisit::Visitor>::visit_expr
+  46:     0x7ffd1445c171 - <rustc_hir_typeck[f0addf0c856a1637]::gather_locals::GatherLocalsVisitor as rustc_hir[ec2a4f92b6f487f7]::intravisit::Visitor>::visit_param
+  47:     0x7ffd147dcdc9 - <core[c581a5698e0001c6]::option::Option<rustc_middle[2d97b4190bb00205]::middle::privacy::Level> as rustc_privacy[6422734b6ac716cf]::VisibilityLike>::new_min
+  48:     0x7ffd1485a99b - <core[c581a5698e0001c6]::option::Option<rustc_middle[2d97b4190bb00205]::middle::privacy::Level> as rustc_privacy[6422734b6ac716cf]::VisibilityLike>::new_min
+  49:     0x7ffd143c1e0a - <rustc_hir_analysis[abf2fb892a9f178e]::check::intrinsicck::InlineAsmCtxt>::check_asm
+  50:     0x7ffd143dcc4f - rustc_hir_analysis[abf2fb892a9f178e]::check_crate
+  51:     0x7ffd144d23fd - rustc_interface[e09bab31b5025fb2]::passes::analysis
+  52:     0x7ffd147c50c9 - <core[c581a5698e0001c6]::option::Option<rustc_middle[2d97b4190bb00205]::middle::privacy::Level> as rustc_privacy[6422734b6ac716cf]::VisibilityLike>::new_min
+  53:     0x7ffd148626ef - <core[c581a5698e0001c6]::option::Option<rustc_middle[2d97b4190bb00205]::middle::privacy::Level> as rustc_privacy[6422734b6ac716cf]::VisibilityLike>::new_min
+  54:     0x7ffd142d3573 - <rustc_span[25fa311e2ce9dc22]::DebuggerVisualizerFile>::new
+  55:     0x7ffd142e4317 - rustc_driver[5e4fd5aa1121bb7c]::args::arg_expand_all
+  56:     0x7ffd142d4983 - <rustc_span[25fa311e2ce9dc22]::DebuggerVisualizerFile>::new
+  57:     0x7ffd142ca24d - <rustc_span[25fa311e2ce9dc22]::DebuggerVisualizerFile>::new
+  58:     0x7ffd34a3fe9c - std::sys::windows::thread::Thread::new::h4025a5964e95cbad
+  59:     0x7ffdb0ae55a0 - BaseThreadInitThunk
+  60:     0x7ffdb17e485b - RtlUserThreadStart
+note: the compiler unexpectedly panicked. this is a bug.
+
+note: we would appreciate a bug report: https://github.com/EmbarkStudios/rust-gpu/issues/new
+
+note: rustc 1.68.0-nightly (0468a00ae 2022-12-17) running on x86_64-pc-windows-msvc
+
+note: compiler flags: -C prefer-dynamic -Z codegen-backend=D:/embark/rust-gpu/target/release/deps/rustc_codegen_spirv.dll -Z binary-dep-depinfo -C overflow-checks=off -C debug-assertions=off -C debuginfo=2 -C embed-bitcode=no -C target-feature=+Int8,+Int16,+Int64,+Float64,+ShaderClockKHR,+ext:SPV_KHR_shader_clock -C symbol-mangling-version=v0 -Z crate-attr=feature(register_tool) -Z crate-attr=register_tool(rust_gpu) --crate-type dylib -Z unstable-options -Z crate-attr=no_std -Z crate-attr=feature(asm_const,asm_experimental_arch) -C llvm-args=--spirt -C target-feature=+Sampled1D
+
+query stack during panic:
+#0 [typeck] type-checking `main`
+#1 [typeck_item_bodies] type-checking all item bodies
+#2 [analysis] running analysis passes on this crate
+end of query stack
+note: `rust-gpu` version 0.4.0
 
 error: aborting due to 2 previous errors
 
