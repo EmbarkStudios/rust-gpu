@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["sanitize",""],["sanitize_with_options",""]],"struct":[["Options",""]]});
+initSidebarItems({"fn":[["is_sanitized",""],["is_sanitized_with_options",""],["sanitize",""],["sanitize_with_options",""]],"struct":[["Options",""],["OptionsForCheck",""]]});
