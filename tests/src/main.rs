@@ -286,7 +286,7 @@ fn find_lib(
 }
 
 /// Returns whether this string ends with a dash ('-'), followed by 16 lowercase hexadecimal characters
-fn ends_with_dash_hash(s: &str) -> bool {    
+fn ends_with_dash_hash(s: &str) -> bool {
     let n = s.len();
     if n < 17 {
         return false;
@@ -298,7 +298,6 @@ fn ends_with_dash_hash(s: &str) -> bool {
 
     bytes.all(|b| b.is_ascii_hexdigit())
 }
-
 
 /// Paths to all of the library artifacts of dependencies needed to compile tests.
 struct TestDeps {
