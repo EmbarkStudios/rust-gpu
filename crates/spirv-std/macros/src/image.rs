@@ -1,7 +1,7 @@
 use proc_macro2::Ident;
 
 use quote::{quote, TokenStreamExt};
-use spirv_types::image_params::*;
+use spirv_std_types::image_params::*;
 use syn::parse::{Parse, ParseStream};
 
 use self::params::SampledType;

@@ -10,7 +10,7 @@ mod params;
 
 pub use self::params::{ImageCoordinate, ImageCoordinateSubpassData, SampleType};
 pub use crate::macros::Image;
-pub use spirv_types::image_params::{
+pub use spirv_std_types::image_params::{
     AccessQualifier, Arrayed, Dimensionality, ImageDepth, ImageFormat, Multisampled, Sampled,
 };
 
