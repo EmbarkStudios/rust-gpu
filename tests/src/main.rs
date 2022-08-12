@@ -260,14 +260,16 @@ fn find_lib(
         .map(|entry| entry.path())
         .filter(|path| {
             let name = {
-                let name = path.file_name();
+                let name = path.file_stem();
                 if name.is_none() {
                     return false;
                 }
                 name.unwrap()
             };
 
-            let name_matches = name.to_str().unwrap().starts_with(&expected_name);
+            let name_matches = name.to_str().unwrap().starts_with(&expected_name)
+                && name.len() == expected_name.len() + 17   // we expect our name, '-', and then 16 hexadecimal digits
+                && ends_with_dash_hash(name.to_str().unwrap());
             let extension_matches = path
                 .extension()
                 .map_or(false, |ext| ext == expected_extension);
@@ -282,6 +284,21 @@ fn find_lib(
         paths.into_iter().next()
     })
 }
+
+/// Returns whether this string ends with a dash ('-'), followed by 16 lowercase hexadecimal characters
+fn ends_with_dash_hash(s: &str) -> bool {    
+    let n = s.len();
+    if n < 17 {
+        return false;
+    }
+    let mut bytes = s.bytes().skip(n - 17);
+    if bytes.next() != Some(b'-') {
+        return false;
+    }
+
+    bytes.all(|b| b.is_ascii_hexdigit())
+}
+
 
 /// Paths to all of the library artifacts of dependencies needed to compile tests.
 struct TestDeps {
