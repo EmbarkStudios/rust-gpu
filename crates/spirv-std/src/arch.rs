@@ -11,12 +11,14 @@ use crate::{
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;
 
+mod atomics;
 mod barrier;
 mod demote_to_helper_invocation_ext;
 mod derivative;
 mod primitive;
 mod ray_tracing;
 
+pub use atomics::*;
 pub use barrier::*;
 pub use demote_to_helper_invocation_ext::*;
 pub use derivative::*;
@@ -224,29 +226,6 @@ pub fn signed_min<T: SignedInteger>(a: T, b: T) -> T {
 #[spirv_std_macros::gpu_only]
 pub fn signed_max<T: SignedInteger>(a: T, b: T) -> T {
     unsafe { call_glsl_op_with_ints::<_, 42>(a, b) }
-}
-
-/// Atomically increment an integer and return the old value.
-#[spirv_std_macros::gpu_only]
-#[doc(alias = "OpAtomicIIncrement")]
-pub unsafe fn atomic_i_increment<I: Integer, const SCOPE: u32, const SEMANTICS: u32>(
-    ptr: &mut I,
-) -> I {
-    let mut old = I::default();
-
-    asm! {
-        "%u32 = OpTypeInt 32 0",
-        "%scope = OpConstant %u32 {scope}",
-        "%semantics = OpConstant %u32 {semantics}",
-        "%old = OpAtomicIIncrement _ {ptr} %scope %semantics",
-        "OpStore {old} %old",
-        scope = const SCOPE,
-        semantics = const SEMANTICS,
-        ptr = in(reg) ptr,
-        old = in(reg) &mut old,
-    }
-
-    old
 }
 
 /// Index into an array without bounds checking.

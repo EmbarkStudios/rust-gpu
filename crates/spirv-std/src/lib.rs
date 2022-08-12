@@ -102,6 +102,7 @@ pub mod float;
 pub mod image;
 pub mod integer;
 pub mod memory;
+pub mod number;
 pub mod ray_tracing;
 mod runtime_array;
 mod sampler;
@@ -130,7 +131,7 @@ extern "C" fn rust_eh_personality() {}
 
 // See: https://github.com/rust-lang/rust/issues/84738
 #[doc(hidden)]
-/// [spirv_types]
+/// [spirv_std_types]
 pub fn workaround_rustdoc_ice_84738() {}
 
 #[doc(hidden)]

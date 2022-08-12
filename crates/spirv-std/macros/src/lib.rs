@@ -121,7 +121,7 @@ use quote::ToTokens;
 /// - `depth` — Whether it is known that the image is a depth image.
 ///    Accepted values: `true` or `false`. Default: `unknown`.
 ///
-/// [`ImageFormat`]: spirv_types::image_params::ImageFormat
+/// [`ImageFormat`]: spirv_std_types::image_params::ImageFormat
 ///
 /// Keep in mind that `sampled` here is a different concept than the `SampledImage` type:
 /// `sampled=true` means that this image requires a sampler to be able to access, while the
