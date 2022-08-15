@@ -10,7 +10,7 @@ pub fn main(#[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffer: &m
     unsafe {
         let old = spirv_std::arch::atomic_exchange::<
             _,
-            { Scope::CrossDevice as u32 },
+            { Scope::Device as u32 },
             { Semantics::UNIFORM_MEMORY.bits() },
         >(&mut *buffer.index_unchecked_mut(0), 5);
     }
