@@ -1,7 +1,5 @@
 // build-pass
 
-#![allow(incomplete_features)]
-#![feature(generic_const_exprs)]
 use spirv_std::{
     arch::IndexUnchecked,
     memory::{Scope, Semantics},
