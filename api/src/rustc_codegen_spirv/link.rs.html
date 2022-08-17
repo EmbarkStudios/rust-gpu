@@ -618,6 +618,15 @@
 <span id="613">613</span>
 <span id="614">614</span>
 <span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx</span>::{<span class="ident">CodegenArgs</span>, <span class="ident">ModuleOutputType</span>, <span class="ident">SpirvMetadata</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">linker</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>};
 <span class="kw">use</span> <span class="ident">ar</span>::{<span class="ident">Archive</span>, <span class="ident">GnuBuilder</span>, <span class="ident">Header</span>};
@@ -1111,7 +1120,16 @@
             <span class="string">&quot;Duplicate filename in archive: {:?}&quot;</span>,
             <span class="ident">file</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>()
         );
-        <span class="ident">builder</span>.<span class="ident">append_path</span>(<span class="ident">file</span>).<span class="ident">unwrap</span>();
+
+        <span class="comment">// NOTE(eddyb) we can&#39;t use `append_path` or `append_file`, as they</span>
+        <span class="comment">// record too much metadata by default (mtime/UID/GID, at least),</span>
+        <span class="comment">// which is determintal to reproducible build artifacts, but also</span>
+        <span class="comment">// can misbehave in environments with high UIDs/GIDs (see #889).</span>
+        <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="ident">file</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">Header::new</span>(<span class="ident">name</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(), <span class="ident">file</span>.<span class="ident">metadata</span>().<span class="ident">unwrap</span>().<span class="ident">len</span>());
+        <span class="comment">// NOTE(eddyb) either `fs::File`, or the result of `fs::read`, could fit</span>
+        <span class="comment">// here, but `fs::File` has specialized file-&gt;file copying on some OSes.</span>
+        <span class="ident">builder</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="ident">header</span>, <span class="ident">file</span>).<span class="ident">unwrap</span>();
     }
     <span class="ident">builder</span>.<span class="ident">into_inner</span>().<span class="ident">unwrap</span>();
 }
