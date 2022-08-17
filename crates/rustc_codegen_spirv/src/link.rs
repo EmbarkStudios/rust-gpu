@@ -491,7 +491,16 @@ fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
             "Duplicate filename in archive: {:?}",
             file.file_name().unwrap()
         );
-        builder.append_path(file).unwrap();
+
+        // NOTE(eddyb) we can't use `append_path` or `append_file`, as they
+        // record too much metadata by default (mtime/UID/GID, at least),
+        // which is determintal to reproducible build artifacts, but also
+        // can misbehave in environments with high UIDs/GIDs (see #889).
+        let file = File::open(file).unwrap();
+        let header = Header::new(name.as_bytes().to_vec(), file.metadata().unwrap().len());
+        // NOTE(eddyb) either `fs::File`, or the result of `fs::read`, could fit
+        // here, but `fs::File` has specialized file->file copying on some OSes.
+        builder.append(&header, file).unwrap();
     }
     builder.into_inner().unwrap();
 }
