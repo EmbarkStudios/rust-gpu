@@ -22,32 +22,43 @@ jobs:
             target: aarch64-linux-android
     runs-on: ${{ matrix.os }}
     env:
-      spirv_tools_version: "20220414" # get platform-specific download link from https://github.com/KhronosGroup/SPIRV-Tools/blob/master/docs/downloads.md
+      # Get platform-specific download links from https://github.com/KhronosGroup/SPIRV-Tools/blob/master/docs/downloads.md
+      # which will point to the `spirv-tools` Google Cloud Storage Bucket - if
+      # you need to manually look around, you can search for `spirv_tools_version`
+      # (which should be in the `YYYYMMDD` format and appear in paths) in these
+      # listings (NB: they're limited to 1000 results and may need adjustment):
+      # https://storage.googleapis.com/spirv-tools/?list-type=2&start-after=artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1700
+      # https://storage.googleapis.com/spirv-tools/?list-type=2&start-after=artifacts/prod/graphics_shader_compiler/spirv-tools/macos-clang-release/continuous/1700
+      # https://storage.googleapis.com/spirv-tools/?list-type=2&start-after=artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1700
+      spirv_tools_version: "20220414"
+      spirv_tools_linux_url: "https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1744/20220414-060821/install.tgz"
+      spirv_tools_macos_url: "https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/macos-clang-release/continuous/1756/20220414-060434/install.tgz"
+      spirv_tools_windows_url: "https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1732/20220414-060824/install.zip"
       RUSTUP_UNPACK_RAM: "26214400"
       RUSTUP_IO_THREADS: "1"
     steps:
       - uses: actions/checkout@v2
-      # Ubuntu does have `brew install spirv-tools`, but it installs from
-      # source and so takes >8 minutes.
       - if: ${{ runner.os == 'Linux' }}
-        name: Linux - Install native dependencies
+        name: Linux - Install native dependencies and spirv-tools
         run: |
           sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
-          mkdir "${HOME}/spirv-tools"          
-          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1744/20220414-060821/install.tgz | tar -xz -C "${HOME}/spirv-tools"
+          mkdir "${HOME}/spirv-tools"
+          curl -fL "$spirv_tools_linux_url" | tar -xz -C "${HOME}/spirv-tools"
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - if: ${{ runner.os == 'macOS' }}
         name: Mac - Install spirv-tools
-        run: brew install spirv-tools
-      # Currently SPIR-V tools aren't available in any package manager
-      # on Windows that put the tools in the path.
+        # FIXME(eddyb) deduplicate with Linux (and maybe even Windows?).
+        run: |
+          mkdir "${HOME}/spirv-tools"
+          curl -fL "$spirv_tools_macos_url" | tar -xz -C "${HOME}/spirv-tools"
+          echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - if: ${{ runner.os == 'Windows' }}
         name: Windows - Install spirv-tools
         shell: bash
         run: |
           tmparch=$(mktemp)
           mkdir "${HOME}/spirv-tools"
-          curl -fL -o "$tmparch" https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1732/20220414-060824/install.zip
+          curl -fL -o "$tmparch" "$spirv_tools_windows_url"
           unzip "$tmparch" -d "${HOME}/spirv-tools"
       - if: ${{ runner.os == 'Windows' }}
         # Runs separately to add spir-v tools to Powershell's Path.
