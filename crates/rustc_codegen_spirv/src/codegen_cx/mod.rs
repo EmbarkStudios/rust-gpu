@@ -671,11 +671,11 @@ impl<'tcx> CoverageInfoMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> AsmMethods for CodegenCx<'tcx> {
+impl<'tcx> AsmMethods<'tcx> for CodegenCx<'tcx> {
     fn codegen_global_asm(
         &self,
         _template: &[InlineAsmTemplatePiece],
-        _operands: &[GlobalAsmOperandRef],
+        _operands: &[GlobalAsmOperandRef<'tcx>],
         _options: InlineAsmOptions,
         _line_spans: &[Span],
     ) {
