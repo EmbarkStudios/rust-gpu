@@ -59,26 +59,42 @@ error: Unrecognised format specifier: 'r'
    |                       ^^^^
 
 error[E0308]: mismatched types
-  --> $DIR/debug_printf_type_checking.rs:20:29
-   |
-20 |         debug_printf!("%f", 11_u32);
-   |                             ^^^^^^ expected `f32`, found `u32`
-   |
+   --> $DIR/debug_printf_type_checking.rs:20:29
+    |
+20  |         debug_printf!("%f", 11_u32);
+    |         --------------------^^^^^^-
+    |         |                   |
+    |         |                   expected `f32`, found `u32`
+    |         arguments to this function are incorrect
+    |
+note: function defined here
+   --> $SPIRV_STD_SRC/lib.rs:138:8
+    |
+138 | pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 help: change the type of the numeric literal from `u32` to `f32`
-   |
-20 |         debug_printf!("%f", 11_f32);
-   |                                ~~~
+    |
+20  |         debug_printf!("%f", 11_f32);
+    |                                ~~~
 
 error[E0308]: mismatched types
-  --> $DIR/debug_printf_type_checking.rs:21:29
-   |
-21 |         debug_printf!("%u", 11.0_f32);
-   |                             ^^^^^^^^ expected `u32`, found `f32`
-   |
+   --> $DIR/debug_printf_type_checking.rs:21:29
+    |
+21  |         debug_printf!("%u", 11.0_f32);
+    |         --------------------^^^^^^^^-
+    |         |                   |
+    |         |                   expected `u32`, found `f32`
+    |         arguments to this function are incorrect
+    |
+note: function defined here
+   --> $SPIRV_STD_SRC/lib.rs:138:8
+    |
+138 | pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 help: change the type of the numeric literal from `f32` to `u32`
-   |
-21 |         debug_printf!("%u", 11u32);
-   |                               ~~~
+    |
+21  |         debug_printf!("%u", 11u32);
+    |                               ~~~
 
 error[E0277]: the trait bound `{float}: Vector<f32, 2_usize>` is not satisfied
    --> $DIR/debug_printf_type_checking.rs:22:31
@@ -106,10 +122,19 @@ note: required by a bound in `debug_printf_assert_is_vector`
     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `debug_printf_assert_is_vector`
 
 error[E0308]: mismatched types
-  --> $DIR/debug_printf_type_checking.rs:23:29
-   |
-23 |         debug_printf!("%f", Vec2::splat(33.3));
-   |                             ^^^^^^^^^^^^^^^^^ expected `f32`, found struct `Vec2`
+   --> $DIR/debug_printf_type_checking.rs:23:29
+    |
+23  |         debug_printf!("%f", Vec2::splat(33.3));
+    |         --------------------^^^^^^^^^^^^^^^^^-
+    |         |                   |
+    |         |                   expected `f32`, found struct `Vec2`
+    |         arguments to this function are incorrect
+    |
+note: function defined here
+   --> $SPIRV_STD_SRC/lib.rs:138:8
+    |
+138 | pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error: aborting due to 14 previous errors
 
