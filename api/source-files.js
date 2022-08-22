@@ -1,4 +1,4 @@
-var N = null;var sourcesIndex = {};
+var sourcesIndex = {};
 sourcesIndex["ahash"] = {"name":"","files":["convert.rs","fallback_hash.rs","lib.rs","operations.rs","random_state.rs","specialize.rs"]};
 sourcesIndex["ar"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["bimap"] = {"name":"","files":["btree.rs","hash.rs","lib.rs","mem.rs"]};

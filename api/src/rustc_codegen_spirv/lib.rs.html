@@ -3,7 +3,9 @@
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -557,13 +559,6 @@
 <span id="552">552</span>
 <span id="553">553</span>
 <span id="554">554</span>
-<span id="555">555</span>
-<span id="556">556</span>
-<span id="557">557</span>
-<span id="558">558</span>
-<span id="559">559</span>
-<span id="560">560</span>
-<span id="561">561</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is</span>
 <span class="doccomment">//! unstable and mainly intended for developing on the project itself. This is</span>
 <span class="doccomment">//! the API documentation for `rustc_codegen_spirv` which is not that useful on</span>
@@ -722,7 +717,7 @@
             }
 
             <span class="kw">if</span> <span class="ident">tcx</span>.<span class="ident">opt_item_ident</span>(<span class="ident">def</span>.<span class="ident">did</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">name</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">sym</span>.<span class="ident">fmt_decimal</span>) {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">parent_def_id</span>) <span class="op">=</span> <span class="ident">tcx</span>.<span class="ident">parent</span>(<span class="ident">def</span>.<span class="ident">did</span>) {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">parent_def_id</span>) <span class="op">=</span> <span class="ident">tcx</span>.<span class="ident">opt_parent</span>(<span class="ident">def</span>.<span class="ident">did</span>) {
                     <span class="kw">if</span> <span class="ident">is_debug_fmt_method</span>(<span class="ident">parent_def_id</span>) {
                         <span class="kw">return</span> <span class="bool-val">true</span>;
                     }
@@ -895,7 +890,7 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">optimize_thin</span>(
         <span class="ident">_cgcx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenContext</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>,
-        <span class="ident">thin_module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ThinModule</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>,
+        <span class="ident">thin_module</span>: <span class="ident">ThinModule</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ModuleCodegen</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Module</span><span class="op">&gt;</span>, <span class="ident">FatalError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">ModuleCodegen</span> {
             <span class="ident">module_llvm</span>: <span class="ident">spirv_tools::binary::to_binary</span>(<span class="ident">thin_module</span>.<span class="ident">data</span>())
@@ -905,6 +900,13 @@
             <span class="ident">kind</span>: <span class="ident">ModuleKind::Regular</span>,
         };
         <span class="prelude-val">Ok</span>(<span class="ident">module</span>)
+    }
+
+    <span class="kw">fn</span> <span class="ident">optimize_fat</span>(
+        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenContext</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>,
+        <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleCodegen</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Module</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">FatalError</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>()
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">codegen</span>(
@@ -938,30 +940,16 @@
     <span class="kw">fn</span> <span class="ident">serialize_module</span>(<span class="ident">module</span>: <span class="ident">ModuleCodegen</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Module</span><span class="op">&gt;</span>) -&gt; (<span class="ident">String</span>, <span class="ident"><span class="self">Self</span>::ModuleBuffer</span>) {
         (<span class="ident">module</span>.<span class="ident">name</span>, <span class="ident">SpirvModuleBuffer</span>(<span class="ident">module</span>.<span class="ident">module_llvm</span>))
     }
-
-    <span class="kw">fn</span> <span class="ident">run_lto_pass_manager</span>(
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenContext</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>,
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">ModuleCodegen</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Module</span><span class="op">&gt;</span>,
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">ModuleConfig</span>,
-        <span class="kw">_</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">FatalError</span><span class="op">&gt;</span> {
-        <span class="macro">todo!</span>()
-    }
 }
 
 <span class="kw">impl</span> <span class="ident">ExtraBackendMethods</span> <span class="kw">for</span> <span class="ident">SpirvCodegenBackend</span> {
-    <span class="kw">fn</span> <span class="ident">new_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident"><span class="self">Self</span>::Module</span> {
-        <span class="ident"><span class="self">Self</span>::Module::new</span>()
-    }
-
     <span class="kw">fn</span> <span class="ident">codegen_allocator</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="kw">_</span>: <span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Module</span>,
         <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="kw">_</span>: <span class="ident">AllocatorKind</span>,
         <span class="kw">_</span>: <span class="ident">bool</span>,
-    ) {
+    ) -&gt; <span class="ident"><span class="self">Self</span>::Module</span> {
         <span class="macro">todo!</span>()
     }
 
@@ -1126,5 +1114,5 @@
     <span class="ident">Box::new</span>(<span class="ident">SpirvCodegenBackend</span>)
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (ec77f2524 2022-04-17)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (42e1761c7 2022-05-15)" ></div>
 </body></html>
