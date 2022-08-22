@@ -156,7 +156,7 @@ fn is_blocklisted_fn<'tcx>(
             }
 
             if tcx.opt_item_ident(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
-                if let Some(parent_def_id) = tcx.parent(def.did) {
+                if let Some(parent_def_id) = tcx.opt_parent(def.did) {
                     if is_debug_fmt_method(parent_def_id) {
                         return true;
                     }
@@ -329,7 +329,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     unsafe fn optimize_thin(
         _cgcx: &CodegenContext<Self>,
-        thin_module: &mut ThinModule<Self>,
+        thin_module: ThinModule<Self>,
     ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
         let module = ModuleCodegen {
             module_llvm: spirv_tools::binary::to_binary(thin_module.data())
@@ -339,6 +339,13 @@ impl WriteBackendMethods for SpirvCodegenBackend {
             kind: ModuleKind::Regular,
         };
         Ok(module)
+    }
+
+    fn optimize_fat(
+        _: &CodegenContext<Self>,
+        _: &mut ModuleCodegen<Self::Module>,
+    ) -> Result<(), FatalError> {
+        todo!()
     }
 
     unsafe fn codegen(
@@ -372,30 +379,16 @@ impl WriteBackendMethods for SpirvCodegenBackend {
     fn serialize_module(module: ModuleCodegen<Self::Module>) -> (String, Self::ModuleBuffer) {
         (module.name, SpirvModuleBuffer(module.module_llvm))
     }
-
-    fn run_lto_pass_manager(
-        _: &CodegenContext<Self>,
-        _: &ModuleCodegen<Self::Module>,
-        _: &ModuleConfig,
-        _: bool,
-    ) -> Result<(), FatalError> {
-        todo!()
-    }
 }
 
 impl ExtraBackendMethods for SpirvCodegenBackend {
-    fn new_metadata(&self, _: TyCtxt<'_>, _: &str) -> Self::Module {
-        Self::Module::new()
-    }
-
     fn codegen_allocator<'tcx>(
         &self,
         _: TyCtxt<'tcx>,
-        _: &mut Self::Module,
         _: &str,
         _: AllocatorKind,
         _: bool,
-    ) {
+    ) -> Self::Module {
         todo!()
     }
 
