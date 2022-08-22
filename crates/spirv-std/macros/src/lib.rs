@@ -78,6 +78,7 @@ use proc_macro2::{Delimiter, Group, Ident, Span, TokenTree};
 use syn::{punctuated::Punctuated, spanned::Spanned, ItemFn, Token};
 
 use quote::ToTokens;
+use std::fmt::Write;
 
 /// A macro for creating SPIR-V `OpTypeImage` types. Always produces a
 /// `spirv_std::image::Image<...>` type.
@@ -570,7 +571,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     {
         let ident = quote::format_ident!("_{}", i);
 
-        variable_idents.push_str(&format!("%{} ", ident));
+        let _ = write!(variable_idents, "%{} ", ident);
 
         let assert_fn = match format_argument {
             FormatType::Scalar { ty } => {
