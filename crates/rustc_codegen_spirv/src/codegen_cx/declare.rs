@@ -108,7 +108,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let declared = fn_id.with_type(function_type);
 
-        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.get_attrs(instance.def_id()));
+        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.get_attrs_unchecked(instance.def_id()));
         if let Some(entry) = attrs.entry.map(|attr| attr.value) {
             let entry_name = entry
                 .name
