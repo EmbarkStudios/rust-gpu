@@ -345,7 +345,7 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
                 span = cx.tcx.def_span(adt.did());
             }
 
-            let attrs = AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did()));
+            let attrs = AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs_unchecked(adt.did()));
 
             if let Some(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
                 if let Ok(spirv_type) =
