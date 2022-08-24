@@ -143,9 +143,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     fn ordering_to_semantics_def(&self, ordering: AtomicOrdering) -> SpirvValue {
         let mut invalid_seq_cst = false;
         let semantics = match ordering {
-            AtomicOrdering::NotAtomic | AtomicOrdering::Unordered | AtomicOrdering::Monotonic => {
-                MemorySemantics::NONE
-            }
+            AtomicOrdering::Unordered | AtomicOrdering::Relaxed => MemorySemantics::NONE,
             // Note: rustc currently has AtomicOrdering::Consume commented out, if it ever becomes
             // uncommented, it should be MakeVisible | Acquire.
             AtomicOrdering::Acquire => MemorySemantics::MAKE_VISIBLE | MemorySemantics::ACQUIRE,
