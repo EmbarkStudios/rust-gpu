@@ -746,7 +746,7 @@ impl<'a, S: Specialization> InferCx<'a, S> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum InferOperand {
     Unknown,
     Var(InferVar),
