@@ -76,7 +76,7 @@ use strum::{Display, EnumString};
 mod compute;
 mod graphics;
 
-#[derive(EnumString, Display, PartialEq, Copy, Clone)]
+#[derive(EnumString, Display, PartialEq, Eq, Copy, Clone)]
 pub enum RustGPUShader {
     Simplest,
     Sky,
