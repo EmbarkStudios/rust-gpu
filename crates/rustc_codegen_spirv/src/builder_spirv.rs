@@ -356,7 +356,7 @@ impl BuilderSpirv {
         fn add_ext(builder: &mut Builder, enabled_extensions: &mut FxHashSet<Symbol>, ext: Symbol) {
             // This should be the only callsite of Builder::extension (aside from tests), to make
             // sure the hashset stays in sync.
-            builder.extension(&*ext.as_str());
+            builder.extension(ext.as_str());
             enabled_extensions.insert(ext);
         }
 
