@@ -440,7 +440,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 // tldr, the pointer here is only needed for the offset
                 let value = match alloc
                     .inner()
-                    .read_scalar(self, alloc_range(*offset, size))
+                    .read_scalar(self, alloc_range(*offset, size), primitive.is_ptr())
                     .unwrap()
                 {
                     ScalarMaybeUninit::Scalar(scalar) => {
