@@ -802,7 +802,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         id_map: &mut FxHashMap<&'a str, Word>,
         defined_ids: &mut FxHashSet<Word>,
         token: Token<'a, 'cx, 'tcx>,
-    ) -> Option<OutRegister<'a>> {
+    ) -> Option<OutRegister<'tcx>> {
         match token {
             Token::Word(word) => {
                 if let Some(id) = word.strip_prefix('%') {
