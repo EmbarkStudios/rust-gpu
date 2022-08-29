@@ -207,7 +207,7 @@ impl CodegenBackend for SpirvCodegenBackend {
                 .parse::<target::SpirvTarget>()
                 .map(|target| target.rustc_target())
                 .ok(),
-            TargetTriple::TargetPath(_) => None,
+            TargetTriple::TargetJson { .. } => None,
         }
     }
 
