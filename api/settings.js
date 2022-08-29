@@ -3,7 +3,7 @@
                         <div class="choices">`;onEach(setting["options"],option=>{const checked=option===setting["default"]?" checked":"";output+=`<label for="${js_data_name}-${option}" class="choice">\
                            <input type="radio" name="${js_data_name}" \
                                 id="${js_data_name}-${option}" value="${option}"${checked}>\
-                           ${option}\
+                           <span>${option}</span>\
                          </label>`});output+="</div></div>"}else{const checked=setting["default"]===true?" checked":"";output+=`<label class="toggle">\
                         <input type="checkbox" id="${js_data_name}"${checked}>\
                         <span class="slider"></span>\
