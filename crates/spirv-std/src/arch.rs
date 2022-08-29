@@ -188,6 +188,7 @@ pub unsafe fn read_clock_uvec2_khr<V: Vector<u32, 2>, const SCOPE: u32>() -> V {
 }
 
 #[spirv_std_macros::gpu_only]
+#[allow(dead_code)]
 unsafe fn call_glsl_op_with_ints<T: Integer, const OP: u32>(a: T, b: T) -> T {
     let mut result = T::default();
     asm!(
