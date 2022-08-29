@@ -12,8 +12,7 @@ use rustc_target::abi::{Align, Size};
 use std::cell::RefCell;
 use std::fmt;
 use std::iter;
-use std::lazy::SyncLazy;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 /// Spir-v types are represented as simple Words, which are the `result_id` of instructions like
 /// `OpTypeInteger`. Sometimes, however, we want to inspect one of these Words and ask questions
@@ -403,7 +402,7 @@ pub struct SpirvTypePrinter<'cx, 'tcx> {
 /// track of a stack of what types are currently being printed, to not infinitely loop.
 /// Unfortunately, unlike `fmt::Display`, we can't easily pass down the "stack" of
 /// currently-being-printed types, so we use a global static.
-static DEBUG_STACK: SyncLazy<Mutex<Vec<Word>>> = SyncLazy::new(|| Mutex::new(Vec::new()));
+static DEBUG_STACK: LazyLock<Mutex<Vec<Word>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
 impl fmt::Debug for SpirvTypePrinter<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
