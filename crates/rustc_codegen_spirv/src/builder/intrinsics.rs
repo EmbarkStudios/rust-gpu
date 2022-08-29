@@ -358,6 +358,15 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         todo!()
     }
 
+    fn type_checked_load(
+        &mut self,
+        _llvtable: Self::Value,
+        _vtable_byte_offset: u64,
+        _typeid: Self::Value,
+    ) -> Self::Value {
+        todo!()
+    }
+
     fn va_start(&mut self, _val: Self::Value) -> Self::Value {
         todo!()
     }
