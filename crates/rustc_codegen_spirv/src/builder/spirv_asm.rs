@@ -196,9 +196,9 @@ enum Token<'a, 'cx, 'tcx> {
     ),
 }
 
-enum OutRegister<'a> {
+enum OutRegister<'tcx> {
     Regular(Word),
-    Place(PlaceRef<'a, SpirvValue>),
+    Place(PlaceRef<'tcx, SpirvValue>),
 }
 
 enum AsmBlock {
