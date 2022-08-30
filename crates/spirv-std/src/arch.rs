@@ -4,7 +4,7 @@
 //! These functions will typically map to a single instruction, and will perform
 //! no additional safety checks beyond type-checking.
 use crate::{
-    integer::{Integer, SignedInteger, UnsignedInteger},
+    integer::{SignedInteger, UnsignedInteger},
     scalar::Scalar,
     vector::Vector,
 };
