@@ -9,6 +9,8 @@ use crate::{
     vector::Vector,
 };
 #[cfg(target_arch = "spirv")]
+use crate::integer::Integer;
+#[cfg(target_arch = "spirv")]
 use core::arch::asm;
 
 mod atomics;
