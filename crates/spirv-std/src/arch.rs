@@ -3,13 +3,13 @@
 //! This module is intended as a low level abstraction over SPIR-V instructions.
 //! These functions will typically map to a single instruction, and will perform
 //! no additional safety checks beyond type-checking.
+#[cfg(target_arch = "spirv")]
+use crate::integer::Integer;
 use crate::{
     integer::{SignedInteger, UnsignedInteger},
     scalar::Scalar,
     vector::Vector,
 };
-#[cfg(target_arch = "spirv")]
-use crate::integer::Integer;
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;
 
