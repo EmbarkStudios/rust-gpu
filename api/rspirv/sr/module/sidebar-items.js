@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Block",""],["EntryPoint",""],["Function",""],["Jump","Jump destination parameters."],["Module",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["Block",""],["EntryPoint",""],["Function",""],["Jump","Jump destination parameters."],["Module",""]]};

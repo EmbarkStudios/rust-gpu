@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ToolAssembler",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["ToolAssembler",""]]};

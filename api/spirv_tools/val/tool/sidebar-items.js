@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ToolValidator",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["ToolValidator",""]]};

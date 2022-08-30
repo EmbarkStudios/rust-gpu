@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["assembler",""],["diagnostics",""],["opt",""],["shared",""],["val",""]]});
+window.SIDEBAR_ITEMS = {"mod":[["assembler",""],["diagnostics",""],["opt",""],["shared",""],["val",""]]};

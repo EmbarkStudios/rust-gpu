@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["a",""]],"enum":[["Capability","/// SPIR-V operand kind: Capability"],["ModuleResult",""]],"struct":[["CompileResult",""]]});
+window.SIDEBAR_ITEMS = {"constant":[["a",""]],"enum":[["Capability","/// SPIR-V operand kind: Capability"],["ModuleResult",""]],"struct":[["CompileResult",""]]};

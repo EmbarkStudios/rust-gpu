@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["Vector","Abstract trait representing a SPIR-V vector type."]]});
+window.SIDEBAR_ITEMS = {"trait":[["Vector","Abstract trait representing a SPIR-V vector type."]]};

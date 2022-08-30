@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ToolOptimizer",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["ToolOptimizer",""]]};

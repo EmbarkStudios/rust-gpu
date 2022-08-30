@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["create",""]],"mod":[["tool",""]],"struct":[["AssemblerOptions",""],["DisassembleOptions",""]],"trait":[["Assembler",""]]});
+window.SIDEBAR_ITEMS = {"fn":[["create",""]],"mod":[["tool",""]],"struct":[["AssemblerOptions",""],["DisassembleOptions",""]],"trait":[["Assembler",""]]};
