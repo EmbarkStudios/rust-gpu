@@ -6,9 +6,10 @@ use rustc_ast::CRATE_NODE_ID;
 use rustc_codegen_spirv_types::{CompileResult, ModuleResult};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
-use rustc_codegen_ssa::{CodegenResults, NativeLib, METADATA_FILENAME};
+use rustc_codegen_ssa::{CodegenResults, NativeLib};
 use rustc_data_structures::fx::FxHashSet;
 use rustc_errors::FatalError;
+use rustc_metadata::fs::METADATA_FILENAME;
 use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
 use rustc_middle::middle::dependency_format::Linkage;
@@ -32,7 +33,7 @@ pub fn link<'a>(
 ) {
     let output_metadata = sess.opts.output_types.contains_key(&OutputType::Metadata);
     for &crate_type in sess.crate_types().iter() {
-        if (sess.opts.debugging_opts.no_codegen || !sess.opts.output_types.should_codegen())
+        if (sess.opts.unstable_opts.no_codegen || !sess.opts.output_types.should_codegen())
             && !output_metadata
             && crate_type == CrateType::Executable
         {
@@ -353,11 +354,11 @@ fn link_local_crate_native_libs_and_dependent_crate_libs<'a>(
     crate_type: CrateType,
     codegen_results: &CodegenResults,
 ) {
-    if sess.opts.debugging_opts.link_native_libraries {
+    if sess.opts.unstable_opts.link_native_libraries {
         add_local_native_libraries(sess, codegen_results);
     }
     add_upstream_rust_crates(sess, rlibs, codegen_results, crate_type);
-    if sess.opts.debugging_opts.link_native_libraries {
+    if sess.opts.unstable_opts.link_native_libraries {
         add_upstream_native_libraries(sess, codegen_results, crate_type);
     }
 }
