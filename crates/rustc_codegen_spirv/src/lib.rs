@@ -190,7 +190,7 @@ impl ThinBufferMethods for SpirvThinBuffer {
 struct SpirvCodegenBackend;
 
 impl CodegenBackend for SpirvCodegenBackend {
-    fn target_features(&self, sess: &Session) -> Vec<Symbol> {
+    fn target_features(&self, sess: &Session, _allow_unstable: bool) -> Vec<Symbol> {
         let cmdline = sess.opts.cg.target_feature.split(',');
         let cfg = sess.target.options.features.split(',');
         cfg.chain(cmdline)
