@@ -496,7 +496,7 @@ fn check_mod_attrs(tcx: TyCtxt<'_>, module_def_id: LocalDefId) {
         sym: Symbols::get(),
     };
     tcx.hir()
-        .deep_visit_item_likes_in_module(module_def_id, check_spirv_attr_visitor);
+        .visit_item_likes_in_module(module_def_id, check_spirv_attr_visitor);
     if module_def_id.is_top_level_module() {
         check_spirv_attr_visitor.check_spirv_attributes(CRATE_HIR_ID, Target::Mod);
     }

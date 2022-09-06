@@ -10,7 +10,6 @@ use rustc_middle::mir::interpret::{
     alloc_range, ConstAllocation, GlobalAlloc, Scalar, ScalarMaybeUninit,
 };
 use rustc_middle::ty::layout::{LayoutOf, TyAndLayout};
-use rustc_span::symbol::Symbol;
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::abi::{self, AddressSpace, HasDataLayout, Integer, Primitive, Size};
 
@@ -168,8 +167,8 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         self.constant_float(t, val)
     }
 
-    fn const_str(&self, s: Symbol) -> (Self::Value, Self::Value) {
-        let len = s.as_str().len();
+    fn const_str(&self, s: &str) -> (Self::Value, Self::Value) {
+        let len = s.len();
         let str_ty = self
             .layout_of(self.tcx.types.str_)
             .spirv_type(DUMMY_SP, self);
@@ -317,6 +316,11 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             }
         }
     }
+
+    fn zst_to_backend(&self, _llty: Self::Type) -> Self::Value {
+        unreachable!();
+    }
+
     // FIXME(eddyb) this shouldn't exist, and is only used by vtable creation,
     // see https://github.com/rust-lang/rust/pull/86475#discussion_r680792727.
     fn const_data_from_alloc(&self, _alloc: ConstAllocation<'tcx>) -> Self::Value {
