@@ -95,6 +95,7 @@ fn link_rlib(sess: &Session, codegen_results: &CodegenResults, out_filename: &Pa
             | NativeLibKind::Dylib { .. }
             | NativeLibKind::Framework { .. }
             | NativeLibKind::RawDylib
+            | NativeLibKind::LinkArg
             | NativeLibKind::Unspecified => continue,
         }
         if let Some(name) = lib.name {
@@ -445,6 +446,10 @@ fn add_upstream_native_libraries(
                 NativeLibKind::RawDylib => {
                     sess.fatal(&format!("raw_dylib feature not yet implemented: {}", name))
                 }
+                NativeLibKind::LinkArg => sess.fatal(&format!(
+                    "TODO: linkarg nativelibkind not supported yet: {}",
+                    name
+                )),
             }
         }
     }
