@@ -18,7 +18,7 @@ use rustc_codegen_ssa::mir::operand::OperandValue;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, BackendTypes, BuilderMethods, CoverageInfoBuilderMethods,
-    DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods,
+    DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods, TypeMembershipMethods,
 };
 use rustc_errors::{DiagnosticBuilder, ErrorGuaranteed};
 use rustc_middle::mir::coverage::{
@@ -437,5 +437,15 @@ impl<'tcx> FnAbiOfHelpers<'tcx> for Builder<'_, 'tcx> {
         fn_abi_request: FnAbiRequest<'tcx>,
     ) -> ! {
         self.cx.handle_fn_abi_err(err, span, fn_abi_request)
+    }
+}
+
+impl<'tcx> TypeMembershipMethods<'tcx> for CodegenCx<'tcx> {
+    fn set_type_metadata(&self, _function: Self::Function, _typeid: String) {
+        // ignore
+    }
+
+    fn typeid_metadata(&self, _typeid: String) -> Self::Value {
+        todo!()
     }
 }
