@@ -289,6 +289,22 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         self.get_fn_addr(fn_instance.polymorphize(self.tcx)),
                         self.data_layout().instruction_address_space,
                     ),
+                    GlobalAlloc::VTable(vty, trait_ref) => {
+                        let alloc = self
+                            .tcx
+                            .global_alloc(self.tcx.vtable_allocation((vty, trait_ref)))
+                            .unwrap_memory();
+                        let pointee = match self.lookup_type(ty) {
+                            SpirvType::Pointer { pointee } => pointee,
+                            other => self.tcx.sess.fatal(&format!(
+                                "GlobalAlloc::VTable type not implemented: {}",
+                                other.debug(ty, self)
+                            )),
+                        };
+                        let init = self.create_const_alloc(alloc, pointee);
+                        let value = self.static_addr_of(init, alloc.inner().align, None);
+                        (value, AddressSpace::DATA)
+                    }
                     GlobalAlloc::Static(def_id) => {
                         assert!(self.tcx.is_static(def_id));
                         assert!(!self.tcx.is_thread_local_static(def_id));
