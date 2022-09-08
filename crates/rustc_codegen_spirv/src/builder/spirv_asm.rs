@@ -515,7 +515,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         while let Some(LogicalOperand { kind, quantifier }) = logical_operand_stack.pop_front() {
             if kind == OperandKind::IdResult {
                 assert_eq!(quantifier, OperandQuantifier::One);
-                if instruction.result_id == None {
+                if instruction.result_id.is_none() {
                     self.err(&format!(
                         "instruction {} expects a result id",
                         instruction.class.opname
