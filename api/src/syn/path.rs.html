@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/path.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>path.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/path.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>path.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -846,848 +840,847 @@
 <span id="840">840</span>
 <span id="841">841</span>
 <span id="842">842</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::punctuated::Punctuated</span>;
+</pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::punctuated::Punctuated;
 
-<span class="macro">ast_struct!</span> {
-    <span class="doccomment">/// A path at which a named item is exported (e.g. `std::collections::HashMap`).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`</span>
-    <span class="doccomment">/// feature.*</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))))]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Path</span> {
-        <span class="kw">pub</span> <span class="ident">leading_colon</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro">Token!</span>[::]<span class="op">&gt;</span>,
-        <span class="kw">pub</span> <span class="ident">segments</span>: <span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">PathSegment</span>, <span class="macro">Token!</span>[::]<span class="op">&gt;</span>,
+<span class="macro">ast_struct! </span>{
+    <span class="doccomment">/// A path at which a named item is exported (e.g. `std::collections::HashMap`).
+    ///
+    /// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`
+    /// feature.*
+    </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    </span><span class="kw">pub struct </span>Path {
+        <span class="kw">pub </span>leading_colon: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[::]&gt;,
+        <span class="kw">pub </span>segments: Punctuated&lt;PathSegment, <span class="macro">Token!</span>[::]&gt;,
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Path</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">PathSegment</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;T&gt; From&lt;T&gt; <span class="kw">for </span>Path
+<span class="kw">where
+    </span>T: Into&lt;PathSegment&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">segment</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path</span> {
-            <span class="ident">leading_colon</span>: <span class="prelude-val">None</span>,
-            <span class="ident">segments</span>: <span class="ident">Punctuated::new</span>(),
+    <span class="kw">fn </span>from(segment: T) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>path = Path {
+            leading_colon: <span class="prelude-val">None</span>,
+            segments: Punctuated::new(),
         };
-        <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">push_value</span>(<span class="ident">segment</span>.<span class="ident">into</span>());
-        <span class="ident">path</span>
+        path.segments.push_value(segment.into());
+        path
     }
 }
 
-<span class="macro">ast_struct!</span> {
-    <span class="doccomment">/// A segment of a path together with any path arguments on that segment.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`</span>
-    <span class="doccomment">/// feature.*</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))))]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PathSegment</span> {
-        <span class="kw">pub</span> <span class="ident">ident</span>: <span class="ident">Ident</span>,
-        <span class="kw">pub</span> <span class="ident">arguments</span>: <span class="ident">PathArguments</span>,
+<span class="macro">ast_struct! </span>{
+    <span class="doccomment">/// A segment of a path together with any path arguments on that segment.
+    ///
+    /// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`
+    /// feature.*
+    </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    </span><span class="kw">pub struct </span>PathSegment {
+        <span class="kw">pub </span>ident: Ident,
+        <span class="kw">pub </span>arguments: PathArguments,
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PathSegment</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Ident</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;T&gt; From&lt;T&gt; <span class="kw">for </span>PathSegment
+<span class="kw">where
+    </span>T: Into&lt;Ident&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ident</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">PathSegment</span> {
-            <span class="ident">ident</span>: <span class="ident">ident</span>.<span class="ident">into</span>(),
-            <span class="ident">arguments</span>: <span class="ident">PathArguments::None</span>,
+    <span class="kw">fn </span>from(ident: T) -&gt; <span class="self">Self </span>{
+        PathSegment {
+            ident: ident.into(),
+            arguments: PathArguments::None,
         }
     }
 }
 
-<span class="macro">ast_enum!</span> {
-    <span class="doccomment">/// Angle bracketed or parenthesized arguments of a path segment.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`</span>
-    <span class="doccomment">/// feature.*</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Angle bracketed</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The `&lt;&#39;a, T&gt;` in `std::slice::iter&lt;&#39;a, T&gt;`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Parenthesized</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The `(A, B) -&gt; C` in `Fn(A, B) -&gt; C`.</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))))]</span>
-    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PathArguments</span> {
+<span class="macro">ast_enum! </span>{
+    <span class="doccomment">/// Angle bracketed or parenthesized arguments of a path segment.
+    ///
+    /// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`
+    /// feature.*
+    ///
+    /// ## Angle bracketed
+    ///
+    /// The `&lt;&#39;a, T&gt;` in `std::slice::iter&lt;&#39;a, T&gt;`.
+    ///
+    /// ## Parenthesized
+    ///
+    /// The `(A, B) -&gt; C` in `Fn(A, B) -&gt; C`.
+    </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    </span><span class="kw">pub enum </span>PathArguments {
         <span class="prelude-val">None</span>,
-        <span class="doccomment">/// The `&lt;&#39;a, T&gt;` in `std::slice::iter&lt;&#39;a, T&gt;`.</span>
-        <span class="ident">AngleBracketed</span>(<span class="ident">AngleBracketedGenericArguments</span>),
-        <span class="doccomment">/// The `(A, B) -&gt; C` in `Fn(A, B) -&gt; C`.</span>
-        <span class="ident">Parenthesized</span>(<span class="ident">ParenthesizedGenericArguments</span>),
+        <span class="doccomment">/// The `&lt;&#39;a, T&gt;` in `std::slice::iter&lt;&#39;a, T&gt;`.
+        </span>AngleBracketed(AngleBracketedGenericArguments),
+        <span class="doccomment">/// The `(A, B) -&gt; C` in `Fn(A, B) -&gt; C`.
+        </span>Parenthesized(ParenthesizedGenericArguments),
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PathArguments</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">PathArguments::None</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>PathArguments {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        PathArguments::None
     }
 }
 
-<span class="kw">impl</span> <span class="ident">PathArguments</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">PathArguments::None</span> =&gt; <span class="bool-val">true</span>,
-            <span class="ident">PathArguments::AngleBracketed</span>(<span class="ident">bracketed</span>) =&gt; <span class="ident">bracketed</span>.<span class="ident">args</span>.<span class="ident">is_empty</span>(),
-            <span class="ident">PathArguments::Parenthesized</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
+<span class="kw">impl </span>PathArguments {
+    <span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">match </span><span class="self">self </span>{
+            PathArguments::None =&gt; <span class="bool-val">true</span>,
+            PathArguments::AngleBracketed(bracketed) =&gt; bracketed.args.is_empty(),
+            PathArguments::Parenthesized(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">is_none</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">PathArguments::None</span> =&gt; <span class="bool-val">true</span>,
-            <span class="ident">PathArguments::AngleBracketed</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PathArguments::Parenthesized</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;parsing&quot;</span>)]
+    </span><span class="kw">fn </span>is_none(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            PathArguments::None =&gt; <span class="bool-val">true</span>,
+            PathArguments::AngleBracketed(<span class="kw">_</span>) | PathArguments::Parenthesized(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
         }
     }
 }
 
-<span class="macro">ast_enum!</span> {
-    <span class="doccomment">/// An individual generic argument, like `&#39;a`, `T`, or `Item = T`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`</span>
-    <span class="doccomment">/// feature.*</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))))]</span>
-    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">GenericArgument</span> {
-        <span class="doccomment">/// A lifetime argument.</span>
-        <span class="ident">Lifetime</span>(<span class="ident">Lifetime</span>),
-        <span class="doccomment">/// A type argument.</span>
-        <span class="ident">Type</span>(<span class="ident">Type</span>),
-        <span class="doccomment">/// A binding (equality constraint) on an associated type: the `Item =</span>
-        <span class="doccomment">/// u8` in `Iterator&lt;Item = u8&gt;`.</span>
-        <span class="ident">Binding</span>(<span class="ident">Binding</span>),
-        <span class="doccomment">/// An associated type bound: `Iterator&lt;Item: Display&gt;`.</span>
-        <span class="ident">Constraint</span>(<span class="ident">Constraint</span>),
-        <span class="doccomment">/// A const expression. Must be inside of a block.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// NOTE: Identity expressions are represented as Type arguments, as</span>
-        <span class="doccomment">/// they are indistinguishable syntactically.</span>
-        <span class="ident">Const</span>(<span class="ident">Expr</span>),
+<span class="macro">ast_enum! </span>{
+    <span class="doccomment">/// An individual generic argument, like `&#39;a`, `T`, or `Item = T`.
+    ///
+    /// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`
+    /// feature.*
+    </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    </span><span class="kw">pub enum </span>GenericArgument {
+        <span class="doccomment">/// A lifetime argument.
+        </span>Lifetime(Lifetime),
+        <span class="doccomment">/// A type argument.
+        </span>Type(Type),
+        <span class="doccomment">/// A binding (equality constraint) on an associated type: the `Item =
+        /// u8` in `Iterator&lt;Item = u8&gt;`.
+        </span>Binding(Binding),
+        <span class="doccomment">/// An associated type bound: `Iterator&lt;Item: Display&gt;`.
+        </span>Constraint(Constraint),
+        <span class="doccomment">/// A const expression. Must be inside of a block.
+        ///
+        /// NOTE: Identity expressions are represented as Type arguments, as
+        /// they are indistinguishable syntactically.
+        </span>Const(Expr),
     }
 }
 
-<span class="macro">ast_struct!</span> {
-    <span class="doccomment">/// Angle bracketed arguments of a path segment: the `&lt;K, V&gt;` in `HashMap&lt;K,</span>
-    <span class="doccomment">/// V&gt;`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`</span>
-    <span class="doccomment">/// feature.*</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))))]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AngleBracketedGenericArguments</span> {
-        <span class="kw">pub</span> <span class="ident">colon2_token</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro">Token!</span>[::]<span class="op">&gt;</span>,
-        <span class="kw">pub</span> <span class="ident">lt_token</span>: <span class="macro">Token!</span>[<span class="op">&lt;</span>],
-        <span class="kw">pub</span> <span class="ident">args</span>: <span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">GenericArgument</span>, <span class="macro">Token!</span>[,]<span class="op">&gt;</span>,
-        <span class="kw">pub</span> <span class="ident">gt_token</span>: <span class="macro">Token!</span>[<span class="op">&gt;</span>],
+<span class="macro">ast_struct! </span>{
+    <span class="doccomment">/// Angle bracketed arguments of a path segment: the `&lt;K, V&gt;` in `HashMap&lt;K,
+    /// V&gt;`.
+    ///
+    /// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`
+    /// feature.*
+    </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    </span><span class="kw">pub struct </span>AngleBracketedGenericArguments {
+        <span class="kw">pub </span>colon2_token: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[::]&gt;,
+        <span class="kw">pub </span>lt_token: <span class="macro">Token!</span>[&lt;],
+        <span class="kw">pub </span>args: Punctuated&lt;GenericArgument, <span class="macro">Token!</span>[,]&gt;,
+        <span class="kw">pub </span>gt_token: <span class="macro">Token!</span>[&gt;],
     }
 }
 
-<span class="macro">ast_struct!</span> {
-    <span class="doccomment">/// A binding (equality constraint) on an associated type: `Item = u8`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`</span>
-    <span class="doccomment">/// feature.*</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))))]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Binding</span> {
-        <span class="kw">pub</span> <span class="ident">ident</span>: <span class="ident">Ident</span>,
-        <span class="kw">pub</span> <span class="ident">eq_token</span>: <span class="macro">Token!</span>[<span class="op">=</span>],
-        <span class="kw">pub</span> <span class="ident">ty</span>: <span class="ident">Type</span>,
+<span class="macro">ast_struct! </span>{
+    <span class="doccomment">/// A binding (equality constraint) on an associated type: `Item = u8`.
+    ///
+    /// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`
+    /// feature.*
+    </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    </span><span class="kw">pub struct </span>Binding {
+        <span class="kw">pub </span>ident: Ident,
+        <span class="kw">pub </span>eq_token: <span class="macro">Token!</span>[=],
+        <span class="kw">pub </span>ty: Type,
     }
 }
 
-<span class="macro">ast_struct!</span> {
-    <span class="doccomment">/// An associated type bound: `Iterator&lt;Item: Display&gt;`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`</span>
-    <span class="doccomment">/// feature.*</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))))]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Constraint</span> {
-        <span class="kw">pub</span> <span class="ident">ident</span>: <span class="ident">Ident</span>,
-        <span class="kw">pub</span> <span class="ident">colon_token</span>: <span class="macro">Token!</span>[:],
-        <span class="kw">pub</span> <span class="ident">bounds</span>: <span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">TypeParamBound</span>, <span class="macro">Token!</span>[<span class="op">+</span>]<span class="op">&gt;</span>,
+<span class="macro">ast_struct! </span>{
+    <span class="doccomment">/// An associated type bound: `Iterator&lt;Item: Display&gt;`.
+    ///
+    /// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`
+    /// feature.*
+    </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    </span><span class="kw">pub struct </span>Constraint {
+        <span class="kw">pub </span>ident: Ident,
+        <span class="kw">pub </span>colon_token: <span class="macro">Token!</span>[:],
+        <span class="kw">pub </span>bounds: Punctuated&lt;TypeParamBound, <span class="macro">Token!</span>[+]&gt;,
     }
 }
 
-<span class="macro">ast_struct!</span> {
-    <span class="doccomment">/// Arguments of a function path segment: the `(A, B) -&gt; C` in `Fn(A,B) -&gt;</span>
-    <span class="doccomment">/// C`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`</span>
-    <span class="doccomment">/// feature.*</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))))]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ParenthesizedGenericArguments</span> {
-        <span class="kw">pub</span> <span class="ident">paren_token</span>: <span class="ident">token::Paren</span>,
-        <span class="doccomment">/// `(A, B)`</span>
-        <span class="kw">pub</span> <span class="ident">inputs</span>: <span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">Type</span>, <span class="macro">Token!</span>[,]<span class="op">&gt;</span>,
-        <span class="doccomment">/// `C`</span>
-        <span class="kw">pub</span> <span class="ident">output</span>: <span class="ident">ReturnType</span>,
+<span class="macro">ast_struct! </span>{
+    <span class="doccomment">/// Arguments of a function path segment: the `(A, B) -&gt; C` in `Fn(A,B) -&gt;
+    /// C`.
+    ///
+    /// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`
+    /// feature.*
+    </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    </span><span class="kw">pub struct </span>ParenthesizedGenericArguments {
+        <span class="kw">pub </span>paren_token: token::Paren,
+        <span class="doccomment">/// `(A, B)`
+        </span><span class="kw">pub </span>inputs: Punctuated&lt;Type, <span class="macro">Token!</span>[,]&gt;,
+        <span class="doccomment">/// `C`
+        </span><span class="kw">pub </span>output: ReturnType,
     }
 }
 
-<span class="macro">ast_struct!</span> {
-    <span class="doccomment">/// The explicit Self type in a qualified path: the `T` in `&lt;T as</span>
-    <span class="doccomment">/// Display&gt;::fmt`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The actual path, including the trait and the associated item, is stored</span>
-    <span class="doccomment">/// separately. The `position` field represents the index of the associated</span>
-    <span class="doccomment">/// item qualified with this Self type.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// &lt;Vec&lt;T&gt; as a::b::Trait&gt;::AssociatedItem</span>
-    <span class="doccomment">///  ^~~~~~    ~~~~~~~~~~~~~~^</span>
-    <span class="doccomment">///  ty        position = 3</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// &lt;Vec&lt;T&gt;&gt;::AssociatedItem</span>
-    <span class="doccomment">///  ^~~~~~   ^</span>
-    <span class="doccomment">///  ty       position = 0</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`</span>
-    <span class="doccomment">/// feature.*</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))))]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QSelf</span> {
-        <span class="kw">pub</span> <span class="ident">lt_token</span>: <span class="macro">Token!</span>[<span class="op">&lt;</span>],
-        <span class="kw">pub</span> <span class="ident">ty</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>,
-        <span class="kw">pub</span> <span class="ident">position</span>: <span class="ident">usize</span>,
-        <span class="kw">pub</span> <span class="ident">as_token</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro">Token!</span>[<span class="kw">as</span>]<span class="op">&gt;</span>,
-        <span class="kw">pub</span> <span class="ident">gt_token</span>: <span class="macro">Token!</span>[<span class="op">&gt;</span>],
+<span class="macro">ast_struct! </span>{
+    <span class="doccomment">/// The explicit Self type in a qualified path: the `T` in `&lt;T as
+    /// Display&gt;::fmt`.
+    ///
+    /// The actual path, including the trait and the associated item, is stored
+    /// separately. The `position` field represents the index of the associated
+    /// item qualified with this Self type.
+    ///
+    /// ```text
+    /// &lt;Vec&lt;T&gt; as a::b::Trait&gt;::AssociatedItem
+    ///  ^~~~~~    ~~~~~~~~~~~~~~^
+    ///  ty        position = 3
+    ///
+    /// &lt;Vec&lt;T&gt;&gt;::AssociatedItem
+    ///  ^~~~~~   ^
+    ///  ty       position = 0
+    /// ```
+    ///
+    /// *This type is available only if Syn is built with the `&quot;derive&quot;` or `&quot;full&quot;`
+    /// feature.*
+    </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    </span><span class="kw">pub struct </span>QSelf {
+        <span class="kw">pub </span>lt_token: <span class="macro">Token!</span>[&lt;],
+        <span class="kw">pub </span>ty: Box&lt;Type&gt;,
+        <span class="kw">pub </span>position: usize,
+        <span class="kw">pub </span>as_token: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[<span class="kw">as</span>]&gt;,
+        <span class="kw">pub </span>gt_token: <span class="macro">Token!</span>[&gt;],
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">parsing</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;parsing&quot;</span>)]
+</span><span class="kw">pub mod </span>parsing {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ext::IdentExt</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>, <span class="prelude-ty">Result</span>};
+    <span class="kw">use </span><span class="kw">crate</span>::ext::IdentExt;
+    <span class="kw">use </span><span class="kw">crate</span>::parse::{Parse, ParseStream, <span class="prelude-ty">Result</span>};
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">Path</span> {
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="ident"><span class="self">Self</span>::parse_helper</span>(<span class="ident">input</span>, <span class="bool-val">false</span>)
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+    </span><span class="kw">impl </span>Parse <span class="kw">for </span>Path {
+        <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="self">Self</span>::parse_helper(input, <span class="bool-val">false</span>)
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">GenericArgument</span> {
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">Lifetime</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek2</span>(<span class="macro">Token!</span>[<span class="op">+</span>]) {
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">GenericArgument::Lifetime</span>(<span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>));
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+    </span><span class="kw">impl </span>Parse <span class="kw">for </span>GenericArgument {
+        <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="kw">if </span>input.peek(Lifetime) &amp;&amp; !input.peek2(<span class="macro">Token!</span>[+]) {
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(GenericArgument::Lifetime(input.parse()<span class="question-mark">?</span>));
             }
 
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">Ident</span>) <span class="op">&amp;&amp;</span> <span class="ident">input</span>.<span class="ident">peek2</span>(<span class="macro">Token!</span>[<span class="op">=</span>]) {
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">GenericArgument::Binding</span>(<span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>));
+            <span class="kw">if </span>input.peek(Ident) &amp;&amp; input.peek2(<span class="macro">Token!</span>[=]) {
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(GenericArgument::Binding(input.parse()<span class="question-mark">?</span>));
             }
 
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-            {
-                <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">Ident</span>) <span class="op">&amp;&amp;</span> <span class="ident">input</span>.<span class="ident">peek2</span>(<span class="macro">Token!</span>[:]) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek2</span>(<span class="macro">Token!</span>[::]) {
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">GenericArgument::Constraint</span>(<span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>));
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
+            </span>{
+                <span class="kw">if </span>input.peek(Ident) &amp;&amp; input.peek2(<span class="macro">Token!</span>[:]) &amp;&amp; !input.peek2(<span class="macro">Token!</span>[::]) {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(GenericArgument::Constraint(input.parse()<span class="question-mark">?</span>));
                 }
             }
 
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">Lit</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">token::Brace</span>) {
-                <span class="kw">return</span> <span class="ident">const_argument</span>(<span class="ident">input</span>).<span class="ident">map</span>(<span class="ident">GenericArgument::Const</span>);
+            <span class="kw">if </span>input.peek(Lit) || input.peek(token::Brace) {
+                <span class="kw">return </span>const_argument(input).map(GenericArgument::Const);
             }
 
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-            <span class="kw">let</span> <span class="ident">begin</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">fork</span>();
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
+            </span><span class="kw">let </span>begin = input.fork();
 
-            <span class="kw">let</span> <span class="ident">argument</span>: <span class="ident">Type</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+            <span class="kw">let </span>argument: Type = input.parse()<span class="question-mark">?</span>;
 
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-            {
-                <span class="kw">if</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">argument</span> {
-                    <span class="ident">Type::Path</span>(<span class="ident">argument</span>)
-                        <span class="kw">if</span> <span class="ident">argument</span>.<span class="ident">qself</span>.<span class="ident">is_none</span>()
-                            <span class="op">&amp;&amp;</span> <span class="ident">argument</span>.<span class="ident">path</span>.<span class="ident">leading_colon</span>.<span class="ident">is_none</span>()
-                            <span class="op">&amp;&amp;</span> <span class="ident">argument</span>.<span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> =&gt;
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
+            </span>{
+                <span class="kw">if match </span><span class="kw-2">&amp;</span>argument {
+                    Type::Path(argument)
+                        <span class="kw">if </span>argument.qself.is_none()
+                            &amp;&amp; argument.path.leading_colon.is_none()
+                            &amp;&amp; argument.path.segments.len() == <span class="number">1 </span>=&gt;
                     {
-                        <span class="kw">match</span> <span class="ident">argument</span>.<span class="ident">path</span>.<span class="ident">segments</span>[<span class="number">0</span>].<span class="ident">arguments</span> {
-                            <span class="ident">PathArguments::AngleBracketed</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
-                            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+                        <span class="kw">match </span>argument.path.segments[<span class="number">0</span>].arguments {
+                            PathArguments::AngleBracketed(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+                            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                         }
                     }
-                    <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
-                } <span class="op">&amp;&amp;</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="op">=</span>]) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">Token!</span>[<span class="op">=</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-                    <span class="bool-val">true</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[:]) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">Token!</span>[:]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
-                    <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">constraint_bounds</span>)<span class="question-mark">?</span>;
-                    <span class="bool-val">true</span>
-                } <span class="kw">else</span> {
-                    <span class="bool-val">false</span>
-                } {
-                    <span class="kw">let</span> <span class="ident">verbatim</span> <span class="op">=</span> <span class="ident">verbatim::between</span>(<span class="ident">begin</span>, <span class="ident">input</span>);
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">GenericArgument::Type</span>(<span class="ident">Type::Verbatim</span>(<span class="ident">verbatim</span>)));
+                    <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+                } &amp;&amp; <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[=]) {
+                    input.parse::&lt;<span class="macro">Token!</span>[=]&gt;()<span class="question-mark">?</span>;
+                    input.parse::&lt;Type&gt;()<span class="question-mark">?</span>;
+                    <span class="bool-val">true
+                </span>} <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[:]) {
+                    input.parse::&lt;<span class="macro">Token!</span>[:]&gt;()<span class="question-mark">?</span>;
+                    input.call(constraint_bounds)<span class="question-mark">?</span>;
+                    <span class="bool-val">true
+                </span>} <span class="kw">else </span>{
+                    <span class="bool-val">false
+                </span>} {
+                    <span class="kw">let </span>verbatim = verbatim::between(begin, input);
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(GenericArgument::Type(Type::Verbatim(verbatim)));
                 }
             }
 
-            <span class="prelude-val">Ok</span>(<span class="ident">GenericArgument::Type</span>(<span class="ident">argument</span>))
+            <span class="prelude-val">Ok</span>(GenericArgument::Type(argument))
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">const_argument</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Expr</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">lookahead</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">lookahead1</span>();
+    <span class="kw">pub fn </span>const_argument(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
+        <span class="kw">let </span>lookahead = input.lookahead1();
 
-        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">Lit</span>) {
-            <span class="kw">let</span> <span class="ident">lit</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Expr::Lit</span>(<span class="ident">lit</span>));
+        <span class="kw">if </span>input.peek(Lit) {
+            <span class="kw">let </span>lit = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(Expr::Lit(lit));
         }
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-        {
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">Ident</span>) {
-                <span class="kw">let</span> <span class="ident">ident</span>: <span class="ident">Ident</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Expr::Path</span>(<span class="ident">ExprPath</span> {
-                    <span class="ident">attrs</span>: <span class="ident">Vec::new</span>(),
-                    <span class="ident">qself</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">path</span>: <span class="ident">Path::from</span>(<span class="ident">ident</span>),
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
+        </span>{
+            <span class="kw">if </span>input.peek(Ident) {
+                <span class="kw">let </span>ident: Ident = input.parse()<span class="question-mark">?</span>;
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(Expr::Path(ExprPath {
+                    attrs: Vec::new(),
+                    qself: <span class="prelude-val">None</span>,
+                    path: Path::from(ident),
                 }));
             }
         }
 
-        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">token::Brace</span>) {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-            {
-                <span class="kw">let</span> <span class="ident">block</span>: <span class="ident">ExprBlock</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Expr::Block</span>(<span class="ident">block</span>));
+        <span class="kw">if </span>input.peek(token::Brace) {
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
+            </span>{
+                <span class="kw">let </span>block: ExprBlock = input.parse()<span class="question-mark">?</span>;
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(Expr::Block(block));
             }
 
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>))]</span>
-            {
-                <span class="kw">let</span> <span class="ident">begin</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">fork</span>();
-                <span class="kw">let</span> <span class="ident">content</span>;
-                <span class="macro">braced!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>);
-                <span class="ident">content</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">Expr</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">verbatim</span> <span class="op">=</span> <span class="ident">verbatim::between</span>(<span class="ident">begin</span>, <span class="ident">input</span>);
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Expr::Verbatim</span>(<span class="ident">verbatim</span>));
+            <span class="attribute">#[cfg(not(feature = <span class="string">&quot;full&quot;</span>))]
+            </span>{
+                <span class="kw">let </span>begin = input.fork();
+                <span class="kw">let </span>content;
+                <span class="macro">braced!</span>(content <span class="kw">in </span>input);
+                content.parse::&lt;Expr&gt;()<span class="question-mark">?</span>;
+                <span class="kw">let </span>verbatim = verbatim::between(begin, input);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(Expr::Verbatim(verbatim));
             }
         }
 
-        <span class="prelude-val">Err</span>(<span class="ident">lookahead</span>.<span class="ident">error</span>())
+        <span class="prelude-val">Err</span>(lookahead.error())
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">AngleBracketedGenericArguments</span> {
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">AngleBracketedGenericArguments</span> {
-                <span class="ident">colon2_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">lt_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">args</span>: {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">Punctuated::new</span>();
-                    <span class="kw">loop</span> {
-                        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="op">&gt;</span>]) {
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+    </span><span class="kw">impl </span>Parse <span class="kw">for </span>AngleBracketedGenericArguments {
+        <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="prelude-val">Ok</span>(AngleBracketedGenericArguments {
+                colon2_token: input.parse()<span class="question-mark">?</span>,
+                lt_token: input.parse()<span class="question-mark">?</span>,
+                args: {
+                    <span class="kw">let </span><span class="kw-2">mut </span>args = Punctuated::new();
+                    <span class="kw">loop </span>{
+                        <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[&gt;]) {
                             <span class="kw">break</span>;
                         }
-                        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                        <span class="ident">args</span>.<span class="ident">push_value</span>(<span class="ident">value</span>);
-                        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="op">&gt;</span>]) {
+                        <span class="kw">let </span>value = input.parse()<span class="question-mark">?</span>;
+                        args.push_value(value);
+                        <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[&gt;]) {
                             <span class="kw">break</span>;
                         }
-                        <span class="kw">let</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                        <span class="ident">args</span>.<span class="ident">push_punct</span>(<span class="ident">punct</span>);
+                        <span class="kw">let </span>punct = input.parse()<span class="question-mark">?</span>;
+                        args.push_punct(punct);
                     }
-                    <span class="ident">args</span>
+                    args
                 },
-                <span class="ident">gt_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+                gt_token: input.parse()<span class="question-mark">?</span>,
             })
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ParenthesizedGenericArguments</span> {
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">content</span>;
-            <span class="prelude-val">Ok</span>(<span class="ident">ParenthesizedGenericArguments</span> {
-                <span class="ident">paren_token</span>: <span class="macro">parenthesized!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>),
-                <span class="ident">inputs</span>: <span class="ident">content</span>.<span class="ident">parse_terminated</span>(<span class="ident">Type::parse</span>)<span class="question-mark">?</span>,
-                <span class="ident">output</span>: <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">ReturnType::without_plus</span>)<span class="question-mark">?</span>,
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+    </span><span class="kw">impl </span>Parse <span class="kw">for </span>ParenthesizedGenericArguments {
+        <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="kw">let </span>content;
+            <span class="prelude-val">Ok</span>(ParenthesizedGenericArguments {
+                paren_token: <span class="macro">parenthesized!</span>(content <span class="kw">in </span>input),
+                inputs: content.parse_terminated(Type::parse)<span class="question-mark">?</span>,
+                output: input.call(ReturnType::without_plus)<span class="question-mark">?</span>,
             })
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">PathSegment</span> {
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="ident"><span class="self">Self</span>::parse_helper</span>(<span class="ident">input</span>, <span class="bool-val">false</span>)
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+    </span><span class="kw">impl </span>Parse <span class="kw">for </span>PathSegment {
+        <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="self">Self</span>::parse_helper(input, <span class="bool-val">false</span>)
         }
     }
 
-    <span class="kw">impl</span> <span class="ident">PathSegment</span> {
-        <span class="kw">fn</span> <span class="ident">parse_helper</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>, <span class="ident">expr_style</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="kw">super</span>]) <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="self">self</span>]) <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="kw">crate</span>]) {
-                <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">Ident::parse_any</span>)<span class="question-mark">?</span>;
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">PathSegment::from</span>(<span class="ident">ident</span>));
+    <span class="kw">impl </span>PathSegment {
+        <span class="kw">fn </span>parse_helper(input: ParseStream, expr_style: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">super</span>]) || input.peek(<span class="macro">Token!</span>[<span class="self">self</span>]) || input.peek(<span class="macro">Token!</span>[<span class="kw">crate</span>]) {
+                <span class="kw">let </span>ident = input.call(Ident::parse_any)<span class="question-mark">?</span>;
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(PathSegment::from(ident));
             }
 
-            <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="self">Self</span>]) {
-                <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">Ident::parse_any</span>)<span class="question-mark">?</span>
-            } <span class="kw">else</span> {
-                <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>
-            };
+            <span class="kw">let </span>ident = <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[<span class="self">Self</span>]) {
+                input.call(Ident::parse_any)<span class="question-mark">?
+            </span>} <span class="kw">else </span>{
+                input.parse()<span class="question-mark">?
+            </span>};
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">expr_style</span> <span class="op">&amp;&amp;</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="op">&lt;</span>]) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="op">&lt;</span><span class="op">=</span>])
-                <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[::]) <span class="op">&amp;&amp;</span> <span class="ident">input</span>.<span class="ident">peek3</span>(<span class="macro">Token!</span>[<span class="op">&lt;</span>])
+            <span class="kw">if </span>!expr_style &amp;&amp; input.peek(<span class="macro">Token!</span>[&lt;]) &amp;&amp; !input.peek(<span class="macro">Token!</span>[&lt;=])
+                || input.peek(<span class="macro">Token!</span>[::]) &amp;&amp; input.peek3(<span class="macro">Token!</span>[&lt;])
             {
-                <span class="prelude-val">Ok</span>(<span class="ident">PathSegment</span> {
-                    <span class="ident">ident</span>,
-                    <span class="ident">arguments</span>: <span class="ident">PathArguments::AngleBracketed</span>(<span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>),
+                <span class="prelude-val">Ok</span>(PathSegment {
+                    ident,
+                    arguments: PathArguments::AngleBracketed(input.parse()<span class="question-mark">?</span>),
                 })
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">PathSegment::from</span>(<span class="ident">ident</span>))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Ok</span>(PathSegment::from(ident))
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">Binding</span> {
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">Binding</span> {
-                <span class="ident">ident</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">eq_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">ty</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+    </span><span class="kw">impl </span>Parse <span class="kw">for </span>Binding {
+        <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="prelude-val">Ok</span>(Binding {
+                ident: input.parse()<span class="question-mark">?</span>,
+                eq_token: input.parse()<span class="question-mark">?</span>,
+                ty: input.parse()<span class="question-mark">?</span>,
             })
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">Constraint</span> {
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">Constraint</span> {
-                <span class="ident">ident</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">colon_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">bounds</span>: <span class="ident">constraint_bounds</span>(<span class="ident">input</span>)<span class="question-mark">?</span>,
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+    </span><span class="kw">impl </span>Parse <span class="kw">for </span>Constraint {
+        <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="prelude-val">Ok</span>(Constraint {
+                ident: input.parse()<span class="question-mark">?</span>,
+                colon_token: input.parse()<span class="question-mark">?</span>,
+                bounds: constraint_bounds(input)<span class="question-mark">?</span>,
             })
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">constraint_bounds</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">TypeParamBound</span>, <span class="macro">Token!</span>[<span class="op">+</span>]<span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bounds</span> <span class="op">=</span> <span class="ident">Punctuated::new</span>();
-        <span class="kw">loop</span> {
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[,]) <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="op">&gt;</span>]) {
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
+    </span><span class="kw">fn </span>constraint_bounds(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;Punctuated&lt;TypeParamBound, <span class="macro">Token!</span>[+]&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>bounds = Punctuated::new();
+        <span class="kw">loop </span>{
+            <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[,]) || input.peek(<span class="macro">Token!</span>[&gt;]) {
                 <span class="kw">break</span>;
             }
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-            <span class="ident">bounds</span>.<span class="ident">push_value</span>(<span class="ident">value</span>);
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="op">+</span>]) {
+            <span class="kw">let </span>value = input.parse()<span class="question-mark">?</span>;
+            bounds.push_value(value);
+            <span class="kw">if </span>!input.peek(<span class="macro">Token!</span>[+]) {
                 <span class="kw">break</span>;
             }
-            <span class="kw">let</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-            <span class="ident">bounds</span>.<span class="ident">push_punct</span>(<span class="ident">punct</span>);
+            <span class="kw">let </span>punct = input.parse()<span class="question-mark">?</span>;
+            bounds.push_punct(punct);
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">bounds</span>)
+        <span class="prelude-val">Ok</span>(bounds)
     }
 
-    <span class="kw">impl</span> <span class="ident">Path</span> {
-        <span class="doccomment">/// Parse a `Path` containing no path arguments on any of its segments.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// *This function is available only if Syn is built with the `&quot;parsing&quot;`</span>
-        <span class="doccomment">/// feature.*</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// # Example</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// ```</span>
-        <span class="doccomment">/// use syn::{Path, Result, Token};</span>
-        <span class="doccomment">/// use syn::parse::{Parse, ParseStream};</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// // A simplified single `use` statement like:</span>
-        <span class="doccomment">/// //</span>
-        <span class="doccomment">/// //     use std::collections::HashMap;</span>
-        <span class="doccomment">/// //</span>
-        <span class="doccomment">/// // Note that generic parameters are not allowed in a `use` statement</span>
-        <span class="doccomment">/// // so the following must not be accepted.</span>
-        <span class="doccomment">/// //</span>
-        <span class="doccomment">/// //     use a::&lt;b&gt;::c;</span>
-        <span class="doccomment">/// struct SingleUse {</span>
-        <span class="doccomment">///     use_token: Token![use],</span>
-        <span class="doccomment">///     path: Path,</span>
-        <span class="doccomment">/// }</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// impl Parse for SingleUse {</span>
-        <span class="doccomment">///     fn parse(input: ParseStream) -&gt; Result&lt;Self&gt; {</span>
-        <span class="doccomment">///         Ok(SingleUse {</span>
-        <span class="doccomment">///             use_token: input.parse()?,</span>
-        <span class="doccomment">///             path: input.call(Path::parse_mod_style)?,</span>
-        <span class="doccomment">///         })</span>
-        <span class="doccomment">///     }</span>
-        <span class="doccomment">/// }</span>
-        <span class="doccomment">/// ```</span>
-        <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_mod_style</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">Path</span> {
-                <span class="ident">leading_colon</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">segments</span>: {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="ident">Punctuated::new</span>();
-                    <span class="kw">loop</span> {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">Ident</span>)
-                            <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="kw">super</span>])
-                            <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="self">self</span>])
-                            <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="self">Self</span>])
-                            <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="kw">crate</span>])
+    <span class="kw">impl </span>Path {
+        <span class="doccomment">/// Parse a `Path` containing no path arguments on any of its segments.
+        ///
+        /// *This function is available only if Syn is built with the `&quot;parsing&quot;`
+        /// feature.*
+        ///
+        /// # Example
+        ///
+        /// ```
+        /// use syn::{Path, Result, Token};
+        /// use syn::parse::{Parse, ParseStream};
+        ///
+        /// // A simplified single `use` statement like:
+        /// //
+        /// //     use std::collections::HashMap;
+        /// //
+        /// // Note that generic parameters are not allowed in a `use` statement
+        /// // so the following must not be accepted.
+        /// //
+        /// //     use a::&lt;b&gt;::c;
+        /// struct SingleUse {
+        ///     use_token: Token![use],
+        ///     path: Path,
+        /// }
+        ///
+        /// impl Parse for SingleUse {
+        ///     fn parse(input: ParseStream) -&gt; Result&lt;Self&gt; {
+        ///         Ok(SingleUse {
+        ///             use_token: input.parse()?,
+        ///             path: input.call(Path::parse_mod_style)?,
+        ///         })
+        ///     }
+        /// }
+        /// ```
+        </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+        </span><span class="kw">pub fn </span>parse_mod_style(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="prelude-val">Ok</span>(Path {
+                leading_colon: input.parse()<span class="question-mark">?</span>,
+                segments: {
+                    <span class="kw">let </span><span class="kw-2">mut </span>segments = Punctuated::new();
+                    <span class="kw">loop </span>{
+                        <span class="kw">if </span>!input.peek(Ident)
+                            &amp;&amp; !input.peek(<span class="macro">Token!</span>[<span class="kw">super</span>])
+                            &amp;&amp; !input.peek(<span class="macro">Token!</span>[<span class="self">self</span>])
+                            &amp;&amp; !input.peek(<span class="macro">Token!</span>[<span class="self">Self</span>])
+                            &amp;&amp; !input.peek(<span class="macro">Token!</span>[<span class="kw">crate</span>])
                         {
                             <span class="kw">break</span>;
                         }
-                        <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="ident">Ident::parse_any</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-                        <span class="ident">segments</span>.<span class="ident">push_value</span>(<span class="ident">PathSegment::from</span>(<span class="ident">ident</span>));
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[::]) {
+                        <span class="kw">let </span>ident = Ident::parse_any(input)<span class="question-mark">?</span>;
+                        segments.push_value(PathSegment::from(ident));
+                        <span class="kw">if </span>!input.peek(<span class="macro">Token!</span>[::]) {
                             <span class="kw">break</span>;
                         }
-                        <span class="kw">let</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                        <span class="ident">segments</span>.<span class="ident">push_punct</span>(<span class="ident">punct</span>);
+                        <span class="kw">let </span>punct = input.parse()<span class="question-mark">?</span>;
+                        segments.push_punct(punct);
                     }
-                    <span class="kw">if</span> <span class="ident">segments</span>.<span class="ident">is_empty</span>() {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">input</span>.<span class="ident">error</span>(<span class="string">&quot;expected path&quot;</span>));
-                    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">segments</span>.<span class="ident">trailing_punct</span>() {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">input</span>.<span class="ident">error</span>(<span class="string">&quot;expected path segment&quot;</span>));
+                    <span class="kw">if </span>segments.is_empty() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(input.error(<span class="string">&quot;expected path&quot;</span>));
+                    } <span class="kw">else if </span>segments.trailing_punct() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(input.error(<span class="string">&quot;expected path segment&quot;</span>));
                     }
-                    <span class="ident">segments</span>
+                    segments
                 },
             })
         }
 
-        <span class="doccomment">/// Determines whether this is a path of length 1 equal to the given</span>
-        <span class="doccomment">/// ident.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// For them to compare equal, it must be the case that:</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// - the path has no leading colon,</span>
-        <span class="doccomment">/// - the number of path segments is 1,</span>
-        <span class="doccomment">/// - the first path segment has no angle bracketed or parenthesized</span>
-        <span class="doccomment">///   path arguments, and</span>
-        <span class="doccomment">/// - the ident of the first path segment is equal to the given one.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// *This function is available only if Syn is built with the `&quot;parsing&quot;`</span>
-        <span class="doccomment">/// feature.*</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// # Example</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// ```</span>
-        <span class="doccomment">/// use syn::{Attribute, Error, Meta, NestedMeta, Result};</span>
-        <span class="doccomment">/// # use std::iter::FromIterator;</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// fn get_serde_meta_items(attr: &amp;Attribute) -&gt; Result&lt;Vec&lt;NestedMeta&gt;&gt; {</span>
-        <span class="doccomment">///     if attr.path.is_ident(&quot;serde&quot;) {</span>
-        <span class="doccomment">///         match attr.parse_meta()? {</span>
-        <span class="doccomment">///             Meta::List(meta) =&gt; Ok(Vec::from_iter(meta.nested)),</span>
-        <span class="doccomment">///             bad =&gt; Err(Error::new_spanned(bad, &quot;unrecognized attribute&quot;)),</span>
-        <span class="doccomment">///         }</span>
-        <span class="doccomment">///     } else {</span>
-        <span class="doccomment">///         Ok(Vec::new())</span>
-        <span class="doccomment">///     }</span>
-        <span class="doccomment">/// }</span>
-        <span class="doccomment">/// ```</span>
-        <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ident</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ident</span>: <span class="kw-2">&amp;</span><span class="ident">I</span>) -&gt; <span class="ident">bool</span>
-        <span class="kw">where</span>
-            <span class="ident">Ident</span>: <span class="ident">PartialEq</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// Determines whether this is a path of length 1 equal to the given
+        /// ident.
+        ///
+        /// For them to compare equal, it must be the case that:
+        ///
+        /// - the path has no leading colon,
+        /// - the number of path segments is 1,
+        /// - the first path segment has no angle bracketed or parenthesized
+        ///   path arguments, and
+        /// - the ident of the first path segment is equal to the given one.
+        ///
+        /// *This function is available only if Syn is built with the `&quot;parsing&quot;`
+        /// feature.*
+        ///
+        /// # Example
+        ///
+        /// ```
+        /// use syn::{Attribute, Error, Meta, NestedMeta, Result};
+        /// # use std::iter::FromIterator;
+        ///
+        /// fn get_serde_meta_items(attr: &amp;Attribute) -&gt; Result&lt;Vec&lt;NestedMeta&gt;&gt; {
+        ///     if attr.path.is_ident(&quot;serde&quot;) {
+        ///         match attr.parse_meta()? {
+        ///             Meta::List(meta) =&gt; Ok(Vec::from_iter(meta.nested)),
+        ///             bad =&gt; Err(Error::new_spanned(bad, &quot;unrecognized attribute&quot;)),
+        ///         }
+        ///     } else {
+        ///         Ok(Vec::new())
+        ///     }
+        /// }
+        /// ```
+        </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+        </span><span class="kw">pub fn </span>is_ident&lt;I: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, ident: <span class="kw-2">&amp;</span>I) -&gt; bool
+        <span class="kw">where
+            </span>Ident: PartialEq&lt;I&gt;,
         {
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_ident</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">id</span>) =&gt; <span class="ident">id</span> <span class="op">==</span> <span class="ident">ident</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
+            <span class="kw">match </span><span class="self">self</span>.get_ident() {
+                <span class="prelude-val">Some</span>(id) =&gt; id == ident,
+                <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
             }
         }
 
-        <span class="doccomment">/// If this path consists of a single ident, returns the ident.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// A path is considered an ident if:</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// - the path has no leading colon,</span>
-        <span class="doccomment">/// - the number of path segments is 1, and</span>
-        <span class="doccomment">/// - the first path segment has no angle bracketed or parenthesized</span>
-        <span class="doccomment">///   path arguments.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// *This function is available only if Syn is built with the `&quot;parsing&quot;`</span>
-        <span class="doccomment">/// feature.*</span>
-        <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_ident</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Ident</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">leading_colon</span>.<span class="ident">is_none</span>()
-                <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">segments</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span>
-                <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">segments</span>[<span class="number">0</span>].<span class="ident">arguments</span>.<span class="ident">is_none</span>()
+        <span class="doccomment">/// If this path consists of a single ident, returns the ident.
+        ///
+        /// A path is considered an ident if:
+        ///
+        /// - the path has no leading colon,
+        /// - the number of path segments is 1, and
+        /// - the first path segment has no angle bracketed or parenthesized
+        ///   path arguments.
+        ///
+        /// *This function is available only if Syn is built with the `&quot;parsing&quot;`
+        /// feature.*
+        </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
+        </span><span class="kw">pub fn </span>get_ident(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Ident&gt; {
+            <span class="kw">if </span><span class="self">self</span>.leading_colon.is_none()
+                &amp;&amp; <span class="self">self</span>.segments.len() == <span class="number">1
+                </span>&amp;&amp; <span class="self">self</span>.segments[<span class="number">0</span>].arguments.is_none()
             {
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">segments</span>[<span class="number">0</span>].<span class="ident">ident</span>)
-            } <span class="kw">else</span> {
-                <span class="prelude-val">None</span>
-            }
+                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.segments[<span class="number">0</span>].ident)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>}
         }
 
-        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">parse_helper</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>, <span class="ident">expr_style</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path</span> {
-                <span class="ident">leading_colon</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">segments</span>: {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="ident">Punctuated::new</span>();
-                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">PathSegment::parse_helper</span>(<span class="ident">input</span>, <span class="ident">expr_style</span>)<span class="question-mark">?</span>;
-                    <span class="ident">segments</span>.<span class="ident">push_value</span>(<span class="ident">value</span>);
-                    <span class="ident">segments</span>
+        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>parse_helper(input: ParseStream, expr_style: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>path = Path {
+                leading_colon: input.parse()<span class="question-mark">?</span>,
+                segments: {
+                    <span class="kw">let </span><span class="kw-2">mut </span>segments = Punctuated::new();
+                    <span class="kw">let </span>value = PathSegment::parse_helper(input, expr_style)<span class="question-mark">?</span>;
+                    segments.push_value(value);
+                    segments
                 },
             };
-            <span class="ident">Path::parse_rest</span>(<span class="ident">input</span>, <span class="kw-2">&amp;mut</span> <span class="ident">path</span>, <span class="ident">expr_style</span>)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(<span class="ident">path</span>)
+            Path::parse_rest(input, <span class="kw-2">&amp;mut </span>path, expr_style)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(path)
         }
 
-        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">parse_rest</span>(
-            <span class="ident">input</span>: <span class="ident">ParseStream</span>,
-            <span class="ident">path</span>: <span class="kw-2">&amp;mut</span> <span class="self">Self</span>,
-            <span class="ident">expr_style</span>: <span class="ident">bool</span>,
-        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">while</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[::]) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek3</span>(<span class="ident">token::Paren</span>) {
-                <span class="kw">let</span> <span class="ident">punct</span>: <span class="macro">Token!</span>[::] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">push_punct</span>(<span class="ident">punct</span>);
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">PathSegment::parse_helper</span>(<span class="ident">input</span>, <span class="ident">expr_style</span>)<span class="question-mark">?</span>;
-                <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">push_value</span>(<span class="ident">value</span>);
+        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>parse_rest(
+            input: ParseStream,
+            path: <span class="kw-2">&amp;mut </span><span class="self">Self</span>,
+            expr_style: bool,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+            <span class="kw">while </span>input.peek(<span class="macro">Token!</span>[::]) &amp;&amp; !input.peek3(token::Paren) {
+                <span class="kw">let </span>punct: <span class="macro">Token!</span>[::] = input.parse()<span class="question-mark">?</span>;
+                path.segments.push_punct(punct);
+                <span class="kw">let </span>value = PathSegment::parse_helper(input, expr_style)<span class="question-mark">?</span>;
+                path.segments.push_value(value);
             }
             <span class="prelude-val">Ok</span>(())
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">qpath</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>, <span class="ident">expr_style</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">QSelf</span><span class="op">&gt;</span>, <span class="ident">Path</span>)<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="op">&lt;</span>]) {
-            <span class="kw">let</span> <span class="ident">lt_token</span>: <span class="macro">Token!</span>[<span class="op">&lt;</span>] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">this</span>: <span class="ident">Type</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="kw">as</span>]) {
-                <span class="kw">let</span> <span class="ident">as_token</span>: <span class="macro">Token!</span>[<span class="kw">as</span>] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">path</span>: <span class="ident">Path</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                <span class="prelude-val">Some</span>((<span class="ident">as_token</span>, <span class="ident">path</span>))
-            } <span class="kw">else</span> {
-                <span class="prelude-val">None</span>
-            };
-            <span class="kw">let</span> <span class="ident">gt_token</span>: <span class="macro">Token!</span>[<span class="op">&gt;</span>] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">colon2_token</span>: <span class="macro">Token!</span>[::] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rest</span> <span class="op">=</span> <span class="ident">Punctuated::new</span>();
-            <span class="kw">loop</span> {
-                <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathSegment::parse_helper</span>(<span class="ident">input</span>, <span class="ident">expr_style</span>)<span class="question-mark">?</span>;
-                <span class="ident">rest</span>.<span class="ident">push_value</span>(<span class="ident">path</span>);
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[::]) {
+    <span class="kw">pub fn </span>qpath(input: ParseStream, expr_style: bool) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="prelude-ty">Option</span>&lt;QSelf&gt;, Path)&gt; {
+        <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[&lt;]) {
+            <span class="kw">let </span>lt_token: <span class="macro">Token!</span>[&lt;] = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>this: Type = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>path = <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">as</span>]) {
+                <span class="kw">let </span>as_token: <span class="macro">Token!</span>[<span class="kw">as</span>] = input.parse()<span class="question-mark">?</span>;
+                <span class="kw">let </span>path: Path = input.parse()<span class="question-mark">?</span>;
+                <span class="prelude-val">Some</span>((as_token, path))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>};
+            <span class="kw">let </span>gt_token: <span class="macro">Token!</span>[&gt;] = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>colon2_token: <span class="macro">Token!</span>[::] = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>rest = Punctuated::new();
+            <span class="kw">loop </span>{
+                <span class="kw">let </span>path = PathSegment::parse_helper(input, expr_style)<span class="question-mark">?</span>;
+                rest.push_value(path);
+                <span class="kw">if </span>!input.peek(<span class="macro">Token!</span>[::]) {
                     <span class="kw">break</span>;
                 }
-                <span class="kw">let</span> <span class="ident">punct</span>: <span class="macro">Token!</span>[::] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                <span class="ident">rest</span>.<span class="ident">push_punct</span>(<span class="ident">punct</span>);
+                <span class="kw">let </span>punct: <span class="macro">Token!</span>[::] = input.parse()<span class="question-mark">?</span>;
+                rest.push_punct(punct);
             }
-            <span class="kw">let</span> (<span class="ident">position</span>, <span class="ident">as_token</span>, <span class="ident">path</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">path</span> {
-                <span class="prelude-val">Some</span>((<span class="ident">as_token</span>, <span class="kw-2">mut</span> <span class="ident">path</span>)) =&gt; {
-                    <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">len</span>();
-                    <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">push_punct</span>(<span class="ident">colon2_token</span>);
-                    <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">extend</span>(<span class="ident">rest</span>.<span class="ident">into_pairs</span>());
-                    (<span class="ident">pos</span>, <span class="prelude-val">Some</span>(<span class="ident">as_token</span>), <span class="ident">path</span>)
+            <span class="kw">let </span>(position, as_token, path) = <span class="kw">match </span>path {
+                <span class="prelude-val">Some</span>((as_token, <span class="kw-2">mut </span>path)) =&gt; {
+                    <span class="kw">let </span>pos = path.segments.len();
+                    path.segments.push_punct(colon2_token);
+                    path.segments.extend(rest.into_pairs());
+                    (pos, <span class="prelude-val">Some</span>(as_token), path)
                 }
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path</span> {
-                        <span class="ident">leading_colon</span>: <span class="prelude-val">Some</span>(<span class="ident">colon2_token</span>),
-                        <span class="ident">segments</span>: <span class="ident">rest</span>,
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">let </span>path = Path {
+                        leading_colon: <span class="prelude-val">Some</span>(colon2_token),
+                        segments: rest,
                     };
-                    (<span class="number">0</span>, <span class="prelude-val">None</span>, <span class="ident">path</span>)
+                    (<span class="number">0</span>, <span class="prelude-val">None</span>, path)
                 }
             };
-            <span class="kw">let</span> <span class="ident">qself</span> <span class="op">=</span> <span class="ident">QSelf</span> {
-                <span class="ident">lt_token</span>,
-                <span class="ident">ty</span>: <span class="ident">Box::new</span>(<span class="ident">this</span>),
-                <span class="ident">position</span>,
-                <span class="ident">as_token</span>,
-                <span class="ident">gt_token</span>,
+            <span class="kw">let </span>qself = QSelf {
+                lt_token,
+                ty: Box::new(this),
+                position,
+                as_token,
+                gt_token,
             };
-            <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(<span class="ident">qself</span>), <span class="ident">path</span>))
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::parse_helper</span>(<span class="ident">input</span>, <span class="ident">expr_style</span>)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, <span class="ident">path</span>))
+            <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(qself), path))
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>path = Path::parse_helper(input, expr_style)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, path))
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">printing</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::print::TokensOrDefault</span>;
-    <span class="kw">use</span> <span class="ident">proc_macro2::TokenStream</span>;
-    <span class="kw">use</span> <span class="ident">quote::ToTokens</span>;
-    <span class="kw">use</span> <span class="ident">std::cmp</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;printing&quot;</span>)]
+</span><span class="kw">mod </span>printing {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::print::TokensOrDefault;
+    <span class="kw">use </span>proc_macro2::TokenStream;
+    <span class="kw">use </span>quote::ToTokens;
+    <span class="kw">use </span>std::cmp;
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">Path</span> {
-        <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="self">self</span>.<span class="ident">leading_colon</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-            <span class="self">self</span>.<span class="ident">segments</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;printing&quot;</span>)))]
+    </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>Path {
+        <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            <span class="self">self</span>.leading_colon.to_tokens(tokens);
+            <span class="self">self</span>.segments.to_tokens(tokens);
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">PathSegment</span> {
-        <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="self">self</span>.<span class="ident">ident</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-            <span class="self">self</span>.<span class="ident">arguments</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;printing&quot;</span>)))]
+    </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>PathSegment {
+        <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            <span class="self">self</span>.ident.to_tokens(tokens);
+            <span class="self">self</span>.arguments.to_tokens(tokens);
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">PathArguments</span> {
-        <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="kw">match</span> <span class="self">self</span> {
-                <span class="ident">PathArguments::None</span> =&gt; {}
-                <span class="ident">PathArguments::AngleBracketed</span>(<span class="ident">arguments</span>) =&gt; {
-                    <span class="ident">arguments</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;printing&quot;</span>)))]
+    </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>PathArguments {
+        <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            <span class="kw">match </span><span class="self">self </span>{
+                PathArguments::None =&gt; {}
+                PathArguments::AngleBracketed(arguments) =&gt; {
+                    arguments.to_tokens(tokens);
                 }
-                <span class="ident">PathArguments::Parenthesized</span>(<span class="ident">arguments</span>) =&gt; {
-                    <span class="ident">arguments</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+                PathArguments::Parenthesized(arguments) =&gt; {
+                    arguments.to_tokens(tokens);
                 }
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">GenericArgument</span> {
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::match_same_arms</span>)]</span>
-        <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="kw">match</span> <span class="self">self</span> {
-                <span class="ident">GenericArgument::Lifetime</span>(<span class="ident">lt</span>) =&gt; <span class="ident">lt</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>),
-                <span class="ident">GenericArgument::Type</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>),
-                <span class="ident">GenericArgument::Binding</span>(<span class="ident">tb</span>) =&gt; <span class="ident">tb</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>),
-                <span class="ident">GenericArgument::Constraint</span>(<span class="ident">tc</span>) =&gt; <span class="ident">tc</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>),
-                <span class="ident">GenericArgument::Const</span>(<span class="ident">e</span>) =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">e</span> {
-                    <span class="ident">Expr::Lit</span>(<span class="kw">_</span>) =&gt; <span class="ident">e</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>),
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;printing&quot;</span>)))]
+    </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>GenericArgument {
+        <span class="attribute">#[allow(clippy::match_same_arms)]
+        </span><span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            <span class="kw">match </span><span class="self">self </span>{
+                GenericArgument::Lifetime(lt) =&gt; lt.to_tokens(tokens),
+                GenericArgument::Type(ty) =&gt; ty.to_tokens(tokens),
+                GenericArgument::Binding(tb) =&gt; tb.to_tokens(tokens),
+                GenericArgument::Constraint(tc) =&gt; tc.to_tokens(tokens),
+                GenericArgument::Const(e) =&gt; <span class="kw">match </span><span class="kw-2">*</span>e {
+                    Expr::Lit(<span class="kw">_</span>) =&gt; e.to_tokens(tokens),
 
-                    <span class="comment">// NOTE: We should probably support parsing blocks with only</span>
-                    <span class="comment">// expressions in them without the full feature for const</span>
-                    <span class="comment">// generics.</span>
-                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-                    <span class="ident">Expr::Block</span>(<span class="kw">_</span>) =&gt; <span class="ident">e</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>),
+                    <span class="comment">// NOTE: We should probably support parsing blocks with only
+                    // expressions in them without the full feature for const
+                    // generics.
+                    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
+                    </span>Expr::Block(<span class="kw">_</span>) =&gt; e.to_tokens(tokens),
 
-                    <span class="comment">// ERROR CORRECTION: Add braces to make sure that the</span>
-                    <span class="comment">// generated code is valid.</span>
-                    <span class="kw">_</span> =&gt; <span class="ident">token::Brace::default</span>().<span class="ident">surround</span>(<span class="ident">tokens</span>, <span class="op">|</span><span class="ident">tokens</span><span class="op">|</span> {
-                        <span class="ident">e</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+                    <span class="comment">// ERROR CORRECTION: Add braces to make sure that the
+                    // generated code is valid.
+                    </span><span class="kw">_ </span>=&gt; token::Brace::default().surround(tokens, |tokens| {
+                        e.to_tokens(tokens);
                     }),
                 },
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">AngleBracketedGenericArguments</span> {
-        <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="self">self</span>.<span class="ident">colon2_token</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-            <span class="self">self</span>.<span class="ident">lt_token</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;printing&quot;</span>)))]
+    </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>AngleBracketedGenericArguments {
+        <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            <span class="self">self</span>.colon2_token.to_tokens(tokens);
+            <span class="self">self</span>.lt_token.to_tokens(tokens);
 
-            <span class="comment">// Print lifetimes before types and consts, all before bindings,</span>
-            <span class="comment">// regardless of their order in self.args.</span>
-            <span class="comment">//</span>
-            <span class="comment">// TODO: ordering rules for const arguments vs type arguments have</span>
-            <span class="comment">// not been settled yet. https://github.com/rust-lang/rust/issues/44580</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trailing_or_empty</span> <span class="op">=</span> <span class="bool-val">true</span>;
-            <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">args</span>.<span class="ident">pairs</span>() {
-                <span class="kw">match</span> <span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">param</span>.<span class="ident">value</span>() {
-                    <span class="ident">GenericArgument::Lifetime</span>(<span class="kw">_</span>) =&gt; {
-                        <span class="ident">param</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-                        <span class="ident">trailing_or_empty</span> <span class="op">=</span> <span class="ident">param</span>.<span class="ident">punct</span>().<span class="ident">is_some</span>();
+            <span class="comment">// Print lifetimes before types and consts, all before bindings,
+            // regardless of their order in self.args.
+            //
+            // TODO: ordering rules for const arguments vs type arguments have
+            // not been settled yet. https://github.com/rust-lang/rust/issues/44580
+            </span><span class="kw">let </span><span class="kw-2">mut </span>trailing_or_empty = <span class="bool-val">true</span>;
+            <span class="kw">for </span>param <span class="kw">in </span><span class="self">self</span>.args.pairs() {
+                <span class="kw">match </span><span class="kw-2">**</span>param.value() {
+                    GenericArgument::Lifetime(<span class="kw">_</span>) =&gt; {
+                        param.to_tokens(tokens);
+                        trailing_or_empty = param.punct().is_some();
                     }
-                    <span class="ident">GenericArgument::Type</span>(<span class="kw">_</span>)
-                    <span class="op">|</span> <span class="ident">GenericArgument::Binding</span>(<span class="kw">_</span>)
-                    <span class="op">|</span> <span class="ident">GenericArgument::Constraint</span>(<span class="kw">_</span>)
-                    <span class="op">|</span> <span class="ident">GenericArgument::Const</span>(<span class="kw">_</span>) =&gt; {}
+                    GenericArgument::Type(<span class="kw">_</span>)
+                    | GenericArgument::Binding(<span class="kw">_</span>)
+                    | GenericArgument::Constraint(<span class="kw">_</span>)
+                    | GenericArgument::Const(<span class="kw">_</span>) =&gt; {}
                 }
             }
-            <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">args</span>.<span class="ident">pairs</span>() {
-                <span class="kw">match</span> <span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">param</span>.<span class="ident">value</span>() {
-                    <span class="ident">GenericArgument::Type</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">GenericArgument::Const</span>(<span class="kw">_</span>) =&gt; {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">trailing_or_empty</span> {
-                            <span class="op">&lt;</span><span class="macro">Token!</span>[,]<span class="op">&gt;</span><span class="ident">::default</span>().<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+            <span class="kw">for </span>param <span class="kw">in </span><span class="self">self</span>.args.pairs() {
+                <span class="kw">match </span><span class="kw-2">**</span>param.value() {
+                    GenericArgument::Type(<span class="kw">_</span>) | GenericArgument::Const(<span class="kw">_</span>) =&gt; {
+                        <span class="kw">if </span>!trailing_or_empty {
+                            &lt;<span class="macro">Token!</span>[,]&gt;::default().to_tokens(tokens);
                         }
-                        <span class="ident">param</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-                        <span class="ident">trailing_or_empty</span> <span class="op">=</span> <span class="ident">param</span>.<span class="ident">punct</span>().<span class="ident">is_some</span>();
+                        param.to_tokens(tokens);
+                        trailing_or_empty = param.punct().is_some();
                     }
-                    <span class="ident">GenericArgument::Lifetime</span>(<span class="kw">_</span>)
-                    <span class="op">|</span> <span class="ident">GenericArgument::Binding</span>(<span class="kw">_</span>)
-                    <span class="op">|</span> <span class="ident">GenericArgument::Constraint</span>(<span class="kw">_</span>) =&gt; {}
+                    GenericArgument::Lifetime(<span class="kw">_</span>)
+                    | GenericArgument::Binding(<span class="kw">_</span>)
+                    | GenericArgument::Constraint(<span class="kw">_</span>) =&gt; {}
                 }
             }
-            <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">args</span>.<span class="ident">pairs</span>() {
-                <span class="kw">match</span> <span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">param</span>.<span class="ident">value</span>() {
-                    <span class="ident">GenericArgument::Binding</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">GenericArgument::Constraint</span>(<span class="kw">_</span>) =&gt; {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">trailing_or_empty</span> {
-                            <span class="op">&lt;</span><span class="macro">Token!</span>[,]<span class="op">&gt;</span><span class="ident">::default</span>().<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+            <span class="kw">for </span>param <span class="kw">in </span><span class="self">self</span>.args.pairs() {
+                <span class="kw">match </span><span class="kw-2">**</span>param.value() {
+                    GenericArgument::Binding(<span class="kw">_</span>) | GenericArgument::Constraint(<span class="kw">_</span>) =&gt; {
+                        <span class="kw">if </span>!trailing_or_empty {
+                            &lt;<span class="macro">Token!</span>[,]&gt;::default().to_tokens(tokens);
                         }
-                        <span class="ident">param</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-                        <span class="ident">trailing_or_empty</span> <span class="op">=</span> <span class="ident">param</span>.<span class="ident">punct</span>().<span class="ident">is_some</span>();
+                        param.to_tokens(tokens);
+                        trailing_or_empty = param.punct().is_some();
                     }
-                    <span class="ident">GenericArgument::Lifetime</span>(<span class="kw">_</span>)
-                    <span class="op">|</span> <span class="ident">GenericArgument::Type</span>(<span class="kw">_</span>)
-                    <span class="op">|</span> <span class="ident">GenericArgument::Const</span>(<span class="kw">_</span>) =&gt; {}
+                    GenericArgument::Lifetime(<span class="kw">_</span>)
+                    | GenericArgument::Type(<span class="kw">_</span>)
+                    | GenericArgument::Const(<span class="kw">_</span>) =&gt; {}
                 }
             }
 
-            <span class="self">self</span>.<span class="ident">gt_token</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+            <span class="self">self</span>.gt_token.to_tokens(tokens);
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">Binding</span> {
-        <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="self">self</span>.<span class="ident">ident</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-            <span class="self">self</span>.<span class="ident">eq_token</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-            <span class="self">self</span>.<span class="ident">ty</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;printing&quot;</span>)))]
+    </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>Binding {
+        <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            <span class="self">self</span>.ident.to_tokens(tokens);
+            <span class="self">self</span>.eq_token.to_tokens(tokens);
+            <span class="self">self</span>.ty.to_tokens(tokens);
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">Constraint</span> {
-        <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="self">self</span>.<span class="ident">ident</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-            <span class="self">self</span>.<span class="ident">colon_token</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-            <span class="self">self</span>.<span class="ident">bounds</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;printing&quot;</span>)))]
+    </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>Constraint {
+        <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            <span class="self">self</span>.ident.to_tokens(tokens);
+            <span class="self">self</span>.colon_token.to_tokens(tokens);
+            <span class="self">self</span>.bounds.to_tokens(tokens);
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)))]</span>
-    <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">ParenthesizedGenericArguments</span> {
-        <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="self">self</span>.<span class="ident">paren_token</span>.<span class="ident">surround</span>(<span class="ident">tokens</span>, <span class="op">|</span><span class="ident">tokens</span><span class="op">|</span> {
-                <span class="self">self</span>.<span class="ident">inputs</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+    <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;printing&quot;</span>)))]
+    </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>ParenthesizedGenericArguments {
+        <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            <span class="self">self</span>.paren_token.surround(tokens, |tokens| {
+                <span class="self">self</span>.inputs.to_tokens(tokens);
             });
-            <span class="self">self</span>.<span class="ident">output</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+            <span class="self">self</span>.output.to_tokens(tokens);
         }
     }
 
-    <span class="kw">impl</span> <span class="ident">private</span> {
-        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">print_path</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">qself</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">QSelf</span><span class="op">&gt;</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) {
-            <span class="kw">let</span> <span class="ident">qself</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">qself</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">qself</span>) =&gt; <span class="ident">qself</span>,
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="ident">path</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+    <span class="kw">impl </span>private {
+        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>print_path(tokens: <span class="kw-2">&amp;mut </span>TokenStream, qself: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;QSelf&gt;, path: <span class="kw-2">&amp;</span>Path) {
+            <span class="kw">let </span>qself = <span class="kw">match </span>qself {
+                <span class="prelude-val">Some</span>(qself) =&gt; qself,
+                <span class="prelude-val">None </span>=&gt; {
+                    path.to_tokens(tokens);
                     <span class="kw">return</span>;
                 }
             };
-            <span class="ident">qself</span>.<span class="ident">lt_token</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-            <span class="ident">qself</span>.<span class="ident">ty</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+            qself.lt_token.to_tokens(tokens);
+            qself.ty.to_tokens(tokens);
 
-            <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">qself</span>.<span class="ident">position</span>, <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">len</span>());
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">pairs</span>();
-            <span class="kw">if</span> <span class="ident">pos</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                <span class="ident">TokensOrDefault</span>(<span class="kw-2">&amp;</span><span class="ident">qself</span>.<span class="ident">as_token</span>).<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-                <span class="ident">path</span>.<span class="ident">leading_colon</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">segment</span>) <span class="kw">in</span> <span class="ident">segments</span>.<span class="ident">by_ref</span>().<span class="ident">take</span>(<span class="ident">pos</span>).<span class="ident">enumerate</span>() {
-                    <span class="kw">if</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span> <span class="op">==</span> <span class="ident">pos</span> {
-                        <span class="ident">segment</span>.<span class="ident">value</span>().<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-                        <span class="ident">qself</span>.<span class="ident">gt_token</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-                        <span class="ident">segment</span>.<span class="ident">punct</span>().<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-                    } <span class="kw">else</span> {
-                        <span class="ident">segment</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+            <span class="kw">let </span>pos = cmp::min(qself.position, path.segments.len());
+            <span class="kw">let </span><span class="kw-2">mut </span>segments = path.segments.pairs();
+            <span class="kw">if </span>pos &gt; <span class="number">0 </span>{
+                TokensOrDefault(<span class="kw-2">&amp;</span>qself.as_token).to_tokens(tokens);
+                path.leading_colon.to_tokens(tokens);
+                <span class="kw">for </span>(i, segment) <span class="kw">in </span>segments.by_ref().take(pos).enumerate() {
+                    <span class="kw">if </span>i + <span class="number">1 </span>== pos {
+                        segment.value().to_tokens(tokens);
+                        qself.gt_token.to_tokens(tokens);
+                        segment.punct().to_tokens(tokens);
+                    } <span class="kw">else </span>{
+                        segment.to_tokens(tokens);
                     }
                 }
-            } <span class="kw">else</span> {
-                <span class="ident">qself</span>.<span class="ident">gt_token</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
-                <span class="ident">path</span>.<span class="ident">leading_colon</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+            } <span class="kw">else </span>{
+                qself.gt_token.to_tokens(tokens);
+                path.leading_colon.to_tokens(tokens);
             }
-            <span class="kw">for</span> <span class="ident">segment</span> <span class="kw">in</span> <span class="ident">segments</span> {
-                <span class="ident">segment</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+            <span class="kw">for </span>segment <span class="kw">in </span>segments {
+                segment.to_tokens(tokens);
             }
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

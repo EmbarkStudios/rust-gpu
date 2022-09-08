@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/byte_addressable_buffer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>byte_addressable_buffer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_std/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/byte_addressable_buffer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>byte_addressable_buffer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_std/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -94,96 +88,95 @@
 <span id="88">88</span>
 <span id="89">89</span>
 <span id="90">90</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Container for an untyped blob of data.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Container for an untyped blob of data.
 
-<span class="kw">use</span> <span class="ident">core::mem</span>;
+</span><span class="kw">use </span>core::mem;
 
-<span class="attribute">#[<span class="ident">spirv</span>(<span class="ident">buffer_load_intrinsic</span>)]</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">improper_ctypes_definitions</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">buffer_load_intrinsic</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">_buffer</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>], <span class="ident">_offset</span>: <span class="ident">u32</span>) -&gt; <span class="ident">T</span> {
+<span class="attribute">#[spirv(buffer_load_intrinsic)]
+#[spirv_std_macros::gpu_only]
+#[allow(improper_ctypes_definitions)]
+</span><span class="kw">unsafe fn </span>buffer_load_intrinsic&lt;T&gt;(_buffer: <span class="kw-2">&amp;</span>[u32], _offset: u32) -&gt; T {
     <span class="macro">unimplemented!</span>()
-} <span class="comment">// actually implemented in the compiler</span>
+} <span class="comment">// actually implemented in the compiler
 
-<span class="attribute">#[<span class="ident">spirv</span>(<span class="ident">buffer_store_intrinsic</span>)]</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">improper_ctypes_definitions</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">buffer_store_intrinsic</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">_buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u32</span>], <span class="ident">_offset</span>: <span class="ident">u32</span>, <span class="ident">_value</span>: <span class="ident">T</span>) {
+</span><span class="attribute">#[spirv(buffer_store_intrinsic)]
+#[spirv_std_macros::gpu_only]
+#[allow(improper_ctypes_definitions)]
+</span><span class="kw">unsafe fn </span>buffer_store_intrinsic&lt;T&gt;(_buffer: <span class="kw-2">&amp;mut </span>[u32], _offset: u32, _value: T) {
     <span class="macro">unimplemented!</span>()
-} <span class="comment">// actually implemented in the compiler</span>
+} <span class="comment">// actually implemented in the compiler
 
-<span class="doccomment">/// `ByteAddressableBuffer` is an untyped blob of data, allowing loads and stores of arbitrary</span>
-<span class="doccomment">/// basic data types at arbitrary indicies. However, all data must be aligned to size 4, each</span>
-<span class="doccomment">/// element within the data (e.g. struct fields) must have a size and alignment of a multiple of 4,</span>
-<span class="doccomment">/// and the `byte_index` passed to load and store must be a multiple of 4 (`byte_index` will be</span>
-<span class="doccomment">/// rounded down to the nearest multiple of 4). So, it&#39;s not technically a *byte* addressable</span>
-<span class="doccomment">/// buffer, but rather a *word* buffer, but this naming and behavior was inhereted from HLSL (where</span>
-<span class="doccomment">/// it&#39;s UB to pass in an index not a multiple of 4).</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ByteAddressableBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The underlying array of bytes, able to be directly accessed.</span>
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">u32</span>],
+</span><span class="doccomment">/// `ByteAddressableBuffer` is an untyped blob of data, allowing loads and stores of arbitrary
+/// basic data types at arbitrary indicies. However, all data must be aligned to size 4, each
+/// element within the data (e.g. struct fields) must have a size and alignment of a multiple of 4,
+/// and the `byte_index` passed to load and store must be a multiple of 4 (`byte_index` will be
+/// rounded down to the nearest multiple of 4). So, it&#39;s not technically a *byte* addressable
+/// buffer, but rather a *word* buffer, but this naming and behavior was inhereted from HLSL (where
+/// it&#39;s UB to pass in an index not a multiple of 4).
+</span><span class="attribute">#[repr(transparent)]
+</span><span class="kw">pub struct </span>ByteAddressableBuffer&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// The underlying array of bytes, able to be directly accessed.
+    </span><span class="kw">pub </span>data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[u32],
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ByteAddressableBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Creates a `ByteAddressableBuffer` from the untyped blob of data.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">u32</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">data</span> }
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ByteAddressableBuffer&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Creates a `ByteAddressableBuffer` from the untyped blob of data.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>new(data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[u32]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ data }
     }
 
-    <span class="doccomment">/// Loads an arbitrary type from the buffer. `byte_index` must be a multiple of 4, otherwise,</span>
-    <span class="doccomment">/// it will get silently rounded down to the nearest multiple of 4.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">/// This function allows writing a type to an untyped buffer, then reading a different type</span>
-    <span class="doccomment">/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a</span>
-    <span class="doccomment">/// transmute)</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>) -&gt; <span class="ident">T</span> {
-        <span class="kw">if</span> <span class="ident">byte_index</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> {
+    <span class="doccomment">/// Loads an arbitrary type from the buffer. `byte_index` must be a multiple of 4, otherwise,
+    /// it will get silently rounded down to the nearest multiple of 4.
+    ///
+    /// # Safety
+    /// This function allows writing a type to an untyped buffer, then reading a different type
+    /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+    /// transmute)
+    </span><span class="kw">pub unsafe fn </span>load&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, byte_index: u32) -&gt; T {
+        <span class="kw">if </span>byte_index + mem::size_of::&lt;T&gt;() <span class="kw">as </span>u32 &gt; <span class="self">self</span>.data.len() <span class="kw">as </span>u32 {
             <span class="macro">panic!</span>(<span class="string">&quot;Index out of range&quot;</span>)
         }
-        <span class="ident">buffer_load_intrinsic</span>(<span class="self">self</span>.<span class="ident">data</span>, <span class="ident">byte_index</span>)
+        buffer_load_intrinsic(<span class="self">self</span>.data, byte_index)
     }
 
-    <span class="doccomment">/// Loads an arbitrary type from the buffer. `byte_index` must be a multiple of 4, otherwise,</span>
-    <span class="doccomment">/// it will get silently rounded down to the nearest multiple of 4. Bounds checking is not</span>
-    <span class="doccomment">/// performed.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">/// This function allows writing a type to an untyped buffer, then reading a different type</span>
-    <span class="doccomment">/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a</span>
-    <span class="doccomment">/// transmute). Additionally, bounds checking is not performed.</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load_unchecked</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>) -&gt; <span class="ident">T</span> {
-        <span class="ident">buffer_load_intrinsic</span>(<span class="self">self</span>.<span class="ident">data</span>, <span class="ident">byte_index</span>)
+    <span class="doccomment">/// Loads an arbitrary type from the buffer. `byte_index` must be a multiple of 4, otherwise,
+    /// it will get silently rounded down to the nearest multiple of 4. Bounds checking is not
+    /// performed.
+    ///
+    /// # Safety
+    /// This function allows writing a type to an untyped buffer, then reading a different type
+    /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+    /// transmute). Additionally, bounds checking is not performed.
+    </span><span class="kw">pub unsafe fn </span>load_unchecked&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, byte_index: u32) -&gt; T {
+        buffer_load_intrinsic(<span class="self">self</span>.data, byte_index)
     }
 
-    <span class="doccomment">/// Stores an arbitrary type int the buffer. `byte_index` must be a multiple of 4, otherwise,</span>
-    <span class="doccomment">/// it will get silently rounded down to the nearest multiple of 4.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">/// This function allows writing a type to an untyped buffer, then reading a different type</span>
-    <span class="doccomment">/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a</span>
-    <span class="doccomment">/// transmute)</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">store</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
-        <span class="kw">if</span> <span class="ident">byte_index</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> {
+    <span class="doccomment">/// Stores an arbitrary type int the buffer. `byte_index` must be a multiple of 4, otherwise,
+    /// it will get silently rounded down to the nearest multiple of 4.
+    ///
+    /// # Safety
+    /// This function allows writing a type to an untyped buffer, then reading a different type
+    /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+    /// transmute)
+    </span><span class="kw">pub unsafe fn </span>store&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, byte_index: u32, value: T) {
+        <span class="kw">if </span>byte_index + mem::size_of::&lt;T&gt;() <span class="kw">as </span>u32 &gt; <span class="self">self</span>.data.len() <span class="kw">as </span>u32 {
             <span class="macro">panic!</span>(<span class="string">&quot;Index out of range&quot;</span>)
         }
-        <span class="ident">buffer_store_intrinsic</span>(<span class="self">self</span>.<span class="ident">data</span>, <span class="ident">byte_index</span>, <span class="ident">value</span>);
+        buffer_store_intrinsic(<span class="self">self</span>.data, byte_index, value);
     }
 
-    <span class="doccomment">/// Stores an arbitrary type int the buffer. `byte_index` must be a multiple of 4, otherwise,</span>
-    <span class="doccomment">/// it will get silently rounded down to the nearest multiple of 4. Bounds checking is not</span>
-    <span class="doccomment">/// performed.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">/// This function allows writing a type to an untyped buffer, then reading a different type</span>
-    <span class="doccomment">/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a</span>
-    <span class="doccomment">/// transmute). Additionally, bounds checking is not performed.</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">store_unchecked</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
-        <span class="ident">buffer_store_intrinsic</span>(<span class="self">self</span>.<span class="ident">data</span>, <span class="ident">byte_index</span>, <span class="ident">value</span>);
+    <span class="doccomment">/// Stores an arbitrary type int the buffer. `byte_index` must be a multiple of 4, otherwise,
+    /// it will get silently rounded down to the nearest multiple of 4. Bounds checking is not
+    /// performed.
+    ///
+    /// # Safety
+    /// This function allows writing a type to an untyped buffer, then reading a different type
+    /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+    /// transmute). Additionally, bounds checking is not performed.
+    </span><span class="kw">pub unsafe fn </span>store_unchecked&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, byte_index: u32, value: T) {
+        buffer_store_intrinsic(<span class="self">self</span>.data, byte_index, value);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

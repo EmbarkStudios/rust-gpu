@@ -1,12 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/rng.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rng.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../rand/index.html"><div class="logo-container">
-                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rand/index.html">
-                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/rng.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rng.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../rand/index.html"><div class="logo-container">
+                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rand/index.html">
+                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -609,609 +603,608 @@
 <span id="601">601</span>
 <span id="602">602</span>
 <span id="603">603</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.</span>
-<span class="comment">// Copyright 2013-2017 The Rust Project Developers.</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
-<span class="comment">// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
-<span class="comment">// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your</span>
-<span class="comment">// option. This file may not be copied, modified, or distributed</span>
-<span class="comment">// except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.
+// Copyright 2013-2017 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license
+// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-<span class="doccomment">//! [`Rng`] trait</span>
+</span><span class="doccomment">//! [`Rng`] trait
 
-<span class="kw">use</span> <span class="ident">rand_core</span>::{<span class="ident">Error</span>, <span class="ident">RngCore</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::distributions::uniform</span>::{<span class="ident">SampleRange</span>, <span class="ident">SampleUniform</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::distributions</span>::{<span class="self">self</span>, <span class="ident">Distribution</span>, <span class="ident">Standard</span>};
-<span class="kw">use</span> <span class="ident">core::num::Wrapping</span>;
-<span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">mem</span>, <span class="ident">slice</span>};
+</span><span class="kw">use </span>rand_core::{Error, RngCore};
+<span class="kw">use </span><span class="kw">crate</span>::distributions::uniform::{SampleRange, SampleUniform};
+<span class="kw">use </span><span class="kw">crate</span>::distributions::{<span class="self">self</span>, Distribution, Standard};
+<span class="kw">use </span>core::num::Wrapping;
+<span class="kw">use </span>core::{mem, slice};
 
-<span class="doccomment">/// An automatically-implemented extension trait on [`RngCore`] providing high-level</span>
-<span class="doccomment">/// generic methods for sampling values and other convenience methods.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is the primary trait to use when generating random values.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Generic usage</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The basic pattern is `fn foo&lt;R: Rng + ?Sized&gt;(rng: &amp;mut R)`. Some</span>
-<span class="doccomment">/// things are worth noting here:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// - Since `Rng: RngCore` and every `RngCore` implements `Rng`, it makes no</span>
-<span class="doccomment">///   difference whether we use `R: Rng` or `R: RngCore`.</span>
-<span class="doccomment">/// - The `+ ?Sized` un-bounding allows functions to be called directly on</span>
-<span class="doccomment">///   type-erased references; i.e. `foo(r)` where `r: &amp;mut dyn RngCore`. Without</span>
-<span class="doccomment">///   this it would be necessary to write `foo(&amp;mut r)`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// An alternative pattern is possible: `fn foo&lt;R: Rng&gt;(rng: R)`. This has some</span>
-<span class="doccomment">/// trade-offs. It allows the argument to be consumed directly without a `&amp;mut`</span>
-<span class="doccomment">/// (which is how `from_rng(thread_rng())` works); also it still works directly</span>
-<span class="doccomment">/// on references (including type-erased references). Unfortunately within the</span>
-<span class="doccomment">/// function `foo` it is not known whether `rng` is a reference type or not,</span>
-<span class="doccomment">/// hence many uses of `rng` require an extra reference, either explicitly</span>
-<span class="doccomment">/// (`distr.sample(&amp;mut rng)`) or implicitly (`rng.gen()`); one may hope the</span>
-<span class="doccomment">/// optimiser can remove redundant references later.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Example:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use rand::thread_rng;</span>
-<span class="doccomment">/// use rand::Rng;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// fn foo&lt;R: Rng + ?Sized&gt;(rng: &amp;mut R) -&gt; f32 {</span>
-<span class="doccomment">///     rng.gen()</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # let v = foo(&amp;mut thread_rng());</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Rng</span>: <span class="ident">RngCore</span> {
-    <span class="doccomment">/// Return a random value supporting the [`Standard`] distribution.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut rng = thread_rng();</span>
-    <span class="doccomment">/// let x: u32 = rng.gen();</span>
-    <span class="doccomment">/// println!(&quot;{}&quot;, x);</span>
-    <span class="doccomment">/// println!(&quot;{:?}&quot;, rng.gen::&lt;(f64, bool)&gt;());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Arrays and tuples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The `rng.gen()` method is able to generate arrays (up to 32 elements)</span>
-    <span class="doccomment">/// and tuples (up to 12 elements), so long as all element types can be</span>
-    <span class="doccomment">/// generated.</span>
-    <span class="doccomment">/// When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support</span>
-    <span class="doccomment">/// arrays larger than 32 elements.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// For arrays of integers, especially for those with small element types</span>
-    <span class="doccomment">/// (&lt; 64 bit), it will likely be faster to instead use [`Rng::fill`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut rng = thread_rng();</span>
-    <span class="doccomment">/// let tuple: (u8, i32, char) = rng.gen(); // arbitrary tuple support</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let arr1: [f32; 32] = rng.gen();        // array construction</span>
-    <span class="doccomment">/// let mut arr2 = [0u8; 128];</span>
-    <span class="doccomment">/// rng.fill(&amp;mut arr2);                    // array fill</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Standard`]: distributions::Standard</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">gen</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">T</span>
-    <span class="kw">where</span> <span class="ident">Standard</span>: <span class="ident">Distribution</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">Standard</span>.<span class="ident">sample</span>(<span class="self">self</span>)
+<span class="doccomment">/// An automatically-implemented extension trait on [`RngCore`] providing high-level
+/// generic methods for sampling values and other convenience methods.
+///
+/// This is the primary trait to use when generating random values.
+///
+/// # Generic usage
+///
+/// The basic pattern is `fn foo&lt;R: Rng + ?Sized&gt;(rng: &amp;mut R)`. Some
+/// things are worth noting here:
+///
+/// - Since `Rng: RngCore` and every `RngCore` implements `Rng`, it makes no
+///   difference whether we use `R: Rng` or `R: RngCore`.
+/// - The `+ ?Sized` un-bounding allows functions to be called directly on
+///   type-erased references; i.e. `foo(r)` where `r: &amp;mut dyn RngCore`. Without
+///   this it would be necessary to write `foo(&amp;mut r)`.
+///
+/// An alternative pattern is possible: `fn foo&lt;R: Rng&gt;(rng: R)`. This has some
+/// trade-offs. It allows the argument to be consumed directly without a `&amp;mut`
+/// (which is how `from_rng(thread_rng())` works); also it still works directly
+/// on references (including type-erased references). Unfortunately within the
+/// function `foo` it is not known whether `rng` is a reference type or not,
+/// hence many uses of `rng` require an extra reference, either explicitly
+/// (`distr.sample(&amp;mut rng)`) or implicitly (`rng.gen()`); one may hope the
+/// optimiser can remove redundant references later.
+///
+/// Example:
+///
+/// ```
+/// # use rand::thread_rng;
+/// use rand::Rng;
+///
+/// fn foo&lt;R: Rng + ?Sized&gt;(rng: &amp;mut R) -&gt; f32 {
+///     rng.gen()
+/// }
+///
+/// # let v = foo(&amp;mut thread_rng());
+/// ```
+</span><span class="kw">pub trait </span>Rng: RngCore {
+    <span class="doccomment">/// Return a random value supporting the [`Standard`] distribution.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// let x: u32 = rng.gen();
+    /// println!(&quot;{}&quot;, x);
+    /// println!(&quot;{:?}&quot;, rng.gen::&lt;(f64, bool)&gt;());
+    /// ```
+    ///
+    /// # Arrays and tuples
+    ///
+    /// The `rng.gen()` method is able to generate arrays (up to 32 elements)
+    /// and tuples (up to 12 elements), so long as all element types can be
+    /// generated.
+    /// When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support
+    /// arrays larger than 32 elements.
+    ///
+    /// For arrays of integers, especially for those with small element types
+    /// (&lt; 64 bit), it will likely be faster to instead use [`Rng::fill`].
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// let tuple: (u8, i32, char) = rng.gen(); // arbitrary tuple support
+    ///
+    /// let arr1: [f32; 32] = rng.gen();        // array construction
+    /// let mut arr2 = [0u8; 128];
+    /// rng.fill(&amp;mut arr2);                    // array fill
+    /// ```
+    ///
+    /// [`Standard`]: distributions::Standard
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>gen&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; T
+    <span class="kw">where </span>Standard: Distribution&lt;T&gt; {
+        Standard.sample(<span class="self">self</span>)
     }
 
-    <span class="doccomment">/// Generate a random value in the given range.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function is optimised for the case that only a single sample is</span>
-    <span class="doccomment">/// made from the given range. See also the [`Uniform`] distribution</span>
-    <span class="doccomment">/// type which may be faster if sampling from the same range repeatedly.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Only `gen_range(low..high)` and `gen_range(low..=high)` are supported.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Panics if the range is empty.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut rng = thread_rng();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Exclusive range</span>
-    <span class="doccomment">/// let n: u32 = rng.gen_range(0..10);</span>
-    <span class="doccomment">/// println!(&quot;{}&quot;, n);</span>
-    <span class="doccomment">/// let m: f64 = rng.gen_range(-40.0..1.3e5);</span>
-    <span class="doccomment">/// println!(&quot;{}&quot;, m);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Inclusive range</span>
-    <span class="doccomment">/// let n: u32 = rng.gen_range(0..=10);</span>
-    <span class="doccomment">/// println!(&quot;{}&quot;, n);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Uniform`]: distributions::uniform::Uniform</span>
-    <span class="kw">fn</span> <span class="ident">gen_range</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">range</span>: <span class="ident">R</span>) -&gt; <span class="ident">T</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">SampleUniform</span>,
-        <span class="ident">R</span>: <span class="ident">SampleRange</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+    <span class="doccomment">/// Generate a random value in the given range.
+    ///
+    /// This function is optimised for the case that only a single sample is
+    /// made from the given range. See also the [`Uniform`] distribution
+    /// type which may be faster if sampling from the same range repeatedly.
+    ///
+    /// Only `gen_range(low..high)` and `gen_range(low..=high)` are supported.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the range is empty.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    ///
+    /// // Exclusive range
+    /// let n: u32 = rng.gen_range(0..10);
+    /// println!(&quot;{}&quot;, n);
+    /// let m: f64 = rng.gen_range(-40.0..1.3e5);
+    /// println!(&quot;{}&quot;, m);
+    ///
+    /// // Inclusive range
+    /// let n: u32 = rng.gen_range(0..=10);
+    /// println!(&quot;{}&quot;, n);
+    /// ```
+    ///
+    /// [`Uniform`]: distributions::uniform::Uniform
+    </span><span class="kw">fn </span>gen_range&lt;T, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: R) -&gt; T
+    <span class="kw">where
+        </span>T: SampleUniform,
+        R: SampleRange&lt;T&gt;
     {
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">range</span>.<span class="ident">is_empty</span>(), <span class="string">&quot;cannot sample empty range&quot;</span>);
-        <span class="ident">range</span>.<span class="ident">sample_single</span>(<span class="self">self</span>)
+        <span class="macro">assert!</span>(!range.is_empty(), <span class="string">&quot;cannot sample empty range&quot;</span>);
+        range.sample_single(<span class="self">self</span>)
     }
 
-    <span class="doccomment">/// Sample a new value, using the given distribution.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ### Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-    <span class="doccomment">/// use rand::distributions::Uniform;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut rng = thread_rng();</span>
-    <span class="doccomment">/// let x = rng.sample(Uniform::new(10u32, 15));</span>
-    <span class="doccomment">/// // Type annotation requires two types, the type and distribution; the</span>
-    <span class="doccomment">/// // distribution can be inferred.</span>
-    <span class="doccomment">/// let y = rng.sample::&lt;u16, _&gt;(Uniform::new(10, 15));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">D</span>: <span class="ident">Distribution</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">distr</span>: <span class="ident">D</span>) -&gt; <span class="ident">T</span> {
-        <span class="ident">distr</span>.<span class="ident">sample</span>(<span class="self">self</span>)
+    <span class="doccomment">/// Sample a new value, using the given distribution.
+    ///
+    /// ### Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    /// use rand::distributions::Uniform;
+    ///
+    /// let mut rng = thread_rng();
+    /// let x = rng.sample(Uniform::new(10u32, 15));
+    /// // Type annotation requires two types, the type and distribution; the
+    /// // distribution can be inferred.
+    /// let y = rng.sample::&lt;u16, _&gt;(Uniform::new(10, 15));
+    /// ```
+    </span><span class="kw">fn </span>sample&lt;T, D: Distribution&lt;T&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, distr: D) -&gt; T {
+        distr.sample(<span class="self">self</span>)
     }
 
-    <span class="doccomment">/// Create an iterator that generates values using the given distribution.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that this function takes its arguments by value. This works since</span>
-    <span class="doccomment">/// `(&amp;mut R): Rng where R: Rng` and</span>
-    <span class="doccomment">/// `(&amp;D): Distribution where D: Distribution`,</span>
-    <span class="doccomment">/// however borrowing is not automatic hence `rng.sample_iter(...)` may</span>
-    <span class="doccomment">/// need to be replaced with `(&amp;mut rng).sample_iter(...)`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-    <span class="doccomment">/// use rand::distributions::{Alphanumeric, Uniform, Standard};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut rng = thread_rng();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Vec of 16 x f32:</span>
-    <span class="doccomment">/// let v: Vec&lt;f32&gt; = (&amp;mut rng).sample_iter(Standard).take(16).collect();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // String:</span>
-    <span class="doccomment">/// let s: String = (&amp;mut rng).sample_iter(Alphanumeric)</span>
-    <span class="doccomment">///     .take(7)</span>
-    <span class="doccomment">///     .map(char::from)</span>
-    <span class="doccomment">///     .collect();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Combined values</span>
-    <span class="doccomment">/// println!(&quot;{:?}&quot;, (&amp;mut rng).sample_iter(Standard).take(5)</span>
-    <span class="doccomment">///                              .collect::&lt;Vec&lt;(f64, bool)&gt;&gt;());</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Dice-rolling:</span>
-    <span class="doccomment">/// let die_range = Uniform::new_inclusive(1, 6);</span>
-    <span class="doccomment">/// let mut roll_die = (&amp;mut rng).sample_iter(die_range);</span>
-    <span class="doccomment">/// while roll_die.next().unwrap() != 6 {</span>
-    <span class="doccomment">///     println!(&quot;Not a 6; rolling again!&quot;);</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">fn</span> <span class="ident">sample_iter</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">distr</span>: <span class="ident">D</span>) -&gt; <span class="ident">distributions::DistIter</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="self">Self</span>, <span class="ident">T</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">Distribution</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-        <span class="self">Self</span>: <span class="ident">Sized</span>,
+    <span class="doccomment">/// Create an iterator that generates values using the given distribution.
+    ///
+    /// Note that this function takes its arguments by value. This works since
+    /// `(&amp;mut R): Rng where R: Rng` and
+    /// `(&amp;D): Distribution where D: Distribution`,
+    /// however borrowing is not automatic hence `rng.sample_iter(...)` may
+    /// need to be replaced with `(&amp;mut rng).sample_iter(...)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    /// use rand::distributions::{Alphanumeric, Uniform, Standard};
+    ///
+    /// let mut rng = thread_rng();
+    ///
+    /// // Vec of 16 x f32:
+    /// let v: Vec&lt;f32&gt; = (&amp;mut rng).sample_iter(Standard).take(16).collect();
+    ///
+    /// // String:
+    /// let s: String = (&amp;mut rng).sample_iter(Alphanumeric)
+    ///     .take(7)
+    ///     .map(char::from)
+    ///     .collect();
+    ///
+    /// // Combined values
+    /// println!(&quot;{:?}&quot;, (&amp;mut rng).sample_iter(Standard).take(5)
+    ///                              .collect::&lt;Vec&lt;(f64, bool)&gt;&gt;());
+    ///
+    /// // Dice-rolling:
+    /// let die_range = Uniform::new_inclusive(1, 6);
+    /// let mut roll_die = (&amp;mut rng).sample_iter(die_range);
+    /// while roll_die.next().unwrap() != 6 {
+    ///     println!(&quot;Not a 6; rolling again!&quot;);
+    /// }
+    /// ```
+    </span><span class="kw">fn </span>sample_iter&lt;T, D&gt;(<span class="self">self</span>, distr: D) -&gt; distributions::DistIter&lt;D, <span class="self">Self</span>, T&gt;
+    <span class="kw">where
+        </span>D: Distribution&lt;T&gt;,
+        <span class="self">Self</span>: Sized,
     {
-        <span class="ident">distr</span>.<span class="ident">sample_iter</span>(<span class="self">self</span>)
+        distr.sample_iter(<span class="self">self</span>)
     }
 
-    <span class="doccomment">/// Fill any type implementing [`Fill`] with random data</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The distribution is expected to be uniform with portable results, but</span>
-    <span class="doccomment">/// this cannot be guaranteed for third-party implementations.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is identical to [`try_fill`] except that it panics on error.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut arr = [0i8; 20];</span>
-    <span class="doccomment">/// thread_rng().fill(&amp;mut arr[..]);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`fill_bytes`]: RngCore::fill_bytes</span>
-    <span class="doccomment">/// [`try_fill`]: Rng::try_fill</span>
-    <span class="kw">fn</span> <span class="ident">fill</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Fill</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="kw-2">&amp;mut</span> <span class="ident">T</span>) {
-        <span class="ident">dest</span>.<span class="ident">try_fill</span>(<span class="self">self</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro">panic!</span>(<span class="string">&quot;Rng::fill failed&quot;</span>))
+    <span class="doccomment">/// Fill any type implementing [`Fill`] with random data
+    ///
+    /// The distribution is expected to be uniform with portable results, but
+    /// this cannot be guaranteed for third-party implementations.
+    ///
+    /// This is identical to [`try_fill`] except that it panics on error.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut arr = [0i8; 20];
+    /// thread_rng().fill(&amp;mut arr[..]);
+    /// ```
+    ///
+    /// [`fill_bytes`]: RngCore::fill_bytes
+    /// [`try_fill`]: Rng::try_fill
+    </span><span class="kw">fn </span>fill&lt;T: Fill + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dest: <span class="kw-2">&amp;mut </span>T) {
+        dest.try_fill(<span class="self">self</span>).unwrap_or_else(|<span class="kw">_</span>| <span class="macro">panic!</span>(<span class="string">&quot;Rng::fill failed&quot;</span>))
     }
 
-    <span class="doccomment">/// Fill any type implementing [`Fill`] with random data</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The distribution is expected to be uniform with portable results, but</span>
-    <span class="doccomment">/// this cannot be guaranteed for third-party implementations.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is identical to [`fill`] except that it forwards errors.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use rand::Error;</span>
-    <span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # fn try_inner() -&gt; Result&lt;(), Error&gt; {</span>
-    <span class="doccomment">/// let mut arr = [0u64; 4];</span>
-    <span class="doccomment">/// thread_rng().try_fill(&amp;mut arr[..])?;</span>
-    <span class="doccomment">/// # Ok(())</span>
-    <span class="doccomment">/// # }</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # try_inner().unwrap()</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`try_fill_bytes`]: RngCore::try_fill_bytes</span>
-    <span class="doccomment">/// [`fill`]: Rng::fill</span>
-    <span class="kw">fn</span> <span class="ident">try_fill</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Fill</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="kw-2">&amp;mut</span> <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="ident">dest</span>.<span class="ident">try_fill</span>(<span class="self">self</span>)
+    <span class="doccomment">/// Fill any type implementing [`Fill`] with random data
+    ///
+    /// The distribution is expected to be uniform with portable results, but
+    /// this cannot be guaranteed for third-party implementations.
+    ///
+    /// This is identical to [`fill`] except that it forwards errors.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use rand::Error;
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// # fn try_inner() -&gt; Result&lt;(), Error&gt; {
+    /// let mut arr = [0u64; 4];
+    /// thread_rng().try_fill(&amp;mut arr[..])?;
+    /// # Ok(())
+    /// # }
+    ///
+    /// # try_inner().unwrap()
+    /// ```
+    ///
+    /// [`try_fill_bytes`]: RngCore::try_fill_bytes
+    /// [`fill`]: Rng::fill
+    </span><span class="kw">fn </span>try_fill&lt;T: Fill + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dest: <span class="kw-2">&amp;mut </span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        dest.try_fill(<span class="self">self</span>)
     }
 
-    <span class="doccomment">/// Return a bool with a probability `p` of being true.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See also the [`Bernoulli`] distribution, which may be faster if</span>
-    <span class="doccomment">/// sampling from the same probability repeatedly.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut rng = thread_rng();</span>
-    <span class="doccomment">/// println!(&quot;{}&quot;, rng.gen_bool(1.0 / 3.0));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If `p &lt; 0` or `p &gt; 1`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Bernoulli`]: distributions::Bernoulli</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">gen_bool</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">p</span>: <span class="ident">f64</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">distributions::Bernoulli::new</span>(<span class="ident">p</span>).<span class="ident">unwrap</span>();
-        <span class="self">self</span>.<span class="ident">sample</span>(<span class="ident">d</span>)
+    <span class="doccomment">/// Return a bool with a probability `p` of being true.
+    ///
+    /// See also the [`Bernoulli`] distribution, which may be faster if
+    /// sampling from the same probability repeatedly.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// println!(&quot;{}&quot;, rng.gen_bool(1.0 / 3.0));
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// If `p &lt; 0` or `p &gt; 1`.
+    ///
+    /// [`Bernoulli`]: distributions::Bernoulli
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>gen_bool(<span class="kw-2">&amp;mut </span><span class="self">self</span>, p: f64) -&gt; bool {
+        <span class="kw">let </span>d = distributions::Bernoulli::new(p).unwrap();
+        <span class="self">self</span>.sample(d)
     }
 
-    <span class="doccomment">/// Return a bool with a probability of `numerator/denominator` of being</span>
-    <span class="doccomment">/// true. I.e. `gen_ratio(2, 3)` has chance of 2 in 3, or about 67%, of</span>
-    <span class="doccomment">/// returning true. If `numerator == denominator`, then the returned value</span>
-    <span class="doccomment">/// is guaranteed to be `true`. If `numerator == 0`, then the returned</span>
-    <span class="doccomment">/// value is guaranteed to be `false`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See also the [`Bernoulli`] distribution, which may be faster if</span>
-    <span class="doccomment">/// sampling from the same `numerator` and `denominator` repeatedly.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If `denominator == 0` or `numerator &gt; denominator`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut rng = thread_rng();</span>
-    <span class="doccomment">/// println!(&quot;{}&quot;, rng.gen_ratio(2, 3));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Bernoulli`]: distributions::Bernoulli</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">gen_ratio</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">numerator</span>: <span class="ident">u32</span>, <span class="ident">denominator</span>: <span class="ident">u32</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">distributions::Bernoulli::from_ratio</span>(<span class="ident">numerator</span>, <span class="ident">denominator</span>).<span class="ident">unwrap</span>();
-        <span class="self">self</span>.<span class="ident">sample</span>(<span class="ident">d</span>)
+    <span class="doccomment">/// Return a bool with a probability of `numerator/denominator` of being
+    /// true. I.e. `gen_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+    /// returning true. If `numerator == denominator`, then the returned value
+    /// is guaranteed to be `true`. If `numerator == 0`, then the returned
+    /// value is guaranteed to be `false`.
+    ///
+    /// See also the [`Bernoulli`] distribution, which may be faster if
+    /// sampling from the same `numerator` and `denominator` repeatedly.
+    ///
+    /// # Panics
+    ///
+    /// If `denominator == 0` or `numerator &gt; denominator`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// println!(&quot;{}&quot;, rng.gen_ratio(2, 3));
+    /// ```
+    ///
+    /// [`Bernoulli`]: distributions::Bernoulli
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>gen_ratio(<span class="kw-2">&amp;mut </span><span class="self">self</span>, numerator: u32, denominator: u32) -&gt; bool {
+        <span class="kw">let </span>d = distributions::Bernoulli::from_ratio(numerator, denominator).unwrap();
+        <span class="self">self</span>.sample(d)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">Rng</span> <span class="kw">for</span> <span class="ident">R</span> {}
+<span class="kw">impl</span>&lt;R: RngCore + <span class="question-mark">?</span>Sized&gt; Rng <span class="kw">for </span>R {}
 
-<span class="doccomment">/// Types which may be filled with random data</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This trait allows arrays to be efficiently filled with random data.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Implementations are expected to be portable across machines unless</span>
-<span class="doccomment">/// clearly documented otherwise (see the</span>
-<span class="doccomment">/// [Chapter on Portability](https://rust-random.github.io/book/portability.html)).</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Fill</span> {
-    <span class="doccomment">/// Fill self with random data</span>
-    <span class="kw">fn</span> <span class="ident">try_fill</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Types which may be filled with random data
+///
+/// This trait allows arrays to be efficiently filled with random data.
+///
+/// Implementations are expected to be portable across machines unless
+/// clearly documented otherwise (see the
+/// [Chapter on Portability](https://rust-random.github.io/book/portability.html)).
+</span><span class="kw">pub trait </span>Fill {
+    <span class="doccomment">/// Fill self with random data
+    </span><span class="kw">fn </span>try_fill&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;;
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">impl_fill_each</span> {
+<span class="macro">macro_rules! </span>impl_fill_each {
     () =&gt; {};
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">impl</span> <span class="ident">Fill</span> <span class="kw">for</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>] {
-            <span class="kw">fn</span> <span class="ident">try_fill</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-                <span class="kw">for</span> <span class="ident">elt</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">iter_mut</span>() {
-                    <span class="kw-2">*</span><span class="ident">elt</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen</span>();
+    (<span class="macro-nonterminal">$t</span>:ty) =&gt; {
+        <span class="kw">impl </span>Fill <span class="kw">for </span>[<span class="macro-nonterminal">$t</span>] {
+            <span class="kw">fn </span>try_fill&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+                <span class="kw">for </span>elt <span class="kw">in </span><span class="self">self</span>.iter_mut() {
+                    <span class="kw-2">*</span>elt = rng.gen();
                 }
                 <span class="prelude-val">Ok</span>(())
             }
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tt</span>:<span class="ident">ty</span>,)<span class="kw-2">*</span>) =&gt; {
-        <span class="macro">impl_fill_each!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>);
-        <span class="macro">impl_fill_each!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tt</span>,)<span class="kw-2">*</span>);
+    (<span class="macro-nonterminal">$t</span>:ty, $(<span class="macro-nonterminal">$tt</span>:ty,)<span class="kw-2">*</span>) =&gt; {
+        <span class="macro">impl_fill_each!</span>(<span class="macro-nonterminal">$t</span>);
+        <span class="macro">impl_fill_each!</span>($(<span class="macro-nonterminal">$tt</span>,)<span class="kw-2">*</span>);
     };
 }
 
-<span class="macro">impl_fill_each!</span>(<span class="ident">bool</span>, <span class="ident">char</span>, <span class="ident">f32</span>, <span class="ident">f64</span>,);
+<span class="macro">impl_fill_each!</span>(bool, char, f32, f64,);
 
-<span class="kw">impl</span> <span class="ident">Fill</span> <span class="kw">for</span> [<span class="ident">u8</span>] {
-    <span class="kw">fn</span> <span class="ident">try_fill</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="ident">rng</span>.<span class="ident">try_fill_bytes</span>(<span class="self">self</span>)
+<span class="kw">impl </span>Fill <span class="kw">for </span>[u8] {
+    <span class="kw">fn </span>try_fill&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        rng.try_fill_bytes(<span class="self">self</span>)
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">impl_fill</span> {
+<span class="macro">macro_rules! </span>impl_fill {
     () =&gt; {};
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">impl</span> <span class="ident">Fill</span> <span class="kw">for</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>] {
-            <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">never</span>)]</span> <span class="comment">// in micro benchmarks, this improves performance</span>
-            <span class="kw">fn</span> <span class="ident">try_fill</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span> {
-                    <span class="ident">rng</span>.<span class="ident">try_fill_bytes</span>(<span class="kw">unsafe</span> {
-                        <span class="ident">slice::from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">as_mut_ptr</span>()
-                            <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>,
-                            <span class="self">self</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>()
+    (<span class="macro-nonterminal">$t</span>:ty) =&gt; {
+        <span class="kw">impl </span>Fill <span class="kw">for </span>[<span class="macro-nonterminal">$t</span>] {
+            <span class="attribute">#[inline(never)] </span><span class="comment">// in micro benchmarks, this improves performance
+            </span><span class="kw">fn </span>try_fill&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+                <span class="kw">if </span><span class="self">self</span>.len() &gt; <span class="number">0 </span>{
+                    rng.try_fill_bytes(<span class="kw">unsafe </span>{
+                        slice::from_raw_parts_mut(<span class="self">self</span>.as_mut_ptr()
+                            <span class="kw">as </span><span class="kw-2">*mut </span>u8,
+                            <span class="self">self</span>.len() * mem::size_of::&lt;<span class="macro-nonterminal">$t</span>&gt;()
                         )
                     })<span class="question-mark">?</span>;
-                    <span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="self">self</span> {
-                        <span class="kw-2">*</span><span class="ident">x</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_le</span>();
+                    <span class="kw">for </span>x <span class="kw">in </span><span class="self">self </span>{
+                        <span class="kw-2">*</span>x = x.to_le();
                     }
                 }
                 <span class="prelude-val">Ok</span>(())
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">Fill</span> <span class="kw">for</span> [<span class="ident">Wrapping</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>] {
-            <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">never</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">try_fill</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span> {
-                    <span class="ident">rng</span>.<span class="ident">try_fill_bytes</span>(<span class="kw">unsafe</span> {
-                        <span class="ident">slice::from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">as_mut_ptr</span>()
-                            <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>,
-                            <span class="self">self</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>()
+        <span class="kw">impl </span>Fill <span class="kw">for </span>[Wrapping&lt;<span class="macro-nonterminal">$t</span>&gt;] {
+            <span class="attribute">#[inline(never)]
+            </span><span class="kw">fn </span>try_fill&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+                <span class="kw">if </span><span class="self">self</span>.len() &gt; <span class="number">0 </span>{
+                    rng.try_fill_bytes(<span class="kw">unsafe </span>{
+                        slice::from_raw_parts_mut(<span class="self">self</span>.as_mut_ptr()
+                            <span class="kw">as </span><span class="kw-2">*mut </span>u8,
+                            <span class="self">self</span>.len() * mem::size_of::&lt;<span class="macro-nonterminal">$t</span>&gt;()
                         )
                     })<span class="question-mark">?</span>;
-                    <span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="self">self</span> {
-                    <span class="kw-2">*</span><span class="ident">x</span> <span class="op">=</span> <span class="ident">Wrapping</span>(<span class="ident">x</span>.<span class="number">0</span>.<span class="ident">to_le</span>());
+                    <span class="kw">for </span>x <span class="kw">in </span><span class="self">self </span>{
+                    <span class="kw-2">*</span>x = Wrapping(x.<span class="number">0</span>.to_le());
                     }
                 }
                 <span class="prelude-val">Ok</span>(())
             }
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tt</span>:<span class="ident">ty</span>,)<span class="kw-2">*</span>) =&gt; {
-        <span class="macro">impl_fill!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>);
-        <span class="comment">// TODO: this could replace above impl once Rust #32463 is fixed</span>
-        <span class="comment">// impl_fill!(Wrapping&lt;$t&gt;);</span>
-        <span class="macro">impl_fill!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tt</span>,)<span class="kw-2">*</span>);
+    (<span class="macro-nonterminal">$t</span>:ty, $(<span class="macro-nonterminal">$tt</span>:ty,)<span class="kw-2">*</span>) =&gt; {
+        <span class="macro">impl_fill!</span>(<span class="macro-nonterminal">$t</span>);
+        <span class="comment">// TODO: this could replace above impl once Rust #32463 is fixed
+        // impl_fill!(Wrapping&lt;$t&gt;);
+        </span><span class="macro">impl_fill!</span>($(<span class="macro-nonterminal">$tt</span>,)<span class="kw-2">*</span>);
     }
 }
 
-<span class="macro">impl_fill!</span>(<span class="ident">u16</span>, <span class="ident">u32</span>, <span class="ident">u64</span>, <span class="ident">usize</span>,);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>))]</span>
-<span class="macro">impl_fill!</span>(<span class="ident">u128</span>);
-<span class="macro">impl_fill!</span>(<span class="ident">i8</span>, <span class="ident">i16</span>, <span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">isize</span>,);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>))]</span>
-<span class="macro">impl_fill!</span>(<span class="ident">i128</span>);
+<span class="macro">impl_fill!</span>(u16, u32, u64, usize,);
+<span class="attribute">#[cfg(not(target_os = <span class="string">&quot;emscripten&quot;</span>))]
+</span><span class="macro">impl_fill!</span>(u128);
+<span class="macro">impl_fill!</span>(i8, i16, i32, i64, isize,);
+<span class="attribute">#[cfg(not(target_os = <span class="string">&quot;emscripten&quot;</span>))]
+</span><span class="macro">impl_fill!</span>(i128);
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;min_const_gen&quot;</span>)]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">usize</span><span class="op">&gt;</span> <span class="ident">Fill</span> <span class="kw">for</span> [<span class="ident">T</span>; <span class="ident">N</span>]
-<span class="kw">where</span> [<span class="ident">T</span>]: <span class="ident">Fill</span>
+<span class="attribute">#[cfg(feature = <span class="string">&quot;min_const_gen&quot;</span>)]
+</span><span class="kw">impl</span>&lt;T, <span class="kw">const </span>N: usize&gt; Fill <span class="kw">for </span>[T; N]
+<span class="kw">where </span>[T]: Fill
 {
-    <span class="kw">fn</span> <span class="ident">try_fill</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>[..].<span class="ident">try_fill</span>(<span class="ident">rng</span>)
+    <span class="kw">fn </span>try_fill&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="self">self</span>[..].try_fill(rng)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;min_const_gen&quot;</span>))]</span>
-<span class="macro">macro_rules!</span> <span class="ident">impl_fill_arrays</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">expr</span>,) =&gt; {};
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">N</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Fill</span> <span class="kw">for</span> [<span class="ident">T</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>] <span class="kw">where</span> [<span class="ident">T</span>]: <span class="ident">Fill</span> {
-            <span class="kw">fn</span> <span class="ident">try_fill</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-                <span class="self">self</span>[..].<span class="ident">try_fill</span>(<span class="ident">rng</span>)
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;min_const_gen&quot;</span>))]
+</span><span class="macro">macro_rules! </span>impl_fill_arrays {
+    (<span class="macro-nonterminal">$n</span>:expr,) =&gt; {};
+    (<span class="macro-nonterminal">$n</span>:expr, <span class="macro-nonterminal">$N</span>:ident) =&gt; {
+        <span class="kw">impl</span>&lt;T&gt; Fill <span class="kw">for </span>[T; <span class="macro-nonterminal">$n</span>] <span class="kw">where </span>[T]: Fill {
+            <span class="kw">fn </span>try_fill&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+                <span class="self">self</span>[..].try_fill(rng)
             }
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">N</span>:<span class="ident">ident</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">NN</span>:<span class="ident">ident</span>,)<span class="kw-2">*</span>) =&gt; {
-        <span class="macro">impl_fill_arrays!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">N</span>);
-        <span class="macro">impl_fill_arrays!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span> <span class="op">-</span> <span class="number">1</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">NN</span>,)<span class="kw-2">*</span>);
+    (<span class="macro-nonterminal">$n</span>:expr, <span class="macro-nonterminal">$N</span>:ident, $(<span class="macro-nonterminal">$NN</span>:ident,)<span class="kw-2">*</span>) =&gt; {
+        <span class="macro">impl_fill_arrays!</span>(<span class="macro-nonterminal">$n</span>, <span class="macro-nonterminal">$N</span>);
+        <span class="macro">impl_fill_arrays!</span>(<span class="macro-nonterminal">$n </span>- <span class="number">1</span>, $(<span class="macro-nonterminal">$NN</span>,)<span class="kw-2">*</span>);
     };
-    (<span class="op">!</span><span class="ident">div</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">expr</span>,) =&gt; {};
-    (<span class="op">!</span><span class="ident">div</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">N</span>:<span class="ident">ident</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">NN</span>:<span class="ident">ident</span>,)<span class="kw-2">*</span>) =&gt; {
-        <span class="macro">impl_fill_arrays!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">N</span>);
-        <span class="macro">impl_fill_arrays!</span>(<span class="op">!</span><span class="ident">div</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span> <span class="op">/</span> <span class="number">2</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">NN</span>,)<span class="kw-2">*</span>);
+    (!div <span class="macro-nonterminal">$n</span>:expr,) =&gt; {};
+    (!div <span class="macro-nonterminal">$n</span>:expr, <span class="macro-nonterminal">$N</span>:ident, $(<span class="macro-nonterminal">$NN</span>:ident,)<span class="kw-2">*</span>) =&gt; {
+        <span class="macro">impl_fill_arrays!</span>(<span class="macro-nonterminal">$n</span>, <span class="macro-nonterminal">$N</span>);
+        <span class="macro">impl_fill_arrays!</span>(!div <span class="macro-nonterminal">$n </span>/ <span class="number">2</span>, $(<span class="macro-nonterminal">$NN</span>,)<span class="kw-2">*</span>);
     };
 }
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;min_const_gen&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-<span class="macro">impl_fill_arrays!</span>(<span class="number">32</span>, <span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;min_const_gen&quot;</span>))]</span>
-<span class="macro">impl_fill_arrays!</span>(<span class="op">!</span><span class="ident">div</span> <span class="number">4096</span>, <span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,<span class="ident">N</span>,);
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;min_const_gen&quot;</span>))]
+#[rustfmt::skip]
+</span><span class="macro">impl_fill_arrays!</span>(<span class="number">32</span>, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;min_const_gen&quot;</span>))]
+</span><span class="macro">impl_fill_arrays!</span>(!div <span class="number">4096</span>, N,N,N,N,N,N,N,);
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::test::rng</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rngs::mock::StepRng</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>)]</span> <span class="kw">use</span> <span class="ident">alloc::boxed::Box</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::test::rng;
+    <span class="kw">use </span><span class="kw">crate</span>::rngs::mock::StepRng;
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)] </span><span class="kw">use </span>alloc::boxed::Box;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_fill_bytes_default</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0x11_22_33_44_55_66_77_88</span>, <span class="number">0</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_fill_bytes_default() {
+        <span class="kw">let </span><span class="kw-2">mut </span>r = StepRng::new(<span class="number">0x11_22_33_44_55_66_77_88</span>, <span class="number">0</span>);
 
-        <span class="comment">// check every remainder mod 8, both in small and big vectors.</span>
-        <span class="kw">let</span> <span class="ident">lengths</span> <span class="op">=</span> [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">80</span>, <span class="number">81</span>, <span class="number">82</span>, <span class="number">83</span>, <span class="number">84</span>, <span class="number">85</span>, <span class="number">86</span>, <span class="number">87</span>];
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">n</span> <span class="kw">in</span> <span class="ident">lengths</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">87</span>];
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>[<span class="number">0</span>..<span class="ident">n</span>];
-            <span class="ident">r</span>.<span class="ident">fill_bytes</span>(<span class="ident">v</span>);
+        <span class="comment">// check every remainder mod 8, both in small and big vectors.
+        </span><span class="kw">let </span>lengths = [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">80</span>, <span class="number">81</span>, <span class="number">82</span>, <span class="number">83</span>, <span class="number">84</span>, <span class="number">85</span>, <span class="number">86</span>, <span class="number">87</span>];
+        <span class="kw">for </span><span class="kw-2">&amp;</span>n <span class="kw">in </span>lengths.iter() {
+            <span class="kw">let </span><span class="kw-2">mut </span>buffer = [<span class="number">0u8</span>; <span class="number">87</span>];
+            <span class="kw">let </span>v = <span class="kw-2">&amp;mut </span>buffer[<span class="number">0</span>..n];
+            r.fill_bytes(v);
 
-            <span class="comment">// use this to get nicer error messages.</span>
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">byte</span>) <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="kw">if</span> <span class="ident">byte</span> <span class="op">==</span> <span class="number">0</span> {
-                    <span class="macro">panic!</span>(<span class="string">&quot;byte {} of {} is zero&quot;</span>, <span class="ident">i</span>, <span class="ident">n</span>)
+            <span class="comment">// use this to get nicer error messages.
+            </span><span class="kw">for </span>(i, <span class="kw-2">&amp;</span>byte) <span class="kw">in </span>v.iter().enumerate() {
+                <span class="kw">if </span>byte == <span class="number">0 </span>{
+                    <span class="macro">panic!</span>(<span class="string">&quot;byte {} of {} is zero&quot;</span>, i, n)
                 }
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_fill</span>() {
-        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="number">9041086907909331047</span>; <span class="comment">// a random u64</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="ident">x</span>, <span class="number">0</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_fill() {
+        <span class="kw">let </span>x = <span class="number">9041086907909331047</span>; <span class="comment">// a random u64
+        </span><span class="kw">let </span><span class="kw-2">mut </span>rng = StepRng::new(x, <span class="number">0</span>);
 
-        <span class="comment">// Convert to byte sequence and back to u64; byte-swap twice if BE.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">array</span> <span class="op">=</span> [<span class="number">0u64</span>; <span class="number">2</span>];
-        <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">array</span>[..]);
-        <span class="macro">assert_eq!</span>(<span class="ident">array</span>, [<span class="ident">x</span>, <span class="ident">x</span>]);
-        <span class="macro">assert_eq!</span>(<span class="ident">rng</span>.<span class="ident">next_u64</span>(), <span class="ident">x</span>);
+        <span class="comment">// Convert to byte sequence and back to u64; byte-swap twice if BE.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>array = [<span class="number">0u64</span>; <span class="number">2</span>];
+        rng.fill(<span class="kw-2">&amp;mut </span>array[..]);
+        <span class="macro">assert_eq!</span>(array, [x, x]);
+        <span class="macro">assert_eq!</span>(rng.next_u64(), x);
 
-        <span class="comment">// Convert to bytes then u32 in LE order</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">array</span> <span class="op">=</span> [<span class="number">0u32</span>; <span class="number">2</span>];
-        <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">array</span>[..]);
-        <span class="macro">assert_eq!</span>(<span class="ident">array</span>, [<span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span>, (<span class="ident">x</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>]);
-        <span class="macro">assert_eq!</span>(<span class="ident">rng</span>.<span class="ident">next_u32</span>(), <span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="comment">// Convert to bytes then u32 in LE order
+        </span><span class="kw">let </span><span class="kw-2">mut </span>array = [<span class="number">0u32</span>; <span class="number">2</span>];
+        rng.fill(<span class="kw-2">&amp;mut </span>array[..]);
+        <span class="macro">assert_eq!</span>(array, [x <span class="kw">as </span>u32, (x &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32]);
+        <span class="macro">assert_eq!</span>(rng.next_u32(), x <span class="kw">as </span>u32);
 
-        <span class="comment">// Check equivalence using wrapped arrays</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">warray</span> <span class="op">=</span> [<span class="ident">Wrapping</span>(<span class="number">0u32</span>); <span class="number">2</span>];
-        <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">warray</span>[..]);
-        <span class="macro">assert_eq!</span>(<span class="ident">array</span>[<span class="number">0</span>], <span class="ident">warray</span>[<span class="number">0</span>].<span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">array</span>[<span class="number">1</span>], <span class="ident">warray</span>[<span class="number">1</span>].<span class="number">0</span>);
+        <span class="comment">// Check equivalence using wrapped arrays
+        </span><span class="kw">let </span><span class="kw-2">mut </span>warray = [Wrapping(<span class="number">0u32</span>); <span class="number">2</span>];
+        rng.fill(<span class="kw-2">&amp;mut </span>warray[..]);
+        <span class="macro">assert_eq!</span>(array[<span class="number">0</span>], warray[<span class="number">0</span>].<span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(array[<span class="number">1</span>], warray[<span class="number">1</span>].<span class="number">0</span>);
 
-        <span class="comment">// Check equivalence for generated floats</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">array</span> <span class="op">=</span> [<span class="number">0f32</span>; <span class="number">2</span>];
-        <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">array</span>);
-        <span class="kw">let</span> <span class="ident">gen</span>: [<span class="ident">f32</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">array</span>, <span class="ident">gen</span>);
+        <span class="comment">// Check equivalence for generated floats
+        </span><span class="kw">let </span><span class="kw-2">mut </span>array = [<span class="number">0f32</span>; <span class="number">2</span>];
+        rng.fill(<span class="kw-2">&amp;mut </span>array);
+        <span class="kw">let </span>gen: [f32; <span class="number">2</span>] = rng.gen();
+        <span class="macro">assert_eq!</span>(array, gen);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_fill_empty</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">array</span> <span class="op">=</span> [<span class="number">0u32</span>; <span class="number">0</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0</span>, <span class="number">1</span>);
-        <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">array</span>);
-        <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">array</span>[..]);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_fill_empty() {
+        <span class="kw">let </span><span class="kw-2">mut </span>array = [<span class="number">0u32</span>; <span class="number">0</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = StepRng::new(<span class="number">0</span>, <span class="number">1</span>);
+        rng.fill(<span class="kw-2">&amp;mut </span>array);
+        rng.fill(<span class="kw-2">&amp;mut </span>array[..]);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_gen_range_int</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">rng</span>(<span class="number">101</span>);
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">1000</span> {
-            <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="op">-</span><span class="number">4711</span>..<span class="number">17</span>);
-            <span class="macro">assert!</span>((<span class="op">-</span><span class="number">4711</span>..<span class="number">17</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>));
-            <span class="kw">let</span> <span class="ident">a</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="op">-</span><span class="number">3</span>..<span class="number">42</span>);
-            <span class="macro">assert!</span>((<span class="op">-</span><span class="number">3</span>..<span class="number">42</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>));
-            <span class="kw">let</span> <span class="ident">a</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">10</span>..<span class="number">99</span>);
-            <span class="macro">assert!</span>((<span class="number">10</span>..<span class="number">99</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>));
-            <span class="kw">let</span> <span class="ident">a</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="op">-</span><span class="number">100</span>..<span class="number">2000</span>);
-            <span class="macro">assert!</span>((<span class="op">-</span><span class="number">100</span>..<span class="number">2000</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>));
-            <span class="kw">let</span> <span class="ident">a</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">12</span>..<span class="op">=</span><span class="number">24</span>);
-            <span class="macro">assert!</span>((<span class="number">12</span>..<span class="op">=</span><span class="number">24</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_gen_range_int() {
+        <span class="kw">let </span><span class="kw-2">mut </span>r = rng(<span class="number">101</span>);
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">1000 </span>{
+            <span class="kw">let </span>a = r.gen_range(-<span class="number">4711</span>..<span class="number">17</span>);
+            <span class="macro">assert!</span>((-<span class="number">4711</span>..<span class="number">17</span>).contains(<span class="kw-2">&amp;</span>a));
+            <span class="kw">let </span>a: i8 = r.gen_range(-<span class="number">3</span>..<span class="number">42</span>);
+            <span class="macro">assert!</span>((-<span class="number">3</span>..<span class="number">42</span>).contains(<span class="kw-2">&amp;</span>a));
+            <span class="kw">let </span>a: u16 = r.gen_range(<span class="number">10</span>..<span class="number">99</span>);
+            <span class="macro">assert!</span>((<span class="number">10</span>..<span class="number">99</span>).contains(<span class="kw-2">&amp;</span>a));
+            <span class="kw">let </span>a: i32 = r.gen_range(-<span class="number">100</span>..<span class="number">2000</span>);
+            <span class="macro">assert!</span>((-<span class="number">100</span>..<span class="number">2000</span>).contains(<span class="kw-2">&amp;</span>a));
+            <span class="kw">let </span>a: u32 = r.gen_range(<span class="number">12</span>..=<span class="number">24</span>);
+            <span class="macro">assert!</span>((<span class="number">12</span>..=<span class="number">24</span>).contains(<span class="kw-2">&amp;</span>a));
 
-            <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">0u32</span>..<span class="number">1</span>), <span class="number">0u32</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="op">-</span><span class="number">12i64</span>..<span class="op">-</span><span class="number">11</span>), <span class="op">-</span><span class="number">12i64</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">3_000_000</span>..<span class="number">3_000_001</span>), <span class="number">3_000_000</span>);
+            <span class="macro">assert_eq!</span>(r.gen_range(<span class="number">0u32</span>..<span class="number">1</span>), <span class="number">0u32</span>);
+            <span class="macro">assert_eq!</span>(r.gen_range(-<span class="number">12i64</span>..-<span class="number">11</span>), -<span class="number">12i64</span>);
+            <span class="macro">assert_eq!</span>(r.gen_range(<span class="number">3_000_000</span>..<span class="number">3_000_001</span>), <span class="number">3_000_000</span>);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_gen_range_float</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">rng</span>(<span class="number">101</span>);
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">1000</span> {
-            <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="op">-</span><span class="number">4.5</span>..<span class="number">1.7</span>);
-            <span class="macro">assert!</span>((<span class="op">-</span><span class="number">4.5</span>..<span class="number">1.7</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>));
-            <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="op">-</span><span class="number">1.1</span>..<span class="op">=</span><span class="op">-</span><span class="number">0.3</span>);
-            <span class="macro">assert!</span>((<span class="op">-</span><span class="number">1.1</span>..<span class="op">=</span><span class="op">-</span><span class="number">0.3</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_gen_range_float() {
+        <span class="kw">let </span><span class="kw-2">mut </span>r = rng(<span class="number">101</span>);
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">1000 </span>{
+            <span class="kw">let </span>a = r.gen_range(-<span class="number">4.5</span>..<span class="number">1.7</span>);
+            <span class="macro">assert!</span>((-<span class="number">4.5</span>..<span class="number">1.7</span>).contains(<span class="kw-2">&amp;</span>a));
+            <span class="kw">let </span>a = r.gen_range(-<span class="number">1.1</span>..=-<span class="number">0.3</span>);
+            <span class="macro">assert!</span>((-<span class="number">1.1</span>..=-<span class="number">0.3</span>).contains(<span class="kw-2">&amp;</span>a));
 
-            <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">0.0f32</span>..<span class="op">=</span><span class="number">0.0</span>), <span class="number">0.</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="op">-</span><span class="number">11.0</span>..<span class="op">=</span><span class="op">-</span><span class="number">11.0</span>), <span class="op">-</span><span class="number">11.</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">3_000_000.0</span>..<span class="op">=</span><span class="number">3_000_000.0</span>), <span class="number">3_000_000.</span>);
+            <span class="macro">assert_eq!</span>(r.gen_range(<span class="number">0.0f32</span>..=<span class="number">0.0</span>), <span class="number">0.</span>);
+            <span class="macro">assert_eq!</span>(r.gen_range(-<span class="number">11.0</span>..=-<span class="number">11.0</span>), -<span class="number">11.</span>);
+            <span class="macro">assert_eq!</span>(r.gen_range(<span class="number">3_000_000.0</span>..=<span class="number">3_000_000.0</span>), <span class="number">3_000_000.</span>);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_gen_range_panic_int</span>() {
-        <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::reversed_empty_ranges</span>)]</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">rng</span>(<span class="number">102</span>);
-        <span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">5</span>..<span class="op">-</span><span class="number">2</span>);
+    <span class="attribute">#[test]
+    #[should_panic]
+    </span><span class="kw">fn </span>test_gen_range_panic_int() {
+        <span class="attribute">#![allow(clippy::reversed_empty_ranges)]
+        </span><span class="kw">let </span><span class="kw-2">mut </span>r = rng(<span class="number">102</span>);
+        r.gen_range(<span class="number">5</span>..-<span class="number">2</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_gen_range_panic_usize</span>() {
-        <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::reversed_empty_ranges</span>)]</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">rng</span>(<span class="number">103</span>);
-        <span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">5</span>..<span class="number">2</span>);
+    <span class="attribute">#[test]
+    #[should_panic]
+    </span><span class="kw">fn </span>test_gen_range_panic_usize() {
+        <span class="attribute">#![allow(clippy::reversed_empty_ranges)]
+        </span><span class="kw">let </span><span class="kw-2">mut </span>r = rng(<span class="number">103</span>);
+        r.gen_range(<span class="number">5</span>..<span class="number">2</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_gen_bool</span>() {
-        <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::bool_assert_comparison</span>)]</span>
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_gen_bool() {
+        <span class="attribute">#![allow(clippy::bool_assert_comparison)]
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">rng</span>(<span class="number">105</span>);
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">5</span> {
-            <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_bool</span>(<span class="number">0.0</span>), <span class="bool-val">false</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_bool</span>(<span class="number">1.0</span>), <span class="bool-val">true</span>);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>r = rng(<span class="number">105</span>);
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">5 </span>{
+            <span class="macro">assert_eq!</span>(r.gen_bool(<span class="number">0.0</span>), <span class="bool-val">false</span>);
+            <span class="macro">assert_eq!</span>(r.gen_bool(<span class="number">1.0</span>), <span class="bool-val">true</span>);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_rng_trait_object</span>() {
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::distributions</span>::{<span class="ident">Distribution</span>, <span class="ident">Standard</span>};
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">rng</span>(<span class="number">109</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">rng</span> <span class="kw">as</span> <span class="kw-2">&amp;mut</span> <span class="kw">dyn</span> <span class="ident">RngCore</span>;
-        <span class="ident">r</span>.<span class="ident">next_u32</span>();
-        <span class="ident">r</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="number">1</span>), <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">_c</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">Standard</span>.<span class="ident">sample</span>(<span class="kw-2">&amp;mut</span> <span class="ident">r</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_rng_trait_object() {
+        <span class="kw">use </span><span class="kw">crate</span>::distributions::{Distribution, Standard};
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = rng(<span class="number">109</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>r = <span class="kw-2">&amp;mut </span>rng <span class="kw">as </span><span class="kw-2">&amp;mut </span><span class="kw">dyn </span>RngCore;
+        r.next_u32();
+        r.gen::&lt;i32&gt;();
+        <span class="macro">assert_eq!</span>(r.gen_range(<span class="number">0</span>..<span class="number">1</span>), <span class="number">0</span>);
+        <span class="kw">let </span>_c: u8 = Standard.sample(<span class="kw-2">&amp;mut </span>r);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">test_rng_boxed_trait</span>() {
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::distributions</span>::{<span class="ident">Distribution</span>, <span class="ident">Standard</span>};
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">rng</span>(<span class="number">110</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">rng</span>) <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">RngCore</span><span class="op">&gt;</span>;
-        <span class="ident">r</span>.<span class="ident">next_u32</span>();
-        <span class="ident">r</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="number">1</span>), <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">_c</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">Standard</span>.<span class="ident">sample</span>(<span class="kw-2">&amp;mut</span> <span class="ident">r</span>);
+    <span class="attribute">#[test]
+    #[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+    </span><span class="kw">fn </span>test_rng_boxed_trait() {
+        <span class="kw">use </span><span class="kw">crate</span>::distributions::{Distribution, Standard};
+        <span class="kw">let </span>rng = rng(<span class="number">110</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>r = Box::new(rng) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>RngCore&gt;;
+        r.next_u32();
+        r.gen::&lt;i32&gt;();
+        <span class="macro">assert_eq!</span>(r.gen_range(<span class="number">0</span>..<span class="number">1</span>), <span class="number">0</span>);
+        <span class="kw">let </span>_c: u8 = Standard.sample(<span class="kw-2">&amp;mut </span>r);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">miri</span>, <span class="ident">ignore</span>)]</span> <span class="comment">// Miri is too slow</span>
-    <span class="kw">fn</span> <span class="ident">test_gen_ratio_average</span>() {
-        <span class="kw">const</span> <span class="ident">NUM</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">3</span>;
-        <span class="kw">const</span> <span class="ident">DENOM</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">10</span>;
-        <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">100_000</span>;
+    <span class="attribute">#[test]
+    #[cfg_attr(miri, ignore)] </span><span class="comment">// Miri is too slow
+    </span><span class="kw">fn </span>test_gen_ratio_average() {
+        <span class="kw">const </span>NUM: u32 = <span class="number">3</span>;
+        <span class="kw">const </span>DENOM: u32 = <span class="number">10</span>;
+        <span class="kw">const </span>N: u32 = <span class="number">100_000</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sum</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">rng</span>(<span class="number">111</span>);
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">N</span> {
-            <span class="kw">if</span> <span class="ident">rng</span>.<span class="ident">gen_ratio</span>(<span class="ident">NUM</span>, <span class="ident">DENOM</span>) {
-                <span class="ident">sum</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>sum: u32 = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = rng(<span class="number">111</span>);
+        <span class="kw">for _ in </span><span class="number">0</span>..N {
+            <span class="kw">if </span>rng.gen_ratio(NUM, DENOM) {
+                sum += <span class="number">1</span>;
             }
         }
-        <span class="comment">// Have Binomial(N, NUM/DENOM) distribution</span>
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> (<span class="ident">NUM</span> <span class="op">*</span> <span class="ident">N</span>) <span class="op">/</span> <span class="ident">DENOM</span>; <span class="comment">// exact integer</span>
-        <span class="macro">assert!</span>(((<span class="ident">sum</span> <span class="op">-</span> <span class="ident">expected</span>) <span class="kw">as</span> <span class="ident">i32</span>).<span class="ident">abs</span>() <span class="op">&lt;</span> <span class="number">500</span>);
+        <span class="comment">// Have Binomial(N, NUM/DENOM) distribution
+        </span><span class="kw">let </span>expected = (NUM * N) / DENOM; <span class="comment">// exact integer
+        </span><span class="macro">assert!</span>(((sum - expected) <span class="kw">as </span>i32).abs() &lt; <span class="number">500</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

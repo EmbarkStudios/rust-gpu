@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/genericsimd.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>genericsimd.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/genericsimd.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>genericsimd.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -270,272 +264,271 @@
 <span id="264">264</span>
 <span id="265">265</span>
 <span id="266">266</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::mem::size_of</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>core::mem::size_of;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::memmem</span>::{<span class="ident">util::memcmp</span>, <span class="ident">vector::Vector</span>, <span class="ident">NeedleInfo</span>};
+<span class="kw">use </span><span class="kw">crate</span>::memmem::{util::memcmp, vector::Vector, NeedleInfo};
 
-<span class="doccomment">/// The minimum length of a needle required for this algorithm. The minimum</span>
-<span class="doccomment">/// is 2 since a length of 1 should just use memchr and a length of 0 isn&#39;t</span>
-<span class="doccomment">/// a case handled by this searcher.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">MIN_NEEDLE_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="doccomment">/// The minimum length of a needle required for this algorithm. The minimum
+/// is 2 since a length of 1 should just use memchr and a length of 0 isn&#39;t
+/// a case handled by this searcher.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>MIN_NEEDLE_LEN: usize = <span class="number">2</span>;
 
-<span class="doccomment">/// The maximum length of a needle required for this algorithm.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// In reality, there is no hard max here. The code below can handle any</span>
-<span class="doccomment">/// length needle. (Perhaps that suggests there are missing optimizations.)</span>
-<span class="doccomment">/// Instead, this is a heuristic and a bound guaranteeing our linear time</span>
-<span class="doccomment">/// complexity.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It is a heuristic because when a candidate match is found, memcmp is run.</span>
-<span class="doccomment">/// For very large needles with lots of false positives, memcmp can make the</span>
-<span class="doccomment">/// code run quite slow.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It is a bound because the worst case behavior with memcmp is multiplicative</span>
-<span class="doccomment">/// in the size of the needle and haystack, and we want to keep that additive.</span>
-<span class="doccomment">/// This bound ensures we still meet that bound theoretically, since it&#39;s just</span>
-<span class="doccomment">/// a constant. We aren&#39;t acting in bad faith here, memcmp on tiny needles</span>
-<span class="doccomment">/// is so fast that even in pathological cases (see pathological vector</span>
-<span class="doccomment">/// benchmarks), this is still just as fast or faster in practice.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This specific number was chosen by tweaking a bit and running benchmarks.</span>
-<span class="doccomment">/// The rare-medium-needle, for example, gets about 5% faster by using this</span>
-<span class="doccomment">/// algorithm instead of a prefilter-accelerated Two-Way. There&#39;s also a</span>
-<span class="doccomment">/// theoretical desire to keep this number reasonably low, to mitigate the</span>
-<span class="doccomment">/// impact of pathological cases. I did try 64, and some benchmarks got a</span>
-<span class="doccomment">/// little better, and others (particularly the pathological ones), got a lot</span>
-<span class="doccomment">/// worse. So... 32 it is?</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">MAX_NEEDLE_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">32</span>;
+<span class="doccomment">/// The maximum length of a needle required for this algorithm.
+///
+/// In reality, there is no hard max here. The code below can handle any
+/// length needle. (Perhaps that suggests there are missing optimizations.)
+/// Instead, this is a heuristic and a bound guaranteeing our linear time
+/// complexity.
+///
+/// It is a heuristic because when a candidate match is found, memcmp is run.
+/// For very large needles with lots of false positives, memcmp can make the
+/// code run quite slow.
+///
+/// It is a bound because the worst case behavior with memcmp is multiplicative
+/// in the size of the needle and haystack, and we want to keep that additive.
+/// This bound ensures we still meet that bound theoretically, since it&#39;s just
+/// a constant. We aren&#39;t acting in bad faith here, memcmp on tiny needles
+/// is so fast that even in pathological cases (see pathological vector
+/// benchmarks), this is still just as fast or faster in practice.
+///
+/// This specific number was chosen by tweaking a bit and running benchmarks.
+/// The rare-medium-needle, for example, gets about 5% faster by using this
+/// algorithm instead of a prefilter-accelerated Two-Way. There&#39;s also a
+/// theoretical desire to keep this number reasonably low, to mitigate the
+/// impact of pathological cases. I did try 64, and some benchmarks got a
+/// little better, and others (particularly the pathological ones), got a lot
+/// worse. So... 32 it is?
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>MAX_NEEDLE_LEN: usize = <span class="number">32</span>;
 
-<span class="doccomment">/// The implementation of the forward vector accelerated substring search.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is extremely similar to the prefilter vector module by the same name.</span>
-<span class="doccomment">/// The key difference is that this is not a prefilter. Instead, it handles</span>
-<span class="doccomment">/// confirming its own matches. The trade off is that this only works with</span>
-<span class="doccomment">/// smaller needles. The speed up here is that an inlined memcmp on a tiny</span>
-<span class="doccomment">/// needle is very quick, even on pathological inputs. This is much better than</span>
-<span class="doccomment">/// combining a prefilter with Two-Way, where using Two-Way to confirm the</span>
-<span class="doccomment">/// match has higher latency.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// So why not use this for all needles? We could, and it would probably work</span>
-<span class="doccomment">/// really well on most inputs. But its worst case is multiplicative and we</span>
-<span class="doccomment">/// want to guarantee worst case additive time. Some of the benchmarks try to</span>
-<span class="doccomment">/// justify this (see the pathological ones).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The prefilter variant of this has more comments. Also note that we only</span>
-<span class="doccomment">/// implement this for forward searches for now. If you have a compelling use</span>
-<span class="doccomment">/// case for accelerated reverse search, please file an issue.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Forward</span> {
-    <span class="ident">rare1i</span>: <span class="ident">u8</span>,
-    <span class="ident">rare2i</span>: <span class="ident">u8</span>,
+<span class="doccomment">/// The implementation of the forward vector accelerated substring search.
+///
+/// This is extremely similar to the prefilter vector module by the same name.
+/// The key difference is that this is not a prefilter. Instead, it handles
+/// confirming its own matches. The trade off is that this only works with
+/// smaller needles. The speed up here is that an inlined memcmp on a tiny
+/// needle is very quick, even on pathological inputs. This is much better than
+/// combining a prefilter with Two-Way, where using Two-Way to confirm the
+/// match has higher latency.
+///
+/// So why not use this for all needles? We could, and it would probably work
+/// really well on most inputs. But its worst case is multiplicative and we
+/// want to guarantee worst case additive time. Some of the benchmarks try to
+/// justify this (see the pathological ones).
+///
+/// The prefilter variant of this has more comments. Also note that we only
+/// implement this for forward searches for now. If you have a compelling use
+/// case for accelerated reverse search, please file an issue.
+</span><span class="attribute">#[derive(Clone, Copy, Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Forward {
+    rare1i: u8,
+    rare2i: u8,
 }
 
-<span class="kw">impl</span> <span class="ident">Forward</span> {
-    <span class="doccomment">/// Create a new &quot;generic simd&quot; forward searcher. If one could not be</span>
-    <span class="doccomment">/// created from the given inputs, then None is returned.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">ninfo</span>: <span class="kw-2">&amp;</span><span class="ident">NeedleInfo</span>, <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Forward</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">rare1i</span>, <span class="ident">rare2i</span>) <span class="op">=</span> <span class="ident">ninfo</span>.<span class="ident">rarebytes</span>.<span class="ident">as_rare_ordered_u8</span>();
-        <span class="comment">// If the needle is too short or too long, give up. Also, give up</span>
-        <span class="comment">// if the rare bytes detected are at the same position. (It likely</span>
-        <span class="comment">// suggests a degenerate case, although it should technically not be</span>
-        <span class="comment">// possible.)</span>
-        <span class="kw">if</span> <span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">MIN_NEEDLE_LEN</span>
-            <span class="op">|</span><span class="op">|</span> <span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">MAX_NEEDLE_LEN</span>
-            <span class="op">|</span><span class="op">|</span> <span class="ident">rare1i</span> <span class="op">==</span> <span class="ident">rare2i</span>
+<span class="kw">impl </span>Forward {
+    <span class="doccomment">/// Create a new &quot;generic simd&quot; forward searcher. If one could not be
+    /// created from the given inputs, then None is returned.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(ninfo: <span class="kw-2">&amp;</span>NeedleInfo, needle: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;Forward&gt; {
+        <span class="kw">let </span>(rare1i, rare2i) = ninfo.rarebytes.as_rare_ordered_u8();
+        <span class="comment">// If the needle is too short or too long, give up. Also, give up
+        // if the rare bytes detected are at the same position. (It likely
+        // suggests a degenerate case, although it should technically not be
+        // possible.)
+        </span><span class="kw">if </span>needle.len() &lt; MIN_NEEDLE_LEN
+            || needle.len() &gt; MAX_NEEDLE_LEN
+            || rare1i == rare2i
         {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="prelude-val">Some</span>(<span class="ident">Forward</span> { <span class="ident">rare1i</span>, <span class="ident">rare2i</span> })
+        <span class="prelude-val">Some</span>(Forward { rare1i, rare2i })
     }
 
-    <span class="doccomment">/// Returns the minimum length of haystack that is needed for this searcher</span>
-    <span class="doccomment">/// to work for a particular vector. Passing a haystack with a length</span>
-    <span class="doccomment">/// smaller than this will cause `fwd_find` to panic.</span>
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">min_haystack_len</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">rare2i</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>()
+    <span class="doccomment">/// Returns the minimum length of haystack that is needed for this searcher
+    /// to work for a particular vector. Passing a haystack with a length
+    /// smaller than this will cause `fwd_find` to panic.
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>min_haystack_len&lt;V: Vector&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.rare2i <span class="kw">as </span>usize + size_of::&lt;V&gt;()
     }
 }
 
-<span class="doccomment">/// Searches the given haystack for the given needle. The needle given should</span>
-<span class="doccomment">/// be the same as the needle that this searcher was initialized with.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Panics</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// When the given haystack has a length smaller than `min_haystack_len`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Safety</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Since this is meant to be used with vector functions, callers need to</span>
-<span class="doccomment">/// specialize this inside of a function with a `target_feature` attribute.</span>
-<span class="doccomment">/// Therefore, callers must ensure that whatever target feature is being used</span>
-<span class="doccomment">/// supports the vector functions that this function is specialized for. (For</span>
-<span class="doccomment">/// the specific vector functions used, see the Vector trait implementations.)</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">fwd_find</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&gt;</span>(
-    <span class="ident">fwd</span>: <span class="kw-2">&amp;</span><span class="ident">Forward</span>,
-    <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="comment">// It would be nice if we didn&#39;t have this check here, since the meta</span>
-    <span class="comment">// searcher should handle it for us. But without this, I don&#39;t think we</span>
-    <span class="comment">// guarantee that end_ptr.sub(needle.len()) won&#39;t result in UB. We could</span>
-    <span class="comment">// put it as part of the safety contract, but it makes it more complicated</span>
-    <span class="comment">// than necessary.</span>
-    <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">needle</span>.<span class="ident">len</span>() {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="doccomment">/// Searches the given haystack for the given needle. The needle given should
+/// be the same as the needle that this searcher was initialized with.
+///
+/// # Panics
+///
+/// When the given haystack has a length smaller than `min_haystack_len`.
+///
+/// # Safety
+///
+/// Since this is meant to be used with vector functions, callers need to
+/// specialize this inside of a function with a `target_feature` attribute.
+/// Therefore, callers must ensure that whatever target feature is being used
+/// supports the vector functions that this function is specialized for. (For
+/// the specific vector functions used, see the Vector trait implementations.)
+</span><span class="attribute">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>fwd_find&lt;V: Vector&gt;(
+    fwd: <span class="kw-2">&amp;</span>Forward,
+    haystack: <span class="kw-2">&amp;</span>[u8],
+    needle: <span class="kw-2">&amp;</span>[u8],
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="comment">// It would be nice if we didn&#39;t have this check here, since the meta
+    // searcher should handle it for us. But without this, I don&#39;t think we
+    // guarantee that end_ptr.sub(needle.len()) won&#39;t result in UB. We could
+    // put it as part of the safety contract, but it makes it more complicated
+    // than necessary.
+    </span><span class="kw">if </span>haystack.len() &lt; needle.len() {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="kw">let</span> <span class="ident">min_haystack_len</span> <span class="op">=</span> <span class="ident">fwd</span>.<span class="ident">min_haystack_len</span>::<span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>();
-    <span class="macro">assert!</span>(<span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">min_haystack_len</span>, <span class="string">&quot;haystack too small&quot;</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">len</span>());
+    <span class="kw">let </span>min_haystack_len = fwd.min_haystack_len::&lt;V&gt;();
+    <span class="macro">assert!</span>(haystack.len() &gt;= min_haystack_len, <span class="string">&quot;haystack too small&quot;</span>);
+    <span class="macro">debug_assert!</span>(needle.len() &lt;= haystack.len());
     <span class="macro">debug_assert!</span>(
-        <span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">MIN_NEEDLE_LEN</span>,
+        needle.len() &gt;= MIN_NEEDLE_LEN,
         <span class="string">&quot;needle must be at least {} bytes&quot;</span>,
-        <span class="ident">MIN_NEEDLE_LEN</span>,
+        MIN_NEEDLE_LEN,
     );
     <span class="macro">debug_assert!</span>(
-        <span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">MAX_NEEDLE_LEN</span>,
+        needle.len() &lt;= MAX_NEEDLE_LEN,
         <span class="string">&quot;needle must be at most {} bytes&quot;</span>,
-        <span class="ident">MAX_NEEDLE_LEN</span>,
+        MAX_NEEDLE_LEN,
     );
 
-    <span class="kw">let</span> (<span class="ident">rare1i</span>, <span class="ident">rare2i</span>) <span class="op">=</span> (<span class="ident">fwd</span>.<span class="ident">rare1i</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">fwd</span>.<span class="ident">rare2i</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    <span class="kw">let</span> <span class="ident">rare1chunk</span> <span class="op">=</span> <span class="ident">V::splat</span>(<span class="ident">needle</span>[<span class="ident">rare1i</span>]);
-    <span class="kw">let</span> <span class="ident">rare2chunk</span> <span class="op">=</span> <span class="ident">V::splat</span>(<span class="ident">needle</span>[<span class="ident">rare2i</span>]);
+    <span class="kw">let </span>(rare1i, rare2i) = (fwd.rare1i <span class="kw">as </span>usize, fwd.rare2i <span class="kw">as </span>usize);
+    <span class="kw">let </span>rare1chunk = V::splat(needle[rare1i]);
+    <span class="kw">let </span>rare2chunk = V::splat(needle[rare2i]);
 
-    <span class="kw">let</span> <span class="ident">start_ptr</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">as_ptr</span>();
-    <span class="kw">let</span> <span class="ident">end_ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">haystack</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="ident">max_ptr</span> <span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">min_haystack_len</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>;
+    <span class="kw">let </span>start_ptr = haystack.as_ptr();
+    <span class="kw">let </span>end_ptr = start_ptr.add(haystack.len());
+    <span class="kw">let </span>max_ptr = end_ptr.sub(min_haystack_len);
+    <span class="kw">let </span><span class="kw-2">mut </span>ptr = start_ptr;
 
-    <span class="comment">// N.B. I did experiment with unrolling the loop to deal with size(V)</span>
-    <span class="comment">// bytes at a time and 2*size(V) bytes at a time. The double unroll was</span>
-    <span class="comment">// marginally faster while the quadruple unroll was unambiguously slower.</span>
-    <span class="comment">// In the end, I decided the complexity from unrolling wasn&#39;t worth it. I</span>
-    <span class="comment">// used the memmem/krate/prebuilt/huge-en/ benchmarks to compare.</span>
-    <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">max_ptr</span> {
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">fwd_find_in_chunk</span>(
-            <span class="ident">fwd</span>, <span class="ident">needle</span>, <span class="ident">ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">rare1chunk</span>, <span class="ident">rare2chunk</span>, <span class="op">!</span><span class="number">0</span>,
+    <span class="comment">// N.B. I did experiment with unrolling the loop to deal with size(V)
+    // bytes at a time and 2*size(V) bytes at a time. The double unroll was
+    // marginally faster while the quadruple unroll was unambiguously slower.
+    // In the end, I decided the complexity from unrolling wasn&#39;t worth it. I
+    // used the memmem/krate/prebuilt/huge-en/ benchmarks to compare.
+    </span><span class="kw">while </span>ptr &lt;= max_ptr {
+        <span class="kw">let </span>m = fwd_find_in_chunk(
+            fwd, needle, ptr, end_ptr, rare1chunk, rare2chunk, !<span class="number">0</span>,
         );
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">chunki</span>) <span class="op">=</span> <span class="ident">m</span> {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">matched</span>(<span class="ident">start_ptr</span>, <span class="ident">ptr</span>, <span class="ident">chunki</span>));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunki) = m {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(matched(start_ptr, ptr, chunki));
         }
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>());
+        ptr = ptr.add(size_of::&lt;V&gt;());
     }
-    <span class="kw">if</span> <span class="ident">ptr</span> <span class="op">&lt;</span> <span class="ident">end_ptr</span> {
-        <span class="kw">let</span> <span class="ident">remaining</span> <span class="op">=</span> <span class="ident">diff</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>);
+    <span class="kw">if </span>ptr &lt; end_ptr {
+        <span class="kw">let </span>remaining = diff(end_ptr, ptr);
         <span class="macro">debug_assert!</span>(
-            <span class="ident">remaining</span> <span class="op">&lt;</span> <span class="ident">min_haystack_len</span>,
+            remaining &lt; min_haystack_len,
             <span class="string">&quot;remaining bytes should be smaller than the minimum haystack \
              length of {}, but there are {} bytes remaining&quot;</span>,
-            <span class="ident">min_haystack_len</span>,
-            <span class="ident">remaining</span>,
+            min_haystack_len,
+            remaining,
         );
-        <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">&lt;</span> <span class="ident">needle</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">if </span>remaining &lt; needle.len() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
         <span class="macro">debug_assert!</span>(
-            <span class="ident">max_ptr</span> <span class="op">&lt;</span> <span class="ident">ptr</span>,
+            max_ptr &lt; ptr,
             <span class="string">&quot;after main loop, ptr should have exceeded max_ptr&quot;</span>,
         );
-        <span class="kw">let</span> <span class="ident">overlap</span> <span class="op">=</span> <span class="ident">diff</span>(<span class="ident">ptr</span>, <span class="ident">max_ptr</span>);
+        <span class="kw">let </span>overlap = diff(ptr, max_ptr);
         <span class="macro">debug_assert!</span>(
-            <span class="ident">overlap</span> <span class="op">&gt;</span> <span class="number">0</span>,
+            overlap &gt; <span class="number">0</span>,
             <span class="string">&quot;overlap ({}) must always be non-zero&quot;</span>,
-            <span class="ident">overlap</span>,
+            overlap,
         );
         <span class="macro">debug_assert!</span>(
-            <span class="ident">overlap</span> <span class="op">&lt;</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(),
+            overlap &lt; size_of::&lt;V&gt;(),
             <span class="string">&quot;overlap ({}) cannot possibly be &gt;= than a vector ({})&quot;</span>,
-            <span class="ident">overlap</span>,
-            <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(),
+            overlap,
+            size_of::&lt;V&gt;(),
         );
-        <span class="comment">// The mask has all of its bits set except for the first N least</span>
-        <span class="comment">// significant bits, where N=overlap. This way, any matches that</span>
-        <span class="comment">// occur in find_in_chunk within the overlap are automatically</span>
-        <span class="comment">// ignored.</span>
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="op">!</span>((<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">overlap</span>) <span class="op">-</span> <span class="number">1</span>);
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">max_ptr</span>;
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">fwd_find_in_chunk</span>(
-            <span class="ident">fwd</span>, <span class="ident">needle</span>, <span class="ident">ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">rare1chunk</span>, <span class="ident">rare2chunk</span>, <span class="ident">mask</span>,
+        <span class="comment">// The mask has all of its bits set except for the first N least
+        // significant bits, where N=overlap. This way, any matches that
+        // occur in find_in_chunk within the overlap are automatically
+        // ignored.
+        </span><span class="kw">let </span>mask = !((<span class="number">1 </span>&lt;&lt; overlap) - <span class="number">1</span>);
+        ptr = max_ptr;
+        <span class="kw">let </span>m = fwd_find_in_chunk(
+            fwd, needle, ptr, end_ptr, rare1chunk, rare2chunk, mask,
         );
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">chunki</span>) <span class="op">=</span> <span class="ident">m</span> {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">matched</span>(<span class="ident">start_ptr</span>, <span class="ident">ptr</span>, <span class="ident">chunki</span>));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunki) = m {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(matched(start_ptr, ptr, chunki));
         }
     }
-    <span class="prelude-val">None</span>
-}
+    <span class="prelude-val">None
+</span>}
 
-<span class="doccomment">/// Search for an occurrence of two rare bytes from the needle in the chunk</span>
-<span class="doccomment">/// pointed to by ptr, with the end of the haystack pointed to by end_ptr. When</span>
-<span class="doccomment">/// an occurrence is found, memcmp is run to check if a match occurs at the</span>
-<span class="doccomment">/// corresponding position.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// rare1chunk and rare2chunk correspond to vectors with the rare1 and rare2</span>
-<span class="doccomment">/// bytes repeated in each 8-bit lane, respectively.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// mask should have bits set corresponding the positions in the chunk in which</span>
-<span class="doccomment">/// matches are considered. This is only used for the last vector load where</span>
-<span class="doccomment">/// the beginning of the vector might have overlapped with the last load in</span>
-<span class="doccomment">/// the main loop. The mask lets us avoid visiting positions that have already</span>
-<span class="doccomment">/// been discarded as matches.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Safety</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It must be safe to do an unaligned read of size(V) bytes starting at both</span>
-<span class="doccomment">/// (ptr + rare1i) and (ptr + rare2i). It must also be safe to do unaligned</span>
-<span class="doccomment">/// loads on ptr up to (end_ptr - needle.len()).</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">fwd_find_in_chunk</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&gt;</span>(
-    <span class="ident">fwd</span>: <span class="kw-2">&amp;</span><span class="ident">Forward</span>,
-    <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">end_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">rare1chunk</span>: <span class="ident">V</span>,
-    <span class="ident">rare2chunk</span>: <span class="ident">V</span>,
-    <span class="ident">mask</span>: <span class="ident">u32</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">chunk0</span> <span class="op">=</span> <span class="ident">V::load_unaligned</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">fwd</span>.<span class="ident">rare1i</span> <span class="kw">as</span> <span class="ident">usize</span>));
-    <span class="kw">let</span> <span class="ident">chunk1</span> <span class="op">=</span> <span class="ident">V::load_unaligned</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">fwd</span>.<span class="ident">rare2i</span> <span class="kw">as</span> <span class="ident">usize</span>));
+<span class="doccomment">/// Search for an occurrence of two rare bytes from the needle in the chunk
+/// pointed to by ptr, with the end of the haystack pointed to by end_ptr. When
+/// an occurrence is found, memcmp is run to check if a match occurs at the
+/// corresponding position.
+///
+/// rare1chunk and rare2chunk correspond to vectors with the rare1 and rare2
+/// bytes repeated in each 8-bit lane, respectively.
+///
+/// mask should have bits set corresponding the positions in the chunk in which
+/// matches are considered. This is only used for the last vector load where
+/// the beginning of the vector might have overlapped with the last load in
+/// the main loop. The mask lets us avoid visiting positions that have already
+/// been discarded as matches.
+///
+/// # Safety
+///
+/// It must be safe to do an unaligned read of size(V) bytes starting at both
+/// (ptr + rare1i) and (ptr + rare2i). It must also be safe to do unaligned
+/// loads on ptr up to (end_ptr - needle.len()).
+</span><span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>fwd_find_in_chunk&lt;V: Vector&gt;(
+    fwd: <span class="kw-2">&amp;</span>Forward,
+    needle: <span class="kw-2">&amp;</span>[u8],
+    ptr: <span class="kw-2">*const </span>u8,
+    end_ptr: <span class="kw-2">*const </span>u8,
+    rare1chunk: V,
+    rare2chunk: V,
+    mask: u32,
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">let </span>chunk0 = V::load_unaligned(ptr.add(fwd.rare1i <span class="kw">as </span>usize));
+    <span class="kw">let </span>chunk1 = V::load_unaligned(ptr.add(fwd.rare2i <span class="kw">as </span>usize));
 
-    <span class="kw">let</span> <span class="ident">eq0</span> <span class="op">=</span> <span class="ident">chunk0</span>.<span class="ident">cmpeq</span>(<span class="ident">rare1chunk</span>);
-    <span class="kw">let</span> <span class="ident">eq1</span> <span class="op">=</span> <span class="ident">chunk1</span>.<span class="ident">cmpeq</span>(<span class="ident">rare2chunk</span>);
+    <span class="kw">let </span>eq0 = chunk0.cmpeq(rare1chunk);
+    <span class="kw">let </span>eq1 = chunk1.cmpeq(rare2chunk);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">match_offsets</span> <span class="op">=</span> <span class="ident">eq0</span>.<span class="ident">and</span>(<span class="ident">eq1</span>).<span class="ident">movemask</span>() <span class="op">&amp;</span> <span class="ident">mask</span>;
-    <span class="kw">while</span> <span class="ident">match_offsets</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">match_offsets</span>.<span class="ident">trailing_zeros</span>() <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">offset</span>);
-        <span class="kw">if</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">needle</span>.<span class="ident">len</span>()) <span class="op">&lt;</span> <span class="ident">ptr</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>match_offsets = eq0.and(eq1).movemask() &amp; mask;
+    <span class="kw">while </span>match_offsets != <span class="number">0 </span>{
+        <span class="kw">let </span>offset = match_offsets.trailing_zeros() <span class="kw">as </span>usize;
+        <span class="kw">let </span>ptr = ptr.add(offset);
+        <span class="kw">if </span>end_ptr.sub(needle.len()) &lt; ptr {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="ident">core::slice::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">needle</span>.<span class="ident">len</span>());
-        <span class="kw">if</span> <span class="ident">memcmp</span>(<span class="ident">needle</span>, <span class="ident">chunk</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">offset</span>);
+        <span class="kw">let </span>chunk = core::slice::from_raw_parts(ptr, needle.len());
+        <span class="kw">if </span>memcmp(needle, chunk) {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(offset);
         }
-        <span class="ident">match_offsets</span> <span class="op">&amp;=</span> <span class="ident">match_offsets</span> <span class="op">-</span> <span class="number">1</span>;
+        match_offsets &amp;= match_offsets - <span class="number">1</span>;
     }
-    <span class="prelude-val">None</span>
+    <span class="prelude-val">None
+</span>}
+
+<span class="doccomment">/// Accepts a chunk-relative offset and returns a haystack relative offset
+/// after updating the prefilter state.
+///
+/// See the same function with the same name in the prefilter variant of this
+/// algorithm to learned why it&#39;s tagged with inline(never). Even here, where
+/// the function is simpler, inlining it leads to poorer codegen. (Although
+/// it does improve some benchmarks, like prebuiltiter/huge-en/common-you.)
+</span><span class="attribute">#[cold]
+#[inline(never)]
+</span><span class="kw">fn </span>matched(start_ptr: <span class="kw-2">*const </span>u8, ptr: <span class="kw-2">*const </span>u8, chunki: usize) -&gt; usize {
+    diff(ptr, start_ptr) + chunki
 }
 
-<span class="doccomment">/// Accepts a chunk-relative offset and returns a haystack relative offset</span>
-<span class="doccomment">/// after updating the prefilter state.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See the same function with the same name in the prefilter variant of this</span>
-<span class="doccomment">/// algorithm to learned why it&#39;s tagged with inline(never). Even here, where</span>
-<span class="doccomment">/// the function is simpler, inlining it leads to poorer codegen. (Although</span>
-<span class="doccomment">/// it does improve some benchmarks, like prebuiltiter/huge-en/common-you.)</span>
-<span class="attribute">#[<span class="ident">cold</span>]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">never</span>)]</span>
-<span class="kw">fn</span> <span class="ident">matched</span>(<span class="ident">start_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">chunki</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">diff</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">+</span> <span class="ident">chunki</span>
-}
-
-<span class="doccomment">/// Subtract `b` from `a` and return the difference. `a` must be greater than</span>
-<span class="doccomment">/// or equal to `b`.</span>
-<span class="kw">fn</span> <span class="ident">diff</span>(<span class="ident">a</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">b</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="ident">usize</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">a</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">b</span>);
-    (<span class="ident">a</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">-</span> (<span class="ident">b</span> <span class="kw">as</span> <span class="ident">usize</span>)
+<span class="doccomment">/// Subtract `b` from `a` and return the difference. `a` must be greater than
+/// or equal to `b`.
+</span><span class="kw">fn </span>diff(a: <span class="kw-2">*const </span>u8, b: <span class="kw-2">*const </span>u8) -&gt; usize {
+    <span class="macro">debug_assert!</span>(a &gt;= b);
+    (a <span class="kw">as </span>usize) - (b <span class="kw">as </span>usize)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

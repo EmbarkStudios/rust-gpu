@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder_spirv.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>builder_spirv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder_spirv.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>builder_spirv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -695,697 +689,696 @@
 <span id="689">689</span>
 <span id="690">690</span>
 <span id="691">691</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx::CodegenCx</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv_type::SpirvType</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::symbols::Symbols</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::target::SpirvTarget</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::target_feature::TargetFeature</span>;
-<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Block</span>, <span class="ident">Builder</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">AddressingModel</span>, <span class="ident">Capability</span>, <span class="ident">MemoryModel</span>, <span class="ident">Op</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rspirv</span>::{<span class="ident">binary::Assemble</span>, <span class="ident">binary::Disassemble</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures::fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_span::symbol::Symbol</span>;
-<span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
-<span class="kw">use</span> <span class="ident">std::assert_matches::assert_matches</span>;
-<span class="kw">use</span> <span class="ident">std::cell</span>::{<span class="ident">RefCell</span>, <span class="ident">RefMut</span>};
-<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fs::File</span>, <span class="ident">io::Write</span>, <span class="ident">path::Path</span>};
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::builder;
+<span class="kw">use </span><span class="kw">crate</span>::codegen_cx::CodegenCx;
+<span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
+<span class="kw">use </span><span class="kw">crate</span>::symbols::Symbols;
+<span class="kw">use </span><span class="kw">crate</span>::target::SpirvTarget;
+<span class="kw">use </span><span class="kw">crate</span>::target_feature::TargetFeature;
+<span class="kw">use </span>rspirv::dr::{Block, Builder, Module, Operand};
+<span class="kw">use </span>rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, StorageClass, Word};
+<span class="kw">use </span>rspirv::{binary::Assemble, binary::Disassemble};
+<span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
+<span class="kw">use </span>rustc_middle::bug;
+<span class="kw">use </span>rustc_span::symbol::Symbol;
+<span class="kw">use </span>rustc_span::{Span, DUMMY_SP};
+<span class="kw">use </span>std::assert_matches::assert_matches;
+<span class="kw">use </span>std::cell::{RefCell, RefMut};
+<span class="kw">use </span>std::rc::Rc;
+<span class="kw">use </span>std::{fs::File, io::Write, path::Path};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpirvValueKind</span> {
-    <span class="ident">Def</span>(<span class="ident">Word</span>),
+<span class="attribute">#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+</span><span class="kw">pub enum </span>SpirvValueKind {
+    Def(Word),
 
-    <span class="doccomment">/// The ID of a global instruction matching a `SpirvConst`, but which cannot</span>
-    <span class="doccomment">/// pass validation. Used to error (or attach zombie spans), at the usesites</span>
-    <span class="doccomment">/// of such constants, instead of where they&#39;re generated (and cached).</span>
-    <span class="ident">IllegalConst</span>(<span class="ident">Word</span>),
+    <span class="doccomment">/// The ID of a global instruction matching a `SpirvConst`, but which cannot
+    /// pass validation. Used to error (or attach zombie spans), at the usesites
+    /// of such constants, instead of where they&#39;re generated (and cached).
+    </span>IllegalConst(Word),
 
-    <span class="doccomment">/// This can only happen in one specific case - which is as a result of</span>
-    <span class="doccomment">/// `codegen_buffer_store_intrinsic`, that function is supposed to return</span>
-    <span class="doccomment">/// OpTypeVoid, however because it gets inline by the compiler it can&#39;t.</span>
-    <span class="doccomment">/// Instead we return this, and trigger an error if we ever end up using the</span>
-    <span class="doccomment">/// result of this function call (which we can&#39;t).</span>
-    <span class="ident">IllegalTypeUsed</span>(<span class="ident">Word</span>),
+    <span class="doccomment">/// This can only happen in one specific case - which is as a result of
+    /// `codegen_buffer_store_intrinsic`, that function is supposed to return
+    /// OpTypeVoid, however because it gets inline by the compiler it can&#39;t.
+    /// Instead we return this, and trigger an error if we ever end up using the
+    /// result of this function call (which we can&#39;t).
+    </span>IllegalTypeUsed(Word),
 
-    <span class="comment">// FIXME(eddyb) this shouldn&#39;t be needed, but `rustc_codegen_ssa` still relies</span>
-    <span class="comment">// on converting `Function`s to `Value`s even for direct calls, the `Builder`</span>
-    <span class="comment">// should just have direct and indirect `call` variants (or a `Callee` enum).</span>
-    <span class="ident">FnAddr</span> {
-        <span class="ident">function</span>: <span class="ident">Word</span>,
+    <span class="comment">// FIXME(eddyb) this shouldn&#39;t be needed, but `rustc_codegen_ssa` still relies
+    // on converting `Function`s to `Value`s even for direct calls, the `Builder`
+    // should just have direct and indirect `call` variants (or a `Callee` enum).
+    </span>FnAddr {
+        function: Word,
     },
 
-    <span class="doccomment">/// Deferred pointer cast, for the `Logical` addressing model (which doesn&#39;t</span>
-    <span class="doccomment">/// really support raw pointers in the way Rust expects to be able to use).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The cast&#39;s target pointer type is the `ty` of the `SpirvValue` that has</span>
-    <span class="doccomment">/// `LogicalPtrCast` as its `kind`, as it would be redundant to have it here.</span>
-    <span class="ident">LogicalPtrCast</span> {
-        <span class="doccomment">/// Pointer value being cast.</span>
-        <span class="ident">original_ptr</span>: <span class="ident">Word</span>,
+    <span class="doccomment">/// Deferred pointer cast, for the `Logical` addressing model (which doesn&#39;t
+    /// really support raw pointers in the way Rust expects to be able to use).
+    ///
+    /// The cast&#39;s target pointer type is the `ty` of the `SpirvValue` that has
+    /// `LogicalPtrCast` as its `kind`, as it would be redundant to have it here.
+    </span>LogicalPtrCast {
+        <span class="doccomment">/// Pointer value being cast.
+        </span>original_ptr: Word,
 
-        <span class="doccomment">/// Pointee type of `original_ptr`.</span>
-        <span class="ident">original_pointee_ty</span>: <span class="ident">Word</span>,
+        <span class="doccomment">/// Pointee type of `original_ptr`.
+        </span>original_pointee_ty: Word,
 
-        <span class="doccomment">/// `OpUndef` of the right target pointer type, to attach zombies to.</span>
-        <span class="comment">// FIXME(eddyb) we should be using a real `OpBitcast` here, but we can&#39;t</span>
-        <span class="comment">// emit that on the fly during `SpirvValue::def`, due to builder locking.</span>
-        <span class="ident">zombie_target_undef</span>: <span class="ident">Word</span>,
+        <span class="doccomment">/// `OpUndef` of the right target pointer type, to attach zombies to.
+        </span><span class="comment">// FIXME(eddyb) we should be using a real `OpBitcast` here, but we can&#39;t
+        // emit that on the fly during `SpirvValue::def`, due to builder locking.
+        </span>zombie_target_undef: Word,
     },
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpirvValue</span> {
-    <span class="kw">pub</span> <span class="ident">kind</span>: <span class="ident">SpirvValueKind</span>,
-    <span class="kw">pub</span> <span class="ident">ty</span>: <span class="ident">Word</span>,
+<span class="attribute">#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+</span><span class="kw">pub struct </span>SpirvValue {
+    <span class="kw">pub </span>kind: SpirvValueKind,
+    <span class="kw">pub </span>ty: Word,
 }
 
-<span class="kw">impl</span> <span class="ident">SpirvValue</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">const_fold_load</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">kind</span> {
-            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>) <span class="op">|</span> <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)<span class="question-mark">?</span>.<span class="ident">clone</span>();
-                <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">val</span> {
-                    <span class="ident">SpirvConst::PtrTo</span> { <span class="ident">pointee</span> } =&gt; {
-                        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="self">self</span>.<span class="ident">ty</span>) {
-                            <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } =&gt; <span class="ident">pointee</span>,
-                            <span class="ident">ty</span> =&gt; <span class="macro">bug!</span>(<span class="string">&quot;load called on value that wasn&#39;t a pointer: {:?}&quot;</span>, <span class="ident">ty</span>),
+<span class="kw">impl </span>SpirvValue {
+    <span class="kw">pub fn </span>const_fold_load(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">match </span><span class="self">self</span>.kind {
+            SpirvValueKind::Def(id) | SpirvValueKind::IllegalConst(id) =&gt; {
+                <span class="kw">let </span>entry = cx.builder.id_to_const.borrow().get(<span class="kw-2">&amp;</span>id)<span class="question-mark">?</span>.clone();
+                <span class="kw">match </span>entry.val {
+                    SpirvConst::PtrTo { pointee } =&gt; {
+                        <span class="kw">let </span>ty = <span class="kw">match </span>cx.lookup_type(<span class="self">self</span>.ty) {
+                            SpirvType::Pointer { pointee } =&gt; pointee,
+                            ty =&gt; <span class="macro">bug!</span>(<span class="string">&quot;load called on value that wasn&#39;t a pointer: {:?}&quot;</span>, ty),
                         };
-                        <span class="comment">// FIXME(eddyb) deduplicate this `if`-`else` and its other copies.</span>
-                        <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">legal</span>.<span class="ident">is_ok</span>() {
-                            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">pointee</span>)
-                        } <span class="kw">else</span> {
-                            <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">pointee</span>)
+                        <span class="comment">// FIXME(eddyb) deduplicate this `if`-`else` and its other copies.
+                        </span><span class="kw">let </span>kind = <span class="kw">if </span>entry.legal.is_ok() {
+                            SpirvValueKind::Def(pointee)
+                        } <span class="kw">else </span>{
+                            SpirvValueKind::IllegalConst(pointee)
                         };
-                        <span class="prelude-val">Some</span>(<span class="ident">SpirvValue</span> { <span class="ident">kind</span>, <span class="ident">ty</span> })
+                        <span class="prelude-val">Some</span>(SpirvValue { kind, ty })
                     }
-                    <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                 }
             }
 
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="comment">// Important: we *cannot* use bx.emit() here, because this is called in</span>
-    <span class="comment">// contexts where the emitter is already locked. Doing so may cause subtle</span>
-    <span class="comment">// rare bugs.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def</span>(<span class="self">self</span>, <span class="ident">bx</span>: <span class="kw-2">&amp;</span><span class="ident">builder::Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">Word</span> {
-        <span class="self">self</span>.<span class="ident">def_with_span</span>(<span class="ident">bx</span>, <span class="ident">bx</span>.<span class="ident">span</span>())
+    <span class="comment">// Important: we *cannot* use bx.emit() here, because this is called in
+    // contexts where the emitter is already locked. Doing so may cause subtle
+    // rare bugs.
+    </span><span class="kw">pub fn </span>def(<span class="self">self</span>, bx: <span class="kw-2">&amp;</span>builder::Builder&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;) -&gt; Word {
+        <span class="self">self</span>.def_with_span(bx, bx.span())
     }
 
-    <span class="comment">// def and def_cx are separated, because Builder has a span associated with</span>
-    <span class="comment">// what it&#39;s currently emitting.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_cx</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">Word</span> {
-        <span class="self">self</span>.<span class="ident">def_with_span</span>(<span class="ident">cx</span>, <span class="ident">DUMMY_SP</span>)
+    <span class="comment">// def and def_cx are separated, because Builder has a span associated with
+    // what it&#39;s currently emitting.
+    </span><span class="kw">pub fn </span>def_cx(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Word {
+        <span class="self">self</span>.def_with_span(cx, DUMMY_SP)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_with_span</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>) -&gt; <span class="ident">Word</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">kind</span> {
-            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>) =&gt; <span class="ident">id</span>,
+    <span class="kw">pub fn </span>def_with_span(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;_</span>&gt;, span: Span) -&gt; Word {
+        <span class="kw">match </span><span class="self">self</span>.kind {
+            SpirvValueKind::Def(id) =&gt; id,
 
-            <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>()[<span class="kw-2">&amp;</span><span class="ident">id</span>];
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">legal</span>.<span class="ident">unwrap_err</span>() {
-                    <span class="ident">IllegalConst::Shallow</span>(<span class="ident">cause</span>) =&gt; {
-                        <span class="kw">if</span> <span class="kw">let</span> (
-                            <span class="ident">LeafIllegalConst::CompositeContainsPtrTo</span>,
-                            <span class="ident">SpirvConst::Composite</span>(<span class="ident">_fields</span>),
-                        ) <span class="op">=</span> (<span class="ident">cause</span>, <span class="kw-2">&amp;</span><span class="ident">entry</span>.<span class="ident">val</span>)
+            SpirvValueKind::IllegalConst(id) =&gt; {
+                <span class="kw">let </span>entry = <span class="kw-2">&amp;</span>cx.builder.id_to_const.borrow()[<span class="kw-2">&amp;</span>id];
+                <span class="kw">let </span>msg = <span class="kw">match </span>entry.legal.unwrap_err() {
+                    IllegalConst::Shallow(cause) =&gt; {
+                        <span class="kw">if let </span>(
+                            LeafIllegalConst::CompositeContainsPtrTo,
+                            SpirvConst::Composite(_fields),
+                        ) = (cause, <span class="kw-2">&amp;</span>entry.val)
                         {
-                            <span class="comment">// FIXME(eddyb) materialize this at runtime, using</span>
-                            <span class="comment">// `OpCompositeConstruct` (transitively, i.e. after</span>
-                            <span class="comment">// putting every field through `SpirvValue::def`),</span>
-                            <span class="comment">// if we have a `Builder` to do that in.</span>
-                            <span class="comment">// FIXME(eddyb) this isn&#39;t possible right now, as</span>
-                            <span class="comment">// the builder would be dynamically &quot;locked&quot; anyway</span>
-                            <span class="comment">// (i.e. attempting to do `bx.emit()` would panic).</span>
-                        }
+                            <span class="comment">// FIXME(eddyb) materialize this at runtime, using
+                            // `OpCompositeConstruct` (transitively, i.e. after
+                            // putting every field through `SpirvValue::def`),
+                            // if we have a `Builder` to do that in.
+                            // FIXME(eddyb) this isn&#39;t possible right now, as
+                            // the builder would be dynamically &quot;locked&quot; anyway
+                            // (i.e. attempting to do `bx.emit()` would panic).
+                        </span>}
 
-                        <span class="ident">cause</span>.<span class="ident">message</span>()
+                        cause.message()
                     }
 
-                    <span class="ident">IllegalConst::Indirect</span>(<span class="ident">cause</span>) =&gt; <span class="ident">cause</span>.<span class="ident">message</span>(),
+                    IllegalConst::Indirect(cause) =&gt; cause.message(),
                 };
 
-                <span class="comment">// HACK(eddyb) we don&#39;t know whether this constant originated</span>
-                <span class="comment">// in a system crate, so it&#39;s better to always zombie.</span>
-                <span class="ident">cx</span>.<span class="ident">zombie_even_in_user_code</span>(<span class="ident">id</span>, <span class="ident">span</span>, <span class="ident">msg</span>);
+                <span class="comment">// HACK(eddyb) we don&#39;t know whether this constant originated
+                // in a system crate, so it&#39;s better to always zombie.
+                </span>cx.zombie_even_in_user_code(id, span, msg);
 
-                <span class="ident">id</span>
+                id
             }
 
-            <span class="ident">SpirvValueKind::IllegalTypeUsed</span>(<span class="ident">id</span>) =&gt; {
-                <span class="ident">cx</span>.<span class="ident">tcx</span>
-                    .<span class="ident">sess</span>
-                    .<span class="ident">struct_span_err</span>(<span class="ident">span</span>, <span class="string">&quot;Can&#39;t use type as a value&quot;</span>)
-                    .<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Type: *{}&quot;</span>, <span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">id</span>)))
-                    .<span class="ident">emit</span>();
+            SpirvValueKind::IllegalTypeUsed(id) =&gt; {
+                cx.tcx
+                    .sess
+                    .struct_span_err(span, <span class="string">&quot;Can&#39;t use type as a value&quot;</span>)
+                    .note(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Type: *{}&quot;</span>, cx.debug_type(id)))
+                    .emit();
 
-                <span class="ident">id</span>
+                id
             }
 
-            <span class="ident">SpirvValueKind::FnAddr</span> { .. } =&gt; {
-                <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">is_system_crate</span>() {
-                    <span class="ident">cx</span>.<span class="ident">builder</span>
-                        .<span class="ident">const_to_id</span>
-                        .<span class="ident">borrow</span>()
-                        .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">WithType</span> {
-                            <span class="ident">ty</span>: <span class="self">self</span>.<span class="ident">ty</span>,
-                            <span class="ident">val</span>: <span class="ident">SpirvConst::ZombieUndefForFnAddr</span>,
+            SpirvValueKind::FnAddr { .. } =&gt; {
+                <span class="kw">if </span>cx.is_system_crate() {
+                    cx.builder
+                        .const_to_id
+                        .borrow()
+                        .get(<span class="kw-2">&amp;</span>WithType {
+                            ty: <span class="self">self</span>.ty,
+                            val: SpirvConst::ZombieUndefForFnAddr,
                         })
-                        .<span class="ident">expect</span>(<span class="string">&quot;FnAddr didn&#39;t go through proper undef registration&quot;</span>)
-                        .<span class="ident">val</span>
-                } <span class="kw">else</span> {
-                    <span class="ident">cx</span>.<span class="ident">tcx</span>
-                        .<span class="ident">sess</span>
-                        .<span class="ident">err</span>(<span class="string">&quot;Cannot use this function pointer for anything other than calls&quot;</span>);
-                    <span class="comment">// Because we never get beyond compilation (into e.g. linking),</span>
-                    <span class="comment">// emitting an invalid ID reference here is OK.</span>
-                    <span class="number">0</span>
-                }
+                        .expect(<span class="string">&quot;FnAddr didn&#39;t go through proper undef registration&quot;</span>)
+                        .val
+                } <span class="kw">else </span>{
+                    cx.tcx
+                        .sess
+                        .err(<span class="string">&quot;Cannot use this function pointer for anything other than calls&quot;</span>);
+                    <span class="comment">// Because we never get beyond compilation (into e.g. linking),
+                    // emitting an invalid ID reference here is OK.
+                    </span><span class="number">0
+                </span>}
             }
 
-            <span class="ident">SpirvValueKind::LogicalPtrCast</span> {
-                <span class="ident">original_ptr</span>: <span class="kw">_</span>,
-                <span class="ident">original_pointee_ty</span>,
-                <span class="ident">zombie_target_undef</span>,
+            SpirvValueKind::LogicalPtrCast {
+                original_ptr: <span class="kw">_</span>,
+                original_pointee_ty,
+                zombie_target_undef,
             } =&gt; {
-                <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">is_system_crate</span>() {
-                    <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(
-                        <span class="ident">zombie_target_undef</span>,
-                        <span class="ident">span</span>,
+                <span class="kw">if </span>cx.is_system_crate() {
+                    cx.zombie_with_span(
+                        zombie_target_undef,
+                        span,
                         <span class="kw-2">&amp;</span><span class="macro">format!</span>(
                             <span class="string">&quot;Cannot cast between pointer types. From: {}. To: {}.&quot;</span>,
-                            <span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">original_pointee_ty</span>),
-                            <span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="self">self</span>.<span class="ident">ty</span>)
+                            cx.debug_type(original_pointee_ty),
+                            cx.debug_type(<span class="self">self</span>.ty)
                         ),
                     );
-                } <span class="kw">else</span> {
-                    <span class="ident">cx</span>.<span class="ident">tcx</span>
-                        .<span class="ident">sess</span>
-                        .<span class="ident">struct_span_err</span>(<span class="ident">span</span>, <span class="string">&quot;Cannot cast between pointer types&quot;</span>)
-                        .<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;from: *{}&quot;</span>, <span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">original_pointee_ty</span>)))
-                        .<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;to: {}&quot;</span>, <span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="self">self</span>.<span class="ident">ty</span>)))
-                        .<span class="ident">emit</span>();
+                } <span class="kw">else </span>{
+                    cx.tcx
+                        .sess
+                        .struct_span_err(span, <span class="string">&quot;Cannot cast between pointer types&quot;</span>)
+                        .note(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;from: *{}&quot;</span>, cx.debug_type(original_pointee_ty)))
+                        .note(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;to: {}&quot;</span>, cx.debug_type(<span class="self">self</span>.ty)))
+                        .emit();
                 }
 
-                <span class="ident">zombie_target_undef</span>
+                zombie_target_undef
             }
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SpirvValueExt</span> {
-    <span class="kw">fn</span> <span class="ident">with_type</span>(<span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) -&gt; <span class="ident">SpirvValue</span>;
+<span class="kw">pub trait </span>SpirvValueExt {
+    <span class="kw">fn </span>with_type(<span class="self">self</span>, ty: Word) -&gt; SpirvValue;
 }
 
-<span class="kw">impl</span> <span class="ident">SpirvValueExt</span> <span class="kw">for</span> <span class="ident">Word</span> {
-    <span class="kw">fn</span> <span class="ident">with_type</span>(<span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="ident">SpirvValue</span> {
-            <span class="ident">kind</span>: <span class="ident">SpirvValueKind::Def</span>(<span class="self">self</span>),
-            <span class="ident">ty</span>,
+<span class="kw">impl </span>SpirvValueExt <span class="kw">for </span>Word {
+    <span class="kw">fn </span>with_type(<span class="self">self</span>, ty: Word) -&gt; SpirvValue {
+        SpirvValue {
+            kind: SpirvValueKind::Def(<span class="self">self</span>),
+            ty,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpirvConst</span> {
-    <span class="ident">U32</span>(<span class="ident">u32</span>),
-    <span class="ident">U64</span>(<span class="ident">u64</span>),
-    <span class="doccomment">/// f32 isn&#39;t hash, so store bits</span>
-    <span class="ident">F32</span>(<span class="ident">u32</span>),
-    <span class="doccomment">/// f64 isn&#39;t hash, so store bits</span>
-    <span class="ident">F64</span>(<span class="ident">u64</span>),
-    <span class="ident">Bool</span>(<span class="ident">bool</span>),
+<span class="attribute">#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+</span><span class="kw">pub enum </span>SpirvConst {
+    U32(u32),
+    U64(u64),
+    <span class="doccomment">/// f32 isn&#39;t hash, so store bits
+    </span>F32(u32),
+    <span class="doccomment">/// f64 isn&#39;t hash, so store bits
+    </span>F64(u64),
+    Bool(bool),
 
-    <span class="ident">Null</span>,
-    <span class="ident">Undef</span>,
+    Null,
+    Undef,
 
-    <span class="doccomment">/// Like `Undef`, but cached separately to avoid `FnAddr` zombies accidentally</span>
-    <span class="doccomment">/// applying to non-zombie `Undef`s of the same types.</span>
-    <span class="comment">// FIXME(eddyb) include the function ID so that multiple `fn` pointers to</span>
-    <span class="comment">// different functions, but of the same type, don&#39;t overlap their zombies.</span>
-    <span class="ident">ZombieUndefForFnAddr</span>,
+    <span class="doccomment">/// Like `Undef`, but cached separately to avoid `FnAddr` zombies accidentally
+    /// applying to non-zombie `Undef`s of the same types.
+    </span><span class="comment">// FIXME(eddyb) include the function ID so that multiple `fn` pointers to
+    // different functions, but of the same type, don&#39;t overlap their zombies.
+    </span>ZombieUndefForFnAddr,
 
-    <span class="ident">Composite</span>(<span class="ident">Rc</span><span class="op">&lt;</span>[<span class="ident">Word</span>]<span class="op">&gt;</span>),
+    Composite(Rc&lt;[Word]&gt;),
 
-    <span class="doccomment">/// Pointer to constant data, i.e. `&amp;pointee`, represented as an `OpVariable`</span>
-    <span class="doccomment">/// in the `Private` storage class, and with `pointee` as its initializer.</span>
-    <span class="ident">PtrTo</span> {
-        <span class="ident">pointee</span>: <span class="ident">Word</span>,
+    <span class="doccomment">/// Pointer to constant data, i.e. `&amp;pointee`, represented as an `OpVariable`
+    /// in the `Private` storage class, and with `pointee` as its initializer.
+    </span>PtrTo {
+        pointee: Word,
     },
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">struct</span> <span class="ident">WithType</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">ty</span>: <span class="ident">Word</span>,
-    <span class="ident">val</span>: <span class="ident">V</span>,
+<span class="attribute">#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+</span><span class="kw">struct </span>WithType&lt;V&gt; {
+    ty: Word,
+    val: V,
 }
 
-<span class="doccomment">/// Primary causes for a `SpirvConst` to be deemed illegal.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">LeafIllegalConst</span> {
-    <span class="doccomment">/// `SpirvConst::Composite` containing a `SpirvConst::PtrTo` as a field.</span>
-    <span class="doccomment">/// This is illegal because `OpConstantComposite` must have other constants</span>
-    <span class="doccomment">/// as its operands, and `OpVariable`s are never considered constant.</span>
-    <span class="comment">// FIXME(eddyb) figure out if this is an accidental omission in SPIR-V.</span>
-    <span class="ident">CompositeContainsPtrTo</span>,
+<span class="doccomment">/// Primary causes for a `SpirvConst` to be deemed illegal.
+</span><span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">enum </span>LeafIllegalConst {
+    <span class="doccomment">/// `SpirvConst::Composite` containing a `SpirvConst::PtrTo` as a field.
+    /// This is illegal because `OpConstantComposite` must have other constants
+    /// as its operands, and `OpVariable`s are never considered constant.
+    </span><span class="comment">// FIXME(eddyb) figure out if this is an accidental omission in SPIR-V.
+    </span>CompositeContainsPtrTo,
 }
 
-<span class="kw">impl</span> <span class="ident">LeafIllegalConst</span> {
-    <span class="kw">fn</span> <span class="ident">message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::CompositeContainsPtrTo</span> =&gt; {
-                <span class="string">&quot;constant arrays/structs cannot contain pointers to other constants&quot;</span>
-            }
+<span class="kw">impl </span>LeafIllegalConst {
+    <span class="kw">fn </span>message(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::CompositeContainsPtrTo =&gt; {
+                <span class="string">&quot;constant arrays/structs cannot contain pointers to other constants&quot;
+            </span>}
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">IllegalConst</span> {
-    <span class="doccomment">/// This `SpirvConst` is (or contains) a &quot;leaf&quot; illegal constant. As there</span>
-    <span class="doccomment">/// is no indirection, some of these could still be materialized at runtime,</span>
-    <span class="doccomment">/// using e.g. `OpCompositeConstruct` instead of `OpConstantComposite`.</span>
-    <span class="ident">Shallow</span>(<span class="ident">LeafIllegalConst</span>),
+<span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">enum </span>IllegalConst {
+    <span class="doccomment">/// This `SpirvConst` is (or contains) a &quot;leaf&quot; illegal constant. As there
+    /// is no indirection, some of these could still be materialized at runtime,
+    /// using e.g. `OpCompositeConstruct` instead of `OpConstantComposite`.
+    </span>Shallow(LeafIllegalConst),
 
-    <span class="doccomment">/// This `SpirvConst` is (or contains/points to) a `PtrTo` which points to</span>
-    <span class="doccomment">/// a &quot;leaf&quot; illegal constant. As the data would have to live for `&#39;static`,</span>
-    <span class="doccomment">/// there is no way to materialize it as a pointer in SPIR-V. However, it</span>
-    <span class="doccomment">/// could still be legalized during codegen by e.g. folding loads from it.</span>
-    <span class="ident">Indirect</span>(<span class="ident">LeafIllegalConst</span>),
+    <span class="doccomment">/// This `SpirvConst` is (or contains/points to) a `PtrTo` which points to
+    /// a &quot;leaf&quot; illegal constant. As the data would have to live for `&#39;static`,
+    /// there is no way to materialize it as a pointer in SPIR-V. However, it
+    /// could still be legalized during codegen by e.g. folding loads from it.
+    </span>Indirect(LeafIllegalConst),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">WithConstLegality</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">val</span>: <span class="ident">V</span>,
-    <span class="ident">legal</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">IllegalConst</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">struct </span>WithConstLegality&lt;V&gt; {
+    val: V,
+    legal: <span class="prelude-ty">Result</span>&lt;(), IllegalConst&gt;,
 }
 
-<span class="doccomment">/// Cursor system:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The LLVM module builder model (and therefore `codegen_ssa`) assumes that there is a central</span>
-<span class="doccomment">/// module object, then, builder objects are created pointing at that central module object (e.g.</span>
-<span class="doccomment">/// for adding instructions to a basic block).  Several of these builder objects can be live at the</span>
-<span class="doccomment">/// same time, mutating the central module object all at once.  Unfortunately, rspirv doesn&#39;t work</span>
-<span class="doccomment">/// like that. Instead, there is a single builder object, which owns a module and a &quot;cursor&quot;. This</span>
-<span class="doccomment">/// cursor indicates to the builder where to append instructions when an instruction is added -</span>
-<span class="doccomment">/// e.g. if add() is called, then `OpAdd` is appended to the basic block pointed to by the cursor.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// So! We emulate the LLVM system by treating the rspirv Builder as the &quot;central module object&quot;,</span>
-<span class="doccomment">/// then, when a &quot;builder object&quot; is created, we store a reference to a `RefCell&lt;rspirv builder&gt;`,</span>
-<span class="doccomment">/// *as well as* a copy of the cursor for that particular builder. Whenever the `RefCell` is</span>
-<span class="doccomment">/// borrowed, then we stomp over the rspirv cursor with our copy, causing the duration of that</span>
-<span class="doccomment">/// `RefCell` borrow to use that cursor.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// So, if you&#39;re writing code inside `crate::builder::Builder`, then `self.emit()` will use</span>
-<span class="doccomment">/// `self.cursor` (the current basic block) as that &quot;stomp-over&quot; cursor and return a mutable</span>
-<span class="doccomment">/// reference to the rspirv builder. If you&#39;re writing code elsewhere (`codegen_cx::CodegenCx`),</span>
-<span class="doccomment">/// then `self.emit_global()` will use the generic &quot;global cursor&quot; and return a mutable reference</span>
-<span class="doccomment">/// to the rspirv builder with no basic block nor function selected, i.e. any instructions emitted</span>
-<span class="doccomment">/// will be in the global section.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">must_use</span> <span class="op">=</span> <span class="string">&quot;BuilderCursor should usually be assigned to the Builder.cursor field&quot;</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BuilderCursor</span> {
-    <span class="kw">pub</span> <span class="ident">function</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">block</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Cursor system:
+///
+/// The LLVM module builder model (and therefore `codegen_ssa`) assumes that there is a central
+/// module object, then, builder objects are created pointing at that central module object (e.g.
+/// for adding instructions to a basic block).  Several of these builder objects can be live at the
+/// same time, mutating the central module object all at once.  Unfortunately, rspirv doesn&#39;t work
+/// like that. Instead, there is a single builder object, which owns a module and a &quot;cursor&quot;. This
+/// cursor indicates to the builder where to append instructions when an instruction is added -
+/// e.g. if add() is called, then `OpAdd` is appended to the basic block pointed to by the cursor.
+///
+/// So! We emulate the LLVM system by treating the rspirv Builder as the &quot;central module object&quot;,
+/// then, when a &quot;builder object&quot; is created, we store a reference to a `RefCell&lt;rspirv builder&gt;`,
+/// *as well as* a copy of the cursor for that particular builder. Whenever the `RefCell` is
+/// borrowed, then we stomp over the rspirv cursor with our copy, causing the duration of that
+/// `RefCell` borrow to use that cursor.
+///
+/// So, if you&#39;re writing code inside `crate::builder::Builder`, then `self.emit()` will use
+/// `self.cursor` (the current basic block) as that &quot;stomp-over&quot; cursor and return a mutable
+/// reference to the rspirv builder. If you&#39;re writing code elsewhere (`codegen_cx::CodegenCx`),
+/// then `self.emit_global()` will use the generic &quot;global cursor&quot; and return a mutable reference
+/// to the rspirv builder with no basic block nor function selected, i.e. any instructions emitted
+/// will be in the global section.
+</span><span class="attribute">#[derive(Debug, Default, Copy, Clone)]
+#[must_use = <span class="string">&quot;BuilderCursor should usually be assigned to the Builder.cursor field&quot;</span>]
+</span><span class="kw">pub struct </span>BuilderCursor {
+    <span class="kw">pub </span>function: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    <span class="kw">pub </span>block: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BuilderSpirv</span> {
-    <span class="ident">builder</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Builder</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>BuilderSpirv {
+    builder: RefCell&lt;Builder&gt;,
 
-    <span class="comment">// Bidirectional maps between `SpirvConst` and the ID of the defined global</span>
-    <span class="comment">// (e.g. `OpConstant...`) instruction.</span>
-    <span class="comment">// NOTE(eddyb) both maps have `WithConstLegality` around their keys, which</span>
-    <span class="comment">// allows getting that legality information without additional lookups.</span>
-    <span class="ident">const_to_id</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">WithType</span><span class="op">&lt;</span><span class="ident">SpirvConst</span><span class="op">&gt;</span>, <span class="ident">WithConstLegality</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">id_to_const</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">WithConstLegality</span><span class="op">&lt;</span><span class="ident">SpirvConst</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">string_cache</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="comment">// Bidirectional maps between `SpirvConst` and the ID of the defined global
+    // (e.g. `OpConstant...`) instruction.
+    // NOTE(eddyb) both maps have `WithConstLegality` around their keys, which
+    // allows getting that legality information without additional lookups.
+    </span>const_to_id: RefCell&lt;FxHashMap&lt;WithType&lt;SpirvConst&gt;, WithConstLegality&lt;Word&gt;&gt;&gt;,
+    id_to_const: RefCell&lt;FxHashMap&lt;Word, WithConstLegality&lt;SpirvConst&gt;&gt;&gt;,
+    string_cache: RefCell&lt;FxHashMap&lt;String, Word&gt;&gt;,
 
-    <span class="ident">enabled_capabilities</span>: <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Capability</span><span class="op">&gt;</span>,
-    <span class="ident">enabled_extensions</span>: <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Symbol</span><span class="op">&gt;</span>,
+    enabled_capabilities: FxHashSet&lt;Capability&gt;,
+    enabled_extensions: FxHashSet&lt;Symbol&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">BuilderSpirv</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">Symbols</span>, <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">SpirvTarget</span>, <span class="ident">features</span>: <span class="kw-2">&amp;</span>[<span class="ident">TargetFeature</span>]) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">target</span>.<span class="ident">spirv_version</span>();
-        <span class="kw">let</span> <span class="ident">memory_model</span> <span class="op">=</span> <span class="ident">target</span>.<span class="ident">memory_model</span>();
+<span class="kw">impl </span>BuilderSpirv {
+    <span class="kw">pub fn </span>new(sym: <span class="kw-2">&amp;</span>Symbols, target: <span class="kw-2">&amp;</span>SpirvTarget, features: <span class="kw-2">&amp;</span>[TargetFeature]) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>version = target.spirv_version();
+        <span class="kw">let </span>memory_model = target.memory_model();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder::new</span>();
-        <span class="ident">builder</span>.<span class="ident">set_version</span>(<span class="ident">version</span>.<span class="number">0</span>, <span class="ident">version</span>.<span class="number">1</span>);
-        <span class="ident">builder</span>.<span class="ident">module_mut</span>().<span class="ident">header</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>().<span class="ident">generator</span> <span class="op">=</span> <span class="number">0x001B_0000</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = Builder::new();
+        builder.set_version(version.<span class="number">0</span>, version.<span class="number">1</span>);
+        builder.module_mut().header.as_mut().unwrap().generator = <span class="number">0x001B_0000</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enabled_capabilities</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enabled_extensions</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>enabled_capabilities = FxHashSet::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>enabled_extensions = FxHashSet::default();
 
-        <span class="kw">fn</span> <span class="ident">add_cap</span>(
-            <span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Builder</span>,
-            <span class="ident">enabled_capabilities</span>: <span class="kw-2">&amp;mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Capability</span><span class="op">&gt;</span>,
-            <span class="ident">cap</span>: <span class="ident">Capability</span>,
+        <span class="kw">fn </span>add_cap(
+            builder: <span class="kw-2">&amp;mut </span>Builder,
+            enabled_capabilities: <span class="kw-2">&amp;mut </span>FxHashSet&lt;Capability&gt;,
+            cap: Capability,
         ) {
-            <span class="comment">// This should be the only callsite of Builder::capability (aside from tests), to make</span>
-            <span class="comment">// sure the hashset stays in sync.</span>
-            <span class="ident">builder</span>.<span class="ident">capability</span>(<span class="ident">cap</span>);
-            <span class="ident">enabled_capabilities</span>.<span class="ident">insert</span>(<span class="ident">cap</span>);
+            <span class="comment">// This should be the only callsite of Builder::capability (aside from tests), to make
+            // sure the hashset stays in sync.
+            </span>builder.capability(cap);
+            enabled_capabilities.insert(cap);
         }
-        <span class="kw">fn</span> <span class="ident">add_ext</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Builder</span>, <span class="ident">enabled_extensions</span>: <span class="kw-2">&amp;mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Symbol</span><span class="op">&gt;</span>, <span class="ident">ext</span>: <span class="ident">Symbol</span>) {
-            <span class="comment">// This should be the only callsite of Builder::extension (aside from tests), to make</span>
-            <span class="comment">// sure the hashset stays in sync.</span>
-            <span class="ident">builder</span>.<span class="ident">extension</span>(<span class="ident">ext</span>.<span class="ident">as_str</span>());
-            <span class="ident">enabled_extensions</span>.<span class="ident">insert</span>(<span class="ident">ext</span>);
+        <span class="kw">fn </span>add_ext(builder: <span class="kw-2">&amp;mut </span>Builder, enabled_extensions: <span class="kw-2">&amp;mut </span>FxHashSet&lt;Symbol&gt;, ext: Symbol) {
+            <span class="comment">// This should be the only callsite of Builder::extension (aside from tests), to make
+            // sure the hashset stays in sync.
+            </span>builder.extension(ext.as_str());
+            enabled_extensions.insert(ext);
         }
 
-        <span class="kw">for</span> <span class="ident">feature</span> <span class="kw">in</span> <span class="ident">features</span> {
-            <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">feature</span> {
-                <span class="ident">TargetFeature::Capability</span>(<span class="ident">cap</span>) =&gt; {
-                    <span class="ident">add_cap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;mut</span> <span class="ident">enabled_capabilities</span>, <span class="ident">cap</span>);
+        <span class="kw">for </span>feature <span class="kw">in </span>features {
+            <span class="kw">match </span><span class="kw-2">*</span>feature {
+                TargetFeature::Capability(cap) =&gt; {
+                    add_cap(<span class="kw-2">&amp;mut </span>builder, <span class="kw-2">&amp;mut </span>enabled_capabilities, cap);
                 }
-                <span class="ident">TargetFeature::Extension</span>(<span class="ident">ext</span>) =&gt; {
-                    <span class="ident">add_ext</span>(<span class="kw-2">&amp;mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;mut</span> <span class="ident">enabled_extensions</span>, <span class="ident">ext</span>);
+                TargetFeature::Extension(ext) =&gt; {
+                    add_ext(<span class="kw-2">&amp;mut </span>builder, <span class="kw-2">&amp;mut </span>enabled_extensions, ext);
                 }
             }
         }
 
-        <span class="ident">add_cap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;mut</span> <span class="ident">enabled_capabilities</span>, <span class="ident">Capability::Shader</span>);
-        <span class="kw">if</span> <span class="ident">memory_model</span> <span class="op">==</span> <span class="ident">MemoryModel::Vulkan</span> {
-            <span class="kw">if</span> <span class="ident">version</span> <span class="op">&lt;</span> (<span class="number">1</span>, <span class="number">5</span>) {
-                <span class="ident">add_ext</span>(
-                    <span class="kw-2">&amp;mut</span> <span class="ident">builder</span>,
-                    <span class="kw-2">&amp;mut</span> <span class="ident">enabled_extensions</span>,
-                    <span class="ident">sym</span>.<span class="ident">spv_khr_vulkan_memory_model</span>,
+        add_cap(<span class="kw-2">&amp;mut </span>builder, <span class="kw-2">&amp;mut </span>enabled_capabilities, Capability::Shader);
+        <span class="kw">if </span>memory_model == MemoryModel::Vulkan {
+            <span class="kw">if </span>version &lt; (<span class="number">1</span>, <span class="number">5</span>) {
+                add_ext(
+                    <span class="kw-2">&amp;mut </span>builder,
+                    <span class="kw-2">&amp;mut </span>enabled_extensions,
+                    sym.spv_khr_vulkan_memory_model,
                 );
             }
-            <span class="ident">add_cap</span>(
-                <span class="kw-2">&amp;mut</span> <span class="ident">builder</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">enabled_capabilities</span>,
-                <span class="ident">Capability::VulkanMemoryModel</span>,
+            add_cap(
+                <span class="kw-2">&amp;mut </span>builder,
+                <span class="kw-2">&amp;mut </span>enabled_capabilities,
+                Capability::VulkanMemoryModel,
             );
         }
 
-        <span class="comment">// The linker will always be ran on this module</span>
-        <span class="ident">add_cap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;mut</span> <span class="ident">enabled_capabilities</span>, <span class="ident">Capability::Linkage</span>);
+        <span class="comment">// The linker will always be ran on this module
+        </span>add_cap(<span class="kw-2">&amp;mut </span>builder, <span class="kw-2">&amp;mut </span>enabled_capabilities, Capability::Linkage);
 
-        <span class="ident">builder</span>.<span class="ident">memory_model</span>(<span class="ident">AddressingModel::Logical</span>, <span class="ident">memory_model</span>);
+        builder.memory_model(AddressingModel::Logical, memory_model);
 
-        <span class="self">Self</span> {
-            <span class="ident">builder</span>: <span class="ident">RefCell::new</span>(<span class="ident">builder</span>),
-            <span class="ident">const_to_id</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">id_to_const</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">string_cache</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">enabled_capabilities</span>,
-            <span class="ident">enabled_extensions</span>,
+        <span class="self">Self </span>{
+            builder: RefCell::new(builder),
+            const_to_id: Default::default(),
+            id_to_const: Default::default(),
+            string_cache: Default::default(),
+            enabled_capabilities,
+            enabled_extensions,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="self">self</span>) -&gt; <span class="ident">Module</span> {
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">into_inner</span>().<span class="ident">module</span>()
+    <span class="kw">pub fn </span>finalize(<span class="self">self</span>) -&gt; Module {
+        <span class="self">self</span>.builder.into_inner().module()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dump_module_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow</span>().<span class="ident">module_ref</span>().<span class="ident">disassemble</span>()
+    <span class="kw">pub fn </span>dump_module_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="self">self</span>.builder.borrow().module_ref().disassemble()
     }
 
-    <span class="doccomment">/// Helper function useful to place right before a crash, to debug the module state.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dump_module</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow</span>().<span class="ident">module_ref</span>().<span class="ident">assemble</span>();
-        <span class="ident">File::create</span>(<span class="ident">path</span>)
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">write_all</span>(<span class="ident">spirv_tools::binary::from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>))
-            .<span class="ident">unwrap</span>();
+    <span class="doccomment">/// Helper function useful to place right before a crash, to debug the module state.
+    </span><span class="kw">pub fn </span>dump_module(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw">impl </span>AsRef&lt;Path&gt;) {
+        <span class="kw">let </span>module = <span class="self">self</span>.builder.borrow().module_ref().assemble();
+        File::create(path)
+            .unwrap()
+            .write_all(spirv_tools::binary::from_binary(<span class="kw-2">&amp;</span>module))
+            .unwrap();
     }
 
-    <span class="doccomment">/// See comment on `BuilderCursor`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cursor</span>: <span class="ident">BuilderCursor</span>) -&gt; <span class="ident">RefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Builder</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow_mut</span>();
-        <span class="comment">// select_function does bounds checks and other relatively expensive things, so don&#39;t just call it</span>
-        <span class="comment">// unconditionally.</span>
-        <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">selected_function</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">function</span> {
-            <span class="ident">builder</span>.<span class="ident">select_function</span>(<span class="ident">cursor</span>.<span class="ident">function</span>).<span class="ident">unwrap</span>();
+    <span class="doccomment">/// See comment on `BuilderCursor`
+    </span><span class="kw">pub fn </span>builder(<span class="kw-2">&amp;</span><span class="self">self</span>, cursor: BuilderCursor) -&gt; RefMut&lt;<span class="lifetime">&#39;_</span>, Builder&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">self</span>.builder.borrow_mut();
+        <span class="comment">// select_function does bounds checks and other relatively expensive things, so don&#39;t just call it
+        // unconditionally.
+        </span><span class="kw">if </span>builder.selected_function() != cursor.function {
+            builder.select_function(cursor.function).unwrap();
         }
-        <span class="kw">if</span> <span class="ident">cursor</span>.<span class="ident">function</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> <span class="ident">builder</span>.<span class="ident">selected_block</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">block</span> {
-            <span class="ident">builder</span>.<span class="ident">select_block</span>(<span class="ident">cursor</span>.<span class="ident">block</span>).<span class="ident">unwrap</span>();
+        <span class="kw">if </span>cursor.function.is_some() &amp;&amp; builder.selected_block() != cursor.block {
+            builder.select_block(cursor.block).unwrap();
         }
-        <span class="ident">builder</span>
+        builder
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">capability</span>: <span class="ident">Capability</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">enabled_capabilities</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">capability</span>)
+    <span class="kw">pub fn </span>has_capability(<span class="kw-2">&amp;</span><span class="self">self</span>, capability: Capability) -&gt; bool {
+        <span class="self">self</span>.enabled_capabilities.contains(<span class="kw-2">&amp;</span>capability)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_extension</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">extension</span>: <span class="ident">Symbol</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">enabled_extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">extension</span>)
+    <span class="kw">pub fn </span>has_extension(<span class="kw-2">&amp;</span><span class="self">self</span>, extension: Symbol) -&gt; bool {
+        <span class="self">self</span>.enabled_extensions.contains(<span class="kw-2">&amp;</span>extension)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_function_by_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Word</span>) -&gt; <span class="ident">BuilderCursor</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow_mut</span>();
-        <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">func</span>) <span class="kw">in</span> <span class="ident">builder</span>.<span class="ident">module_ref</span>().<span class="ident">functions</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="ident">func</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">result_id</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) {
-                <span class="ident">builder</span>.<span class="ident">select_function</span>(<span class="prelude-val">Some</span>(<span class="ident">index</span>)).<span class="ident">unwrap</span>();
-                <span class="kw">return</span> <span class="ident">BuilderCursor</span> {
-                    <span class="ident">function</span>: <span class="prelude-val">Some</span>(<span class="ident">index</span>),
-                    <span class="ident">block</span>: <span class="prelude-val">None</span>,
+    <span class="kw">pub fn </span>select_function_by_id(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Word) -&gt; BuilderCursor {
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">self</span>.builder.borrow_mut();
+        <span class="kw">for </span>(index, func) <span class="kw">in </span>builder.module_ref().functions.iter().enumerate() {
+            <span class="kw">if </span>func.def.as_ref().and_then(|i| i.result_id) == <span class="prelude-val">Some</span>(id) {
+                builder.select_function(<span class="prelude-val">Some</span>(index)).unwrap();
+                <span class="kw">return </span>BuilderCursor {
+                    function: <span class="prelude-val">Some</span>(index),
+                    block: <span class="prelude-val">None</span>,
                 };
             }
         }
 
-        <span class="macro">bug!</span>(<span class="string">&quot;Function not found: {}&quot;</span>, <span class="ident">id</span>);
+        <span class="macro">bug!</span>(<span class="string">&quot;Function not found: {}&quot;</span>, id);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_constant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>, <span class="ident">val</span>: <span class="ident">SpirvConst</span>) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">val_with_type</span> <span class="op">=</span> <span class="ident">WithType</span> { <span class="ident">ty</span>, <span class="ident">val</span> };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>(<span class="ident">BuilderCursor::default</span>());
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">const_to_id</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">val_with_type</span>) {
-            <span class="comment">// FIXME(eddyb) deduplicate this `if`-`else` and its other copies.</span>
-            <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">legal</span>.<span class="ident">is_ok</span>() {
-                <span class="ident">SpirvValueKind::Def</span>(<span class="ident">entry</span>.<span class="ident">val</span>)
-            } <span class="kw">else</span> {
-                <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">entry</span>.<span class="ident">val</span>)
+    <span class="kw">pub fn </span>def_constant(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word, val: SpirvConst) -&gt; SpirvValue {
+        <span class="kw">let </span>val_with_type = WithType { ty, val };
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">self</span>.builder(BuilderCursor::default());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = <span class="self">self</span>.const_to_id.borrow().get(<span class="kw-2">&amp;</span>val_with_type) {
+            <span class="comment">// FIXME(eddyb) deduplicate this `if`-`else` and its other copies.
+            </span><span class="kw">let </span>kind = <span class="kw">if </span>entry.legal.is_ok() {
+                SpirvValueKind::Def(entry.val)
+            } <span class="kw">else </span>{
+                SpirvValueKind::IllegalConst(entry.val)
             };
-            <span class="kw">return</span> <span class="ident">SpirvValue</span> { <span class="ident">kind</span>, <span class="ident">ty</span> };
+            <span class="kw">return </span>SpirvValue { kind, ty };
         }
-        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">val_with_type</span>.<span class="ident">val</span>;
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">val</span> {
-            <span class="ident">SpirvConst::U32</span>(<span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_u32</span>(<span class="ident">ty</span>, <span class="ident">v</span>),
-            <span class="ident">SpirvConst::U64</span>(<span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_u64</span>(<span class="ident">ty</span>, <span class="ident">v</span>),
-            <span class="ident">SpirvConst::F32</span>(<span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_f32</span>(<span class="ident">ty</span>, <span class="ident">f32::from_bits</span>(<span class="ident">v</span>)),
-            <span class="ident">SpirvConst::F64</span>(<span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_f64</span>(<span class="ident">ty</span>, <span class="ident">f64::from_bits</span>(<span class="ident">v</span>)),
-            <span class="ident">SpirvConst::Bool</span>(<span class="ident">v</span>) =&gt; {
-                <span class="kw">if</span> <span class="ident">v</span> {
-                    <span class="ident">builder</span>.<span class="ident">constant_true</span>(<span class="ident">ty</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">builder</span>.<span class="ident">constant_false</span>(<span class="ident">ty</span>)
+        <span class="kw">let </span>val = val_with_type.val;
+        <span class="kw">let </span>id = <span class="kw">match </span>val {
+            SpirvConst::U32(v) =&gt; builder.constant_u32(ty, v),
+            SpirvConst::U64(v) =&gt; builder.constant_u64(ty, v),
+            SpirvConst::F32(v) =&gt; builder.constant_f32(ty, f32::from_bits(v)),
+            SpirvConst::F64(v) =&gt; builder.constant_f64(ty, f64::from_bits(v)),
+            SpirvConst::Bool(v) =&gt; {
+                <span class="kw">if </span>v {
+                    builder.constant_true(ty)
+                } <span class="kw">else </span>{
+                    builder.constant_false(ty)
                 }
             }
 
-            <span class="ident">SpirvConst::Null</span> =&gt; <span class="ident">builder</span>.<span class="ident">constant_null</span>(<span class="ident">ty</span>),
-            <span class="ident">SpirvConst::Undef</span> <span class="op">|</span> <span class="ident">SpirvConst::ZombieUndefForFnAddr</span> =&gt; <span class="ident">builder</span>.<span class="ident">undef</span>(<span class="ident">ty</span>, <span class="prelude-val">None</span>),
+            SpirvConst::Null =&gt; builder.constant_null(ty),
+            SpirvConst::Undef | SpirvConst::ZombieUndefForFnAddr =&gt; builder.undef(ty, <span class="prelude-val">None</span>),
 
-            <span class="ident">SpirvConst::Composite</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) =&gt; <span class="ident">builder</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">copied</span>()),
+            SpirvConst::Composite(<span class="kw-2">ref </span>v) =&gt; builder.constant_composite(ty, v.iter().copied()),
 
-            <span class="ident">SpirvConst::PtrTo</span> { <span class="ident">pointee</span> } =&gt; {
-                <span class="ident">builder</span>.<span class="ident">variable</span>(<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">StorageClass::Private</span>, <span class="prelude-val">Some</span>(<span class="ident">pointee</span>))
+            SpirvConst::PtrTo { pointee } =&gt; {
+                builder.variable(ty, <span class="prelude-val">None</span>, StorageClass::Private, <span class="prelude-val">Some</span>(pointee))
             }
         };
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::match_same_arms</span>)]</span>
-        <span class="kw">let</span> <span class="ident">legal</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">val</span> {
-            <span class="ident">SpirvConst::U32</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">SpirvConst::U64</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">SpirvConst::F32</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">SpirvConst::F64</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">SpirvConst::Bool</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
+        <span class="attribute">#[allow(clippy::match_same_arms)]
+        </span><span class="kw">let </span>legal = <span class="kw">match </span>val {
+            SpirvConst::U32(<span class="kw">_</span>)
+            | SpirvConst::U64(<span class="kw">_</span>)
+            | SpirvConst::F32(<span class="kw">_</span>)
+            | SpirvConst::F64(<span class="kw">_</span>)
+            | SpirvConst::Bool(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
 
-            <span class="ident">SpirvConst::Null</span> =&gt; {
-                <span class="comment">// FIXME(eddyb) check that the type supports `OpConstantNull`.</span>
-                <span class="prelude-val">Ok</span>(())
+            SpirvConst::Null =&gt; {
+                <span class="comment">// FIXME(eddyb) check that the type supports `OpConstantNull`.
+                </span><span class="prelude-val">Ok</span>(())
             }
-            <span class="ident">SpirvConst::Undef</span> =&gt; {
-                <span class="comment">// FIXME(eddyb) check that the type supports `OpUndef`.</span>
-                <span class="prelude-val">Ok</span>(())
-            }
-
-            <span class="ident">SpirvConst::ZombieUndefForFnAddr</span> =&gt; {
-                <span class="comment">// This can be considered legal as it&#39;s already marked as zombie.</span>
-                <span class="comment">// FIXME(eddyb) is it possible for the original zombie to lack a</span>
-                <span class="comment">// span, and should we go through `IllegalConst` in order to be</span>
-                <span class="comment">// able to attach a proper usesite span?</span>
-                <span class="prelude-val">Ok</span>(())
+            SpirvConst::Undef =&gt; {
+                <span class="comment">// FIXME(eddyb) check that the type supports `OpUndef`.
+                </span><span class="prelude-val">Ok</span>(())
             }
 
-            <span class="ident">SpirvConst::Composite</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) =&gt; <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="prelude-val">Ok</span>(()), <span class="op">|</span><span class="ident">composite_legal</span>, <span class="ident">field</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">field_entry</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>()[<span class="ident">field</span>];
-                <span class="kw">let</span> <span class="ident">field_legal_in_composite</span> <span class="op">=</span> <span class="ident">field_entry</span>.<span class="ident">legal</span>.<span class="ident">and</span>(
-                    <span class="comment">// `field` is itself some legal `SpirvConst`, but can we have</span>
-                    <span class="comment">// it as part of an `OpConstantComposite`?</span>
-                    <span class="kw">match</span> <span class="ident">field_entry</span>.<span class="ident">val</span> {
-                        <span class="ident">SpirvConst::PtrTo</span> { .. } =&gt; <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Shallow</span>(
-                            <span class="ident">LeafIllegalConst::CompositeContainsPtrTo</span>,
+            SpirvConst::ZombieUndefForFnAddr =&gt; {
+                <span class="comment">// This can be considered legal as it&#39;s already marked as zombie.
+                // FIXME(eddyb) is it possible for the original zombie to lack a
+                // span, and should we go through `IllegalConst` in order to be
+                // able to attach a proper usesite span?
+                </span><span class="prelude-val">Ok</span>(())
+            }
+
+            SpirvConst::Composite(<span class="kw-2">ref </span>v) =&gt; v.iter().fold(<span class="prelude-val">Ok</span>(()), |composite_legal, field| {
+                <span class="kw">let </span>field_entry = <span class="kw-2">&amp;</span><span class="self">self</span>.id_to_const.borrow()[field];
+                <span class="kw">let </span>field_legal_in_composite = field_entry.legal.and(
+                    <span class="comment">// `field` is itself some legal `SpirvConst`, but can we have
+                    // it as part of an `OpConstantComposite`?
+                    </span><span class="kw">match </span>field_entry.val {
+                        SpirvConst::PtrTo { .. } =&gt; <span class="prelude-val">Err</span>(IllegalConst::Shallow(
+                            LeafIllegalConst::CompositeContainsPtrTo,
                         )),
-                        <span class="kw">_</span> =&gt; <span class="prelude-val">Ok</span>(()),
+                        <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(()),
                     },
                 );
 
-                <span class="kw">match</span> (<span class="ident">composite_legal</span>, <span class="ident">field_legal_in_composite</span>) {
+                <span class="kw">match </span>(composite_legal, field_legal_in_composite) {
                     (<span class="prelude-val">Ok</span>(()), <span class="prelude-val">Ok</span>(())) =&gt; <span class="prelude-val">Ok</span>(()),
-                    (<span class="prelude-val">Err</span>(<span class="ident">illegal</span>), <span class="prelude-val">Ok</span>(())) <span class="op">|</span> (<span class="prelude-val">Ok</span>(()), <span class="prelude-val">Err</span>(<span class="ident">illegal</span>)) =&gt; <span class="prelude-val">Err</span>(<span class="ident">illegal</span>),
+                    (<span class="prelude-val">Err</span>(illegal), <span class="prelude-val">Ok</span>(())) | (<span class="prelude-val">Ok</span>(()), <span class="prelude-val">Err</span>(illegal)) =&gt; <span class="prelude-val">Err</span>(illegal),
 
-                    <span class="comment">// Combining two causes of an illegal `SpirvConst` has to</span>
-                    <span class="comment">// take into account which is &quot;worse&quot;, i.e. which imposes</span>
-                    <span class="comment">// more restrictions on how the resulting value can be used.</span>
-                    <span class="comment">// `Indirect` is worse than `Shallow` because it cannot be</span>
-                    <span class="comment">// materialized at runtime in the same way `Shallow` can be.</span>
-                    (<span class="prelude-val">Err</span>(<span class="ident">illegal</span> @ <span class="ident">IllegalConst::Indirect</span>(<span class="kw">_</span>)), <span class="prelude-val">Err</span>(<span class="kw">_</span>))
-                    <span class="op">|</span> (<span class="prelude-val">Err</span>(<span class="kw">_</span>), <span class="prelude-val">Err</span>(<span class="ident">illegal</span> @ <span class="ident">IllegalConst::Indirect</span>(<span class="kw">_</span>)))
-                    <span class="op">|</span> (<span class="prelude-val">Err</span>(<span class="ident">illegal</span> @ <span class="ident">IllegalConst::Shallow</span>(<span class="kw">_</span>)), <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Shallow</span>(<span class="kw">_</span>))) =&gt; {
-                        <span class="prelude-val">Err</span>(<span class="ident">illegal</span>)
+                    <span class="comment">// Combining two causes of an illegal `SpirvConst` has to
+                    // take into account which is &quot;worse&quot;, i.e. which imposes
+                    // more restrictions on how the resulting value can be used.
+                    // `Indirect` is worse than `Shallow` because it cannot be
+                    // materialized at runtime in the same way `Shallow` can be.
+                    </span>(<span class="prelude-val">Err</span>(illegal @ IllegalConst::Indirect(<span class="kw">_</span>)), <span class="prelude-val">Err</span>(<span class="kw">_</span>))
+                    | (<span class="prelude-val">Err</span>(<span class="kw">_</span>), <span class="prelude-val">Err</span>(illegal @ IllegalConst::Indirect(<span class="kw">_</span>)))
+                    | (<span class="prelude-val">Err</span>(illegal @ IllegalConst::Shallow(<span class="kw">_</span>)), <span class="prelude-val">Err</span>(IllegalConst::Shallow(<span class="kw">_</span>))) =&gt; {
+                        <span class="prelude-val">Err</span>(illegal)
                     }
                 }
             }),
 
-            <span class="ident">SpirvConst::PtrTo</span> { <span class="ident">pointee</span> } =&gt; <span class="kw">match</span> <span class="self">self</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>()[<span class="kw-2">&amp;</span><span class="ident">pointee</span>].<span class="ident">legal</span> {
+            SpirvConst::PtrTo { pointee } =&gt; <span class="kw">match </span><span class="self">self</span>.id_to_const.borrow()[<span class="kw-2">&amp;</span>pointee].legal {
                 <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
 
-                <span class="comment">// `Shallow` becomes `Indirect` when placed behind a pointer.</span>
-                <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Shallow</span>(<span class="ident">cause</span>) <span class="op">|</span> <span class="ident">IllegalConst::Indirect</span>(<span class="ident">cause</span>)) =&gt; {
-                    <span class="prelude-val">Err</span>(<span class="ident">IllegalConst::Indirect</span>(<span class="ident">cause</span>))
+                <span class="comment">// `Shallow` becomes `Indirect` when placed behind a pointer.
+                </span><span class="prelude-val">Err</span>(IllegalConst::Shallow(cause) | IllegalConst::Indirect(cause)) =&gt; {
+                    <span class="prelude-val">Err</span>(IllegalConst::Indirect(cause))
                 }
             },
         };
         <span class="macro">assert_matches!</span>(
-            <span class="self">self</span>.<span class="ident">const_to_id</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(
-                <span class="ident">WithType</span> {
-                    <span class="ident">ty</span>,
-                    <span class="ident">val</span>: <span class="ident">val</span>.<span class="ident">clone</span>()
+            <span class="self">self</span>.const_to_id.borrow_mut().insert(
+                WithType {
+                    ty,
+                    val: val.clone()
                 },
-                <span class="ident">WithConstLegality</span> { <span class="ident">val</span>: <span class="ident">id</span>, <span class="ident">legal</span> }
+                WithConstLegality { val: id, legal }
             ),
-            <span class="prelude-val">None</span>
-        );
+            <span class="prelude-val">None
+        </span>);
         <span class="macro">assert_matches!</span>(
-            <span class="self">self</span>.<span class="ident">id_to_const</span>
-                .<span class="ident">borrow_mut</span>()
-                .<span class="ident">insert</span>(<span class="ident">id</span>, <span class="ident">WithConstLegality</span> { <span class="ident">val</span>, <span class="ident">legal</span> }),
-            <span class="prelude-val">None</span>
-        );
-        <span class="comment">// FIXME(eddyb) deduplicate this `if`-`else` and its other copies.</span>
-        <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">legal</span>.<span class="ident">is_ok</span>() {
-            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>)
+            <span class="self">self</span>.id_to_const
+                .borrow_mut()
+                .insert(id, WithConstLegality { val, legal }),
+            <span class="prelude-val">None
+        </span>);
+        <span class="comment">// FIXME(eddyb) deduplicate this `if`-`else` and its other copies.
+        </span><span class="kw">let </span>kind = <span class="kw">if </span>legal.is_ok() {
+            SpirvValueKind::Def(id)
+        } <span class="kw">else </span>{
+            SpirvValueKind::IllegalConst(id)
         };
-        <span class="ident">SpirvValue</span> { <span class="ident">kind</span>, <span class="ident">ty</span> }
+        SpirvValue { kind, ty }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_const</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">SpirvValue</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SpirvConst</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">def</span>.<span class="ident">kind</span> {
-            <span class="ident">SpirvValueKind::Def</span>(<span class="ident">id</span>) <span class="op">|</span> <span class="ident">SpirvValueKind::IllegalConst</span>(<span class="ident">id</span>) =&gt; {
-                <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">id_to_const</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)<span class="question-mark">?</span>.<span class="ident">val</span>.<span class="ident">clone</span>())
+    <span class="kw">pub fn </span>lookup_const(<span class="kw-2">&amp;</span><span class="self">self</span>, def: SpirvValue) -&gt; <span class="prelude-ty">Option</span>&lt;SpirvConst&gt; {
+        <span class="kw">match </span>def.kind {
+            SpirvValueKind::Def(id) | SpirvValueKind::IllegalConst(id) =&gt; {
+                <span class="prelude-val">Some</span>(<span class="self">self</span>.id_to_const.borrow().get(<span class="kw-2">&amp;</span>id)<span class="question-mark">?</span>.val.clone())
             }
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_const_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">SpirvValue</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_const</span>(<span class="ident">def</span>)<span class="question-mark">?</span> {
-            <span class="ident">SpirvConst::U32</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u64</span>),
-            <span class="ident">SpirvConst::U64</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+    <span class="kw">pub fn </span>lookup_const_u64(<span class="kw-2">&amp;</span><span class="self">self</span>, def: SpirvValue) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
+        <span class="kw">match </span><span class="self">self</span>.lookup_const(def)<span class="question-mark">? </span>{
+            SpirvConst::U32(v) =&gt; <span class="prelude-val">Some</span>(v <span class="kw">as </span>u64),
+            SpirvConst::U64(v) =&gt; <span class="prelude-val">Some</span>(v),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="ident">String</span>) -&gt; <span class="ident">Word</span> {
-        <span class="kw">use</span> <span class="ident">std::collections::hash_map::Entry</span>;
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">string_cache</span>.<span class="ident">borrow_mut</span>().<span class="ident">entry</span>(<span class="ident">s</span>) {
-            <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; <span class="kw-2">*</span><span class="ident">entry</span>.<span class="ident">get</span>(),
-            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">key</span>().<span class="ident">clone</span>();
-                <span class="kw-2">*</span><span class="ident">entry</span>.<span class="ident">insert</span>(<span class="self">self</span>.<span class="ident">builder</span>(<span class="ident">Default::default</span>()).<span class="ident">string</span>(<span class="ident">key</span>))
+    <span class="kw">pub fn </span>def_string(<span class="kw-2">&amp;</span><span class="self">self</span>, s: String) -&gt; Word {
+        <span class="kw">use </span>std::collections::hash_map::Entry;
+        <span class="kw">match </span><span class="self">self</span>.string_cache.borrow_mut().entry(s) {
+            Entry::Occupied(entry) =&gt; <span class="kw-2">*</span>entry.get(),
+            Entry::Vacant(entry) =&gt; {
+                <span class="kw">let </span>key = entry.key().clone();
+                <span class="kw-2">*</span>entry.insert(<span class="self">self</span>.builder(Default::default()).string(key))
             }
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_global_initializer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">global</span>: <span class="ident">Word</span>, <span class="ident">initializer</span>: <span class="ident">Word</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow_mut</span>();
-        <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">module_mut</span>();
-        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">module</span>
-            .<span class="ident">types_global_values</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">find_map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">inst</span>)<span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">result_id</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">global</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">index</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                }
+    <span class="kw">pub fn </span>set_global_initializer(<span class="kw-2">&amp;</span><span class="self">self</span>, global: Word, initializer: Word) {
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">self</span>.builder.borrow_mut();
+        <span class="kw">let </span>module = builder.module_mut();
+        <span class="kw">let </span>index = module
+            .types_global_values
+            .iter()
+            .enumerate()
+            .find_map(|(index, inst)| {
+                <span class="kw">if </span>inst.result_id == <span class="prelude-val">Some</span>(global) {
+                    <span class="prelude-val">Some</span>(index)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
             })
-            .<span class="ident">expect</span>(<span class="string">&quot;set_global_initializer global not found&quot;</span>);
-        <span class="comment">// Remove and push it to the end, to keep spir-v definition order.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">remove</span>(<span class="ident">index</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span>, <span class="ident">Op::Variable</span>);
+            .expect(<span class="string">&quot;set_global_initializer global not found&quot;</span>);
+        <span class="comment">// Remove and push it to the end, to keep spir-v definition order.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>inst = module.types_global_values.remove(index);
+        <span class="macro">assert_eq!</span>(inst.class.opcode, Op::Variable);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>(),
+            inst.operands.len(),
             <span class="number">1</span>,
             <span class="string">&quot;global already has initializer defined: {}&quot;</span>,
-            <span class="ident">global</span>
+            global
         );
-        <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">push</span>(<span class="ident">Operand::IdRef</span>(<span class="ident">initializer</span>));
-        <span class="ident">module</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">inst</span>);
+        inst.operands.push(Operand::IdRef(initializer));
+        module.types_global_values.push(inst);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_block_by_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Word</span>) -&gt; <span class="ident">BuilderCursor</span> {
-        <span class="kw">fn</span> <span class="ident">block_matches</span>(<span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">Block</span>, <span class="ident">id</span>: <span class="ident">Word</span>) -&gt; <span class="ident">bool</span> {
-            <span class="ident">block</span>.<span class="ident">label</span>.<span class="ident">as_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">result_id</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>)
+    <span class="kw">pub fn </span>select_block_by_id(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Word) -&gt; BuilderCursor {
+        <span class="kw">fn </span>block_matches(block: <span class="kw-2">&amp;</span>Block, id: Word) -&gt; bool {
+            block.label.as_ref().and_then(|b| b.result_id) == <span class="prelude-val">Some</span>(id)
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">borrow_mut</span>();
-        <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">module_ref</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">self</span>.builder.borrow_mut();
+        <span class="kw">let </span>module = builder.module_ref();
 
-        <span class="comment">// The user is probably selecting a block in the current function, so search that first.</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">selected_function</span>) <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">selected_function</span>() {
-            <span class="comment">// make no-ops really fast</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">selected_block</span>) <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">selected_block</span>() {
-                <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">selected_function</span>].<span class="ident">blocks</span>[<span class="ident">selected_block</span>];
-                <span class="kw">if</span> <span class="ident">block_matches</span>(<span class="ident">block</span>, <span class="ident">id</span>) {
-                    <span class="kw">return</span> <span class="ident">BuilderCursor</span> {
-                        <span class="ident">function</span>: <span class="prelude-val">Some</span>(<span class="ident">selected_function</span>),
-                        <span class="ident">block</span>: <span class="prelude-val">Some</span>(<span class="ident">selected_block</span>),
+        <span class="comment">// The user is probably selecting a block in the current function, so search that first.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(selected_function) = builder.selected_function() {
+            <span class="comment">// make no-ops really fast
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(selected_block) = builder.selected_block() {
+                <span class="kw">let </span>block = <span class="kw-2">&amp;</span>module.functions[selected_function].blocks[selected_block];
+                <span class="kw">if </span>block_matches(block, id) {
+                    <span class="kw">return </span>BuilderCursor {
+                        function: <span class="prelude-val">Some</span>(selected_function),
+                        block: <span class="prelude-val">Some</span>(selected_block),
                     };
                 }
             }
 
-            <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">selected_function</span>]
-                .<span class="ident">blocks</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">enumerate</span>()
+            <span class="kw">for </span>(index, block) <span class="kw">in </span>module.functions[selected_function]
+                .blocks
+                .iter()
+                .enumerate()
             {
-                <span class="kw">if</span> <span class="ident">block_matches</span>(<span class="ident">block</span>, <span class="ident">id</span>) {
-                    <span class="ident">builder</span>.<span class="ident">select_block</span>(<span class="prelude-val">Some</span>(<span class="ident">index</span>)).<span class="ident">unwrap</span>();
-                    <span class="kw">return</span> <span class="ident">BuilderCursor</span> {
-                        <span class="ident">function</span>: <span class="prelude-val">Some</span>(<span class="ident">selected_function</span>),
-                        <span class="ident">block</span>: <span class="prelude-val">Some</span>(<span class="ident">index</span>),
+                <span class="kw">if </span>block_matches(block, id) {
+                    builder.select_block(<span class="prelude-val">Some</span>(index)).unwrap();
+                    <span class="kw">return </span>BuilderCursor {
+                        function: <span class="prelude-val">Some</span>(selected_function),
+                        block: <span class="prelude-val">Some</span>(index),
                     };
                 }
             }
         }
 
-        <span class="comment">// Search the whole module.</span>
-        <span class="kw">for</span> (<span class="ident">function_index</span>, <span class="ident">function</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">for</span> (<span class="ident">block_index</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">function</span>.<span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="kw">if</span> <span class="ident">block_matches</span>(<span class="ident">block</span>, <span class="ident">id</span>) {
-                    <span class="ident">builder</span>.<span class="ident">select_function</span>(<span class="prelude-val">Some</span>(<span class="ident">function_index</span>)).<span class="ident">unwrap</span>();
-                    <span class="ident">builder</span>.<span class="ident">select_block</span>(<span class="prelude-val">Some</span>(<span class="ident">block_index</span>)).<span class="ident">unwrap</span>();
-                    <span class="kw">return</span> <span class="ident">BuilderCursor</span> {
-                        <span class="ident">function</span>: <span class="prelude-val">Some</span>(<span class="ident">function_index</span>),
-                        <span class="ident">block</span>: <span class="prelude-val">Some</span>(<span class="ident">block_index</span>),
+        <span class="comment">// Search the whole module.
+        </span><span class="kw">for </span>(function_index, function) <span class="kw">in </span>module.functions.iter().enumerate() {
+            <span class="kw">for </span>(block_index, block) <span class="kw">in </span>function.blocks.iter().enumerate() {
+                <span class="kw">if </span>block_matches(block, id) {
+                    builder.select_function(<span class="prelude-val">Some</span>(function_index)).unwrap();
+                    builder.select_block(<span class="prelude-val">Some</span>(block_index)).unwrap();
+                    <span class="kw">return </span>BuilderCursor {
+                        function: <span class="prelude-val">Some</span>(function_index),
+                        block: <span class="prelude-val">Some</span>(block_index),
                     };
                 }
             }
         }
 
-        <span class="macro">bug!</span>(<span class="string">&quot;Block not found: {}&quot;</span>, <span class="ident">id</span>);
+        <span class="macro">bug!</span>(<span class="string">&quot;Block not found: {}&quot;</span>, id);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

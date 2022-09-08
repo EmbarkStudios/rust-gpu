@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/fma.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fma.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/fma.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fma.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -227,229 +221,228 @@
 <span id="221">221</span>
 <span id="222">222</span>
 <span id="223">223</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">f32</span>, <span class="ident">f64</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>core::{f32, f64};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::scalbn</span>;
+<span class="kw">use </span><span class="kw">super</span>::scalbn;
 
-<span class="kw">const</span> <span class="ident">ZEROINFNAN</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">0x7ff</span> <span class="op">-</span> <span class="number">0x3ff</span> <span class="op">-</span> <span class="number">52</span> <span class="op">-</span> <span class="number">1</span>;
+<span class="kw">const </span>ZEROINFNAN: i32 = <span class="number">0x7ff </span>- <span class="number">0x3ff </span>- <span class="number">52 </span>- <span class="number">1</span>;
 
-<span class="kw">struct</span> <span class="ident">Num</span> {
-    <span class="ident">m</span>: <span class="ident">u64</span>,
-    <span class="ident">e</span>: <span class="ident">i32</span>,
-    <span class="ident">sign</span>: <span class="ident">i32</span>,
+<span class="kw">struct </span>Num {
+    m: u64,
+    e: i32,
+    sign: i32,
 }
 
-<span class="kw">fn</span> <span class="ident">normalize</span>(<span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">Num</span> {
-    <span class="kw">let</span> <span class="ident">x1p63</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x43e0000000000000</span>); <span class="comment">// 0x1p63 === 2 ^ 63</span>
+<span class="kw">fn </span>normalize(x: f64) -&gt; Num {
+    <span class="kw">let </span>x1p63: f64 = f64::from_bits(<span class="number">0x43e0000000000000</span>); <span class="comment">// 0x1p63 === 2 ^ 63
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ix</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">e</span>: <span class="ident">i32</span> <span class="op">=</span> (<span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">52</span>) <span class="kw">as</span> <span class="ident">i32</span>;
-    <span class="kw">let</span> <span class="ident">sign</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">e</span> <span class="op">&amp;</span> <span class="number">0x800</span>;
-    <span class="ident">e</span> <span class="op">&amp;=</span> <span class="number">0x7ff</span>;
-    <span class="kw">if</span> <span class="ident">e</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="ident">ix</span> <span class="op">=</span> (<span class="ident">x</span> <span class="op">*</span> <span class="ident">x1p63</span>).<span class="ident">to_bits</span>();
-        <span class="ident">e</span> <span class="op">=</span> (<span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">52</span>) <span class="kw">as</span> <span class="ident">i32</span> <span class="op">&amp;</span> <span class="number">0x7ff</span>;
-        <span class="ident">e</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">e</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> { <span class="ident">e</span> <span class="op">-</span> <span class="number">63</span> } <span class="kw">else</span> { <span class="number">0x800</span> };
+    </span><span class="kw">let </span><span class="kw-2">mut </span>ix: u64 = x.to_bits();
+    <span class="kw">let </span><span class="kw-2">mut </span>e: i32 = (ix &gt;&gt; <span class="number">52</span>) <span class="kw">as </span>i32;
+    <span class="kw">let </span>sign: i32 = e &amp; <span class="number">0x800</span>;
+    e &amp;= <span class="number">0x7ff</span>;
+    <span class="kw">if </span>e == <span class="number">0 </span>{
+        ix = (x * x1p63).to_bits();
+        e = (ix &gt;&gt; <span class="number">52</span>) <span class="kw">as </span>i32 &amp; <span class="number">0x7ff</span>;
+        e = <span class="kw">if </span>e != <span class="number">0 </span>{ e - <span class="number">63 </span>} <span class="kw">else </span>{ <span class="number">0x800 </span>};
     }
-    <span class="ident">ix</span> <span class="op">&amp;=</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">52</span>) <span class="op">-</span> <span class="number">1</span>;
-    <span class="ident">ix</span> <span class="op">|</span><span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">52</span>;
-    <span class="ident">ix</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span>;
-    <span class="ident">e</span> <span class="op">-</span><span class="op">=</span> <span class="number">0x3ff</span> <span class="op">+</span> <span class="number">52</span> <span class="op">+</span> <span class="number">1</span>;
-    <span class="ident">Num</span> { <span class="ident">m</span>: <span class="ident">ix</span>, <span class="ident">e</span>, <span class="ident">sign</span> }
+    ix &amp;= (<span class="number">1 </span>&lt;&lt; <span class="number">52</span>) - <span class="number">1</span>;
+    ix |= <span class="number">1 </span>&lt;&lt; <span class="number">52</span>;
+    ix &lt;&lt;= <span class="number">1</span>;
+    e -= <span class="number">0x3ff </span>+ <span class="number">52 </span>+ <span class="number">1</span>;
+    Num { m: ix, e, sign }
 }
 
-<span class="kw">fn</span> <span class="ident">mul</span>(<span class="ident">x</span>: <span class="ident">u64</span>, <span class="ident">y</span>: <span class="ident">u64</span>) -&gt; (<span class="ident">u64</span>, <span class="ident">u64</span>) {
-    <span class="kw">let</span> <span class="ident">t1</span>: <span class="ident">u64</span>;
-    <span class="kw">let</span> <span class="ident">t2</span>: <span class="ident">u64</span>;
-    <span class="kw">let</span> <span class="ident">t3</span>: <span class="ident">u64</span>;
-    <span class="kw">let</span> <span class="ident">xlo</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">u64</span>;
-    <span class="kw">let</span> <span class="ident">xhi</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>;
-    <span class="kw">let</span> <span class="ident">ylo</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">y</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">u64</span>;
-    <span class="kw">let</span> <span class="ident">yhi</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>;
+<span class="kw">fn </span>mul(x: u64, y: u64) -&gt; (u64, u64) {
+    <span class="kw">let </span>t1: u64;
+    <span class="kw">let </span>t2: u64;
+    <span class="kw">let </span>t3: u64;
+    <span class="kw">let </span>xlo: u64 = x <span class="kw">as </span>u32 <span class="kw">as </span>u64;
+    <span class="kw">let </span>xhi: u64 = x &gt;&gt; <span class="number">32</span>;
+    <span class="kw">let </span>ylo: u64 = y <span class="kw">as </span>u32 <span class="kw">as </span>u64;
+    <span class="kw">let </span>yhi: u64 = y &gt;&gt; <span class="number">32</span>;
 
-    <span class="ident">t1</span> <span class="op">=</span> <span class="ident">xlo</span> <span class="op">*</span> <span class="ident">ylo</span>;
-    <span class="ident">t2</span> <span class="op">=</span> <span class="ident">xlo</span> <span class="op">*</span> <span class="ident">yhi</span> <span class="op">+</span> <span class="ident">xhi</span> <span class="op">*</span> <span class="ident">ylo</span>;
-    <span class="ident">t3</span> <span class="op">=</span> <span class="ident">xhi</span> <span class="op">*</span> <span class="ident">yhi</span>;
-    <span class="kw">let</span> <span class="ident">lo</span> <span class="op">=</span> <span class="ident">t1</span>.<span class="ident">wrapping_add</span>(<span class="ident">t2</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>);
-    <span class="kw">let</span> <span class="ident">hi</span> <span class="op">=</span> <span class="ident">t3</span> <span class="op">+</span> (<span class="ident">t2</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="op">+</span> (<span class="ident">t1</span> <span class="op">&gt;</span> <span class="ident">lo</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-    (<span class="ident">hi</span>, <span class="ident">lo</span>)
+    t1 = xlo * ylo;
+    t2 = xlo * yhi + xhi * ylo;
+    t3 = xhi * yhi;
+    <span class="kw">let </span>lo = t1.wrapping_add(t2 &lt;&lt; <span class="number">32</span>);
+    <span class="kw">let </span>hi = t3 + (t2 &gt;&gt; <span class="number">32</span>) + (t1 &gt; lo) <span class="kw">as </span>u64;
+    (hi, lo)
 }
 
-<span class="doccomment">/// Floating multiply add (f64)</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Computes `(x*y)+z`, rounded as one ternary operation:</span>
-<span class="doccomment">/// Computes the value (as if) to infinite precision and rounds once to the result format,</span>
-<span class="doccomment">/// according to the rounding mode characterized by the value of FLT_ROUNDS.</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fma</span>(<span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">z</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
-    <span class="kw">let</span> <span class="ident">x1p63</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x43e0000000000000</span>); <span class="comment">// 0x1p63 === 2 ^ 63</span>
-    <span class="kw">let</span> <span class="ident">x0_ffffff8p_63</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3bfffffff0000000</span>); <span class="comment">// 0x0.ffffff8p-63</span>
+<span class="doccomment">/// Floating multiply add (f64)
+///
+/// Computes `(x*y)+z`, rounded as one ternary operation:
+/// Computes the value (as if) to infinite precision and rounds once to the result format,
+/// according to the rounding mode characterized by the value of FLT_ROUNDS.
+</span><span class="attribute">#[cfg_attr(all(test, assert_no_panic), no_panic::no_panic)]
+</span><span class="kw">pub fn </span>fma(x: f64, y: f64, z: f64) -&gt; f64 {
+    <span class="kw">let </span>x1p63: f64 = f64::from_bits(<span class="number">0x43e0000000000000</span>); <span class="comment">// 0x1p63 === 2 ^ 63
+    </span><span class="kw">let </span>x0_ffffff8p_63 = f64::from_bits(<span class="number">0x3bfffffff0000000</span>); <span class="comment">// 0x0.ffffff8p-63
 
-    <span class="comment">/* normalize so top 10bits and last bit are 0 */</span>
-    <span class="kw">let</span> <span class="ident">nx</span> <span class="op">=</span> <span class="ident">normalize</span>(<span class="ident">x</span>);
-    <span class="kw">let</span> <span class="ident">ny</span> <span class="op">=</span> <span class="ident">normalize</span>(<span class="ident">y</span>);
-    <span class="kw">let</span> <span class="ident">nz</span> <span class="op">=</span> <span class="ident">normalize</span>(<span class="ident">z</span>);
+    /* normalize so top 10bits and last bit are 0 */
+    </span><span class="kw">let </span>nx = normalize(x);
+    <span class="kw">let </span>ny = normalize(y);
+    <span class="kw">let </span>nz = normalize(z);
 
-    <span class="kw">if</span> <span class="ident">nx</span>.<span class="ident">e</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">ZEROINFNAN</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ny</span>.<span class="ident">e</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">ZEROINFNAN</span> {
-        <span class="kw">return</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">y</span> <span class="op">+</span> <span class="ident">z</span>;
+    <span class="kw">if </span>nx.e &gt;= ZEROINFNAN || ny.e &gt;= ZEROINFNAN {
+        <span class="kw">return </span>x * y + z;
     }
-    <span class="kw">if</span> <span class="ident">nz</span>.<span class="ident">e</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">ZEROINFNAN</span> {
-        <span class="kw">if</span> <span class="ident">nz</span>.<span class="ident">e</span> <span class="op">&gt;</span> <span class="ident">ZEROINFNAN</span> {
-            <span class="comment">/* z==0 */</span>
-            <span class="kw">return</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">y</span> <span class="op">+</span> <span class="ident">z</span>;
+    <span class="kw">if </span>nz.e &gt;= ZEROINFNAN {
+        <span class="kw">if </span>nz.e &gt; ZEROINFNAN {
+            <span class="comment">/* z==0 */
+            </span><span class="kw">return </span>x * y + z;
         }
-        <span class="kw">return</span> <span class="ident">z</span>;
+        <span class="kw">return </span>z;
     }
 
-    <span class="comment">/* mul: r = x*y */</span>
-    <span class="kw">let</span> <span class="ident">zhi</span>: <span class="ident">u64</span>;
-    <span class="kw">let</span> <span class="ident">zlo</span>: <span class="ident">u64</span>;
-    <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">rhi</span>, <span class="kw-2">mut</span> <span class="ident">rlo</span>) <span class="op">=</span> <span class="ident">mul</span>(<span class="ident">nx</span>.<span class="ident">m</span>, <span class="ident">ny</span>.<span class="ident">m</span>);
-    <span class="comment">/* either top 20 or 21 bits of rhi and last 2 bits of rlo are 0 */</span>
+    <span class="comment">/* mul: r = x*y */
+    </span><span class="kw">let </span>zhi: u64;
+    <span class="kw">let </span>zlo: u64;
+    <span class="kw">let </span>(<span class="kw-2">mut </span>rhi, <span class="kw-2">mut </span>rlo) = mul(nx.m, ny.m);
+    <span class="comment">/* either top 20 or 21 bits of rhi and last 2 bits of rlo are 0 */
 
-    <span class="comment">/* align exponents */</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">e</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">nx</span>.<span class="ident">e</span> <span class="op">+</span> <span class="ident">ny</span>.<span class="ident">e</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">nz</span>.<span class="ident">e</span> <span class="op">-</span> <span class="ident">e</span>;
-    <span class="comment">/* shift bits z&lt;&lt;=kz, r&gt;&gt;=kr, so kz+kr == d, set e = e+kr (== ez-kz) */</span>
-    <span class="kw">if</span> <span class="ident">d</span> <span class="op">&gt;</span> <span class="number">0</span> {
-        <span class="kw">if</span> <span class="ident">d</span> <span class="op">&lt;</span> <span class="number">64</span> {
-            <span class="ident">zlo</span> <span class="op">=</span> <span class="ident">nz</span>.<span class="ident">m</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">d</span>;
-            <span class="ident">zhi</span> <span class="op">=</span> <span class="ident">nz</span>.<span class="ident">m</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">64</span> <span class="op">-</span> <span class="ident">d</span>);
-        } <span class="kw">else</span> {
-            <span class="ident">zlo</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="ident">zhi</span> <span class="op">=</span> <span class="ident">nz</span>.<span class="ident">m</span>;
-            <span class="ident">e</span> <span class="op">=</span> <span class="ident">nz</span>.<span class="ident">e</span> <span class="op">-</span> <span class="number">64</span>;
-            <span class="ident">d</span> <span class="op">-</span><span class="op">=</span> <span class="number">64</span>;
-            <span class="kw">if</span> <span class="ident">d</span> <span class="op">==</span> <span class="number">0</span> {
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">d</span> <span class="op">&lt;</span> <span class="number">64</span> {
-                <span class="ident">rlo</span> <span class="op">=</span> <span class="ident">rhi</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">64</span> <span class="op">-</span> <span class="ident">d</span>) <span class="op">|</span> <span class="ident">rlo</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">d</span> <span class="op">|</span> ((<span class="ident">rlo</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">64</span> <span class="op">-</span> <span class="ident">d</span>)) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-                <span class="ident">rhi</span> <span class="op">=</span> <span class="ident">rhi</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">d</span>;
-            } <span class="kw">else</span> {
-                <span class="ident">rlo</span> <span class="op">=</span> <span class="number">1</span>;
-                <span class="ident">rhi</span> <span class="op">=</span> <span class="number">0</span>;
+    /* align exponents */
+    </span><span class="kw">let </span><span class="kw-2">mut </span>e: i32 = nx.e + ny.e;
+    <span class="kw">let </span><span class="kw-2">mut </span>d: i32 = nz.e - e;
+    <span class="comment">/* shift bits z&lt;&lt;=kz, r&gt;&gt;=kr, so kz+kr == d, set e = e+kr (== ez-kz) */
+    </span><span class="kw">if </span>d &gt; <span class="number">0 </span>{
+        <span class="kw">if </span>d &lt; <span class="number">64 </span>{
+            zlo = nz.m &lt;&lt; d;
+            zhi = nz.m &gt;&gt; (<span class="number">64 </span>- d);
+        } <span class="kw">else </span>{
+            zlo = <span class="number">0</span>;
+            zhi = nz.m;
+            e = nz.e - <span class="number">64</span>;
+            d -= <span class="number">64</span>;
+            <span class="kw">if </span>d == <span class="number">0 </span>{
+            } <span class="kw">else if </span>d &lt; <span class="number">64 </span>{
+                rlo = rhi &lt;&lt; (<span class="number">64 </span>- d) | rlo &gt;&gt; d | ((rlo &lt;&lt; (<span class="number">64 </span>- d)) != <span class="number">0</span>) <span class="kw">as </span>u64;
+                rhi = rhi &gt;&gt; d;
+            } <span class="kw">else </span>{
+                rlo = <span class="number">1</span>;
+                rhi = <span class="number">0</span>;
             }
         }
-    } <span class="kw">else</span> {
-        <span class="ident">zhi</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">d</span> <span class="op">=</span> <span class="op">-</span><span class="ident">d</span>;
-        <span class="kw">if</span> <span class="ident">d</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="ident">zlo</span> <span class="op">=</span> <span class="ident">nz</span>.<span class="ident">m</span>;
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">d</span> <span class="op">&lt;</span> <span class="number">64</span> {
-            <span class="ident">zlo</span> <span class="op">=</span> <span class="ident">nz</span>.<span class="ident">m</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">d</span> <span class="op">|</span> ((<span class="ident">nz</span>.<span class="ident">m</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">64</span> <span class="op">-</span> <span class="ident">d</span>)) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-        } <span class="kw">else</span> {
-            <span class="ident">zlo</span> <span class="op">=</span> <span class="number">1</span>;
+    } <span class="kw">else </span>{
+        zhi = <span class="number">0</span>;
+        d = -d;
+        <span class="kw">if </span>d == <span class="number">0 </span>{
+            zlo = nz.m;
+        } <span class="kw">else if </span>d &lt; <span class="number">64 </span>{
+            zlo = nz.m &gt;&gt; d | ((nz.m &lt;&lt; (<span class="number">64 </span>- d)) != <span class="number">0</span>) <span class="kw">as </span>u64;
+        } <span class="kw">else </span>{
+            zlo = <span class="number">1</span>;
         }
     }
 
-    <span class="comment">/* add */</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sign</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">nx</span>.<span class="ident">sign</span> <span class="op">^</span> <span class="ident">ny</span>.<span class="ident">sign</span>;
-    <span class="kw">let</span> <span class="ident">samesign</span>: <span class="ident">bool</span> <span class="op">=</span> (<span class="ident">sign</span> <span class="op">^</span> <span class="ident">nz</span>.<span class="ident">sign</span>) <span class="op">==</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nonzero</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">1</span>;
-    <span class="kw">if</span> <span class="ident">samesign</span> {
-        <span class="comment">/* r += z */</span>
-        <span class="ident">rlo</span> <span class="op">=</span> <span class="ident">rlo</span>.<span class="ident">wrapping_add</span>(<span class="ident">zlo</span>);
-        <span class="ident">rhi</span> <span class="op">+</span><span class="op">=</span> <span class="ident">zhi</span> <span class="op">+</span> (<span class="ident">rlo</span> <span class="op">&lt;</span> <span class="ident">zlo</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-    } <span class="kw">else</span> {
-        <span class="comment">/* r -= z */</span>
-        <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">rlo</span>;
-        <span class="ident">rlo</span> <span class="op">=</span> <span class="ident">rlo</span>.<span class="ident">wrapping_sub</span>(<span class="ident">zlo</span>);
-        <span class="ident">rhi</span> <span class="op">=</span> <span class="ident">rhi</span>.<span class="ident">wrapping_sub</span>(<span class="ident">zhi</span>.<span class="ident">wrapping_sub</span>((<span class="ident">t</span> <span class="op">&lt;</span> <span class="ident">rlo</span>) <span class="kw">as</span> <span class="ident">u64</span>));
-        <span class="kw">if</span> (<span class="ident">rhi</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">63</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">rlo</span> <span class="op">=</span> (<span class="op">-</span>(<span class="ident">rlo</span> <span class="kw">as</span> <span class="ident">i64</span>)) <span class="kw">as</span> <span class="ident">u64</span>;
-            <span class="ident">rhi</span> <span class="op">=</span> (<span class="op">-</span>(<span class="ident">rhi</span> <span class="kw">as</span> <span class="ident">i64</span>)) <span class="kw">as</span> <span class="ident">u64</span> <span class="op">-</span> (<span class="ident">rlo</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-            <span class="ident">sign</span> <span class="op">=</span> (<span class="ident">sign</span> <span class="op">==</span> <span class="number">0</span>) <span class="kw">as</span> <span class="ident">i32</span>;
+    <span class="comment">/* add */
+    </span><span class="kw">let </span><span class="kw-2">mut </span>sign: i32 = nx.sign ^ ny.sign;
+    <span class="kw">let </span>samesign: bool = (sign ^ nz.sign) == <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>nonzero: i32 = <span class="number">1</span>;
+    <span class="kw">if </span>samesign {
+        <span class="comment">/* r += z */
+        </span>rlo = rlo.wrapping_add(zlo);
+        rhi += zhi + (rlo &lt; zlo) <span class="kw">as </span>u64;
+    } <span class="kw">else </span>{
+        <span class="comment">/* r -= z */
+        </span><span class="kw">let </span>t = rlo;
+        rlo = rlo.wrapping_sub(zlo);
+        rhi = rhi.wrapping_sub(zhi.wrapping_sub((t &lt; rlo) <span class="kw">as </span>u64));
+        <span class="kw">if </span>(rhi &gt;&gt; <span class="number">63</span>) != <span class="number">0 </span>{
+            rlo = (-(rlo <span class="kw">as </span>i64)) <span class="kw">as </span>u64;
+            rhi = (-(rhi <span class="kw">as </span>i64)) <span class="kw">as </span>u64 - (rlo != <span class="number">0</span>) <span class="kw">as </span>u64;
+            sign = (sign == <span class="number">0</span>) <span class="kw">as </span>i32;
         }
-        <span class="ident">nonzero</span> <span class="op">=</span> (<span class="ident">rhi</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) <span class="kw">as</span> <span class="ident">i32</span>;
+        nonzero = (rhi != <span class="number">0</span>) <span class="kw">as </span>i32;
     }
 
-    <span class="comment">/* set rhi to top 63bit of the result (last bit is sticky) */</span>
-    <span class="kw">if</span> <span class="ident">nonzero</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="ident">e</span> <span class="op">+</span><span class="op">=</span> <span class="number">64</span>;
-        <span class="ident">d</span> <span class="op">=</span> <span class="ident">rhi</span>.<span class="ident">leading_zeros</span>() <span class="kw">as</span> <span class="ident">i32</span> <span class="op">-</span> <span class="number">1</span>;
-        <span class="comment">/* note: d &gt; 0 */</span>
-        <span class="ident">rhi</span> <span class="op">=</span> <span class="ident">rhi</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">d</span> <span class="op">|</span> <span class="ident">rlo</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">64</span> <span class="op">-</span> <span class="ident">d</span>) <span class="op">|</span> ((<span class="ident">rlo</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">d</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">rlo</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="ident">d</span> <span class="op">=</span> <span class="ident">rlo</span>.<span class="ident">leading_zeros</span>() <span class="kw">as</span> <span class="ident">i32</span> <span class="op">-</span> <span class="number">1</span>;
-        <span class="kw">if</span> <span class="ident">d</span> <span class="op">&lt;</span> <span class="number">0</span> {
-            <span class="ident">rhi</span> <span class="op">=</span> <span class="ident">rlo</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span> <span class="op">|</span> (<span class="ident">rlo</span> <span class="op">&amp;</span> <span class="number">1</span>);
-        } <span class="kw">else</span> {
-            <span class="ident">rhi</span> <span class="op">=</span> <span class="ident">rlo</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">d</span>;
+    <span class="comment">/* set rhi to top 63bit of the result (last bit is sticky) */
+    </span><span class="kw">if </span>nonzero != <span class="number">0 </span>{
+        e += <span class="number">64</span>;
+        d = rhi.leading_zeros() <span class="kw">as </span>i32 - <span class="number">1</span>;
+        <span class="comment">/* note: d &gt; 0 */
+        </span>rhi = rhi &lt;&lt; d | rlo &gt;&gt; (<span class="number">64 </span>- d) | ((rlo &lt;&lt; d) != <span class="number">0</span>) <span class="kw">as </span>u64;
+    } <span class="kw">else if </span>rlo != <span class="number">0 </span>{
+        d = rlo.leading_zeros() <span class="kw">as </span>i32 - <span class="number">1</span>;
+        <span class="kw">if </span>d &lt; <span class="number">0 </span>{
+            rhi = rlo &gt;&gt; <span class="number">1 </span>| (rlo &amp; <span class="number">1</span>);
+        } <span class="kw">else </span>{
+            rhi = rlo &lt;&lt; d;
         }
-    } <span class="kw">else</span> {
-        <span class="comment">/* exact +-0 */</span>
-        <span class="kw">return</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">y</span> <span class="op">+</span> <span class="ident">z</span>;
+    } <span class="kw">else </span>{
+        <span class="comment">/* exact +-0 */
+        </span><span class="kw">return </span>x * y + z;
     }
-    <span class="ident">e</span> <span class="op">-</span><span class="op">=</span> <span class="ident">d</span>;
+    e -= d;
 
-    <span class="comment">/* convert to double */</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">rhi</span> <span class="kw">as</span> <span class="ident">i64</span>; <span class="comment">/* i is in [1&lt;&lt;62,(1&lt;&lt;63)-1] */</span>
-    <span class="kw">if</span> <span class="ident">sign</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="ident">i</span> <span class="op">=</span> <span class="op">-</span><span class="ident">i</span>;
+    <span class="comment">/* convert to double */
+    </span><span class="kw">let </span><span class="kw-2">mut </span>i: i64 = rhi <span class="kw">as </span>i64; <span class="comment">/* i is in [1&lt;&lt;62,(1&lt;&lt;63)-1] */
+    </span><span class="kw">if </span>sign != <span class="number">0 </span>{
+        i = -i;
     }
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">f64</span>; <span class="comment">/* |r| is in [0x1p62,0x1p63] */</span>
+    <span class="kw">let </span><span class="kw-2">mut </span>r: f64 = i <span class="kw">as </span>f64; <span class="comment">/* |r| is in [0x1p62,0x1p63] */
 
-    <span class="kw">if</span> <span class="ident">e</span> <span class="op">&lt;</span> <span class="op">-</span><span class="number">1022</span> <span class="op">-</span> <span class="number">62</span> {
-        <span class="comment">/* result is subnormal before rounding */</span>
-        <span class="kw">if</span> <span class="ident">e</span> <span class="op">==</span> <span class="op">-</span><span class="number">1022</span> <span class="op">-</span> <span class="number">63</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">c</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">x1p63</span>;
-            <span class="kw">if</span> <span class="ident">sign</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">c</span> <span class="op">=</span> <span class="op">-</span><span class="ident">c</span>;
+    </span><span class="kw">if </span>e &lt; -<span class="number">1022 </span>- <span class="number">62 </span>{
+        <span class="comment">/* result is subnormal before rounding */
+        </span><span class="kw">if </span>e == -<span class="number">1022 </span>- <span class="number">63 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>c: f64 = x1p63;
+            <span class="kw">if </span>sign != <span class="number">0 </span>{
+                c = -c;
             }
-            <span class="kw">if</span> <span class="ident">r</span> <span class="op">==</span> <span class="ident">c</span> {
+            <span class="kw">if </span>r == c {
                 <span class="comment">/* min normal after rounding, underflow depends
                 on arch behaviour which can be imitated by
-                a double to float conversion */</span>
-                <span class="kw">let</span> <span class="ident">fltmin</span>: <span class="ident">f32</span> <span class="op">=</span> (<span class="ident">x0_ffffff8p_63</span> <span class="op">*</span> <span class="ident">f32::MIN_POSITIVE</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">r</span>) <span class="kw">as</span> <span class="ident">f32</span>;
-                <span class="kw">return</span> <span class="ident">f64::MIN_POSITIVE</span> <span class="op">/</span> <span class="ident">f32::MIN_POSITIVE</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">fltmin</span> <span class="kw">as</span> <span class="ident">f64</span>;
+                a double to float conversion */
+                </span><span class="kw">let </span>fltmin: f32 = (x0_ffffff8p_63 * f32::MIN_POSITIVE <span class="kw">as </span>f64 * r) <span class="kw">as </span>f32;
+                <span class="kw">return </span>f64::MIN_POSITIVE / f32::MIN_POSITIVE <span class="kw">as </span>f64 * fltmin <span class="kw">as </span>f64;
             }
             <span class="comment">/* one bit is lost when scaled, add another top bit to
-            only round once at conversion if it is inexact */</span>
-            <span class="kw">if</span> (<span class="ident">rhi</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">53</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">i</span> <span class="op">=</span> (<span class="ident">rhi</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span> <span class="op">|</span> (<span class="ident">rhi</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">|</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">62</span>) <span class="kw">as</span> <span class="ident">i64</span>;
-                <span class="kw">if</span> <span class="ident">sign</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="ident">i</span> <span class="op">=</span> <span class="op">-</span><span class="ident">i</span>;
+            only round once at conversion if it is inexact */
+            </span><span class="kw">if </span>(rhi &lt;&lt; <span class="number">53</span>) != <span class="number">0 </span>{
+                i = (rhi &gt;&gt; <span class="number">1 </span>| (rhi &amp; <span class="number">1</span>) | <span class="number">1 </span>&lt;&lt; <span class="number">62</span>) <span class="kw">as </span>i64;
+                <span class="kw">if </span>sign != <span class="number">0 </span>{
+                    i = -i;
                 }
-                <span class="ident">r</span> <span class="op">=</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">f64</span>;
-                <span class="ident">r</span> <span class="op">=</span> <span class="number">2.</span> <span class="op">*</span> <span class="ident">r</span> <span class="op">-</span> <span class="ident">c</span>; <span class="comment">/* remove top bit */</span>
+                r = i <span class="kw">as </span>f64;
+                r = <span class="number">2. </span>* r - c; <span class="comment">/* remove top bit */
 
-                <span class="comment">/* raise underflow portably, such that it
-                cannot be optimized away */</span>
-                {
-                    <span class="kw">let</span> <span class="ident">tiny</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f64::MIN_POSITIVE</span> <span class="op">/</span> <span class="ident">f32::MIN_POSITIVE</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">r</span>;
-                    <span class="ident">r</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">tiny</span> <span class="op">*</span> <span class="ident">tiny</span>) <span class="op">*</span> (<span class="ident">r</span> <span class="op">-</span> <span class="ident">r</span>);
+                /* raise underflow portably, such that it
+                cannot be optimized away */
+                </span>{
+                    <span class="kw">let </span>tiny: f64 = f64::MIN_POSITIVE / f32::MIN_POSITIVE <span class="kw">as </span>f64 * r;
+                    r += (tiny * tiny) * (r - r);
                 }
             }
-        } <span class="kw">else</span> {
-            <span class="comment">/* only round once when scaled */</span>
-            <span class="ident">d</span> <span class="op">=</span> <span class="number">10</span>;
-            <span class="ident">i</span> <span class="op">=</span> ((<span class="ident">rhi</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">d</span> <span class="op">|</span> ((<span class="ident">rhi</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">64</span> <span class="op">-</span> <span class="ident">d</span>)) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">d</span>) <span class="kw">as</span> <span class="ident">i64</span>;
-            <span class="kw">if</span> <span class="ident">sign</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">i</span> <span class="op">=</span> <span class="op">-</span><span class="ident">i</span>;
+        } <span class="kw">else </span>{
+            <span class="comment">/* only round once when scaled */
+            </span>d = <span class="number">10</span>;
+            i = ((rhi &gt;&gt; d | ((rhi &lt;&lt; (<span class="number">64 </span>- d)) != <span class="number">0</span>) <span class="kw">as </span>u64) &lt;&lt; d) <span class="kw">as </span>i64;
+            <span class="kw">if </span>sign != <span class="number">0 </span>{
+                i = -i;
             }
-            <span class="ident">r</span> <span class="op">=</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">f64</span>;
+            r = i <span class="kw">as </span>f64;
         }
     }
-    <span class="ident">scalbn</span>(<span class="ident">r</span>, <span class="ident">e</span>)
+    scalbn(r, e)
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">fma_segfault</span>() {
-        <span class="comment">// These two inputs cause fma to segfault on release due to overflow:</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">fma</span>(
-                <span class="op">-</span><span class="number">0.0000000000000002220446049250313</span>,
-                <span class="op">-</span><span class="number">0.0000000000000002220446049250313</span>,
-                <span class="op">-</span><span class="number">0.0000000000000002220446049250313</span>
-            ),
-            <span class="op">-</span><span class="number">0.00000000000000022204460492503126</span>,
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>fma_segfault() {
+        <span class="comment">// These two inputs cause fma to segfault on release due to overflow:
+        </span><span class="macro">assert_eq!</span>(
+            fma(
+                -<span class="number">0.0000000000000002220446049250313</span>,
+                -<span class="number">0.0000000000000002220446049250313</span>,
+                -<span class="number">0.0000000000000002220446049250313
+            </span>),
+            -<span class="number">0.00000000000000022204460492503126</span>,
         );
 
-        <span class="macro">assert_eq!</span>(<span class="ident">fma</span>(<span class="op">-</span><span class="number">0.992</span>, <span class="op">-</span><span class="number">0.992</span>, <span class="op">-</span><span class="number">0.992</span>), <span class="op">-</span><span class="number">0.00793599999988632</span>,);
+        <span class="macro">assert_eq!</span>(fma(-<span class="number">0.992</span>, -<span class="number">0.992</span>, -<span class="number">0.992</span>), -<span class="number">0.00793599999988632</span>,);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

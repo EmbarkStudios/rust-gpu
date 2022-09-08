@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/runtime_array.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>runtime_array.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_std/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/runtime_array.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>runtime_array.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_std/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -58,60 +52,59 @@
 <span id="52">52</span>
 <span id="53">53</span>
 <span id="54">54</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::arch::asm</span>;
-<span class="kw">use</span> <span class="ident">core::marker::PhantomData</span>;
+</pre><pre class="rust"><code><span class="attribute">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
+</span><span class="kw">use </span>core::arch::asm;
+<span class="kw">use </span>core::marker::PhantomData;
 
-<span class="doccomment">/// Dynamically-sized arrays in Rust carry around their length as the second half of a tuple.</span>
-<span class="doccomment">/// Unfortunately, sometimes SPIR-V provides an unsized array with no way of obtaining its length.</span>
-<span class="doccomment">/// Hence, this type represents something very similar to a slice, but with no way of knowing its</span>
-<span class="doccomment">/// length.</span>
-<span class="attribute">#[<span class="ident">spirv</span>(<span class="ident">runtime_array</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RuntimeArray</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="comment">// spooky! this field does not exist, so if it&#39;s referenced in rust code, things will explode</span>
-    <span class="ident">_do_not_touch</span>: <span class="ident">u32</span>,
-    <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Dynamically-sized arrays in Rust carry around their length as the second half of a tuple.
+/// Unfortunately, sometimes SPIR-V provides an unsized array with no way of obtaining its length.
+/// Hence, this type represents something very similar to a slice, but with no way of knowing its
+/// length.
+</span><span class="attribute">#[spirv(runtime_array)]
+</span><span class="kw">pub struct </span>RuntimeArray&lt;T&gt; {
+    <span class="comment">// spooky! this field does not exist, so if it&#39;s referenced in rust code, things will explode
+    </span>_do_not_touch: u32,
+    _phantom: PhantomData&lt;T&gt;,
 }
 
-<span class="comment">// It would be nice to use the Index/IndexMut traits here, but because we do not have the length of</span>
-<span class="comment">// the array, it&#39;s impossible to make them be safe operations (indexing out of bounds), and</span>
-<span class="comment">// Index/IndexMut are marked as safe functions.</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">RuntimeArray</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Index the array. Unfortunately, because the length of the runtime array cannot be known,</span>
-    <span class="doccomment">/// this function will happily index outside of the bounds of the array, and so is unsafe.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">/// Bounds checking is not performed, and indexing outside the bounds of the array can happen,</span>
-    <span class="doccomment">/// and lead to UB.</span>
-    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">T</span> {
-        <span class="macro">asm!</span> {
+<span class="comment">// It would be nice to use the Index/IndexMut traits here, but because we do not have the length of
+// the array, it&#39;s impossible to make them be safe operations (indexing out of bounds), and
+// Index/IndexMut are marked as safe functions.
+</span><span class="kw">impl</span>&lt;T&gt; RuntimeArray&lt;T&gt; {
+    <span class="doccomment">/// Index the array. Unfortunately, because the length of the runtime array cannot be known,
+    /// this function will happily index outside of the bounds of the array, and so is unsafe.
+    ///
+    /// # Safety
+    /// Bounds checking is not performed, and indexing outside the bounds of the array can happen,
+    /// and lead to UB.
+    </span><span class="attribute">#[spirv_std_macros::gpu_only]
+    </span><span class="kw">pub unsafe fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span>T {
+        <span class="macro">asm! </span>{
             <span class="string">&quot;%result = OpAccessChain _ {arr} {index}&quot;</span>,
             <span class="string">&quot;OpReturnValue %result&quot;</span>,
-            <span class="ident">arr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="self">self</span>,
-            <span class="ident">index</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">index</span>,
-            <span class="ident">options</span>(<span class="ident">noreturn</span>),
+            arr = <span class="kw">in</span>(reg) <span class="self">self</span>,
+            index = <span class="kw">in</span>(reg) index,
+            options(noreturn),
         }
     }
 
-    <span class="doccomment">/// Index the array, returning a mutable reference to an element. Unfortunately, because the</span>
-    <span class="doccomment">/// length of the runtime array cannot be known, this function will happily index outside of</span>
-    <span class="doccomment">/// the bounds of the array, and so is unsafe.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">/// Bounds checking is not performed, and indexing outside the bounds of the array can happen,</span>
-    <span class="doccomment">/// and lead to UB.</span>
-    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">T</span> {
-        <span class="macro">asm!</span> {
+    <span class="doccomment">/// Index the array, returning a mutable reference to an element. Unfortunately, because the
+    /// length of the runtime array cannot be known, this function will happily index outside of
+    /// the bounds of the array, and so is unsafe.
+    ///
+    /// # Safety
+    /// Bounds checking is not performed, and indexing outside the bounds of the array can happen,
+    /// and lead to UB.
+    </span><span class="attribute">#[spirv_std_macros::gpu_only]
+    </span><span class="kw">pub unsafe fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;mut </span>T {
+        <span class="macro">asm! </span>{
             <span class="string">&quot;%result = OpAccessChain _ {arr} {index}&quot;</span>,
             <span class="string">&quot;OpReturnValue %result&quot;</span>,
-            <span class="ident">arr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="self">self</span>,
-            <span class="ident">index</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">index</span>,
-            <span class="ident">options</span>(<span class="ident">noreturn</span>),
+            arr = <span class="kw">in</span>(reg) <span class="self">self</span>,
+            index = <span class="kw">in</span>(reg) index,
+            options(noreturn),
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

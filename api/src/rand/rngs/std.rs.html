@@ -1,12 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/rngs/std.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>std.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container">
-                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rand/index.html">
-                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/rngs/std.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>std.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container">
+                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rand/index.html">
+                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -108,108 +102,107 @@
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
-<span class="comment">// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
-<span class="comment">// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your</span>
-<span class="comment">// option. This file may not be copied, modified, or distributed</span>
-<span class="comment">// except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license
+// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-<span class="doccomment">//! The standard RNG</span>
+</span><span class="doccomment">//! The standard RNG
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">CryptoRng</span>, <span class="ident">Error</span>, <span class="ident">RngCore</span>, <span class="ident">SeedableRng</span>};
+</span><span class="kw">use crate</span>::{CryptoRng, Error, RngCore, SeedableRng};
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>)))]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">rand_chacha::ChaCha12Core</span> <span class="kw">as</span> <span class="ident">Core</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>))]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">rand_hc::Hc128Core</span> <span class="kw">as</span> <span class="ident">Core</span>;
+<span class="attribute">#[cfg(all(any(test, feature = <span class="string">&quot;std&quot;</span>), not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>rand_chacha::ChaCha12Core <span class="kw">as </span>Core;
+<span class="attribute">#[cfg(all(any(test, feature = <span class="string">&quot;std&quot;</span>), target_os = <span class="string">&quot;emscripten&quot;</span>))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>rand_hc::Hc128Core <span class="kw">as </span>Core;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>))]</span> <span class="kw">use</span> <span class="ident">rand_chacha::ChaCha12Rng</span> <span class="kw">as</span> <span class="ident">Rng</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>)]</span> <span class="kw">use</span> <span class="ident">rand_hc::Hc128Rng</span> <span class="kw">as</span> <span class="ident">Rng</span>;
+<span class="attribute">#[cfg(not(target_os = <span class="string">&quot;emscripten&quot;</span>))] </span><span class="kw">use </span>rand_chacha::ChaCha12Rng <span class="kw">as </span>Rng;
+<span class="attribute">#[cfg(target_os = <span class="string">&quot;emscripten&quot;</span>)] </span><span class="kw">use </span>rand_hc::Hc128Rng <span class="kw">as </span>Rng;
 
-<span class="doccomment">/// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient</span>
-<span class="doccomment">/// on the current platform, to be statistically strong and unpredictable</span>
-<span class="doccomment">/// (meaning a cryptographically secure PRNG).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The current algorithm used is the ChaCha block cipher with 12 rounds. Please</span>
-<span class="doccomment">/// see this relevant [rand issue] for the discussion. This may change as new </span>
-<span class="doccomment">/// evidence of cipher security and performance becomes available.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The algorithm is deterministic but should not be considered reproducible</span>
-<span class="doccomment">/// due to dependence on configuration and possible replacement in future</span>
-<span class="doccomment">/// library versions. For a secure reproducible generator, we recommend use of</span>
-<span class="doccomment">/// the [rand_chacha] crate directly.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [rand_chacha]: https://crates.io/crates/rand_chacha</span>
-<span class="doccomment">/// [rand issue]: https://github.com/rust-random/rand/issues/932</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std_rng&quot;</span>)))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StdRng</span>(<span class="ident">Rng</span>);
+<span class="doccomment">/// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
+/// on the current platform, to be statistically strong and unpredictable
+/// (meaning a cryptographically secure PRNG).
+///
+/// The current algorithm used is the ChaCha block cipher with 12 rounds. Please
+/// see this relevant [rand issue] for the discussion. This may change as new 
+/// evidence of cipher security and performance becomes available.
+///
+/// The algorithm is deterministic but should not be considered reproducible
+/// due to dependence on configuration and possible replacement in future
+/// library versions. For a secure reproducible generator, we recommend use of
+/// the [rand_chacha] crate directly.
+///
+/// [rand_chacha]: https://crates.io/crates/rand_chacha
+/// [rand issue]: https://github.com/rust-random/rand/issues/932
+</span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;std_rng&quot;</span>)))]
+#[derive(Clone, Debug, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>StdRng(Rng);
 
-<span class="kw">impl</span> <span class="ident">RngCore</span> <span class="kw">for</span> <span class="ident">StdRng</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">next_u32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">next_u32</span>()
+<span class="kw">impl </span>RngCore <span class="kw">for </span>StdRng {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>next_u32(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.<span class="number">0</span>.next_u32()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">next_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">next_u64</span>()
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>next_u64(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.<span class="number">0</span>.next_u64()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">fill_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">fill_bytes</span>(<span class="ident">dest</span>);
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>fill_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dest: <span class="kw-2">&amp;mut </span>[u8]) {
+        <span class="self">self</span>.<span class="number">0</span>.fill_bytes(dest);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">try_fill_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">try_fill_bytes</span>(<span class="ident">dest</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">SeedableRng</span> <span class="kw">for</span> <span class="ident">StdRng</span> {
-    <span class="kw">type</span> <span class="ident">Seed</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Rng</span> <span class="kw">as</span> <span class="ident">SeedableRng</span><span class="op">&gt;</span><span class="ident">::Seed</span>;
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_seed</span>(<span class="ident">seed</span>: <span class="ident"><span class="self">Self</span>::Seed</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">StdRng</span>(<span class="ident">Rng::from_seed</span>(<span class="ident">seed</span>))
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_rng</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span><span class="op">&gt;</span>(<span class="ident">rng</span>: <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="ident">Rng::from_rng</span>(<span class="ident">rng</span>).<span class="ident">map</span>(<span class="ident">StdRng</span>)
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>try_fill_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dest: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.try_fill_bytes(dest)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">CryptoRng</span> <span class="kw">for</span> <span class="ident">StdRng</span> {}
+<span class="kw">impl </span>SeedableRng <span class="kw">for </span>StdRng {
+    <span class="kw">type </span>Seed = &lt;Rng <span class="kw">as </span>SeedableRng&gt;::Seed;
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_seed(seed: <span class="self">Self</span>::Seed) -&gt; <span class="self">Self </span>{
+        StdRng(Rng::from_seed(seed))
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_rng&lt;R: RngCore&gt;(rng: R) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+        Rng::from_rng(rng).map(StdRng)
+    }
+}
+
+<span class="kw">impl </span>CryptoRng <span class="kw">for </span>StdRng {}
 
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rngs::StdRng</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">RngCore</span>, <span class="ident">SeedableRng</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use </span><span class="kw">crate</span>::rngs::StdRng;
+    <span class="kw">use crate</span>::{RngCore, SeedableRng};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_stdrng_construction</span>() {
-        <span class="comment">// Test value-stability of StdRng. This is expected to break any time</span>
-        <span class="comment">// the algorithm is changed.</span>
-        <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-        <span class="kw">let</span> <span class="ident">seed</span> <span class="op">=</span> [<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>, <span class="number">23</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>, <span class="number">200</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>, <span class="number">210</span>,<span class="number">30</span>,<span class="number">0</span>,<span class="number">0</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_stdrng_construction() {
+        <span class="comment">// Test value-stability of StdRng. This is expected to break any time
+        // the algorithm is changed.
+        </span><span class="attribute">#[rustfmt::skip]
+        </span><span class="kw">let </span>seed = [<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>, <span class="number">23</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>, <span class="number">200</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>, <span class="number">210</span>,<span class="number">30</span>,<span class="number">0</span>,<span class="number">0</span>,
                     <span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>, <span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>, <span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>, <span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>];
 
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> [<span class="number">10719222850664546238</span>, <span class="number">14064965282130556830</span>];
+        <span class="kw">let </span>target = [<span class="number">10719222850664546238</span>, <span class="number">14064965282130556830</span>];
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng0</span> <span class="op">=</span> <span class="ident">StdRng::from_seed</span>(<span class="ident">seed</span>);
-        <span class="kw">let</span> <span class="ident">x0</span> <span class="op">=</span> <span class="ident">rng0</span>.<span class="ident">next_u64</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng0 = StdRng::from_seed(seed);
+        <span class="kw">let </span>x0 = rng0.next_u64();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng1</span> <span class="op">=</span> <span class="ident">StdRng::from_rng</span>(<span class="ident">rng0</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">x1</span> <span class="op">=</span> <span class="ident">rng1</span>.<span class="ident">next_u64</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng1 = StdRng::from_rng(rng0).unwrap();
+        <span class="kw">let </span>x1 = rng1.next_u64();
 
-        <span class="macro">assert_eq!</span>([<span class="ident">x0</span>, <span class="ident">x1</span>], <span class="ident">target</span>);
+        <span class="macro">assert_eq!</span>([x0, x1], target);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

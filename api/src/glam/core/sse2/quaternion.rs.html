@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.20.2/src/core/sse2/quaternion.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>quaternion.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.20.2/src/core/sse2/quaternion.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>quaternion.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -139,141 +133,140 @@
 <span id="133">133</span>
 <span id="134">134</span>
 <span id="135">135</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+</span><span class="kw">use </span>core::arch::x86::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::float</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core</span>::{
-    <span class="ident">storage::XYZ</span>,
-    <span class="ident">traits</span>::{<span class="ident">quaternion::Quaternion</span>, <span class="ident">scalar</span>::<span class="kw-2">*</span>, <span class="ident">vector</span>::<span class="kw-2">*</span>},
+<span class="kw">use </span><span class="kw">super</span>::float::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::core::{
+    storage::XYZ,
+    traits::{quaternion::Quaternion, scalar::<span class="kw-2">*</span>, vector::<span class="kw-2">*</span>},
 };
 
-<span class="kw">impl</span> <span class="ident">Quaternion</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="kw">type</span> <span class="ident">SIMDVector3</span> <span class="op">=</span> <span class="ident">__m128</span>;
+<span class="kw">impl </span>Quaternion&lt;f32&gt; <span class="kw">for </span>__m128 {
+    <span class="kw">type </span>SIMDVector3 = __m128;
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">conjugate</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">const</span> <span class="ident">SIGN</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="op">-</span><span class="number">0.0</span>, <span class="op">-</span><span class="number">0.0</span>, <span class="op">-</span><span class="number">0.0</span>, <span class="number">0.0</span>]);
-        <span class="kw">unsafe</span> { <span class="ident">_mm_xor_ps</span>(<span class="self">self</span>, <span class="ident">SIGN</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>conjugate(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">const </span>SIGN: __m128 = <span class="macro">const_f32x4!</span>([-<span class="number">0.0</span>, -<span class="number">0.0</span>, -<span class="number">0.0</span>, <span class="number">0.0</span>]);
+        <span class="kw">unsafe </span>{ _mm_xor_ps(<span class="self">self</span>, SIGN) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">lerp</span>(<span class="self">self</span>, <span class="ident">end</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="self">self</span>));
-        <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="ident">end</span>));
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>lerp(<span class="self">self</span>, end: <span class="self">Self</span>, s: f32) -&gt; <span class="self">Self </span>{
+        <span class="macro">glam_assert!</span>(FloatVector4::is_normalized(<span class="self">self</span>));
+        <span class="macro">glam_assert!</span>(FloatVector4::is_normalized(end));
 
-        <span class="kw">unsafe</span> {
-            <span class="kw">const</span> <span class="ident">NEG_ZERO</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="op">-</span><span class="number">0.0</span>; <span class="number">4</span>]);
-            <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">end</span>;
-            <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="ident">Vector4::dot_into_vec</span>(<span class="ident">start</span>, <span class="ident">end</span>);
-            <span class="comment">// Calculate the bias, if the dot product is positive or zero, there is no bias</span>
-            <span class="comment">// but if it is negative, we want to flip the &#39;end&#39; rotation XYZW components</span>
-            <span class="kw">let</span> <span class="ident">bias</span> <span class="op">=</span> <span class="ident">_mm_and_ps</span>(<span class="ident">dot</span>, <span class="ident">NEG_ZERO</span>);
-            <span class="kw">let</span> <span class="ident">interpolated</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(
-                <span class="ident">_mm_mul_ps</span>(<span class="ident">_mm_sub_ps</span>(<span class="ident">_mm_xor_ps</span>(<span class="ident">end</span>, <span class="ident">bias</span>), <span class="ident">start</span>), <span class="ident">_mm_set_ps1</span>(<span class="ident">s</span>)),
-                <span class="ident">start</span>,
+        <span class="kw">unsafe </span>{
+            <span class="kw">const </span>NEG_ZERO: __m128 = <span class="macro">const_f32x4!</span>([-<span class="number">0.0</span>; <span class="number">4</span>]);
+            <span class="kw">let </span>start = <span class="self">self</span>;
+            <span class="kw">let </span>end = end;
+            <span class="kw">let </span>dot = Vector4::dot_into_vec(start, end);
+            <span class="comment">// Calculate the bias, if the dot product is positive or zero, there is no bias
+            // but if it is negative, we want to flip the &#39;end&#39; rotation XYZW components
+            </span><span class="kw">let </span>bias = _mm_and_ps(dot, NEG_ZERO);
+            <span class="kw">let </span>interpolated = _mm_add_ps(
+                _mm_mul_ps(_mm_sub_ps(_mm_xor_ps(end, bias), start), _mm_set_ps1(s)),
+                start,
             );
-            <span class="ident">FloatVector4::normalize</span>(<span class="ident">interpolated</span>)
+            FloatVector4::normalize(interpolated)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">slerp</span>(<span class="self">self</span>, <span class="ident">end</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="comment">// http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/</span>
-        <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="self">self</span>));
-        <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="ident">end</span>));
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>slerp(<span class="self">self</span>, end: <span class="self">Self</span>, s: f32) -&gt; <span class="self">Self </span>{
+        <span class="comment">// http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/
+        </span><span class="macro">glam_assert!</span>(FloatVector4::is_normalized(<span class="self">self</span>));
+        <span class="macro">glam_assert!</span>(FloatVector4::is_normalized(end));
 
-        <span class="kw">const</span> <span class="ident">DOT_THRESHOLD</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">0.9995</span>;
+        <span class="kw">const </span>DOT_THRESHOLD: f32 = <span class="number">0.9995</span>;
 
-        <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="ident">Vector4::dot</span>(<span class="self">self</span>, <span class="ident">end</span>);
+        <span class="kw">let </span>dot = Vector4::dot(<span class="self">self</span>, end);
 
-        <span class="kw">if</span> <span class="ident">dot</span> <span class="op">&gt;</span> <span class="ident">DOT_THRESHOLD</span> {
-            <span class="comment">// assumes lerp returns a normalized quaternion</span>
-            <span class="self">self</span>.<span class="ident">lerp</span>(<span class="ident">end</span>, <span class="ident">s</span>)
-        } <span class="kw">else</span> {
-            <span class="comment">// assumes scalar_acos clamps the input to [-1.0, 1.0]</span>
-            <span class="kw">let</span> <span class="ident">theta</span> <span class="op">=</span> <span class="ident">dot</span>.<span class="ident">acos_approx</span>();
+        <span class="kw">if </span>dot &gt; DOT_THRESHOLD {
+            <span class="comment">// assumes lerp returns a normalized quaternion
+            </span><span class="self">self</span>.lerp(end, s)
+        } <span class="kw">else </span>{
+            <span class="comment">// assumes scalar_acos clamps the input to [-1.0, 1.0]
+            </span><span class="kw">let </span>theta = dot.acos_approx();
 
-            <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">-</span> <span class="ident">s</span>;
-            <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">s</span>;
-            <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="number">1.0</span>;
+            <span class="kw">let </span>x = <span class="number">1.0 </span>- s;
+            <span class="kw">let </span>y = s;
+            <span class="kw">let </span>z = <span class="number">1.0</span>;
 
-            <span class="kw">unsafe</span> {
-                <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">_mm_set_ps1</span>(<span class="ident">theta</span>), <span class="ident">_mm_set_ps</span>(<span class="number">0.0</span>, <span class="ident">z</span>, <span class="ident">y</span>, <span class="ident">x</span>));
-                <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">m128_sin</span>(<span class="ident">tmp</span>);
+            <span class="kw">unsafe </span>{
+                <span class="kw">let </span>tmp = _mm_mul_ps(_mm_set_ps1(theta), _mm_set_ps(<span class="number">0.0</span>, z, y, x));
+                <span class="kw">let </span>tmp = m128_sin(tmp);
 
-                <span class="kw">let</span> <span class="ident">scale1</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp</span>, <span class="ident">tmp</span>, <span class="number">0b00_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">scale2</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp</span>, <span class="ident">tmp</span>, <span class="number">0b01_01_01_01</span>);
-                <span class="kw">let</span> <span class="ident">theta_sin</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp</span>, <span class="ident">tmp</span>, <span class="number">0b10_10_10_10</span>);
+                <span class="kw">let </span>scale1 = _mm_shuffle_ps(tmp, tmp, <span class="number">0b00_00_00_00</span>);
+                <span class="kw">let </span>scale2 = _mm_shuffle_ps(tmp, tmp, <span class="number">0b01_01_01_01</span>);
+                <span class="kw">let </span>theta_sin = _mm_shuffle_ps(tmp, tmp, <span class="number">0b10_10_10_10</span>);
 
-                <span class="self">self</span>.<span class="ident">mul</span>(<span class="ident">scale1</span>).<span class="ident">add</span>(<span class="ident">end</span>.<span class="ident">mul</span>(<span class="ident">scale2</span>)).<span class="ident">div</span>(<span class="ident">theta_sin</span>)
+                <span class="self">self</span>.mul(scale1).add(end.mul(scale2)).div(theta_sin)
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_quaternion</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="self">self</span>));
-        <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="ident">other</span>));
-        <span class="kw">unsafe</span> {
-            <span class="comment">// Based on https://github.com/nfrechette/rtm `rtm::quat_mul`</span>
-            <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">other</span>;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_quaternion(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="macro">glam_assert!</span>(FloatVector4::is_normalized(<span class="self">self</span>));
+        <span class="macro">glam_assert!</span>(FloatVector4::is_normalized(other));
+        <span class="kw">unsafe </span>{
+            <span class="comment">// Based on https://github.com/nfrechette/rtm `rtm::quat_mul`
+            </span><span class="kw">let </span>lhs = <span class="self">self</span>;
+            <span class="kw">let </span>rhs = other;
 
-            <span class="kw">const</span> <span class="ident">CONTROL_WZYX</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>]);
-            <span class="kw">const</span> <span class="ident">CONTROL_ZWXY</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>]);
-            <span class="kw">const</span> <span class="ident">CONTROL_YXWZ</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>]);
+            <span class="kw">const </span>CONTROL_WZYX: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, -<span class="number">1.0</span>, <span class="number">1.0</span>, -<span class="number">1.0</span>]);
+            <span class="kw">const </span>CONTROL_ZWXY: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="number">1.0</span>, -<span class="number">1.0</span>, -<span class="number">1.0</span>]);
+            <span class="kw">const </span>CONTROL_YXWZ: __m128 = <span class="macro">const_f32x4!</span>([-<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, -<span class="number">1.0</span>]);
 
-            <span class="kw">let</span> <span class="ident">r_xxxx</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">lhs</span>, <span class="ident">lhs</span>, <span class="number">0b00_00_00_00</span>);
-            <span class="kw">let</span> <span class="ident">r_yyyy</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">lhs</span>, <span class="ident">lhs</span>, <span class="number">0b01_01_01_01</span>);
-            <span class="kw">let</span> <span class="ident">r_zzzz</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">lhs</span>, <span class="ident">lhs</span>, <span class="number">0b10_10_10_10</span>);
-            <span class="kw">let</span> <span class="ident">r_wwww</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">lhs</span>, <span class="ident">lhs</span>, <span class="number">0b11_11_11_11</span>);
+            <span class="kw">let </span>r_xxxx = _mm_shuffle_ps(lhs, lhs, <span class="number">0b00_00_00_00</span>);
+            <span class="kw">let </span>r_yyyy = _mm_shuffle_ps(lhs, lhs, <span class="number">0b01_01_01_01</span>);
+            <span class="kw">let </span>r_zzzz = _mm_shuffle_ps(lhs, lhs, <span class="number">0b10_10_10_10</span>);
+            <span class="kw">let </span>r_wwww = _mm_shuffle_ps(lhs, lhs, <span class="number">0b11_11_11_11</span>);
 
-            <span class="kw">let</span> <span class="ident">lxrw_lyrw_lzrw_lwrw</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">r_wwww</span>, <span class="ident">rhs</span>);
-            <span class="kw">let</span> <span class="ident">l_wzyx</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">rhs</span>, <span class="ident">rhs</span>, <span class="number">0b00_01_10_11</span>);
+            <span class="kw">let </span>lxrw_lyrw_lzrw_lwrw = _mm_mul_ps(r_wwww, rhs);
+            <span class="kw">let </span>l_wzyx = _mm_shuffle_ps(rhs, rhs, <span class="number">0b00_01_10_11</span>);
 
-            <span class="kw">let</span> <span class="ident">lwrx_lzrx_lyrx_lxrx</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">r_xxxx</span>, <span class="ident">l_wzyx</span>);
-            <span class="kw">let</span> <span class="ident">l_zwxy</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">l_wzyx</span>, <span class="ident">l_wzyx</span>, <span class="number">0b10_11_00_01</span>);
+            <span class="kw">let </span>lwrx_lzrx_lyrx_lxrx = _mm_mul_ps(r_xxxx, l_wzyx);
+            <span class="kw">let </span>l_zwxy = _mm_shuffle_ps(l_wzyx, l_wzyx, <span class="number">0b10_11_00_01</span>);
 
-            <span class="kw">let</span> <span class="ident">lwrx_nlzrx_lyrx_nlxrx</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">lwrx_lzrx_lyrx_lxrx</span>, <span class="ident">CONTROL_WZYX</span>);
+            <span class="kw">let </span>lwrx_nlzrx_lyrx_nlxrx = _mm_mul_ps(lwrx_lzrx_lyrx_lxrx, CONTROL_WZYX);
 
-            <span class="kw">let</span> <span class="ident">lzry_lwry_lxry_lyry</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">r_yyyy</span>, <span class="ident">l_zwxy</span>);
-            <span class="kw">let</span> <span class="ident">l_yxwz</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">l_zwxy</span>, <span class="ident">l_zwxy</span>, <span class="number">0b00_01_10_11</span>);
+            <span class="kw">let </span>lzry_lwry_lxry_lyry = _mm_mul_ps(r_yyyy, l_zwxy);
+            <span class="kw">let </span>l_yxwz = _mm_shuffle_ps(l_zwxy, l_zwxy, <span class="number">0b00_01_10_11</span>);
 
-            <span class="kw">let</span> <span class="ident">lzry_lwry_nlxry_nlyry</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">lzry_lwry_lxry_lyry</span>, <span class="ident">CONTROL_ZWXY</span>);
+            <span class="kw">let </span>lzry_lwry_nlxry_nlyry = _mm_mul_ps(lzry_lwry_lxry_lyry, CONTROL_ZWXY);
 
-            <span class="kw">let</span> <span class="ident">lyrz_lxrz_lwrz_lzrz</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">r_zzzz</span>, <span class="ident">l_yxwz</span>);
-            <span class="kw">let</span> <span class="ident">result0</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">lxrw_lyrw_lzrw_lwrw</span>, <span class="ident">lwrx_nlzrx_lyrx_nlxrx</span>);
+            <span class="kw">let </span>lyrz_lxrz_lwrz_lzrz = _mm_mul_ps(r_zzzz, l_yxwz);
+            <span class="kw">let </span>result0 = _mm_add_ps(lxrw_lyrw_lzrw_lwrw, lwrx_nlzrx_lyrx_nlxrx);
 
-            <span class="kw">let</span> <span class="ident">nlyrz_lxrz_lwrz_wlzrz</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">lyrz_lxrz_lwrz_lzrz</span>, <span class="ident">CONTROL_YXWZ</span>);
-            <span class="kw">let</span> <span class="ident">result1</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">lzry_lwry_nlxry_nlyry</span>, <span class="ident">nlyrz_lxrz_lwrz_wlzrz</span>);
-            <span class="ident">_mm_add_ps</span>(<span class="ident">result0</span>, <span class="ident">result1</span>)
+            <span class="kw">let </span>nlyrz_lxrz_lwrz_wlzrz = _mm_mul_ps(lyrz_lxrz_lwrz_lzrz, CONTROL_YXWZ);
+            <span class="kw">let </span>result1 = _mm_add_ps(lzry_lwry_nlxry_nlyry, nlyrz_lxrz_lwrz_wlzrz);
+            _mm_add_ps(result0, result1)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_vector3</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">mul_float4_as_vector3</span>(<span class="ident">other</span>.<span class="ident">into</span>()).<span class="ident">into</span>()
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_vector3(<span class="self">self</span>, other: XYZ&lt;f32&gt;) -&gt; XYZ&lt;f32&gt; {
+        <span class="self">self</span>.mul_float4_as_vector3(other.into()).into()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_float4_as_vector3</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
-        <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_normalized</span>(<span class="self">self</span>));
-        <span class="kw">unsafe</span> {
-            <span class="kw">const</span> <span class="ident">TWO</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">2.0</span>; <span class="number">4</span>]);
-            <span class="kw">let</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b11_11_11_11</span>);
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">b2</span> <span class="op">=</span> <span class="ident">Vector3::dot_into_vec</span>(<span class="ident">b</span>, <span class="ident">b</span>);
-            <span class="ident">other</span>
-                .<span class="ident">mul</span>(<span class="ident">w</span>.<span class="ident">mul</span>(<span class="ident">w</span>).<span class="ident">sub</span>(<span class="ident">b2</span>))
-                .<span class="ident">add</span>(<span class="ident">b</span>.<span class="ident">mul</span>(<span class="ident">Vector3::dot_into_vec</span>(<span class="ident">other</span>, <span class="ident">b</span>).<span class="ident">mul</span>(<span class="ident">TWO</span>)))
-                .<span class="ident">add</span>(<span class="ident">b</span>.<span class="ident">cross</span>(<span class="ident">other</span>).<span class="ident">mul</span>(<span class="ident">w</span>.<span class="ident">mul</span>(<span class="ident">TWO</span>)))
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_float4_as_vector3(<span class="self">self</span>, other: __m128) -&gt; __m128 {
+        <span class="macro">glam_assert!</span>(FloatVector4::is_normalized(<span class="self">self</span>));
+        <span class="kw">unsafe </span>{
+            <span class="kw">const </span>TWO: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">2.0</span>; <span class="number">4</span>]);
+            <span class="kw">let </span>w = _mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b11_11_11_11</span>);
+            <span class="kw">let </span>b = <span class="self">self</span>;
+            <span class="kw">let </span>b2 = Vector3::dot_into_vec(b, b);
+            other
+                .mul(w.mul(w).sub(b2))
+                .add(b.mul(Vector3::dot_into_vec(other, b).mul(TWO)))
+                .add(b.cross(other).mul(w.mul(TWO)))
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="glam" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="glam" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/erff.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>erff.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/erff.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>erff.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -233,11 +227,11 @@
 <span id="227">227</span>
 <span id="228">228</span>
 <span id="229">229</span>
-</pre><pre class="rust"><code><span class="comment">/* origin: FreeBSD /usr/src/lib/msun/src/s_erff.c */</span>
-<span class="comment">/*
+</pre><pre class="rust"><code><span class="comment">/* origin: FreeBSD /usr/src/lib/msun/src/s_erff.c */
+/*
  * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
- */</span>
-<span class="comment">/*
+ */
+/*
  * ====================================================
  * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
  *
@@ -246,222 +240,221 @@
  * software is freely granted, provided that this notice
  * is preserved.
  * ====================================================
- */</span>
+ */
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">expf</span>, <span class="ident">fabsf</span>};
+</span><span class="kw">use super</span>::{expf, fabsf};
 
-<span class="kw">const</span> <span class="ident">ERX</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">8.4506291151e-01</span>; <span class="comment">/* 0x3f58560b */</span>
-<span class="comment">/*
+<span class="kw">const </span>ERX: f32 = <span class="number">8.4506291151e-01</span>; <span class="comment">/* 0x3f58560b */
+/*
  * Coefficients for approximation to  erf on [0,0.84375]
- */</span>
-<span class="kw">const</span> <span class="ident">EFX8</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.0270333290e+00</span>; <span class="comment">/* 0x3f8375d4 */</span>
-<span class="kw">const</span> <span class="ident">PP0</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.2837916613e-01</span>; <span class="comment">/* 0x3e0375d4 */</span>
-<span class="kw">const</span> <span class="ident">PP1</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">3.2504209876e-01</span>; <span class="comment">/* 0xbea66beb */</span>
-<span class="kw">const</span> <span class="ident">PP2</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">2.8481749818e-02</span>; <span class="comment">/* 0xbce9528f */</span>
-<span class="kw">const</span> <span class="ident">PP3</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">5.7702702470e-03</span>; <span class="comment">/* 0xbbbd1489 */</span>
-<span class="kw">const</span> <span class="ident">PP4</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">2.3763017452e-05</span>; <span class="comment">/* 0xb7c756b1 */</span>
-<span class="kw">const</span> <span class="ident">QQ1</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">3.9791721106e-01</span>; <span class="comment">/* 0x3ecbbbce */</span>
-<span class="kw">const</span> <span class="ident">QQ2</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">6.5022252500e-02</span>; <span class="comment">/* 0x3d852a63 */</span>
-<span class="kw">const</span> <span class="ident">QQ3</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">5.0813062117e-03</span>; <span class="comment">/* 0x3ba68116 */</span>
-<span class="kw">const</span> <span class="ident">QQ4</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.3249473704e-04</span>; <span class="comment">/* 0x390aee49 */</span>
-<span class="kw">const</span> <span class="ident">QQ5</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">3.9602282413e-06</span>; <span class="comment">/* 0xb684e21a */</span>
-<span class="comment">/*
+ */
+</span><span class="kw">const </span>EFX8: f32 = <span class="number">1.0270333290e+00</span>; <span class="comment">/* 0x3f8375d4 */
+</span><span class="kw">const </span>PP0: f32 = <span class="number">1.2837916613e-01</span>; <span class="comment">/* 0x3e0375d4 */
+</span><span class="kw">const </span>PP1: f32 = -<span class="number">3.2504209876e-01</span>; <span class="comment">/* 0xbea66beb */
+</span><span class="kw">const </span>PP2: f32 = -<span class="number">2.8481749818e-02</span>; <span class="comment">/* 0xbce9528f */
+</span><span class="kw">const </span>PP3: f32 = -<span class="number">5.7702702470e-03</span>; <span class="comment">/* 0xbbbd1489 */
+</span><span class="kw">const </span>PP4: f32 = -<span class="number">2.3763017452e-05</span>; <span class="comment">/* 0xb7c756b1 */
+</span><span class="kw">const </span>QQ1: f32 = <span class="number">3.9791721106e-01</span>; <span class="comment">/* 0x3ecbbbce */
+</span><span class="kw">const </span>QQ2: f32 = <span class="number">6.5022252500e-02</span>; <span class="comment">/* 0x3d852a63 */
+</span><span class="kw">const </span>QQ3: f32 = <span class="number">5.0813062117e-03</span>; <span class="comment">/* 0x3ba68116 */
+</span><span class="kw">const </span>QQ4: f32 = <span class="number">1.3249473704e-04</span>; <span class="comment">/* 0x390aee49 */
+</span><span class="kw">const </span>QQ5: f32 = -<span class="number">3.9602282413e-06</span>; <span class="comment">/* 0xb684e21a */
+/*
  * Coefficients for approximation to  erf  in [0.84375,1.25]
- */</span>
-<span class="kw">const</span> <span class="ident">PA0</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">2.3621185683e-03</span>; <span class="comment">/* 0xbb1acdc6 */</span>
-<span class="kw">const</span> <span class="ident">PA1</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">4.1485610604e-01</span>; <span class="comment">/* 0x3ed46805 */</span>
-<span class="kw">const</span> <span class="ident">PA2</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">3.7220788002e-01</span>; <span class="comment">/* 0xbebe9208 */</span>
-<span class="kw">const</span> <span class="ident">PA3</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">3.1834661961e-01</span>; <span class="comment">/* 0x3ea2fe54 */</span>
-<span class="kw">const</span> <span class="ident">PA4</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">1.1089469492e-01</span>; <span class="comment">/* 0xbde31cc2 */</span>
-<span class="kw">const</span> <span class="ident">PA5</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">3.5478305072e-02</span>; <span class="comment">/* 0x3d1151b3 */</span>
-<span class="kw">const</span> <span class="ident">PA6</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">2.1663755178e-03</span>; <span class="comment">/* 0xbb0df9c0 */</span>
-<span class="kw">const</span> <span class="ident">QA1</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.0642088205e-01</span>; <span class="comment">/* 0x3dd9f331 */</span>
-<span class="kw">const</span> <span class="ident">QA2</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">5.4039794207e-01</span>; <span class="comment">/* 0x3f0a5785 */</span>
-<span class="kw">const</span> <span class="ident">QA3</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">7.1828655899e-02</span>; <span class="comment">/* 0x3d931ae7 */</span>
-<span class="kw">const</span> <span class="ident">QA4</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.2617121637e-01</span>; <span class="comment">/* 0x3e013307 */</span>
-<span class="kw">const</span> <span class="ident">QA5</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.3637083583e-02</span>; <span class="comment">/* 0x3c5f6e13 */</span>
-<span class="kw">const</span> <span class="ident">QA6</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.1984500103e-02</span>; <span class="comment">/* 0x3c445aa3 */</span>
-<span class="comment">/*
+ */
+</span><span class="kw">const </span>PA0: f32 = -<span class="number">2.3621185683e-03</span>; <span class="comment">/* 0xbb1acdc6 */
+</span><span class="kw">const </span>PA1: f32 = <span class="number">4.1485610604e-01</span>; <span class="comment">/* 0x3ed46805 */
+</span><span class="kw">const </span>PA2: f32 = -<span class="number">3.7220788002e-01</span>; <span class="comment">/* 0xbebe9208 */
+</span><span class="kw">const </span>PA3: f32 = <span class="number">3.1834661961e-01</span>; <span class="comment">/* 0x3ea2fe54 */
+</span><span class="kw">const </span>PA4: f32 = -<span class="number">1.1089469492e-01</span>; <span class="comment">/* 0xbde31cc2 */
+</span><span class="kw">const </span>PA5: f32 = <span class="number">3.5478305072e-02</span>; <span class="comment">/* 0x3d1151b3 */
+</span><span class="kw">const </span>PA6: f32 = -<span class="number">2.1663755178e-03</span>; <span class="comment">/* 0xbb0df9c0 */
+</span><span class="kw">const </span>QA1: f32 = <span class="number">1.0642088205e-01</span>; <span class="comment">/* 0x3dd9f331 */
+</span><span class="kw">const </span>QA2: f32 = <span class="number">5.4039794207e-01</span>; <span class="comment">/* 0x3f0a5785 */
+</span><span class="kw">const </span>QA3: f32 = <span class="number">7.1828655899e-02</span>; <span class="comment">/* 0x3d931ae7 */
+</span><span class="kw">const </span>QA4: f32 = <span class="number">1.2617121637e-01</span>; <span class="comment">/* 0x3e013307 */
+</span><span class="kw">const </span>QA5: f32 = <span class="number">1.3637083583e-02</span>; <span class="comment">/* 0x3c5f6e13 */
+</span><span class="kw">const </span>QA6: f32 = <span class="number">1.1984500103e-02</span>; <span class="comment">/* 0x3c445aa3 */
+/*
  * Coefficients for approximation to  erfc in [1.25,1/0.35]
- */</span>
-<span class="kw">const</span> <span class="ident">RA0</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">9.8649440333e-03</span>; <span class="comment">/* 0xbc21a093 */</span>
-<span class="kw">const</span> <span class="ident">RA1</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">6.9385856390e-01</span>; <span class="comment">/* 0xbf31a0b7 */</span>
-<span class="kw">const</span> <span class="ident">RA2</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">1.0558626175e+01</span>; <span class="comment">/* 0xc128f022 */</span>
-<span class="kw">const</span> <span class="ident">RA3</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">6.2375331879e+01</span>; <span class="comment">/* 0xc2798057 */</span>
-<span class="kw">const</span> <span class="ident">RA4</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">1.6239666748e+02</span>; <span class="comment">/* 0xc322658c */</span>
-<span class="kw">const</span> <span class="ident">RA5</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">1.8460508728e+02</span>; <span class="comment">/* 0xc3389ae7 */</span>
-<span class="kw">const</span> <span class="ident">RA6</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">8.1287437439e+01</span>; <span class="comment">/* 0xc2a2932b */</span>
-<span class="kw">const</span> <span class="ident">RA7</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">9.8143291473e+00</span>; <span class="comment">/* 0xc11d077e */</span>
-<span class="kw">const</span> <span class="ident">SA1</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.9651271820e+01</span>; <span class="comment">/* 0x419d35ce */</span>
-<span class="kw">const</span> <span class="ident">SA2</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.3765776062e+02</span>; <span class="comment">/* 0x4309a863 */</span>
-<span class="kw">const</span> <span class="ident">SA3</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">4.3456588745e+02</span>; <span class="comment">/* 0x43d9486f */</span>
-<span class="kw">const</span> <span class="ident">SA4</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">6.4538726807e+02</span>; <span class="comment">/* 0x442158c9 */</span>
-<span class="kw">const</span> <span class="ident">SA5</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">4.2900814819e+02</span>; <span class="comment">/* 0x43d6810b */</span>
-<span class="kw">const</span> <span class="ident">SA6</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.0863500214e+02</span>; <span class="comment">/* 0x42d9451f */</span>
-<span class="kw">const</span> <span class="ident">SA7</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">6.5702495575e+00</span>; <span class="comment">/* 0x40d23f7c */</span>
-<span class="kw">const</span> <span class="ident">SA8</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">6.0424413532e-02</span>; <span class="comment">/* 0xbd777f97 */</span>
-<span class="comment">/*
+ */
+</span><span class="kw">const </span>RA0: f32 = -<span class="number">9.8649440333e-03</span>; <span class="comment">/* 0xbc21a093 */
+</span><span class="kw">const </span>RA1: f32 = -<span class="number">6.9385856390e-01</span>; <span class="comment">/* 0xbf31a0b7 */
+</span><span class="kw">const </span>RA2: f32 = -<span class="number">1.0558626175e+01</span>; <span class="comment">/* 0xc128f022 */
+</span><span class="kw">const </span>RA3: f32 = -<span class="number">6.2375331879e+01</span>; <span class="comment">/* 0xc2798057 */
+</span><span class="kw">const </span>RA4: f32 = -<span class="number">1.6239666748e+02</span>; <span class="comment">/* 0xc322658c */
+</span><span class="kw">const </span>RA5: f32 = -<span class="number">1.8460508728e+02</span>; <span class="comment">/* 0xc3389ae7 */
+</span><span class="kw">const </span>RA6: f32 = -<span class="number">8.1287437439e+01</span>; <span class="comment">/* 0xc2a2932b */
+</span><span class="kw">const </span>RA7: f32 = -<span class="number">9.8143291473e+00</span>; <span class="comment">/* 0xc11d077e */
+</span><span class="kw">const </span>SA1: f32 = <span class="number">1.9651271820e+01</span>; <span class="comment">/* 0x419d35ce */
+</span><span class="kw">const </span>SA2: f32 = <span class="number">1.3765776062e+02</span>; <span class="comment">/* 0x4309a863 */
+</span><span class="kw">const </span>SA3: f32 = <span class="number">4.3456588745e+02</span>; <span class="comment">/* 0x43d9486f */
+</span><span class="kw">const </span>SA4: f32 = <span class="number">6.4538726807e+02</span>; <span class="comment">/* 0x442158c9 */
+</span><span class="kw">const </span>SA5: f32 = <span class="number">4.2900814819e+02</span>; <span class="comment">/* 0x43d6810b */
+</span><span class="kw">const </span>SA6: f32 = <span class="number">1.0863500214e+02</span>; <span class="comment">/* 0x42d9451f */
+</span><span class="kw">const </span>SA7: f32 = <span class="number">6.5702495575e+00</span>; <span class="comment">/* 0x40d23f7c */
+</span><span class="kw">const </span>SA8: f32 = -<span class="number">6.0424413532e-02</span>; <span class="comment">/* 0xbd777f97 */
+/*
  * Coefficients for approximation to  erfc in [1/.35,28]
- */</span>
-<span class="kw">const</span> <span class="ident">RB0</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">9.8649431020e-03</span>; <span class="comment">/* 0xbc21a092 */</span>
-<span class="kw">const</span> <span class="ident">RB1</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">7.9928326607e-01</span>; <span class="comment">/* 0xbf4c9dd4 */</span>
-<span class="kw">const</span> <span class="ident">RB2</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">1.7757955551e+01</span>; <span class="comment">/* 0xc18e104b */</span>
-<span class="kw">const</span> <span class="ident">RB3</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">1.6063638306e+02</span>; <span class="comment">/* 0xc320a2ea */</span>
-<span class="kw">const</span> <span class="ident">RB4</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">6.3756646729e+02</span>; <span class="comment">/* 0xc41f6441 */</span>
-<span class="kw">const</span> <span class="ident">RB5</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">1.0250950928e+03</span>; <span class="comment">/* 0xc480230b */</span>
-<span class="kw">const</span> <span class="ident">RB6</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">4.8351919556e+02</span>; <span class="comment">/* 0xc3f1c275 */</span>
-<span class="kw">const</span> <span class="ident">SB1</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">3.0338060379e+01</span>; <span class="comment">/* 0x41f2b459 */</span>
-<span class="kw">const</span> <span class="ident">SB2</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">3.2579251099e+02</span>; <span class="comment">/* 0x43a2e571 */</span>
-<span class="kw">const</span> <span class="ident">SB3</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">1.5367296143e+03</span>; <span class="comment">/* 0x44c01759 */</span>
-<span class="kw">const</span> <span class="ident">SB4</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">3.1998581543e+03</span>; <span class="comment">/* 0x4547fdbb */</span>
-<span class="kw">const</span> <span class="ident">SB5</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">2.5530502930e+03</span>; <span class="comment">/* 0x451f90ce */</span>
-<span class="kw">const</span> <span class="ident">SB6</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">4.7452853394e+02</span>; <span class="comment">/* 0x43ed43a7 */</span>
-<span class="kw">const</span> <span class="ident">SB7</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="op">-</span><span class="number">2.2440952301e+01</span>; <span class="comment">/* 0xc1b38712 */</span>
+ */
+</span><span class="kw">const </span>RB0: f32 = -<span class="number">9.8649431020e-03</span>; <span class="comment">/* 0xbc21a092 */
+</span><span class="kw">const </span>RB1: f32 = -<span class="number">7.9928326607e-01</span>; <span class="comment">/* 0xbf4c9dd4 */
+</span><span class="kw">const </span>RB2: f32 = -<span class="number">1.7757955551e+01</span>; <span class="comment">/* 0xc18e104b */
+</span><span class="kw">const </span>RB3: f32 = -<span class="number">1.6063638306e+02</span>; <span class="comment">/* 0xc320a2ea */
+</span><span class="kw">const </span>RB4: f32 = -<span class="number">6.3756646729e+02</span>; <span class="comment">/* 0xc41f6441 */
+</span><span class="kw">const </span>RB5: f32 = -<span class="number">1.0250950928e+03</span>; <span class="comment">/* 0xc480230b */
+</span><span class="kw">const </span>RB6: f32 = -<span class="number">4.8351919556e+02</span>; <span class="comment">/* 0xc3f1c275 */
+</span><span class="kw">const </span>SB1: f32 = <span class="number">3.0338060379e+01</span>; <span class="comment">/* 0x41f2b459 */
+</span><span class="kw">const </span>SB2: f32 = <span class="number">3.2579251099e+02</span>; <span class="comment">/* 0x43a2e571 */
+</span><span class="kw">const </span>SB3: f32 = <span class="number">1.5367296143e+03</span>; <span class="comment">/* 0x44c01759 */
+</span><span class="kw">const </span>SB4: f32 = <span class="number">3.1998581543e+03</span>; <span class="comment">/* 0x4547fdbb */
+</span><span class="kw">const </span>SB5: f32 = <span class="number">2.5530502930e+03</span>; <span class="comment">/* 0x451f90ce */
+</span><span class="kw">const </span>SB6: f32 = <span class="number">4.7452853394e+02</span>; <span class="comment">/* 0x43ed43a7 */
+</span><span class="kw">const </span>SB7: f32 = -<span class="number">2.2440952301e+01</span>; <span class="comment">/* 0xc1b38712 */
 
-<span class="kw">fn</span> <span class="ident">erfc1</span>(<span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
-    <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">q</span>: <span class="ident">f32</span>;
+</span><span class="kw">fn </span>erfc1(x: f32) -&gt; f32 {
+    <span class="kw">let </span>s: f32;
+    <span class="kw">let </span>p: f32;
+    <span class="kw">let </span>q: f32;
 
-    <span class="ident">s</span> <span class="op">=</span> <span class="ident">fabsf</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="number">1.0</span>;
-    <span class="ident">p</span> <span class="op">=</span> <span class="ident">PA0</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">PA1</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">PA2</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">PA3</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">PA4</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">PA5</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> <span class="ident">PA6</span>)))));
-    <span class="ident">q</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">QA1</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">QA2</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">QA3</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">QA4</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">QA5</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> <span class="ident">QA6</span>)))));
-    <span class="kw">return</span> <span class="number">1.0</span> <span class="op">-</span> <span class="ident">ERX</span> <span class="op">-</span> <span class="ident">p</span> <span class="op">/</span> <span class="ident">q</span>;
+    s = fabsf(x) - <span class="number">1.0</span>;
+    p = PA0 + s * (PA1 + s * (PA2 + s * (PA3 + s * (PA4 + s * (PA5 + s * PA6)))));
+    q = <span class="number">1.0 </span>+ s * (QA1 + s * (QA2 + s * (QA3 + s * (QA4 + s * (QA5 + s * QA6)))));
+    <span class="kw">return </span><span class="number">1.0 </span>- ERX - p / q;
 }
 
-<span class="kw">fn</span> <span class="ident">erfc2</span>(<span class="kw-2">mut</span> <span class="ident">ix</span>: <span class="ident">u32</span>, <span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
-    <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">r</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">big_s</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">z</span>: <span class="ident">f32</span>;
+<span class="kw">fn </span>erfc2(<span class="kw-2">mut </span>ix: u32, <span class="kw-2">mut </span>x: f32) -&gt; f32 {
+    <span class="kw">let </span>s: f32;
+    <span class="kw">let </span>r: f32;
+    <span class="kw">let </span>big_s: f32;
+    <span class="kw">let </span>z: f32;
 
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x3fa00000</span> {
-        <span class="comment">/* |x| &lt; 1.25 */</span>
-        <span class="kw">return</span> <span class="ident">erfc1</span>(<span class="ident">x</span>);
+    <span class="kw">if </span>ix &lt; <span class="number">0x3fa00000 </span>{
+        <span class="comment">/* |x| &lt; 1.25 */
+        </span><span class="kw">return </span>erfc1(x);
     }
 
-    <span class="ident">x</span> <span class="op">=</span> <span class="ident">fabsf</span>(<span class="ident">x</span>);
-    <span class="ident">s</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">/</span> (<span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span>);
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x4036db6d</span> {
-        <span class="comment">/* |x| &lt; 1/0.35 */</span>
-        <span class="ident">r</span> <span class="op">=</span> <span class="ident">RA0</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RA1</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RA2</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RA3</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RA4</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RA5</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RA6</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> <span class="ident">RA7</span>))))));
-        <span class="ident">big_s</span> <span class="op">=</span> <span class="number">1.0</span>
-            <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SA1</span>
-                <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SA2</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SA3</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SA4</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SA5</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SA6</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SA7</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> <span class="ident">SA8</span>)))))));
-    } <span class="kw">else</span> {
-        <span class="comment">/* |x| &gt;= 1/0.35 */</span>
-        <span class="ident">r</span> <span class="op">=</span> <span class="ident">RB0</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RB1</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RB2</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RB3</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RB4</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">RB5</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> <span class="ident">RB6</span>)))));
-        <span class="ident">big_s</span> <span class="op">=</span>
-            <span class="number">1.0</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SB1</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SB2</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SB3</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SB4</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SB5</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">SB6</span> <span class="op">+</span> <span class="ident">s</span> <span class="op">*</span> <span class="ident">SB7</span>))))));
+    x = fabsf(x);
+    s = <span class="number">1.0 </span>/ (x * x);
+    <span class="kw">if </span>ix &lt; <span class="number">0x4036db6d </span>{
+        <span class="comment">/* |x| &lt; 1/0.35 */
+        </span>r = RA0 + s * (RA1 + s * (RA2 + s * (RA3 + s * (RA4 + s * (RA5 + s * (RA6 + s * RA7))))));
+        big_s = <span class="number">1.0
+            </span>+ s * (SA1
+                + s * (SA2 + s * (SA3 + s * (SA4 + s * (SA5 + s * (SA6 + s * (SA7 + s * SA8)))))));
+    } <span class="kw">else </span>{
+        <span class="comment">/* |x| &gt;= 1/0.35 */
+        </span>r = RB0 + s * (RB1 + s * (RB2 + s * (RB3 + s * (RB4 + s * (RB5 + s * RB6)))));
+        big_s =
+            <span class="number">1.0 </span>+ s * (SB1 + s * (SB2 + s * (SB3 + s * (SB4 + s * (SB5 + s * (SB6 + s * SB7))))));
     }
-    <span class="ident">ix</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
-    <span class="ident">z</span> <span class="op">=</span> <span class="ident">f32::from_bits</span>(<span class="ident">ix</span> <span class="op">&amp;</span> <span class="number">0xffffe000</span>);
+    ix = x.to_bits();
+    z = f32::from_bits(ix &amp; <span class="number">0xffffe000</span>);
 
-    <span class="ident">expf</span>(<span class="op">-</span><span class="ident">z</span> <span class="op">*</span> <span class="ident">z</span> <span class="op">-</span> <span class="number">0.5625</span>) <span class="op">*</span> <span class="ident">expf</span>((<span class="ident">z</span> <span class="op">-</span> <span class="ident">x</span>) <span class="op">*</span> (<span class="ident">z</span> <span class="op">+</span> <span class="ident">x</span>) <span class="op">+</span> <span class="ident">r</span> <span class="op">/</span> <span class="ident">big_s</span>) <span class="op">/</span> <span class="ident">x</span>
+    expf(-z * z - <span class="number">0.5625</span>) * expf((z - x) * (z + x) + r / big_s) / x
 }
 
-<span class="doccomment">/// Error function (f32)</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Calculates an approximation to the “error function”, which estimates</span>
-<span class="doccomment">/// the probability that an observation will fall within x standard</span>
-<span class="doccomment">/// deviations of the mean (assuming a normal distribution).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">erff</span>(<span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
-    <span class="kw">let</span> <span class="ident">r</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">z</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">y</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ix</span>: <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">sign</span>: <span class="ident">usize</span>;
+<span class="doccomment">/// Error function (f32)
+///
+/// Calculates an approximation to the “error function”, which estimates
+/// the probability that an observation will fall within x standard
+/// deviations of the mean (assuming a normal distribution).
+</span><span class="kw">pub fn </span>erff(x: f32) -&gt; f32 {
+    <span class="kw">let </span>r: f32;
+    <span class="kw">let </span>s: f32;
+    <span class="kw">let </span>z: f32;
+    <span class="kw">let </span>y: f32;
+    <span class="kw">let </span><span class="kw-2">mut </span>ix: u32;
+    <span class="kw">let </span>sign: usize;
 
-    <span class="ident">ix</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
-    <span class="ident">sign</span> <span class="op">=</span> (<span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="kw">as</span> <span class="ident">usize</span>;
-    <span class="ident">ix</span> <span class="op">&amp;=</span> <span class="number">0x7fffffff</span>;
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x7f800000</span> {
-        <span class="comment">/* erf(nan)=nan, erf(+-inf)=+-1 */</span>
-        <span class="kw">return</span> <span class="number">1.0</span> <span class="op">-</span> <span class="number">2.0</span> <span class="op">*</span> (<span class="ident">sign</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">+</span> <span class="number">1.0</span> <span class="op">/</span> <span class="ident">x</span>;
+    ix = x.to_bits();
+    sign = (ix &gt;&gt; <span class="number">31</span>) <span class="kw">as </span>usize;
+    ix &amp;= <span class="number">0x7fffffff</span>;
+    <span class="kw">if </span>ix &gt;= <span class="number">0x7f800000 </span>{
+        <span class="comment">/* erf(nan)=nan, erf(+-inf)=+-1 */
+        </span><span class="kw">return </span><span class="number">1.0 </span>- <span class="number">2.0 </span>* (sign <span class="kw">as </span>f32) + <span class="number">1.0 </span>/ x;
     }
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x3f580000</span> {
-        <span class="comment">/* |x| &lt; 0.84375 */</span>
-        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x31800000</span> {
-            <span class="comment">/* |x| &lt; 2**-28 */</span>
-            <span class="comment">/*avoid underflow */</span>
-            <span class="kw">return</span> <span class="number">0.125</span> <span class="op">*</span> (<span class="number">8.0</span> <span class="op">*</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">EFX8</span> <span class="op">*</span> <span class="ident">x</span>);
+    <span class="kw">if </span>ix &lt; <span class="number">0x3f580000 </span>{
+        <span class="comment">/* |x| &lt; 0.84375 */
+        </span><span class="kw">if </span>ix &lt; <span class="number">0x31800000 </span>{
+            <span class="comment">/* |x| &lt; 2**-28 */
+            /*avoid underflow */
+            </span><span class="kw">return </span><span class="number">0.125 </span>* (<span class="number">8.0 </span>* x + EFX8 * x);
         }
-        <span class="ident">z</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span>;
-        <span class="ident">r</span> <span class="op">=</span> <span class="ident">PP0</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PP1</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PP2</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PP3</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">PP4</span>)));
-        <span class="ident">s</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QQ1</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QQ2</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QQ3</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QQ4</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">QQ5</span>))));
-        <span class="ident">y</span> <span class="op">=</span> <span class="ident">r</span> <span class="op">/</span> <span class="ident">s</span>;
-        <span class="kw">return</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">y</span>;
+        z = x * x;
+        r = PP0 + z * (PP1 + z * (PP2 + z * (PP3 + z * PP4)));
+        s = <span class="number">1.0 </span>+ z * (QQ1 + z * (QQ2 + z * (QQ3 + z * (QQ4 + z * QQ5))));
+        y = r / s;
+        <span class="kw">return </span>x + x * y;
     }
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x40c00000</span> {
-        <span class="comment">/* |x| &lt; 6 */</span>
-        <span class="ident">y</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">-</span> <span class="ident">erfc2</span>(<span class="ident">ix</span>, <span class="ident">x</span>);
-    } <span class="kw">else</span> {
-        <span class="kw">let</span> <span class="ident">x1p_120</span> <span class="op">=</span> <span class="ident">f32::from_bits</span>(<span class="number">0x03800000</span>);
-        <span class="ident">y</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">-</span> <span class="ident">x1p_120</span>;
+    <span class="kw">if </span>ix &lt; <span class="number">0x40c00000 </span>{
+        <span class="comment">/* |x| &lt; 6 */
+        </span>y = <span class="number">1.0 </span>- erfc2(ix, x);
+    } <span class="kw">else </span>{
+        <span class="kw">let </span>x1p_120 = f32::from_bits(<span class="number">0x03800000</span>);
+        y = <span class="number">1.0 </span>- x1p_120;
     }
 
-    <span class="kw">if</span> <span class="ident">sign</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="op">-</span><span class="ident">y</span>
-    } <span class="kw">else</span> {
-        <span class="ident">y</span>
+    <span class="kw">if </span>sign != <span class="number">0 </span>{
+        -y
+    } <span class="kw">else </span>{
+        y
     }
 }
 
-<span class="doccomment">/// Error function (f32)</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Calculates the complementary probability.</span>
-<span class="doccomment">/// Is `1 - erf(x)`. Is computed directly, so that you can use it to avoid</span>
-<span class="doccomment">/// the loss of precision that would result from subtracting</span>
-<span class="doccomment">/// large probabilities (on large `x`) from 1.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">erfcf</span>(<span class="ident">x</span>: <span class="ident">f32</span>) -&gt; <span class="ident">f32</span> {
-    <span class="kw">let</span> <span class="ident">r</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">z</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="ident">y</span>: <span class="ident">f32</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ix</span>: <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">sign</span>: <span class="ident">usize</span>;
+<span class="doccomment">/// Error function (f32)
+///
+/// Calculates the complementary probability.
+/// Is `1 - erf(x)`. Is computed directly, so that you can use it to avoid
+/// the loss of precision that would result from subtracting
+/// large probabilities (on large `x`) from 1.
+</span><span class="kw">pub fn </span>erfcf(x: f32) -&gt; f32 {
+    <span class="kw">let </span>r: f32;
+    <span class="kw">let </span>s: f32;
+    <span class="kw">let </span>z: f32;
+    <span class="kw">let </span>y: f32;
+    <span class="kw">let </span><span class="kw-2">mut </span>ix: u32;
+    <span class="kw">let </span>sign: usize;
 
-    <span class="ident">ix</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
-    <span class="ident">sign</span> <span class="op">=</span> (<span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="kw">as</span> <span class="ident">usize</span>;
-    <span class="ident">ix</span> <span class="op">&amp;=</span> <span class="number">0x7fffffff</span>;
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x7f800000</span> {
-        <span class="comment">/* erfc(nan)=nan, erfc(+-inf)=0,2 */</span>
-        <span class="kw">return</span> <span class="number">2.0</span> <span class="op">*</span> (<span class="ident">sign</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">+</span> <span class="number">1.0</span> <span class="op">/</span> <span class="ident">x</span>;
+    ix = x.to_bits();
+    sign = (ix &gt;&gt; <span class="number">31</span>) <span class="kw">as </span>usize;
+    ix &amp;= <span class="number">0x7fffffff</span>;
+    <span class="kw">if </span>ix &gt;= <span class="number">0x7f800000 </span>{
+        <span class="comment">/* erfc(nan)=nan, erfc(+-inf)=0,2 */
+        </span><span class="kw">return </span><span class="number">2.0 </span>* (sign <span class="kw">as </span>f32) + <span class="number">1.0 </span>/ x;
     }
 
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x3f580000</span> {
-        <span class="comment">/* |x| &lt; 0.84375 */</span>
-        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x23800000</span> {
-            <span class="comment">/* |x| &lt; 2**-56 */</span>
-            <span class="kw">return</span> <span class="number">1.0</span> <span class="op">-</span> <span class="ident">x</span>;
+    <span class="kw">if </span>ix &lt; <span class="number">0x3f580000 </span>{
+        <span class="comment">/* |x| &lt; 0.84375 */
+        </span><span class="kw">if </span>ix &lt; <span class="number">0x23800000 </span>{
+            <span class="comment">/* |x| &lt; 2**-56 */
+            </span><span class="kw">return </span><span class="number">1.0 </span>- x;
         }
-        <span class="ident">z</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span>;
-        <span class="ident">r</span> <span class="op">=</span> <span class="ident">PP0</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PP1</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PP2</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">PP3</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">PP4</span>)));
-        <span class="ident">s</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QQ1</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QQ2</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QQ3</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">QQ4</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">QQ5</span>))));
-        <span class="ident">y</span> <span class="op">=</span> <span class="ident">r</span> <span class="op">/</span> <span class="ident">s</span>;
-        <span class="kw">if</span> <span class="ident">sign</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x3e800000</span> {
-            <span class="comment">/* x &lt; 1/4 */</span>
-            <span class="kw">return</span> <span class="number">1.0</span> <span class="op">-</span> (<span class="ident">x</span> <span class="op">+</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">y</span>);
+        z = x * x;
+        r = PP0 + z * (PP1 + z * (PP2 + z * (PP3 + z * PP4)));
+        s = <span class="number">1.0 </span>+ z * (QQ1 + z * (QQ2 + z * (QQ3 + z * (QQ4 + z * QQ5))));
+        y = r / s;
+        <span class="kw">if </span>sign != <span class="number">0 </span>|| ix &lt; <span class="number">0x3e800000 </span>{
+            <span class="comment">/* x &lt; 1/4 */
+            </span><span class="kw">return </span><span class="number">1.0 </span>- (x + x * y);
         }
-        <span class="kw">return</span> <span class="number">0.5</span> <span class="op">-</span> (<span class="ident">x</span> <span class="op">-</span> <span class="number">0.5</span> <span class="op">+</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">y</span>);
+        <span class="kw">return </span><span class="number">0.5 </span>- (x - <span class="number">0.5 </span>+ x * y);
     }
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x41e00000</span> {
-        <span class="comment">/* |x| &lt; 28 */</span>
-        <span class="kw">if</span> <span class="ident">sign</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="number">2.0</span> <span class="op">-</span> <span class="ident">erfc2</span>(<span class="ident">ix</span>, <span class="ident">x</span>);
-        } <span class="kw">else</span> {
-            <span class="kw">return</span> <span class="ident">erfc2</span>(<span class="ident">ix</span>, <span class="ident">x</span>);
+    <span class="kw">if </span>ix &lt; <span class="number">0x41e00000 </span>{
+        <span class="comment">/* |x| &lt; 28 */
+        </span><span class="kw">if </span>sign != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="number">2.0 </span>- erfc2(ix, x);
+        } <span class="kw">else </span>{
+            <span class="kw">return </span>erfc2(ix, x);
         }
     }
 
-    <span class="kw">let</span> <span class="ident">x1p_120</span> <span class="op">=</span> <span class="ident">f32::from_bits</span>(<span class="number">0x03800000</span>);
-    <span class="kw">if</span> <span class="ident">sign</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="number">2.0</span> <span class="op">-</span> <span class="ident">x1p_120</span>
-    } <span class="kw">else</span> {
-        <span class="ident">x1p_120</span> <span class="op">*</span> <span class="ident">x1p_120</span>
+    <span class="kw">let </span>x1p_120 = f32::from_bits(<span class="number">0x03800000</span>);
+    <span class="kw">if </span>sign != <span class="number">0 </span>{
+        <span class="number">2.0 </span>- x1p_120
+    } <span class="kw">else </span>{
+        x1p_120 * x1p_120
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

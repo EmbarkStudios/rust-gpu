@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/spirv_type_constraints.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spirv_type_constraints.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/spirv_type_constraints.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spirv_type_constraints.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -955,957 +949,956 @@
 <span id="949">949</span>
 <span id="950">950</span>
 <span id="951">951</span>
-</pre><pre class="rust"><code><span class="doccomment">//! SPIR-V type constraints. Can be used to perform a subset of validation,</span>
-<span class="doccomment">//! or for inference purposes.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Only type/storage-class equality is currently handled here, no concrete</span>
-<span class="doccomment">//! type/storage-class constraints, nor anything involving non-type/storage-class</span>
-<span class="doccomment">//! operands. While more constraints could be supported, encoding all the possible</span>
-<span class="doccomment">//! rules for them may be challenging.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Type constraints could be provided in two representations:</span>
-<span class="doccomment">//! * static/generic: the constraints are built up from generic types</span>
-<span class="doccomment">//!   (i.e. like iterator combinators), and passed to a generic trait method</span>
-<span class="doccomment">//!   to &quot;apply&quot; them, allowing efficient code to be generated, similar to</span>
-<span class="doccomment">//!   e.g. handcrafted imperative inference logic, but more flexible</span>
-<span class="doccomment">//! * dynamic/value: the constraints are a tree of `enum` values (like an AST)</span>
-<span class="doccomment">//!   that has to be visited (using recursion and `match`) to apply, which is</span>
-<span class="doccomment">//!   less efficient than the &quot;static representation&quot;, but even more flexible</span>
-<span class="doccomment">//!   (as full introspection of the constraints is possible)</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Only the &quot;dynamic representation&quot; is currently implemented, as it&#39;s simpler.</span>
-<span class="doccomment">//! If the &quot;static representation&quot; ends up being required (for performance reasons),</span>
-<span class="doccomment">//! the &quot;dynamic representation&quot; could be generated from it using associated `const`s.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! SPIR-V type constraints. Can be used to perform a subset of validation,
+//! or for inference purposes.
+//!
+//! Only type/storage-class equality is currently handled here, no concrete
+//! type/storage-class constraints, nor anything involving non-type/storage-class
+//! operands. While more constraints could be supported, encoding all the possible
+//! rules for them may be challenging.
+//!
+//! Type constraints could be provided in two representations:
+//! * static/generic: the constraints are built up from generic types
+//!   (i.e. like iterator combinators), and passed to a generic trait method
+//!   to &quot;apply&quot; them, allowing efficient code to be generated, similar to
+//!   e.g. handcrafted imperative inference logic, but more flexible
+//! * dynamic/value: the constraints are a tree of `enum` values (like an AST)
+//!   that has to be visited (using recursion and `match`) to apply, which is
+//!   less efficient than the &quot;static representation&quot;, but even more flexible
+//!   (as full introspection of the constraints is possible)
+//!
+//! Only the &quot;dynamic representation&quot; is currently implemented, as it&#39;s simpler.
+//! If the &quot;static representation&quot; ends up being required (for performance reasons),
+//! the &quot;dynamic representation&quot; could be generated from it using associated `const`s.
 
-<span class="kw">use</span> <span class="ident">rspirv::spirv::Op</span>;
+</span><span class="kw">use </span>rspirv::spirv::Op;
 
-<span class="doccomment">/// Helper trait to allow macros to work uniformly across different pattern types.</span>
-<span class="kw">trait</span> <span class="ident">Pat</span> {
-    <span class="doccomment">/// Unconstrained pattern, i.e. that matches everything.</span>
-    <span class="kw">const</span> <span class="ident">ANY</span>: <span class="self">Self</span>;
+<span class="doccomment">/// Helper trait to allow macros to work uniformly across different pattern types.
+</span><span class="kw">trait </span>Pat {
+    <span class="doccomment">/// Unconstrained pattern, i.e. that matches everything.
+    </span><span class="kw">const </span>ANY: <span class="self">Self</span>;
 }
 
-<span class="doccomment">/// Pattern for a SPIR-V storage class, dynamic representation (see module-level docs).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StorageClassPat</span> {
-    <span class="doccomment">/// Unconstrained storage class.</span>
-    <span class="ident">Any</span>,
+<span class="doccomment">/// Pattern for a SPIR-V storage class, dynamic representation (see module-level docs).
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>StorageClassPat {
+    <span class="doccomment">/// Unconstrained storage class.
+    </span>Any,
 
-    <span class="doccomment">/// Storage class variable: all occurrences of `Var(i)` with the same `i` must be</span>
-    <span class="doccomment">/// identical storage classes. For convenience, these associated consts are provided:</span>
-    <span class="doccomment">/// * `StorageClassPat::S` for `StorageClassPat::Var(0)`</span>
-    <span class="ident">Var</span>(<span class="ident">usize</span>),
+    <span class="doccomment">/// Storage class variable: all occurrences of `Var(i)` with the same `i` must be
+    /// identical storage classes. For convenience, these associated consts are provided:
+    /// * `StorageClassPat::S` for `StorageClassPat::Var(0)`
+    </span>Var(usize),
 }
 
-<span class="kw">impl</span> <span class="ident">Pat</span> <span class="kw">for</span> <span class="ident">StorageClassPat</span> {
-    <span class="kw">const</span> <span class="ident">ANY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Any</span>;
+<span class="kw">impl </span>Pat <span class="kw">for </span>StorageClassPat {
+    <span class="kw">const </span>ANY: <span class="self">Self </span>= <span class="self">Self</span>::Any;
 }
 
-<span class="kw">impl</span> <span class="ident">StorageClassPat</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">S</span>: <span class="self">Self</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Var</span>(<span class="number">0</span>);
+<span class="kw">impl </span>StorageClassPat {
+    <span class="kw">pub const </span>S: <span class="self">Self </span>= <span class="self">Self</span>::Var(<span class="number">0</span>);
 }
 
-<span class="doccomment">/// Pattern for a SPIR-V type, dynamic representation (see module-level docs).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Unconstrained type.</span>
-    <span class="ident">Any</span>,
+<span class="doccomment">/// Pattern for a SPIR-V type, dynamic representation (see module-level docs).
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Unconstrained type.
+    </span>Any,
 
-    <span class="doccomment">/// Type variable: all occurrences of `Var(i)` with the same `i` must be</span>
-    <span class="doccomment">/// identical types. For convenience, these associated consts are provided:</span>
-    <span class="doccomment">/// * `TyPat::T` for `TyPat::Var(0)`</span>
-    <span class="ident">Var</span>(<span class="ident">usize</span>),
+    <span class="doccomment">/// Type variable: all occurrences of `Var(i)` with the same `i` must be
+    /// identical types. For convenience, these associated consts are provided:
+    /// * `TyPat::T` for `TyPat::Var(0)`
+    </span>Var(usize),
 
-    <span class="doccomment">/// One of the two patterns must match.</span>
-    <span class="ident">Either</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// One of the two patterns must match.
+    </span>Either(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// `OpTypeVoid`: this is the only exception to the limitations of</span>
-    <span class="doccomment">/// &quot;no concrete type constraints&quot;, and is used solely to disambiguate</span>
-    <span class="doccomment">/// image sampling instructions, which are specified using phrasing like:</span>
-    <span class="doccomment">/// &gt; Its components must be the same as *Sampled Type* of the underlying</span>
-    <span class="doccomment">/// &gt; `OpTypeImage` (unless that underlying *Sampled Type* is `OpTypeVoid`).</span>
-    <span class="ident">Void</span>,
+    <span class="doccomment">/// `OpTypeVoid`: this is the only exception to the limitations of
+    /// &quot;no concrete type constraints&quot;, and is used solely to disambiguate
+    /// image sampling instructions, which are specified using phrasing like:
+    /// &gt; Its components must be the same as *Sampled Type* of the underlying
+    /// &gt; `OpTypeImage` (unless that underlying *Sampled Type* is `OpTypeVoid`).
+    </span>Void,
 
-    <span class="doccomment">/// `OpTypePointer`, with an inner pattern for its *Storage Class* operand,</span>
-    <span class="doccomment">/// and another for its *Type* operand.</span>
-    <span class="ident">Pointer</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StorageClassPat</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// `OpTypePointer`, with an inner pattern for its *Storage Class* operand,
+    /// and another for its *Type* operand.
+    </span>Pointer(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>StorageClassPat, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="comment">// FIXME(eddyb) try to DRY the same-shape patterns below.</span>
-    <span class="comment">//</span>
-    <span class="doccomment">/// `OpTypeArray`, with an inner pattern for its *Element Type* operand.</span>
-    <span class="ident">Array</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="comment">// FIXME(eddyb) try to DRY the same-shape patterns below.
+    //
+    </span><span class="doccomment">/// `OpTypeArray`, with an inner pattern for its *Element Type* operand.
+    </span>Array(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// `OpTypeVector`, with an inner pattern for its *Component Type* operand.</span>
-    <span class="ident">Vector</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// `OpTypeVector`, with an inner pattern for its *Component Type* operand.
+    </span>Vector(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// `OpTypeVector`, with an inner pattern for its *Component Type* operand,</span>
-    <span class="doccomment">/// and a *Component Count* of `4`, used solely for image sampling instructions.</span>
-    <span class="ident">Vector4</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// `OpTypeVector`, with an inner pattern for its *Component Type* operand,
+    /// and a *Component Count* of `4`, used solely for image sampling instructions.
+    </span>Vector4(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// `OpTypeMatrix`, with an inner pattern for its *Column Type* operand.</span>
-    <span class="ident">Matrix</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// `OpTypeMatrix`, with an inner pattern for its *Column Type* operand.
+    </span>Matrix(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// `OpTypeImage`, with an inner pattern for its *Sampled Type* operand.</span>
-    <span class="ident">Image</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// `OpTypeImage`, with an inner pattern for its *Sampled Type* operand.
+    </span>Image(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// `OpTypePipe`, with an inner pattern for what is referred to as its</span>
-    <span class="doccomment">/// &quot;data type&quot;, despite `OpTypePipe` itself not taking any operands.</span>
-    <span class="comment">// FIXME(eddyb) figure out why the spec talks about `OpTypePipe`s&#39; &quot;data type&quot;s</span>
-    <span class="ident">Pipe</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// `OpTypePipe`, with an inner pattern for what is referred to as its
+    /// &quot;data type&quot;, despite `OpTypePipe` itself not taking any operands.
+    </span><span class="comment">// FIXME(eddyb) figure out why the spec talks about `OpTypePipe`s&#39; &quot;data type&quot;s
+    </span>Pipe(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// `OpTypeSampledImage`, with an inner pattern for its *Image Type* operand.</span>
-    <span class="ident">SampledImage</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// `OpTypeSampledImage`, with an inner pattern for its *Image Type* operand.
+    </span>SampledImage(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// `OpTypeStruct`, with an inner pattern for its *Member N Type* operands.</span>
-    <span class="ident">Struct</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// `OpTypeStruct`, with an inner pattern for its *Member N Type* operands.
+    </span>Struct(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyListPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// `OpTypeFunction`, with an inner pattern for its *Return Type* operand,</span>
-    <span class="doccomment">/// and another for its *Parameter N Type* operands.</span>
-    <span class="ident">Function</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// `OpTypeFunction`, with an inner pattern for its *Return Type* operand,
+    /// and another for its *Parameter N Type* operands.
+    </span>Function(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyListPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// Index the composite type matched by the inner pattern (like a `Var`)</span>
-    <span class="doccomment">/// by all of the value operands of the instruction which don&#39;t have their</span>
-    <span class="doccomment">/// types consumed explicitly, i.e. the indices operands correspond to</span>
-    <span class="doccomment">/// the `TyListPat::Any` part of the the `inputs` of the `InstSig`,</span>
-    <span class="doccomment">/// e.g. in `sig! { (_, T, _, ..) -&gt; IndexComposite(T) }`, the output type</span>
-    <span class="doccomment">/// has to be identical to the result of indexing `T` by all the value</span>
-    <span class="doccomment">/// operands *other than* the first 3.</span>
-    <span class="comment">// FIXME(eddyb) reconsider this design, to be less magical</span>
-    <span class="ident">IndexComposite</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// Index the composite type matched by the inner pattern (like a `Var`)
+    /// by all of the value operands of the instruction which don&#39;t have their
+    /// types consumed explicitly, i.e. the indices operands correspond to
+    /// the `TyListPat::Any` part of the the `inputs` of the `InstSig`,
+    /// e.g. in `sig! { (_, T, _, ..) -&gt; IndexComposite(T) }`, the output type
+    /// has to be identical to the result of indexing `T` by all the value
+    /// operands *other than* the first 3.
+    </span><span class="comment">// FIXME(eddyb) reconsider this design, to be less magical
+    </span>IndexComposite(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 }
 
-<span class="kw">impl</span> <span class="ident">Pat</span> <span class="kw">for</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">const</span> <span class="ident">ANY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Any</span>;
+<span class="kw">impl </span>Pat <span class="kw">for </span>TyPat&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">const </span>ANY: <span class="self">Self </span>= <span class="self">Self</span>::Any;
 }
 
-<span class="kw">impl</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">T</span>: <span class="self">Self</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Var</span>(<span class="number">0</span>);
+<span class="kw">impl </span>TyPat&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">pub const </span>T: <span class="self">Self </span>= <span class="self">Self</span>::Var(<span class="number">0</span>);
 }
 
-<span class="doccomment">/// Pattern for a list of SPIR-V types, dynamic representation (see module-level docs).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// &quot;Type lists&quot; are used for `OpTypeStruct` fields, `OpTypeFunction` parameters,</span>
-<span class="doccomment">/// and operand types of instructions signatures.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Unconstrained type list (any length, and the types can freely vary).</span>
-    <span class="ident">Any</span>,
+<span class="doccomment">/// Pattern for a list of SPIR-V types, dynamic representation (see module-level docs).
+///
+/// &quot;Type lists&quot; are used for `OpTypeStruct` fields, `OpTypeFunction` parameters,
+/// and operand types of instructions signatures.
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>TyListPat&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Unconstrained type list (any length, and the types can freely vary).
+    </span>Any,
 
-    <span class="doccomment">/// Type list variable: all occurrences of `Var(i)` with the same `i` must be</span>
-    <span class="doccomment">/// identical type lists. For convenience, these associated consts are provided:</span>
-    <span class="doccomment">/// * `TyListPat::TS` for `TyListPat::Var(0)`</span>
-    <span class="ident">Var</span>(<span class="ident">usize</span>),
+    <span class="doccomment">/// Type list variable: all occurrences of `Var(i)` with the same `i` must be
+    /// identical type lists. For convenience, these associated consts are provided:
+    /// * `TyListPat::TS` for `TyListPat::Var(0)`
+    </span>Var(usize),
 
-    <span class="doccomment">/// Uniform repeat type list: equivalent to repeating the inner type list</span>
-    <span class="doccomment">/// pattern (which must be finite), enough times to cover the whole list.</span>
-    <span class="ident">Repeat</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// Uniform repeat type list: equivalent to repeating the inner type list
+    /// pattern (which must be finite), enough times to cover the whole list.
+    </span>Repeat(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyListPat&lt;<span class="lifetime">&#39;a</span>&gt;),
 
-    <span class="doccomment">/// Empty type list.</span>
-    <span class="ident">Nil</span>,
+    <span class="doccomment">/// Empty type list.
+    </span>Nil,
 
-    <span class="doccomment">/// One type followed by another type list.</span>
-    <span class="ident">Cons</span> {
-        <span class="ident">first</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-        <span class="ident">suffix</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// One type followed by another type list.
+    </span>Cons {
+        first: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;,
+        suffix: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyListPat&lt;<span class="lifetime">&#39;a</span>&gt;,
     },
 }
 
-<span class="kw">impl</span> <span class="ident">Pat</span> <span class="kw">for</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">const</span> <span class="ident">ANY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Any</span>;
+<span class="kw">impl </span>Pat <span class="kw">for </span>TyListPat&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">const </span>ANY: <span class="self">Self </span>= <span class="self">Self</span>::Any;
 }
 
-<span class="kw">impl</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Var</span>(<span class="number">0</span>);
+<span class="kw">impl </span>TyListPat&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">pub const </span>TS: <span class="self">Self </span>= <span class="self">Self</span>::Var(<span class="number">0</span>);
 }
 
-<span class="doccomment">/// Instruction &quot;signature&quot;, dynamic representation (see module-level docs).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstSig</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Pattern for an instruction&#39;s sole storage class operand, if applicable.</span>
-    <span class="comment">// FIXME(eddyb) integrate this with `input_types` - it&#39;s non-trivial because</span>
-    <span class="comment">// that matches *the types of* ID operands, not the operands themselves.</span>
-    <span class="kw">pub</span> <span class="ident">storage_class</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StorageClassPat</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Instruction &quot;signature&quot;, dynamic representation (see module-level docs).
+</span><span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">pub struct </span>InstSig&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Pattern for an instruction&#39;s sole storage class operand, if applicable.
+    </span><span class="comment">// FIXME(eddyb) integrate this with `input_types` - it&#39;s non-trivial because
+    // that matches *the types of* ID operands, not the operands themselves.
+    </span><span class="kw">pub </span>storage_class: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>StorageClassPat&gt;,
 
-    <span class="doccomment">/// Patterns for the complete list of types of the instruction&#39;s ID operands,</span>
-    <span class="doccomment">/// where non-value operands (i.e. IDs of instructions without a *Result Type*)</span>
-    <span class="doccomment">/// can only match `TyPat::Any`.</span>
-    <span class="kw">pub</span> <span class="ident">input_types</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Patterns for the complete list of types of the instruction&#39;s ID operands,
+    /// where non-value operands (i.e. IDs of instructions without a *Result Type*)
+    /// can only match `TyPat::Any`.
+    </span><span class="kw">pub </span>input_types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyListPat&lt;<span class="lifetime">&#39;a</span>&gt;,
 
-    <span class="doccomment">/// Pattern for the instruction&#39;s *Result Type* operand, if applicable.</span>
-    <span class="kw">pub</span> <span class="ident">output_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Pattern for the instruction&#39;s *Result Type* operand, if applicable.
+    </span><span class="kw">pub </span>output_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TyPat&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
 }
 
-<span class="doccomment">/// Returns an array of valid signatures for an instruction with opcode `op`,</span>
-<span class="doccomment">/// or `None` if there aren&#39;t any known type constraints for that instruction.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">instruction_signatures</span>(<span class="ident">op</span>: <span class="ident">Op</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">InstSig</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>]<span class="op">&gt;</span> {
-    <span class="comment">// Restrict the names the `pat!` macro can take as pattern constructors.</span>
-    <span class="kw">mod</span> <span class="ident">pat_ctors</span> {
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">S</span>: <span class="ident"><span class="kw">super</span>::StorageClassPat</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::StorageClassPat::S</span>;
-        <span class="comment">// NOTE(eddyb) it would be really nice if we could import `TyPat::{* - Any, Var}`,</span>
-        <span class="comment">// i.e. all but those two variants.</span>
-        <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::TyPat</span>::{
-            <span class="ident">Array</span>, <span class="ident">Either</span>, <span class="ident">Function</span>, <span class="ident">Image</span>, <span class="ident">IndexComposite</span>, <span class="ident">Matrix</span>, <span class="ident">Pipe</span>, <span class="ident">Pointer</span>, <span class="ident">SampledImage</span>,
-            <span class="ident">Struct</span>, <span class="ident">Vector</span>, <span class="ident">Vector4</span>, <span class="ident">Void</span>,
+<span class="doccomment">/// Returns an array of valid signatures for an instruction with opcode `op`,
+/// or `None` if there aren&#39;t any known type constraints for that instruction.
+</span><span class="kw">pub fn </span>instruction_signatures(op: Op) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[InstSig&lt;<span class="lifetime">&#39;static</span>&gt;]&gt; {
+    <span class="comment">// Restrict the names the `pat!` macro can take as pattern constructors.
+    </span><span class="kw">mod </span>pat_ctors {
+        <span class="kw">pub const </span>S: <span class="kw">super</span>::StorageClassPat = <span class="kw">super</span>::StorageClassPat::S;
+        <span class="comment">// NOTE(eddyb) it would be really nice if we could import `TyPat::{* - Any, Var}`,
+        // i.e. all but those two variants.
+        </span><span class="kw">pub use </span><span class="kw">super</span>::TyPat::{
+            Array, Either, Function, Image, IndexComposite, Matrix, Pipe, Pointer, SampledImage,
+            Struct, Vector, Vector4, Void,
         };
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">T</span>: <span class="ident"><span class="kw">super</span>::TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::TyPat::T</span>;
-        <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::TyListPat::Repeat</span>;
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TS</span>: <span class="ident"><span class="kw">super</span>::TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::TyListPat::TS</span>;
+        <span class="kw">pub const </span>T: <span class="kw">super</span>::TyPat&lt;<span class="lifetime">&#39;_</span>&gt; = <span class="kw">super</span>::TyPat::T;
+        <span class="kw">pub use </span><span class="kw">super</span>::TyListPat::Repeat;
+        <span class="kw">pub const </span>TS: <span class="kw">super</span>::TyListPat&lt;<span class="lifetime">&#39;_</span>&gt; = <span class="kw">super</span>::TyListPat::TS;
     }
 
-    <span class="macro">macro_rules!</span> <span class="ident">pat</span> {
-        (<span class="kw">_</span>) =&gt; { <span class="kw-2">&amp;</span><span class="ident">Pat::ANY</span> };
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span>:<span class="ident">ident</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>),<span class="op">+</span>))<span class="question-mark">?</span>) =&gt; {
-            <span class="kw-2">&amp;</span><span class="ident">pat_ctors</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span> $(($(<span class="macro">pat!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>)),<span class="op">+</span>))<span class="question-mark">?</span>
-        };
-        ([]) =&gt; { <span class="kw-2">&amp;</span><span class="ident">TyListPat::Nil</span> };
-        ([..]) =&gt; { <span class="kw-2">&amp;</span><span class="ident">TyListPat::Any</span> };
-        ([...$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="op">+</span>]) =&gt; { <span class="macro">pat!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>)<span class="op">+</span>) };
-        ([<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span> $(, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>)<span class="question-mark">?</span>]) =&gt; {
-            <span class="kw-2">&amp;</span><span class="ident">TyListPat::Cons</span> {
-                <span class="ident">first</span>: <span class="macro">pat!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>),
-                <span class="ident">suffix</span>: <span class="macro">pat!</span>([$($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>)<span class="kw-2">*</span>)<span class="question-mark">?</span>]),
+    <span class="macro">macro_rules! </span>pat {
+        (<span class="kw">_</span>) =&gt; { <span class="kw-2">&amp;</span>Pat::ANY };
+        (<span class="macro-nonterminal">$ctor</span>:ident $(($(<span class="macro-nonterminal">$inner</span>:tt $(($(<span class="macro-nonterminal">$inner_args</span>:tt)+))<span class="question-mark">?</span>),+))<span class="question-mark">?</span>) =&gt; {
+            <span class="kw-2">&amp;</span>pat_ctors::<span class="macro-nonterminal">$ctor </span>$(($(<span class="macro">pat!</span>(<span class="macro-nonterminal">$inner </span>$(($(<span class="macro-nonterminal">$inner_args</span>)+))<span class="question-mark">?</span>)),+))<span class="question-mark">?
+        </span>};
+        ([]) =&gt; { <span class="kw-2">&amp;</span>TyListPat::Nil };
+        ([..]) =&gt; { <span class="kw-2">&amp;</span>TyListPat::Any };
+        ([...$(<span class="macro-nonterminal">$rest</span>:tt)+]) =&gt; { <span class="macro">pat!</span>($(<span class="macro-nonterminal">$rest</span>)+) };
+        ([<span class="macro-nonterminal">$first</span>:tt $(($(<span class="macro-nonterminal">$first_args</span>:tt)+))<span class="question-mark">? </span>$(, $(<span class="macro-nonterminal">$rest</span>:tt)<span class="kw-2">*</span>)<span class="question-mark">?</span>]) =&gt; {
+            <span class="kw-2">&amp;</span>TyListPat::Cons {
+                first: <span class="macro">pat!</span>(<span class="macro-nonterminal">$first </span>$(($(<span class="macro-nonterminal">$first_args</span>)+))<span class="question-mark">?</span>),
+                suffix: <span class="macro">pat!</span>([$($(<span class="macro-nonterminal">$rest</span>)<span class="kw-2">*</span>)<span class="question-mark">?</span>]),
             }
         }
     }
-    <span class="macro">macro_rules!</span> <span class="ident">optionify</span> {
+    <span class="macro">macro_rules! </span>optionify {
         () =&gt; {
-            <span class="prelude-val">None</span>
-        };
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">expr</span>) =&gt; {
-            <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>)
+            <span class="prelude-val">None
+        </span>};
+        (<span class="macro-nonterminal">$x</span>:expr) =&gt; {
+            <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$x</span>)
         };
     }
-    <span class="macro">macro_rules!</span> <span class="ident">sig</span> {
+    <span class="macro">macro_rules! </span>sig {
         ($(
-            $({$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">storage_class</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>})<span class="question-mark">?</span>
-            ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_tys</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>)
-            $(-&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>)<span class="question-mark">?</span>
-        )<span class="op">|</span><span class="op">+</span>) =&gt; {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[$(<span class="ident">InstSig</span> {
-                <span class="ident">storage_class</span>: <span class="macro">optionify!</span>($(<span class="macro">pat!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">storage_class</span>)<span class="kw-2">*</span>))<span class="question-mark">?</span>),
-                <span class="ident">input_types</span>: <span class="macro">pat!</span>([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_tys</span>)<span class="kw-2">*</span>]),
-                <span class="ident">output_type</span>: <span class="macro">optionify!</span>($(<span class="macro">pat!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>))<span class="question-mark">?</span>),
+            $({$(<span class="macro-nonterminal">$storage_class</span>:tt)<span class="kw-2">*</span>})<span class="question-mark">?
+            </span>($(<span class="macro-nonterminal">$in_tys</span>:tt)<span class="kw-2">*</span>)
+            $(-&gt; <span class="macro-nonterminal">$out_ty</span>:tt $(($(<span class="macro-nonterminal">$out_ty_args</span>:tt)+))<span class="question-mark">?</span>)<span class="question-mark">?
+        </span>)|+) =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[$(InstSig {
+                storage_class: <span class="macro">optionify!</span>($(<span class="macro">pat!</span>($(<span class="macro-nonterminal">$storage_class</span>)<span class="kw-2">*</span>))<span class="question-mark">?</span>),
+                input_types: <span class="macro">pat!</span>([$(<span class="macro-nonterminal">$in_tys</span>)<span class="kw-2">*</span>]),
+                output_type: <span class="macro">optionify!</span>($(<span class="macro">pat!</span>(<span class="macro-nonterminal">$out_ty </span>$(($(<span class="macro-nonterminal">$out_ty_args</span>)+))<span class="question-mark">?</span>))<span class="question-mark">?</span>),
             }),<span class="kw-2">*</span>])
         };
     }
 
-    <span class="macro">macro_rules!</span> <span class="ident">reserved</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ext</span>:<span class="ident">ident</span>) =&gt; {
-            <span class="macro">unreachable!</span>(<span class="macro">concat!</span>(<span class="string">&quot;Op{:?} is reserved for &quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ext</span>)), <span class="ident">op</span>)
+    <span class="macro">macro_rules! </span>reserved {
+        (<span class="macro-nonterminal">$ext</span>:ident) =&gt; {
+            <span class="macro">unreachable!</span>(<span class="macro">concat!</span>(<span class="string">&quot;Op{:?} is reserved for &quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$ext</span>)), op)
         };
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::match_same_arms</span>)]</span>
-    <span class="kw">match</span> <span class="ident">op</span> {
-        <span class="comment">// 3.37.1. Miscellaneous Instructions</span>
-        <span class="ident">Op::Nop</span> <span class="op">|</span> <span class="ident">Op::Undef</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.1, Capability: Addresses</span>
-        <span class="ident">Op::SizeOf</span> =&gt; {}
+    <span class="attribute">#[allow(clippy::match_same_arms)]
+    </span><span class="kw">match </span>op {
+        <span class="comment">// 3.37.1. Miscellaneous Instructions
+        </span>Op::Nop | Op::Undef =&gt; {}
+        <span class="comment">// SPIR-V 1.1, Capability: Addresses
+        </span>Op::SizeOf =&gt; {}
 
-        <span class="comment">// 3.37.2. Debug Instructions</span>
-        <span class="ident">Op::SourceContinued</span>
-        <span class="op">|</span> <span class="ident">Op::Source</span>
-        <span class="op">|</span> <span class="ident">Op::SourceExtension</span>
-        <span class="op">|</span> <span class="ident">Op::Name</span>
-        <span class="op">|</span> <span class="ident">Op::MemberName</span>
-        <span class="op">|</span> <span class="ident">Op::String</span>
-        <span class="op">|</span> <span class="ident">Op::Line</span> =&gt; {}
-        <span class="comment">//</span>
-        <span class="ident">Op::NoLine</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.1</span>
-        <span class="ident">Op::ModuleProcessed</span> =&gt; {}
+        <span class="comment">// 3.37.2. Debug Instructions
+        </span>Op::SourceContinued
+        | Op::Source
+        | Op::SourceExtension
+        | Op::Name
+        | Op::MemberName
+        | Op::String
+        | Op::Line =&gt; {}
+        <span class="comment">//
+        </span>Op::NoLine =&gt; {}
+        <span class="comment">// SPIR-V 1.1
+        </span>Op::ModuleProcessed =&gt; {}
 
-        <span class="comment">// 3.37.3. Annotation Instructions</span>
-        <span class="ident">Op::Decorate</span>
-        <span class="op">|</span> <span class="ident">Op::MemberDecorate</span>
-        <span class="op">|</span> <span class="ident">Op::DecorationGroup</span>
-        <span class="op">|</span> <span class="ident">Op::GroupDecorate</span>
-        <span class="op">|</span> <span class="ident">Op::GroupMemberDecorate</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.2</span>
-        <span class="ident">Op::DecorateId</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.4</span>
-        <span class="ident">Op::DecorateString</span> <span class="op">|</span> <span class="ident">Op::MemberDecorateString</span> =&gt; {}
+        <span class="comment">// 3.37.3. Annotation Instructions
+        </span>Op::Decorate
+        | Op::MemberDecorate
+        | Op::DecorationGroup
+        | Op::GroupDecorate
+        | Op::GroupMemberDecorate =&gt; {}
+        <span class="comment">// SPIR-V 1.2
+        </span>Op::DecorateId =&gt; {}
+        <span class="comment">// SPIR-V 1.4
+        </span>Op::DecorateString | Op::MemberDecorateString =&gt; {}
 
-        <span class="comment">// 3.37.4. Extension Instructions</span>
-        <span class="ident">Op::Extension</span> <span class="op">|</span> <span class="ident">Op::ExtInstImport</span> <span class="op">|</span> <span class="ident">Op::ExtInst</span> =&gt; {}
+        <span class="comment">// 3.37.4. Extension Instructions
+        </span>Op::Extension | Op::ExtInstImport | Op::ExtInst =&gt; {}
 
-        <span class="comment">// 3.37.5. Mode-Setting Instructions</span>
-        <span class="ident">Op::MemoryModel</span> <span class="op">|</span> <span class="ident">Op::EntryPoint</span> <span class="op">|</span> <span class="ident">Op::ExecutionMode</span> <span class="op">|</span> <span class="ident">Op::Capability</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.2</span>
-        <span class="ident">Op::ExecutionModeId</span> =&gt; {}
+        <span class="comment">// 3.37.5. Mode-Setting Instructions
+        </span>Op::MemoryModel | Op::EntryPoint | Op::ExecutionMode | Op::Capability =&gt; {}
+        <span class="comment">// SPIR-V 1.2
+        </span>Op::ExecutionModeId =&gt; {}
 
-        <span class="comment">// 3.37.6. Type-Declaration Instructions</span>
-        <span class="ident">Op::TypeVoid</span>
-        <span class="op">|</span> <span class="ident">Op::TypeBool</span>
-        <span class="op">|</span> <span class="ident">Op::TypeInt</span>
-        <span class="op">|</span> <span class="ident">Op::TypeFloat</span>
-        <span class="op">|</span> <span class="ident">Op::TypeVector</span>
-        <span class="op">|</span> <span class="ident">Op::TypeMatrix</span>
-        <span class="op">|</span> <span class="ident">Op::TypeImage</span>
-        <span class="op">|</span> <span class="ident">Op::TypeSampler</span>
-        <span class="op">|</span> <span class="ident">Op::TypeSampledImage</span>
-        <span class="op">|</span> <span class="ident">Op::TypeArray</span>
-        <span class="op">|</span> <span class="ident">Op::TypeRuntimeArray</span>
-        <span class="op">|</span> <span class="ident">Op::TypeStruct</span>
-        <span class="op">|</span> <span class="ident">Op::TypeOpaque</span>
-        <span class="op">|</span> <span class="ident">Op::TypePointer</span>
-        <span class="op">|</span> <span class="ident">Op::TypeFunction</span>
-        <span class="op">|</span> <span class="ident">Op::TypeEvent</span>
-        <span class="op">|</span> <span class="ident">Op::TypeDeviceEvent</span>
-        <span class="op">|</span> <span class="ident">Op::TypeReserveId</span>
-        <span class="op">|</span> <span class="ident">Op::TypeQueue</span>
-        <span class="op">|</span> <span class="ident">Op::TypePipe</span>
-        <span class="op">|</span> <span class="ident">Op::TypeForwardPointer</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.1, Capability: PipeStorage</span>
-        <span class="ident">Op::TypePipeStorage</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.1, Capability: NamedBarrier</span>
-        <span class="ident">Op::TypeNamedBarrier</span> =&gt; {}
+        <span class="comment">// 3.37.6. Type-Declaration Instructions
+        </span>Op::TypeVoid
+        | Op::TypeBool
+        | Op::TypeInt
+        | Op::TypeFloat
+        | Op::TypeVector
+        | Op::TypeMatrix
+        | Op::TypeImage
+        | Op::TypeSampler
+        | Op::TypeSampledImage
+        | Op::TypeArray
+        | Op::TypeRuntimeArray
+        | Op::TypeStruct
+        | Op::TypeOpaque
+        | Op::TypePointer
+        | Op::TypeFunction
+        | Op::TypeEvent
+        | Op::TypeDeviceEvent
+        | Op::TypeReserveId
+        | Op::TypeQueue
+        | Op::TypePipe
+        | Op::TypeForwardPointer =&gt; {}
+        <span class="comment">// SPIR-V 1.1, Capability: PipeStorage
+        </span>Op::TypePipeStorage =&gt; {}
+        <span class="comment">// SPIR-V 1.1, Capability: NamedBarrier
+        </span>Op::TypeNamedBarrier =&gt; {}
 
-        <span class="comment">// 3.37.7. Constant-Creation Instructions</span>
-        <span class="ident">Op::ConstantTrue</span> <span class="op">|</span> <span class="ident">Op::ConstantFalse</span> <span class="op">|</span> <span class="ident">Op::Constant</span> =&gt; {}
-        <span class="ident">Op::ConstantComposite</span> <span class="op">|</span> <span class="ident">Op::SpecConstantComposite</span> =&gt; <span class="macro">sig!</span> {
-            (...<span class="ident">TS</span>) -&gt; <span class="ident">Struct</span>(<span class="ident">TS</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Matrix</span>(<span class="ident">T</span>)
+        <span class="comment">// 3.37.7. Constant-Creation Instructions
+        </span>Op::ConstantTrue | Op::ConstantFalse | Op::Constant =&gt; {}
+        Op::ConstantComposite | Op::SpecConstantComposite =&gt; <span class="macro">sig! </span>{
+            (...TS) -&gt; Struct(TS) |
+            (...Repeat([T])) -&gt; Array(T) |
+            (...Repeat([T])) -&gt; Vector(T) |
+            (...Repeat([T])) -&gt; Matrix(T)
         },
-        <span class="ident">Op::ConstantSampler</span>
-        <span class="op">|</span> <span class="ident">Op::ConstantNull</span>
-        <span class="op">|</span> <span class="ident">Op::SpecConstantTrue</span>
-        <span class="op">|</span> <span class="ident">Op::SpecConstantFalse</span>
-        <span class="op">|</span> <span class="ident">Op::SpecConstant</span> =&gt; {}
-        <span class="ident">Op::SpecConstantOp</span> =&gt; {
+        Op::ConstantSampler
+        | Op::ConstantNull
+        | Op::SpecConstantTrue
+        | Op::SpecConstantFalse
+        | Op::SpecConstant =&gt; {}
+        Op::SpecConstantOp =&gt; {
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;Op{:?} should be specially handled outside spirv_type_constraints&quot;</span>,
-                <span class="ident">op</span>
+                op
             );
         }
 
-        <span class="comment">// 3.37.8. Memory Instructions</span>
-        <span class="ident">Op::Variable</span> =&gt; <span class="macro">sig!</span> {
-            {<span class="ident">S</span>} () -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="kw">_</span>) <span class="op">|</span>
-            {<span class="ident">S</span>} (<span class="ident">T</span>) -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>)
+        <span class="comment">// 3.37.8. Memory Instructions
+        </span>Op::Variable =&gt; <span class="macro">sig! </span>{
+            {S} () -&gt; Pointer(S, <span class="kw">_</span>) |
+            {S} (T) -&gt; Pointer(S, T)
         },
-        <span class="ident">Op::ImageTexelPointer</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">Image</span>(<span class="ident">T</span>)), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>) },
-        <span class="ident">Op::Load</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::Store</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">T</span>) },
-        <span class="ident">Op::CopyMemory</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) },
-        <span class="ident">Op::CopyMemorySized</span> =&gt; {}
-        <span class="ident">Op::AccessChain</span> <span class="op">|</span> <span class="ident">Op::InBoundsAccessChain</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>), ..<span class="comment">/*indices*/</span>) -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">IndexComposite</span>(<span class="ident">T</span>))
+        Op::ImageTexelPointer =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, Image(T)), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; Pointer(<span class="kw">_</span>, T) },
+        Op::Load =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, T)) -&gt; T },
+        Op::Store =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, T), T) },
+        Op::CopyMemory =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, T), Pointer(<span class="kw">_</span>, T)) },
+        Op::CopyMemorySized =&gt; {}
+        Op::AccessChain | Op::InBoundsAccessChain =&gt; <span class="macro">sig! </span>{
+            (Pointer(S, T), ..<span class="comment">/*indices*/</span>) -&gt; Pointer(S, IndexComposite(T))
         },
-        <span class="ident">Op::PtrAccessChain</span> <span class="op">|</span> <span class="ident">Op::InBoundsPtrAccessChain</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>), <span class="kw">_</span>, ..<span class="comment">/*indices*/</span>) -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">IndexComposite</span>(<span class="ident">T</span>))
+        Op::PtrAccessChain | Op::InBoundsPtrAccessChain =&gt; <span class="macro">sig! </span>{
+            (Pointer(S, T), <span class="kw">_</span>, ..<span class="comment">/*indices*/</span>) -&gt; Pointer(S, IndexComposite(T))
         },
-        <span class="ident">Op::ArrayLength</span> <span class="op">|</span> <span class="ident">Op::GenericPtrMemSemantics</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.4</span>
-        <span class="ident">Op::PtrEqual</span> <span class="op">|</span> <span class="ident">Op::PtrNotEqual</span> <span class="op">|</span> <span class="ident">Op::PtrDiff</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="kw">_</span>
-        },
+        Op::ArrayLength | Op::GenericPtrMemSemantics =&gt; {}
+        <span class="comment">// SPIR-V 1.4
+        </span>Op::PtrEqual | Op::PtrNotEqual | Op::PtrDiff =&gt; <span class="macro">sig! </span>{
+            (Pointer(<span class="kw">_</span>, T), Pointer(<span class="kw">_</span>, T)) -&gt; <span class="kw">_
+        </span>},
 
-        <span class="comment">// 3.37.9. Function Instructions</span>
-        <span class="ident">Op::Function</span> =&gt; {}
-        <span class="ident">Op::FunctionParameter</span> <span class="op">|</span> <span class="ident">Op::FunctionEnd</span> =&gt; {
+        <span class="comment">// 3.37.9. Function Instructions
+        </span>Op::Function =&gt; {}
+        Op::FunctionParameter | Op::FunctionEnd =&gt; {
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;Op{:?} should be specially handled outside spirv_type_constraints&quot;</span>,
-                <span class="ident">op</span>
+                op
             );
         }
-        <span class="ident">Op::FunctionCall</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Function</span>(<span class="ident">T</span>, <span class="ident">TS</span>), ...<span class="ident">TS</span>) -&gt; <span class="ident">T</span> },
+        Op::FunctionCall =&gt; <span class="macro">sig! </span>{ (Function(T, TS), ...TS) -&gt; T },
 
-        <span class="comment">// 3.37.10. Image Instructions</span>
-        <span class="ident">Op::SampledImage</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">SampledImage</span>(<span class="ident">T</span>) },
-        <span class="ident">Op::ImageSampleImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSampleExplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSampleProjImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSampleProjExplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageGather</span>
-        <span class="op">|</span> <span class="ident">Op::ImageDrefGather</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>))), ..) -&gt; <span class="ident">Vector4</span>(<span class="ident">T</span>)
+        <span class="comment">// 3.37.10. Image Instructions
+        </span>Op::SampledImage =&gt; <span class="macro">sig! </span>{ (T, <span class="kw">_</span>) -&gt; SampledImage(T) },
+        Op::ImageSampleImplicitLod
+        | Op::ImageSampleExplicitLod
+        | Op::ImageSampleProjImplicitLod
+        | Op::ImageSampleProjExplicitLod
+        | Op::ImageGather
+        | Op::ImageDrefGather =&gt; <span class="macro">sig! </span>{
+            (SampledImage(Image(Either(Void, T))), ..) -&gt; Vector4(T)
         },
-        <span class="ident">Op::ImageSampleDrefImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSampleDrefExplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSampleProjDrefImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSampleProjDrefExplicitLod</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">T</span>)), ..) -&gt; <span class="ident">T</span>
+        Op::ImageSampleDrefImplicitLod
+        | Op::ImageSampleDrefExplicitLod
+        | Op::ImageSampleProjDrefImplicitLod
+        | Op::ImageSampleProjDrefExplicitLod =&gt; <span class="macro">sig! </span>{
+            (SampledImage(Image(T)), ..) -&gt; T
         },
-        <span class="ident">Op::ImageFetch</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) -&gt; <span class="ident">Vector4</span>(<span class="ident">T</span>)
+        Op::ImageFetch =&gt; <span class="macro">sig! </span>{
+            (Image(Either(Void, T)), ..) -&gt; Vector4(T)
         },
-        <span class="ident">Op::ImageRead</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) -&gt; <span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)
+        Op::ImageRead =&gt; <span class="macro">sig! </span>{
+            (Image(Either(Void, T)), ..) -&gt; Either(Vector(T), T)
         },
-        <span class="ident">Op::ImageWrite</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), <span class="kw">_</span>, <span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>))
+        Op::ImageWrite =&gt; <span class="macro">sig! </span>{
+            (Image(Either(Void, T)), <span class="kw">_</span>, Either(Vector(T), T))
         },
-        <span class="ident">Op::Image</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">SampledImage</span>(<span class="ident">T</span>)) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::ImageQueryFormat</span>
-        <span class="op">|</span> <span class="ident">Op::ImageQueryOrder</span>
-        <span class="op">|</span> <span class="ident">Op::ImageQuerySizeLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageQuerySize</span>
-        <span class="op">|</span> <span class="ident">Op::ImageQueryLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageQueryLevels</span>
-        <span class="op">|</span> <span class="ident">Op::ImageQuerySamples</span> =&gt; {}
-        <span class="comment">// Capability: SparseResidency</span>
-        <span class="ident">Op::ImageSparseSampleImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseSampleExplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseSampleProjImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseSampleProjExplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseGather</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseDrefGather</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>))), ..) -&gt; <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">Vector4</span>(<span class="ident">T</span>)])
+        Op::Image =&gt; <span class="macro">sig! </span>{ (SampledImage(T)) -&gt; T },
+        Op::ImageQueryFormat
+        | Op::ImageQueryOrder
+        | Op::ImageQuerySizeLod
+        | Op::ImageQuerySize
+        | Op::ImageQueryLod
+        | Op::ImageQueryLevels
+        | Op::ImageQuerySamples =&gt; {}
+        <span class="comment">// Capability: SparseResidency
+        </span>Op::ImageSparseSampleImplicitLod
+        | Op::ImageSparseSampleExplicitLod
+        | Op::ImageSparseSampleProjImplicitLod
+        | Op::ImageSparseSampleProjExplicitLod
+        | Op::ImageSparseGather
+        | Op::ImageSparseDrefGather =&gt; <span class="macro">sig! </span>{
+            (SampledImage(Image(Either(Void, T))), ..) -&gt; Struct([<span class="kw">_</span>, Vector4(T)])
         },
-        <span class="ident">Op::ImageSparseSampleDrefImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseSampleDrefExplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseSampleProjDrefImplicitLod</span>
-        <span class="op">|</span> <span class="ident">Op::ImageSparseSampleProjDrefExplicitLod</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">SampledImage</span>(<span class="ident">Image</span>(<span class="ident">T</span>)), ..) -&gt; <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">T</span>])
+        Op::ImageSparseSampleDrefImplicitLod
+        | Op::ImageSparseSampleDrefExplicitLod
+        | Op::ImageSparseSampleProjDrefImplicitLod
+        | Op::ImageSparseSampleProjDrefExplicitLod =&gt; <span class="macro">sig! </span>{
+            (SampledImage(Image(T)), ..) -&gt; Struct([<span class="kw">_</span>, T])
         },
-        <span class="ident">Op::ImageSparseFetch</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) -&gt; <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">Vector4</span>(<span class="ident">T</span>)])
+        Op::ImageSparseFetch =&gt; <span class="macro">sig! </span>{
+            (Image(Either(Void, T)), ..) -&gt; Struct([<span class="kw">_</span>, Vector4(T)])
         },
-        <span class="ident">Op::ImageSparseTexelsResident</span> =&gt; {}
-        <span class="comment">// Capability: SparseResidency</span>
-        <span class="ident">Op::ImageSparseRead</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Image</span>(<span class="ident">Either</span>(<span class="ident">Void</span>, <span class="ident">T</span>)), ..) -&gt; <span class="ident">Struct</span>([<span class="kw">_</span>, <span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)])
+        Op::ImageSparseTexelsResident =&gt; {}
+        <span class="comment">// Capability: SparseResidency
+        </span>Op::ImageSparseRead =&gt; <span class="macro">sig! </span>{
+            (Image(Either(Void, T)), ..) -&gt; Struct([<span class="kw">_</span>, Either(Vector(T), T)])
         },
-        <span class="comment">// SPV_NV_shader_image_footprint</span>
-        <span class="ident">Op::ImageSampleFootprintNV</span> =&gt; {}
+        <span class="comment">// SPV_NV_shader_image_footprint
+        </span>Op::ImageSampleFootprintNV =&gt; {}
 
-        <span class="comment">// 3.37.11. Conversion Instructions</span>
-        <span class="ident">Op::ConvertFToU</span>
-        <span class="op">|</span> <span class="ident">Op::ConvertFToS</span>
-        <span class="op">|</span> <span class="ident">Op::ConvertSToF</span>
-        <span class="op">|</span> <span class="ident">Op::ConvertUToF</span>
-        <span class="op">|</span> <span class="ident">Op::UConvert</span>
-        <span class="op">|</span> <span class="ident">Op::SConvert</span>
-        <span class="op">|</span> <span class="ident">Op::FConvert</span> =&gt; {}
-        <span class="ident">Op::QuantizeToF16</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::ConvertPtrToU</span> <span class="op">|</span> <span class="ident">Op::SatConvertSToU</span> <span class="op">|</span> <span class="ident">Op::SatConvertUToS</span> <span class="op">|</span> <span class="ident">Op::ConvertUToPtr</span> =&gt; {}
-        <span class="ident">Op::PtrCastToGeneric</span> <span class="op">|</span> <span class="ident">Op::GenericCastToPtr</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>) },
-        <span class="ident">Op::GenericCastToPtrExplicit</span> =&gt; <span class="macro">sig!</span> { {<span class="ident">S</span>} (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>) },
-        <span class="ident">Op::Bitcast</span> =&gt; {}
+        <span class="comment">// 3.37.11. Conversion Instructions
+        </span>Op::ConvertFToU
+        | Op::ConvertFToS
+        | Op::ConvertSToF
+        | Op::ConvertUToF
+        | Op::UConvert
+        | Op::SConvert
+        | Op::FConvert =&gt; {}
+        Op::QuantizeToF16 =&gt; <span class="macro">sig! </span>{ (T) -&gt; T },
+        Op::ConvertPtrToU | Op::SatConvertSToU | Op::SatConvertUToS | Op::ConvertUToPtr =&gt; {}
+        Op::PtrCastToGeneric | Op::GenericCastToPtr =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, T)) -&gt; Pointer(<span class="kw">_</span>, T) },
+        Op::GenericCastToPtrExplicit =&gt; <span class="macro">sig! </span>{ {S} (Pointer(<span class="kw">_</span>, T)) -&gt; Pointer(S, T) },
+        Op::Bitcast =&gt; {}
 
-        <span class="comment">// 3.37.12. Composite Instructions</span>
-        <span class="ident">Op::VectorExtractDynamic</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::VectorInsertDynamic</span> =&gt; <span class="macro">sig!</span> {
-            <span class="comment">// FIXME(eddyb) was `(Vector(T), T, _) -&gt; Vector(T)` but that was</span>
-            <span class="comment">// missing an equality constraint between input and output vectors;</span>
-            <span class="comment">// we should use `(Vector(T, N), T, _) -&gt; Vector(T, N)`, or constrain</span>
-            <span class="comment">// input and output vectors to have the same type some other way.</span>
-            (<span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span>
+        <span class="comment">// 3.37.12. Composite Instructions
+        </span>Op::VectorExtractDynamic =&gt; <span class="macro">sig! </span>{ (Vector(T), <span class="kw">_</span>) -&gt; T },
+        Op::VectorInsertDynamic =&gt; <span class="macro">sig! </span>{
+            <span class="comment">// FIXME(eddyb) was `(Vector(T), T, _) -&gt; Vector(T)` but that was
+            // missing an equality constraint between input and output vectors;
+            // we should use `(Vector(T, N), T, _) -&gt; Vector(T, N)`, or constrain
+            // input and output vectors to have the same type some other way.
+            </span>(T, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; T
         },
-        <span class="ident">Op::VectorShuffle</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Vector</span>(<span class="ident">T</span>)) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>) },
-        <span class="ident">Op::CompositeConstruct</span> =&gt; <span class="macro">sig!</span> {
-            (...<span class="ident">TS</span>) -&gt; <span class="ident">Struct</span>(<span class="ident">TS</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) -&gt; <span class="ident">Matrix</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>([<span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)])) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>)
+        Op::VectorShuffle =&gt; <span class="macro">sig! </span>{ (Vector(T), Vector(T)) -&gt; Vector(T) },
+        Op::CompositeConstruct =&gt; <span class="macro">sig! </span>{
+            (...TS) -&gt; Struct(TS) |
+            (...Repeat([T])) -&gt; Array(T) |
+            (...Repeat([T])) -&gt; Matrix(T) |
+            (...Repeat([Either(Vector(T), T)])) -&gt; Vector(T)
         },
-        <span class="ident">Op::CompositeExtract</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, ..<span class="comment">/*indices*/</span>) -&gt; <span class="ident">IndexComposite</span>(<span class="ident">T</span>) },
-        <span class="ident">Op::CompositeInsert</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">IndexComposite</span>(<span class="ident">T</span>), <span class="ident">T</span>, ..<span class="comment">/*indices*/</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::CopyObject</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::Transpose</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))) -&gt; <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)) },
-        <span class="comment">// SPIR-V 1.4</span>
-        <span class="ident">Op::CopyLogical</span> =&gt; <span class="macro">sig!</span> {
-            <span class="comment">// FIXME(eddyb) this is shallow right now, it should recurse instead</span>
-            (<span class="ident">Array</span>(<span class="ident">T</span>)) -&gt; <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (<span class="ident">Struct</span>(<span class="ident">TS</span>)) -&gt; <span class="ident">Struct</span>(<span class="ident">TS</span>)
+        Op::CompositeExtract =&gt; <span class="macro">sig! </span>{ (T, ..<span class="comment">/*indices*/</span>) -&gt; IndexComposite(T) },
+        Op::CompositeInsert =&gt; <span class="macro">sig! </span>{ (IndexComposite(T), T, ..<span class="comment">/*indices*/</span>) -&gt; T },
+        Op::CopyObject =&gt; <span class="macro">sig! </span>{ (T) -&gt; T },
+        Op::Transpose =&gt; <span class="macro">sig! </span>{ (Matrix(Vector(T))) -&gt; Matrix(Vector(T)) },
+        <span class="comment">// SPIR-V 1.4
+        </span>Op::CopyLogical =&gt; <span class="macro">sig! </span>{
+            <span class="comment">// FIXME(eddyb) this is shallow right now, it should recurse instead
+            </span>(Array(T)) -&gt; Array(T) |
+            (Struct(TS)) -&gt; Struct(TS)
         },
 
-        <span class="comment">// 3.37.13. Arithmetic Instructions</span>
-        <span class="ident">Op::SNegate</span> =&gt; {}
-        <span class="ident">Op::FNegate</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::IAdd</span> <span class="op">|</span> <span class="ident">Op::ISub</span> <span class="op">|</span> <span class="ident">Op::IMul</span> <span class="op">|</span> <span class="ident">Op::SDiv</span> <span class="op">|</span> <span class="ident">Op::SRem</span> <span class="op">|</span> <span class="ident">Op::SMod</span> =&gt; {}
-        <span class="ident">Op::FAdd</span> <span class="op">|</span> <span class="ident">Op::FSub</span> <span class="op">|</span> <span class="ident">Op::FMul</span> <span class="op">|</span> <span class="ident">Op::UDiv</span> <span class="op">|</span> <span class="ident">Op::FDiv</span> <span class="op">|</span> <span class="ident">Op::UMod</span> <span class="op">|</span> <span class="ident">Op::FRem</span> <span class="op">|</span> <span class="ident">Op::FMod</span> =&gt; {
-            <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> }
+        <span class="comment">// 3.37.13. Arithmetic Instructions
+        </span>Op::SNegate =&gt; {}
+        Op::FNegate =&gt; <span class="macro">sig! </span>{ (T) -&gt; T },
+        Op::IAdd | Op::ISub | Op::IMul | Op::SDiv | Op::SRem | Op::SMod =&gt; {}
+        Op::FAdd | Op::FSub | Op::FMul | Op::UDiv | Op::FDiv | Op::UMod | Op::FRem | Op::FMod =&gt; {
+            <span class="macro">sig! </span>{ (T, T) -&gt; T }
         }
-        <span class="ident">Op::VectorTimesScalar</span> =&gt; <span class="macro">sig!</span> {
-            <span class="comment">// FIXME(eddyb) missing equality constraint between input and output vectors.</span>
-            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>)
+        Op::VectorTimesScalar =&gt; <span class="macro">sig! </span>{
+            <span class="comment">// FIXME(eddyb) missing equality constraint between input and output vectors.
+            </span>(Vector(T), T) -&gt; Vector(T)
         },
-        <span class="ident">Op::MatrixTimesScalar</span> =&gt; <span class="macro">sig!</span> {
-            <span class="comment">// FIXME(eddyb) missing equality constraint between input and output matrices.</span>
-            (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)), <span class="ident">T</span>) -&gt; <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))
+        Op::MatrixTimesScalar =&gt; <span class="macro">sig! </span>{
+            <span class="comment">// FIXME(eddyb) missing equality constraint between input and output matrices.
+            </span>(Matrix(Vector(T)), T) -&gt; Matrix(Vector(T))
         },
-        <span class="ident">Op::VectorTimesMatrix</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>) },
-        <span class="ident">Op::MatrixTimesVector</span> =&gt; <span class="macro">sig!</span> {
-            <span class="comment">// FIXME(eddyb) missing equality constraint between input vector and</span>
-            <span class="comment">// the matrix&#39; column vector.</span>
-            (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)), <span class="ident">Vector</span>(<span class="ident">T</span>)) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>)
+        Op::VectorTimesMatrix =&gt; <span class="macro">sig! </span>{ (Vector(T), Matrix(Vector(T))) -&gt; Vector(T) },
+        Op::MatrixTimesVector =&gt; <span class="macro">sig! </span>{
+            <span class="comment">// FIXME(eddyb) missing equality constraint between input vector and
+            // the matrix&#39; column vector.
+            </span>(Matrix(Vector(T)), Vector(T)) -&gt; Vector(T)
         },
-        <span class="ident">Op::MatrixTimesMatrix</span> =&gt; <span class="macro">sig!</span> {
-            <span class="comment">// FIXME(eddyb) missing equality constraint between the column vectors</span>
-            <span class="comment">// of the first input and of the output.</span>
-            (<span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>)), <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))) -&gt; <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))
+        Op::MatrixTimesMatrix =&gt; <span class="macro">sig! </span>{
+            <span class="comment">// FIXME(eddyb) missing equality constraint between the column vectors
+            // of the first input and of the output.
+            </span>(Matrix(Vector(T)), Matrix(Vector(T))) -&gt; Matrix(Vector(T))
         },
-        <span class="ident">Op::OuterProduct</span> =&gt; <span class="macro">sig!</span> {
-            <span class="comment">// FIXME(eddyb) missing equality constraint between first input vector and</span>
-            <span class="comment">// the matrix&#39; column vector.</span>
-            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Vector</span>(<span class="ident">T</span>)) -&gt; <span class="ident">Matrix</span>(<span class="ident">Vector</span>(<span class="ident">T</span>))
+        Op::OuterProduct =&gt; <span class="macro">sig! </span>{
+            <span class="comment">// FIXME(eddyb) missing equality constraint between first input vector and
+            // the matrix&#39; column vector.
+            </span>(Vector(T), Vector(T)) -&gt; Matrix(Vector(T))
         },
-        <span class="ident">Op::Dot</span> =&gt; <span class="macro">sig!</span> {
-            <span class="comment">// FIXME(eddyb) missing equality constraint between two vectors</span>
-            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>) -&gt; <span class="ident">Vector</span>(<span class="ident">T</span>)
+        Op::Dot =&gt; <span class="macro">sig! </span>{
+            <span class="comment">// FIXME(eddyb) missing equality constraint between two vectors
+            </span>(Vector(T), T) -&gt; Vector(T)
         },
-        <span class="ident">Op::IAddCarry</span> <span class="op">|</span> <span class="ident">Op::ISubBorrow</span> <span class="op">|</span> <span class="ident">Op::UMulExtended</span> <span class="op">|</span> <span class="ident">Op::SMulExtended</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">Struct</span>([<span class="ident">T</span>, <span class="ident">T</span>])
+        Op::IAddCarry | Op::ISubBorrow | Op::UMulExtended | Op::SMulExtended =&gt; <span class="macro">sig! </span>{
+            (T, T) -&gt; Struct([T, T])
         },
 
-        <span class="comment">// 3.37.14. Bit Instructions</span>
-        <span class="ident">Op::ShiftRightLogical</span>
-        <span class="op">|</span> <span class="ident">Op::ShiftRightArithmetic</span>
-        <span class="op">|</span> <span class="ident">Op::ShiftLeftLogical</span>
-        <span class="op">|</span> <span class="ident">Op::BitwiseOr</span>
-        <span class="op">|</span> <span class="ident">Op::BitwiseXor</span>
-        <span class="op">|</span> <span class="ident">Op::BitwiseAnd</span>
-        <span class="op">|</span> <span class="ident">Op::Not</span> =&gt; {}
-        <span class="ident">Op::BitFieldInsert</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::BitFieldSExtract</span> <span class="op">|</span> <span class="ident">Op::BitFieldUExtract</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::BitReverse</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::BitCount</span> =&gt; {}
+        <span class="comment">// 3.37.14. Bit Instructions
+        </span>Op::ShiftRightLogical
+        | Op::ShiftRightArithmetic
+        | Op::ShiftLeftLogical
+        | Op::BitwiseOr
+        | Op::BitwiseXor
+        | Op::BitwiseAnd
+        | Op::Not =&gt; {}
+        Op::BitFieldInsert =&gt; <span class="macro">sig! </span>{ (T, T, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; T },
+        Op::BitFieldSExtract | Op::BitFieldUExtract =&gt; <span class="macro">sig! </span>{ (T, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; T },
+        Op::BitReverse =&gt; <span class="macro">sig! </span>{ (T) -&gt; T },
+        Op::BitCount =&gt; {}
 
-        <span class="comment">// 3.37.15. Relational and Logical Instructions</span>
-        <span class="ident">Op::Any</span>
-        <span class="op">|</span> <span class="ident">Op::All</span>
-        <span class="op">|</span> <span class="ident">Op::IsNan</span>
-        <span class="op">|</span> <span class="ident">Op::IsInf</span>
-        <span class="op">|</span> <span class="ident">Op::IsFinite</span>
-        <span class="op">|</span> <span class="ident">Op::IsNormal</span>
-        <span class="op">|</span> <span class="ident">Op::SignBitSet</span> =&gt; {}
-        <span class="ident">Op::LessOrGreater</span> <span class="op">|</span> <span class="ident">Op::Ordered</span> <span class="op">|</span> <span class="ident">Op::Unordered</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="kw">_</span> },
-        <span class="ident">Op::LogicalEqual</span> <span class="op">|</span> <span class="ident">Op::LogicalNotEqual</span> <span class="op">|</span> <span class="ident">Op::LogicalOr</span> <span class="op">|</span> <span class="ident">Op::LogicalAnd</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span>
+        <span class="comment">// 3.37.15. Relational and Logical Instructions
+        </span>Op::Any
+        | Op::All
+        | Op::IsNan
+        | Op::IsInf
+        | Op::IsFinite
+        | Op::IsNormal
+        | Op::SignBitSet =&gt; {}
+        Op::LessOrGreater | Op::Ordered | Op::Unordered =&gt; <span class="macro">sig! </span>{ (T, T) -&gt; <span class="kw">_ </span>},
+        Op::LogicalEqual | Op::LogicalNotEqual | Op::LogicalOr | Op::LogicalAnd =&gt; <span class="macro">sig! </span>{
+            (T, T) -&gt; T
         },
-        <span class="ident">Op::LogicalNot</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::Select</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::IEqual</span>
-        <span class="op">|</span> <span class="ident">Op::INotEqual</span>
-        <span class="op">|</span> <span class="ident">Op::UGreaterThan</span>
-        <span class="op">|</span> <span class="ident">Op::SGreaterThan</span>
-        <span class="op">|</span> <span class="ident">Op::UGreaterThanEqual</span>
-        <span class="op">|</span> <span class="ident">Op::SGreaterThanEqual</span>
-        <span class="op">|</span> <span class="ident">Op::ULessThan</span>
-        <span class="op">|</span> <span class="ident">Op::SLessThan</span>
-        <span class="op">|</span> <span class="ident">Op::ULessThanEqual</span>
-        <span class="op">|</span> <span class="ident">Op::SLessThanEqual</span> =&gt; {}
-        <span class="ident">Op::FOrdEqual</span>
-        <span class="op">|</span> <span class="ident">Op::FUnordEqual</span>
-        <span class="op">|</span> <span class="ident">Op::FOrdNotEqual</span>
-        <span class="op">|</span> <span class="ident">Op::FUnordNotEqual</span>
-        <span class="op">|</span> <span class="ident">Op::FOrdLessThan</span>
-        <span class="op">|</span> <span class="ident">Op::FUnordLessThan</span>
-        <span class="op">|</span> <span class="ident">Op::FOrdGreaterThan</span>
-        <span class="op">|</span> <span class="ident">Op::FUnordGreaterThan</span>
-        <span class="op">|</span> <span class="ident">Op::FOrdLessThanEqual</span>
-        <span class="op">|</span> <span class="ident">Op::FUnordLessThanEqual</span>
-        <span class="op">|</span> <span class="ident">Op::FOrdGreaterThanEqual</span>
-        <span class="op">|</span> <span class="ident">Op::FUnordGreaterThanEqual</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="kw">_</span> },
+        Op::LogicalNot =&gt; <span class="macro">sig! </span>{ (T) -&gt; T },
+        Op::Select =&gt; <span class="macro">sig! </span>{ (<span class="kw">_</span>, T, T) -&gt; T },
+        Op::IEqual
+        | Op::INotEqual
+        | Op::UGreaterThan
+        | Op::SGreaterThan
+        | Op::UGreaterThanEqual
+        | Op::SGreaterThanEqual
+        | Op::ULessThan
+        | Op::SLessThan
+        | Op::ULessThanEqual
+        | Op::SLessThanEqual =&gt; {}
+        Op::FOrdEqual
+        | Op::FUnordEqual
+        | Op::FOrdNotEqual
+        | Op::FUnordNotEqual
+        | Op::FOrdLessThan
+        | Op::FUnordLessThan
+        | Op::FOrdGreaterThan
+        | Op::FUnordGreaterThan
+        | Op::FOrdLessThanEqual
+        | Op::FUnordLessThanEqual
+        | Op::FOrdGreaterThanEqual
+        | Op::FUnordGreaterThanEqual =&gt; <span class="macro">sig! </span>{ (T, T) -&gt; <span class="kw">_ </span>},
 
-        <span class="comment">// 3.37.16. Derivative Instructions</span>
-        <span class="ident">Op::DPdx</span>
-        <span class="op">|</span> <span class="ident">Op::DPdy</span>
-        <span class="op">|</span> <span class="ident">Op::Fwidth</span>
-        <span class="op">|</span> <span class="ident">Op::DPdxFine</span>
-        <span class="op">|</span> <span class="ident">Op::DPdyFine</span>
-        <span class="op">|</span> <span class="ident">Op::FwidthFine</span>
-        <span class="op">|</span> <span class="ident">Op::DPdxCoarse</span>
-        <span class="op">|</span> <span class="ident">Op::DPdyCoarse</span>
-        <span class="op">|</span> <span class="ident">Op::FwidthCoarse</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
+        <span class="comment">// 3.37.16. Derivative Instructions
+        </span>Op::DPdx
+        | Op::DPdy
+        | Op::Fwidth
+        | Op::DPdxFine
+        | Op::DPdyFine
+        | Op::FwidthFine
+        | Op::DPdxCoarse
+        | Op::DPdyCoarse
+        | Op::FwidthCoarse =&gt; <span class="macro">sig! </span>{ (T) -&gt; T },
 
-        <span class="comment">// 3.37.17. Control-Flow Instructions</span>
-        <span class="ident">Op::Phi</span> =&gt; <span class="macro">sig!</span> { (...<span class="ident">Repeat</span>([<span class="ident">T</span>, <span class="kw">_</span>])) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::LoopMerge</span>
-        <span class="op">|</span> <span class="ident">Op::SelectionMerge</span>
-        <span class="op">|</span> <span class="ident">Op::Label</span>
-        <span class="op">|</span> <span class="ident">Op::Branch</span>
-        <span class="op">|</span> <span class="ident">Op::BranchConditional</span>
-        <span class="op">|</span> <span class="ident">Op::Switch</span>
-        <span class="op">|</span> <span class="ident">Op::Kill</span> =&gt; {}
-        <span class="ident">Op::Return</span> <span class="op">|</span> <span class="ident">Op::ReturnValue</span> =&gt; {
+        <span class="comment">// 3.37.17. Control-Flow Instructions
+        </span>Op::Phi =&gt; <span class="macro">sig! </span>{ (...Repeat([T, <span class="kw">_</span>])) -&gt; T },
+        Op::LoopMerge
+        | Op::SelectionMerge
+        | Op::Label
+        | Op::Branch
+        | Op::BranchConditional
+        | Op::Switch
+        | Op::Kill =&gt; {}
+        Op::Return | Op::ReturnValue =&gt; {
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;Op{:?} should be specially handled outside spirv_type_constraints&quot;</span>,
-                <span class="ident">op</span>
+                op
             );
         }
-        <span class="ident">Op::Unreachable</span> <span class="op">|</span> <span class="ident">Op::LifetimeStart</span> <span class="op">|</span> <span class="ident">Op::LifetimeStop</span> <span class="op">|</span> <span class="ident">Op::TerminateInvocation</span> =&gt; {}
+        Op::Unreachable | Op::LifetimeStart | Op::LifetimeStop | Op::TerminateInvocation =&gt; {}
 
-        <span class="comment">// 3.37.18. Atomic Instructions</span>
-        <span class="ident">Op::AtomicLoad</span> <span class="op">|</span> <span class="ident">Op::AtomicIIncrement</span> <span class="op">|</span> <span class="ident">Op::AtomicIDecrement</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span>
+        <span class="comment">// 3.37.18. Atomic Instructions
+        </span>Op::AtomicLoad | Op::AtomicIIncrement | Op::AtomicIDecrement =&gt; <span class="macro">sig! </span>{
+            (Pointer(<span class="kw">_</span>, T), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; T
         },
-        <span class="ident">Op::AtomicStore</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) },
-        <span class="ident">Op::AtomicExchange</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicIAdd</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicISub</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicSMin</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicUMin</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicSMax</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicUMax</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicAnd</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicOr</span>
-        <span class="op">|</span> <span class="ident">Op::AtomicXor</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::AtomicCompareExchange</span> <span class="op">|</span> <span class="ident">Op::AtomicCompareExchangeWeak</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span>
+        Op::AtomicStore =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, T), <span class="kw">_</span>, <span class="kw">_</span>, T) },
+        Op::AtomicExchange
+        | Op::AtomicIAdd
+        | Op::AtomicISub
+        | Op::AtomicSMin
+        | Op::AtomicUMin
+        | Op::AtomicSMax
+        | Op::AtomicUMax
+        | Op::AtomicAnd
+        | Op::AtomicOr
+        | Op::AtomicXor =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, T), <span class="kw">_</span>, <span class="kw">_</span>, T) -&gt; T },
+        Op::AtomicCompareExchange | Op::AtomicCompareExchangeWeak =&gt; <span class="macro">sig! </span>{
+            (Pointer(<span class="kw">_</span>, T), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, T, T) -&gt; T
         },
-        <span class="comment">// Capability: Kernel</span>
-        <span class="ident">Op::AtomicFlagTestAndSet</span> <span class="op">|</span> <span class="ident">Op::AtomicFlagClear</span> =&gt; {}
-        <span class="comment">// SPV_EXT_shader_atomic_float_add</span>
-        <span class="ident">Op::AtomicFAddEXT</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
+        <span class="comment">// Capability: Kernel
+        </span>Op::AtomicFlagTestAndSet | Op::AtomicFlagClear =&gt; {}
+        <span class="comment">// SPV_EXT_shader_atomic_float_add
+        </span>Op::AtomicFAddEXT =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, T), <span class="kw">_</span>, <span class="kw">_</span>, T) -&gt; T },
 
-        <span class="comment">// 3.37.19. Primitive Instructions</span>
-        <span class="ident">Op::EmitVertex</span> <span class="op">|</span> <span class="ident">Op::EndPrimitive</span> <span class="op">|</span> <span class="ident">Op::EmitStreamVertex</span> <span class="op">|</span> <span class="ident">Op::EndStreamPrimitive</span> =&gt; {}
+        <span class="comment">// 3.37.19. Primitive Instructions
+        </span>Op::EmitVertex | Op::EndPrimitive | Op::EmitStreamVertex | Op::EndStreamPrimitive =&gt; {}
 
-        <span class="comment">// 3.37.20. Barrier Instructions</span>
-        <span class="ident">Op::ControlBarrier</span> <span class="op">|</span> <span class="ident">Op::MemoryBarrier</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.1, Capability: NamedBarrier</span>
-        <span class="ident">Op::NamedBarrierInitialize</span> <span class="op">|</span> <span class="ident">Op::MemoryNamedBarrier</span> =&gt; {}
+        <span class="comment">// 3.37.20. Barrier Instructions
+        </span>Op::ControlBarrier | Op::MemoryBarrier =&gt; {}
+        <span class="comment">// SPIR-V 1.1, Capability: NamedBarrier
+        </span>Op::NamedBarrierInitialize | Op::MemoryNamedBarrier =&gt; {}
 
-        <span class="comment">// 3.37.21. Group and Subgroup Instructions</span>
-        <span class="ident">Op::GroupAsyncCopy</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="kw">_</span> },
-        <span class="ident">Op::GroupWaitEvents</span> =&gt; {}
-        <span class="ident">Op::GroupAll</span> <span class="op">|</span> <span class="ident">Op::GroupAny</span> =&gt; {}
-        <span class="ident">Op::GroupBroadcast</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::GroupIAdd</span>
-        <span class="op">|</span> <span class="ident">Op::GroupFAdd</span>
-        <span class="op">|</span> <span class="ident">Op::GroupFMin</span>
-        <span class="op">|</span> <span class="ident">Op::GroupUMin</span>
-        <span class="op">|</span> <span class="ident">Op::GroupSMin</span>
-        <span class="op">|</span> <span class="ident">Op::GroupFMax</span>
-        <span class="op">|</span> <span class="ident">Op::GroupUMax</span>
-        <span class="op">|</span> <span class="ident">Op::GroupSMax</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="comment">// SPV_KHR_shader_ballot</span>
-        <span class="ident">Op::SubgroupBallotKHR</span> =&gt; {}
-        <span class="ident">Op::SubgroupFirstInvocationKHR</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="comment">// SPV_KHR_subgroup_vote</span>
-        <span class="ident">Op::SubgroupAllKHR</span> <span class="op">|</span> <span class="ident">Op::SubgroupAnyKHR</span> <span class="op">|</span> <span class="ident">Op::SubgroupAllEqualKHR</span> =&gt; {}
-        <span class="comment">// SPV_KHR_shader_ballot</span>
-        <span class="ident">Op::SubgroupReadInvocationKHR</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
-        <span class="comment">// SPV_AMD_shader_ballot</span>
-        <span class="ident">Op::GroupIAddNonUniformAMD</span>
-        <span class="op">|</span> <span class="ident">Op::GroupFAddNonUniformAMD</span>
-        <span class="op">|</span> <span class="ident">Op::GroupFMinNonUniformAMD</span>
-        <span class="op">|</span> <span class="ident">Op::GroupUMinNonUniformAMD</span>
-        <span class="op">|</span> <span class="ident">Op::GroupSMinNonUniformAMD</span>
-        <span class="op">|</span> <span class="ident">Op::GroupFMaxNonUniformAMD</span>
-        <span class="op">|</span> <span class="ident">Op::GroupUMaxNonUniformAMD</span>
-        <span class="op">|</span> <span class="ident">Op::GroupSMaxNonUniformAMD</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="comment">// SPV_INTEL_subgroups</span>
-        <span class="ident">Op::SubgroupShuffleINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupShuffleXorINTEL</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::SubgroupShuffleDownINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupShuffleUpINTEL</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::SubgroupBlockReadINTEL</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::SubgroupBlockWriteINTEL</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">T</span>) },
-        <span class="ident">Op::SubgroupImageBlockReadINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupImageBlockWriteINTEL</span> =&gt; {}
-        <span class="comment">// SPV_INTEL_media_block_io</span>
-        <span class="ident">Op::SubgroupImageMediaBlockReadINTEL</span> <span class="op">|</span> <span class="ident">Op::SubgroupImageMediaBlockWriteINTEL</span> =&gt; {}
+        <span class="comment">// 3.37.21. Group and Subgroup Instructions
+        </span>Op::GroupAsyncCopy =&gt; <span class="macro">sig! </span>{ (<span class="kw">_</span>, Pointer(<span class="kw">_</span>, T), Pointer(<span class="kw">_</span>, T), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="kw">_ </span>},
+        Op::GroupWaitEvents =&gt; {}
+        Op::GroupAll | Op::GroupAny =&gt; {}
+        Op::GroupBroadcast =&gt; <span class="macro">sig! </span>{ (<span class="kw">_</span>, T, <span class="kw">_</span>) -&gt; T },
+        Op::GroupIAdd
+        | Op::GroupFAdd
+        | Op::GroupFMin
+        | Op::GroupUMin
+        | Op::GroupSMin
+        | Op::GroupFMax
+        | Op::GroupUMax
+        | Op::GroupSMax =&gt; <span class="macro">sig! </span>{ (<span class="kw">_</span>, T) -&gt; T },
+        <span class="comment">// SPV_KHR_shader_ballot
+        </span>Op::SubgroupBallotKHR =&gt; {}
+        Op::SubgroupFirstInvocationKHR =&gt; <span class="macro">sig! </span>{ (T) -&gt; T },
+        <span class="comment">// SPV_KHR_subgroup_vote
+        </span>Op::SubgroupAllKHR | Op::SubgroupAnyKHR | Op::SubgroupAllEqualKHR =&gt; {}
+        <span class="comment">// SPV_KHR_shader_ballot
+        </span>Op::SubgroupReadInvocationKHR =&gt; <span class="macro">sig! </span>{ (T, <span class="kw">_</span>) -&gt; T },
+        <span class="comment">// SPV_AMD_shader_ballot
+        </span>Op::GroupIAddNonUniformAMD
+        | Op::GroupFAddNonUniformAMD
+        | Op::GroupFMinNonUniformAMD
+        | Op::GroupUMinNonUniformAMD
+        | Op::GroupSMinNonUniformAMD
+        | Op::GroupFMaxNonUniformAMD
+        | Op::GroupUMaxNonUniformAMD
+        | Op::GroupSMaxNonUniformAMD =&gt; <span class="macro">sig! </span>{ (<span class="kw">_</span>, T) -&gt; T },
+        <span class="comment">// SPV_INTEL_subgroups
+        </span>Op::SubgroupShuffleINTEL | Op::SubgroupShuffleXorINTEL =&gt; <span class="macro">sig! </span>{ (T, <span class="kw">_</span>) -&gt; T },
+        Op::SubgroupShuffleDownINTEL | Op::SubgroupShuffleUpINTEL =&gt; <span class="macro">sig! </span>{ (T, T, <span class="kw">_</span>) -&gt; T },
+        Op::SubgroupBlockReadINTEL =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, T)) -&gt; T },
+        Op::SubgroupBlockWriteINTEL =&gt; <span class="macro">sig! </span>{ (Pointer(<span class="kw">_</span>, T), T) },
+        Op::SubgroupImageBlockReadINTEL | Op::SubgroupImageBlockWriteINTEL =&gt; {}
+        <span class="comment">// SPV_INTEL_media_block_io
+        </span>Op::SubgroupImageMediaBlockReadINTEL | Op::SubgroupImageMediaBlockWriteINTEL =&gt; {}
 
-        <span class="comment">// 3.37.22. Device-Side Enqueue Instructions</span>
-        <span class="ident">Op::EnqueueMarker</span>
-        <span class="op">|</span> <span class="ident">Op::EnqueueKernel</span>
-        <span class="op">|</span> <span class="ident">Op::GetKernelNDrangeSubGroupCount</span>
-        <span class="op">|</span> <span class="ident">Op::GetKernelNDrangeMaxSubGroupSize</span>
-        <span class="op">|</span> <span class="ident">Op::GetKernelWorkGroupSize</span>
-        <span class="op">|</span> <span class="ident">Op::GetKernelPreferredWorkGroupSizeMultiple</span>
-        <span class="op">|</span> <span class="ident">Op::RetainEvent</span>
-        <span class="op">|</span> <span class="ident">Op::ReleaseEvent</span>
-        <span class="op">|</span> <span class="ident">Op::CreateUserEvent</span>
-        <span class="op">|</span> <span class="ident">Op::IsValidEvent</span>
-        <span class="op">|</span> <span class="ident">Op::SetUserEventStatus</span>
-        <span class="op">|</span> <span class="ident">Op::CaptureEventProfilingInfo</span>
-        <span class="op">|</span> <span class="ident">Op::GetDefaultQueue</span> =&gt; {}
-        <span class="ident">Op::BuildNDRange</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="ident">T</span>) -&gt; <span class="kw">_</span> },
-        <span class="comment">// SPIR-V 1.1, Capability: SubgroupDispatch</span>
-        <span class="ident">Op::GetKernelLocalSizeForSubgroupCount</span> <span class="op">|</span> <span class="ident">Op::GetKernelMaxNumSubgroups</span> =&gt; {}
+        <span class="comment">// 3.37.22. Device-Side Enqueue Instructions
+        </span>Op::EnqueueMarker
+        | Op::EnqueueKernel
+        | Op::GetKernelNDrangeSubGroupCount
+        | Op::GetKernelNDrangeMaxSubGroupSize
+        | Op::GetKernelWorkGroupSize
+        | Op::GetKernelPreferredWorkGroupSizeMultiple
+        | Op::RetainEvent
+        | Op::ReleaseEvent
+        | Op::CreateUserEvent
+        | Op::IsValidEvent
+        | Op::SetUserEventStatus
+        | Op::CaptureEventProfilingInfo
+        | Op::GetDefaultQueue =&gt; {}
+        Op::BuildNDRange =&gt; <span class="macro">sig! </span>{ (T, T, T) -&gt; <span class="kw">_ </span>},
+        <span class="comment">// SPIR-V 1.1, Capability: SubgroupDispatch
+        </span>Op::GetKernelLocalSizeForSubgroupCount | Op::GetKernelMaxNumSubgroups =&gt; {}
 
-        <span class="comment">// 3.37.23. Pipe Instructions</span>
-        <span class="ident">Op::ReadPipe</span> <span class="op">|</span> <span class="ident">Op::WritePipe</span> =&gt; <span class="macro">sig!</span> { (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="kw">_</span> },
-        <span class="ident">Op::ReservedReadPipe</span> <span class="op">|</span> <span class="ident">Op::ReservedWritePipe</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="kw">_</span>
+        <span class="comment">// 3.37.23. Pipe Instructions
+        </span>Op::ReadPipe | Op::WritePipe =&gt; <span class="macro">sig! </span>{ (Pipe(T), Pointer(<span class="kw">_</span>, T), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="kw">_ </span>},
+        Op::ReservedReadPipe | Op::ReservedWritePipe =&gt; <span class="macro">sig! </span>{
+            (Pipe(T), <span class="kw">_</span>, <span class="kw">_</span>, Pointer(<span class="kw">_</span>, T), <span class="kw">_</span>, <span class="kw">_</span>) -&gt; <span class="kw">_
+        </span>},
+        Op::ReserveReadPipePackets
+        | Op::ReserveWritePipePackets
+        | Op::CommitReadPipe
+        | Op::CommitWritePipe
+        | Op::IsValidReserveId
+        | Op::GetNumPipePackets
+        | Op::GetMaxPipePackets
+        | Op::GroupReserveReadPipePackets
+        | Op::GroupReserveWritePipePackets
+        | Op::GroupCommitReadPipe
+        | Op::GroupCommitWritePipe =&gt; {}
+        <span class="comment">// SPIR-V 1.1, Capability: PipeStorage
+        </span>Op::ConstantPipeStorage | Op::CreatePipeFromPipeStorage =&gt; {}
+        <span class="comment">// SPV_INTEL_blocking_pipes
+        </span>Op::ReadPipeBlockingINTEL | Op::WritePipeBlockingINTEL =&gt; <span class="macro">sig! </span>{
+            (Pipe(T), Pointer(<span class="kw">_</span>, T), <span class="kw">_</span>, <span class="kw">_</span>)
         },
-        <span class="ident">Op::ReserveReadPipePackets</span>
-        <span class="op">|</span> <span class="ident">Op::ReserveWritePipePackets</span>
-        <span class="op">|</span> <span class="ident">Op::CommitReadPipe</span>
-        <span class="op">|</span> <span class="ident">Op::CommitWritePipe</span>
-        <span class="op">|</span> <span class="ident">Op::IsValidReserveId</span>
-        <span class="op">|</span> <span class="ident">Op::GetNumPipePackets</span>
-        <span class="op">|</span> <span class="ident">Op::GetMaxPipePackets</span>
-        <span class="op">|</span> <span class="ident">Op::GroupReserveReadPipePackets</span>
-        <span class="op">|</span> <span class="ident">Op::GroupReserveWritePipePackets</span>
-        <span class="op">|</span> <span class="ident">Op::GroupCommitReadPipe</span>
-        <span class="op">|</span> <span class="ident">Op::GroupCommitWritePipe</span> =&gt; {}
-        <span class="comment">// SPIR-V 1.1, Capability: PipeStorage</span>
-        <span class="ident">Op::ConstantPipeStorage</span> <span class="op">|</span> <span class="ident">Op::CreatePipeFromPipeStorage</span> =&gt; {}
-        <span class="comment">// SPV_INTEL_blocking_pipes</span>
-        <span class="ident">Op::ReadPipeBlockingINTEL</span> <span class="op">|</span> <span class="ident">Op::WritePipeBlockingINTEL</span> =&gt; <span class="macro">sig!</span> {
-            (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>)
-        },
 
-        <span class="comment">// 3.37.24. Non-Uniform Instructions</span>
-        <span class="ident">Op::GroupNonUniformElect</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformAll</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformAny</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformAllEqual</span> =&gt; {}
-        <span class="ident">Op::GroupNonUniformBroadcast</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="kw">_</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::GroupNonUniformBroadcastFirst</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>) -&gt; <span class="ident">T</span> },
-        <span class="ident">Op::GroupNonUniformBallot</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformInverseBallot</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformBallotBitExtract</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformBallotBitCount</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformBallotFindLSB</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformBallotFindMSB</span> =&gt; {}
-        <span class="ident">Op::GroupNonUniformShuffle</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformShuffleXor</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformShuffleUp</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformShuffleDown</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformIAdd</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformFAdd</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformIMul</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformFMul</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformSMin</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformUMin</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformFMin</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformSMax</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformUMax</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformFMax</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformBitwiseAnd</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformBitwiseOr</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformBitwiseXor</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformLogicalAnd</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformLogicalOr</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformLogicalXor</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformQuadBroadcast</span>
-        <span class="op">|</span> <span class="ident">Op::GroupNonUniformQuadSwap</span> =&gt; <span class="macro">sig!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, ..) -&gt; <span class="ident">T</span> },
-        <span class="comment">// SPV_NV_shader_subgroup_partitioned</span>
-        <span class="ident">Op::GroupNonUniformPartitionNV</span> =&gt; {}
+        <span class="comment">// 3.37.24. Non-Uniform Instructions
+        </span>Op::GroupNonUniformElect
+        | Op::GroupNonUniformAll
+        | Op::GroupNonUniformAny
+        | Op::GroupNonUniformAllEqual =&gt; {}
+        Op::GroupNonUniformBroadcast =&gt; <span class="macro">sig! </span>{ (<span class="kw">_</span>, T, <span class="kw">_</span>) -&gt; T },
+        Op::GroupNonUniformBroadcastFirst =&gt; <span class="macro">sig! </span>{ (<span class="kw">_</span>, T) -&gt; T },
+        Op::GroupNonUniformBallot
+        | Op::GroupNonUniformInverseBallot
+        | Op::GroupNonUniformBallotBitExtract
+        | Op::GroupNonUniformBallotBitCount
+        | Op::GroupNonUniformBallotFindLSB
+        | Op::GroupNonUniformBallotFindMSB =&gt; {}
+        Op::GroupNonUniformShuffle
+        | Op::GroupNonUniformShuffleXor
+        | Op::GroupNonUniformShuffleUp
+        | Op::GroupNonUniformShuffleDown
+        | Op::GroupNonUniformIAdd
+        | Op::GroupNonUniformFAdd
+        | Op::GroupNonUniformIMul
+        | Op::GroupNonUniformFMul
+        | Op::GroupNonUniformSMin
+        | Op::GroupNonUniformUMin
+        | Op::GroupNonUniformFMin
+        | Op::GroupNonUniformSMax
+        | Op::GroupNonUniformUMax
+        | Op::GroupNonUniformFMax
+        | Op::GroupNonUniformBitwiseAnd
+        | Op::GroupNonUniformBitwiseOr
+        | Op::GroupNonUniformBitwiseXor
+        | Op::GroupNonUniformLogicalAnd
+        | Op::GroupNonUniformLogicalOr
+        | Op::GroupNonUniformLogicalXor
+        | Op::GroupNonUniformQuadBroadcast
+        | Op::GroupNonUniformQuadSwap =&gt; <span class="macro">sig! </span>{ (<span class="kw">_</span>, T, ..) -&gt; T },
+        <span class="comment">// SPV_NV_shader_subgroup_partitioned
+        </span>Op::GroupNonUniformPartitionNV =&gt; {}
 
-        <span class="comment">// 3.37.25. Reserved Instructions</span>
-        <span class="comment">// SPV_KHR_ray_tracing</span>
-        <span class="ident">Op::TraceRayKHR</span>
-        <span class="op">|</span> <span class="ident">Op::ExecuteCallableKHR</span>
-        <span class="op">|</span> <span class="ident">Op::ConvertUToAccelerationStructureKHR</span>
-        <span class="op">|</span> <span class="ident">Op::IgnoreIntersectionKHR</span>
-        <span class="op">|</span> <span class="ident">Op::TerminateRayKHR</span> =&gt; {
-            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
-            <span class="comment">// reserved!(SPV_KHR_ray_tracing)</span>
+        <span class="comment">// 3.37.25. Reserved Instructions
+        // SPV_KHR_ray_tracing
+        </span>Op::TraceRayKHR
+        | Op::ExecuteCallableKHR
+        | Op::ConvertUToAccelerationStructureKHR
+        | Op::IgnoreIntersectionKHR
+        | Op::TerminateRayKHR =&gt; {
+            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_KHR_ray_tracing)
+        </span>}
+        <span class="comment">// SPV_KHR_ray_query
+        </span>Op::TypeRayQueryKHR
+        | Op::RayQueryInitializeKHR
+        | Op::RayQueryTerminateKHR
+        | Op::RayQueryGenerateIntersectionKHR
+        | Op::RayQueryConfirmIntersectionKHR
+        | Op::RayQueryProceedKHR
+        | Op::RayQueryGetIntersectionTypeKHR =&gt; {
+            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_KHR_ray_query)
+        </span>}
+        <span class="comment">// SPV_AMD_shader_fragment_mask
+        </span>Op::FragmentMaskFetchAMD | Op::FragmentFetchAMD =&gt; <span class="macro">reserved!</span>(SPV_AMD_shader_fragment_mask),
+        <span class="comment">// SPV_KHR_shader_clock
+        </span>Op::ReadClockKHR =&gt; {
+            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_KHR_shader_clock)
+        </span>}
+        <span class="comment">// SPV_NV_mesh_shader
+        </span>Op::WritePackedPrimitiveIndices4x8NV =&gt; <span class="macro">reserved!</span>(SPV_NV_mesh_shader),
+        <span class="comment">// SPV_NV_ray_tracing
+        </span>Op::ReportIntersectionNV
+        | Op::IgnoreIntersectionNV
+        | Op::TerminateRayNV
+        | Op::TraceNV
+        | Op::TypeAccelerationStructureNV
+        | Op::ExecuteCallableNV =&gt; {
+            <span class="comment">// NOTE(eddyb) Some KHR variants are aliased to the the NV instructions.
+            // reserved!(SPV_NV_ray_tracing)
+        </span>}
+        <span class="comment">// SPV_NV_cooperative_matrix
+        </span>Op::TypeCooperativeMatrixNV
+        | Op::CooperativeMatrixLoadNV
+        | Op::CooperativeMatrixStoreNV
+        | Op::CooperativeMatrixMulAddNV
+        | Op::CooperativeMatrixLengthNV =&gt; <span class="macro">reserved!</span>(SPV_NV_cooperative_matrix),
+        <span class="comment">// SPV_EXT_fragment_shader_interlock
+        </span>Op::BeginInvocationInterlockEXT | Op::EndInvocationInterlockEXT =&gt; {
+            <span class="macro">reserved!</span>(SPV_EXT_fragment_shader_interlock);
         }
-        <span class="comment">// SPV_KHR_ray_query</span>
-        <span class="ident">Op::TypeRayQueryKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryInitializeKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryTerminateKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGenerateIntersectionKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryConfirmIntersectionKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryProceedKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionTypeKHR</span> =&gt; {
-            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
-            <span class="comment">// reserved!(SPV_KHR_ray_query)</span>
-        }
-        <span class="comment">// SPV_AMD_shader_fragment_mask</span>
-        <span class="ident">Op::FragmentMaskFetchAMD</span> <span class="op">|</span> <span class="ident">Op::FragmentFetchAMD</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_AMD_shader_fragment_mask</span>),
-        <span class="comment">// SPV_KHR_shader_clock</span>
-        <span class="ident">Op::ReadClockKHR</span> =&gt; {
-            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
-            <span class="comment">// reserved!(SPV_KHR_shader_clock)</span>
-        }
-        <span class="comment">// SPV_NV_mesh_shader</span>
-        <span class="ident">Op::WritePackedPrimitiveIndices4x8NV</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_NV_mesh_shader</span>),
-        <span class="comment">// SPV_NV_ray_tracing</span>
-        <span class="ident">Op::ReportIntersectionNV</span>
-        <span class="op">|</span> <span class="ident">Op::IgnoreIntersectionNV</span>
-        <span class="op">|</span> <span class="ident">Op::TerminateRayNV</span>
-        <span class="op">|</span> <span class="ident">Op::TraceNV</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAccelerationStructureNV</span>
-        <span class="op">|</span> <span class="ident">Op::ExecuteCallableNV</span> =&gt; {
-            <span class="comment">// NOTE(eddyb) Some KHR variants are aliased to the the NV instructions.</span>
-            <span class="comment">// reserved!(SPV_NV_ray_tracing)</span>
-        }
-        <span class="comment">// SPV_NV_cooperative_matrix</span>
-        <span class="ident">Op::TypeCooperativeMatrixNV</span>
-        <span class="op">|</span> <span class="ident">Op::CooperativeMatrixLoadNV</span>
-        <span class="op">|</span> <span class="ident">Op::CooperativeMatrixStoreNV</span>
-        <span class="op">|</span> <span class="ident">Op::CooperativeMatrixMulAddNV</span>
-        <span class="op">|</span> <span class="ident">Op::CooperativeMatrixLengthNV</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_NV_cooperative_matrix</span>),
-        <span class="comment">// SPV_EXT_fragment_shader_interlock</span>
-        <span class="ident">Op::BeginInvocationInterlockEXT</span> <span class="op">|</span> <span class="ident">Op::EndInvocationInterlockEXT</span> =&gt; {
-            <span class="macro">reserved!</span>(<span class="ident">SPV_EXT_fragment_shader_interlock</span>);
-        }
-        <span class="comment">// SPV_EXT_demote_to_helper_invocation</span>
-        <span class="ident">Op::DemoteToHelperInvocationEXT</span> <span class="op">|</span> <span class="ident">Op::IsHelperInvocationEXT</span> =&gt; {
-            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
-            <span class="comment">// reserved!(SPV_EXT_demote_to_helper_invocation)</span>
-        }
-        <span class="comment">// SPV_INTEL_shader_integer_functions2</span>
-        <span class="ident">Op::UCountLeadingZerosINTEL</span> <span class="op">|</span> <span class="ident">Op::UCountTrailingZerosINTEL</span> =&gt; {
-            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
-            <span class="comment">// reserved!(SPV_INTEL_shader_integer_functions2)</span>
-        }
-        <span class="ident">Op::AbsISubINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::AbsUSubINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::IAddSatINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::UAddSatINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::IAverageINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::UAverageINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::IAverageRoundedINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::UAverageRoundedINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::ISubSatINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::USubSatINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::IMul32x16INTEL</span>
-        <span class="op">|</span> <span class="ident">Op::UMul32x16INTEL</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_shader_integer_functions2</span>),
-        <span class="comment">// SPV_INTEL_unstructured_loop_controls</span>
-        <span class="ident">Op::LoopControlINTEL</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_unstructured_loop_controls</span>),
-        <span class="comment">// SPV_INTEL_fpga_reg</span>
-        <span class="ident">Op::FPGARegINTEL</span> =&gt; <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_fpga_reg</span>),
-        <span class="comment">// SPV_KHR_ray_query</span>
-        <span class="ident">Op::RayQueryGetRayTMinKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetRayFlagsKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionTKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionInstanceCustomIndexKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionInstanceIdKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionGeometryIndexKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionPrimitiveIndexKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionBarycentricsKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionFrontFaceKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionCandidateAABBOpaqueKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionObjectRayDirectionKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionObjectRayOriginKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetWorldRayDirectionKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetWorldRayOriginKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionObjectToWorldKHR</span>
-        <span class="op">|</span> <span class="ident">Op::RayQueryGetIntersectionWorldToObjectKHR</span> =&gt; {
-            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
-            <span class="comment">// reserved!(SPV_KHR_ray_query)</span>
-        }
+        <span class="comment">// SPV_EXT_demote_to_helper_invocation
+        </span>Op::DemoteToHelperInvocationEXT | Op::IsHelperInvocationEXT =&gt; {
+            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_EXT_demote_to_helper_invocation)
+        </span>}
+        <span class="comment">// SPV_INTEL_shader_integer_functions2
+        </span>Op::UCountLeadingZerosINTEL | Op::UCountTrailingZerosINTEL =&gt; {
+            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_INTEL_shader_integer_functions2)
+        </span>}
+        Op::AbsISubINTEL
+        | Op::AbsUSubINTEL
+        | Op::IAddSatINTEL
+        | Op::UAddSatINTEL
+        | Op::IAverageINTEL
+        | Op::UAverageINTEL
+        | Op::IAverageRoundedINTEL
+        | Op::UAverageRoundedINTEL
+        | Op::ISubSatINTEL
+        | Op::USubSatINTEL
+        | Op::IMul32x16INTEL
+        | Op::UMul32x16INTEL =&gt; <span class="macro">reserved!</span>(SPV_INTEL_shader_integer_functions2),
+        <span class="comment">// SPV_INTEL_unstructured_loop_controls
+        </span>Op::LoopControlINTEL =&gt; <span class="macro">reserved!</span>(SPV_INTEL_unstructured_loop_controls),
+        <span class="comment">// SPV_INTEL_fpga_reg
+        </span>Op::FPGARegINTEL =&gt; <span class="macro">reserved!</span>(SPV_INTEL_fpga_reg),
+        <span class="comment">// SPV_KHR_ray_query
+        </span>Op::RayQueryGetRayTMinKHR
+        | Op::RayQueryGetRayFlagsKHR
+        | Op::RayQueryGetIntersectionTKHR
+        | Op::RayQueryGetIntersectionInstanceCustomIndexKHR
+        | Op::RayQueryGetIntersectionInstanceIdKHR
+        | Op::RayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR
+        | Op::RayQueryGetIntersectionGeometryIndexKHR
+        | Op::RayQueryGetIntersectionPrimitiveIndexKHR
+        | Op::RayQueryGetIntersectionBarycentricsKHR
+        | Op::RayQueryGetIntersectionFrontFaceKHR
+        | Op::RayQueryGetIntersectionCandidateAABBOpaqueKHR
+        | Op::RayQueryGetIntersectionObjectRayDirectionKHR
+        | Op::RayQueryGetIntersectionObjectRayOriginKHR
+        | Op::RayQueryGetWorldRayDirectionKHR
+        | Op::RayQueryGetWorldRayOriginKHR
+        | Op::RayQueryGetIntersectionObjectToWorldKHR
+        | Op::RayQueryGetIntersectionWorldToObjectKHR =&gt; {
+            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_KHR_ray_query)
+        </span>}
 
-        <span class="comment">// Instructions not present in current SPIR-V specification</span>
-        <span class="comment">// SPV_INTEL_function_pointers</span>
-        <span class="ident">Op::FunctionPointerINTEL</span> <span class="op">|</span> <span class="ident">Op::FunctionPointerCallINTEL</span> =&gt; {
-            <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_function_pointers</span>);
+        <span class="comment">// Instructions not present in current SPIR-V specification
+        // SPV_INTEL_function_pointers
+        </span>Op::FunctionPointerINTEL | Op::FunctionPointerCallINTEL =&gt; {
+            <span class="macro">reserved!</span>(SPV_INTEL_function_pointers);
         }
-        <span class="comment">// SPV_INTEL_device_side_avc_motion_estimation</span>
-        <span class="ident">Op::VmeImageINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeVmeImageINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcImePayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcRefPayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcSicPayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcMcePayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcMceResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcImeResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcImeResultSingleReferenceStreamoutINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcImeResultDualReferenceStreamoutINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcImeSingleReferenceStreaminINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcImeDualReferenceStreaminINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcRefResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::TypeAvcSicResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultInterBaseMultiReferencePenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceSetInterBaseMultiReferencePenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultInterShapePenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceSetInterShapePenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultInterDirectionPenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceSetInterDirectionPenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultIntraLumaShapePenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultInterMotionVectorCostTableINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultHighPenaltyCostTableINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultMediumPenaltyCostTableINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultLowPenaltyCostTableINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceSetMotionVectorCostFunctionINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultIntraLumaModePenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultNonDcLumaIntraPenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetDefaultIntraChromaModeBasePenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceSetAcOnlyHaarINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceSetSourceInterlacedFieldPolarityINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceSetSingleReferenceInterlacedFieldPolarityINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceSetDualReferenceInterlacedFieldPolaritiesINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceConvertToImePayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceConvertToImeResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceConvertToRefPayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceConvertToRefResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceConvertToSicPayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceConvertToSicResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetMotionVectorsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetInterDistortionsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetBestInterDistortionsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetInterMajorShapeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetInterMinorShapeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetInterDirectionsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetInterMotionVectorCountINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetInterReferenceIdsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcMceGetInterReferenceInterlacedFieldPolaritiesINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeInitializeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeSetSingleReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeSetDualReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeRefWindowSizeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeAdjustRefOffsetINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeConvertToMcePayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeSetMaxMotionVectorCountINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeSetUnidirectionalMixDisableINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeSetEarlySearchTerminationThresholdINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeSetWeightedSadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeEvaluateWithSingleReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeEvaluateWithDualReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeEvaluateWithSingleReferenceStreaminINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeEvaluateWithDualReferenceStreaminINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeEvaluateWithSingleReferenceStreamoutINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeEvaluateWithDualReferenceStreamoutINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeEvaluateWithSingleReferenceStreaminoutINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeEvaluateWithDualReferenceStreaminoutINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeConvertToMceResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetSingleReferenceStreaminINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetDualReferenceStreaminINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeStripSingleReferenceStreamoutINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeStripDualReferenceStreamoutINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetStreamoutSingleReferenceMajorShapeMotionVectorsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetStreamoutSingleReferenceMajorShapeDistortionsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetStreamoutSingleReferenceMajorShapeReferenceIdsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetStreamoutDualReferenceMajorShapeMotionVectorsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetStreamoutDualReferenceMajorShapeDistortionsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetStreamoutDualReferenceMajorShapeReferenceIdsINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetBorderReachedINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetTruncatedSearchIndicationINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetUnidirectionalEarlySearchTerminationINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetWeightingPatternMinimumMotionVectorINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcImeGetWeightingPatternMinimumDistortionINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcFmeInitializeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcBmeInitializeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcRefConvertToMcePayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcRefSetBidirectionalMixDisableINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcRefSetBilinearFilterEnableINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcRefEvaluateWithSingleReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcRefEvaluateWithDualReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcRefEvaluateWithMultiReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcRefEvaluateWithMultiReferenceInterlacedINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcRefConvertToMceResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicInitializeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicConfigureSkcINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicConfigureIpeLumaINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicConfigureIpeLumaChromaINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetMotionVectorMaskINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicConvertToMcePayloadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicSetIntraLumaShapePenaltyINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicSetIntraLumaModeCostFunctionINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicSetIntraChromaModeCostFunctionINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicSetBilinearFilterEnableINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicSetSkcForwardTransformEnableINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicSetBlockBasedRawSkipSadINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicEvaluateIpeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicEvaluateWithSingleReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicEvaluateWithDualReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicEvaluateWithMultiReferenceINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicEvaluateWithMultiReferenceInterlacedINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicConvertToMceResultINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetIpeLumaShapeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetBestIpeLumaDistortionINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetBestIpeChromaDistortionINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetPackedIpeLumaModesINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetIpeChromaModeINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL</span>
-        <span class="op">|</span> <span class="ident">Op::SubgroupAvcSicGetInterRawSadsINTEL</span> =&gt; {
-            <span class="macro">reserved!</span>(<span class="ident">SPV_INTEL_device_side_avc_motion_estimation</span>);
+        <span class="comment">// SPV_INTEL_device_side_avc_motion_estimation
+        </span>Op::VmeImageINTEL
+        | Op::TypeVmeImageINTEL
+        | Op::TypeAvcImePayloadINTEL
+        | Op::TypeAvcRefPayloadINTEL
+        | Op::TypeAvcSicPayloadINTEL
+        | Op::TypeAvcMcePayloadINTEL
+        | Op::TypeAvcMceResultINTEL
+        | Op::TypeAvcImeResultINTEL
+        | Op::TypeAvcImeResultSingleReferenceStreamoutINTEL
+        | Op::TypeAvcImeResultDualReferenceStreamoutINTEL
+        | Op::TypeAvcImeSingleReferenceStreaminINTEL
+        | Op::TypeAvcImeDualReferenceStreaminINTEL
+        | Op::TypeAvcRefResultINTEL
+        | Op::TypeAvcSicResultINTEL
+        | Op::SubgroupAvcMceGetDefaultInterBaseMultiReferencePenaltyINTEL
+        | Op::SubgroupAvcMceSetInterBaseMultiReferencePenaltyINTEL
+        | Op::SubgroupAvcMceGetDefaultInterShapePenaltyINTEL
+        | Op::SubgroupAvcMceSetInterShapePenaltyINTEL
+        | Op::SubgroupAvcMceGetDefaultInterDirectionPenaltyINTEL
+        | Op::SubgroupAvcMceSetInterDirectionPenaltyINTEL
+        | Op::SubgroupAvcMceGetDefaultIntraLumaShapePenaltyINTEL
+        | Op::SubgroupAvcMceGetDefaultInterMotionVectorCostTableINTEL
+        | Op::SubgroupAvcMceGetDefaultHighPenaltyCostTableINTEL
+        | Op::SubgroupAvcMceGetDefaultMediumPenaltyCostTableINTEL
+        | Op::SubgroupAvcMceGetDefaultLowPenaltyCostTableINTEL
+        | Op::SubgroupAvcMceSetMotionVectorCostFunctionINTEL
+        | Op::SubgroupAvcMceGetDefaultIntraLumaModePenaltyINTEL
+        | Op::SubgroupAvcMceGetDefaultNonDcLumaIntraPenaltyINTEL
+        | Op::SubgroupAvcMceGetDefaultIntraChromaModeBasePenaltyINTEL
+        | Op::SubgroupAvcMceSetAcOnlyHaarINTEL
+        | Op::SubgroupAvcMceSetSourceInterlacedFieldPolarityINTEL
+        | Op::SubgroupAvcMceSetSingleReferenceInterlacedFieldPolarityINTEL
+        | Op::SubgroupAvcMceSetDualReferenceInterlacedFieldPolaritiesINTEL
+        | Op::SubgroupAvcMceConvertToImePayloadINTEL
+        | Op::SubgroupAvcMceConvertToImeResultINTEL
+        | Op::SubgroupAvcMceConvertToRefPayloadINTEL
+        | Op::SubgroupAvcMceConvertToRefResultINTEL
+        | Op::SubgroupAvcMceConvertToSicPayloadINTEL
+        | Op::SubgroupAvcMceConvertToSicResultINTEL
+        | Op::SubgroupAvcMceGetMotionVectorsINTEL
+        | Op::SubgroupAvcMceGetInterDistortionsINTEL
+        | Op::SubgroupAvcMceGetBestInterDistortionsINTEL
+        | Op::SubgroupAvcMceGetInterMajorShapeINTEL
+        | Op::SubgroupAvcMceGetInterMinorShapeINTEL
+        | Op::SubgroupAvcMceGetInterDirectionsINTEL
+        | Op::SubgroupAvcMceGetInterMotionVectorCountINTEL
+        | Op::SubgroupAvcMceGetInterReferenceIdsINTEL
+        | Op::SubgroupAvcMceGetInterReferenceInterlacedFieldPolaritiesINTEL
+        | Op::SubgroupAvcImeInitializeINTEL
+        | Op::SubgroupAvcImeSetSingleReferenceINTEL
+        | Op::SubgroupAvcImeSetDualReferenceINTEL
+        | Op::SubgroupAvcImeRefWindowSizeINTEL
+        | Op::SubgroupAvcImeAdjustRefOffsetINTEL
+        | Op::SubgroupAvcImeConvertToMcePayloadINTEL
+        | Op::SubgroupAvcImeSetMaxMotionVectorCountINTEL
+        | Op::SubgroupAvcImeSetUnidirectionalMixDisableINTEL
+        | Op::SubgroupAvcImeSetEarlySearchTerminationThresholdINTEL
+        | Op::SubgroupAvcImeSetWeightedSadINTEL
+        | Op::SubgroupAvcImeEvaluateWithSingleReferenceINTEL
+        | Op::SubgroupAvcImeEvaluateWithDualReferenceINTEL
+        | Op::SubgroupAvcImeEvaluateWithSingleReferenceStreaminINTEL
+        | Op::SubgroupAvcImeEvaluateWithDualReferenceStreaminINTEL
+        | Op::SubgroupAvcImeEvaluateWithSingleReferenceStreamoutINTEL
+        | Op::SubgroupAvcImeEvaluateWithDualReferenceStreamoutINTEL
+        | Op::SubgroupAvcImeEvaluateWithSingleReferenceStreaminoutINTEL
+        | Op::SubgroupAvcImeEvaluateWithDualReferenceStreaminoutINTEL
+        | Op::SubgroupAvcImeConvertToMceResultINTEL
+        | Op::SubgroupAvcImeGetSingleReferenceStreaminINTEL
+        | Op::SubgroupAvcImeGetDualReferenceStreaminINTEL
+        | Op::SubgroupAvcImeStripSingleReferenceStreamoutINTEL
+        | Op::SubgroupAvcImeStripDualReferenceStreamoutINTEL
+        | Op::SubgroupAvcImeGetStreamoutSingleReferenceMajorShapeMotionVectorsINTEL
+        | Op::SubgroupAvcImeGetStreamoutSingleReferenceMajorShapeDistortionsINTEL
+        | Op::SubgroupAvcImeGetStreamoutSingleReferenceMajorShapeReferenceIdsINTEL
+        | Op::SubgroupAvcImeGetStreamoutDualReferenceMajorShapeMotionVectorsINTEL
+        | Op::SubgroupAvcImeGetStreamoutDualReferenceMajorShapeDistortionsINTEL
+        | Op::SubgroupAvcImeGetStreamoutDualReferenceMajorShapeReferenceIdsINTEL
+        | Op::SubgroupAvcImeGetBorderReachedINTEL
+        | Op::SubgroupAvcImeGetTruncatedSearchIndicationINTEL
+        | Op::SubgroupAvcImeGetUnidirectionalEarlySearchTerminationINTEL
+        | Op::SubgroupAvcImeGetWeightingPatternMinimumMotionVectorINTEL
+        | Op::SubgroupAvcImeGetWeightingPatternMinimumDistortionINTEL
+        | Op::SubgroupAvcFmeInitializeINTEL
+        | Op::SubgroupAvcBmeInitializeINTEL
+        | Op::SubgroupAvcRefConvertToMcePayloadINTEL
+        | Op::SubgroupAvcRefSetBidirectionalMixDisableINTEL
+        | Op::SubgroupAvcRefSetBilinearFilterEnableINTEL
+        | Op::SubgroupAvcRefEvaluateWithSingleReferenceINTEL
+        | Op::SubgroupAvcRefEvaluateWithDualReferenceINTEL
+        | Op::SubgroupAvcRefEvaluateWithMultiReferenceINTEL
+        | Op::SubgroupAvcRefEvaluateWithMultiReferenceInterlacedINTEL
+        | Op::SubgroupAvcRefConvertToMceResultINTEL
+        | Op::SubgroupAvcSicInitializeINTEL
+        | Op::SubgroupAvcSicConfigureSkcINTEL
+        | Op::SubgroupAvcSicConfigureIpeLumaINTEL
+        | Op::SubgroupAvcSicConfigureIpeLumaChromaINTEL
+        | Op::SubgroupAvcSicGetMotionVectorMaskINTEL
+        | Op::SubgroupAvcSicConvertToMcePayloadINTEL
+        | Op::SubgroupAvcSicSetIntraLumaShapePenaltyINTEL
+        | Op::SubgroupAvcSicSetIntraLumaModeCostFunctionINTEL
+        | Op::SubgroupAvcSicSetIntraChromaModeCostFunctionINTEL
+        | Op::SubgroupAvcSicSetBilinearFilterEnableINTEL
+        | Op::SubgroupAvcSicSetSkcForwardTransformEnableINTEL
+        | Op::SubgroupAvcSicSetBlockBasedRawSkipSadINTEL
+        | Op::SubgroupAvcSicEvaluateIpeINTEL
+        | Op::SubgroupAvcSicEvaluateWithSingleReferenceINTEL
+        | Op::SubgroupAvcSicEvaluateWithDualReferenceINTEL
+        | Op::SubgroupAvcSicEvaluateWithMultiReferenceINTEL
+        | Op::SubgroupAvcSicEvaluateWithMultiReferenceInterlacedINTEL
+        | Op::SubgroupAvcSicConvertToMceResultINTEL
+        | Op::SubgroupAvcSicGetIpeLumaShapeINTEL
+        | Op::SubgroupAvcSicGetBestIpeLumaDistortionINTEL
+        | Op::SubgroupAvcSicGetBestIpeChromaDistortionINTEL
+        | Op::SubgroupAvcSicGetPackedIpeLumaModesINTEL
+        | Op::SubgroupAvcSicGetIpeChromaModeINTEL
+        | Op::SubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL
+        | Op::SubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL
+        | Op::SubgroupAvcSicGetInterRawSadsINTEL =&gt; {
+            <span class="macro">reserved!</span>(SPV_INTEL_device_side_avc_motion_estimation);
         }
     }
 
-    <span class="prelude-val">None</span>
-}
+    <span class="prelude-val">None
+</span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

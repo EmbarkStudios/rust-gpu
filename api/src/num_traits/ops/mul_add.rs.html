@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/num-traits-0.2.14/src/ops/mul_add.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mul_add.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../num_traits/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../num_traits/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../num_traits/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/num-traits-0.2.14/src/ops/mul_add.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mul_add.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../num_traits/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../num_traits/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../num_traits/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -155,157 +149,156 @@
 <span id="149">149</span>
 <span id="150">150</span>
 <span id="151">151</span>
-</pre><pre class="rust"><code><span class="doccomment">/// Fused multiply-add. Computes `(self * a) + b` with only one rounding</span>
-<span class="doccomment">/// error, yielding a more accurate result than an unfused multiply-add.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Using `mul_add` can be more performant than an unfused multiply-add if</span>
-<span class="doccomment">/// the target architecture has a dedicated `fma` CPU instruction.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that `A` and `B` are `Self` by default, but this is not mandatory.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use std::f32;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let m = 10.0_f32;</span>
-<span class="doccomment">/// let x = 4.0_f32;</span>
-<span class="doccomment">/// let b = 60.0_f32;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // 100.0</span>
-<span class="doccomment">/// let abs_difference = (m.mul_add(x, b) - (m*x + b)).abs();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// assert!(abs_difference &lt;= 100.0 * f32::EPSILON);</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MulAdd</span><span class="op">&lt;</span><span class="ident">A</span> <span class="op">=</span> <span class="self">Self</span>, <span class="ident">B</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The resulting type after applying the fused multiply-add.</span>
-    <span class="kw">type</span> <span class="ident">Output</span>;
+</pre><pre class="rust"><code><span class="doccomment">/// Fused multiply-add. Computes `(self * a) + b` with only one rounding
+/// error, yielding a more accurate result than an unfused multiply-add.
+///
+/// Using `mul_add` can be more performant than an unfused multiply-add if
+/// the target architecture has a dedicated `fma` CPU instruction.
+///
+/// Note that `A` and `B` are `Self` by default, but this is not mandatory.
+///
+/// # Example
+///
+/// ```
+/// use std::f32;
+///
+/// let m = 10.0_f32;
+/// let x = 4.0_f32;
+/// let b = 60.0_f32;
+///
+/// // 100.0
+/// let abs_difference = (m.mul_add(x, b) - (m*x + b)).abs();
+///
+/// assert!(abs_difference &lt;= 100.0 * f32::EPSILON);
+/// ```
+</span><span class="kw">pub trait </span>MulAdd&lt;A = <span class="self">Self</span>, B = <span class="self">Self</span>&gt; {
+    <span class="doccomment">/// The resulting type after applying the fused multiply-add.
+    </span><span class="kw">type </span>Output;
 
-    <span class="doccomment">/// Performs the fused multiply-add operation.</span>
-    <span class="kw">fn</span> <span class="ident">mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>: <span class="ident">A</span>, <span class="ident">b</span>: <span class="ident">B</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span>;
+    <span class="doccomment">/// Performs the fused multiply-add operation.
+    </span><span class="kw">fn </span>mul_add(<span class="self">self</span>, a: A, b: B) -&gt; <span class="self">Self</span>::Output;
 }
 
-<span class="doccomment">/// The fused multiply-add assignment operation.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MulAddAssign</span><span class="op">&lt;</span><span class="ident">A</span> <span class="op">=</span> <span class="self">Self</span>, <span class="ident">B</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Performs the fused multiply-add operation.</span>
-    <span class="kw">fn</span> <span class="ident">mul_add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">A</span>, <span class="ident">b</span>: <span class="ident">B</span>);
+<span class="doccomment">/// The fused multiply-add assignment operation.
+</span><span class="kw">pub trait </span>MulAddAssign&lt;A = <span class="self">Self</span>, B = <span class="self">Self</span>&gt; {
+    <span class="doccomment">/// Performs the fused multiply-add operation.
+    </span><span class="kw">fn </span>mul_add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: A, b: B);
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;libm&quot;</span>))]</span>
-<span class="kw">impl</span> <span class="ident">MulAdd</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">f32</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;libm&quot;</span>))]
+</span><span class="kw">impl </span>MulAdd&lt;f32, f32&gt; <span class="kw">for </span>f32 {
+    <span class="kw">type </span>Output = <span class="self">Self</span>;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>: <span class="self">Self</span>, <span class="ident">b</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">::Float</span><span class="op">&gt;</span><span class="ident">::mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>, <span class="ident">b</span>)
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_add(<span class="self">self</span>, a: <span class="self">Self</span>, b: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Output {
+        &lt;<span class="self">Self </span><span class="kw">as </span>::Float&gt;::mul_add(<span class="self">self</span>, a, b)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;libm&quot;</span>))]</span>
-<span class="kw">impl</span> <span class="ident">MulAdd</span><span class="op">&lt;</span><span class="ident">f64</span>, <span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">f64</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;libm&quot;</span>))]
+</span><span class="kw">impl </span>MulAdd&lt;f64, f64&gt; <span class="kw">for </span>f64 {
+    <span class="kw">type </span>Output = <span class="self">Self</span>;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>: <span class="self">Self</span>, <span class="ident">b</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">::Float</span><span class="op">&gt;</span><span class="ident">::mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>, <span class="ident">b</span>)
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_add(<span class="self">self</span>, a: <span class="self">Self</span>, b: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Output {
+        &lt;<span class="self">Self </span><span class="kw">as </span>::Float&gt;::mul_add(<span class="self">self</span>, a, b)
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">mul_add_impl</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">trait_name</span>:<span class="ident">ident</span> <span class="kw">for</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>)<span class="kw-2">*</span>) =&gt; {$(
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">trait_name</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
-            <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
+<span class="macro">macro_rules! </span>mul_add_impl {
+    (<span class="macro-nonterminal">$trait_name</span>:ident <span class="kw">for </span>$(<span class="macro-nonterminal">$t</span>:ty)<span class="kw-2">*</span>) =&gt; {$(
+        <span class="kw">impl </span><span class="macro-nonterminal">$trait_name </span><span class="kw">for </span><span class="macro-nonterminal">$t </span>{
+            <span class="kw">type </span>Output = <span class="self">Self</span>;
 
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>: <span class="self">Self</span>, <span class="ident">b</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-                (<span class="self">self</span> <span class="op">*</span> <span class="ident">a</span>) <span class="op">+</span> <span class="ident">b</span>
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>mul_add(<span class="self">self</span>, a: <span class="self">Self</span>, b: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Output {
+                (<span class="self">self </span>* a) + b
             }
         }
     )<span class="kw-2">*</span>}
 }
 
-<span class="macro">mul_add_impl!</span>(<span class="ident">MulAdd</span> <span class="kw">for</span> <span class="ident">isize</span> <span class="ident">usize</span> <span class="ident">i8</span> <span class="ident">u8</span> <span class="ident">i16</span> <span class="ident">u16</span> <span class="ident">i32</span> <span class="ident">u32</span> <span class="ident">i64</span> <span class="ident">u64</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
-<span class="macro">mul_add_impl!</span>(<span class="ident">MulAdd</span> <span class="kw">for</span> <span class="ident">i128</span> <span class="ident">u128</span>);
+<span class="macro">mul_add_impl!</span>(MulAdd <span class="kw">for </span>isize usize i8 u8 i16 u16 i32 u32 i64 u64);
+<span class="attribute">#[cfg(has_i128)]
+</span><span class="macro">mul_add_impl!</span>(MulAdd <span class="kw">for </span>i128 u128);
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;libm&quot;</span>))]</span>
-<span class="kw">impl</span> <span class="ident">MulAddAssign</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">f32</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="self">Self</span>, <span class="ident">b</span>: <span class="self">Self</span>) {
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">::Float</span><span class="op">&gt;</span><span class="ident">::mul_add</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="ident">a</span>, <span class="ident">b</span>)
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;libm&quot;</span>))]
+</span><span class="kw">impl </span>MulAddAssign&lt;f32, f32&gt; <span class="kw">for </span>f32 {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: <span class="self">Self</span>, b: <span class="self">Self</span>) {
+        <span class="kw-2">*</span><span class="self">self </span>= &lt;<span class="self">Self </span><span class="kw">as </span>::Float&gt;::mul_add(<span class="kw-2">*</span><span class="self">self</span>, a, b)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;libm&quot;</span>))]</span>
-<span class="kw">impl</span> <span class="ident">MulAddAssign</span><span class="op">&lt;</span><span class="ident">f64</span>, <span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">f64</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="self">Self</span>, <span class="ident">b</span>: <span class="self">Self</span>) {
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">::Float</span><span class="op">&gt;</span><span class="ident">::mul_add</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="ident">a</span>, <span class="ident">b</span>)
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;libm&quot;</span>))]
+</span><span class="kw">impl </span>MulAddAssign&lt;f64, f64&gt; <span class="kw">for </span>f64 {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: <span class="self">Self</span>, b: <span class="self">Self</span>) {
+        <span class="kw-2">*</span><span class="self">self </span>= &lt;<span class="self">Self </span><span class="kw">as </span>::Float&gt;::mul_add(<span class="kw-2">*</span><span class="self">self</span>, a, b)
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">mul_add_assign_impl</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">trait_name</span>:<span class="ident">ident</span> <span class="kw">for</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>)<span class="kw-2">*</span>) =&gt; {$(
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">trait_name</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">mul_add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="self">Self</span>, <span class="ident">b</span>: <span class="self">Self</span>) {
-                <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="self">self</span> <span class="op">*</span> <span class="ident">a</span>) <span class="op">+</span> <span class="ident">b</span>
+<span class="macro">macro_rules! </span>mul_add_assign_impl {
+    (<span class="macro-nonterminal">$trait_name</span>:ident <span class="kw">for </span>$(<span class="macro-nonterminal">$t</span>:ty)<span class="kw-2">*</span>) =&gt; {$(
+        <span class="kw">impl </span><span class="macro-nonterminal">$trait_name </span><span class="kw">for </span><span class="macro-nonterminal">$t </span>{
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>mul_add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: <span class="self">Self</span>, b: <span class="self">Self</span>) {
+                <span class="kw-2">*</span><span class="self">self </span>= (<span class="kw-2">*</span><span class="self">self </span>* a) + b
             }
         }
     )<span class="kw-2">*</span>}
 }
 
-<span class="macro">mul_add_assign_impl!</span>(<span class="ident">MulAddAssign</span> <span class="kw">for</span> <span class="ident">isize</span> <span class="ident">usize</span> <span class="ident">i8</span> <span class="ident">u8</span> <span class="ident">i16</span> <span class="ident">u16</span> <span class="ident">i32</span> <span class="ident">u32</span> <span class="ident">i64</span> <span class="ident">u64</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
-<span class="macro">mul_add_assign_impl!</span>(<span class="ident">MulAddAssign</span> <span class="kw">for</span> <span class="ident">i128</span> <span class="ident">u128</span>);
+<span class="macro">mul_add_assign_impl!</span>(MulAddAssign <span class="kw">for </span>isize usize i8 u8 i16 u16 i32 u32 i64 u64);
+<span class="attribute">#[cfg(has_i128)]
+</span><span class="macro">mul_add_assign_impl!</span>(MulAddAssign <span class="kw">for </span>i128 u128);
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_add_integer</span>() {
-        <span class="macro">macro_rules!</span> <span class="ident">test_mul_add</span> {
-            ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ident</span>)<span class="op">+</span>) =&gt; {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>mul_add_integer() {
+        <span class="macro">macro_rules! </span>test_mul_add {
+            ($(<span class="macro-nonterminal">$t</span>:ident)+) =&gt; {
                 $(
                     {
-                        <span class="kw">let</span> <span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> <span class="op">=</span> <span class="number">2</span>;
-                        <span class="kw">let</span> <span class="ident">x</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> <span class="op">=</span> <span class="number">3</span>;
-                        <span class="kw">let</span> <span class="ident">b</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> <span class="op">=</span> <span class="number">4</span>;
+                        <span class="kw">let </span>m: <span class="macro-nonterminal">$t </span>= <span class="number">2</span>;
+                        <span class="kw">let </span>x: <span class="macro-nonterminal">$t </span>= <span class="number">3</span>;
+                        <span class="kw">let </span>b: <span class="macro-nonterminal">$t </span>= <span class="number">4</span>;
 
-                        <span class="macro">assert_eq!</span>(<span class="ident">MulAdd::mul_add</span>(<span class="ident">m</span>, <span class="ident">x</span>, <span class="ident">b</span>), (<span class="ident">m</span><span class="kw-2">*</span><span class="ident">x</span> <span class="op">+</span> <span class="ident">b</span>));
+                        <span class="macro">assert_eq!</span>(MulAdd::mul_add(m, x, b), (m<span class="kw-2">*</span>x + b));
                     }
-                )<span class="op">+</span>
+                )+
             };
         }
 
-        <span class="macro">test_mul_add!</span>(<span class="ident">usize</span> <span class="ident">u8</span> <span class="ident">u16</span> <span class="ident">u32</span> <span class="ident">u64</span> <span class="ident">isize</span> <span class="ident">i8</span> <span class="ident">i16</span> <span class="ident">i32</span> <span class="ident">i64</span>);
+        <span class="macro">test_mul_add!</span>(usize u8 u16 u32 u64 isize i8 i16 i32 i64);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">mul_add_float</span>() {
-        <span class="macro">macro_rules!</span> <span class="ident">test_mul_add</span> {
-            ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ident</span>)<span class="op">+</span>) =&gt; {
+    <span class="attribute">#[test]
+    #[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">fn </span>mul_add_float() {
+        <span class="macro">macro_rules! </span>test_mul_add {
+            ($(<span class="macro-nonterminal">$t</span>:ident)+) =&gt; {
                 $(
                     {
-                        <span class="kw">use</span> <span class="ident">core</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>;
+                        <span class="kw">use </span>core::<span class="macro-nonterminal">$t</span>;
 
-                        <span class="kw">let</span> <span class="ident">m</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> <span class="op">=</span> <span class="number">12.0</span>;
-                        <span class="kw">let</span> <span class="ident">x</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> <span class="op">=</span> <span class="number">3.4</span>;
-                        <span class="kw">let</span> <span class="ident">b</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> <span class="op">=</span> <span class="number">5.6</span>;
+                        <span class="kw">let </span>m: <span class="macro-nonterminal">$t </span>= <span class="number">12.0</span>;
+                        <span class="kw">let </span>x: <span class="macro-nonterminal">$t </span>= <span class="number">3.4</span>;
+                        <span class="kw">let </span>b: <span class="macro-nonterminal">$t </span>= <span class="number">5.6</span>;
 
-                        <span class="kw">let</span> <span class="ident">abs_difference</span> <span class="op">=</span> (<span class="ident">MulAdd::mul_add</span>(<span class="ident">m</span>, <span class="ident">x</span>, <span class="ident">b</span>) <span class="op">-</span> (<span class="ident">m</span><span class="kw-2">*</span><span class="ident">x</span> <span class="op">+</span> <span class="ident">b</span>)).<span class="ident">abs</span>();
+                        <span class="kw">let </span>abs_difference = (MulAdd::mul_add(m, x, b) - (m<span class="kw-2">*</span>x + b)).abs();
 
-                        <span class="macro">assert!</span>(<span class="ident">abs_difference</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">46.4</span> <span class="op">*</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t::EPSILON</span>);
+                        <span class="macro">assert!</span>(abs_difference &lt;= <span class="number">46.4 </span>* <span class="macro-nonterminal">$t::EPSILON</span>);
                     }
-                )<span class="op">+</span>
+                )+
             };
         }
 
-        <span class="macro">test_mul_add!</span>(<span class="ident">f32</span> <span class="ident">f64</span>);
+        <span class="macro">test_mul_add!</span>(f32 f64);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="num_traits" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="num_traits" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

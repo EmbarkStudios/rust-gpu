@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/inline.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>inline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/inline.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>inline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -574,576 +568,575 @@
 <span id="568">568</span>
 <span id="569">569</span>
 <span id="570">570</span>
-</pre><pre class="rust"><code><span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.</span>
-<span class="doccomment">//! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a</span>
-<span class="doccomment">//! `StorageClass::Input` pointer. Our frontend definitely allows it, though, this is like taking a</span>
-<span class="doccomment">//! `&amp;Input&lt;T&gt;` in a function! So, we inline all functions that take these &quot;illegal&quot; pointers, then</span>
-<span class="doccomment">//! run mem2reg (see mem2reg.rs) on the result to &quot;unwrap&quot; the Function pointer.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.
+//! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a
+//! `StorageClass::Input` pointer. Our frontend definitely allows it, though, this is like taking a
+//! `&amp;Input&lt;T&gt;` in a function! So, we inline all functions that take these &quot;illegal&quot; pointers, then
+//! run mem2reg (see mem2reg.rs) on the result to &quot;unwrap&quot; the Function pointer.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::apply_rewrite_rules</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::simple_passes::outgoing_edges</span>;
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">get_name</span>, <span class="ident">get_names</span>};
-<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Block</span>, <span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">ModuleHeader</span>, <span class="ident">Operand</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">FunctionControl</span>, <span class="ident">Op</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures::fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
-<span class="kw">use</span> <span class="ident">rustc_errors::ErrorGuaranteed</span>;
-<span class="kw">use</span> <span class="ident">rustc_session::Session</span>;
-<span class="kw">use</span> <span class="ident">std::mem::take</span>;
+</span><span class="kw">use </span><span class="kw">super</span>::apply_rewrite_rules;
+<span class="kw">use </span><span class="kw">super</span>::simple_passes::outgoing_edges;
+<span class="kw">use super</span>::{get_name, get_names};
+<span class="kw">use </span>rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
+<span class="kw">use </span>rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
+<span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
+<span class="kw">use </span>rustc_errors::ErrorGuaranteed;
+<span class="kw">use </span>rustc_session::Session;
+<span class="kw">use </span>std::mem::take;
 
-<span class="kw">type</span> <span class="ident">FunctionMap</span> <span class="op">=</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Function</span><span class="op">&gt;</span>;
+<span class="kw">type </span>FunctionMap = FxHashMap&lt;Word, Function&gt;;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inline</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="comment">// This algorithm gets real sad if there&#39;s recursion - but, good news, SPIR-V bans recursion</span>
-    <span class="ident">deny_recursion_in_module</span>(<span class="ident">sess</span>, <span class="ident">module</span>)<span class="question-mark">?</span>;
+<span class="kw">pub fn </span>inline(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;mut </span>Module) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+    <span class="comment">// This algorithm gets real sad if there&#39;s recursion - but, good news, SPIR-V bans recursion
+    </span>deny_recursion_in_module(sess, module)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">functions</span> <span class="op">=</span> <span class="ident">module</span>
-        .<span class="ident">functions</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> (<span class="ident">f</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>(), <span class="ident">f</span>.<span class="ident">clone</span>()))
-        .<span class="ident">collect</span>();
-    <span class="kw">let</span> (<span class="ident">disallowed_argument_types</span>, <span class="ident">disallowed_return_types</span>) <span class="op">=</span>
-        <span class="ident">compute_disallowed_argument_and_return_types</span>(<span class="ident">module</span>);
-    <span class="kw">let</span> <span class="ident">void</span> <span class="op">=</span> <span class="ident">module</span>
-        .<span class="ident">types_global_values</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::TypeVoid</span>)
-        .<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
-    <span class="comment">// Drop all the functions we&#39;ll be inlining. (This also means we won&#39;t waste time processing</span>
-    <span class="comment">// inlines in functions that will get inlined)</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dropped_ids</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inlined_dont_inlines</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> {
-        <span class="kw">if</span> <span class="ident">should_inline</span>(<span class="kw-2">&amp;</span><span class="ident">disallowed_argument_types</span>, <span class="kw-2">&amp;</span><span class="ident">disallowed_return_types</span>, <span class="ident">f</span>) {
-            <span class="kw">if</span> <span class="ident">has_dont_inline</span>(<span class="ident">f</span>) {
-                <span class="ident">inlined_dont_inlines</span>.<span class="ident">push</span>(<span class="ident">f</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>());
+    <span class="kw">let </span>functions = module
+        .functions
+        .iter()
+        .map(|f| (f.def_id().unwrap(), f.clone()))
+        .collect();
+    <span class="kw">let </span>(disallowed_argument_types, disallowed_return_types) =
+        compute_disallowed_argument_and_return_types(module);
+    <span class="kw">let </span>void = module
+        .types_global_values
+        .iter()
+        .find(|inst| inst.class.opcode == Op::TypeVoid)
+        .map_or(<span class="number">0</span>, |inst| inst.result_id.unwrap());
+    <span class="comment">// Drop all the functions we&#39;ll be inlining. (This also means we won&#39;t waste time processing
+    // inlines in functions that will get inlined)
+    </span><span class="kw">let </span><span class="kw-2">mut </span>dropped_ids = FxHashSet::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>inlined_dont_inlines = Vec::new();
+    module.functions.retain(|f| {
+        <span class="kw">if </span>should_inline(<span class="kw-2">&amp;</span>disallowed_argument_types, <span class="kw-2">&amp;</span>disallowed_return_types, f) {
+            <span class="kw">if </span>has_dont_inline(f) {
+                inlined_dont_inlines.push(f.def_id().unwrap());
             }
-            <span class="comment">// TODO: We should insert all defined IDs in this function.</span>
-            <span class="ident">dropped_ids</span>.<span class="ident">insert</span>(<span class="ident">f</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>());
-            <span class="bool-val">false</span>
-        } <span class="kw">else</span> {
-            <span class="bool-val">true</span>
-        }
+            <span class="comment">// TODO: We should insert all defined IDs in this function.
+            </span>dropped_ids.insert(f.def_id().unwrap());
+            <span class="bool-val">false
+        </span>} <span class="kw">else </span>{
+            <span class="bool-val">true
+        </span>}
     });
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">inlined_dont_inlines</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="ident">get_names</span>(<span class="ident">module</span>);
-        <span class="kw">for</span> <span class="ident">f</span> <span class="kw">in</span> <span class="ident">inlined_dont_inlines</span> {
-            <span class="ident">sess</span>.<span class="ident">warn</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+    <span class="kw">if </span>!inlined_dont_inlines.is_empty() {
+        <span class="kw">let </span>names = get_names(module);
+        <span class="kw">for </span>f <span class="kw">in </span>inlined_dont_inlines {
+            sess.warn(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;`#[inline(never)]` function `{}` needs to be inlined \
                  because it has illegal argument or return types&quot;</span>,
-                <span class="ident">get_name</span>(<span class="kw-2">&amp;</span><span class="ident">names</span>, <span class="ident">f</span>)
+                get_name(<span class="kw-2">&amp;</span>names, f)
             ));
         }
     }
 
-    <span class="comment">// Drop OpName etc. for inlined functions</span>
-    <span class="ident">module</span>.<span class="ident">debug_names</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-        <span class="op">!</span><span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> {
-            <span class="ident">op</span>.<span class="ident">id_ref_any</span>()
-                .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="ident">dropped_ids</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>))
+    <span class="comment">// Drop OpName etc. for inlined functions
+    </span>module.debug_names.retain(|inst| {
+        !inst.operands.iter().any(|op| {
+            op.id_ref_any()
+                .map_or(<span class="bool-val">false</span>, |id| dropped_ids.contains(<span class="kw-2">&amp;</span>id))
         })
     });
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inliner</span> <span class="op">=</span> <span class="ident">Inliner</span> {
-        <span class="ident">header</span>: <span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>(),
-        <span class="ident">types_global_values</span>: <span class="kw-2">&amp;mut</span> <span class="ident">module</span>.<span class="ident">types_global_values</span>,
-        <span class="ident">void</span>,
-        <span class="ident">functions</span>: <span class="kw-2">&amp;</span><span class="ident">functions</span>,
-        <span class="ident">disallowed_argument_types</span>: <span class="kw-2">&amp;</span><span class="ident">disallowed_argument_types</span>,
-        <span class="ident">disallowed_return_types</span>: <span class="kw-2">&amp;</span><span class="ident">disallowed_return_types</span>,
+    <span class="kw">let </span><span class="kw-2">mut </span>inliner = Inliner {
+        header: module.header.as_mut().unwrap(),
+        types_global_values: <span class="kw-2">&amp;mut </span>module.types_global_values,
+        void,
+        functions: <span class="kw-2">&amp;</span>functions,
+        disallowed_argument_types: <span class="kw-2">&amp;</span>disallowed_argument_types,
+        disallowed_return_types: <span class="kw-2">&amp;</span>disallowed_return_types,
     };
-    <span class="kw">for</span> <span class="ident">function</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">module</span>.<span class="ident">functions</span> {
-        <span class="ident">inliner</span>.<span class="ident">inline_fn</span>(<span class="ident">function</span>);
-        <span class="ident">fuse_trivial_branches</span>(<span class="ident">function</span>);
+    <span class="kw">for </span>function <span class="kw">in </span><span class="kw-2">&amp;mut </span>module.functions {
+        inliner.inline_fn(function);
+        fuse_trivial_branches(function);
     }
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="comment">// https://stackoverflow.com/a/53995651</span>
-<span class="kw">fn</span> <span class="ident">deny_recursion_in_module</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">func_to_index</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">module</span>
-        .<span class="ident">functions</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">enumerate</span>()
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">func</span>)<span class="op">|</span> (<span class="ident">func</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>(), <span class="ident">index</span>))
-        .<span class="ident">collect</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">discovered</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="bool-val">false</span>; <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">len</span>()];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">finished</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="bool-val">false</span>; <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">len</span>()];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_recursion</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">len</span>() {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">discovered</span>[<span class="ident">index</span>] <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">finished</span>[<span class="ident">index</span>] {
-            <span class="ident">visit</span>(
-                <span class="ident">sess</span>,
-                <span class="ident">module</span>,
-                <span class="ident">index</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">discovered</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">finished</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">has_recursion</span>,
-                <span class="kw-2">&amp;</span><span class="ident">func_to_index</span>,
+<span class="comment">// https://stackoverflow.com/a/53995651
+</span><span class="kw">fn </span>deny_recursion_in_module(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;</span>Module) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+    <span class="kw">let </span>func_to_index: FxHashMap&lt;Word, usize&gt; = module
+        .functions
+        .iter()
+        .enumerate()
+        .map(|(index, func)| (func.def_id().unwrap(), index))
+        .collect();
+    <span class="kw">let </span><span class="kw-2">mut </span>discovered = <span class="macro">vec!</span>[<span class="bool-val">false</span>; module.functions.len()];
+    <span class="kw">let </span><span class="kw-2">mut </span>finished = <span class="macro">vec!</span>[<span class="bool-val">false</span>; module.functions.len()];
+    <span class="kw">let </span><span class="kw-2">mut </span>has_recursion = <span class="prelude-val">None</span>;
+    <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..module.functions.len() {
+        <span class="kw">if </span>!discovered[index] &amp;&amp; !finished[index] {
+            visit(
+                sess,
+                module,
+                index,
+                <span class="kw-2">&amp;mut </span>discovered,
+                <span class="kw-2">&amp;mut </span>finished,
+                <span class="kw-2">&amp;mut </span>has_recursion,
+                <span class="kw-2">&amp;</span>func_to_index,
             );
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit</span>(
-        <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
-        <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>,
-        <span class="ident">current</span>: <span class="ident">usize</span>,
-        <span class="ident">discovered</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
-        <span class="ident">finished</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
-        <span class="ident">has_recursion</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ErrorGuaranteed</span><span class="op">&gt;</span>,
-        <span class="ident">func_to_index</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">usize</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>visit(
+        sess: <span class="kw-2">&amp;</span>Session,
+        module: <span class="kw-2">&amp;</span>Module,
+        current: usize,
+        discovered: <span class="kw-2">&amp;mut </span>Vec&lt;bool&gt;,
+        finished: <span class="kw-2">&amp;mut </span>Vec&lt;bool&gt;,
+        has_recursion: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;ErrorGuaranteed&gt;,
+        func_to_index: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, usize&gt;,
     ) {
-        <span class="ident">discovered</span>[<span class="ident">current</span>] <span class="op">=</span> <span class="bool-val">true</span>;
+        discovered[current] = <span class="bool-val">true</span>;
 
-        <span class="kw">for</span> <span class="ident">next</span> <span class="kw">in</span> <span class="ident">calls</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">current</span>], <span class="ident">func_to_index</span>) {
-            <span class="kw">if</span> <span class="ident">discovered</span>[<span class="ident">next</span>] {
-                <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="ident">get_names</span>(<span class="ident">module</span>);
-                <span class="kw">let</span> <span class="ident">current_name</span> <span class="op">=</span> <span class="ident">get_name</span>(<span class="kw-2">&amp;</span><span class="ident">names</span>, <span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">current</span>].<span class="ident">def_id</span>().<span class="ident">unwrap</span>());
-                <span class="kw">let</span> <span class="ident">next_name</span> <span class="op">=</span> <span class="ident">get_name</span>(<span class="kw-2">&amp;</span><span class="ident">names</span>, <span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">next</span>].<span class="ident">def_id</span>().<span class="ident">unwrap</span>());
-                <span class="kw-2">*</span><span class="ident">has_recursion</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+        <span class="kw">for </span>next <span class="kw">in </span>calls(<span class="kw-2">&amp;</span>module.functions[current], func_to_index) {
+            <span class="kw">if </span>discovered[next] {
+                <span class="kw">let </span>names = get_names(module);
+                <span class="kw">let </span>current_name = get_name(<span class="kw-2">&amp;</span>names, module.functions[current].def_id().unwrap());
+                <span class="kw">let </span>next_name = get_name(<span class="kw-2">&amp;</span>names, module.functions[next].def_id().unwrap());
+                <span class="kw-2">*</span>has_recursion = <span class="prelude-val">Some</span>(sess.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;module has recursion, which is not allowed: `{}` calls `{}`&quot;</span>,
-                    <span class="ident">current_name</span>, <span class="ident">next_name</span>
+                    current_name, next_name
                 )));
                 <span class="kw">break</span>;
             }
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">finished</span>[<span class="ident">next</span>] {
-                <span class="ident">visit</span>(
-                    <span class="ident">sess</span>,
-                    <span class="ident">module</span>,
-                    <span class="ident">next</span>,
-                    <span class="ident">discovered</span>,
-                    <span class="ident">finished</span>,
-                    <span class="ident">has_recursion</span>,
-                    <span class="ident">func_to_index</span>,
+            <span class="kw">if </span>!finished[next] {
+                visit(
+                    sess,
+                    module,
+                    next,
+                    discovered,
+                    finished,
+                    has_recursion,
+                    func_to_index,
                 );
             }
         }
 
-        <span class="ident">discovered</span>[<span class="ident">current</span>] <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="ident">finished</span>[<span class="ident">current</span>] <span class="op">=</span> <span class="bool-val">true</span>;
+        discovered[current] = <span class="bool-val">false</span>;
+        finished[current] = <span class="bool-val">true</span>;
     }
 
-    <span class="kw">fn</span> <span class="ident">calls</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="ident">func</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Function</span>,
-        <span class="ident">func_to_index</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">usize</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">usize</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;a</span> {
-        <span class="ident">func</span>.<span class="ident">all_inst_iter</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::FunctionCall</span>)
-            .<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-                <span class="kw-2">*</span><span class="ident">func_to_index</span>
-                    .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>())
-                    .<span class="ident">unwrap</span>()
+    <span class="kw">fn </span>calls&lt;<span class="lifetime">&#39;a</span>&gt;(
+        func: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Function,
+        func_to_index: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FxHashMap&lt;Word, usize&gt;,
+    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = usize&gt; + <span class="lifetime">&#39;a </span>{
+        func.all_inst_iter()
+            .filter(|inst| inst.class.opcode == Op::FunctionCall)
+            .map(<span class="kw">move </span>|inst| {
+                <span class="kw-2">*</span>func_to_index
+                    .get(<span class="kw-2">&amp;</span>inst.operands[<span class="number">0</span>].id_ref_any().unwrap())
+                    .unwrap()
             })
     }
 
-    <span class="kw">match</span> <span class="ident">has_recursion</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">err</span>),
-        <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(()),
+    <span class="kw">match </span>has_recursion {
+        <span class="prelude-val">Some</span>(err) =&gt; <span class="prelude-val">Err</span>(err),
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(()),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">compute_disallowed_argument_and_return_types</span>(
-    <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>,
-) -&gt; (<span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) {
-    <span class="kw">let</span> <span class="ident">allowed_argument_storage_classes</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[
-        <span class="ident">StorageClass::UniformConstant</span>,
-        <span class="ident">StorageClass::Function</span>,
-        <span class="ident">StorageClass::Private</span>,
-        <span class="ident">StorageClass::Workgroup</span>,
-        <span class="ident">StorageClass::AtomicCounter</span>,
+<span class="kw">fn </span>compute_disallowed_argument_and_return_types(
+    module: <span class="kw-2">&amp;</span>Module,
+) -&gt; (FxHashSet&lt;Word&gt;, FxHashSet&lt;Word&gt;) {
+    <span class="kw">let </span>allowed_argument_storage_classes = <span class="kw-2">&amp;</span>[
+        StorageClass::UniformConstant,
+        StorageClass::Function,
+        StorageClass::Private,
+        StorageClass::Workgroup,
+        StorageClass::AtomicCounter,
     ];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_argument_types</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_pointees</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_return_types</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types_global_values</span> {
-        <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-            <span class="ident">Op::TypePointer</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">storage_class</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>();
-                <span class="kw">let</span> <span class="ident">pointee</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>();
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">allowed_argument_storage_classes</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">storage_class</span>)
-                    <span class="op">|</span><span class="op">|</span> <span class="ident">disallowed_pointees</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">pointee</span>)
-                    <span class="op">|</span><span class="op">|</span> <span class="ident">disallowed_argument_types</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">pointee</span>)
+    <span class="kw">let </span><span class="kw-2">mut </span>disallowed_argument_types = FxHashSet::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>disallowed_pointees = FxHashSet::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>disallowed_return_types = FxHashSet::default();
+    <span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;</span>module.types_global_values {
+        <span class="kw">match </span>inst.class.opcode {
+            Op::TypePointer =&gt; {
+                <span class="kw">let </span>storage_class = inst.operands[<span class="number">0</span>].unwrap_storage_class();
+                <span class="kw">let </span>pointee = inst.operands[<span class="number">1</span>].unwrap_id_ref();
+                <span class="kw">if </span>!allowed_argument_storage_classes.contains(<span class="kw-2">&amp;</span>storage_class)
+                    || disallowed_pointees.contains(<span class="kw-2">&amp;</span>pointee)
+                    || disallowed_argument_types.contains(<span class="kw-2">&amp;</span>pointee)
                 {
-                    <span class="ident">disallowed_argument_types</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
+                    disallowed_argument_types.insert(inst.result_id.unwrap());
                 }
-                <span class="ident">disallowed_pointees</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
-                <span class="ident">disallowed_return_types</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
+                disallowed_pointees.insert(inst.result_id.unwrap());
+                disallowed_return_types.insert(inst.result_id.unwrap());
             }
-            <span class="ident">Op::TypeStruct</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">fields</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>());
-                <span class="kw">if</span> <span class="ident">fields</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="ident">disallowed_argument_types</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)) {
-                    <span class="ident">disallowed_argument_types</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
+            Op::TypeStruct =&gt; {
+                <span class="kw">let </span>fields = || inst.operands.iter().map(|op| op.id_ref_any().unwrap());
+                <span class="kw">if </span>fields().any(|id| disallowed_argument_types.contains(<span class="kw-2">&amp;</span>id)) {
+                    disallowed_argument_types.insert(inst.result_id.unwrap());
                 }
-                <span class="kw">if</span> <span class="ident">fields</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="ident">disallowed_pointees</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)) {
-                    <span class="ident">disallowed_pointees</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
+                <span class="kw">if </span>fields().any(|id| disallowed_pointees.contains(<span class="kw-2">&amp;</span>id)) {
+                    disallowed_pointees.insert(inst.result_id.unwrap());
                 }
-                <span class="kw">if</span> <span class="ident">fields</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="ident">disallowed_return_types</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)) {
-                    <span class="ident">disallowed_return_types</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
-                }
-            }
-            <span class="ident">Op::TypeArray</span> <span class="op">|</span> <span class="ident">Op::TypeRuntimeArray</span> <span class="op">|</span> <span class="ident">Op::TypeVector</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>();
-                <span class="kw">if</span> <span class="ident">disallowed_argument_types</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
-                    <span class="ident">disallowed_argument_types</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
-                }
-                <span class="kw">if</span> <span class="ident">disallowed_pointees</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
-                    <span class="ident">disallowed_pointees</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
+                <span class="kw">if </span>fields().any(|id| disallowed_return_types.contains(<span class="kw-2">&amp;</span>id)) {
+                    disallowed_return_types.insert(inst.result_id.unwrap());
                 }
             }
-            <span class="kw">_</span> =&gt; {}
+            Op::TypeArray | Op::TypeRuntimeArray | Op::TypeVector =&gt; {
+                <span class="kw">let </span>id = inst.operands[<span class="number">0</span>].id_ref_any().unwrap();
+                <span class="kw">if </span>disallowed_argument_types.contains(<span class="kw-2">&amp;</span>id) {
+                    disallowed_argument_types.insert(inst.result_id.unwrap());
+                }
+                <span class="kw">if </span>disallowed_pointees.contains(<span class="kw-2">&amp;</span>id) {
+                    disallowed_pointees.insert(inst.result_id.unwrap());
+                }
+            }
+            <span class="kw">_ </span>=&gt; {}
         }
     }
-    (<span class="ident">disallowed_argument_types</span>, <span class="ident">disallowed_return_types</span>)
+    (disallowed_argument_types, disallowed_return_types)
 }
 
-<span class="kw">fn</span> <span class="ident">has_dont_inline</span>(<span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="ident">def</span> <span class="op">=</span> <span class="ident">function</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">control</span> <span class="op">=</span> <span class="ident">def</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_function_control</span>();
-    <span class="ident">control</span>.<span class="ident">contains</span>(<span class="ident">FunctionControl::DONT_INLINE</span>)
+<span class="kw">fn </span>has_dont_inline(function: <span class="kw-2">&amp;</span>Function) -&gt; bool {
+    <span class="kw">let </span>def = function.def.as_ref().unwrap();
+    <span class="kw">let </span>control = def.operands[<span class="number">0</span>].unwrap_function_control();
+    control.contains(FunctionControl::DONT_INLINE)
 }
 
-<span class="kw">fn</span> <span class="ident">should_inline</span>(
-    <span class="ident">disallowed_argument_types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">disallowed_return_types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>,
-) -&gt; <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="ident">def</span> <span class="op">=</span> <span class="ident">function</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">control</span> <span class="op">=</span> <span class="ident">def</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_function_control</span>();
-    <span class="ident">control</span>.<span class="ident">contains</span>(<span class="ident">FunctionControl::INLINE</span>)
-        <span class="op">|</span><span class="op">|</span> <span class="ident">function</span>
-            .<span class="ident">parameters</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">disallowed_argument_types</span>.<span class="ident">contains</span>(<span class="ident">inst</span>.<span class="ident">result_type</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()))
-        <span class="op">|</span><span class="op">|</span> <span class="ident">disallowed_return_types</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">function</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">result_type</span>.<span class="ident">unwrap</span>())
+<span class="kw">fn </span>should_inline(
+    disallowed_argument_types: <span class="kw-2">&amp;</span>FxHashSet&lt;Word&gt;,
+    disallowed_return_types: <span class="kw-2">&amp;</span>FxHashSet&lt;Word&gt;,
+    function: <span class="kw-2">&amp;</span>Function,
+) -&gt; bool {
+    <span class="kw">let </span>def = function.def.as_ref().unwrap();
+    <span class="kw">let </span>control = def.operands[<span class="number">0</span>].unwrap_function_control();
+    control.contains(FunctionControl::INLINE)
+        || function
+            .parameters
+            .iter()
+            .any(|inst| disallowed_argument_types.contains(inst.result_type.as_ref().unwrap()))
+        || disallowed_return_types.contains(<span class="kw-2">&amp;</span>function.def.as_ref().unwrap().result_type.unwrap())
 }
 
-<span class="comment">// This should be more general, but a very common problem is passing an OpAccessChain to an</span>
-<span class="comment">// OpFunctionCall (i.e. `f(&amp;s.x)`, or more commonly, `s.x.f()` where `f` takes `&amp;self`), so detect</span>
-<span class="comment">// that case and inline the call.</span>
-<span class="kw">fn</span> <span class="ident">args_invalid</span>(<span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>, <span class="ident">call</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">function</span>.<span class="ident">all_inst_iter</span>() {
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::AccessChain</span> {
-            <span class="kw">let</span> <span class="ident">inst_result</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>();
-            <span class="kw">if</span> <span class="ident">call</span>
-                .<span class="ident">operands</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">any</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">op</span> <span class="op">==</span> <span class="ident">Operand::IdRef</span>(<span class="ident">inst_result</span>))
+<span class="comment">// This should be more general, but a very common problem is passing an OpAccessChain to an
+// OpFunctionCall (i.e. `f(&amp;s.x)`, or more commonly, `s.x.f()` where `f` takes `&amp;self`), so detect
+// that case and inline the call.
+</span><span class="kw">fn </span>args_invalid(function: <span class="kw-2">&amp;</span>Function, call: <span class="kw-2">&amp;</span>Instruction) -&gt; bool {
+    <span class="kw">for </span>inst <span class="kw">in </span>function.all_inst_iter() {
+        <span class="kw">if </span>inst.class.opcode == Op::AccessChain {
+            <span class="kw">let </span>inst_result = inst.result_id.unwrap();
+            <span class="kw">if </span>call
+                .operands
+                .iter()
+                .any(|op| <span class="kw-2">*</span>op == Operand::IdRef(inst_result))
             {
-                <span class="kw">return</span> <span class="bool-val">true</span>;
+                <span class="kw">return </span><span class="bool-val">true</span>;
             }
         }
     }
-    <span class="bool-val">false</span>
-}
+    <span class="bool-val">false
+</span>}
 
-<span class="comment">// Steps:</span>
-<span class="comment">// Move OpVariable decls</span>
-<span class="comment">// Rewrite return</span>
-<span class="comment">// Renumber IDs</span>
-<span class="comment">// Insert blocks</span>
+<span class="comment">// Steps:
+// Move OpVariable decls
+// Rewrite return
+// Renumber IDs
+// Insert blocks
 
-<span class="kw">struct</span> <span class="ident">Inliner</span><span class="op">&lt;</span><span class="lifetime">&#39;m</span>, <span class="lifetime">&#39;map</span><span class="op">&gt;</span> {
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;m</span> <span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">types_global_values</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;m</span> <span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">void</span>: <span class="ident">Word</span>,
-    <span class="ident">functions</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="ident">FunctionMap</span>,
-    <span class="ident">disallowed_argument_types</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">disallowed_return_types</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="comment">// rewrite_rules: FxHashMap&lt;Word, Word&gt;,</span>
-}
+</span><span class="kw">struct </span>Inliner&lt;<span class="lifetime">&#39;m</span>, <span class="lifetime">&#39;map</span>&gt; {
+    header: <span class="kw-2">&amp;</span><span class="lifetime">&#39;m </span><span class="kw-2">mut </span>ModuleHeader,
+    types_global_values: <span class="kw-2">&amp;</span><span class="lifetime">&#39;m </span><span class="kw-2">mut </span>Vec&lt;Instruction&gt;,
+    void: Word,
+    functions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;map </span>FunctionMap,
+    disallowed_argument_types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;map </span>FxHashSet&lt;Word&gt;,
+    disallowed_return_types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;map </span>FxHashSet&lt;Word&gt;,
+    <span class="comment">// rewrite_rules: FxHashMap&lt;Word, Word&gt;,
+</span>}
 
-<span class="kw">impl</span> <span class="ident">Inliner</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Word</span> {
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">bound</span>;
-        <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">bound</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-        <span class="ident">result</span>
+<span class="kw">impl </span>Inliner&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">fn </span>id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
+        <span class="kw">let </span>result = <span class="self">self</span>.header.bound;
+        <span class="self">self</span>.header.bound += <span class="number">1</span>;
+        result
     }
 
-    <span class="kw">fn</span> <span class="ident">ptr_ty</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pointee</span>: <span class="ident">Word</span>) -&gt; <span class="ident">Word</span> {
-        <span class="comment">// TODO: This is horribly slow, fix this</span>
-        <span class="kw">let</span> <span class="ident">existing</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types_global_values</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-            <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::TypePointer</span>
-                <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>() <span class="op">==</span> <span class="ident">StorageClass::Function</span>
-                <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>() <span class="op">==</span> <span class="ident">pointee</span>
+    <span class="kw">fn </span>ptr_ty(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pointee: Word) -&gt; Word {
+        <span class="comment">// TODO: This is horribly slow, fix this
+        </span><span class="kw">let </span>existing = <span class="self">self</span>.types_global_values.iter().find(|inst| {
+            inst.class.opcode == Op::TypePointer
+                &amp;&amp; inst.operands[<span class="number">0</span>].unwrap_storage_class() == StorageClass::Function
+                &amp;&amp; inst.operands[<span class="number">1</span>].unwrap_id_ref() == pointee
         });
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">existing</span>) <span class="op">=</span> <span class="ident">existing</span> {
-            <span class="kw">return</span> <span class="ident">existing</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(existing) = existing {
+            <span class="kw">return </span>existing.result_id.unwrap();
         }
-        <span class="kw">let</span> <span class="ident">inst_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
-        <span class="self">self</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">Instruction::new</span>(
-            <span class="ident">Op::TypePointer</span>,
+        <span class="kw">let </span>inst_id = <span class="self">self</span>.id();
+        <span class="self">self</span>.types_global_values.push(Instruction::new(
+            Op::TypePointer,
             <span class="prelude-val">None</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">inst_id</span>),
+            <span class="prelude-val">Some</span>(inst_id),
             <span class="macro">vec!</span>[
-                <span class="ident">Operand::StorageClass</span>(<span class="ident">StorageClass::Function</span>),
-                <span class="ident">Operand::IdRef</span>(<span class="ident">pointee</span>),
+                Operand::StorageClass(StorageClass::Function),
+                Operand::IdRef(pointee),
             ],
         ));
-        <span class="ident">inst_id</span>
+        inst_id
     }
 
-    <span class="kw">fn</span> <span class="ident">inline_fn</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">function</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Function</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">while</span> <span class="ident">block_idx</span> <span class="op">&lt;</span> <span class="ident">function</span>.<span class="ident">blocks</span>.<span class="ident">len</span>() {
-            <span class="comment">// If we successfully inlined a block, then repeat processing on the same block, in</span>
-            <span class="comment">// case the newly inlined block has more inlined calls.</span>
-            <span class="comment">// TODO: This is quadratic</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">inline_block</span>(<span class="ident">function</span>, <span class="ident">block_idx</span>) {
-                <span class="ident">block_idx</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="kw">fn </span>inline_fn(<span class="kw-2">&amp;mut </span><span class="self">self</span>, function: <span class="kw-2">&amp;mut </span>Function) {
+        <span class="kw">let </span><span class="kw-2">mut </span>block_idx = <span class="number">0</span>;
+        <span class="kw">while </span>block_idx &lt; function.blocks.len() {
+            <span class="comment">// If we successfully inlined a block, then repeat processing on the same block, in
+            // case the newly inlined block has more inlined calls.
+            // TODO: This is quadratic
+            </span><span class="kw">if </span>!<span class="self">self</span>.inline_block(function, block_idx) {
+                block_idx += <span class="number">1</span>;
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">inline_block</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">caller</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Function</span>, <span class="ident">block_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-        <span class="comment">// Find the first inlined OpFunctionCall</span>
-        <span class="kw">let</span> <span class="ident">call</span> <span class="op">=</span> <span class="ident">caller</span>.<span class="ident">blocks</span>[<span class="ident">block_idx</span>]
-            .<span class="ident">instructions</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">inst</span>)<span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::FunctionCall</span>)
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">inst</span>)<span class="op">|</span> {
+    <span class="kw">fn </span>inline_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, caller: <span class="kw-2">&amp;mut </span>Function, block_idx: usize) -&gt; bool {
+        <span class="comment">// Find the first inlined OpFunctionCall
+        </span><span class="kw">let </span>call = caller.blocks[block_idx]
+            .instructions
+            .iter()
+            .enumerate()
+            .filter(|(<span class="kw">_</span>, inst)| inst.class.opcode == Op::FunctionCall)
+            .map(|(index, inst)| {
                 (
-                    <span class="ident">index</span>,
-                    <span class="ident">inst</span>,
-                    <span class="self">self</span>.<span class="ident">functions</span>
-                        .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>())
-                        .<span class="ident">unwrap</span>(),
+                    index,
+                    inst,
+                    <span class="self">self</span>.functions
+                        .get(<span class="kw-2">&amp;</span>inst.operands[<span class="number">0</span>].id_ref_any().unwrap())
+                        .unwrap(),
                 )
             })
-            .<span class="ident">find</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">inst</span>, <span class="ident">f</span>)<span class="op">|</span> {
-                <span class="ident">should_inline</span>(
-                    <span class="self">self</span>.<span class="ident">disallowed_argument_types</span>,
-                    <span class="self">self</span>.<span class="ident">disallowed_return_types</span>,
-                    <span class="ident">f</span>,
-                ) <span class="op">|</span><span class="op">|</span> <span class="ident">args_invalid</span>(<span class="ident">caller</span>, <span class="ident">inst</span>)
+            .find(|(<span class="kw">_</span>, inst, f)| {
+                should_inline(
+                    <span class="self">self</span>.disallowed_argument_types,
+                    <span class="self">self</span>.disallowed_return_types,
+                    f,
+                ) || args_invalid(caller, inst)
             });
-        <span class="kw">let</span> (<span class="ident">call_index</span>, <span class="ident">call_inst</span>, <span class="ident">callee</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">call</span> {
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">call</span>) =&gt; <span class="ident">call</span>,
+        <span class="kw">let </span>(call_index, call_inst, callee) = <span class="kw">match </span>call {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="bool-val">false</span>,
+            <span class="prelude-val">Some</span>(call) =&gt; call,
         };
-        <span class="kw">let</span> <span class="ident">call_result_type</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">call_inst</span>.<span class="ident">result_type</span>.<span class="ident">unwrap</span>();
-            <span class="kw">if</span> <span class="ident">ty</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">void</span> {
-                <span class="prelude-val">None</span>
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">ty</span>)
+        <span class="kw">let </span>call_result_type = {
+            <span class="kw">let </span>ty = call_inst.result_type.unwrap();
+            <span class="kw">if </span>ty == <span class="self">self</span>.void {
+                <span class="prelude-val">None
+            </span>} <span class="kw">else </span>{
+                <span class="prelude-val">Some</span>(ty)
             }
         };
-        <span class="kw">let</span> <span class="ident">call_result_id</span> <span class="op">=</span> <span class="ident">call_inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>();
-        <span class="comment">// Rewrite parameters to arguments</span>
-        <span class="kw">let</span> <span class="ident">call_arguments</span> <span class="op">=</span> <span class="ident">call_inst</span>
-            .<span class="ident">operands</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">skip</span>(<span class="number">1</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>());
-        <span class="kw">let</span> <span class="ident">callee_parameters</span> <span class="op">=</span> <span class="ident">callee</span>.<span class="ident">parameters</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-            <span class="macro">assert!</span>(<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::FunctionParameter</span>);
-            <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>()
+        <span class="kw">let </span>call_result_id = call_inst.result_id.unwrap();
+        <span class="comment">// Rewrite parameters to arguments
+        </span><span class="kw">let </span>call_arguments = call_inst
+            .operands
+            .iter()
+            .skip(<span class="number">1</span>)
+            .map(|op| op.id_ref_any().unwrap());
+        <span class="kw">let </span>callee_parameters = callee.parameters.iter().map(|inst| {
+            <span class="macro">assert!</span>(inst.class.opcode == Op::FunctionParameter);
+            inst.result_id.unwrap()
         });
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewrite_rules</span> <span class="op">=</span> <span class="ident">callee_parameters</span>.<span class="ident">zip</span>(<span class="ident">call_arguments</span>).<span class="ident">collect</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>rewrite_rules = callee_parameters.zip(call_arguments).collect();
 
-        <span class="kw">let</span> <span class="ident">return_variable</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">call_result_type</span>.<span class="ident">is_some</span>() {
-            <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">id</span>())
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        };
-        <span class="kw">let</span> <span class="ident">return_jump</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
-        <span class="comment">// Rewrite OpReturns of the callee.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inlined_blocks</span> <span class="op">=</span> <span class="ident">get_inlined_blocks</span>(<span class="ident">callee</span>, <span class="ident">return_variable</span>, <span class="ident">return_jump</span>);
-        <span class="comment">// Clone the IDs of the callee, because otherwise they&#39;d be defined multiple times if the</span>
-        <span class="comment">// fn is inlined multiple times.</span>
-        <span class="self">self</span>.<span class="ident">add_clone_id_rules</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rewrite_rules</span>, <span class="kw-2">&amp;</span><span class="ident">inlined_blocks</span>);
-        <span class="ident">apply_rewrite_rules</span>(<span class="kw-2">&amp;</span><span class="ident">rewrite_rules</span>, <span class="kw-2">&amp;mut</span> <span class="ident">inlined_blocks</span>);
+        <span class="kw">let </span>return_variable = <span class="kw">if </span>call_result_type.is_some() {
+            <span class="prelude-val">Some</span>(<span class="self">self</span>.id())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
+        <span class="kw">let </span>return_jump = <span class="self">self</span>.id();
+        <span class="comment">// Rewrite OpReturns of the callee.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>inlined_blocks = get_inlined_blocks(callee, return_variable, return_jump);
+        <span class="comment">// Clone the IDs of the callee, because otherwise they&#39;d be defined multiple times if the
+        // fn is inlined multiple times.
+        </span><span class="self">self</span>.add_clone_id_rules(<span class="kw-2">&amp;mut </span>rewrite_rules, <span class="kw-2">&amp;</span>inlined_blocks);
+        apply_rewrite_rules(<span class="kw-2">&amp;</span>rewrite_rules, <span class="kw-2">&amp;mut </span>inlined_blocks);
 
-        <span class="comment">// Split the block containing the OpFunctionCall into two, around the call.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">post_call_block_insts</span> <span class="op">=</span> <span class="ident">caller</span>.<span class="ident">blocks</span>[<span class="ident">block_idx</span>]
-            .<span class="ident">instructions</span>
-            .<span class="ident">split_off</span>(<span class="ident">call_index</span> <span class="op">+</span> <span class="number">1</span>);
-        <span class="comment">// pop off OpFunctionCall</span>
-        <span class="kw">let</span> <span class="ident">call</span> <span class="op">=</span> <span class="ident">caller</span>.<span class="ident">blocks</span>[<span class="ident">block_idx</span>].<span class="ident">instructions</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">call</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::FunctionCall</span>);
+        <span class="comment">// Split the block containing the OpFunctionCall into two, around the call.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>post_call_block_insts = caller.blocks[block_idx]
+            .instructions
+            .split_off(call_index + <span class="number">1</span>);
+        <span class="comment">// pop off OpFunctionCall
+        </span><span class="kw">let </span>call = caller.blocks[block_idx].instructions.pop().unwrap();
+        <span class="macro">assert!</span>(call.class.opcode == Op::FunctionCall);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">call_result_type</span>) <span class="op">=</span> <span class="ident">call_result_type</span> {
-            <span class="comment">// Generate the storage space for the return value: Do this *after* the split above,</span>
-            <span class="comment">// because if block_idx=0, inserting a variable here shifts call_index.</span>
-            <span class="ident">insert_opvariable</span>(
-                <span class="kw-2">&amp;mut</span> <span class="ident">caller</span>.<span class="ident">blocks</span>[<span class="number">0</span>],
-                <span class="self">self</span>.<span class="ident">ptr_ty</span>(<span class="ident">call_result_type</span>),
-                <span class="ident">return_variable</span>.<span class="ident">unwrap</span>(),
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(call_result_type) = call_result_type {
+            <span class="comment">// Generate the storage space for the return value: Do this *after* the split above,
+            // because if block_idx=0, inserting a variable here shifts call_index.
+            </span>insert_opvariable(
+                <span class="kw-2">&amp;mut </span>caller.blocks[<span class="number">0</span>],
+                <span class="self">self</span>.ptr_ty(call_result_type),
+                return_variable.unwrap(),
             );
         }
 
-        <span class="comment">// Fuse the first block of the callee into the block of the caller. This is okay because</span>
-        <span class="comment">// it&#39;s illegal to branch to the first BB in a function.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">callee_header</span> <span class="op">=</span> <span class="ident">inlined_blocks</span>.<span class="ident">remove</span>(<span class="number">0</span>).<span class="ident">instructions</span>;
-        <span class="comment">// TODO: OpLine handling</span>
-        <span class="kw">let</span> <span class="ident">num_variables</span> <span class="op">=</span> <span class="ident">callee_header</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">position</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Variable</span>)
-            .<span class="ident">unwrap_or</span>(<span class="ident">callee_header</span>.<span class="ident">len</span>());
-        <span class="ident">caller</span>.<span class="ident">blocks</span>[<span class="ident">block_idx</span>]
-            .<span class="ident">instructions</span>
-            .<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">callee_header</span>.<span class="ident">split_off</span>(<span class="ident">num_variables</span>));
-        <span class="comment">// Move the OpVariables of the callee to the caller.</span>
-        <span class="ident">insert_opvariables</span>(<span class="kw-2">&amp;mut</span> <span class="ident">caller</span>.<span class="ident">blocks</span>[<span class="number">0</span>], <span class="ident">callee_header</span>);
+        <span class="comment">// Fuse the first block of the callee into the block of the caller. This is okay because
+        // it&#39;s illegal to branch to the first BB in a function.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>callee_header = inlined_blocks.remove(<span class="number">0</span>).instructions;
+        <span class="comment">// TODO: OpLine handling
+        </span><span class="kw">let </span>num_variables = callee_header
+            .iter()
+            .position(|inst| inst.class.opcode != Op::Variable)
+            .unwrap_or(callee_header.len());
+        caller.blocks[block_idx]
+            .instructions
+            .append(<span class="kw-2">&amp;mut </span>callee_header.split_off(num_variables));
+        <span class="comment">// Move the OpVariables of the callee to the caller.
+        </span>insert_opvariables(<span class="kw-2">&amp;mut </span>caller.blocks[<span class="number">0</span>], callee_header);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">call_result_type</span>) <span class="op">=</span> <span class="ident">call_result_type</span> {
-            <span class="comment">// Add the load of the result value after the inlined function. Note there&#39;s guaranteed no</span>
-            <span class="comment">// OpPhi instructions since we just split this block.</span>
-            <span class="ident">post_call_block_insts</span>.<span class="ident">insert</span>(
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(call_result_type) = call_result_type {
+            <span class="comment">// Add the load of the result value after the inlined function. Note there&#39;s guaranteed no
+            // OpPhi instructions since we just split this block.
+            </span>post_call_block_insts.insert(
                 <span class="number">0</span>,
-                <span class="ident">Instruction::new</span>(
-                    <span class="ident">Op::Load</span>,
-                    <span class="prelude-val">Some</span>(<span class="ident">call_result_type</span>),
-                    <span class="prelude-val">Some</span>(<span class="ident">call_result_id</span>),
-                    <span class="macro">vec!</span>[<span class="ident">Operand::IdRef</span>(<span class="ident">return_variable</span>.<span class="ident">unwrap</span>())],
+                Instruction::new(
+                    Op::Load,
+                    <span class="prelude-val">Some</span>(call_result_type),
+                    <span class="prelude-val">Some</span>(call_result_id),
+                    <span class="macro">vec!</span>[Operand::IdRef(return_variable.unwrap())],
                 ),
             );
         }
-        <span class="comment">// Insert the second half of the split block.</span>
-        <span class="kw">let</span> <span class="ident">continue_block</span> <span class="op">=</span> <span class="ident">Block</span> {
-            <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="ident">Instruction::new</span>(<span class="ident">Op::Label</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">return_jump</span>), <span class="macro">vec!</span>[])),
-            <span class="ident">instructions</span>: <span class="ident">post_call_block_insts</span>,
+        <span class="comment">// Insert the second half of the split block.
+        </span><span class="kw">let </span>continue_block = Block {
+            label: <span class="prelude-val">Some</span>(Instruction::new(Op::Label, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(return_jump), <span class="macro">vec!</span>[])),
+            instructions: post_call_block_insts,
         };
-        <span class="ident">caller</span>.<span class="ident">blocks</span>.<span class="ident">insert</span>(<span class="ident">block_idx</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">continue_block</span>);
+        caller.blocks.insert(block_idx + <span class="number">1</span>, continue_block);
 
-        <span class="comment">// Insert the rest of the blocks (i.e. not the first) between the original block that was</span>
-        <span class="comment">// split.</span>
-        <span class="ident">caller</span>
-            .<span class="ident">blocks</span>
-            .<span class="ident">splice</span>((<span class="ident">block_idx</span> <span class="op">+</span> <span class="number">1</span>)..(<span class="ident">block_idx</span> <span class="op">+</span> <span class="number">1</span>), <span class="ident">inlined_blocks</span>);
+        <span class="comment">// Insert the rest of the blocks (i.e. not the first) between the original block that was
+        // split.
+        </span>caller
+            .blocks
+            .splice((block_idx + <span class="number">1</span>)..(block_idx + <span class="number">1</span>), inlined_blocks);
 
-        <span class="bool-val">true</span>
-    }
+        <span class="bool-val">true
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">add_clone_id_rules</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rewrite_rules</span>: <span class="kw-2">&amp;mut</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) {
-        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span> {
-            <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">block</span>.<span class="ident">label</span>.<span class="ident">iter</span>().<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">instructions</span>) {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
-                    <span class="kw">let</span> <span class="ident">new_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
-                    <span class="kw">let</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">rewrite_rules</span>.<span class="ident">insert</span>(<span class="ident">result_id</span>, <span class="ident">new_id</span>);
-                    <span class="macro">assert!</span>(<span class="ident">old</span>.<span class="ident">is_none</span>());
+    <span class="kw">fn </span>add_clone_id_rules(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rewrite_rules: <span class="kw-2">&amp;mut </span>FxHashMap&lt;Word, Word&gt;, blocks: <span class="kw-2">&amp;</span>[Block]) {
+        <span class="kw">for </span>block <span class="kw">in </span>blocks {
+            <span class="kw">for </span>inst <span class="kw">in </span>block.label.iter().chain(<span class="kw-2">&amp;</span>block.instructions) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(result_id) = inst.result_id {
+                    <span class="kw">let </span>new_id = <span class="self">self</span>.id();
+                    <span class="kw">let </span>old = rewrite_rules.insert(result_id, new_id);
+                    <span class="macro">assert!</span>(old.is_none());
                 }
             }
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">get_inlined_blocks</span>(
-    <span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>,
-    <span class="ident">return_variable</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">return_jump</span>: <span class="ident">Word</span>,
-) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Block</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="ident">function</span>.<span class="ident">blocks</span>.<span class="ident">clone</span>();
-    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">blocks</span> {
-        <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Op::Return</span> <span class="op">|</span> <span class="ident">Op::ReturnValue</span> <span class="op">=</span> <span class="ident">last</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-            <span class="kw">if</span> <span class="ident">Op::ReturnValue</span> <span class="op">==</span> <span class="ident">last</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-                <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">last</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>();
-                <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(
-                    <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>,
-                    <span class="ident">Instruction::new</span>(
-                        <span class="ident">Op::Store</span>,
+<span class="kw">fn </span>get_inlined_blocks(
+    function: <span class="kw-2">&amp;</span>Function,
+    return_variable: <span class="prelude-ty">Option</span>&lt;Word&gt;,
+    return_jump: Word,
+) -&gt; Vec&lt;Block&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>blocks = function.blocks.clone();
+    <span class="kw">for </span>block <span class="kw">in </span><span class="kw-2">&amp;mut </span>blocks {
+        <span class="kw">let </span>last = block.instructions.last().unwrap();
+        <span class="kw">if let </span>Op::Return | Op::ReturnValue = last.class.opcode {
+            <span class="kw">if </span>Op::ReturnValue == last.class.opcode {
+                <span class="kw">let </span>return_value = last.operands[<span class="number">0</span>].id_ref_any().unwrap();
+                block.instructions.insert(
+                    block.instructions.len() - <span class="number">1</span>,
+                    Instruction::new(
+                        Op::Store,
                         <span class="prelude-val">None</span>,
                         <span class="prelude-val">None</span>,
                         <span class="macro">vec!</span>[
-                            <span class="ident">Operand::IdRef</span>(<span class="ident">return_variable</span>.<span class="ident">unwrap</span>()),
-                            <span class="ident">Operand::IdRef</span>(<span class="ident">return_value</span>),
+                            Operand::IdRef(return_variable.unwrap()),
+                            Operand::IdRef(return_value),
                         ],
                     ),
                 );
-            } <span class="kw">else</span> {
-                <span class="macro">assert!</span>(<span class="ident">return_variable</span>.<span class="ident">is_none</span>());
+            } <span class="kw">else </span>{
+                <span class="macro">assert!</span>(return_variable.is_none());
             }
-            <span class="kw-2">*</span><span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>() <span class="op">=</span>
-                <span class="ident">Instruction::new</span>(<span class="ident">Op::Branch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[<span class="ident">Operand::IdRef</span>(<span class="ident">return_jump</span>)]);
+            <span class="kw-2">*</span>block.instructions.last_mut().unwrap() =
+                Instruction::new(Op::Branch, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[Operand::IdRef(return_jump)]);
         }
     }
-    <span class="ident">blocks</span>
+    blocks
 }
 
-<span class="kw">fn</span> <span class="ident">insert_opvariable</span>(<span class="ident">block</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Block</span>, <span class="ident">ptr_ty</span>: <span class="ident">Word</span>, <span class="ident">result_id</span>: <span class="ident">Word</span>) {
-    <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">block</span>
-        .<span class="ident">instructions</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">enumerate</span>()
-        .<span class="ident">find_map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">inst</span>)<span class="op">|</span> {
-            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Variable</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">index</span>)
-            } <span class="kw">else</span> {
-                <span class="prelude-val">None</span>
-            }
+<span class="kw">fn </span>insert_opvariable(block: <span class="kw-2">&amp;mut </span>Block, ptr_ty: Word, result_id: Word) {
+    <span class="kw">let </span>index = block
+        .instructions
+        .iter()
+        .enumerate()
+        .find_map(|(index, inst)| {
+            <span class="kw">if </span>inst.class.opcode != Op::Variable {
+                <span class="prelude-val">Some</span>(index)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>}
         });
-    <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::new</span>(
-        <span class="ident">Op::Variable</span>,
-        <span class="prelude-val">Some</span>(<span class="ident">ptr_ty</span>),
-        <span class="prelude-val">Some</span>(<span class="ident">result_id</span>),
-        <span class="macro">vec!</span>[<span class="ident">Operand::StorageClass</span>(<span class="ident">StorageClass::Function</span>)],
+    <span class="kw">let </span>inst = Instruction::new(
+        Op::Variable,
+        <span class="prelude-val">Some</span>(ptr_ty),
+        <span class="prelude-val">Some</span>(result_id),
+        <span class="macro">vec!</span>[Operand::StorageClass(StorageClass::Function)],
     );
-    <span class="kw">match</span> <span class="ident">index</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">index</span>) =&gt; <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(<span class="ident">index</span>, <span class="ident">inst</span>),
-        <span class="prelude-val">None</span> =&gt; <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">push</span>(<span class="ident">inst</span>),
+    <span class="kw">match </span>index {
+        <span class="prelude-val">Some</span>(index) =&gt; block.instructions.insert(index, inst),
+        <span class="prelude-val">None </span>=&gt; block.instructions.push(inst),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">insert_opvariables</span>(<span class="ident">block</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Block</span>, <span class="kw-2">mut</span> <span class="ident">insts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>) {
-    <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">block</span>
-        .<span class="ident">instructions</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">enumerate</span>()
-        .<span class="ident">find_map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">inst</span>)<span class="op">|</span> {
-            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Variable</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">index</span>)
-            } <span class="kw">else</span> {
-                <span class="prelude-val">None</span>
-            }
+<span class="kw">fn </span>insert_opvariables(block: <span class="kw-2">&amp;mut </span>Block, <span class="kw-2">mut </span>insts: Vec&lt;Instruction&gt;) {
+    <span class="kw">let </span>index = block
+        .instructions
+        .iter()
+        .enumerate()
+        .find_map(|(index, inst)| {
+            <span class="kw">if </span>inst.class.opcode != Op::Variable {
+                <span class="prelude-val">Some</span>(index)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>}
         });
-    <span class="kw">match</span> <span class="ident">index</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">index</span>) =&gt; {
-            <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">splice</span>(<span class="ident">index</span>..<span class="ident">index</span>, <span class="ident">insts</span>);
+    <span class="kw">match </span>index {
+        <span class="prelude-val">Some</span>(index) =&gt; {
+            block.instructions.splice(index..index, insts);
         }
-        <span class="prelude-val">None</span> =&gt; <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">insts</span>),
+        <span class="prelude-val">None </span>=&gt; block.instructions.append(<span class="kw-2">&amp;mut </span>insts),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">fuse_trivial_branches</span>(<span class="ident">function</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Function</span>) {
-    <span class="kw">let</span> <span class="ident">all_preds</span> <span class="op">=</span> <span class="ident">compute_preds</span>(<span class="kw-2">&amp;</span><span class="ident">function</span>.<span class="ident">blocks</span>);
-    <span class="lifetime">&#39;outer</span>: <span class="kw">for</span> (<span class="ident">dest_block</span>, <span class="kw-2">mut</span> <span class="ident">preds</span>) <span class="kw">in</span> <span class="ident">all_preds</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="comment">// if there&#39;s two trivial branches in a row, the middle one might get inlined before the</span>
-        <span class="comment">// last one, so when processing the last one, skip through to the first one.</span>
-        <span class="kw">let</span> <span class="ident">pred</span> <span class="op">=</span> <span class="kw">loop</span> {
-            <span class="kw">if</span> <span class="ident">preds</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">preds</span>[<span class="number">0</span>] <span class="op">==</span> <span class="ident">dest_block</span> {
-                <span class="kw">continue</span> <span class="lifetime">&#39;outer</span>;
+<span class="kw">fn </span>fuse_trivial_branches(function: <span class="kw-2">&amp;mut </span>Function) {
+    <span class="kw">let </span>all_preds = compute_preds(<span class="kw-2">&amp;</span>function.blocks);
+    <span class="lifetime">&#39;outer</span>: <span class="kw">for </span>(dest_block, <span class="kw-2">mut </span>preds) <span class="kw">in </span>all_preds.iter().enumerate() {
+        <span class="comment">// if there&#39;s two trivial branches in a row, the middle one might get inlined before the
+        // last one, so when processing the last one, skip through to the first one.
+        </span><span class="kw">let </span>pred = <span class="kw">loop </span>{
+            <span class="kw">if </span>preds.len() != <span class="number">1 </span>|| preds[<span class="number">0</span>] == dest_block {
+                <span class="kw">continue </span><span class="lifetime">&#39;outer</span>;
             }
-            <span class="kw">let</span> <span class="ident">pred</span> <span class="op">=</span> <span class="ident">preds</span>[<span class="number">0</span>];
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">function</span>.<span class="ident">blocks</span>[<span class="ident">pred</span>].<span class="ident">instructions</span>.<span class="ident">is_empty</span>() {
-                <span class="kw">break</span> <span class="ident">pred</span>;
+            <span class="kw">let </span>pred = preds[<span class="number">0</span>];
+            <span class="kw">if </span>!function.blocks[pred].instructions.is_empty() {
+                <span class="kw">break </span>pred;
             }
-            <span class="ident">preds</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">all_preds</span>[<span class="ident">pred</span>];
+            preds = <span class="kw-2">&amp;</span>all_preds[pred];
         };
-        <span class="kw">let</span> <span class="ident">pred_insts</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">function</span>.<span class="ident">blocks</span>[<span class="ident">pred</span>].<span class="ident">instructions</span>;
-        <span class="kw">if</span> <span class="ident">pred_insts</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>().<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::Branch</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dest_insts</span> <span class="op">=</span> <span class="ident">take</span>(<span class="kw-2">&amp;mut</span> <span class="ident">function</span>.<span class="ident">blocks</span>[<span class="ident">dest_block</span>].<span class="ident">instructions</span>);
-            <span class="kw">let</span> <span class="ident">pred_insts</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">function</span>.<span class="ident">blocks</span>[<span class="ident">pred</span>].<span class="ident">instructions</span>;
-            <span class="ident">pred_insts</span>.<span class="ident">pop</span>(); <span class="comment">// pop the branch</span>
-            <span class="ident">pred_insts</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">dest_insts</span>);
+        <span class="kw">let </span>pred_insts = <span class="kw-2">&amp;</span>function.blocks[pred].instructions;
+        <span class="kw">if </span>pred_insts.last().unwrap().class.opcode == Op::Branch {
+            <span class="kw">let </span><span class="kw-2">mut </span>dest_insts = take(<span class="kw-2">&amp;mut </span>function.blocks[dest_block].instructions);
+            <span class="kw">let </span>pred_insts = <span class="kw-2">&amp;mut </span>function.blocks[pred].instructions;
+            pred_insts.pop(); <span class="comment">// pop the branch
+            </span>pred_insts.append(<span class="kw-2">&amp;mut </span>dest_insts);
         }
     }
-    <span class="ident">function</span>.<span class="ident">blocks</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="op">!</span><span class="ident">b</span>.<span class="ident">instructions</span>.<span class="ident">is_empty</span>());
+    function.blocks.retain(|b| !b.instructions.is_empty());
 }
 
-<span class="kw">fn</span> <span class="ident">compute_preds</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="macro">vec!</span>[]; <span class="ident">blocks</span>.<span class="ident">len</span>()];
-    <span class="kw">for</span> (<span class="ident">source_idx</span>, <span class="ident">source</span>) <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">outgoing_edges</span>(<span class="ident">source</span>) {
-            <span class="kw">let</span> <span class="ident">dest_idx</span> <span class="op">=</span> <span class="ident">blocks</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">position</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>() <span class="op">==</span> <span class="ident">dest_id</span>)
-                .<span class="ident">unwrap</span>();
-            <span class="ident">result</span>[<span class="ident">dest_idx</span>].<span class="ident">push</span>(<span class="ident">source_idx</span>);
+<span class="kw">fn </span>compute_preds(blocks: <span class="kw-2">&amp;</span>[Block]) -&gt; Vec&lt;Vec&lt;usize&gt;&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[<span class="macro">vec!</span>[]; blocks.len()];
+    <span class="kw">for </span>(source_idx, source) <span class="kw">in </span>blocks.iter().enumerate() {
+        <span class="kw">for </span>dest_id <span class="kw">in </span>outgoing_edges(source) {
+            <span class="kw">let </span>dest_idx = blocks
+                .iter()
+                .position(|b| b.label_id().unwrap() == dest_id)
+                .unwrap();
+            result[dest_idx].push(source_idx);
         }
     }
-    <span class="ident">result</span>
+    result
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ahash-0.7.6/src/operations.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>operations.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../ahash/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ahash-0.7.6/src/operations.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>operations.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../ahash/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -334,336 +328,335 @@
 <span id="328">328</span>
 <span id="329">329</span>
 <span id="330">330</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::convert</span>::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::convert::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// This is a constant with a lot of special properties found by automated search.</span>
-<span class="doccomment">/// See the unit tests below. (Below are alternative values)</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;ssse3&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
-<span class="kw">const</span> <span class="ident">SHUFFLE_MASK</span>: <span class="ident">u128</span> <span class="op">=</span> <span class="number">0x020a0700_0c01030e_050f0d08_06090b04_u128</span>;
-<span class="comment">//const SHUFFLE_MASK: u128 = 0x000d0702_0a040301_05080f0c_0e0b0609_u128;</span>
-<span class="comment">//const SHUFFLE_MASK: u128 = 0x040A0700_030E0106_0D050F08_020B0C09_u128;</span>
+<span class="doccomment">/// This is a constant with a lot of special properties found by automated search.
+/// See the unit tests below. (Below are alternative values)
+</span><span class="attribute">#[cfg(all(target_feature = <span class="string">&quot;ssse3&quot;</span>, not(miri)))]
+</span><span class="kw">const </span>SHUFFLE_MASK: u128 = <span class="number">0x020a0700_0c01030e_050f0d08_06090b04_u128</span>;
+<span class="comment">//const SHUFFLE_MASK: u128 = 0x000d0702_0a040301_05080f0c_0e0b0609_u128;
+//const SHUFFLE_MASK: u128 = 0x040A0700_030E0106_0D050F08_020B0C09_u128;
 
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">folded_multiply</span>(<span class="ident">s</span>: <span class="ident">u64</span>, <span class="ident">by</span>: <span class="ident">u64</span>) -&gt; <span class="ident">u64</span> {
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> (<span class="ident">s</span> <span class="kw">as</span> <span class="ident">u128</span>).<span class="ident">wrapping_mul</span>(<span class="ident">by</span> <span class="kw">as</span> <span class="ident">u128</span>);
-    ((<span class="ident">result</span> <span class="op">&amp;</span> <span class="number">0xffff_ffff_ffff_ffff</span>) <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">^</span> ((<span class="ident">result</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">64</span>) <span class="kw">as</span> <span class="ident">u64</span>)
+</span><span class="attribute">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>folded_multiply(s: u64, by: u64) -&gt; u64 {
+    <span class="kw">let </span>result = (s <span class="kw">as </span>u128).wrapping_mul(by <span class="kw">as </span>u128);
+    ((result &amp; <span class="number">0xffff_ffff_ffff_ffff</span>) <span class="kw">as </span>u64) ^ ((result &gt;&gt; <span class="number">64</span>) <span class="kw">as </span>u64)
 }
 
 
-<span class="doccomment">/// Given a small (less than 8 byte slice) returns the same data stored in two u32s.</span>
-<span class="doccomment">/// (order of and non-duplication of bytes is NOT guaranteed)</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">read_small</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; [<span class="ident">u64</span>; <span class="number">2</span>] {
-    <span class="macro">debug_assert!</span>(<span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="number">8</span>);
-    <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span> {
-        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">4</span> {
-            <span class="comment">//len 4-8</span>
-            [<span class="ident">data</span>.<span class="ident">read_u32</span>().<span class="number">0</span> <span class="kw">as</span> <span class="ident">u64</span>, <span class="ident">data</span>.<span class="ident">read_last_u32</span>() <span class="kw">as</span> <span class="ident">u64</span>]
-        } <span class="kw">else</span> {
-            <span class="comment">//len 2-3</span>
-            [<span class="ident">data</span>.<span class="ident">read_u16</span>().<span class="number">0</span> <span class="kw">as</span> <span class="ident">u64</span>, <span class="ident">data</span>[<span class="ident">data</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>] <span class="kw">as</span> <span class="ident">u64</span>]
+<span class="doccomment">/// Given a small (less than 8 byte slice) returns the same data stored in two u32s.
+/// (order of and non-duplication of bytes is NOT guaranteed)
+</span><span class="attribute">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>read_small(data: <span class="kw-2">&amp;</span>[u8]) -&gt; [u64; <span class="number">2</span>] {
+    <span class="macro">debug_assert!</span>(data.len() &lt;= <span class="number">8</span>);
+    <span class="kw">if </span>data.len() &gt;= <span class="number">2 </span>{
+        <span class="kw">if </span>data.len() &gt;= <span class="number">4 </span>{
+            <span class="comment">//len 4-8
+            </span>[data.read_u32().<span class="number">0 </span><span class="kw">as </span>u64, data.read_last_u32() <span class="kw">as </span>u64]
+        } <span class="kw">else </span>{
+            <span class="comment">//len 2-3
+            </span>[data.read_u16().<span class="number">0 </span><span class="kw">as </span>u64, data[data.len() - <span class="number">1</span>] <span class="kw">as </span>u64]
         }
-    } <span class="kw">else</span> {
-        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span> {
-            [<span class="ident">data</span>[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">u64</span>, <span class="ident">data</span>[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">u64</span>]
-        } <span class="kw">else</span> {
+    } <span class="kw">else </span>{
+        <span class="kw">if </span>data.len() &gt; <span class="number">0 </span>{
+            [data[<span class="number">0</span>] <span class="kw">as </span>u64, data[<span class="number">0</span>] <span class="kw">as </span>u64]
+        } <span class="kw">else </span>{
             [<span class="number">0</span>, <span class="number">0</span>]
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">shuffle</span>(<span class="ident">a</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;ssse3&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
-    {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-        <span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-        <span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
-        <span class="kw">use</span> <span class="ident">core::mem::transmute</span>;
-        <span class="kw">unsafe</span> { <span class="ident">transmute</span>(<span class="ident">_mm_shuffle_epi8</span>(<span class="ident">transmute</span>(<span class="ident">a</span>), <span class="ident">transmute</span>(<span class="ident">SHUFFLE_MASK</span>))) }
+<span class="attribute">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>shuffle(a: u128) -&gt; u128 {
+    <span class="attribute">#[cfg(all(target_feature = <span class="string">&quot;ssse3&quot;</span>, not(miri)))]
+    </span>{
+        <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+        </span><span class="kw">use </span>core::arch::x86::<span class="kw-2">*</span>;
+        <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+        </span><span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
+        <span class="kw">use </span>core::mem::transmute;
+        <span class="kw">unsafe </span>{ transmute(_mm_shuffle_epi8(transmute(a), transmute(SHUFFLE_MASK))) }
     }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;ssse3&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>))))]</span>
-    {
-        <span class="ident">a</span>.<span class="ident">swap_bytes</span>()
-    }
-}
-
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span> <span class="comment">//not used by fallback</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_and_shuffle</span>(<span class="ident">a</span>: <span class="ident">u128</span>, <span class="ident">b</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
-    <span class="kw">let</span> <span class="ident">sum</span> <span class="op">=</span> <span class="ident">add_by_64s</span>(<span class="ident">a</span>.<span class="ident">convert</span>(), <span class="ident">b</span>.<span class="ident">convert</span>());
-    <span class="ident">shuffle</span>(<span class="ident">sum</span>.<span class="ident">convert</span>())
-}
-
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span> <span class="comment">//not used by fallbac</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">shuffle_and_add</span>(<span class="ident">base</span>: <span class="ident">u128</span>, <span class="ident">to_add</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
-    <span class="kw">let</span> <span class="ident">shuffled</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">base</span>).<span class="ident">convert</span>();
-    <span class="ident">add_by_64s</span>(<span class="ident">shuffled</span>, <span class="ident">to_add</span>.<span class="ident">convert</span>()).<span class="ident">convert</span>()
-}
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_by_64s</span>(<span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">2</span>], <span class="ident">b</span>: [<span class="ident">u64</span>; <span class="number">2</span>]) -&gt; [<span class="ident">u64</span>; <span class="number">2</span>] {
-    <span class="kw">use</span> <span class="ident">core::mem::transmute</span>;
-    <span class="kw">unsafe</span> {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-        <span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-        <span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
-        <span class="ident">transmute</span>(<span class="ident">_mm_add_epi64</span>(<span class="ident">transmute</span>(<span class="ident">a</span>), <span class="ident">transmute</span>(<span class="ident">b</span>)))
+    <span class="attribute">#[cfg(not(all(target_feature = <span class="string">&quot;ssse3&quot;</span>, not(miri))))]
+    </span>{
+        a.swap_bytes()
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>))))]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_by_64s</span>(<span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">2</span>], <span class="ident">b</span>: [<span class="ident">u64</span>; <span class="number">2</span>]) -&gt; [<span class="ident">u64</span>; <span class="number">2</span>] {
-    [<span class="ident">a</span>[<span class="number">0</span>].<span class="ident">wrapping_add</span>(<span class="ident">b</span>[<span class="number">0</span>]), <span class="ident">a</span>[<span class="number">1</span>].<span class="ident">wrapping_add</span>(<span class="ident">b</span>[<span class="number">1</span>])]
+<span class="attribute">#[allow(unused)] </span><span class="comment">//not used by fallback
+</span><span class="attribute">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add_and_shuffle(a: u128, b: u128) -&gt; u128 {
+    <span class="kw">let </span>sum = add_by_64s(a.convert(), b.convert());
+    shuffle(sum.convert())
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesenc</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">core::mem::transmute</span>;
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">transmute</span>(<span class="ident">value</span>);
-        <span class="ident">transmute</span>(<span class="ident">_mm_aesenc_si128</span>(<span class="ident">value</span>, <span class="ident">transmute</span>(<span class="ident">xor</span>)))
+<span class="attribute">#[allow(unused)] </span><span class="comment">//not used by fallbac
+</span><span class="attribute">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>shuffle_and_add(base: u128, to_add: u128) -&gt; u128 {
+    <span class="kw">let </span>shuffled: [u64; <span class="number">2</span>] = shuffle(base).convert();
+    add_by_64s(shuffled, to_add.convert()).convert()
+}
+
+<span class="attribute">#[cfg(all(any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>), target_feature = <span class="string">&quot;sse2&quot;</span>, not(miri)))]
+#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add_by_64s(a: [u64; <span class="number">2</span>], b: [u64; <span class="number">2</span>]) -&gt; [u64; <span class="number">2</span>] {
+    <span class="kw">use </span>core::mem::transmute;
+    <span class="kw">unsafe </span>{
+        <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+        </span><span class="kw">use </span>core::arch::x86::<span class="kw-2">*</span>;
+        <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+        </span><span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
+        transmute(_mm_add_epi64(transmute(a), transmute(b)))
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;crypto&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stdsimd&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesenc</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">core::arch::arm</span>::<span class="kw-2">*</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">core::arch::aarch64</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">core::mem::transmute</span>;
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">transmute</span>(<span class="ident">value</span>);
-        <span class="ident">transmute</span>(<span class="ident">vaesmcq_u8</span>(<span class="ident">vaeseq_u8</span>(<span class="ident">value</span>, <span class="ident">transmute</span>(<span class="ident">xor</span>))))
+<span class="attribute">#[cfg(not(all(any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>), target_feature = <span class="string">&quot;sse2&quot;</span>, not(miri))))]
+#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add_by_64s(a: [u64; <span class="number">2</span>], b: [u64; <span class="number">2</span>]) -&gt; [u64; <span class="number">2</span>] {
+    [a[<span class="number">0</span>].wrapping_add(b[<span class="number">0</span>]), a[<span class="number">1</span>].wrapping_add(b[<span class="number">1</span>])]
+}
+
+<span class="attribute">#[cfg(all(any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>), target_feature = <span class="string">&quot;aes&quot;</span>, not(miri)))]
+#[allow(unused)]
+#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>aesenc(value: u128, xor: u128) -&gt; u128 {
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+    </span><span class="kw">use </span>core::arch::x86::<span class="kw-2">*</span>;
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    </span><span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
+    <span class="kw">use </span>core::mem::transmute;
+    <span class="kw">unsafe </span>{
+        <span class="kw">let </span>value = transmute(value);
+        transmute(_mm_aesenc_si128(value, transmute(xor)))
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesdec</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">core::mem::transmute</span>;
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">transmute</span>(<span class="ident">value</span>);
-        <span class="ident">transmute</span>(<span class="ident">_mm_aesdec_si128</span>(<span class="ident">value</span>, <span class="ident">transmute</span>(<span class="ident">xor</span>)))
+<span class="attribute">#[cfg(all(any(target_arch = <span class="string">&quot;arm&quot;</span>, target_arch = <span class="string">&quot;aarch64&quot;</span>), target_feature = <span class="string">&quot;crypto&quot;</span>, not(miri), feature = <span class="string">&quot;stdsimd&quot;</span>))]
+#[allow(unused)]
+#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>aesenc(value: u128, xor: u128) -&gt; u128 {
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;arm&quot;</span>)]
+    </span><span class="kw">use </span>core::arch::arm::<span class="kw-2">*</span>;
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;aarch64&quot;</span>)]
+    </span><span class="kw">use </span>core::arch::aarch64::<span class="kw-2">*</span>;
+    <span class="kw">use </span>core::mem::transmute;
+    <span class="kw">unsafe </span>{
+        <span class="kw">let </span>value = transmute(value);
+        transmute(vaesmcq_u8(vaeseq_u8(value, transmute(xor))))
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;crypto&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stdsimd&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aesdec</span>(<span class="ident">value</span>: <span class="ident">u128</span>, <span class="ident">xor</span>: <span class="ident">u128</span>) -&gt; <span class="ident">u128</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">core::arch::arm</span>::<span class="kw-2">*</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">core::arch::aarch64</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">core::mem::transmute</span>;
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">transmute</span>(<span class="ident">value</span>);
-        <span class="ident">transmute</span>(<span class="ident">vaesimcq_u8</span>(<span class="ident">vaesdq_u8</span>(<span class="ident">value</span>, <span class="ident">transmute</span>(<span class="ident">xor</span>))))
+<span class="attribute">#[cfg(all(any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>), target_feature = <span class="string">&quot;aes&quot;</span>, not(miri)))]
+#[allow(unused)]
+#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>aesdec(value: u128, xor: u128) -&gt; u128 {
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+    </span><span class="kw">use </span>core::arch::x86::<span class="kw-2">*</span>;
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    </span><span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
+    <span class="kw">use </span>core::mem::transmute;
+    <span class="kw">unsafe </span>{
+        <span class="kw">let </span>value = transmute(value);
+        transmute(_mm_aesdec_si128(value, transmute(xor)))
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::convert::Convert</span>;
+<span class="attribute">#[cfg(all(any(target_arch = <span class="string">&quot;arm&quot;</span>, target_arch = <span class="string">&quot;aarch64&quot;</span>), target_feature = <span class="string">&quot;crypto&quot;</span>, not(miri), feature = <span class="string">&quot;stdsimd&quot;</span>))]
+#[allow(unused)]
+#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>aesdec(value: u128, xor: u128) -&gt; u128 {
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;arm&quot;</span>)]
+    </span><span class="kw">use </span>core::arch::arm::<span class="kw-2">*</span>;
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;aarch64&quot;</span>)]
+    </span><span class="kw">use </span>core::arch::aarch64::<span class="kw-2">*</span>;
+    <span class="kw">use </span>core::mem::transmute;
+    <span class="kw">unsafe </span>{
+        <span class="kw">let </span>value = transmute(value);
+        transmute(vaesimcq_u8(vaesdq_u8(value, transmute(xor))))
+    }
+}
 
-    <span class="comment">// This is code to search for the shuffle constant</span>
-    <span class="comment">//</span>
-    <span class="comment">//thread_local! { static MASK: Cell&lt;u128&gt; = Cell::new(0); }</span>
-    <span class="comment">//</span>
-    <span class="comment">// fn shuffle(a: u128) -&gt; u128 {</span>
-    <span class="comment">//     use std::intrinsics::transmute;</span>
-    <span class="comment">//     #[cfg(target_arch = &quot;x86&quot;)]</span>
-    <span class="comment">//     use core::arch::x86::*;</span>
-    <span class="comment">//     #[cfg(target_arch = &quot;x86_64&quot;)]</span>
-    <span class="comment">//     use core::arch::x86_64::*;</span>
-    <span class="comment">//     MASK.with(|mask| {</span>
-    <span class="comment">//         unsafe { transmute(_mm_shuffle_epi8(transmute(a), transmute(mask.get()))) }</span>
-    <span class="comment">//     })</span>
-    <span class="comment">// }</span>
-    <span class="comment">//</span>
-    <span class="comment">// #[test]</span>
-    <span class="comment">// fn find_shuffle() {</span>
-    <span class="comment">//     use rand::prelude::*;</span>
-    <span class="comment">//     use SliceRandom;</span>
-    <span class="comment">//     use std::panic;</span>
-    <span class="comment">//     use std::io::Write;</span>
-    <span class="comment">//</span>
-    <span class="comment">//     let mut value: [u8; 16] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14, 15];</span>
-    <span class="comment">//     let mut rand = thread_rng();</span>
-    <span class="comment">//     let mut successful_list = HashMap::new();</span>
-    <span class="comment">//     for _attempt in 0..10000000 {</span>
-    <span class="comment">//         rand.shuffle(&amp;mut value);</span>
-    <span class="comment">//         let test_val = value.convert();</span>
-    <span class="comment">//         MASK.with(|mask| {</span>
-    <span class="comment">//             mask.set(test_val);</span>
-    <span class="comment">//         });</span>
-    <span class="comment">//         if let Ok(successful) = panic::catch_unwind(|| {</span>
-    <span class="comment">//             test_shuffle_does_not_collide_with_aes();</span>
-    <span class="comment">//             test_shuffle_moves_high_bits();</span>
-    <span class="comment">//             test_shuffle_moves_every_value();</span>
-    <span class="comment">//             //test_shuffle_does_not_loop();</span>
-    <span class="comment">//             value</span>
-    <span class="comment">//         }) {</span>
-    <span class="comment">//             let successful: u128 = successful.convert();</span>
-    <span class="comment">//             successful_list.insert(successful, iters_before_loop());</span>
-    <span class="comment">//         }</span>
-    <span class="comment">//     }</span>
-    <span class="comment">//     let write_file = File::create(&quot;/tmp/output&quot;).unwrap();</span>
-    <span class="comment">//     let mut writer = BufWriter::new(&amp;write_file);</span>
-    <span class="comment">//</span>
-    <span class="comment">//     for success in successful_list {</span>
-    <span class="comment">//         writeln!(writer, &quot;Found successful: {:x?} - {:?}&quot;, success.0, success.1);</span>
-    <span class="comment">//     }</span>
-    <span class="comment">// }</span>
-    <span class="comment">//</span>
-    <span class="comment">// fn iters_before_loop() -&gt; u32 {</span>
-    <span class="comment">//     let numbered = 0x00112233_44556677_8899AABB_CCDDEEFF;</span>
-    <span class="comment">//     let mut shuffled = shuffle(numbered);</span>
-    <span class="comment">//     let mut count = 0;</span>
-    <span class="comment">//     loop {</span>
-    <span class="comment">//         // println!(&quot;{:&gt;16x}&quot;, shuffled);</span>
-    <span class="comment">//         if numbered == shuffled {</span>
-    <span class="comment">//             break;</span>
-    <span class="comment">//         }</span>
-    <span class="comment">//         count += 1;</span>
-    <span class="comment">//         shuffled = shuffle(shuffled);</span>
-    <span class="comment">//     }</span>
-    <span class="comment">//     count</span>
-    <span class="comment">// }</span>
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::convert::Convert;
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-        <span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>),
-        <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;ssse3&quot;</span>,
-        <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>,
-        <span class="ident">not</span>(<span class="ident">miri</span>)
-    ))]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_shuffle_does_not_collide_with_aes</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">16</span>];
-        <span class="kw">let</span> <span class="ident">zero_mask_enc</span> <span class="op">=</span> <span class="ident">aesenc</span>(<span class="number">0</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">zero_mask_dec</span> <span class="op">=</span> <span class="ident">aesdec</span>(<span class="number">0</span>, <span class="number">0</span>);
-        <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">16</span> {
-            <span class="ident">value</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="number">1</span>;
-            <span class="kw">let</span> <span class="ident">excluded_positions_enc</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="ident">aesenc</span>(<span class="ident">value</span>.<span class="ident">convert</span>(), <span class="ident">zero_mask_enc</span>).<span class="ident">convert</span>();
-            <span class="kw">let</span> <span class="ident">excluded_positions_dec</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="ident">aesdec</span>(<span class="ident">value</span>.<span class="ident">convert</span>(), <span class="ident">zero_mask_dec</span>).<span class="ident">convert</span>();
-            <span class="kw">let</span> <span class="ident">actual_location</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">value</span>.<span class="ident">convert</span>()).<span class="ident">convert</span>();
-            <span class="kw">for</span> <span class="ident">pos</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">16</span> {
-                <span class="kw">if</span> <span class="ident">actual_location</span>[<span class="ident">pos</span>] <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="comment">// This is code to search for the shuffle constant
+    //
+    //thread_local! { static MASK: Cell&lt;u128&gt; = Cell::new(0); }
+    //
+    // fn shuffle(a: u128) -&gt; u128 {
+    //     use std::intrinsics::transmute;
+    //     #[cfg(target_arch = &quot;x86&quot;)]
+    //     use core::arch::x86::*;
+    //     #[cfg(target_arch = &quot;x86_64&quot;)]
+    //     use core::arch::x86_64::*;
+    //     MASK.with(|mask| {
+    //         unsafe { transmute(_mm_shuffle_epi8(transmute(a), transmute(mask.get()))) }
+    //     })
+    // }
+    //
+    // #[test]
+    // fn find_shuffle() {
+    //     use rand::prelude::*;
+    //     use SliceRandom;
+    //     use std::panic;
+    //     use std::io::Write;
+    //
+    //     let mut value: [u8; 16] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14, 15];
+    //     let mut rand = thread_rng();
+    //     let mut successful_list = HashMap::new();
+    //     for _attempt in 0..10000000 {
+    //         rand.shuffle(&amp;mut value);
+    //         let test_val = value.convert();
+    //         MASK.with(|mask| {
+    //             mask.set(test_val);
+    //         });
+    //         if let Ok(successful) = panic::catch_unwind(|| {
+    //             test_shuffle_does_not_collide_with_aes();
+    //             test_shuffle_moves_high_bits();
+    //             test_shuffle_moves_every_value();
+    //             //test_shuffle_does_not_loop();
+    //             value
+    //         }) {
+    //             let successful: u128 = successful.convert();
+    //             successful_list.insert(successful, iters_before_loop());
+    //         }
+    //     }
+    //     let write_file = File::create(&quot;/tmp/output&quot;).unwrap();
+    //     let mut writer = BufWriter::new(&amp;write_file);
+    //
+    //     for success in successful_list {
+    //         writeln!(writer, &quot;Found successful: {:x?} - {:?}&quot;, success.0, success.1);
+    //     }
+    // }
+    //
+    // fn iters_before_loop() -&gt; u32 {
+    //     let numbered = 0x00112233_44556677_8899AABB_CCDDEEFF;
+    //     let mut shuffled = shuffle(numbered);
+    //     let mut count = 0;
+    //     loop {
+    //         // println!(&quot;{:&gt;16x}&quot;, shuffled);
+    //         if numbered == shuffled {
+    //             break;
+    //         }
+    //         count += 1;
+    //         shuffled = shuffle(shuffled);
+    //     }
+    //     count
+    // }
+
+    </span><span class="attribute">#[cfg(all(
+        any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>),
+        target_feature = <span class="string">&quot;ssse3&quot;</span>,
+        target_feature = <span class="string">&quot;aes&quot;</span>,
+        not(miri)
+    ))]
+    #[test]
+    </span><span class="kw">fn </span>test_shuffle_does_not_collide_with_aes() {
+        <span class="kw">let </span><span class="kw-2">mut </span>value: [u8; <span class="number">16</span>] = [<span class="number">0</span>; <span class="number">16</span>];
+        <span class="kw">let </span>zero_mask_enc = aesenc(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="kw">let </span>zero_mask_dec = aesdec(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..<span class="number">16 </span>{
+            value[index] = <span class="number">1</span>;
+            <span class="kw">let </span>excluded_positions_enc: [u8; <span class="number">16</span>] = aesenc(value.convert(), zero_mask_enc).convert();
+            <span class="kw">let </span>excluded_positions_dec: [u8; <span class="number">16</span>] = aesdec(value.convert(), zero_mask_dec).convert();
+            <span class="kw">let </span>actual_location: [u8; <span class="number">16</span>] = shuffle(value.convert()).convert();
+            <span class="kw">for </span>pos <span class="kw">in </span><span class="number">0</span>..<span class="number">16 </span>{
+                <span class="kw">if </span>actual_location[pos] != <span class="number">0 </span>{
                     <span class="macro">assert_eq!</span>(
-                        <span class="number">0</span>, <span class="ident">excluded_positions_enc</span>[<span class="ident">pos</span>],
+                        <span class="number">0</span>, excluded_positions_enc[pos],
                         <span class="string">&quot;Forward Overlap between {:?} and {:?} at {}&quot;</span>,
-                        <span class="ident">excluded_positions_enc</span>, <span class="ident">actual_location</span>, <span class="ident">index</span>
+                        excluded_positions_enc, actual_location, index
                     );
                     <span class="macro">assert_eq!</span>(
-                        <span class="number">0</span>, <span class="ident">excluded_positions_dec</span>[<span class="ident">pos</span>],
+                        <span class="number">0</span>, excluded_positions_dec[pos],
                         <span class="string">&quot;Reverse Overlap between {:?} and {:?} at {}&quot;</span>,
-                        <span class="ident">excluded_positions_dec</span>, <span class="ident">actual_location</span>, <span class="ident">index</span>
+                        excluded_positions_dec, actual_location, index
                     );
                 }
             }
-            <span class="ident">value</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="number">0</span>;
+            value[index] = <span class="number">0</span>;
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_shuffle_contains_each_value</span>() {
-        <span class="kw">let</span> <span class="ident">value</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="number">0x00010203_04050607_08090A0B_0C0D0E0F_u128</span>.<span class="ident">convert</span>();
-        <span class="kw">let</span> <span class="ident">shuffled</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">value</span>.<span class="ident">convert</span>()).<span class="ident">convert</span>();
-        <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">16_u8</span> {
-            <span class="macro">assert!</span>(<span class="ident">shuffled</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>), <span class="string">&quot;Value is missing {}&quot;</span>, <span class="ident">index</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_shuffle_contains_each_value() {
+        <span class="kw">let </span>value: [u8; <span class="number">16</span>] = <span class="number">0x00010203_04050607_08090A0B_0C0D0E0F_u128</span>.convert();
+        <span class="kw">let </span>shuffled: [u8; <span class="number">16</span>] = shuffle(value.convert()).convert();
+        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..<span class="number">16_u8 </span>{
+            <span class="macro">assert!</span>(shuffled.contains(<span class="kw-2">&amp;</span>index), <span class="string">&quot;Value is missing {}&quot;</span>, index);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_shuffle_moves_every_value</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">16</span>];
-        <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">16</span> {
-            <span class="ident">value</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="number">1</span>;
-            <span class="kw">let</span> <span class="ident">shuffled</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">value</span>.<span class="ident">convert</span>()).<span class="ident">convert</span>();
-            <span class="macro">assert_eq!</span>(<span class="number">0</span>, <span class="ident">shuffled</span>[<span class="ident">index</span>], <span class="string">&quot;Value is not moved {}&quot;</span>, <span class="ident">index</span>);
-            <span class="ident">value</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="number">0</span>;
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_shuffle_moves_every_value() {
+        <span class="kw">let </span><span class="kw-2">mut </span>value: [u8; <span class="number">16</span>] = [<span class="number">0</span>; <span class="number">16</span>];
+        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..<span class="number">16 </span>{
+            value[index] = <span class="number">1</span>;
+            <span class="kw">let </span>shuffled: [u8; <span class="number">16</span>] = shuffle(value.convert()).convert();
+            <span class="macro">assert_eq!</span>(<span class="number">0</span>, shuffled[index], <span class="string">&quot;Value is not moved {}&quot;</span>, index);
+            value[index] = <span class="number">0</span>;
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_shuffle_moves_high_bits</span>() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_shuffle_moves_high_bits() {
         <span class="macro">assert!</span>(
-            <span class="ident">shuffle</span>(<span class="number">1</span>) <span class="op">&gt;</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">80</span>),
+            shuffle(<span class="number">1</span>) &gt; (<span class="number">1_u128 </span>&lt;&lt; <span class="number">80</span>),
             <span class="string">&quot;Low bits must be moved to other half {:?} -&gt; {:?}&quot;</span>,
             <span class="number">0</span>,
-            <span class="ident">shuffle</span>(<span class="number">1</span>)
+            shuffle(<span class="number">1</span>)
         );
 
         <span class="macro">assert!</span>(
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">58</span>) <span class="op">&gt;</span><span class="op">=</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>),
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">58</span>) &gt;= (<span class="number">1_u128 </span>&lt;&lt; <span class="number">64</span>),
             <span class="string">&quot;High bits must be moved to other half {:?} -&gt; {:?}&quot;</span>,
             <span class="number">7</span>,
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">58</span>)
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">58</span>)
         );
         <span class="macro">assert!</span>(
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">58</span>) <span class="op">&lt;</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">112</span>),
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">58</span>) &lt; (<span class="number">1_u128 </span>&lt;&lt; <span class="number">112</span>),
             <span class="string">&quot;High bits must not remain high {:?} -&gt; {:?}&quot;</span>,
             <span class="number">7</span>,
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">58</span>)
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">58</span>)
         );
         <span class="macro">assert!</span>(
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>) <span class="op">&lt;</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>),
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">64</span>) &lt; (<span class="number">1_u128 </span>&lt;&lt; <span class="number">64</span>),
             <span class="string">&quot;Low bits must be moved to other half {:?} -&gt; {:?}&quot;</span>,
             <span class="number">8</span>,
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>)
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">64</span>)
         );
         <span class="macro">assert!</span>(
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>) <span class="op">&gt;</span><span class="op">=</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>),
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">64</span>) &gt;= (<span class="number">1_u128 </span>&lt;&lt; <span class="number">16</span>),
             <span class="string">&quot;Low bits must not remain low {:?} -&gt; {:?}&quot;</span>,
             <span class="number">8</span>,
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>)
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">64</span>)
         );
 
         <span class="macro">assert!</span>(
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">120</span>) <span class="op">&lt;</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">50</span>),
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">120</span>) &lt; (<span class="number">1_u128 </span>&lt;&lt; <span class="number">50</span>),
             <span class="string">&quot;High bits must be moved to low half {:?} -&gt; {:?}&quot;</span>,
             <span class="number">15</span>,
-            <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">120</span>)
+            shuffle(<span class="number">1_u128 </span>&lt;&lt; <span class="number">120</span>)
         );
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-        <span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>),
-        <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;ssse3&quot;</span>,
-        <span class="ident">not</span>(<span class="ident">miri</span>)
-    ))]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_shuffle_does_not_loop</span>() {
-        <span class="kw">let</span> <span class="ident">numbered</span> <span class="op">=</span> <span class="number">0x00112233_44556677_8899AABB_CCDDEEFF</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shuffled</span> <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">numbered</span>);
-        <span class="kw">for</span> <span class="ident">count</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
-            <span class="comment">// println!(&quot;{:&gt;16x}&quot;, shuffled);</span>
-            <span class="macro">assert_ne!</span>(<span class="ident">numbered</span>, <span class="ident">shuffled</span>, <span class="string">&quot;Equal after {} vs {:x}&quot;</span>, <span class="ident">count</span>, <span class="ident">shuffled</span>);
-            <span class="ident">shuffled</span> <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">shuffled</span>);
+    <span class="attribute">#[cfg(all(
+        any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>),
+        target_feature = <span class="string">&quot;ssse3&quot;</span>,
+        not(miri)
+    ))]
+    #[test]
+    </span><span class="kw">fn </span>test_shuffle_does_not_loop() {
+        <span class="kw">let </span>numbered = <span class="number">0x00112233_44556677_8899AABB_CCDDEEFF</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>shuffled = shuffle(numbered);
+        <span class="kw">for </span>count <span class="kw">in </span><span class="number">0</span>..<span class="number">100 </span>{
+            <span class="comment">// println!(&quot;{:&gt;16x}&quot;, shuffled);
+            </span><span class="macro">assert_ne!</span>(numbered, shuffled, <span class="string">&quot;Equal after {} vs {:x}&quot;</span>, count, shuffled);
+            shuffled = shuffle(shuffled);
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ahash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ahash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

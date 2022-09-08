@@ -1,12 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/distributions/float.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>float.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container">
-                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rand/index.html">
-                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/distributions/float.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>float.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container">
+                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rand/index.html">
+                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -318,318 +312,317 @@
 <span id="310">310</span>
 <span id="311">311</span>
 <span id="312">312</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
-<span class="comment">// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
-<span class="comment">// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your</span>
-<span class="comment">// option. This file may not be copied, modified, or distributed</span>
-<span class="comment">// except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license
+// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-<span class="doccomment">//! Basic floating-point number distributions</span>
+</span><span class="doccomment">//! Basic floating-point number distributions
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::distributions::utils::FloatSIMDUtils</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::distributions</span>::{<span class="ident">Distribution</span>, <span class="ident">Standard</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Rng</span>;
-<span class="kw">use</span> <span class="ident">core::mem</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span> <span class="kw">use</span> <span class="ident">packed_simd</span>::<span class="kw-2">*</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::distributions::utils::FloatSIMDUtils;
+<span class="kw">use </span><span class="kw">crate</span>::distributions::{Distribution, Standard};
+<span class="kw">use </span><span class="kw">crate</span>::Rng;
+<span class="kw">use </span>core::mem;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)] </span><span class="kw">use </span>packed_simd::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde1&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;serde1&quot;</span>)]
+</span><span class="kw">use </span>serde::{Serialize, Deserialize};
 
-<span class="doccomment">/// A distribution to sample floating point numbers uniformly in the half-open</span>
-<span class="doccomment">/// interval `(0, 1]`, i.e. including 1 but not 0.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// All values that can be generated are of the form `n * ε/2`. For `f32`</span>
-<span class="doccomment">/// the 24 most significant random bits of a `u32` are used and for `f64` the</span>
-<span class="doccomment">/// 53 most significant bits of a `u64` are used. The conversion uses the</span>
-<span class="doccomment">/// multiplicative method.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See also: [`Standard`] which samples from `[0, 1)`, [`Open01`]</span>
-<span class="doccomment">/// which samples from `(0, 1)` and [`Uniform`] which samples from arbitrary</span>
-<span class="doccomment">/// ranges.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-<span class="doccomment">/// use rand::distributions::OpenClosed01;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let val: f32 = thread_rng().sample(OpenClosed01);</span>
-<span class="doccomment">/// println!(&quot;f32 from (0, 1): {}&quot;, val);</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Standard`]: crate::distributions::Standard</span>
-<span class="doccomment">/// [`Open01`]: crate::distributions::Open01</span>
-<span class="doccomment">/// [`Uniform`]: crate::distributions::uniform::Uniform</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde1&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OpenClosed01</span>;
+<span class="doccomment">/// A distribution to sample floating point numbers uniformly in the half-open
+/// interval `(0, 1]`, i.e. including 1 but not 0.
+///
+/// All values that can be generated are of the form `n * ε/2`. For `f32`
+/// the 24 most significant random bits of a `u32` are used and for `f64` the
+/// 53 most significant bits of a `u64` are used. The conversion uses the
+/// multiplicative method.
+///
+/// See also: [`Standard`] which samples from `[0, 1)`, [`Open01`]
+/// which samples from `(0, 1)` and [`Uniform`] which samples from arbitrary
+/// ranges.
+///
+/// # Example
+/// ```
+/// use rand::{thread_rng, Rng};
+/// use rand::distributions::OpenClosed01;
+///
+/// let val: f32 = thread_rng().sample(OpenClosed01);
+/// println!(&quot;f32 from (0, 1): {}&quot;, val);
+/// ```
+///
+/// [`Standard`]: crate::distributions::Standard
+/// [`Open01`]: crate::distributions::Open01
+/// [`Uniform`]: crate::distributions::uniform::Uniform
+</span><span class="attribute">#[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = <span class="string">&quot;serde1&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>OpenClosed01;
 
-<span class="doccomment">/// A distribution to sample floating point numbers uniformly in the open</span>
-<span class="doccomment">/// interval `(0, 1)`, i.e. not including either endpoint.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// All values that can be generated are of the form `n * ε + ε/2`. For `f32`</span>
-<span class="doccomment">/// the 23 most significant random bits of an `u32` are used, for `f64` 52 from</span>
-<span class="doccomment">/// an `u64`. The conversion uses a transmute-based method.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See also: [`Standard`] which samples from `[0, 1)`, [`OpenClosed01`]</span>
-<span class="doccomment">/// which samples from `(0, 1]` and [`Uniform`] which samples from arbitrary</span>
-<span class="doccomment">/// ranges.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use rand::{thread_rng, Rng};</span>
-<span class="doccomment">/// use rand::distributions::Open01;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let val: f32 = thread_rng().sample(Open01);</span>
-<span class="doccomment">/// println!(&quot;f32 from (0, 1): {}&quot;, val);</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Standard`]: crate::distributions::Standard</span>
-<span class="doccomment">/// [`OpenClosed01`]: crate::distributions::OpenClosed01</span>
-<span class="doccomment">/// [`Uniform`]: crate::distributions::uniform::Uniform</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde1&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Open01</span>;
+<span class="doccomment">/// A distribution to sample floating point numbers uniformly in the open
+/// interval `(0, 1)`, i.e. not including either endpoint.
+///
+/// All values that can be generated are of the form `n * ε + ε/2`. For `f32`
+/// the 23 most significant random bits of an `u32` are used, for `f64` 52 from
+/// an `u64`. The conversion uses a transmute-based method.
+///
+/// See also: [`Standard`] which samples from `[0, 1)`, [`OpenClosed01`]
+/// which samples from `(0, 1]` and [`Uniform`] which samples from arbitrary
+/// ranges.
+///
+/// # Example
+/// ```
+/// use rand::{thread_rng, Rng};
+/// use rand::distributions::Open01;
+///
+/// let val: f32 = thread_rng().sample(Open01);
+/// println!(&quot;f32 from (0, 1): {}&quot;, val);
+/// ```
+///
+/// [`Standard`]: crate::distributions::Standard
+/// [`OpenClosed01`]: crate::distributions::OpenClosed01
+/// [`Uniform`]: crate::distributions::uniform::Uniform
+</span><span class="attribute">#[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = <span class="string">&quot;serde1&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>Open01;
 
 
-<span class="comment">// This trait is needed by both this lib and rand_distr hence is a hidden export</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IntoFloat</span> {
-    <span class="kw">type</span> <span class="ident">F</span>;
+<span class="comment">// This trait is needed by both this lib and rand_distr hence is a hidden export
+</span><span class="attribute">#[doc(hidden)]
+</span><span class="kw">pub trait </span>IntoFloat {
+    <span class="kw">type </span>F;
 
-    <span class="doccomment">/// Helper method to combine the fraction and a contant exponent into a</span>
-    <span class="doccomment">/// float.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Only the least significant bits of `self` may be set, 23 for `f32` and</span>
-    <span class="doccomment">/// 52 for `f64`.</span>
-    <span class="doccomment">/// The resulting value will fall in a range that depends on the exponent.</span>
-    <span class="doccomment">/// As an example the range with exponent 0 will be</span>
-    <span class="doccomment">/// [2&lt;sup&gt;0&lt;/sup&gt;..2&lt;sup&gt;1&lt;/sup&gt;), which is [1..2).</span>
-    <span class="kw">fn</span> <span class="ident">into_float_with_exponent</span>(<span class="self">self</span>, <span class="ident">exponent</span>: <span class="ident">i32</span>) -&gt; <span class="ident"><span class="self">Self</span>::F</span>;
+    <span class="doccomment">/// Helper method to combine the fraction and a contant exponent into a
+    /// float.
+    ///
+    /// Only the least significant bits of `self` may be set, 23 for `f32` and
+    /// 52 for `f64`.
+    /// The resulting value will fall in a range that depends on the exponent.
+    /// As an example the range with exponent 0 will be
+    /// [2&lt;sup&gt;0&lt;/sup&gt;..2&lt;sup&gt;1&lt;/sup&gt;), which is [1..2).
+    </span><span class="kw">fn </span>into_float_with_exponent(<span class="self">self</span>, exponent: i32) -&gt; <span class="self">Self</span>::F;
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">float_impls</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">uty</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f_scalar</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">u_scalar</span>:<span class="ident">ty</span>,
-     <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fraction_bits</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">exponent_bias</span>:<span class="ident">expr</span>) =&gt; {
-        <span class="kw">impl</span> <span class="ident">IntoFloat</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">uty</span> {
-            <span class="kw">type</span> <span class="ident">F</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>;
-            <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">into_float_with_exponent</span>(<span class="self">self</span>, <span class="ident">exponent</span>: <span class="ident">i32</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span> {
-                <span class="comment">// The exponent is encoded using an offset-binary representation</span>
-                <span class="kw">let</span> <span class="ident">exponent_bits</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">u_scalar</span> <span class="op">=</span>
-                    ((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">exponent_bias</span> <span class="op">+</span> <span class="ident">exponent</span>) <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">u_scalar</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fraction_bits</span>;
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty::from_bits</span>(<span class="self">self</span> <span class="op">|</span> <span class="ident">exponent_bits</span>)
+<span class="macro">macro_rules! </span>float_impls {
+    (<span class="macro-nonterminal">$ty</span>:ident, <span class="macro-nonterminal">$uty</span>:ident, <span class="macro-nonterminal">$f_scalar</span>:ident, <span class="macro-nonterminal">$u_scalar</span>:ty,
+     <span class="macro-nonterminal">$fraction_bits</span>:expr, <span class="macro-nonterminal">$exponent_bias</span>:expr) =&gt; {
+        <span class="kw">impl </span>IntoFloat <span class="kw">for </span><span class="macro-nonterminal">$uty </span>{
+            <span class="kw">type </span>F = <span class="macro-nonterminal">$ty</span>;
+            <span class="attribute">#[inline(always)]
+            </span><span class="kw">fn </span>into_float_with_exponent(<span class="self">self</span>, exponent: i32) -&gt; <span class="macro-nonterminal">$ty </span>{
+                <span class="comment">// The exponent is encoded using an offset-binary representation
+                </span><span class="kw">let </span>exponent_bits: <span class="macro-nonterminal">$u_scalar </span>=
+                    ((<span class="macro-nonterminal">$exponent_bias </span>+ exponent) <span class="kw">as </span><span class="macro-nonterminal">$u_scalar</span>) &lt;&lt; <span class="macro-nonterminal">$fraction_bits</span>;
+                <span class="macro-nonterminal">$ty::from_bits</span>(<span class="self">self </span>| exponent_bits)
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">Distribution</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Standard</span> {
-            <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span> {
-                <span class="comment">// Multiply-based method; 24/53 random bits; [0, 1) interval.</span>
-                <span class="comment">// We use the most significant bits because for simple RNGs</span>
-                <span class="comment">// those are usually more random.</span>
-                <span class="kw">let</span> <span class="ident">float_size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">f_scalar</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="number">8</span>;
-                <span class="kw">let</span> <span class="ident">precision</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fraction_bits</span> <span class="op">+</span> <span class="number">1</span>;
-                <span class="kw">let</span> <span class="ident">scale</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">/</span> ((<span class="number">1</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">u_scalar</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">precision</span>) <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f_scalar</span>);
+        <span class="kw">impl </span>Distribution&lt;<span class="macro-nonterminal">$ty</span>&gt; <span class="kw">for </span>Standard {
+            <span class="kw">fn </span>sample&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="macro-nonterminal">$ty </span>{
+                <span class="comment">// Multiply-based method; 24/53 random bits; [0, 1) interval.
+                // We use the most significant bits because for simple RNGs
+                // those are usually more random.
+                </span><span class="kw">let </span>float_size = mem::size_of::&lt;<span class="macro-nonterminal">$f_scalar</span>&gt;() <span class="kw">as </span>u32 * <span class="number">8</span>;
+                <span class="kw">let </span>precision = <span class="macro-nonterminal">$fraction_bits </span>+ <span class="number">1</span>;
+                <span class="kw">let </span>scale = <span class="number">1.0 </span>/ ((<span class="number">1 </span><span class="kw">as </span><span class="macro-nonterminal">$u_scalar </span>&lt;&lt; precision) <span class="kw">as </span><span class="macro-nonterminal">$f_scalar</span>);
 
-                <span class="kw">let</span> <span class="ident">value</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">uty</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen</span>();
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="ident">float_size</span> <span class="op">-</span> <span class="ident">precision</span>);
-                <span class="ident">scale</span> <span class="op">*</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty::cast_from_int</span>(<span class="ident">value</span>)
+                <span class="kw">let </span>value: <span class="macro-nonterminal">$uty </span>= rng.gen();
+                <span class="kw">let </span>value = value &gt;&gt; (float_size - precision);
+                scale * <span class="macro-nonterminal">$ty::cast_from_int</span>(value)
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">Distribution</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">OpenClosed01</span> {
-            <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span> {
-                <span class="comment">// Multiply-based method; 24/53 random bits; (0, 1] interval.</span>
-                <span class="comment">// We use the most significant bits because for simple RNGs</span>
-                <span class="comment">// those are usually more random.</span>
-                <span class="kw">let</span> <span class="ident">float_size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">f_scalar</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="number">8</span>;
-                <span class="kw">let</span> <span class="ident">precision</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fraction_bits</span> <span class="op">+</span> <span class="number">1</span>;
-                <span class="kw">let</span> <span class="ident">scale</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">/</span> ((<span class="number">1</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">u_scalar</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">precision</span>) <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f_scalar</span>);
+        <span class="kw">impl </span>Distribution&lt;<span class="macro-nonterminal">$ty</span>&gt; <span class="kw">for </span>OpenClosed01 {
+            <span class="kw">fn </span>sample&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="macro-nonterminal">$ty </span>{
+                <span class="comment">// Multiply-based method; 24/53 random bits; (0, 1] interval.
+                // We use the most significant bits because for simple RNGs
+                // those are usually more random.
+                </span><span class="kw">let </span>float_size = mem::size_of::&lt;<span class="macro-nonterminal">$f_scalar</span>&gt;() <span class="kw">as </span>u32 * <span class="number">8</span>;
+                <span class="kw">let </span>precision = <span class="macro-nonterminal">$fraction_bits </span>+ <span class="number">1</span>;
+                <span class="kw">let </span>scale = <span class="number">1.0 </span>/ ((<span class="number">1 </span><span class="kw">as </span><span class="macro-nonterminal">$u_scalar </span>&lt;&lt; precision) <span class="kw">as </span><span class="macro-nonterminal">$f_scalar</span>);
 
-                <span class="kw">let</span> <span class="ident">value</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">uty</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen</span>();
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="ident">float_size</span> <span class="op">-</span> <span class="ident">precision</span>);
-                <span class="comment">// Add 1 to shift up; will not overflow because of right-shift:</span>
-                <span class="ident">scale</span> <span class="op">*</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty::cast_from_int</span>(<span class="ident">value</span> <span class="op">+</span> <span class="number">1</span>)
+                <span class="kw">let </span>value: <span class="macro-nonterminal">$uty </span>= rng.gen();
+                <span class="kw">let </span>value = value &gt;&gt; (float_size - precision);
+                <span class="comment">// Add 1 to shift up; will not overflow because of right-shift:
+                </span>scale * <span class="macro-nonterminal">$ty::cast_from_int</span>(value + <span class="number">1</span>)
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">Distribution</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Open01</span> {
-            <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span> {
-                <span class="comment">// Transmute-based method; 23/52 random bits; (0, 1) interval.</span>
-                <span class="comment">// We use the most significant bits because for simple RNGs</span>
-                <span class="comment">// those are usually more random.</span>
-                <span class="kw">use</span> <span class="ident">core</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f_scalar::EPSILON</span>;
-                <span class="kw">let</span> <span class="ident">float_size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">f_scalar</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="number">8</span>;
+        <span class="kw">impl </span>Distribution&lt;<span class="macro-nonterminal">$ty</span>&gt; <span class="kw">for </span>Open01 {
+            <span class="kw">fn </span>sample&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="macro-nonterminal">$ty </span>{
+                <span class="comment">// Transmute-based method; 23/52 random bits; (0, 1) interval.
+                // We use the most significant bits because for simple RNGs
+                // those are usually more random.
+                </span><span class="kw">use </span>core::<span class="macro-nonterminal">$f_scalar::EPSILON</span>;
+                <span class="kw">let </span>float_size = mem::size_of::&lt;<span class="macro-nonterminal">$f_scalar</span>&gt;() <span class="kw">as </span>u32 * <span class="number">8</span>;
 
-                <span class="kw">let</span> <span class="ident">value</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">uty</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen</span>();
-                <span class="kw">let</span> <span class="ident">fraction</span> <span class="op">=</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="ident">float_size</span> <span class="op">-</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fraction_bits</span>);
-                <span class="ident">fraction</span>.<span class="ident">into_float_with_exponent</span>(<span class="number">0</span>) <span class="op">-</span> (<span class="number">1.0</span> <span class="op">-</span> <span class="ident">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>)
+                <span class="kw">let </span>value: <span class="macro-nonterminal">$uty </span>= rng.gen();
+                <span class="kw">let </span>fraction = value &gt;&gt; (float_size - <span class="macro-nonterminal">$fraction_bits</span>);
+                fraction.into_float_with_exponent(<span class="number">0</span>) - (<span class="number">1.0 </span>- EPSILON / <span class="number">2.0</span>)
             }
         }
     }
 }
 
-<span class="macro">float_impls!</span> { <span class="ident">f32</span>, <span class="ident">u32</span>, <span class="ident">f32</span>, <span class="ident">u32</span>, <span class="number">23</span>, <span class="number">127</span> }
-<span class="macro">float_impls!</span> { <span class="ident">f64</span>, <span class="ident">u64</span>, <span class="ident">f64</span>, <span class="ident">u64</span>, <span class="number">52</span>, <span class="number">1023</span> }
+<span class="macro">float_impls! </span>{ f32, u32, f32, u32, <span class="number">23</span>, <span class="number">127 </span>}
+<span class="macro">float_impls! </span>{ f64, u64, f64, u64, <span class="number">52</span>, <span class="number">1023 </span>}
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-<span class="macro">float_impls!</span> { <span class="ident">f32x2</span>, <span class="ident">u32x2</span>, <span class="ident">f32</span>, <span class="ident">u32</span>, <span class="number">23</span>, <span class="number">127</span> }
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-<span class="macro">float_impls!</span> { <span class="ident">f32x4</span>, <span class="ident">u32x4</span>, <span class="ident">f32</span>, <span class="ident">u32</span>, <span class="number">23</span>, <span class="number">127</span> }
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-<span class="macro">float_impls!</span> { <span class="ident">f32x8</span>, <span class="ident">u32x8</span>, <span class="ident">f32</span>, <span class="ident">u32</span>, <span class="number">23</span>, <span class="number">127</span> }
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-<span class="macro">float_impls!</span> { <span class="ident">f32x16</span>, <span class="ident">u32x16</span>, <span class="ident">f32</span>, <span class="ident">u32</span>, <span class="number">23</span>, <span class="number">127</span> }
+<span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+</span><span class="macro">float_impls! </span>{ f32x2, u32x2, f32, u32, <span class="number">23</span>, <span class="number">127 </span>}
+<span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+</span><span class="macro">float_impls! </span>{ f32x4, u32x4, f32, u32, <span class="number">23</span>, <span class="number">127 </span>}
+<span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+</span><span class="macro">float_impls! </span>{ f32x8, u32x8, f32, u32, <span class="number">23</span>, <span class="number">127 </span>}
+<span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+</span><span class="macro">float_impls! </span>{ f32x16, u32x16, f32, u32, <span class="number">23</span>, <span class="number">127 </span>}
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-<span class="macro">float_impls!</span> { <span class="ident">f64x2</span>, <span class="ident">u64x2</span>, <span class="ident">f64</span>, <span class="ident">u64</span>, <span class="number">52</span>, <span class="number">1023</span> }
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-<span class="macro">float_impls!</span> { <span class="ident">f64x4</span>, <span class="ident">u64x4</span>, <span class="ident">f64</span>, <span class="ident">u64</span>, <span class="number">52</span>, <span class="number">1023</span> }
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-<span class="macro">float_impls!</span> { <span class="ident">f64x8</span>, <span class="ident">u64x8</span>, <span class="ident">f64</span>, <span class="ident">u64</span>, <span class="number">52</span>, <span class="number">1023</span> }
+<span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+</span><span class="macro">float_impls! </span>{ f64x2, u64x2, f64, u64, <span class="number">52</span>, <span class="number">1023 </span>}
+<span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+</span><span class="macro">float_impls! </span>{ f64x4, u64x4, f64, u64, <span class="number">52</span>, <span class="number">1023 </span>}
+<span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+</span><span class="macro">float_impls! </span>{ f64x8, u64x8, f64, u64, <span class="number">52</span>, <span class="number">1023 </span>}
 
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rngs::mock::StepRng</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::rngs::mock::StepRng;
 
-    <span class="kw">const</span> <span class="ident">EPSILON32</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="ident">::core::f32::EPSILON</span>;
-    <span class="kw">const</span> <span class="ident">EPSILON64</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">::core::f64::EPSILON</span>;
+    <span class="kw">const </span>EPSILON32: f32 = ::core::f32::EPSILON;
+    <span class="kw">const </span>EPSILON64: f64 = ::core::f64::EPSILON;
 
-    <span class="macro">macro_rules!</span> <span class="ident">test_f32</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fnn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ZERO</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span>:<span class="ident">expr</span>) =&gt; {
-            <span class="attribute">#[<span class="ident">test</span>]</span>
-            <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fnn</span>() {
-                <span class="comment">// Standard</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zeros</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">zeros</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span>(), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ZERO</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span> <span class="op">|</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">8</span> <span class="op">+</span> <span class="number">32</span>), <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">one</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span>(), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="op">!</span><span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">max</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span>(), <span class="number">1.0</span> <span class="op">-</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
+    <span class="macro">macro_rules! </span>test_f32 {
+        (<span class="macro-nonterminal">$fnn</span>:ident, <span class="macro-nonterminal">$ty</span>:ident, <span class="macro-nonterminal">$ZERO</span>:expr, <span class="macro-nonterminal">$EPSILON</span>:expr) =&gt; {
+            <span class="attribute">#[test]
+            </span><span class="kw">fn </span><span class="macro-nonterminal">$fnn</span>() {
+                <span class="comment">// Standard
+                </span><span class="kw">let </span><span class="kw-2">mut </span>zeros = StepRng::new(<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(zeros.gen::&lt;<span class="macro-nonterminal">$ty</span>&gt;(), <span class="macro-nonterminal">$ZERO</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>one = StepRng::new(<span class="number">1 </span>&lt;&lt; <span class="number">8 </span>| <span class="number">1 </span>&lt;&lt; (<span class="number">8 </span>+ <span class="number">32</span>), <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(one.gen::&lt;<span class="macro-nonterminal">$ty</span>&gt;(), <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>max = StepRng::new(!<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(max.gen::&lt;<span class="macro-nonterminal">$ty</span>&gt;(), <span class="number">1.0 </span>- <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
 
-                <span class="comment">// OpenClosed01</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zeros</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">zeros</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">OpenClosed01</span>), <span class="number">0.0</span> <span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span> <span class="op">|</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">8</span> <span class="op">+</span> <span class="number">32</span>), <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">one</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">OpenClosed01</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="op">!</span><span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">max</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">OpenClosed01</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ZERO</span> <span class="op">+</span> <span class="number">1.0</span>);
+                <span class="comment">// OpenClosed01
+                </span><span class="kw">let </span><span class="kw-2">mut </span>zeros = StepRng::new(<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(zeros.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(OpenClosed01), <span class="number">0.0 </span>+ <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>one = StepRng::new(<span class="number">1 </span>&lt;&lt; <span class="number">8 </span>| <span class="number">1 </span>&lt;&lt; (<span class="number">8 </span>+ <span class="number">32</span>), <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(one.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(OpenClosed01), <span class="macro-nonterminal">$EPSILON</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>max = StepRng::new(!<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(max.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(OpenClosed01), <span class="macro-nonterminal">$ZERO </span>+ <span class="number">1.0</span>);
 
-                <span class="comment">// Open01</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zeros</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">zeros</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Open01</span>), <span class="number">0.0</span> <span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span> <span class="op">|</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">9</span> <span class="op">+</span> <span class="number">32</span>), <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">one</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Open01</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span> <span class="op">*</span> <span class="number">3.0</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="op">!</span><span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">max</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Open01</span>), <span class="number">1.0</span> <span class="op">-</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
+                <span class="comment">// Open01
+                </span><span class="kw">let </span><span class="kw-2">mut </span>zeros = StepRng::new(<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(zeros.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(Open01), <span class="number">0.0 </span>+ <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>one = StepRng::new(<span class="number">1 </span>&lt;&lt; <span class="number">9 </span>| <span class="number">1 </span>&lt;&lt; (<span class="number">9 </span>+ <span class="number">32</span>), <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(one.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(Open01), <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0 </span>* <span class="number">3.0</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>max = StepRng::new(!<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(max.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(Open01), <span class="number">1.0 </span>- <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
             }
         };
     }
-    <span class="macro">test_f32!</span> { <span class="ident">f32_edge_cases</span>, <span class="ident">f32</span>, <span class="number">0.0</span>, <span class="ident">EPSILON32</span> }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-    <span class="macro">test_f32!</span> { <span class="ident">f32x2_edge_cases</span>, <span class="ident">f32x2</span>, <span class="ident">f32x2::splat</span>(<span class="number">0.0</span>), <span class="ident">f32x2::splat</span>(<span class="ident">EPSILON32</span>) }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-    <span class="macro">test_f32!</span> { <span class="ident">f32x4_edge_cases</span>, <span class="ident">f32x4</span>, <span class="ident">f32x4::splat</span>(<span class="number">0.0</span>), <span class="ident">f32x4::splat</span>(<span class="ident">EPSILON32</span>) }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-    <span class="macro">test_f32!</span> { <span class="ident">f32x8_edge_cases</span>, <span class="ident">f32x8</span>, <span class="ident">f32x8::splat</span>(<span class="number">0.0</span>), <span class="ident">f32x8::splat</span>(<span class="ident">EPSILON32</span>) }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-    <span class="macro">test_f32!</span> { <span class="ident">f32x16_edge_cases</span>, <span class="ident">f32x16</span>, <span class="ident">f32x16::splat</span>(<span class="number">0.0</span>), <span class="ident">f32x16::splat</span>(<span class="ident">EPSILON32</span>) }
+    <span class="macro">test_f32! </span>{ f32_edge_cases, f32, <span class="number">0.0</span>, EPSILON32 }
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+    </span><span class="macro">test_f32! </span>{ f32x2_edge_cases, f32x2, f32x2::splat(<span class="number">0.0</span>), f32x2::splat(EPSILON32) }
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+    </span><span class="macro">test_f32! </span>{ f32x4_edge_cases, f32x4, f32x4::splat(<span class="number">0.0</span>), f32x4::splat(EPSILON32) }
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+    </span><span class="macro">test_f32! </span>{ f32x8_edge_cases, f32x8, f32x8::splat(<span class="number">0.0</span>), f32x8::splat(EPSILON32) }
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+    </span><span class="macro">test_f32! </span>{ f32x16_edge_cases, f32x16, f32x16::splat(<span class="number">0.0</span>), f32x16::splat(EPSILON32) }
 
-    <span class="macro">macro_rules!</span> <span class="ident">test_f64</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fnn</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ZERO</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span>:<span class="ident">expr</span>) =&gt; {
-            <span class="attribute">#[<span class="ident">test</span>]</span>
-            <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fnn</span>() {
-                <span class="comment">// Standard</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zeros</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">zeros</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span>(), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ZERO</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">11</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">one</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span>(), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="op">!</span><span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">max</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span>(), <span class="number">1.0</span> <span class="op">-</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
+    <span class="macro">macro_rules! </span>test_f64 {
+        (<span class="macro-nonterminal">$fnn</span>:ident, <span class="macro-nonterminal">$ty</span>:ident, <span class="macro-nonterminal">$ZERO</span>:expr, <span class="macro-nonterminal">$EPSILON</span>:expr) =&gt; {
+            <span class="attribute">#[test]
+            </span><span class="kw">fn </span><span class="macro-nonterminal">$fnn</span>() {
+                <span class="comment">// Standard
+                </span><span class="kw">let </span><span class="kw-2">mut </span>zeros = StepRng::new(<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(zeros.gen::&lt;<span class="macro-nonterminal">$ty</span>&gt;(), <span class="macro-nonterminal">$ZERO</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>one = StepRng::new(<span class="number">1 </span>&lt;&lt; <span class="number">11</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(one.gen::&lt;<span class="macro-nonterminal">$ty</span>&gt;(), <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>max = StepRng::new(!<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(max.gen::&lt;<span class="macro-nonterminal">$ty</span>&gt;(), <span class="number">1.0 </span>- <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
 
-                <span class="comment">// OpenClosed01</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zeros</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">zeros</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">OpenClosed01</span>), <span class="number">0.0</span> <span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">11</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">one</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">OpenClosed01</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="op">!</span><span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">max</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">OpenClosed01</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ZERO</span> <span class="op">+</span> <span class="number">1.0</span>);
+                <span class="comment">// OpenClosed01
+                </span><span class="kw">let </span><span class="kw-2">mut </span>zeros = StepRng::new(<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(zeros.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(OpenClosed01), <span class="number">0.0 </span>+ <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>one = StepRng::new(<span class="number">1 </span>&lt;&lt; <span class="number">11</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(one.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(OpenClosed01), <span class="macro-nonterminal">$EPSILON</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>max = StepRng::new(!<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(max.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(OpenClosed01), <span class="macro-nonterminal">$ZERO </span>+ <span class="number">1.0</span>);
 
-                <span class="comment">// Open01</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zeros</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">zeros</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Open01</span>), <span class="number">0.0</span> <span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">one</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Open01</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span> <span class="op">*</span> <span class="number">3.0</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="op">!</span><span class="number">0</span>, <span class="number">0</span>);
-                <span class="macro">assert_eq!</span>(<span class="ident">max</span>.<span class="ident">sample</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Open01</span>), <span class="number">1.0</span> <span class="op">-</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">EPSILON</span> <span class="op">/</span> <span class="number">2.0</span>);
+                <span class="comment">// Open01
+                </span><span class="kw">let </span><span class="kw-2">mut </span>zeros = StepRng::new(<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(zeros.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(Open01), <span class="number">0.0 </span>+ <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>one = StepRng::new(<span class="number">1 </span>&lt;&lt; <span class="number">12</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(one.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(Open01), <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0 </span>* <span class="number">3.0</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>max = StepRng::new(!<span class="number">0</span>, <span class="number">0</span>);
+                <span class="macro">assert_eq!</span>(max.sample::&lt;<span class="macro-nonterminal">$ty</span>, <span class="kw">_</span>&gt;(Open01), <span class="number">1.0 </span>- <span class="macro-nonterminal">$EPSILON </span>/ <span class="number">2.0</span>);
             }
         };
     }
-    <span class="macro">test_f64!</span> { <span class="ident">f64_edge_cases</span>, <span class="ident">f64</span>, <span class="number">0.0</span>, <span class="ident">EPSILON64</span> }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-    <span class="macro">test_f64!</span> { <span class="ident">f64x2_edge_cases</span>, <span class="ident">f64x2</span>, <span class="ident">f64x2::splat</span>(<span class="number">0.0</span>), <span class="ident">f64x2::splat</span>(<span class="ident">EPSILON64</span>) }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-    <span class="macro">test_f64!</span> { <span class="ident">f64x4_edge_cases</span>, <span class="ident">f64x4</span>, <span class="ident">f64x4::splat</span>(<span class="number">0.0</span>), <span class="ident">f64x4::splat</span>(<span class="ident">EPSILON64</span>) }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-    <span class="macro">test_f64!</span> { <span class="ident">f64x8_edge_cases</span>, <span class="ident">f64x8</span>, <span class="ident">f64x8::splat</span>(<span class="number">0.0</span>), <span class="ident">f64x8::splat</span>(<span class="ident">EPSILON64</span>) }
+    <span class="macro">test_f64! </span>{ f64_edge_cases, f64, <span class="number">0.0</span>, EPSILON64 }
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+    </span><span class="macro">test_f64! </span>{ f64x2_edge_cases, f64x2, f64x2::splat(<span class="number">0.0</span>), f64x2::splat(EPSILON64) }
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+    </span><span class="macro">test_f64! </span>{ f64x4_edge_cases, f64x4, f64x4::splat(<span class="number">0.0</span>), f64x4::splat(EPSILON64) }
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+    </span><span class="macro">test_f64! </span>{ f64x8_edge_cases, f64x8, f64x8::splat(<span class="number">0.0</span>), f64x8::splat(EPSILON64) }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">value_stability</span>() {
-        <span class="kw">fn</span> <span class="ident">test_samples</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">core::fmt::Debug</span> <span class="op">+</span> <span class="ident">PartialEq</span>, <span class="ident">D</span>: <span class="ident">Distribution</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-            <span class="ident">distr</span>: <span class="kw-2">&amp;</span><span class="ident">D</span>, <span class="ident">zero</span>: <span class="ident">T</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>],
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>value_stability() {
+        <span class="kw">fn </span>test_samples&lt;T: Copy + core::fmt::Debug + PartialEq, D: Distribution&lt;T&gt;&gt;(
+            distr: <span class="kw-2">&amp;</span>D, zero: T, expected: <span class="kw-2">&amp;</span>[T],
         ) {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test::rng</span>(<span class="number">0x6f44f5646c2a7334</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> [<span class="ident">zero</span>; <span class="number">3</span>];
-            <span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">buf</span> {
-                <span class="kw-2">*</span><span class="ident">x</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">sample</span>(<span class="kw-2">&amp;</span><span class="ident">distr</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>rng = <span class="kw">crate</span>::test::rng(<span class="number">0x6f44f5646c2a7334</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>buf = [zero; <span class="number">3</span>];
+            <span class="kw">for </span>x <span class="kw">in </span><span class="kw-2">&amp;mut </span>buf {
+                <span class="kw-2">*</span>x = rng.sample(<span class="kw-2">&amp;</span>distr);
             }
-            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>, <span class="ident">expected</span>);
+            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>buf, expected);
         }
 
-        <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span><span class="ident">Standard</span>, <span class="number">0f32</span>, <span class="kw-2">&amp;</span>[<span class="number">0.0035963655</span>, <span class="number">0.7346052</span>, <span class="number">0.09778172</span>]);
-        <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span><span class="ident">Standard</span>, <span class="number">0f64</span>, <span class="kw-2">&amp;</span>[
+        test_samples(<span class="kw-2">&amp;</span>Standard, <span class="number">0f32</span>, <span class="kw-2">&amp;</span>[<span class="number">0.0035963655</span>, <span class="number">0.7346052</span>, <span class="number">0.09778172</span>]);
+        test_samples(<span class="kw-2">&amp;</span>Standard, <span class="number">0f64</span>, <span class="kw-2">&amp;</span>[
             <span class="number">0.7346051961657583</span>,
             <span class="number">0.20298547462974248</span>,
             <span class="number">0.8166436635290655</span>,
         ]);
 
-        <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span><span class="ident">OpenClosed01</span>, <span class="number">0f32</span>, <span class="kw-2">&amp;</span>[<span class="number">0.003596425</span>, <span class="number">0.73460525</span>, <span class="number">0.09778178</span>]);
-        <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span><span class="ident">OpenClosed01</span>, <span class="number">0f64</span>, <span class="kw-2">&amp;</span>[
+        test_samples(<span class="kw-2">&amp;</span>OpenClosed01, <span class="number">0f32</span>, <span class="kw-2">&amp;</span>[<span class="number">0.003596425</span>, <span class="number">0.73460525</span>, <span class="number">0.09778178</span>]);
+        test_samples(<span class="kw-2">&amp;</span>OpenClosed01, <span class="number">0f64</span>, <span class="kw-2">&amp;</span>[
             <span class="number">0.7346051961657584</span>,
             <span class="number">0.2029854746297426</span>,
             <span class="number">0.8166436635290656</span>,
         ]);
 
-        <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span><span class="ident">Open01</span>, <span class="number">0f32</span>, <span class="kw-2">&amp;</span>[<span class="number">0.0035963655</span>, <span class="number">0.73460525</span>, <span class="number">0.09778172</span>]);
-        <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span><span class="ident">Open01</span>, <span class="number">0f64</span>, <span class="kw-2">&amp;</span>[
+        test_samples(<span class="kw-2">&amp;</span>Open01, <span class="number">0f32</span>, <span class="kw-2">&amp;</span>[<span class="number">0.0035963655</span>, <span class="number">0.73460525</span>, <span class="number">0.09778172</span>]);
+        test_samples(<span class="kw-2">&amp;</span>Open01, <span class="number">0f64</span>, <span class="kw-2">&amp;</span>[
             <span class="number">0.7346051961657584</span>,
             <span class="number">0.20298547462974248</span>,
             <span class="number">0.8166436635290656</span>,
         ]);
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;simd_support&quot;</span>)]</span>
-        {
-            <span class="comment">// We only test a sub-set of types here. Values are identical to</span>
-            <span class="comment">// non-SIMD types; we assume this pattern continues across all</span>
-            <span class="comment">// SIMD types.</span>
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;simd_support&quot;</span>)]
+        </span>{
+            <span class="comment">// We only test a sub-set of types here. Values are identical to
+            // non-SIMD types; we assume this pattern continues across all
+            // SIMD types.
 
-            <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span><span class="ident">Standard</span>, <span class="ident">f32x2::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>), <span class="kw-2">&amp;</span>[
-                <span class="ident">f32x2::new</span>(<span class="number">0.0035963655</span>, <span class="number">0.7346052</span>),
-                <span class="ident">f32x2::new</span>(<span class="number">0.09778172</span>, <span class="number">0.20298547</span>),
-                <span class="ident">f32x2::new</span>(<span class="number">0.34296435</span>, <span class="number">0.81664366</span>),
+            </span>test_samples(<span class="kw-2">&amp;</span>Standard, f32x2::new(<span class="number">0.0</span>, <span class="number">0.0</span>), <span class="kw-2">&amp;</span>[
+                f32x2::new(<span class="number">0.0035963655</span>, <span class="number">0.7346052</span>),
+                f32x2::new(<span class="number">0.09778172</span>, <span class="number">0.20298547</span>),
+                f32x2::new(<span class="number">0.34296435</span>, <span class="number">0.81664366</span>),
             ]);
 
-            <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span><span class="ident">Standard</span>, <span class="ident">f64x2::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>), <span class="kw-2">&amp;</span>[
-                <span class="ident">f64x2::new</span>(<span class="number">0.7346051961657583</span>, <span class="number">0.20298547462974248</span>),
-                <span class="ident">f64x2::new</span>(<span class="number">0.8166436635290655</span>, <span class="number">0.7423708925400552</span>),
-                <span class="ident">f64x2::new</span>(<span class="number">0.16387782224016323</span>, <span class="number">0.9087068770169618</span>),
+            test_samples(<span class="kw-2">&amp;</span>Standard, f64x2::new(<span class="number">0.0</span>, <span class="number">0.0</span>), <span class="kw-2">&amp;</span>[
+                f64x2::new(<span class="number">0.7346051961657583</span>, <span class="number">0.20298547462974248</span>),
+                f64x2::new(<span class="number">0.8166436635290655</span>, <span class="number">0.7423708925400552</span>),
+                f64x2::new(<span class="number">0.16387782224016323</span>, <span class="number">0.9087068770169618</span>),
             ]);
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-builder/src/depfile.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>depfile.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_builder/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../spirv_builder/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_builder/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-builder/src/depfile.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>depfile.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_builder/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../spirv_builder/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_builder/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -147,149 +141,148 @@
 <span id="141">141</span>
 <span id="142">142</span>
 <span id="143">143</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Reading Makefile-style dependency files.</span>
-<span class="doccomment">//! Taken with permission from &lt;https://github.com/m-ou-se/ninj/blob/master/lib/depfile/mod.rs&gt;</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Reading Makefile-style dependency files.
+//! Taken with permission from &lt;https://github.com/m-ou-se/ninj/blob/master/lib/depfile/mod.rs&gt;
 
-<span class="kw">use</span> <span class="ident">raw_string</span>::{<span class="ident">RawStr</span>, <span class="ident">RawString</span>};
-<span class="kw">use</span> <span class="ident">std::fs::File</span>;
-<span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">BufRead</span>, <span class="ident">BufReader</span>, <span class="ident">Error</span>, <span class="ident">ErrorKind</span>, <span class="ident">Read</span>};
-<span class="kw">use</span> <span class="ident">std::mem</span>::{<span class="ident">replace</span>, <span class="ident">take</span>};
-<span class="kw">use</span> <span class="ident">std::path::Path</span>;
+</span><span class="kw">use </span>raw_string::{RawStr, RawString};
+<span class="kw">use </span>std::fs::File;
+<span class="kw">use </span>std::io::{BufRead, BufReader, Error, ErrorKind, Read};
+<span class="kw">use </span>std::mem::{replace, take};
+<span class="kw">use </span>std::path::Path;
 
-<span class="doccomment">/// Read a Makfile-style dependency file.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `f` is called for every target. The first argument is the target, the</span>
-<span class="doccomment">/// second is the list of dependencies.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_deps_file</span>(
-    <span class="ident">file_name</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
-    <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">RawString</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawString</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="ident">file_name</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::new</span>(<span class="ident">e</span>.<span class="ident">kind</span>(), <span class="macro">format!</span>(<span class="string">&quot;Unable to read {:?}: {}&quot;</span>, <span class="ident">file_name</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
-    <span class="ident">read_deps_file_from</span>(<span class="ident">file</span>, <span class="ident">f</span>)
+<span class="doccomment">/// Read a Makfile-style dependency file.
+///
+/// `f` is called for every target. The first argument is the target, the
+/// second is the list of dependencies.
+</span><span class="kw">pub fn </span>read_deps_file(
+    file_name: <span class="kw-2">&amp;</span>Path,
+    f: <span class="kw">impl </span>FnMut(RawString, Vec&lt;RawString&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    <span class="kw">let </span>file = File::open(file_name)
+        .map_err(|e| Error::new(e.kind(), <span class="macro">format!</span>(<span class="string">&quot;Unable to read {:?}: {}&quot;</span>, file_name, e)))<span class="question-mark">?</span>;
+    read_deps_file_from(file, f)
 }
 
-<span class="doccomment">/// Read a Makfile-style dependency file.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `f` is called for every target. The first argument is the target, the</span>
-<span class="doccomment">/// second is the list of dependencies.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_deps_file_from</span>(
-    <span class="ident">file</span>: <span class="kw">impl</span> <span class="ident">Read</span>,
-    <span class="kw-2">mut</span> <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">RawString</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawString</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">BufReader::new</span>(<span class="ident">file</span>);
+<span class="doccomment">/// Read a Makfile-style dependency file.
+///
+/// `f` is called for every target. The first argument is the target, the
+/// second is the list of dependencies.
+</span><span class="kw">pub fn </span>read_deps_file_from(
+    file: <span class="kw">impl </span>Read,
+    <span class="kw-2">mut </span>f: <span class="kw">impl </span>FnMut(RawString, Vec&lt;RawString&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>file = BufReader::new(file);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">State::default</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>state = State::default();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">line</span> <span class="op">=</span> <span class="ident">RawString::new</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>line = RawString::new();
 
-    <span class="kw">loop</span> {
-        <span class="ident">line</span>.<span class="ident">clear</span>();
-        <span class="kw">if</span> <span class="ident">file</span>.<span class="ident">read_until</span>(<span class="string">b&#39;\n&#39;</span>, <span class="ident">line</span>.<span class="ident">as_mut_bytes</span>())<span class="question-mark">?</span> <span class="op">==</span> <span class="number">0</span> {
+    <span class="kw">loop </span>{
+        line.clear();
+        <span class="kw">if </span>file.read_until(<span class="string">b&#39;\n&#39;</span>, line.as_mut_bytes())<span class="question-mark">? </span>== <span class="number">0 </span>{
             <span class="kw">break</span>;
         }
 
-        <span class="kw">if</span> <span class="ident">line</span>.<span class="ident">last</span>() <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;\n&#39;</span>) {
-            <span class="ident">line</span>.<span class="ident">pop</span>();
+        <span class="kw">if </span>line.last() == <span class="prelude-val">Some</span>(<span class="string">b&#39;\n&#39;</span>) {
+            line.pop();
         }
 
-        <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">windows</span>) <span class="op">&amp;&amp;</span> <span class="ident">line</span>.<span class="ident">last</span>() <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;\r&#39;</span>) {
-            <span class="ident">line</span>.<span class="ident">pop</span>();
+        <span class="kw">if </span><span class="macro">cfg!</span>(windows) &amp;&amp; line.last() == <span class="prelude-val">Some</span>(<span class="string">b&#39;\r&#39;</span>) {
+            line.pop();
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_offset</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">read_offset</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>write_offset = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>read_offset = <span class="number">0</span>;
 
-        <span class="kw">loop</span> {
-            <span class="kw">match</span> <span class="ident">memchr::memchr2</span>(<span class="string">b&#39; &#39;</span>, <span class="string">b&#39;\\&#39;</span>, <span class="ident">line</span>[<span class="ident">read_offset</span>..].<span class="ident">as_bytes</span>())
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span> <span class="op">+</span> <span class="ident">read_offset</span>)
+        <span class="kw">loop </span>{
+            <span class="kw">match </span>memchr::memchr2(<span class="string">b&#39; &#39;</span>, <span class="string">b&#39;\\&#39;</span>, line[read_offset..].as_bytes())
+                .map(|i| i + read_offset)
             {
-                <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="kw">if</span> <span class="ident">line</span>[<span class="ident">i</span>] <span class="op">==</span> <span class="string">b&#39;\\&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span> <span class="op">==</span> <span class="ident">line</span>.<span class="ident">len</span>() =&gt; {
-                    <span class="comment">// Backslash at the end of the line</span>
-                    <span class="ident">state</span>.<span class="ident">add_part</span>(<span class="kw-2">&amp;</span><span class="ident">line</span>[<span class="ident">write_offset</span>..<span class="ident">i</span>]);
-                    <span class="ident">state</span>.<span class="ident">finish_path</span>()<span class="question-mark">?</span>;
+                <span class="prelude-val">Some</span>(i) <span class="kw">if </span>line[i] == <span class="string">b&#39;\\&#39; </span>&amp;&amp; i + <span class="number">1 </span>== line.len() =&gt; {
+                    <span class="comment">// Backslash at the end of the line
+                    </span>state.add_part(<span class="kw-2">&amp;</span>line[write_offset..i]);
+                    state.finish_path()<span class="question-mark">?</span>;
                     <span class="kw">break</span>;
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="kw">if</span> <span class="ident">line</span>[<span class="ident">i</span>] <span class="op">==</span> <span class="string">b&#39;\\&#39;</span> =&gt; {
-                    <span class="comment">// Backslash before character.</span>
-                    <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">line</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>];
-                    <span class="kw">match</span> <span class="ident">c</span> {
-                        <span class="string">b&#39; &#39;</span> <span class="op">|</span> <span class="string">b&#39;\\&#39;</span> <span class="op">|</span> <span class="string">b&#39;#&#39;</span> <span class="op">|</span> <span class="string">b&#39;*&#39;</span> <span class="op">|</span> <span class="string">b&#39;[&#39;</span> <span class="op">|</span> <span class="string">b&#39;]&#39;</span> <span class="op">|</span> <span class="string">b&#39;|&#39;</span> =&gt; {
-                            <span class="comment">// Escaped character. Drop the &#39;\&#39;.</span>
-                            <span class="ident">state</span>.<span class="ident">add_part</span>(<span class="kw-2">&amp;</span><span class="ident">line</span>[<span class="ident">write_offset</span>..<span class="ident">i</span>]);
-                            <span class="ident">write_offset</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>;
+                <span class="prelude-val">Some</span>(i) <span class="kw">if </span>line[i] == <span class="string">b&#39;\\&#39; </span>=&gt; {
+                    <span class="comment">// Backslash before character.
+                    </span><span class="kw">let </span>c = line[i + <span class="number">1</span>];
+                    <span class="kw">match </span>c {
+                        <span class="string">b&#39; &#39; </span>| <span class="string">b&#39;\\&#39; </span>| <span class="string">b&#39;#&#39; </span>| <span class="string">b&#39;*&#39; </span>| <span class="string">b&#39;[&#39; </span>| <span class="string">b&#39;]&#39; </span>| <span class="string">b&#39;|&#39; </span>=&gt; {
+                            <span class="comment">// Escaped character. Drop the &#39;\&#39;.
+                            </span>state.add_part(<span class="kw-2">&amp;</span>line[write_offset..i]);
+                            write_offset = i + <span class="number">1</span>;
                         }
-                        <span class="kw">_</span> =&gt; (), <span class="comment">// Keep the &#39;\&#39;.</span>
-                    }
-                    <span class="ident">read_offset</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">2</span>;
+                        <span class="kw">_ </span>=&gt; (), <span class="comment">// Keep the &#39;\&#39;.
+                    </span>}
+                    read_offset = i + <span class="number">2</span>;
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">i</span>) =&gt; {
-                    <span class="comment">// A space.</span>
-                    <span class="macro">debug_assert_eq!</span>(<span class="ident">line</span>[<span class="ident">i</span>], <span class="string">b&#39; &#39;</span>);
-                    <span class="ident">state</span>.<span class="ident">add_part</span>(<span class="kw-2">&amp;</span><span class="ident">line</span>[<span class="ident">write_offset</span>..<span class="ident">i</span>]);
-                    <span class="ident">state</span>.<span class="ident">finish_path</span>()<span class="question-mark">?</span>;
-                    <span class="ident">write_offset</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>;
-                    <span class="ident">read_offset</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>;
+                <span class="prelude-val">Some</span>(i) =&gt; {
+                    <span class="comment">// A space.
+                    </span><span class="macro">debug_assert_eq!</span>(line[i], <span class="string">b&#39; &#39;</span>);
+                    state.add_part(<span class="kw-2">&amp;</span>line[write_offset..i]);
+                    state.finish_path()<span class="question-mark">?</span>;
+                    write_offset = i + <span class="number">1</span>;
+                    read_offset = i + <span class="number">1</span>;
                 }
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="comment">// End of the line.</span>
-                    <span class="ident">state</span>.<span class="ident">add_part</span>(<span class="kw-2">&amp;</span><span class="ident">line</span>[<span class="ident">write_offset</span>..]);
-                    <span class="ident">state</span>.<span class="ident">finish_deps</span>(<span class="kw-2">&amp;mut</span> <span class="ident">f</span>)<span class="question-mark">?</span>;
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="comment">// End of the line.
+                    </span>state.add_part(<span class="kw-2">&amp;</span>line[write_offset..]);
+                    state.finish_deps(<span class="kw-2">&amp;mut </span>f)<span class="question-mark">?</span>;
                     <span class="kw">break</span>;
                 }
             }
         }
     }
 
-    <span class="kw">if</span> <span class="ident">state</span>.<span class="ident">target</span>.<span class="ident">is_none</span>() {
+    <span class="kw">if </span>state.target.is_none() {
         <span class="prelude-val">Ok</span>(())
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="string">&quot;Unexpected end of file&quot;</span>))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(Error::new(ErrorKind::InvalidData, <span class="string">&quot;Unexpected end of file&quot;</span>))
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">State</span> {
-    <span class="doccomment">/// The (incomplete) path we&#39;re currently reading.</span>
-    <span class="ident">path</span>: <span class="ident">RawString</span>,
-    <span class="doccomment">/// The target, once we&#39;ve finished reading it.</span>
-    <span class="ident">target</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RawString</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The rest of the paths we&#39;ve finished reading.</span>
-    <span class="ident">deps</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawString</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default)]
+</span><span class="kw">struct </span>State {
+    <span class="doccomment">/// The (incomplete) path we&#39;re currently reading.
+    </span>path: RawString,
+    <span class="doccomment">/// The target, once we&#39;ve finished reading it.
+    </span>target: <span class="prelude-ty">Option</span>&lt;RawString&gt;,
+    <span class="doccomment">/// The rest of the paths we&#39;ve finished reading.
+    </span>deps: Vec&lt;RawString&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">State</span> {
-    <span class="kw">fn</span> <span class="ident">add_part</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">RawStr</span>) {
-        <span class="self">self</span>.<span class="ident">path</span>.<span class="ident">push_str</span>(<span class="ident">s</span>);
+<span class="kw">impl </span>State {
+    <span class="kw">fn </span>add_part(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>RawStr) {
+        <span class="self">self</span>.path.push_str(s);
     }
-    <span class="kw">fn</span> <span class="ident">finish_path</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">path</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">path</span>, <span class="ident">RawString::new</span>());
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">path</span>.<span class="ident">last</span>() <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;:&#39;</span>) {
-                <span class="ident">path</span>.<span class="ident">pop</span>();
-                <span class="self">self</span>.<span class="ident">target</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">path</span>);
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_none</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(
-                    <span class="ident">ErrorKind::InvalidData</span>,
+    <span class="kw">fn </span>finish_path(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">if </span>!<span class="self">self</span>.path.is_empty() {
+            <span class="kw">let </span><span class="kw-2">mut </span>path = replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.path, RawString::new());
+            <span class="kw">if </span><span class="self">self</span>.target.is_none() &amp;&amp; path.last() == <span class="prelude-val">Some</span>(<span class="string">b&#39;:&#39;</span>) {
+                path.pop();
+                <span class="self">self</span>.target = <span class="prelude-val">Some</span>(path);
+            } <span class="kw">else if </span><span class="self">self</span>.target.is_none() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                    ErrorKind::InvalidData,
                     <span class="string">&quot;Rule in dependency file has multiple outputs&quot;</span>,
                 ));
-            } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">deps</span>.<span class="ident">push</span>(<span class="ident">path</span>);
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.deps.push(path);
             }
         }
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="kw">fn</span> <span class="ident">finish_deps</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">RawString</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawString</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">finish_path</span>()<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">target</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">take</span>() {
-            <span class="ident">f</span>(<span class="ident">target</span>, <span class="ident">take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">deps</span>))<span class="question-mark">?</span>;
+    <span class="kw">fn </span>finish_deps(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        f: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(RawString, Vec&lt;RawString&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="self">self</span>.finish_path()<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(target) = <span class="self">self</span>.target.take() {
+            f(target, take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.deps))<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_builder" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_builder" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

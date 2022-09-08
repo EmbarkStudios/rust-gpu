@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ahash-0.7.6/src/fallback_hash.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fallback_hash.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../ahash/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ahash-0.7.6/src/fallback_hash.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fallback_hash.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../ahash/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -396,398 +390,397 @@
 <span id="390">390</span>
 <span id="391">391</span>
 <span id="392">392</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::convert</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::operations::folded_multiply</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::operations::read_small</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::random_state::PI</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::RandomState</span>;
-<span class="kw">use</span> <span class="ident">core::hash::Hasher</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::convert::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::operations::folded_multiply;
+<span class="kw">use </span><span class="kw">crate</span>::operations::read_small;
+<span class="kw">use </span><span class="kw">crate</span>::random_state::PI;
+<span class="kw">use </span><span class="kw">crate</span>::RandomState;
+<span class="kw">use </span>core::hash::Hasher;
 
-<span class="doccomment">///This constant come from Kunth&#39;s prng (Empirically it works better than those from splitmix32).</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">MULTIPLE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">6364136223846793005</span>;
-<span class="kw">const</span> <span class="ident">ROT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">23</span>; <span class="comment">//17</span>
+<span class="doccomment">///This constant come from Kunth&#39;s prng (Empirically it works better than those from splitmix32).
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>MULTIPLE: u64 = <span class="number">6364136223846793005</span>;
+<span class="kw">const </span>ROT: u32 = <span class="number">23</span>; <span class="comment">//17
 
-<span class="doccomment">/// A `Hasher` for hashing an arbitrary stream of bytes.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Instances of [`AHasher`] represent state that is updated while hashing data.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Each method updates the internal state based on the new data provided. Once</span>
-<span class="doccomment">/// all of the data has been provided, the resulting hash can be obtained by calling</span>
-<span class="doccomment">/// `finish()`</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [Clone] is also provided in case you wish to calculate hashes for two different items that</span>
-<span class="doccomment">/// start with the same data.</span>
-<span class="doccomment">///</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AHasher</span> {
-    <span class="ident">buffer</span>: <span class="ident">u64</span>,
-    <span class="ident">pad</span>: <span class="ident">u64</span>,
-    <span class="ident">extra_keys</span>: [<span class="ident">u64</span>; <span class="number">2</span>],
+</span><span class="doccomment">/// A `Hasher` for hashing an arbitrary stream of bytes.
+///
+/// Instances of [`AHasher`] represent state that is updated while hashing data.
+///
+/// Each method updates the internal state based on the new data provided. Once
+/// all of the data has been provided, the resulting hash can be obtained by calling
+/// `finish()`
+///
+/// [Clone] is also provided in case you wish to calculate hashes for two different items that
+/// start with the same data.
+///
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>AHasher {
+    buffer: u64,
+    pad: u64,
+    extra_keys: [u64; <span class="number">2</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">AHasher</span> {
-    <span class="doccomment">/// Creates a new hasher keyed to the provided key.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span> <span class="comment">// Is not called if non-fallback hash is used.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_with_keys</span>(<span class="ident">key1</span>: <span class="ident">u128</span>, <span class="ident">key2</span>: <span class="ident">u128</span>) -&gt; <span class="ident">AHasher</span> {
-        <span class="kw">let</span> <span class="ident">pi</span>: [<span class="ident">u128</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">PI</span>.<span class="ident">convert</span>();
-        <span class="kw">let</span> <span class="ident">key1</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> (<span class="ident">key1</span> <span class="op">^</span> <span class="ident">pi</span>[<span class="number">0</span>]).<span class="ident">convert</span>();
-        <span class="kw">let</span> <span class="ident">key2</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> (<span class="ident">key2</span> <span class="op">^</span> <span class="ident">pi</span>[<span class="number">1</span>]).<span class="ident">convert</span>();
-        <span class="ident">AHasher</span> {
-            <span class="ident">buffer</span>: <span class="ident">key1</span>[<span class="number">0</span>],
-            <span class="ident">pad</span>: <span class="ident">key1</span>[<span class="number">1</span>],
-            <span class="ident">extra_keys</span>: <span class="ident">key2</span>,
+<span class="kw">impl </span>AHasher {
+    <span class="doccomment">/// Creates a new hasher keyed to the provided key.
+    </span><span class="attribute">#[inline]
+    #[allow(dead_code)] </span><span class="comment">// Is not called if non-fallback hash is used.
+    </span><span class="kw">pub fn </span>new_with_keys(key1: u128, key2: u128) -&gt; AHasher {
+        <span class="kw">let </span>pi: [u128; <span class="number">2</span>] = PI.convert();
+        <span class="kw">let </span>key1: [u64; <span class="number">2</span>] = (key1 ^ pi[<span class="number">0</span>]).convert();
+        <span class="kw">let </span>key2: [u64; <span class="number">2</span>] = (key2 ^ pi[<span class="number">1</span>]).convert();
+        AHasher {
+            buffer: key1[<span class="number">0</span>],
+            pad: key1[<span class="number">1</span>],
+            extra_keys: key2,
         }
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span> <span class="comment">// False positive</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">test_with_keys</span>(<span class="ident">key1</span>: <span class="ident">u128</span>, <span class="ident">key2</span>: <span class="ident">u128</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">key1</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">key1</span>.<span class="ident">convert</span>();
-        <span class="kw">let</span> <span class="ident">key2</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">key2</span>.<span class="ident">convert</span>();
-        <span class="self">Self</span> {
-            <span class="ident">buffer</span>: <span class="ident">key1</span>[<span class="number">0</span>],
-            <span class="ident">pad</span>: <span class="ident">key1</span>[<span class="number">1</span>],
-            <span class="ident">extra_keys</span>: <span class="ident">key2</span>,
+    <span class="attribute">#[allow(unused)] </span><span class="comment">// False positive
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>test_with_keys(key1: u128, key2: u128) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>key1: [u64; <span class="number">2</span>] = key1.convert();
+        <span class="kw">let </span>key2: [u64; <span class="number">2</span>] = key2.convert();
+        <span class="self">Self </span>{
+            buffer: key1[<span class="number">0</span>],
+            pad: key1[<span class="number">1</span>],
+            extra_keys: key2,
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span> <span class="comment">// Is not called if non-fallback hash is used.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_random_state</span>(<span class="ident">rand_state</span>: <span class="kw-2">&amp;</span><span class="ident">RandomState</span>) -&gt; <span class="ident">AHasher</span> {
-        <span class="ident">AHasher</span> {
-            <span class="ident">buffer</span>: <span class="ident">rand_state</span>.<span class="ident">k0</span>,
-            <span class="ident">pad</span>: <span class="ident">rand_state</span>.<span class="ident">k1</span>,
-            <span class="ident">extra_keys</span>: [<span class="ident">rand_state</span>.<span class="ident">k2</span>, <span class="ident">rand_state</span>.<span class="ident">k3</span>],
+    <span class="attribute">#[inline]
+    #[allow(dead_code)] </span><span class="comment">// Is not called if non-fallback hash is used.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_random_state(rand_state: <span class="kw-2">&amp;</span>RandomState) -&gt; AHasher {
+        AHasher {
+            buffer: rand_state.k0,
+            pad: rand_state.k1,
+            extra_keys: [rand_state.k2, rand_state.k3],
         }
     }
 
-    <span class="doccomment">/// This update function has the goal of updating the buffer with a single multiply</span>
-    <span class="doccomment">/// FxHash does this but is vulnerable to attack. To avoid this input needs to be masked to with an</span>
-    <span class="doccomment">/// unpredictable value. Other hashes such as murmurhash have taken this approach but were found vulnerable</span>
-    <span class="doccomment">/// to attack. The attack was based on the idea of reversing the pre-mixing (Which is necessarily</span>
-    <span class="doccomment">/// reversible otherwise bits would be lost) then placing a difference in the highest bit before the</span>
-    <span class="doccomment">/// multiply used to mix the data. Because a multiply can never affect the bits to the right of it, a</span>
-    <span class="doccomment">/// subsequent update that also differed in this bit could result in a predictable collision.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This version avoids this vulnerability while still only using a single multiply. It takes advantage</span>
-    <span class="doccomment">/// of the fact that when a 64 bit multiply is performed the upper 64 bits are usually computed and thrown</span>
-    <span class="doccomment">/// away. Instead it creates two 128 bit values where the upper 64 bits are zeros and multiplies them.</span>
-    <span class="doccomment">/// (The compiler is smart enough to turn this into a 64 bit multiplication in the assembly)</span>
-    <span class="doccomment">/// Then the upper bits are xored with the lower bits to produce a single 64 bit result.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// To understand why this is a good scrambling function it helps to understand multiply-with-carry PRNGs:</span>
-    <span class="doccomment">/// https://en.wikipedia.org/wiki/Multiply-with-carry_pseudorandom_number_generator</span>
-    <span class="doccomment">/// If the multiple is chosen well, this creates a long period, decent quality PRNG.</span>
-    <span class="doccomment">/// Notice that this function is equivalent to this except the `buffer`/`state` is being xored with each</span>
-    <span class="doccomment">/// new block of data. In the event that data is all zeros, it is exactly equivalent to a MWC PRNG.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is impervious to attack because every bit buffer at the end is dependent on every bit in</span>
-    <span class="doccomment">/// `new_data ^ buffer`. For example suppose two inputs differed in only the 5th bit. Then when the</span>
-    <span class="doccomment">/// multiplication is performed the `result` will differ in bits 5-69. More specifically it will differ by</span>
-    <span class="doccomment">/// 2^5 * MULTIPLE. However in the next step bits 65-128 are turned into a separate 64 bit value. So the</span>
-    <span class="doccomment">/// differing bits will be in the lower 6 bits of this value. The two intermediate values that differ in</span>
-    <span class="doccomment">/// bits 5-63 and in bits 0-5 respectively get added together. Producing an output that differs in every</span>
-    <span class="doccomment">/// bit. The addition carries in the multiplication and at the end additionally mean that the even if an</span>
-    <span class="doccomment">/// attacker somehow knew part of (but not all) the contents of the buffer before hand,</span>
-    <span class="doccomment">/// they would not be able to predict any of the bits in the buffer at the end.</span>
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;folded_multiply&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new_data</span>: <span class="ident">u64</span>) {
-        <span class="self">self</span>.<span class="ident">buffer</span> <span class="op">=</span> <span class="ident">folded_multiply</span>(<span class="ident">new_data</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">buffer</span>, <span class="ident">MULTIPLE</span>);
+    <span class="doccomment">/// This update function has the goal of updating the buffer with a single multiply
+    /// FxHash does this but is vulnerable to attack. To avoid this input needs to be masked to with an
+    /// unpredictable value. Other hashes such as murmurhash have taken this approach but were found vulnerable
+    /// to attack. The attack was based on the idea of reversing the pre-mixing (Which is necessarily
+    /// reversible otherwise bits would be lost) then placing a difference in the highest bit before the
+    /// multiply used to mix the data. Because a multiply can never affect the bits to the right of it, a
+    /// subsequent update that also differed in this bit could result in a predictable collision.
+    ///
+    /// This version avoids this vulnerability while still only using a single multiply. It takes advantage
+    /// of the fact that when a 64 bit multiply is performed the upper 64 bits are usually computed and thrown
+    /// away. Instead it creates two 128 bit values where the upper 64 bits are zeros and multiplies them.
+    /// (The compiler is smart enough to turn this into a 64 bit multiplication in the assembly)
+    /// Then the upper bits are xored with the lower bits to produce a single 64 bit result.
+    ///
+    /// To understand why this is a good scrambling function it helps to understand multiply-with-carry PRNGs:
+    /// https://en.wikipedia.org/wiki/Multiply-with-carry_pseudorandom_number_generator
+    /// If the multiple is chosen well, this creates a long period, decent quality PRNG.
+    /// Notice that this function is equivalent to this except the `buffer`/`state` is being xored with each
+    /// new block of data. In the event that data is all zeros, it is exactly equivalent to a MWC PRNG.
+    ///
+    /// This is impervious to attack because every bit buffer at the end is dependent on every bit in
+    /// `new_data ^ buffer`. For example suppose two inputs differed in only the 5th bit. Then when the
+    /// multiplication is performed the `result` will differ in bits 5-69. More specifically it will differ by
+    /// 2^5 * MULTIPLE. However in the next step bits 65-128 are turned into a separate 64 bit value. So the
+    /// differing bits will be in the lower 6 bits of this value. The two intermediate values that differ in
+    /// bits 5-63 and in bits 0-5 respectively get added together. Producing an output that differs in every
+    /// bit. The addition carries in the multiplication and at the end additionally mean that the even if an
+    /// attacker somehow knew part of (but not all) the contents of the buffer before hand,
+    /// they would not be able to predict any of the bits in the buffer at the end.
+    </span><span class="attribute">#[inline(always)]
+    #[cfg(feature = <span class="string">&quot;folded_multiply&quot;</span>)]
+    </span><span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_data: u64) {
+        <span class="self">self</span>.buffer = folded_multiply(new_data ^ <span class="self">self</span>.buffer, MULTIPLE);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;folded_multiply&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new_data</span>: <span class="ident">u64</span>) {
-        <span class="kw">let</span> <span class="ident">d1</span> <span class="op">=</span> (<span class="ident">new_data</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">buffer</span>).<span class="ident">wrapping_mul</span>(<span class="ident">MULTIPLE</span>);
-        <span class="self">self</span>.<span class="ident">pad</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">pad</span> <span class="op">^</span> <span class="ident">d1</span>).<span class="ident">rotate_left</span>(<span class="number">8</span>).<span class="ident">wrapping_mul</span>(<span class="ident">MULTIPLE</span>);
-        <span class="self">self</span>.<span class="ident">buffer</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">buffer</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">pad</span>).<span class="ident">rotate_left</span>(<span class="number">24</span>);
+    <span class="attribute">#[inline(always)]
+    #[cfg(not(feature = <span class="string">&quot;folded_multiply&quot;</span>))]
+    </span><span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_data: u64) {
+        <span class="kw">let </span>d1 = (new_data ^ <span class="self">self</span>.buffer).wrapping_mul(MULTIPLE);
+        <span class="self">self</span>.pad = (<span class="self">self</span>.pad ^ d1).rotate_left(<span class="number">8</span>).wrapping_mul(MULTIPLE);
+        <span class="self">self</span>.buffer = (<span class="self">self</span>.buffer ^ <span class="self">self</span>.pad).rotate_left(<span class="number">24</span>);
     }
 
-    <span class="doccomment">/// Similar to the above this function performs an update using a &quot;folded multiply&quot;.</span>
-    <span class="doccomment">/// However it takes in 128 bits of data instead of 64. Both halves must be masked.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This makes it impossible for an attacker to place a single bit difference between</span>
-    <span class="doccomment">/// two blocks so as to cancel each other.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// However this is not sufficient. to prevent (a,b) from hashing the same as (b,a) the buffer itself must</span>
-    <span class="doccomment">/// be updated between calls in a way that does not commute. To achieve this XOR and Rotate are used.</span>
-    <span class="doccomment">/// Add followed by xor is not the same as xor followed by add, and rotate ensures that the same out bits</span>
-    <span class="doccomment">/// can&#39;t be changed by the same set of input bits. To cancel this sequence with subsequent input would require</span>
-    <span class="doccomment">/// knowing the keys.</span>
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;folded_multiply&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">large_update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new_data</span>: <span class="ident">u128</span>) {
-        <span class="kw">let</span> <span class="ident">block</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">new_data</span>.<span class="ident">convert</span>();
-        <span class="kw">let</span> <span class="ident">combined</span> <span class="op">=</span> <span class="ident">folded_multiply</span>(<span class="ident">block</span>[<span class="number">0</span>] <span class="op">^</span> <span class="self">self</span>.<span class="ident">extra_keys</span>[<span class="number">0</span>], <span class="ident">block</span>[<span class="number">1</span>] <span class="op">^</span> <span class="self">self</span>.<span class="ident">extra_keys</span>[<span class="number">1</span>]);
-        <span class="self">self</span>.<span class="ident">buffer</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">wrapping_add</span>(<span class="self">self</span>.<span class="ident">pad</span>) <span class="op">^</span> <span class="ident">combined</span>).<span class="ident">rotate_left</span>(<span class="ident">ROT</span>);
+    <span class="doccomment">/// Similar to the above this function performs an update using a &quot;folded multiply&quot;.
+    /// However it takes in 128 bits of data instead of 64. Both halves must be masked.
+    ///
+    /// This makes it impossible for an attacker to place a single bit difference between
+    /// two blocks so as to cancel each other.
+    ///
+    /// However this is not sufficient. to prevent (a,b) from hashing the same as (b,a) the buffer itself must
+    /// be updated between calls in a way that does not commute. To achieve this XOR and Rotate are used.
+    /// Add followed by xor is not the same as xor followed by add, and rotate ensures that the same out bits
+    /// can&#39;t be changed by the same set of input bits. To cancel this sequence with subsequent input would require
+    /// knowing the keys.
+    </span><span class="attribute">#[inline(always)]
+    #[cfg(feature = <span class="string">&quot;folded_multiply&quot;</span>)]
+    </span><span class="kw">fn </span>large_update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_data: u128) {
+        <span class="kw">let </span>block: [u64; <span class="number">2</span>] = new_data.convert();
+        <span class="kw">let </span>combined = folded_multiply(block[<span class="number">0</span>] ^ <span class="self">self</span>.extra_keys[<span class="number">0</span>], block[<span class="number">1</span>] ^ <span class="self">self</span>.extra_keys[<span class="number">1</span>]);
+        <span class="self">self</span>.buffer = (<span class="self">self</span>.buffer.wrapping_add(<span class="self">self</span>.pad) ^ combined).rotate_left(ROT);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;folded_multiply&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">large_update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new_data</span>: <span class="ident">u128</span>) {
-        <span class="kw">let</span> <span class="ident">block</span>: [<span class="ident">u64</span>; <span class="number">2</span>] <span class="op">=</span> <span class="ident">new_data</span>.<span class="ident">convert</span>();
-        <span class="self">self</span>.<span class="ident">update</span>(<span class="ident">block</span>[<span class="number">0</span>] <span class="op">^</span> <span class="self">self</span>.<span class="ident">extra_keys</span>[<span class="number">0</span>]);
-        <span class="self">self</span>.<span class="ident">update</span>(<span class="ident">block</span>[<span class="number">1</span>] <span class="op">^</span> <span class="self">self</span>.<span class="ident">extra_keys</span>[<span class="number">1</span>]);
+    <span class="attribute">#[inline(always)]
+    #[cfg(not(feature = <span class="string">&quot;folded_multiply&quot;</span>))]
+    </span><span class="kw">fn </span>large_update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_data: u128) {
+        <span class="kw">let </span>block: [u64; <span class="number">2</span>] = new_data.convert();
+        <span class="self">self</span>.update(block[<span class="number">0</span>] ^ <span class="self">self</span>.extra_keys[<span class="number">0</span>]);
+        <span class="self">self</span>.update(block[<span class="number">1</span>] ^ <span class="self">self</span>.extra_keys[<span class="number">1</span>]);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">short_finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">wrapping_add</span>(<span class="self">self</span>.<span class="ident">pad</span>)
+    <span class="attribute">#[inline]
+    #[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+    </span><span class="kw">fn </span>short_finish(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.buffer.wrapping_add(<span class="self">self</span>.pad)
     }
 }
 
-<span class="doccomment">/// Provides [Hasher] methods to hash all of the primitive types.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [Hasher]: core::hash::Hasher</span>
-<span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">AHasher</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) {
-        <span class="self">self</span>.<span class="ident">update</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+<span class="doccomment">/// Provides [Hasher] methods to hash all of the primitive types.
+///
+/// [Hasher]: core::hash::Hasher
+</span><span class="kw">impl </span>Hasher <span class="kw">for </span>AHasher {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u8) {
+        <span class="self">self</span>.update(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u16</span>) {
-        <span class="self">self</span>.<span class="ident">update</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u16(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u16) {
+        <span class="self">self</span>.update(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">update</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u32(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u32) {
+        <span class="self">self</span>.update(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
-        <span class="self">self</span>.<span class="ident">update</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u64(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u64) {
+        <span class="self">self</span>.update(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u128</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u128</span>) {
-        <span class="self">self</span>.<span class="ident">large_update</span>(<span class="ident">i</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u128(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u128) {
+        <span class="self">self</span>.large_update(i);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;64&quot;</span>, <span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;32&quot;</span>, <span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;16&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
-        <span class="self">self</span>.<span class="ident">write_u64</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    #[cfg(any(target_pointer_width = <span class="string">&quot;64&quot;</span>, target_pointer_width = <span class="string">&quot;32&quot;</span>, target_pointer_width = <span class="string">&quot;16&quot;</span>))]
+    </span><span class="kw">fn </span>write_usize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: usize) {
+        <span class="self">self</span>.write_u64(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;128&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
-        <span class="self">self</span>.<span class="ident">write_u128</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u128</span>);
+    <span class="attribute">#[inline]
+    #[cfg(target_pointer_width = <span class="string">&quot;128&quot;</span>)]
+    </span><span class="kw">fn </span>write_usize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: usize) {
+        <span class="self">self</span>.write_u128(i <span class="kw">as </span>u128);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::collapsible_if</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">input</span>;
-        <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="comment">//Needs to be an add rather than an xor because otherwise it could be canceled with carefully formed input.</span>
-        <span class="self">self</span>.<span class="ident">buffer</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">wrapping_add</span>(<span class="ident">length</span>).<span class="ident">wrapping_mul</span>(<span class="ident">MULTIPLE</span>);
-        <span class="comment">//A &#39;binary search&#39; on sizes reduces the number of comparisons.</span>
-        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">8</span> {
-            <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">16</span> {
-                <span class="kw">let</span> <span class="ident">tail</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">read_last_u128</span>();
-                <span class="self">self</span>.<span class="ident">large_update</span>(<span class="ident">tail</span>);
-                <span class="kw">while</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">16</span> {
-                    <span class="kw">let</span> (<span class="ident">block</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">data</span>.<span class="ident">read_u128</span>();
-                    <span class="self">self</span>.<span class="ident">large_update</span>(<span class="ident">block</span>);
-                    <span class="ident">data</span> <span class="op">=</span> <span class="ident">rest</span>;
+    <span class="attribute">#[inline]
+    #[allow(clippy::collapsible_if)]
+    </span><span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="kw">let </span><span class="kw-2">mut </span>data = input;
+        <span class="kw">let </span>length = data.len() <span class="kw">as </span>u64;
+        <span class="comment">//Needs to be an add rather than an xor because otherwise it could be canceled with carefully formed input.
+        </span><span class="self">self</span>.buffer = <span class="self">self</span>.buffer.wrapping_add(length).wrapping_mul(MULTIPLE);
+        <span class="comment">//A &#39;binary search&#39; on sizes reduces the number of comparisons.
+        </span><span class="kw">if </span>data.len() &gt; <span class="number">8 </span>{
+            <span class="kw">if </span>data.len() &gt; <span class="number">16 </span>{
+                <span class="kw">let </span>tail = data.read_last_u128();
+                <span class="self">self</span>.large_update(tail);
+                <span class="kw">while </span>data.len() &gt; <span class="number">16 </span>{
+                    <span class="kw">let </span>(block, rest) = data.read_u128();
+                    <span class="self">self</span>.large_update(block);
+                    data = rest;
                 }
-            } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">large_update</span>([<span class="ident">data</span>.<span class="ident">read_u64</span>().<span class="number">0</span>, <span class="ident">data</span>.<span class="ident">read_last_u64</span>()].<span class="ident">convert</span>());
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.large_update([data.read_u64().<span class="number">0</span>, data.read_last_u64()].convert());
             }
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">read_small</span>(<span class="ident">data</span>);
-            <span class="self">self</span>.<span class="ident">large_update</span>(<span class="ident">value</span>.<span class="ident">convert</span>());
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>value = read_small(data);
+            <span class="self">self</span>.large_update(value.convert());
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;folded_multiply&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">rot</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">buffer</span> <span class="op">&amp;</span> <span class="number">63</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="ident">folded_multiply</span>(<span class="self">self</span>.<span class="ident">buffer</span>, <span class="self">self</span>.<span class="ident">pad</span>).<span class="ident">rotate_left</span>(<span class="ident">rot</span>)
+    <span class="attribute">#[inline]
+    #[cfg(feature = <span class="string">&quot;folded_multiply&quot;</span>)]
+    </span><span class="kw">fn </span>finish(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="kw">let </span>rot = (<span class="self">self</span>.buffer &amp; <span class="number">63</span>) <span class="kw">as </span>u32;
+        folded_multiply(<span class="self">self</span>.buffer, <span class="self">self</span>.pad).rotate_left(rot)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;folded_multiply&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">rot</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">buffer</span> <span class="op">&amp;</span> <span class="number">63</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        (<span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">wrapping_mul</span>(<span class="ident">MULTIPLE</span>) <span class="op">^</span> <span class="self">self</span>.<span class="ident">pad</span>).<span class="ident">rotate_left</span>(<span class="ident">rot</span>)
+    <span class="attribute">#[inline]
+    #[cfg(not(feature = <span class="string">&quot;folded_multiply&quot;</span>))]
+    </span><span class="kw">fn </span>finish(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="kw">let </span>rot = (<span class="self">self</span>.buffer &amp; <span class="number">63</span>) <span class="kw">as </span>u32;
+        (<span class="self">self</span>.buffer.wrapping_mul(MULTIPLE) ^ <span class="self">self</span>.pad).rotate_left(rot)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">AHasherU64</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">buffer</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">pad</span>: <span class="ident">u64</span>,
+<span class="attribute">#[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AHasherU64 {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) buffer: u64,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pad: u64,
 }
 
-<span class="doccomment">/// A specialized hasher for only primitives under 64 bits.</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">AHasherU64</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">rot</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">pad</span> <span class="op">&amp;</span> <span class="number">63</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">rotate_left</span>(<span class="ident">rot</span>)
+<span class="doccomment">/// A specialized hasher for only primitives under 64 bits.
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+</span><span class="kw">impl </span>Hasher <span class="kw">for </span>AHasherU64 {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>finish(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="kw">let </span>rot = (<span class="self">self</span>.pad &amp; <span class="number">63</span>) <span class="kw">as </span>u32;
+        <span class="self">self</span>.buffer.rotate_left(rot)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _bytes: <span class="kw-2">&amp;</span>[u8]) {
         <span class="macro">unreachable!</span>(<span class="string">&quot;Specialized hasher was called with a different type of object&quot;</span>)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) {
-        <span class="self">self</span>.<span class="ident">write_u64</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u8) {
+        <span class="self">self</span>.write_u64(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u16</span>) {
-        <span class="self">self</span>.<span class="ident">write_u64</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u16(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u16) {
+        <span class="self">self</span>.write_u64(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">write_u64</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u32(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u32) {
+        <span class="self">self</span>.write_u64(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
-        <span class="self">self</span>.<span class="ident">buffer</span> <span class="op">=</span> <span class="ident">folded_multiply</span>(<span class="ident">i</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">buffer</span>, <span class="ident">MULTIPLE</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u64(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u64) {
+        <span class="self">self</span>.buffer = folded_multiply(i ^ <span class="self">self</span>.buffer, MULTIPLE);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u128</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_i</span>: <span class="ident">u128</span>) {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u128(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _i: u128) {
         <span class="macro">unreachable!</span>(<span class="string">&quot;Specialized hasher was called with a different type of object&quot;</span>)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_i</span>: <span class="ident">usize</span>) {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_usize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _i: usize) {
         <span class="macro">unreachable!</span>(<span class="string">&quot;Specialized hasher was called with a different type of object&quot;</span>)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">AHasherFixed</span>(<span class="kw">pub</span> <span class="ident">AHasher</span>);
+<span class="attribute">#[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AHasherFixed(<span class="kw">pub </span>AHasher);
 
-<span class="doccomment">/// A specialized hasher for fixed size primitives larger than 64 bits.</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">AHasherFixed</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">short_finish</span>()
+<span class="doccomment">/// A specialized hasher for fixed size primitives larger than 64 bits.
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+</span><span class="kw">impl </span>Hasher <span class="kw">for </span>AHasherFixed {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>finish(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.<span class="number">0</span>.short_finish()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>(<span class="ident">bytes</span>)
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bytes: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="self">self</span>.<span class="number">0</span>.write(bytes)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) {
-        <span class="self">self</span>.<span class="ident">write_u64</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u8) {
+        <span class="self">self</span>.write_u64(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u16</span>) {
-        <span class="self">self</span>.<span class="ident">write_u64</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u16(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u16) {
+        <span class="self">self</span>.write_u64(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">write_u64</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u32(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u32) {
+        <span class="self">self</span>.write_u64(i <span class="kw">as </span>u64);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write_u64</span>(<span class="ident">i</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u64(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u64) {
+        <span class="self">self</span>.<span class="number">0</span>.write_u64(i);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u128</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u128</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write_u128</span>(<span class="ident">i</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u128(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: u128) {
+        <span class="self">self</span>.<span class="number">0</span>.write_u128(i);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write_usize</span>(<span class="ident">i</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_usize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: usize) {
+        <span class="self">self</span>.<span class="number">0</span>.write_usize(i);
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">AHasherStr</span>(<span class="kw">pub</span> <span class="ident">AHasher</span>);
+<span class="attribute">#[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AHasherStr(<span class="kw">pub </span>AHasher);
 
-<span class="doccomment">/// A specialized hasher for a single string</span>
-<span class="doccomment">/// Note that the other types don&#39;t panic because the hash impl for String tacks on an unneeded call. (As does vec)</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">AHasherStr</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">finish</span>()
+<span class="doccomment">/// A specialized hasher for a single string
+/// Note that the other types don&#39;t panic because the hash impl for String tacks on an unneeded call. (As does vec)
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+</span><span class="kw">impl </span>Hasher <span class="kw">for </span>AHasherStr {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>finish(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.<span class="number">0</span>.finish()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-        <span class="kw">if</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">8</span> {
-            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>(<span class="ident">bytes</span>)
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">read_small</span>(<span class="ident">bytes</span>);
-            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">buffer</span> <span class="op">=</span> <span class="ident">folded_multiply</span>(<span class="ident">value</span>[<span class="number">0</span>] <span class="op">^</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">buffer</span>,
-                                           <span class="ident">value</span>[<span class="number">1</span>] <span class="op">^</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">extra_keys</span>[<span class="number">1</span>]);
-            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">pad</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">pad</span>.<span class="ident">wrapping_add</span>(<span class="ident">bytes</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bytes: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="kw">if </span>bytes.len() &gt; <span class="number">8 </span>{
+            <span class="self">self</span>.<span class="number">0</span>.write(bytes)
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>value = read_small(bytes);
+            <span class="self">self</span>.<span class="number">0</span>.buffer = folded_multiply(value[<span class="number">0</span>] ^ <span class="self">self</span>.<span class="number">0</span>.buffer,
+                                           value[<span class="number">1</span>] ^ <span class="self">self</span>.<span class="number">0</span>.extra_keys[<span class="number">1</span>]);
+            <span class="self">self</span>.<span class="number">0</span>.pad = <span class="self">self</span>.<span class="number">0</span>.pad.wrapping_add(bytes.len() <span class="kw">as </span>u64);
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_i</span>: <span class="ident">u8</span>) {}
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _i: u8) {}
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_i</span>: <span class="ident">u16</span>) {}
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u16(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _i: u16) {}
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_i</span>: <span class="ident">u32</span>) {}
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u32(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _i: u32) {}
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_i</span>: <span class="ident">u64</span>) {}
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u64(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _i: u64) {}
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u128</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_i</span>: <span class="ident">u128</span>) {}
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_u128(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _i: u128) {}
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_i</span>: <span class="ident">usize</span>) {}
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>write_usize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _i: usize) {}
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::convert::Convert</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fallback_hash</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">crate</span>::convert::Convert;
+    <span class="kw">use </span><span class="kw">crate</span>::fallback_hash::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_hash</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasher::new_with_keys</span>(<span class="number">0</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>;
-        <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">value</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">buffer</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasher::new_with_keys</span>(<span class="number">0</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">value2</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">value2</span>);
-        <span class="kw">let</span> <span class="ident">result2</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">buffer</span>;
-        <span class="kw">let</span> <span class="ident">result</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">result</span>.<span class="ident">convert</span>();
-        <span class="kw">let</span> <span class="ident">result2</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">result2</span>.<span class="ident">convert</span>();
-        <span class="macro">assert_ne!</span>(<span class="ident">hex::encode</span>(<span class="ident">result</span>), <span class="ident">hex::encode</span>(<span class="ident">result2</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_hash() {
+        <span class="kw">let </span><span class="kw-2">mut </span>hasher = AHasher::new_with_keys(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="kw">let </span>value: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">32</span>;
+        hasher.update(value);
+        <span class="kw">let </span>result = hasher.buffer;
+        <span class="kw">let </span><span class="kw-2">mut </span>hasher = AHasher::new_with_keys(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="kw">let </span>value2: u64 = <span class="number">1</span>;
+        hasher.update(value2);
+        <span class="kw">let </span>result2 = hasher.buffer;
+        <span class="kw">let </span>result: [u8; <span class="number">8</span>] = result.convert();
+        <span class="kw">let </span>result2: [u8; <span class="number">8</span>] = result2.convert();
+        <span class="macro">assert_ne!</span>(hex::encode(result), hex::encode(result2));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_conversion</span>() {
-        <span class="kw">let</span> <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">&quot;dddddddd&quot;</span>.<span class="ident">as_bytes</span>();
-        <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="macro">as_array!</span>(<span class="ident">input</span>, <span class="number">8</span>).<span class="ident">convert</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>, <span class="number">0x6464646464646464</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_conversion() {
+        <span class="kw">let </span>input: <span class="kw-2">&amp;</span>[u8] = <span class="string">&quot;dddddddd&quot;</span>.as_bytes();
+        <span class="kw">let </span>bytes: u64 = <span class="macro">as_array!</span>(input, <span class="number">8</span>).convert();
+        <span class="macro">assert_eq!</span>(bytes, <span class="number">0x6464646464646464</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ahash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ahash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

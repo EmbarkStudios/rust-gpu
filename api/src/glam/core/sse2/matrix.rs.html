@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.20.2/src/core/sse2/matrix.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>matrix.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.20.2/src/core/sse2/matrix.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>matrix.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -555,557 +549,556 @@
 <span id="549">549</span>
 <span id="550">550</span>
 <span id="551">551</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+</span><span class="kw">use </span>core::arch::x86::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident">core::mem::MaybeUninit</span>;
+<span class="kw">use </span>core::mem::MaybeUninit;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core</span>::{
-    <span class="ident">storage</span>::{<span class="ident">Align16</span>, <span class="ident">Columns2</span>, <span class="ident">Columns3</span>, <span class="ident">Columns4</span>, <span class="ident">XY</span>, <span class="ident">XYZ</span>},
-    <span class="ident">traits</span>::{
-        <span class="ident">matrix</span>::{
-            <span class="ident">FloatMatrix2x2</span>, <span class="ident">FloatMatrix3x3</span>, <span class="ident">FloatMatrix4x4</span>, <span class="ident">Matrix</span>, <span class="ident">Matrix2x2</span>, <span class="ident">Matrix3x3</span>,
-            <span class="ident">Matrix4x4</span>, <span class="ident">MatrixConst</span>,
+<span class="kw">use </span><span class="kw">crate</span>::core::{
+    storage::{Align16, Columns2, Columns3, Columns4, XY, XYZ},
+    traits::{
+        matrix::{
+            FloatMatrix2x2, FloatMatrix3x3, FloatMatrix4x4, Matrix, Matrix2x2, Matrix3x3,
+            Matrix4x4, MatrixConst,
         },
-        <span class="ident">projection::ProjectionMatrix</span>,
-        <span class="ident">scalar::NanConstEx</span>,
-        <span class="ident">vector</span>::{<span class="ident">FloatVector4</span>, <span class="ident">Vector</span>, <span class="ident">Vector4</span>, <span class="ident">Vector4Const</span>},
+        projection::ProjectionMatrix,
+        scalar::NanConstEx,
+        vector::{FloatVector4, Vector, Vector4, Vector4Const},
     },
 };
 
-<span class="comment">// __m128 as a Matrix2x2</span>
-<span class="kw">impl</span> <span class="ident">MatrixConst</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="kw">const</span> <span class="ident">ZERO</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
-    <span class="kw">const</span> <span class="ident">IDENTITY</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]);
+<span class="comment">// __m128 as a Matrix2x2
+</span><span class="kw">impl </span>MatrixConst <span class="kw">for </span>__m128 {
+    <span class="kw">const </span>ZERO: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
+    <span class="kw">const </span>IDENTITY: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]);
 }
 
-<span class="kw">impl</span> <span class="ident">Matrix</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {}
+<span class="kw">impl </span>Matrix&lt;f32&gt; <span class="kw">for </span>__m128 {}
 
-<span class="kw">impl</span> <span class="ident">Matrix2x2</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">m00</span>: <span class="ident">f32</span>, <span class="ident">m01</span>: <span class="ident">f32</span>, <span class="ident">m10</span>: <span class="ident">f32</span>, <span class="ident">m11</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">m11</span>, <span class="ident">m10</span>, <span class="ident">m01</span>, <span class="ident">m00</span>) }
+<span class="kw">impl </span>Matrix2x2&lt;f32, XY&lt;f32&gt;&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>new(m00: f32, m01: f32, m10: f32, m11: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_set_ps(m11, m10, m01, m00) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_cols</span>(<span class="ident">x_axis</span>: <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>, <span class="ident">y_axis</span>: <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Matrix2x2::new</span>(<span class="ident">x_axis</span>.<span class="ident">x</span>, <span class="ident">x_axis</span>.<span class="ident">y</span>, <span class="ident">y_axis</span>.<span class="ident">x</span>, <span class="ident">y_axis</span>.<span class="ident">y</span>)
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_cols(x_axis: XY&lt;f32&gt;, y_axis: XY&lt;f32&gt;) -&gt; <span class="self">Self </span>{
+        Matrix2x2::new(x_axis.x, x_axis.y, y_axis.x, y_axis.y)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">x_axis</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="self">Self</span>).<span class="ident">cast</span>::<span class="op">&lt;</span><span class="ident">Columns2</span><span class="op">&lt;</span><span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()).<span class="ident">x_axis</span> }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>x_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>XY&lt;f32&gt; {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="self">Self</span>).cast::&lt;Columns2&lt;XY&lt;f32&gt;&gt;&gt;()).x_axis }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">y_axis</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="self">Self</span>).<span class="ident">cast</span>::<span class="op">&lt;</span><span class="ident">Columns2</span><span class="op">&lt;</span><span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()).<span class="ident">y_axis</span> }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>y_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>XY&lt;f32&gt; {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>(<span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="self">Self</span>).cast::&lt;Columns2&lt;XY&lt;f32&gt;&gt;&gt;()).y_axis }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">determinant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="comment">// self.x_axis.x * self.y_axis.y - self.x_axis.y * self.y_axis.x</span>
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">abcd</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">dcba</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">abcd</span>, <span class="ident">abcd</span>, <span class="number">0b00_01_10_11</span>);
-            <span class="kw">let</span> <span class="ident">prod</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">abcd</span>, <span class="ident">dcba</span>);
-            <span class="kw">let</span> <span class="ident">det</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">prod</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">prod</span>, <span class="ident">prod</span>, <span class="number">0b01_01_01_01</span>));
-            <span class="ident">_mm_cvtss_f32</span>(<span class="ident">det</span>)
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>determinant(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
+        <span class="comment">// self.x_axis.x * self.y_axis.y - self.x_axis.y * self.y_axis.x
+        </span><span class="kw">unsafe </span>{
+            <span class="kw">let </span>abcd = <span class="kw-2">*</span><span class="self">self</span>;
+            <span class="kw">let </span>dcba = _mm_shuffle_ps(abcd, abcd, <span class="number">0b00_01_10_11</span>);
+            <span class="kw">let </span>prod = _mm_mul_ps(abcd, dcba);
+            <span class="kw">let </span>det = _mm_sub_ps(prod, _mm_shuffle_ps(prod, prod, <span class="number">0b01_01_01_01</span>));
+            _mm_cvtss_f32(det)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">transpose</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_shuffle_ps</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span><span class="self">self</span>, <span class="number">0b11_01_10_00</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>transpose(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_shuffle_ps(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span><span class="self">self</span>, <span class="number">0b11_01_10_00</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_vector</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">abcd</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">xxyy</span> <span class="op">=</span> <span class="ident">_mm_set_ps</span>(<span class="ident">other</span>.<span class="ident">y</span>, <span class="ident">other</span>.<span class="ident">y</span>, <span class="ident">other</span>.<span class="ident">x</span>, <span class="ident">other</span>.<span class="ident">x</span>);
-            <span class="kw">let</span> <span class="ident">axbxcydy</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">abcd</span>, <span class="ident">xxyy</span>);
-            <span class="kw">let</span> <span class="ident">cydyaxbx</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">axbxcydy</span>, <span class="ident">axbxcydy</span>, <span class="number">0b01_00_11_10</span>);
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">axbxcydy</span>, <span class="ident">cydyaxbx</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span><span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="ident">result</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_vector(<span class="kw-2">&amp;</span><span class="self">self</span>, other: XY&lt;f32&gt;) -&gt; XY&lt;f32&gt; {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>abcd = <span class="kw-2">*</span><span class="self">self</span>;
+            <span class="kw">let </span>xxyy = _mm_set_ps(other.y, other.y, other.x, other.x);
+            <span class="kw">let </span>axbxcydy = _mm_mul_ps(abcd, xxyy);
+            <span class="kw">let </span>cydyaxbx = _mm_shuffle_ps(axbxcydy, axbxcydy, <span class="number">0b01_00_11_10</span>);
+            <span class="kw">let </span>result = _mm_add_ps(axbxcydy, cydyaxbx);
+            <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;XY&lt;f32&gt;&gt;&gt; = MaybeUninit::uninit();
+            _mm_store_ps(out.as_mut_ptr().cast(), result);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_matrix(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>abcd = <span class="kw-2">*</span><span class="self">self</span>;
+            <span class="kw">let </span>other = <span class="kw-2">*</span>other;
+            <span class="kw">let </span>xxyy0 = _mm_shuffle_ps(other, other, <span class="number">0b01_01_00_00</span>);
+            <span class="kw">let </span>xxyy1 = _mm_shuffle_ps(other, other, <span class="number">0b11_11_10_10</span>);
+            <span class="kw">let </span>axbxcydy0 = _mm_mul_ps(abcd, xxyy0);
+            <span class="kw">let </span>axbxcydy1 = _mm_mul_ps(abcd, xxyy1);
+            <span class="kw">let </span>cydyaxbx0 = _mm_shuffle_ps(axbxcydy0, axbxcydy0, <span class="number">0b01_00_11_10</span>);
+            <span class="kw">let </span>cydyaxbx1 = _mm_shuffle_ps(axbxcydy1, axbxcydy1, <span class="number">0b01_00_11_10</span>);
+            <span class="kw">let </span>result0 = _mm_add_ps(axbxcydy0, cydyaxbx0);
+            <span class="kw">let </span>result1 = _mm_add_ps(axbxcydy1, cydyaxbx1);
+            _mm_shuffle_ps(result0, result1, <span class="number">0b01_00_01_00</span>)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_matrix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">abcd</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">other</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">other</span>;
-            <span class="kw">let</span> <span class="ident">xxyy0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">other</span>, <span class="ident">other</span>, <span class="number">0b01_01_00_00</span>);
-            <span class="kw">let</span> <span class="ident">xxyy1</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">other</span>, <span class="ident">other</span>, <span class="number">0b11_11_10_10</span>);
-            <span class="kw">let</span> <span class="ident">axbxcydy0</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">abcd</span>, <span class="ident">xxyy0</span>);
-            <span class="kw">let</span> <span class="ident">axbxcydy1</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">abcd</span>, <span class="ident">xxyy1</span>);
-            <span class="kw">let</span> <span class="ident">cydyaxbx0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">axbxcydy0</span>, <span class="ident">axbxcydy0</span>, <span class="number">0b01_00_11_10</span>);
-            <span class="kw">let</span> <span class="ident">cydyaxbx1</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">axbxcydy1</span>, <span class="ident">axbxcydy1</span>, <span class="number">0b01_00_11_10</span>);
-            <span class="kw">let</span> <span class="ident">result0</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">axbxcydy0</span>, <span class="ident">cydyaxbx0</span>);
-            <span class="kw">let</span> <span class="ident">result1</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">axbxcydy1</span>, <span class="ident">cydyaxbx1</span>);
-            <span class="ident">_mm_shuffle_ps</span>(<span class="ident">result0</span>, <span class="ident">result1</span>, <span class="number">0b01_00_01_00</span>)
-        }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>mul_scalar(<span class="kw-2">&amp;</span><span class="self">self</span>, other: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_mul_ps(<span class="kw-2">*</span><span class="self">self</span>, _mm_set_ps1(other)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_scalar</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_mul_ps</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="ident">_mm_set_ps1</span>(<span class="ident">other</span>)) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>add_matrix(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_add_ps(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span>other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add_matrix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_add_ps</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span><span class="ident">other</span>) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub_matrix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_sub_ps</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span><span class="ident">other</span>) }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">FloatMatrix2x2</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">abs_diff_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>, <span class="ident">max_abs_diff</span>: <span class="ident">f32</span>) -&gt; <span class="ident">bool</span> {
-        <span class="ident">FloatVector4::abs_diff_eq</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span><span class="ident">other</span>, <span class="ident">max_abs_diff</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">inverse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">const</span> <span class="ident">SIGN</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>]);
-            <span class="kw">let</span> <span class="ident">abcd</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">dcba</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">abcd</span>, <span class="ident">abcd</span>, <span class="number">0b00_01_10_11</span>);
-            <span class="kw">let</span> <span class="ident">prod</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">abcd</span>, <span class="ident">dcba</span>);
-            <span class="kw">let</span> <span class="ident">sub</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">prod</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">prod</span>, <span class="ident">prod</span>, <span class="number">0b01_01_01_01</span>));
-            <span class="kw">let</span> <span class="ident">det</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">sub</span>, <span class="ident">sub</span>, <span class="number">0b00_00_00_00</span>);
-            <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">_mm_div_ps</span>(<span class="ident">SIGN</span>, <span class="ident">det</span>);
-            <span class="macro">glam_assert!</span>(<span class="ident">tmp</span>.<span class="ident">is_finite</span>());
-            <span class="kw">let</span> <span class="ident">dbca</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">abcd</span>, <span class="ident">abcd</span>, <span class="number">0b00_10_01_11</span>);
-            <span class="ident">_mm_mul_ps</span>(<span class="ident">dbca</span>, <span class="ident">tmp</span>)
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">neg_matrix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_xor_ps</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="ident">_mm_set1_ps</span>(<span class="op">-</span><span class="number">0.0</span>)) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>sub_matrix(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_sub_ps(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span>other) }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">MatrixConst</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-    <span class="kw">const</span> <span class="ident">ZERO</span>: <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Columns3</span> {
-        <span class="ident">x_axis</span>: <span class="ident">__m128::ZERO</span>,
-        <span class="ident">y_axis</span>: <span class="ident">__m128::ZERO</span>,
-        <span class="ident">z_axis</span>: <span class="ident">__m128::ZERO</span>,
+<span class="kw">impl </span>FloatMatrix2x2&lt;f32, XY&lt;f32&gt;&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>abs_diff_eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>, max_abs_diff: f32) -&gt; bool {
+        FloatVector4::abs_diff_eq(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span>other, max_abs_diff)
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>inverse(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">const </span>SIGN: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, -<span class="number">1.0</span>, -<span class="number">1.0</span>, <span class="number">1.0</span>]);
+            <span class="kw">let </span>abcd = <span class="kw-2">*</span><span class="self">self</span>;
+            <span class="kw">let </span>dcba = _mm_shuffle_ps(abcd, abcd, <span class="number">0b00_01_10_11</span>);
+            <span class="kw">let </span>prod = _mm_mul_ps(abcd, dcba);
+            <span class="kw">let </span>sub = _mm_sub_ps(prod, _mm_shuffle_ps(prod, prod, <span class="number">0b01_01_01_01</span>));
+            <span class="kw">let </span>det = _mm_shuffle_ps(sub, sub, <span class="number">0b00_00_00_00</span>);
+            <span class="kw">let </span>tmp = _mm_div_ps(SIGN, det);
+            <span class="macro">glam_assert!</span>(tmp.is_finite());
+            <span class="kw">let </span>dbca = _mm_shuffle_ps(abcd, abcd, <span class="number">0b00_10_01_11</span>);
+            _mm_mul_ps(dbca, tmp)
+        }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>neg_matrix(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_xor_ps(<span class="kw-2">*</span><span class="self">self</span>, _mm_set1_ps(-<span class="number">0.0</span>)) }
+    }
+}
+
+<span class="kw">impl </span>MatrixConst <span class="kw">for </span>Columns3&lt;__m128&gt; {
+    <span class="kw">const </span>ZERO: Columns3&lt;__m128&gt; = Columns3 {
+        x_axis: __m128::ZERO,
+        y_axis: __m128::ZERO,
+        z_axis: __m128::ZERO,
     };
-    <span class="kw">const</span> <span class="ident">IDENTITY</span>: <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Columns3</span> {
-        <span class="ident">x_axis</span>: <span class="ident">__m128::X</span>,
-        <span class="ident">y_axis</span>: <span class="ident">__m128::Y</span>,
-        <span class="ident">z_axis</span>: <span class="ident">__m128::Z</span>,
-    };
-}
-
-<span class="kw">impl</span> <span class="ident">NanConstEx</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-    <span class="kw">const</span> <span class="ident">NAN</span>: <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Columns3</span> {
-        <span class="ident">x_axis</span>: <span class="ident">__m128::NAN</span>,
-        <span class="ident">y_axis</span>: <span class="ident">__m128::NAN</span>,
-        <span class="ident">z_axis</span>: <span class="ident">__m128::NAN</span>,
+    <span class="kw">const </span>IDENTITY: Columns3&lt;__m128&gt; = Columns3 {
+        x_axis: __m128::X,
+        y_axis: __m128::Y,
+        z_axis: __m128::Z,
     };
 }
 
-<span class="kw">impl</span> <span class="ident">Matrix</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {}
+<span class="kw">impl </span>NanConstEx <span class="kw">for </span>Columns3&lt;__m128&gt; {
+    <span class="kw">const </span>NAN: Columns3&lt;__m128&gt; = Columns3 {
+        x_axis: __m128::NAN,
+        y_axis: __m128::NAN,
+        z_axis: __m128::NAN,
+    };
+}
 
-<span class="kw">impl</span> <span class="ident">Matrix3x3</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">__m128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_cols</span>(<span class="ident">x_axis</span>: <span class="ident">__m128</span>, <span class="ident">y_axis</span>: <span class="ident">__m128</span>, <span class="ident">z_axis</span>: <span class="ident">__m128</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">x_axis</span>,
-            <span class="ident">y_axis</span>,
-            <span class="ident">z_axis</span>,
+<span class="kw">impl </span>Matrix&lt;f32&gt; <span class="kw">for </span>Columns3&lt;__m128&gt; {}
+
+<span class="kw">impl </span>Matrix3x3&lt;f32, __m128&gt; <span class="kw">for </span>Columns3&lt;__m128&gt; {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_cols(x_axis: __m128, y_axis: __m128, z_axis: __m128) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            x_axis,
+            y_axis,
+            z_axis,
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">x_axis</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">__m128</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">x_axis</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>x_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>__m128 {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.x_axis
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">y_axis</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">__m128</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">y_axis</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>y_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>__m128 {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.y_axis
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">z_axis</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">__m128</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">z_axis</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>z_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>__m128 {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.z_axis
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">transpose</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">tmp0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">x_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b01_00_01_00</span>);
-            <span class="kw">let</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">x_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b11_10_11_10</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>transpose(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>tmp0 = _mm_shuffle_ps(<span class="self">self</span>.x_axis, <span class="self">self</span>.y_axis, <span class="number">0b01_00_01_00</span>);
+            <span class="kw">let </span>tmp1 = _mm_shuffle_ps(<span class="self">self</span>.x_axis, <span class="self">self</span>.y_axis, <span class="number">0b11_10_11_10</span>);
 
-            <span class="self">Self</span> {
-                <span class="ident">x_axis</span>: <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp0</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b00_00_10_00</span>),
-                <span class="ident">y_axis</span>: <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp0</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b01_01_11_01</span>),
-                <span class="ident">z_axis</span>: <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp1</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b10_10_10_00</span>),
+            <span class="self">Self </span>{
+                x_axis: _mm_shuffle_ps(tmp0, <span class="self">self</span>.z_axis, <span class="number">0b00_00_10_00</span>),
+                y_axis: _mm_shuffle_ps(tmp0, <span class="self">self</span>.z_axis, <span class="number">0b01_01_11_01</span>),
+                z_axis: _mm_shuffle_ps(tmp1, <span class="self">self</span>.z_axis, <span class="number">0b10_10_10_00</span>),
             }
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">FloatMatrix3x3</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">__m128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">transform_point2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">x</span>);
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">y</span>).<span class="ident">add</span>(<span class="ident">res</span>);
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">add</span>(<span class="ident">res</span>);
-        <span class="ident">res</span>.<span class="ident">into</span>()
+<span class="kw">impl </span>FloatMatrix3x3&lt;f32, __m128&gt; <span class="kw">for </span>Columns3&lt;__m128&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>transform_point2(<span class="kw-2">&amp;</span><span class="self">self</span>, other: XY&lt;f32&gt;) -&gt; XY&lt;f32&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="self">self</span>.x_axis.mul_scalar(other.x);
+        res = <span class="self">self</span>.y_axis.mul_scalar(other.y).add(res);
+        res = <span class="self">self</span>.z_axis.add(res);
+        res.into()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">transform_vector2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">x</span>);
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">y</span>).<span class="ident">add</span>(<span class="ident">res</span>);
-        <span class="ident">res</span>.<span class="ident">into</span>()
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>transform_vector2(<span class="kw-2">&amp;</span><span class="self">self</span>, other: XY&lt;f32&gt;) -&gt; XY&lt;f32&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="self">self</span>.x_axis.mul_scalar(other.x);
+        res = <span class="self">self</span>.y_axis.mul_scalar(other.y).add(res);
+        res.into()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">MatrixConst</span> <span class="kw">for</span> <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-    <span class="kw">const</span> <span class="ident">ZERO</span>: <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Columns4</span> {
-        <span class="ident">x_axis</span>: <span class="ident">__m128::ZERO</span>,
-        <span class="ident">y_axis</span>: <span class="ident">__m128::ZERO</span>,
-        <span class="ident">z_axis</span>: <span class="ident">__m128::ZERO</span>,
-        <span class="ident">w_axis</span>: <span class="ident">__m128::ZERO</span>,
+<span class="kw">impl </span>MatrixConst <span class="kw">for </span>Columns4&lt;__m128&gt; {
+    <span class="kw">const </span>ZERO: Columns4&lt;__m128&gt; = Columns4 {
+        x_axis: __m128::ZERO,
+        y_axis: __m128::ZERO,
+        z_axis: __m128::ZERO,
+        w_axis: __m128::ZERO,
     };
-    <span class="kw">const</span> <span class="ident">IDENTITY</span>: <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Columns4</span> {
-        <span class="ident">x_axis</span>: <span class="ident">__m128::X</span>,
-        <span class="ident">y_axis</span>: <span class="ident">__m128::Y</span>,
-        <span class="ident">z_axis</span>: <span class="ident">__m128::Z</span>,
-        <span class="ident">w_axis</span>: <span class="ident">__m128::W</span>,
-    };
-}
-
-<span class="kw">impl</span> <span class="ident">NanConstEx</span> <span class="kw">for</span> <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-    <span class="kw">const</span> <span class="ident">NAN</span>: <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Columns4</span> {
-        <span class="ident">x_axis</span>: <span class="ident">__m128::NAN</span>,
-        <span class="ident">y_axis</span>: <span class="ident">__m128::NAN</span>,
-        <span class="ident">z_axis</span>: <span class="ident">__m128::NAN</span>,
-        <span class="ident">w_axis</span>: <span class="ident">__m128::NAN</span>,
+    <span class="kw">const </span>IDENTITY: Columns4&lt;__m128&gt; = Columns4 {
+        x_axis: __m128::X,
+        y_axis: __m128::Y,
+        z_axis: __m128::Z,
+        w_axis: __m128::W,
     };
 }
 
-<span class="kw">impl</span> <span class="ident">Matrix</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {}
+<span class="kw">impl </span>NanConstEx <span class="kw">for </span>Columns4&lt;__m128&gt; {
+    <span class="kw">const </span>NAN: Columns4&lt;__m128&gt; = Columns4 {
+        x_axis: __m128::NAN,
+        y_axis: __m128::NAN,
+        z_axis: __m128::NAN,
+        w_axis: __m128::NAN,
+    };
+}
 
-<span class="kw">impl</span> <span class="ident">Matrix4x4</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">__m128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_cols</span>(<span class="ident">x_axis</span>: <span class="ident">__m128</span>, <span class="ident">y_axis</span>: <span class="ident">__m128</span>, <span class="ident">z_axis</span>: <span class="ident">__m128</span>, <span class="ident">w_axis</span>: <span class="ident">__m128</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">x_axis</span>,
-            <span class="ident">y_axis</span>,
-            <span class="ident">z_axis</span>,
-            <span class="ident">w_axis</span>,
+<span class="kw">impl </span>Matrix&lt;f32&gt; <span class="kw">for </span>Columns4&lt;__m128&gt; {}
+
+<span class="kw">impl </span>Matrix4x4&lt;f32, __m128&gt; <span class="kw">for </span>Columns4&lt;__m128&gt; {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_cols(x_axis: __m128, y_axis: __m128, z_axis: __m128, w_axis: __m128) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            x_axis,
+            y_axis,
+            z_axis,
+            w_axis,
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">x_axis</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">__m128</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">x_axis</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>x_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>__m128 {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.x_axis
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">y_axis</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">__m128</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">y_axis</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>y_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>__m128 {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.y_axis
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">z_axis</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">__m128</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">z_axis</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>z_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>__m128 {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.z_axis
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">w_axis</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">__m128</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">w_axis</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>w_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>__m128 {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.w_axis
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">determinant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> {
-            <span class="comment">// Based on https://github.com/g-truc/glm `glm_mat4_determinant`</span>
-            <span class="kw">let</span> <span class="ident">swp2a</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b00_01_01_10</span>);
-            <span class="kw">let</span> <span class="ident">swp3a</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">w_axis</span>, <span class="number">0b11_10_11_11</span>);
-            <span class="kw">let</span> <span class="ident">swp2b</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b11_10_11_11</span>);
-            <span class="kw">let</span> <span class="ident">swp3b</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">w_axis</span>, <span class="number">0b00_10_01_10</span>);
-            <span class="kw">let</span> <span class="ident">swp2c</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b00_00_01_10</span>);
-            <span class="kw">let</span> <span class="ident">swp3c</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">w_axis</span>, <span class="number">0b01_10_00_00</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>determinant(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{
+            <span class="comment">// Based on https://github.com/g-truc/glm `glm_mat4_determinant`
+            </span><span class="kw">let </span>swp2a = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.z_axis, <span class="number">0b00_01_01_10</span>);
+            <span class="kw">let </span>swp3a = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.w_axis, <span class="number">0b11_10_11_11</span>);
+            <span class="kw">let </span>swp2b = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.z_axis, <span class="number">0b11_10_11_11</span>);
+            <span class="kw">let </span>swp3b = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.w_axis, <span class="number">0b00_10_01_10</span>);
+            <span class="kw">let </span>swp2c = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.z_axis, <span class="number">0b00_00_01_10</span>);
+            <span class="kw">let </span>swp3c = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.w_axis, <span class="number">0b01_10_00_00</span>);
 
-            <span class="kw">let</span> <span class="ident">mula</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp2a</span>, <span class="ident">swp3a</span>);
-            <span class="kw">let</span> <span class="ident">mulb</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp2b</span>, <span class="ident">swp3b</span>);
-            <span class="kw">let</span> <span class="ident">mulc</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp2c</span>, <span class="ident">swp3c</span>);
-            <span class="kw">let</span> <span class="ident">sube</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">mula</span>, <span class="ident">mulb</span>);
-            <span class="kw">let</span> <span class="ident">subf</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">_mm_movehl_ps</span>(<span class="ident">mulc</span>, <span class="ident">mulc</span>), <span class="ident">mulc</span>);
+            <span class="kw">let </span>mula = _mm_mul_ps(swp2a, swp3a);
+            <span class="kw">let </span>mulb = _mm_mul_ps(swp2b, swp3b);
+            <span class="kw">let </span>mulc = _mm_mul_ps(swp2c, swp3c);
+            <span class="kw">let </span>sube = _mm_sub_ps(mula, mulb);
+            <span class="kw">let </span>subf = _mm_sub_ps(_mm_movehl_ps(mulc, mulc), mulc);
 
-            <span class="kw">let</span> <span class="ident">subfaca</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">sube</span>, <span class="ident">sube</span>, <span class="number">0b10_01_00_00</span>);
-            <span class="kw">let</span> <span class="ident">swpfaca</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">y_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b00_00_00_01</span>);
-            <span class="kw">let</span> <span class="ident">mulfaca</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swpfaca</span>, <span class="ident">subfaca</span>);
+            <span class="kw">let </span>subfaca = _mm_shuffle_ps(sube, sube, <span class="number">0b10_01_00_00</span>);
+            <span class="kw">let </span>swpfaca = _mm_shuffle_ps(<span class="self">self</span>.y_axis, <span class="self">self</span>.y_axis, <span class="number">0b00_00_00_01</span>);
+            <span class="kw">let </span>mulfaca = _mm_mul_ps(swpfaca, subfaca);
 
-            <span class="kw">let</span> <span class="ident">subtmpb</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">sube</span>, <span class="ident">subf</span>, <span class="number">0b00_00_11_01</span>);
-            <span class="kw">let</span> <span class="ident">subfacb</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">subtmpb</span>, <span class="ident">subtmpb</span>, <span class="number">0b11_01_01_00</span>);
-            <span class="kw">let</span> <span class="ident">swpfacb</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">y_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b01_01_10_10</span>);
-            <span class="kw">let</span> <span class="ident">mulfacb</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swpfacb</span>, <span class="ident">subfacb</span>);
+            <span class="kw">let </span>subtmpb = _mm_shuffle_ps(sube, subf, <span class="number">0b00_00_11_01</span>);
+            <span class="kw">let </span>subfacb = _mm_shuffle_ps(subtmpb, subtmpb, <span class="number">0b11_01_01_00</span>);
+            <span class="kw">let </span>swpfacb = _mm_shuffle_ps(<span class="self">self</span>.y_axis, <span class="self">self</span>.y_axis, <span class="number">0b01_01_10_10</span>);
+            <span class="kw">let </span>mulfacb = _mm_mul_ps(swpfacb, subfacb);
 
-            <span class="kw">let</span> <span class="ident">subres</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">mulfaca</span>, <span class="ident">mulfacb</span>);
-            <span class="kw">let</span> <span class="ident">subtmpc</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">sube</span>, <span class="ident">subf</span>, <span class="number">0b01_00_10_10</span>);
-            <span class="kw">let</span> <span class="ident">subfacc</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">subtmpc</span>, <span class="ident">subtmpc</span>, <span class="number">0b11_11_10_00</span>);
-            <span class="kw">let</span> <span class="ident">swpfacc</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">y_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b10_11_11_11</span>);
-            <span class="kw">let</span> <span class="ident">mulfacc</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swpfacc</span>, <span class="ident">subfacc</span>);
+            <span class="kw">let </span>subres = _mm_sub_ps(mulfaca, mulfacb);
+            <span class="kw">let </span>subtmpc = _mm_shuffle_ps(sube, subf, <span class="number">0b01_00_10_10</span>);
+            <span class="kw">let </span>subfacc = _mm_shuffle_ps(subtmpc, subtmpc, <span class="number">0b11_11_10_00</span>);
+            <span class="kw">let </span>swpfacc = _mm_shuffle_ps(<span class="self">self</span>.y_axis, <span class="self">self</span>.y_axis, <span class="number">0b10_11_11_11</span>);
+            <span class="kw">let </span>mulfacc = _mm_mul_ps(swpfacc, subfacc);
 
-            <span class="kw">let</span> <span class="ident">addres</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">subres</span>, <span class="ident">mulfacc</span>);
-            <span class="kw">let</span> <span class="ident">detcof</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">addres</span>, <span class="ident">_mm_setr_ps</span>(<span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>));
+            <span class="kw">let </span>addres = _mm_add_ps(subres, mulfacc);
+            <span class="kw">let </span>detcof = _mm_mul_ps(addres, _mm_setr_ps(<span class="number">1.0</span>, -<span class="number">1.0</span>, <span class="number">1.0</span>, -<span class="number">1.0</span>));
 
-            <span class="ident">Vector4::dot</span>(<span class="self">self</span>.<span class="ident">x_axis</span>, <span class="ident">detcof</span>)
+            Vector4::dot(<span class="self">self</span>.x_axis, detcof)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">transpose</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="comment">// Based on https://github.com/microsoft/DirectXMath `XMMatrixTranspose`</span>
-            <span class="kw">let</span> <span class="ident">tmp0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">x_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b01_00_01_00</span>);
-            <span class="kw">let</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">x_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b11_10_11_10</span>);
-            <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">w_axis</span>, <span class="number">0b01_00_01_00</span>);
-            <span class="kw">let</span> <span class="ident">tmp3</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">w_axis</span>, <span class="number">0b11_10_11_10</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>transpose(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="comment">// Based on https://github.com/microsoft/DirectXMath `XMMatrixTranspose`
+            </span><span class="kw">let </span>tmp0 = _mm_shuffle_ps(<span class="self">self</span>.x_axis, <span class="self">self</span>.y_axis, <span class="number">0b01_00_01_00</span>);
+            <span class="kw">let </span>tmp1 = _mm_shuffle_ps(<span class="self">self</span>.x_axis, <span class="self">self</span>.y_axis, <span class="number">0b11_10_11_10</span>);
+            <span class="kw">let </span>tmp2 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.w_axis, <span class="number">0b01_00_01_00</span>);
+            <span class="kw">let </span>tmp3 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.w_axis, <span class="number">0b11_10_11_10</span>);
 
-            <span class="self">Self</span> {
-                <span class="ident">x_axis</span>: <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp0</span>, <span class="ident">tmp2</span>, <span class="number">0b10_00_10_00</span>),
-                <span class="ident">y_axis</span>: <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp0</span>, <span class="ident">tmp2</span>, <span class="number">0b11_01_11_01</span>),
-                <span class="ident">z_axis</span>: <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp1</span>, <span class="ident">tmp3</span>, <span class="number">0b10_00_10_00</span>),
-                <span class="ident">w_axis</span>: <span class="ident">_mm_shuffle_ps</span>(<span class="ident">tmp1</span>, <span class="ident">tmp3</span>, <span class="number">0b11_01_11_01</span>),
+            <span class="self">Self </span>{
+                x_axis: _mm_shuffle_ps(tmp0, tmp2, <span class="number">0b10_00_10_00</span>),
+                y_axis: _mm_shuffle_ps(tmp0, tmp2, <span class="number">0b11_01_11_01</span>),
+                z_axis: _mm_shuffle_ps(tmp1, tmp3, <span class="number">0b10_00_10_00</span>),
+                w_axis: _mm_shuffle_ps(tmp1, tmp3, <span class="number">0b11_01_11_01</span>),
             }
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">FloatMatrix4x4</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">__m128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">SIMDVector3</span> <span class="op">=</span> <span class="ident">__m128</span>;
+<span class="kw">impl </span>FloatMatrix4x4&lt;f32, __m128&gt; <span class="kw">for </span>Columns4&lt;__m128&gt; {
+    <span class="kw">type </span>SIMDVector3 = __m128;
 
-    <span class="kw">fn</span> <span class="ident">inverse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="comment">// Based on https://github.com/g-truc/glm `glm_mat4_inverse`</span>
-            <span class="kw">let</span> <span class="ident">fac0</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">swp0a</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b11_11_11_11</span>);
-                <span class="kw">let</span> <span class="ident">swp0b</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b10_10_10_10</span>);
+    <span class="kw">fn </span>inverse(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="comment">// Based on https://github.com/g-truc/glm `glm_mat4_inverse`
+            </span><span class="kw">let </span>fac0 = {
+                <span class="kw">let </span>swp0a = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b11_11_11_11</span>);
+                <span class="kw">let </span>swp0b = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b10_10_10_10</span>);
 
-                <span class="kw">let</span> <span class="ident">swp00</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b10_10_10_10</span>);
-                <span class="kw">let</span> <span class="ident">swp01</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0a</span>, <span class="ident">swp0a</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp02</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0b</span>, <span class="ident">swp0b</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp03</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b11_11_11_11</span>);
+                <span class="kw">let </span>swp00 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b10_10_10_10</span>);
+                <span class="kw">let </span>swp01 = _mm_shuffle_ps(swp0a, swp0a, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp02 = _mm_shuffle_ps(swp0b, swp0b, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp03 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b11_11_11_11</span>);
 
-                <span class="kw">let</span> <span class="ident">mul00</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp00</span>, <span class="ident">swp01</span>);
-                <span class="kw">let</span> <span class="ident">mul01</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp02</span>, <span class="ident">swp03</span>);
-                <span class="ident">_mm_sub_ps</span>(<span class="ident">mul00</span>, <span class="ident">mul01</span>)
+                <span class="kw">let </span>mul00 = _mm_mul_ps(swp00, swp01);
+                <span class="kw">let </span>mul01 = _mm_mul_ps(swp02, swp03);
+                _mm_sub_ps(mul00, mul01)
             };
-            <span class="kw">let</span> <span class="ident">fac1</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">swp0a</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b11_11_11_11</span>);
-                <span class="kw">let</span> <span class="ident">swp0b</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b01_01_01_01</span>);
+            <span class="kw">let </span>fac1 = {
+                <span class="kw">let </span>swp0a = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b11_11_11_11</span>);
+                <span class="kw">let </span>swp0b = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b01_01_01_01</span>);
 
-                <span class="kw">let</span> <span class="ident">swp00</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b01_01_01_01</span>);
-                <span class="kw">let</span> <span class="ident">swp01</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0a</span>, <span class="ident">swp0a</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp02</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0b</span>, <span class="ident">swp0b</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp03</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b11_11_11_11</span>);
+                <span class="kw">let </span>swp00 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b01_01_01_01</span>);
+                <span class="kw">let </span>swp01 = _mm_shuffle_ps(swp0a, swp0a, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp02 = _mm_shuffle_ps(swp0b, swp0b, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp03 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b11_11_11_11</span>);
 
-                <span class="kw">let</span> <span class="ident">mul00</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp00</span>, <span class="ident">swp01</span>);
-                <span class="kw">let</span> <span class="ident">mul01</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp02</span>, <span class="ident">swp03</span>);
-                <span class="ident">_mm_sub_ps</span>(<span class="ident">mul00</span>, <span class="ident">mul01</span>)
+                <span class="kw">let </span>mul00 = _mm_mul_ps(swp00, swp01);
+                <span class="kw">let </span>mul01 = _mm_mul_ps(swp02, swp03);
+                _mm_sub_ps(mul00, mul01)
             };
-            <span class="kw">let</span> <span class="ident">fac2</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">swp0a</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b10_10_10_10</span>);
-                <span class="kw">let</span> <span class="ident">swp0b</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b01_01_01_01</span>);
+            <span class="kw">let </span>fac2 = {
+                <span class="kw">let </span>swp0a = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b10_10_10_10</span>);
+                <span class="kw">let </span>swp0b = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b01_01_01_01</span>);
 
-                <span class="kw">let</span> <span class="ident">swp00</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b01_01_01_01</span>);
-                <span class="kw">let</span> <span class="ident">swp01</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0a</span>, <span class="ident">swp0a</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp02</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0b</span>, <span class="ident">swp0b</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp03</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b10_10_10_10</span>);
+                <span class="kw">let </span>swp00 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b01_01_01_01</span>);
+                <span class="kw">let </span>swp01 = _mm_shuffle_ps(swp0a, swp0a, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp02 = _mm_shuffle_ps(swp0b, swp0b, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp03 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b10_10_10_10</span>);
 
-                <span class="kw">let</span> <span class="ident">mul00</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp00</span>, <span class="ident">swp01</span>);
-                <span class="kw">let</span> <span class="ident">mul01</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp02</span>, <span class="ident">swp03</span>);
-                <span class="ident">_mm_sub_ps</span>(<span class="ident">mul00</span>, <span class="ident">mul01</span>)
+                <span class="kw">let </span>mul00 = _mm_mul_ps(swp00, swp01);
+                <span class="kw">let </span>mul01 = _mm_mul_ps(swp02, swp03);
+                _mm_sub_ps(mul00, mul01)
             };
-            <span class="kw">let</span> <span class="ident">fac3</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">swp0a</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b11_11_11_11</span>);
-                <span class="kw">let</span> <span class="ident">swp0b</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b00_00_00_00</span>);
+            <span class="kw">let </span>fac3 = {
+                <span class="kw">let </span>swp0a = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b11_11_11_11</span>);
+                <span class="kw">let </span>swp0b = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b00_00_00_00</span>);
 
-                <span class="kw">let</span> <span class="ident">swp00</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b00_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp01</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0a</span>, <span class="ident">swp0a</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp02</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0b</span>, <span class="ident">swp0b</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp03</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b11_11_11_11</span>);
+                <span class="kw">let </span>swp00 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b00_00_00_00</span>);
+                <span class="kw">let </span>swp01 = _mm_shuffle_ps(swp0a, swp0a, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp02 = _mm_shuffle_ps(swp0b, swp0b, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp03 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b11_11_11_11</span>);
 
-                <span class="kw">let</span> <span class="ident">mul00</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp00</span>, <span class="ident">swp01</span>);
-                <span class="kw">let</span> <span class="ident">mul01</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp02</span>, <span class="ident">swp03</span>);
-                <span class="ident">_mm_sub_ps</span>(<span class="ident">mul00</span>, <span class="ident">mul01</span>)
+                <span class="kw">let </span>mul00 = _mm_mul_ps(swp00, swp01);
+                <span class="kw">let </span>mul01 = _mm_mul_ps(swp02, swp03);
+                _mm_sub_ps(mul00, mul01)
             };
-            <span class="kw">let</span> <span class="ident">fac4</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">swp0a</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b10_10_10_10</span>);
-                <span class="kw">let</span> <span class="ident">swp0b</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b00_00_00_00</span>);
+            <span class="kw">let </span>fac4 = {
+                <span class="kw">let </span>swp0a = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b10_10_10_10</span>);
+                <span class="kw">let </span>swp0b = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b00_00_00_00</span>);
 
-                <span class="kw">let</span> <span class="ident">swp00</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b00_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp01</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0a</span>, <span class="ident">swp0a</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp02</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0b</span>, <span class="ident">swp0b</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp03</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b10_10_10_10</span>);
+                <span class="kw">let </span>swp00 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b00_00_00_00</span>);
+                <span class="kw">let </span>swp01 = _mm_shuffle_ps(swp0a, swp0a, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp02 = _mm_shuffle_ps(swp0b, swp0b, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp03 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b10_10_10_10</span>);
 
-                <span class="kw">let</span> <span class="ident">mul00</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp00</span>, <span class="ident">swp01</span>);
-                <span class="kw">let</span> <span class="ident">mul01</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp02</span>, <span class="ident">swp03</span>);
-                <span class="ident">_mm_sub_ps</span>(<span class="ident">mul00</span>, <span class="ident">mul01</span>)
+                <span class="kw">let </span>mul00 = _mm_mul_ps(swp00, swp01);
+                <span class="kw">let </span>mul01 = _mm_mul_ps(swp02, swp03);
+                _mm_sub_ps(mul00, mul01)
             };
-            <span class="kw">let</span> <span class="ident">fac5</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">swp0a</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b01_01_01_01</span>);
-                <span class="kw">let</span> <span class="ident">swp0b</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">w_axis</span>, <span class="self">self</span>.<span class="ident">z_axis</span>, <span class="number">0b00_00_00_00</span>);
+            <span class="kw">let </span>fac5 = {
+                <span class="kw">let </span>swp0a = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b01_01_01_01</span>);
+                <span class="kw">let </span>swp0b = _mm_shuffle_ps(<span class="self">self</span>.w_axis, <span class="self">self</span>.z_axis, <span class="number">0b00_00_00_00</span>);
 
-                <span class="kw">let</span> <span class="ident">swp00</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b00_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp01</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0a</span>, <span class="ident">swp0a</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp02</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">swp0b</span>, <span class="ident">swp0b</span>, <span class="number">0b10_00_00_00</span>);
-                <span class="kw">let</span> <span class="ident">swp03</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">z_axis</span>, <span class="self">self</span>.<span class="ident">y_axis</span>, <span class="number">0b01_01_01_01</span>);
+                <span class="kw">let </span>swp00 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b00_00_00_00</span>);
+                <span class="kw">let </span>swp01 = _mm_shuffle_ps(swp0a, swp0a, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp02 = _mm_shuffle_ps(swp0b, swp0b, <span class="number">0b10_00_00_00</span>);
+                <span class="kw">let </span>swp03 = _mm_shuffle_ps(<span class="self">self</span>.z_axis, <span class="self">self</span>.y_axis, <span class="number">0b01_01_01_01</span>);
 
-                <span class="kw">let</span> <span class="ident">mul00</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp00</span>, <span class="ident">swp01</span>);
-                <span class="kw">let</span> <span class="ident">mul01</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">swp02</span>, <span class="ident">swp03</span>);
-                <span class="ident">_mm_sub_ps</span>(<span class="ident">mul00</span>, <span class="ident">mul01</span>)
+                <span class="kw">let </span>mul00 = _mm_mul_ps(swp00, swp01);
+                <span class="kw">let </span>mul01 = _mm_mul_ps(swp02, swp03);
+                _mm_sub_ps(mul00, mul01)
             };
-            <span class="kw">let</span> <span class="ident">sign_a</span> <span class="op">=</span> <span class="ident">_mm_set_ps</span>(<span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>);
-            <span class="kw">let</span> <span class="ident">sign_b</span> <span class="op">=</span> <span class="ident">_mm_set_ps</span>(<span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>, <span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>);
+            <span class="kw">let </span>sign_a = _mm_set_ps(<span class="number">1.0</span>, -<span class="number">1.0</span>, <span class="number">1.0</span>, -<span class="number">1.0</span>);
+            <span class="kw">let </span>sign_b = _mm_set_ps(-<span class="number">1.0</span>, <span class="number">1.0</span>, -<span class="number">1.0</span>, <span class="number">1.0</span>);
 
-            <span class="kw">let</span> <span class="ident">temp0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">y_axis</span>, <span class="self">self</span>.<span class="ident">x_axis</span>, <span class="number">0b00_00_00_00</span>);
-            <span class="kw">let</span> <span class="ident">vec0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">temp0</span>, <span class="ident">temp0</span>, <span class="number">0b10_10_10_00</span>);
+            <span class="kw">let </span>temp0 = _mm_shuffle_ps(<span class="self">self</span>.y_axis, <span class="self">self</span>.x_axis, <span class="number">0b00_00_00_00</span>);
+            <span class="kw">let </span>vec0 = _mm_shuffle_ps(temp0, temp0, <span class="number">0b10_10_10_00</span>);
 
-            <span class="kw">let</span> <span class="ident">temp1</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">y_axis</span>, <span class="self">self</span>.<span class="ident">x_axis</span>, <span class="number">0b01_01_01_01</span>);
-            <span class="kw">let</span> <span class="ident">vec1</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">temp1</span>, <span class="ident">temp1</span>, <span class="number">0b10_10_10_00</span>);
+            <span class="kw">let </span>temp1 = _mm_shuffle_ps(<span class="self">self</span>.y_axis, <span class="self">self</span>.x_axis, <span class="number">0b01_01_01_01</span>);
+            <span class="kw">let </span>vec1 = _mm_shuffle_ps(temp1, temp1, <span class="number">0b10_10_10_00</span>);
 
-            <span class="kw">let</span> <span class="ident">temp2</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">y_axis</span>, <span class="self">self</span>.<span class="ident">x_axis</span>, <span class="number">0b10_10_10_10</span>);
-            <span class="kw">let</span> <span class="ident">vec2</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">temp2</span>, <span class="ident">temp2</span>, <span class="number">0b10_10_10_00</span>);
+            <span class="kw">let </span>temp2 = _mm_shuffle_ps(<span class="self">self</span>.y_axis, <span class="self">self</span>.x_axis, <span class="number">0b10_10_10_10</span>);
+            <span class="kw">let </span>vec2 = _mm_shuffle_ps(temp2, temp2, <span class="number">0b10_10_10_00</span>);
 
-            <span class="kw">let</span> <span class="ident">temp3</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>.<span class="ident">y_axis</span>, <span class="self">self</span>.<span class="ident">x_axis</span>, <span class="number">0b11_11_11_11</span>);
-            <span class="kw">let</span> <span class="ident">vec3</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">temp3</span>, <span class="ident">temp3</span>, <span class="number">0b10_10_10_00</span>);
+            <span class="kw">let </span>temp3 = _mm_shuffle_ps(<span class="self">self</span>.y_axis, <span class="self">self</span>.x_axis, <span class="number">0b11_11_11_11</span>);
+            <span class="kw">let </span>vec3 = _mm_shuffle_ps(temp3, temp3, <span class="number">0b10_10_10_00</span>);
 
-            <span class="kw">let</span> <span class="ident">mul00</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec1</span>, <span class="ident">fac0</span>);
-            <span class="kw">let</span> <span class="ident">mul01</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec2</span>, <span class="ident">fac1</span>);
-            <span class="kw">let</span> <span class="ident">mul02</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec3</span>, <span class="ident">fac2</span>);
-            <span class="kw">let</span> <span class="ident">sub00</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">mul00</span>, <span class="ident">mul01</span>);
-            <span class="kw">let</span> <span class="ident">add00</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">sub00</span>, <span class="ident">mul02</span>);
-            <span class="kw">let</span> <span class="ident">inv0</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">sign_b</span>, <span class="ident">add00</span>);
+            <span class="kw">let </span>mul00 = _mm_mul_ps(vec1, fac0);
+            <span class="kw">let </span>mul01 = _mm_mul_ps(vec2, fac1);
+            <span class="kw">let </span>mul02 = _mm_mul_ps(vec3, fac2);
+            <span class="kw">let </span>sub00 = _mm_sub_ps(mul00, mul01);
+            <span class="kw">let </span>add00 = _mm_add_ps(sub00, mul02);
+            <span class="kw">let </span>inv0 = _mm_mul_ps(sign_b, add00);
 
-            <span class="kw">let</span> <span class="ident">mul03</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec0</span>, <span class="ident">fac0</span>);
-            <span class="kw">let</span> <span class="ident">mul04</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec2</span>, <span class="ident">fac3</span>);
-            <span class="kw">let</span> <span class="ident">mul05</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec3</span>, <span class="ident">fac4</span>);
-            <span class="kw">let</span> <span class="ident">sub01</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">mul03</span>, <span class="ident">mul04</span>);
-            <span class="kw">let</span> <span class="ident">add01</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">sub01</span>, <span class="ident">mul05</span>);
-            <span class="kw">let</span> <span class="ident">inv1</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">sign_a</span>, <span class="ident">add01</span>);
+            <span class="kw">let </span>mul03 = _mm_mul_ps(vec0, fac0);
+            <span class="kw">let </span>mul04 = _mm_mul_ps(vec2, fac3);
+            <span class="kw">let </span>mul05 = _mm_mul_ps(vec3, fac4);
+            <span class="kw">let </span>sub01 = _mm_sub_ps(mul03, mul04);
+            <span class="kw">let </span>add01 = _mm_add_ps(sub01, mul05);
+            <span class="kw">let </span>inv1 = _mm_mul_ps(sign_a, add01);
 
-            <span class="kw">let</span> <span class="ident">mul06</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec0</span>, <span class="ident">fac1</span>);
-            <span class="kw">let</span> <span class="ident">mul07</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec1</span>, <span class="ident">fac3</span>);
-            <span class="kw">let</span> <span class="ident">mul08</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec3</span>, <span class="ident">fac5</span>);
-            <span class="kw">let</span> <span class="ident">sub02</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">mul06</span>, <span class="ident">mul07</span>);
-            <span class="kw">let</span> <span class="ident">add02</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">sub02</span>, <span class="ident">mul08</span>);
-            <span class="kw">let</span> <span class="ident">inv2</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">sign_b</span>, <span class="ident">add02</span>);
+            <span class="kw">let </span>mul06 = _mm_mul_ps(vec0, fac1);
+            <span class="kw">let </span>mul07 = _mm_mul_ps(vec1, fac3);
+            <span class="kw">let </span>mul08 = _mm_mul_ps(vec3, fac5);
+            <span class="kw">let </span>sub02 = _mm_sub_ps(mul06, mul07);
+            <span class="kw">let </span>add02 = _mm_add_ps(sub02, mul08);
+            <span class="kw">let </span>inv2 = _mm_mul_ps(sign_b, add02);
 
-            <span class="kw">let</span> <span class="ident">mul09</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec0</span>, <span class="ident">fac2</span>);
-            <span class="kw">let</span> <span class="ident">mul10</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec1</span>, <span class="ident">fac4</span>);
-            <span class="kw">let</span> <span class="ident">mul11</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">vec2</span>, <span class="ident">fac5</span>);
-            <span class="kw">let</span> <span class="ident">sub03</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">mul09</span>, <span class="ident">mul10</span>);
-            <span class="kw">let</span> <span class="ident">add03</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">sub03</span>, <span class="ident">mul11</span>);
-            <span class="kw">let</span> <span class="ident">inv3</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">sign_a</span>, <span class="ident">add03</span>);
+            <span class="kw">let </span>mul09 = _mm_mul_ps(vec0, fac2);
+            <span class="kw">let </span>mul10 = _mm_mul_ps(vec1, fac4);
+            <span class="kw">let </span>mul11 = _mm_mul_ps(vec2, fac5);
+            <span class="kw">let </span>sub03 = _mm_sub_ps(mul09, mul10);
+            <span class="kw">let </span>add03 = _mm_add_ps(sub03, mul11);
+            <span class="kw">let </span>inv3 = _mm_mul_ps(sign_a, add03);
 
-            <span class="kw">let</span> <span class="ident">row0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">inv0</span>, <span class="ident">inv1</span>, <span class="number">0b00_00_00_00</span>);
-            <span class="kw">let</span> <span class="ident">row1</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">inv2</span>, <span class="ident">inv3</span>, <span class="number">0b00_00_00_00</span>);
-            <span class="kw">let</span> <span class="ident">row2</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">row0</span>, <span class="ident">row1</span>, <span class="number">0b10_00_10_00</span>);
+            <span class="kw">let </span>row0 = _mm_shuffle_ps(inv0, inv1, <span class="number">0b00_00_00_00</span>);
+            <span class="kw">let </span>row1 = _mm_shuffle_ps(inv2, inv3, <span class="number">0b00_00_00_00</span>);
+            <span class="kw">let </span>row2 = _mm_shuffle_ps(row0, row1, <span class="number">0b10_00_10_00</span>);
 
-            <span class="kw">let</span> <span class="ident">dot0</span> <span class="op">=</span> <span class="ident">Vector4::dot</span>(<span class="self">self</span>.<span class="ident">x_axis</span>, <span class="ident">row2</span>);
-            <span class="macro">glam_assert!</span>(<span class="ident">dot0</span> <span class="op">!</span><span class="op">=</span> <span class="number">0.0</span>);
+            <span class="kw">let </span>dot0 = Vector4::dot(<span class="self">self</span>.x_axis, row2);
+            <span class="macro">glam_assert!</span>(dot0 != <span class="number">0.0</span>);
 
-            <span class="kw">let</span> <span class="ident">rcp0</span> <span class="op">=</span> <span class="ident">_mm_set1_ps</span>(<span class="ident">dot0</span>.<span class="ident">recip</span>());
+            <span class="kw">let </span>rcp0 = _mm_set1_ps(dot0.recip());
 
-            <span class="self">Self</span> {
-                <span class="ident">x_axis</span>: <span class="ident">_mm_mul_ps</span>(<span class="ident">inv0</span>, <span class="ident">rcp0</span>),
-                <span class="ident">y_axis</span>: <span class="ident">_mm_mul_ps</span>(<span class="ident">inv1</span>, <span class="ident">rcp0</span>),
-                <span class="ident">z_axis</span>: <span class="ident">_mm_mul_ps</span>(<span class="ident">inv2</span>, <span class="ident">rcp0</span>),
-                <span class="ident">w_axis</span>: <span class="ident">_mm_mul_ps</span>(<span class="ident">inv3</span>, <span class="ident">rcp0</span>),
+            <span class="self">Self </span>{
+                x_axis: _mm_mul_ps(inv0, rcp0),
+                y_axis: _mm_mul_ps(inv1, rcp0),
+                z_axis: _mm_mul_ps(inv2, rcp0),
+                w_axis: _mm_mul_ps(inv3, rcp0),
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">transform_point3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">x_axis</span>
-            .<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">x</span>)
-            .<span class="ident">add</span>(<span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">y</span>))
-            .<span class="ident">add</span>(<span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">z</span>))
-            .<span class="ident">add</span>(<span class="self">self</span>.<span class="ident">w_axis</span>)
-            .<span class="ident">into</span>()
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>transform_point3(<span class="kw-2">&amp;</span><span class="self">self</span>, other: XYZ&lt;f32&gt;) -&gt; XYZ&lt;f32&gt; {
+        <span class="self">self</span>.x_axis
+            .mul_scalar(other.x)
+            .add(<span class="self">self</span>.y_axis.mul_scalar(other.y))
+            .add(<span class="self">self</span>.z_axis.mul_scalar(other.z))
+            .add(<span class="self">self</span>.w_axis)
+            .into()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">transform_vector3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">x_axis</span>
-            .<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">x</span>)
-            .<span class="ident">add</span>(<span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">y</span>))
-            .<span class="ident">add</span>(<span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">mul_scalar</span>(<span class="ident">other</span>.<span class="ident">z</span>))
-            .<span class="ident">into</span>()
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>transform_vector3(<span class="kw-2">&amp;</span><span class="self">self</span>, other: XYZ&lt;f32&gt;) -&gt; XYZ&lt;f32&gt; {
+        <span class="self">self</span>.x_axis
+            .mul_scalar(other.x)
+            .add(<span class="self">self</span>.y_axis.mul_scalar(other.y))
+            .add(<span class="self">self</span>.z_axis.mul_scalar(other.z))
+            .into()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">transform_float4_as_point3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">mul</span>(<span class="ident">Vector4::splat_x</span>(<span class="ident">other</span>));
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">mul_add</span>(<span class="ident">Vector4::splat_y</span>(<span class="ident">other</span>), <span class="ident">res</span>);
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">mul_add</span>(<span class="ident">Vector4::splat_z</span>(<span class="ident">other</span>), <span class="ident">res</span>);
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">w_axis</span>.<span class="ident">add</span>(<span class="ident">res</span>);
-        <span class="ident">res</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>transform_float4_as_point3(<span class="kw-2">&amp;</span><span class="self">self</span>, other: __m128) -&gt; __m128 {
+        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="self">self</span>.x_axis.mul(Vector4::splat_x(other));
+        res = <span class="self">self</span>.y_axis.mul_add(Vector4::splat_y(other), res);
+        res = <span class="self">self</span>.z_axis.mul_add(Vector4::splat_z(other), res);
+        res = <span class="self">self</span>.w_axis.add(res);
+        res
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">transform_float4_as_vector3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">mul</span>(<span class="ident">Vector4::splat_x</span>(<span class="ident">other</span>));
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">mul_add</span>(<span class="ident">Vector4::splat_y</span>(<span class="ident">other</span>), <span class="ident">res</span>);
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">mul_add</span>(<span class="ident">Vector4::splat_z</span>(<span class="ident">other</span>), <span class="ident">res</span>);
-        <span class="ident">res</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>transform_float4_as_vector3(<span class="kw-2">&amp;</span><span class="self">self</span>, other: __m128) -&gt; __m128 {
+        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="self">self</span>.x_axis.mul(Vector4::splat_x(other));
+        res = <span class="self">self</span>.y_axis.mul_add(Vector4::splat_y(other), res);
+        res = <span class="self">self</span>.z_axis.mul_add(Vector4::splat_z(other), res);
+        res
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">project_float4_as_point3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">x_axis</span>.<span class="ident">mul</span>(<span class="ident">Vector4::splat_x</span>(<span class="ident">other</span>));
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">y_axis</span>.<span class="ident">mul_add</span>(<span class="ident">Vector4::splat_y</span>(<span class="ident">other</span>), <span class="ident">res</span>);
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">z_axis</span>.<span class="ident">mul_add</span>(<span class="ident">Vector4::splat_z</span>(<span class="ident">other</span>), <span class="ident">res</span>);
-        <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">w_axis</span>.<span class="ident">add</span>(<span class="ident">res</span>);
-        <span class="ident">res</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">mul</span>(<span class="ident">res</span>.<span class="ident">splat_w</span>().<span class="ident">recip</span>());
-        <span class="ident">res</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>project_float4_as_point3(<span class="kw-2">&amp;</span><span class="self">self</span>, other: __m128) -&gt; __m128 {
+        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="self">self</span>.x_axis.mul(Vector4::splat_x(other));
+        res = <span class="self">self</span>.y_axis.mul_add(Vector4::splat_y(other), res);
+        res = <span class="self">self</span>.z_axis.mul_add(Vector4::splat_z(other), res);
+        res = <span class="self">self</span>.w_axis.add(res);
+        res = res.mul(res.splat_w().recip());
+        res
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ProjectionMatrix</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">__m128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {}
+<span class="kw">impl </span>ProjectionMatrix&lt;f32, __m128&gt; <span class="kw">for </span>Columns4&lt;__m128&gt; {}
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
-        <span class="self">Self</span> {
-            <span class="ident">x_axis</span>: <span class="ident">v</span>.<span class="ident">x_axis</span>.<span class="ident">into</span>(),
-            <span class="ident">y_axis</span>: <span class="ident">v</span>.<span class="ident">y_axis</span>.<span class="ident">into</span>(),
-            <span class="ident">z_axis</span>: <span class="ident">v</span>.<span class="ident">z_axis</span>.<span class="ident">into</span>(),
+<span class="kw">impl </span>From&lt;Columns3&lt;XYZ&lt;f32&gt;&gt;&gt; <span class="kw">for </span>Columns3&lt;__m128&gt; {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from(v: Columns3&lt;XYZ&lt;f32&gt;&gt;) -&gt; Columns3&lt;__m128&gt; {
+        <span class="self">Self </span>{
+            x_axis: v.x_axis.into(),
+            y_axis: v.y_axis.into(),
+            z_axis: v.z_axis.into(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span>) -&gt; <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">Self</span> {
-            <span class="ident">x_axis</span>: <span class="ident">v</span>.<span class="ident">x_axis</span>.<span class="ident">into</span>(),
-            <span class="ident">y_axis</span>: <span class="ident">v</span>.<span class="ident">y_axis</span>.<span class="ident">into</span>(),
-            <span class="ident">z_axis</span>: <span class="ident">v</span>.<span class="ident">z_axis</span>.<span class="ident">into</span>(),
+<span class="kw">impl </span>From&lt;Columns3&lt;__m128&gt;&gt; <span class="kw">for </span>Columns3&lt;XYZ&lt;f32&gt;&gt; {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from(v: Columns3&lt;__m128&gt;) -&gt; Columns3&lt;XYZ&lt;f32&gt;&gt; {
+        <span class="self">Self </span>{
+            x_axis: v.x_axis.into(),
+            y_axis: v.y_axis.into(),
+            z_axis: v.z_axis.into(),
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="glam" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="glam" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

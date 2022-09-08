@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/peephole_opts.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>peephole_opts.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/peephole_opts.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>peephole_opts.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -619,621 +613,620 @@
 <span id="613">613</span>
 <span id="614">614</span>
 <span id="615">615</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::id</span>;
-<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">ModuleHeader</span>, <span class="ident">Operand</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">Op</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures::fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::id;
+<span class="kw">use </span>rspirv::dr::{Function, Instruction, Module, ModuleHeader, Operand};
+<span class="kw">use </span>rspirv::spirv::{Op, Word};
+<span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
+<span class="kw">use </span>rustc_middle::bug;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">collect_types</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) -&gt; <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span> {
-    <span class="ident">module</span>
-        .<span class="ident">types_global_values</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="prelude-val">Some</span>((<span class="ident">inst</span>.<span class="ident">result_id</span><span class="question-mark">?</span>, <span class="ident">inst</span>.<span class="ident">clone</span>())))
-        .<span class="ident">collect</span>()
+<span class="kw">pub fn </span>collect_types(module: <span class="kw-2">&amp;</span>Module) -&gt; FxHashMap&lt;Word, Instruction&gt; {
+    module
+        .types_global_values
+        .iter()
+        .filter_map(|inst| <span class="prelude-val">Some</span>((inst.result_id<span class="question-mark">?</span>, inst.clone())))
+        .collect()
 }
 
-<span class="kw">fn</span> <span class="ident">composite_count</span>(<span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>, <span class="ident">ty_id</span>: <span class="ident">Word</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">types</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">ty_id</span>)<span class="question-mark">?</span>;
-    <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-        <span class="ident">Op::TypeStruct</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">ty</span>.<span class="ident">operands</span>.<span class="ident">len</span>()),
-        <span class="ident">Op::TypeVector</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">ty</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_int32</span>() <span class="kw">as</span> <span class="ident">usize</span>),
-        <span class="ident">Op::TypeArray</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">length_id</span> <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>();
-            <span class="kw">let</span> <span class="ident">const_inst</span> <span class="op">=</span> <span class="ident">types</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">length_id</span>)<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="ident">const_inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Constant</span> {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="kw">fn </span>composite_count(types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;, ty_id: Word) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">let </span>ty = types.get(<span class="kw-2">&amp;</span>ty_id)<span class="question-mark">?</span>;
+    <span class="kw">match </span>ty.class.opcode {
+        Op::TypeStruct =&gt; <span class="prelude-val">Some</span>(ty.operands.len()),
+        Op::TypeVector =&gt; <span class="prelude-val">Some</span>(ty.operands[<span class="number">1</span>].unwrap_literal_int32() <span class="kw">as </span>usize),
+        Op::TypeArray =&gt; {
+            <span class="kw">let </span>length_id = ty.operands[<span class="number">1</span>].unwrap_id_ref();
+            <span class="kw">let </span>const_inst = types.get(<span class="kw-2">&amp;</span>length_id)<span class="question-mark">?</span>;
+            <span class="kw">if </span>const_inst.class.opcode != Op::Constant {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
-            <span class="kw">let</span> <span class="ident">const_ty</span> <span class="op">=</span> <span class="ident">types</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">const_inst</span>.<span class="ident">result_type</span>.<span class="ident">unwrap</span>())<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="ident">const_ty</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::TypeInt</span> {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+            <span class="kw">let </span>const_ty = types.get(<span class="kw-2">&amp;</span>const_inst.result_type.unwrap())<span class="question-mark">?</span>;
+            <span class="kw">if </span>const_ty.class.opcode != Op::TypeInt {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
-            <span class="kw">let</span> <span class="ident">const_value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">const_inst</span>.<span class="ident">operands</span>[<span class="number">0</span>] {
-                <span class="ident">Operand::LiteralInt32</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span> <span class="kw">as</span> <span class="ident">usize</span>,
-                <span class="ident">Operand::LiteralInt64</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span> <span class="kw">as</span> <span class="ident">usize</span>,
-                <span class="kw">_</span> =&gt; <span class="macro">bug!</span>(),
+            <span class="kw">let </span>const_value = <span class="kw">match </span>const_inst.operands[<span class="number">0</span>] {
+                Operand::LiteralInt32(v) =&gt; v <span class="kw">as </span>usize,
+                Operand::LiteralInt64(v) =&gt; v <span class="kw">as </span>usize,
+                <span class="kw">_ </span>=&gt; <span class="macro">bug!</span>(),
             };
-            <span class="prelude-val">Some</span>(<span class="ident">const_value</span>)
+            <span class="prelude-val">Some</span>(const_value)
         }
-        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
 
-<span class="doccomment">/// Given a chain of `OpCompositeInsert` instructions where all slots of the composite are</span>
-<span class="doccomment">/// assigned, replace the chain with a single `OpCompositeConstruct`.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">composite_construct</span>(<span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>, <span class="ident">function</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Function</span>) {
-    <span class="kw">let</span> <span class="ident">defs</span> <span class="op">=</span> <span class="ident">function</span>
-        .<span class="ident">all_inst_iter</span>()
-        .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="prelude-val">Some</span>((<span class="ident">inst</span>.<span class="ident">result_id</span><span class="question-mark">?</span>, <span class="ident">inst</span>.<span class="ident">clone</span>())))
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">function</span>.<span class="ident">blocks</span> {
-        <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">block</span>.<span class="ident">instructions</span> {
-            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::CompositeInsert</span> {
+<span class="doccomment">/// Given a chain of `OpCompositeInsert` instructions where all slots of the composite are
+/// assigned, replace the chain with a single `OpCompositeConstruct`.
+</span><span class="kw">pub fn </span>composite_construct(types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;, function: <span class="kw-2">&amp;mut </span>Function) {
+    <span class="kw">let </span>defs = function
+        .all_inst_iter()
+        .filter_map(|inst| <span class="prelude-val">Some</span>((inst.result_id<span class="question-mark">?</span>, inst.clone())))
+        .collect::&lt;FxHashMap&lt;Word, Instruction&gt;&gt;();
+    <span class="kw">for </span>block <span class="kw">in </span><span class="kw-2">&amp;mut </span>function.blocks {
+        <span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;mut </span>block.instructions {
+            <span class="kw">if </span>inst.class.opcode != Op::CompositeInsert {
                 <span class="kw">continue</span>;
             }
-            <span class="comment">// Get the number of components to expect</span>
-            <span class="kw">let</span> <span class="ident">component_count</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">composite_count</span>(<span class="ident">types</span>, <span class="ident">inst</span>.<span class="ident">result_type</span>.<span class="ident">unwrap</span>()) {
-                <span class="prelude-val">Some</span>(<span class="ident">c</span>) =&gt; <span class="ident">c</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="kw">continue</span>,
+            <span class="comment">// Get the number of components to expect
+            </span><span class="kw">let </span>component_count = <span class="kw">match </span>composite_count(types, inst.result_type.unwrap()) {
+                <span class="prelude-val">Some</span>(c) =&gt; c,
+                <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
             };
-            <span class="comment">// Remember a map of index -&gt; value for that index. If any index is missing (None)</span>
-            <span class="comment">// afterwards, then we know not all slots have been filled in, and we should skip</span>
-            <span class="comment">// optimizing this chain.</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">components</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="prelude-val">None</span>; <span class="ident">component_count</span>];
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cur_inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span> <span class="op">=</span> <span class="ident">inst</span>;
-            <span class="comment">// Start looping from the current instruction, through each instruction in the chain.</span>
-            <span class="kw">while</span> <span class="ident">cur_inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::CompositeInsert</span> {
-                <span class="kw">if</span> <span class="ident">cur_inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">3</span> {
-                    <span class="comment">// If there&#39;s more than one index, skip optimizing this chain.</span>
-                    <span class="kw">break</span>;
+            <span class="comment">// Remember a map of index -&gt; value for that index. If any index is missing (None)
+            // afterwards, then we know not all slots have been filled in, and we should skip
+            // optimizing this chain.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>components = <span class="macro">vec!</span>[<span class="prelude-val">None</span>; component_count];
+            <span class="kw">let </span><span class="kw-2">mut </span>cur_inst: <span class="kw-2">&amp;</span>Instruction = inst;
+            <span class="comment">// Start looping from the current instruction, through each instruction in the chain.
+            </span><span class="kw">while </span>cur_inst.class.opcode == Op::CompositeInsert {
+                <span class="kw">if </span>cur_inst.operands.len() != <span class="number">3 </span>{
+                    <span class="comment">// If there&#39;s more than one index, skip optimizing this chain.
+                    </span><span class="kw">break</span>;
                 }
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">cur_inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>();
-                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">cur_inst</span>.<span class="ident">operands</span>[<span class="number">2</span>].<span class="ident">unwrap_literal_int32</span>() <span class="kw">as</span> <span class="ident">usize</span>;
-                <span class="kw">if</span> <span class="ident">index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">components</span>.<span class="ident">len</span>() {
-                    <span class="comment">// Theoretically shouldn&#39;t happen, as it&#39;s invalid SPIR-V if the index is out</span>
-                    <span class="comment">// of bounds, but just stop optimizing instead of panicing here.</span>
-                    <span class="kw">break</span>;
+                <span class="kw">let </span>value = cur_inst.operands[<span class="number">0</span>].unwrap_id_ref();
+                <span class="kw">let </span>index = cur_inst.operands[<span class="number">2</span>].unwrap_literal_int32() <span class="kw">as </span>usize;
+                <span class="kw">if </span>index &gt;= components.len() {
+                    <span class="comment">// Theoretically shouldn&#39;t happen, as it&#39;s invalid SPIR-V if the index is out
+                    // of bounds, but just stop optimizing instead of panicing here.
+                    </span><span class="kw">break</span>;
                 }
-                <span class="kw">if</span> <span class="ident">components</span>[<span class="ident">index</span>].<span class="ident">is_none</span>() {
-                    <span class="ident">components</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
+                <span class="kw">if </span>components[index].is_none() {
+                    components[index] = <span class="prelude-val">Some</span>(value);
                 }
-                <span class="comment">// Follow back one in the chain of OpCompositeInsert</span>
-                <span class="ident">cur_inst</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">defs</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">cur_inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>()) {
-                    <span class="prelude-val">Some</span>(<span class="ident">i</span>) =&gt; <span class="ident">i</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">break</span>,
+                <span class="comment">// Follow back one in the chain of OpCompositeInsert
+                </span>cur_inst = <span class="kw">match </span>defs.get(<span class="kw-2">&amp;</span>cur_inst.operands[<span class="number">1</span>].unwrap_id_ref()) {
+                    <span class="prelude-val">Some</span>(i) =&gt; i,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
                 };
             }
-            <span class="comment">// If all components are filled in (collect() returns Some), replace it with</span>
-            <span class="comment">// `OpCompositeConstruct`</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">composite_construct_operands</span>) <span class="op">=</span> <span class="ident">components</span>
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">map</span>(<span class="ident">Operand::IdRef</span>))
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+            <span class="comment">// If all components are filled in (collect() returns Some), replace it with
+            // `OpCompositeConstruct`
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(composite_construct_operands) = components
+                .into_iter()
+                .map(|v| v.map(Operand::IdRef))
+                .collect::&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()
             {
-                <span class="comment">// Leave all the other instructions in the chain as dead code for other passes</span>
-                <span class="comment">// to clean up.</span>
-                <span class="kw-2">*</span><span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::new</span>(
-                    <span class="ident">Op::CompositeConstruct</span>,
-                    <span class="ident">inst</span>.<span class="ident">result_type</span>,
-                    <span class="ident">inst</span>.<span class="ident">result_id</span>,
-                    <span class="ident">composite_construct_operands</span>,
+                <span class="comment">// Leave all the other instructions in the chain as dead code for other passes
+                // to clean up.
+                </span><span class="kw-2">*</span>inst = Instruction::new(
+                    Op::CompositeConstruct,
+                    inst.result_type,
+                    inst.result_id,
+                    composite_construct_operands,
                 );
             }
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">IdentifiedOperand</span> {
-    <span class="doccomment">/// The operand to the vectorized operation is a straight-up vector.</span>
-    <span class="ident">Vector</span>(<span class="ident">Word</span>),
-    <span class="doccomment">/// The operand to the vectorized operation is a collection of scalars that need to be packed</span>
-    <span class="doccomment">/// together with OpCompositeConstruct before using the vectorized operation.</span>
-    <span class="ident">Scalars</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// The operand to the vectorized operation is some non-value: for example, the `instruction`</span>
-    <span class="doccomment">/// operand in OpExtInst.</span>
-    <span class="ident">NonValue</span>(<span class="ident">Operand</span>),
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">enum </span>IdentifiedOperand {
+    <span class="doccomment">/// The operand to the vectorized operation is a straight-up vector.
+    </span>Vector(Word),
+    <span class="doccomment">/// The operand to the vectorized operation is a collection of scalars that need to be packed
+    /// together with OpCompositeConstruct before using the vectorized operation.
+    </span>Scalars(Vec&lt;Word&gt;),
+    <span class="doccomment">/// The operand to the vectorized operation is some non-value: for example, the `instruction`
+    /// operand in OpExtInst.
+    </span>NonValue(Operand),
 }
 
-<span class="doccomment">/// Given an ID ref to a `OpCompositeExtract`, get the vector it&#39;s extracting from, and the field</span>
-<span class="doccomment">/// index.</span>
-<span class="kw">fn</span> <span class="ident">get_composite_and_index</span>(
-    <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">defs</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">vector_width</span>: <span class="ident">u32</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">u32</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">defs</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::CompositeExtract</span> {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="doccomment">/// Given an ID ref to a `OpCompositeExtract`, get the vector it&#39;s extracting from, and the field
+/// index.
+</span><span class="kw">fn </span>get_composite_and_index(
+    types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    defs: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    id: Word,
+    vector_width: u32,
+) -&gt; <span class="prelude-ty">Option</span>&lt;(Word, u32)&gt; {
+    <span class="kw">let </span>inst = defs.get(<span class="kw-2">&amp;</span>id)<span class="question-mark">?</span>;
+    <span class="kw">if </span>inst.class.opcode != Op::CompositeExtract {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">2</span> {
-        <span class="comment">// If the index is more than one deep, bail.</span>
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">if </span>inst.operands.len() != <span class="number">2 </span>{
+        <span class="comment">// If the index is more than one deep, bail.
+        </span><span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="kw">let</span> <span class="ident">composite</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>();
-    <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_int32</span>();
+    <span class="kw">let </span>composite = inst.operands[<span class="number">0</span>].unwrap_id_ref();
+    <span class="kw">let </span>index = inst.operands[<span class="number">1</span>].unwrap_literal_int32();
 
-    <span class="kw">let</span> <span class="ident">composite_def</span> <span class="op">=</span> <span class="ident">defs</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">composite</span>).<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">types</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">composite</span>))<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">vector_def</span> <span class="op">=</span> <span class="ident">types</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">composite_def</span>.<span class="ident">result_type</span>.<span class="ident">unwrap</span>())<span class="question-mark">?</span>;
+    <span class="kw">let </span>composite_def = defs.get(<span class="kw-2">&amp;</span>composite).or_else(|| types.get(<span class="kw-2">&amp;</span>composite))<span class="question-mark">?</span>;
+    <span class="kw">let </span>vector_def = types.get(<span class="kw-2">&amp;</span>composite_def.result_type.unwrap())<span class="question-mark">?</span>;
 
-    <span class="comment">// Make sure it&#39;s a vector and has the width we&#39;re expecting.</span>
-    <span class="comment">// Width mismatch would be doing something like `vec2(a.x + b.x, a.y + b.y)` where `a` is a</span>
-    <span class="comment">// vec4 - if we optimized it to just `a + b`, it&#39;d be incorrect.</span>
-    <span class="kw">if</span> <span class="ident">vector_def</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::TypeVector</span>
-        <span class="op">|</span><span class="op">|</span> <span class="ident">vector_width</span> <span class="op">!</span><span class="op">=</span> <span class="ident">vector_def</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_int32</span>()
+    <span class="comment">// Make sure it&#39;s a vector and has the width we&#39;re expecting.
+    // Width mismatch would be doing something like `vec2(a.x + b.x, a.y + b.y)` where `a` is a
+    // vec4 - if we optimized it to just `a + b`, it&#39;d be incorrect.
+    </span><span class="kw">if </span>vector_def.class.opcode != Op::TypeVector
+        || vector_width != vector_def.operands[<span class="number">1</span>].unwrap_literal_int32()
     {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="prelude-val">Some</span>((<span class="ident">composite</span>, <span class="ident">index</span>))
+    <span class="prelude-val">Some</span>((composite, index))
 }
 
-<span class="doccomment">/// Given a bunch of operands (`results[n].operands[operand_index]`), where all those operands</span>
-<span class="doccomment">/// refer to an `OpCompositeExtract` of the same vector (with proper indices, etc.), return that</span>
-<span class="doccomment">/// vector.</span>
-<span class="kw">fn</span> <span class="ident">match_vector_operand</span>(
-    <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">defs</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">results</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Instruction</span>],
-    <span class="ident">operand_index</span>: <span class="ident">usize</span>,
-    <span class="ident">vector_width</span>: <span class="ident">u32</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">operand_zero</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">results</span>[<span class="number">0</span>].<span class="ident">operands</span>[<span class="ident">operand_index</span>] {
-        <span class="ident">Operand::IdRef</span>(<span class="ident">id</span>) =&gt; <span class="ident">id</span>,
-        <span class="kw">_</span> =&gt; {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="doccomment">/// Given a bunch of operands (`results[n].operands[operand_index]`), where all those operands
+/// refer to an `OpCompositeExtract` of the same vector (with proper indices, etc.), return that
+/// vector.
+</span><span class="kw">fn </span>match_vector_operand(
+    types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    defs: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    results: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>Instruction],
+    operand_index: usize,
+    vector_width: u32,
+) -&gt; <span class="prelude-ty">Option</span>&lt;Word&gt; {
+    <span class="kw">let </span>operand_zero = <span class="kw">match </span>results[<span class="number">0</span>].operands[operand_index] {
+        Operand::IdRef(id) =&gt; id,
+        <span class="kw">_ </span>=&gt; {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
     };
-    <span class="comment">// Extract the composite used for the first component.</span>
-    <span class="kw">let</span> <span class="ident">composite_zero</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">get_composite_and_index</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="ident">operand_zero</span>, <span class="ident">vector_width</span>) {
-        <span class="prelude-val">Some</span>((<span class="ident">composite_zero</span>, <span class="number">0</span>)) =&gt; <span class="ident">composite_zero</span>,
-        <span class="kw">_</span> =&gt; {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="comment">// Extract the composite used for the first component.
+    </span><span class="kw">let </span>composite_zero = <span class="kw">match </span>get_composite_and_index(types, defs, operand_zero, vector_width) {
+        <span class="prelude-val">Some</span>((composite_zero, <span class="number">0</span>)) =&gt; composite_zero,
+        <span class="kw">_ </span>=&gt; {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
     };
-    <span class="comment">// Check the same composite is used for every other component (and indices line up)</span>
-    <span class="kw">for</span> (<span class="ident">expected_index</span>, <span class="ident">result</span>) <span class="kw">in</span> <span class="ident">results</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
-        <span class="kw">let</span> <span class="ident">operand</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">result</span>.<span class="ident">operands</span>[<span class="ident">operand_index</span>] {
-            <span class="ident">Operand::IdRef</span>(<span class="ident">id</span>) =&gt; <span class="ident">id</span>,
-            <span class="kw">_</span> =&gt; {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="comment">// Check the same composite is used for every other component (and indices line up)
+    </span><span class="kw">for </span>(expected_index, result) <span class="kw">in </span>results.iter().enumerate().skip(<span class="number">1</span>) {
+        <span class="kw">let </span>operand = <span class="kw">match </span>result.operands[operand_index] {
+            Operand::IdRef(id) =&gt; id,
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
         };
-        <span class="kw">let</span> (<span class="ident">composite</span>, <span class="ident">actual_index</span>) <span class="op">=</span>
-            <span class="kw">match</span> <span class="ident">get_composite_and_index</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="ident">operand</span>, <span class="ident">vector_width</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">x</span>) =&gt; <span class="ident">x</span>,
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">let </span>(composite, actual_index) =
+            <span class="kw">match </span>get_composite_and_index(types, defs, operand, vector_width) {
+                <span class="prelude-val">Some</span>(x) =&gt; x,
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
                 }
             };
-        <span class="comment">// If the source composite isn&#39;t all from the same composite, or the index</span>
-        <span class="comment">// isn&#39;t the right index, break.</span>
-        <span class="kw">if</span> <span class="ident">composite</span> <span class="op">!</span><span class="op">=</span> <span class="ident">composite_zero</span> <span class="op">|</span><span class="op">|</span> <span class="ident">expected_index</span> <span class="op">!</span><span class="op">=</span> <span class="ident">actual_index</span> <span class="kw">as</span> <span class="ident">usize</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="comment">// If the source composite isn&#39;t all from the same composite, or the index
+        // isn&#39;t the right index, break.
+        </span><span class="kw">if </span>composite != composite_zero || expected_index != actual_index <span class="kw">as </span>usize {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
     }
-    <span class="prelude-val">Some</span>(<span class="ident">composite_zero</span>)
+    <span class="prelude-val">Some</span>(composite_zero)
 }
 
-<span class="doccomment">/// Either extract out the vector behind each scalar component (see `match_vector_operand`), or</span>
-<span class="doccomment">/// just return the collection of scalars for this operand (to be constructed into a vector via</span>
-<span class="doccomment">/// `OpCompositeConstruct`).</span>
-<span class="kw">fn</span> <span class="ident">match_vector_or_scalars_operand</span>(
-    <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">defs</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">results</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Instruction</span>],
-    <span class="ident">operand_index</span>: <span class="ident">usize</span>,
-    <span class="ident">vector_width</span>: <span class="ident">u32</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IdentifiedOperand</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">composite</span>) <span class="op">=</span> <span class="ident">match_vector_operand</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="ident">results</span>, <span class="ident">operand_index</span>, <span class="ident">vector_width</span>)
+<span class="doccomment">/// Either extract out the vector behind each scalar component (see `match_vector_operand`), or
+/// just return the collection of scalars for this operand (to be constructed into a vector via
+/// `OpCompositeConstruct`).
+</span><span class="kw">fn </span>match_vector_or_scalars_operand(
+    types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    defs: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    results: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>Instruction],
+    operand_index: usize,
+    vector_width: u32,
+) -&gt; <span class="prelude-ty">Option</span>&lt;IdentifiedOperand&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(composite) = match_vector_operand(types, defs, results, operand_index, vector_width)
     {
-        <span class="prelude-val">Some</span>(<span class="ident">IdentifiedOperand::Vector</span>(<span class="ident">composite</span>))
-    } <span class="kw">else</span> {
-        <span class="kw">let</span> <span class="ident">operands</span> <span class="op">=</span> <span class="ident">results</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="ident">operand_index</span>] {
-                <span class="ident">Operand::IdRef</span>(<span class="ident">id</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">id</span>),
-                <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+        <span class="prelude-val">Some</span>(IdentifiedOperand::Vector(composite))
+    } <span class="kw">else </span>{
+        <span class="kw">let </span>operands = results
+            .iter()
+            .map(|inst| <span class="kw">match </span>inst.operands[operand_index] {
+                Operand::IdRef(id) =&gt; <span class="prelude-val">Some</span>(id),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(<span class="ident">IdentifiedOperand::Scalars</span>(<span class="ident">operands</span>))
+            .collect::&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>(IdentifiedOperand::Scalars(operands))
     }
 }
 
-<span class="doccomment">/// Make sure all the operands are the same at this index, and return that operand. This is used</span>
-<span class="doccomment">/// in, for example, the `instruction` operand for `OpExtInst`.</span>
-<span class="kw">fn</span> <span class="ident">match_all_same_operand</span>(<span class="ident">results</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Instruction</span>], <span class="ident">operand_index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Operand</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">operand_zero</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">results</span>[<span class="number">0</span>].<span class="ident">operands</span>[<span class="ident">operand_index</span>];
-    <span class="kw">if</span> <span class="ident">results</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">skip</span>(<span class="number">1</span>)
-        .<span class="ident">all</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="ident">operand_index</span>] <span class="op">==</span> <span class="ident">operand_zero</span>)
+<span class="doccomment">/// Make sure all the operands are the same at this index, and return that operand. This is used
+/// in, for example, the `instruction` operand for `OpExtInst`.
+</span><span class="kw">fn </span>match_all_same_operand(results: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>Instruction], operand_index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;Operand&gt; {
+    <span class="kw">let </span>operand_zero = <span class="kw-2">&amp;</span>results[<span class="number">0</span>].operands[operand_index];
+    <span class="kw">if </span>results
+        .iter()
+        .skip(<span class="number">1</span>)
+        .all(|inst| <span class="kw-2">&amp;</span>inst.operands[operand_index] == operand_zero)
     {
-        <span class="prelude-val">Some</span>(<span class="ident">operand_zero</span>.<span class="ident">clone</span>())
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">Some</span>(operand_zero.clone())
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="doccomment">/// Find the proper operands for the vectorized operation. This means finding the backing vector</span>
-<span class="doccomment">/// for each scalar component, etc.</span>
-<span class="kw">fn</span> <span class="ident">match_operands</span>(
-    <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">defs</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">results</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Instruction</span>],
-    <span class="ident">vector_width</span>: <span class="ident">u32</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">IdentifiedOperand</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">operation_opcode</span> <span class="op">=</span> <span class="ident">results</span>[<span class="number">0</span>].<span class="ident">class</span>.<span class="ident">opcode</span>;
-    <span class="comment">// Check to make sure they&#39;re all the same opcode, and have the same number of arguments.</span>
-    <span class="kw">if</span> <span class="ident">results</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>).<span class="ident">any</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> {
-        <span class="ident">r</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">operation_opcode</span> <span class="op">|</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">results</span>[<span class="number">0</span>].<span class="ident">operands</span>.<span class="ident">len</span>()
+<span class="doccomment">/// Find the proper operands for the vectorized operation. This means finding the backing vector
+/// for each scalar component, etc.
+</span><span class="kw">fn </span>match_operands(
+    types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    defs: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    results: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>Instruction],
+    vector_width: u32,
+) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;IdentifiedOperand&gt;&gt; {
+    <span class="kw">let </span>operation_opcode = results[<span class="number">0</span>].class.opcode;
+    <span class="comment">// Check to make sure they&#39;re all the same opcode, and have the same number of arguments.
+    </span><span class="kw">if </span>results.iter().skip(<span class="number">1</span>).any(|r| {
+        r.class.opcode != operation_opcode || r.operands.len() != results[<span class="number">0</span>].operands.len()
     }) {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="comment">// TODO: There are probably other instructions relevant here.</span>
-    <span class="kw">match</span> <span class="ident">operation_opcode</span> {
-        <span class="ident">Op::IAdd</span>
-        <span class="op">|</span> <span class="ident">Op::FAdd</span>
-        <span class="op">|</span> <span class="ident">Op::ISub</span>
-        <span class="op">|</span> <span class="ident">Op::FSub</span>
-        <span class="op">|</span> <span class="ident">Op::IMul</span>
-        <span class="op">|</span> <span class="ident">Op::FMul</span>
-        <span class="op">|</span> <span class="ident">Op::UDiv</span>
-        <span class="op">|</span> <span class="ident">Op::SDiv</span>
-        <span class="op">|</span> <span class="ident">Op::FDiv</span>
-        <span class="op">|</span> <span class="ident">Op::UMod</span>
-        <span class="op">|</span> <span class="ident">Op::SRem</span>
-        <span class="op">|</span> <span class="ident">Op::FRem</span>
-        <span class="op">|</span> <span class="ident">Op::FMod</span>
-        <span class="op">|</span> <span class="ident">Op::ShiftRightLogical</span>
-        <span class="op">|</span> <span class="ident">Op::ShiftRightArithmetic</span>
-        <span class="op">|</span> <span class="ident">Op::ShiftLeftLogical</span>
-        <span class="op">|</span> <span class="ident">Op::BitwiseOr</span>
-        <span class="op">|</span> <span class="ident">Op::BitwiseXor</span>
-        <span class="op">|</span> <span class="ident">Op::BitwiseAnd</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">left</span> <span class="op">=</span> <span class="ident">match_vector_or_scalars_operand</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="ident">results</span>, <span class="number">0</span>, <span class="ident">vector_width</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">right</span> <span class="op">=</span> <span class="ident">match_vector_or_scalars_operand</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="ident">results</span>, <span class="number">1</span>, <span class="ident">vector_width</span>)<span class="question-mark">?</span>;
-            <span class="kw">match</span> (<span class="ident">left</span>, <span class="ident">right</span>) {
-                <span class="comment">// Style choice: If all arguments are scalars, don&#39;t fuse this operation.</span>
-                (<span class="ident">IdentifiedOperand::Scalars</span>(<span class="kw">_</span>), <span class="ident">IdentifiedOperand::Scalars</span>(<span class="kw">_</span>)) =&gt; <span class="prelude-val">None</span>,
-                (<span class="ident">left</span>, <span class="ident">right</span>) =&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="ident">left</span>, <span class="ident">right</span>]),
+    <span class="comment">// TODO: There are probably other instructions relevant here.
+    </span><span class="kw">match </span>operation_opcode {
+        Op::IAdd
+        | Op::FAdd
+        | Op::ISub
+        | Op::FSub
+        | Op::IMul
+        | Op::FMul
+        | Op::UDiv
+        | Op::SDiv
+        | Op::FDiv
+        | Op::UMod
+        | Op::SRem
+        | Op::FRem
+        | Op::FMod
+        | Op::ShiftRightLogical
+        | Op::ShiftRightArithmetic
+        | Op::ShiftLeftLogical
+        | Op::BitwiseOr
+        | Op::BitwiseXor
+        | Op::BitwiseAnd =&gt; {
+            <span class="kw">let </span>left = match_vector_or_scalars_operand(types, defs, results, <span class="number">0</span>, vector_width)<span class="question-mark">?</span>;
+            <span class="kw">let </span>right = match_vector_or_scalars_operand(types, defs, results, <span class="number">1</span>, vector_width)<span class="question-mark">?</span>;
+            <span class="kw">match </span>(left, right) {
+                <span class="comment">// Style choice: If all arguments are scalars, don&#39;t fuse this operation.
+                </span>(IdentifiedOperand::Scalars(<span class="kw">_</span>), IdentifiedOperand::Scalars(<span class="kw">_</span>)) =&gt; <span class="prelude-val">None</span>,
+                (left, right) =&gt; <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[left, right]),
             }
         }
-        <span class="ident">Op::SNegate</span> <span class="op">|</span> <span class="ident">Op::FNegate</span> <span class="op">|</span> <span class="ident">Op::Not</span> <span class="op">|</span> <span class="ident">Op::BitReverse</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">match_vector_operand</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="ident">results</span>, <span class="number">0</span>, <span class="ident">vector_width</span>)<span class="question-mark">?</span>;
-            <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="ident">IdentifiedOperand::Vector</span>(<span class="ident">value</span>)])
+        Op::SNegate | Op::FNegate | Op::Not | Op::BitReverse =&gt; {
+            <span class="kw">let </span>value = match_vector_operand(types, defs, results, <span class="number">0</span>, vector_width)<span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[IdentifiedOperand::Vector(value)])
         }
-        <span class="ident">Op::ExtInst</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">set</span> <span class="op">=</span> <span class="ident">match_all_same_operand</span>(<span class="ident">results</span>, <span class="number">0</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">match_all_same_operand</span>(<span class="ident">results</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> (<span class="number">2</span>..<span class="ident">results</span>[<span class="number">0</span>].<span class="ident">operands</span>.<span class="ident">len</span>())
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">match_vector_or_scalars_operand</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="ident">results</span>, <span class="ident">i</span>, <span class="ident">vector_width</span>));
-            <span class="comment">// Do some trickery to reduce allocations.</span>
-            <span class="kw">let</span> <span class="ident">operands</span> <span class="op">=</span> <span class="ident">IntoIterator::into_iter</span>([
-                <span class="prelude-val">Some</span>(<span class="ident">IdentifiedOperand::NonValue</span>(<span class="ident">set</span>)),
-                <span class="prelude-val">Some</span>(<span class="ident">IdentifiedOperand::NonValue</span>(<span class="ident">instruction</span>)),
+        Op::ExtInst =&gt; {
+            <span class="kw">let </span>set = match_all_same_operand(results, <span class="number">0</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>instruction = match_all_same_operand(results, <span class="number">1</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>parameters = (<span class="number">2</span>..results[<span class="number">0</span>].operands.len())
+                .map(|i| match_vector_or_scalars_operand(types, defs, results, i, vector_width));
+            <span class="comment">// Do some trickery to reduce allocations.
+            </span><span class="kw">let </span>operands = IntoIterator::into_iter([
+                <span class="prelude-val">Some</span>(IdentifiedOperand::NonValue(set)),
+                <span class="prelude-val">Some</span>(IdentifiedOperand::NonValue(instruction)),
             ])
-            .<span class="ident">chain</span>(<span class="ident">parameters</span>)
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="ident">operands</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">skip</span>(<span class="number">2</span>)
-                .<span class="ident">all</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="macro">matches!</span>(<span class="ident">p</span>, <span class="kw-2">&amp;</span><span class="ident">IdentifiedOperand::Scalars</span>(<span class="kw">_</span>)))
+            .chain(parameters)
+            .collect::&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
+            <span class="kw">if </span>operands
+                .iter()
+                .skip(<span class="number">2</span>)
+                .all(|p| <span class="macro">matches!</span>(p, <span class="kw-2">&amp;</span>IdentifiedOperand::Scalars(<span class="kw">_</span>)))
             {
-                <span class="comment">// Style choice: If all arguments are scalars, don&#39;t fuse this operation.</span>
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="comment">// Style choice: If all arguments are scalars, don&#39;t fuse this operation.
+                </span><span class="kw">return </span><span class="prelude-val">None</span>;
             }
-            <span class="prelude-val">Some</span>(<span class="ident">operands</span>)
+            <span class="prelude-val">Some</span>(operands)
         }
-        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
 
-<span class="kw">fn</span> <span class="ident">process_instruction</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">defs</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">instructions</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">instruction_index</span>: <span class="kw-2">&amp;mut</span> <span class="ident">usize</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">instructions</span>[<span class="kw-2">*</span><span class="ident">instruction_index</span>];
-    <span class="comment">// Basic sanity checks</span>
-    <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::CompositeConstruct</span> {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="kw">fn </span>process_instruction(
+    header: <span class="kw-2">&amp;mut </span>ModuleHeader,
+    types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    defs: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    instructions: <span class="kw-2">&amp;mut </span>Vec&lt;Instruction&gt;,
+    instruction_index: <span class="kw-2">&amp;mut </span>usize,
+) -&gt; <span class="prelude-ty">Option</span>&lt;Instruction&gt; {
+    <span class="kw">let </span>inst = <span class="kw-2">&amp;</span>instructions[<span class="kw-2">*</span>instruction_index];
+    <span class="comment">// Basic sanity checks
+    </span><span class="kw">if </span>inst.class.opcode != Op::CompositeConstruct {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="kw">let</span> <span class="ident">inst_result_id</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">vector_ty</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_type</span>.<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">vector_ty_inst</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">types</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">vector_ty</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">inst</span>) =&gt; <span class="ident">inst</span>,
-        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+    <span class="kw">let </span>inst_result_id = inst.result_id.unwrap();
+    <span class="kw">let </span>vector_ty = inst.result_type.unwrap();
+    <span class="kw">let </span>vector_ty_inst = <span class="kw">match </span>types.get(<span class="kw-2">&amp;</span>vector_ty) {
+        <span class="prelude-val">Some</span>(inst) =&gt; inst,
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
     };
-    <span class="kw">if</span> <span class="ident">vector_ty_inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::TypeVector</span> {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">if </span>vector_ty_inst.class.opcode != Op::TypeVector {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="kw">let</span> <span class="ident">vector_width</span> <span class="op">=</span> <span class="ident">vector_ty_inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_int32</span>();
-    <span class="comment">// `results` is the defining instruction for each scalar component of the final result.</span>
-    <span class="kw">let</span> <span class="ident">results</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">inst</span>
-        .<span class="ident">operands</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">defs</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">op</span>.<span class="ident">unwrap_id_ref</span>()))
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+    <span class="kw">let </span>vector_width = vector_ty_inst.operands[<span class="number">1</span>].unwrap_literal_int32();
+    <span class="comment">// `results` is the defining instruction for each scalar component of the final result.
+    </span><span class="kw">let </span>results = <span class="kw">match </span>inst
+        .operands
+        .iter()
+        .map(|op| defs.get(<span class="kw-2">&amp;</span>op.unwrap_id_ref()))
+        .collect::&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()
     {
-        <span class="prelude-val">Some</span>(<span class="ident">r</span>) =&gt; <span class="ident">r</span>,
-        <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+        <span class="prelude-val">Some</span>(r) =&gt; r,
+        <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
     };
 
-    <span class="kw">let</span> <span class="ident">operation_opcode</span> <span class="op">=</span> <span class="ident">results</span>[<span class="number">0</span>].<span class="ident">class</span>.<span class="ident">opcode</span>;
-    <span class="comment">// Figure out the operands for the vectorized instruction.</span>
-    <span class="kw">let</span> <span class="ident">composite_arguments</span> <span class="op">=</span> <span class="ident">match_operands</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="kw-2">&amp;</span><span class="ident">results</span>, <span class="ident">vector_width</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>operation_opcode = results[<span class="number">0</span>].class.opcode;
+    <span class="comment">// Figure out the operands for the vectorized instruction.
+    </span><span class="kw">let </span>composite_arguments = match_operands(types, defs, <span class="kw-2">&amp;</span>results, vector_width)<span class="question-mark">?</span>;
 
-    <span class="comment">// Fun little optimization: SPIR-V has a fancy OpVectorTimesScalar instruction. If we have a</span>
-    <span class="comment">// vector times a collection of scalars, and the scalars are all the same, reduce it!</span>
-    <span class="kw">if</span> <span class="ident">operation_opcode</span> <span class="op">==</span> <span class="ident">Op::FMul</span> <span class="op">&amp;&amp;</span> <span class="ident">composite_arguments</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">2</span> {
-        <span class="kw">if</span> <span class="kw">let</span> (<span class="kw-2">&amp;</span><span class="ident">IdentifiedOperand::Vector</span>(<span class="ident">composite</span>), <span class="ident">IdentifiedOperand::Scalars</span>(<span class="ident">scalars</span>))
-        <span class="op">|</span> (<span class="ident">IdentifiedOperand::Scalars</span>(<span class="ident">scalars</span>), <span class="kw-2">&amp;</span><span class="ident">IdentifiedOperand::Vector</span>(<span class="ident">composite</span>)) <span class="op">=</span>
-            (<span class="kw-2">&amp;</span><span class="ident">composite_arguments</span>[<span class="number">0</span>], <span class="kw-2">&amp;</span><span class="ident">composite_arguments</span>[<span class="number">1</span>])
+    <span class="comment">// Fun little optimization: SPIR-V has a fancy OpVectorTimesScalar instruction. If we have a
+    // vector times a collection of scalars, and the scalars are all the same, reduce it!
+    </span><span class="kw">if </span>operation_opcode == Op::FMul &amp;&amp; composite_arguments.len() == <span class="number">2 </span>{
+        <span class="kw">if let </span>(<span class="kw-2">&amp;</span>IdentifiedOperand::Vector(composite), IdentifiedOperand::Scalars(scalars))
+        | (IdentifiedOperand::Scalars(scalars), <span class="kw-2">&amp;</span>IdentifiedOperand::Vector(composite)) =
+            (<span class="kw-2">&amp;</span>composite_arguments[<span class="number">0</span>], <span class="kw-2">&amp;</span>composite_arguments[<span class="number">1</span>])
         {
-            <span class="kw">let</span> <span class="ident">scalar</span> <span class="op">=</span> <span class="ident">scalars</span>[<span class="number">0</span>];
-            <span class="kw">if</span> <span class="ident">scalars</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>).<span class="ident">all</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span> <span class="op">==</span> <span class="ident">scalar</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction::new</span>(
-                    <span class="ident">Op::VectorTimesScalar</span>,
-                    <span class="ident">inst</span>.<span class="ident">result_type</span>,
-                    <span class="ident">inst</span>.<span class="ident">result_id</span>,
-                    <span class="macro">vec!</span>[<span class="ident">Operand::IdRef</span>(<span class="ident">composite</span>), <span class="ident">Operand::IdRef</span>(<span class="ident">scalar</span>)],
+            <span class="kw">let </span>scalar = scalars[<span class="number">0</span>];
+            <span class="kw">if </span>scalars.iter().skip(<span class="number">1</span>).all(|<span class="kw-2">&amp;</span>s| s == scalar) {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(Instruction::new(
+                    Op::VectorTimesScalar,
+                    inst.result_type,
+                    inst.result_id,
+                    <span class="macro">vec!</span>[Operand::IdRef(composite), Operand::IdRef(scalar)],
                 ));
             }
         }
     }
 
-    <span class="comment">// Map the operands into their concrete representations: vectors and non-values stay as-is, but</span>
-    <span class="comment">// we need to emit an OpCompositeConstruct instruction for scalar collections.</span>
-    <span class="kw">let</span> <span class="ident">operands</span> <span class="op">=</span> <span class="ident">composite_arguments</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">operand</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">operand</span> {
-            <span class="ident">IdentifiedOperand::Vector</span>(<span class="ident">composite</span>) =&gt; <span class="ident">Operand::IdRef</span>(<span class="ident">composite</span>),
-            <span class="ident">IdentifiedOperand::NonValue</span>(<span class="ident">operand</span>) =&gt; <span class="ident">operand</span>,
-            <span class="ident">IdentifiedOperand::Scalars</span>(<span class="ident">scalars</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::id</span>(<span class="ident">header</span>);
-                <span class="comment">// spirv-opt will transform this into an OpConstantComposite if all arguments are</span>
-                <span class="comment">// constant, so we don&#39;t have to worry about that.</span>
-                <span class="ident">instructions</span>.<span class="ident">insert</span>(
-                    <span class="kw-2">*</span><span class="ident">instruction_index</span>,
-                    <span class="ident">Instruction::new</span>(
-                        <span class="ident">Op::CompositeConstruct</span>,
-                        <span class="prelude-val">Some</span>(<span class="ident">vector_ty</span>),
-                        <span class="prelude-val">Some</span>(<span class="ident">id</span>),
-                        <span class="ident">scalars</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">Operand::IdRef</span>).<span class="ident">collect</span>(),
+    <span class="comment">// Map the operands into their concrete representations: vectors and non-values stay as-is, but
+    // we need to emit an OpCompositeConstruct instruction for scalar collections.
+    </span><span class="kw">let </span>operands = composite_arguments
+        .into_iter()
+        .map(|operand| <span class="kw">match </span>operand {
+            IdentifiedOperand::Vector(composite) =&gt; Operand::IdRef(composite),
+            IdentifiedOperand::NonValue(operand) =&gt; operand,
+            IdentifiedOperand::Scalars(scalars) =&gt; {
+                <span class="kw">let </span>id = <span class="kw">super</span>::id(header);
+                <span class="comment">// spirv-opt will transform this into an OpConstantComposite if all arguments are
+                // constant, so we don&#39;t have to worry about that.
+                </span>instructions.insert(
+                    <span class="kw-2">*</span>instruction_index,
+                    Instruction::new(
+                        Op::CompositeConstruct,
+                        <span class="prelude-val">Some</span>(vector_ty),
+                        <span class="prelude-val">Some</span>(id),
+                        scalars.into_iter().map(Operand::IdRef).collect(),
                     ),
                 );
-                <span class="kw-2">*</span><span class="ident">instruction_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                <span class="ident">Operand::IdRef</span>(<span class="ident">id</span>)
+                <span class="kw-2">*</span>instruction_index += <span class="number">1</span>;
+                Operand::IdRef(id)
             }
         })
-        .<span class="ident">collect</span>();
+        .collect();
 
-    <span class="prelude-val">Some</span>(<span class="ident">Instruction::new</span>(
-        <span class="ident">operation_opcode</span>,
-        <span class="prelude-val">Some</span>(<span class="ident">vector_ty</span>),
-        <span class="prelude-val">Some</span>(<span class="ident">inst_result_id</span>),
-        <span class="ident">operands</span>,
+    <span class="prelude-val">Some</span>(Instruction::new(
+        operation_opcode,
+        <span class="prelude-val">Some</span>(vector_ty),
+        <span class="prelude-val">Some</span>(inst_result_id),
+        operands,
     ))
 }
 
-<span class="doccomment">/// Fuse a sequence of scalar operations into a single vector operation. For example:</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// %x_0 = OpCompositeExtract %x 0</span>
-<span class="doccomment">/// %x_1 = OpCompositeExtract %x 1</span>
-<span class="doccomment">/// %y_0 = OpCompositeExtract %y 0</span>
-<span class="doccomment">/// %y_1 = OpCompositeExtract %y 1</span>
-<span class="doccomment">/// %r_0 = OpAdd %x_0 %y_0</span>
-<span class="doccomment">/// %r_1 = OpAdd %x_1 %y_1</span>
-<span class="doccomment">/// %r = OpCompositeConstruct %r_0 %r_1</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// into</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// %r = OpAdd %x %y</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// (We don&#39;t remove the intermediate instructions, however, in case they&#39;re used elsewhere - we</span>
-<span class="doccomment">/// let spirv-opt remove them if they&#39;re actually dead)</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vector_ops</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">function</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Function</span>,
+<span class="doccomment">/// Fuse a sequence of scalar operations into a single vector operation. For example:
+/// ```
+/// %x_0 = OpCompositeExtract %x 0
+/// %x_1 = OpCompositeExtract %x 1
+/// %y_0 = OpCompositeExtract %y 0
+/// %y_1 = OpCompositeExtract %y 1
+/// %r_0 = OpAdd %x_0 %y_0
+/// %r_1 = OpAdd %x_1 %y_1
+/// %r = OpCompositeConstruct %r_0 %r_1
+/// ```
+/// into
+/// ```
+/// %r = OpAdd %x %y
+/// ```
+/// (We don&#39;t remove the intermediate instructions, however, in case they&#39;re used elsewhere - we
+/// let spirv-opt remove them if they&#39;re actually dead)
+</span><span class="kw">pub fn </span>vector_ops(
+    header: <span class="kw-2">&amp;mut </span>ModuleHeader,
+    types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    function: <span class="kw-2">&amp;mut </span>Function,
 ) {
-    <span class="kw">let</span> <span class="ident">defs</span> <span class="op">=</span> <span class="ident">function</span>
-        .<span class="ident">all_inst_iter</span>()
-        .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="prelude-val">Some</span>((<span class="ident">inst</span>.<span class="ident">result_id</span><span class="question-mark">?</span>, <span class="ident">inst</span>.<span class="ident">clone</span>())))
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">function</span>.<span class="ident">blocks</span> {
-        <span class="comment">// It&#39;d be nice to iterate over &amp;mut block.instructions, but there&#39;s a weird case: if we</span>
-        <span class="comment">// have a vector plus a collection of scalars, we want to pack the collection of scalars</span>
-        <span class="comment">// into a vector and do a vector+vector op. That means we need to insert an extra</span>
-        <span class="comment">// OpCompositeConstruct into the block, so, we need to manually keep track of the current</span>
-        <span class="comment">// index and do a while loop.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction_index</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">while</span> <span class="ident">instruction_index</span> <span class="op">&lt;</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">len</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result</span>) <span class="op">=</span> <span class="ident">process_instruction</span>(
-                <span class="ident">header</span>,
-                <span class="ident">types</span>,
-                <span class="kw-2">&amp;</span><span class="ident">defs</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">block</span>.<span class="ident">instructions</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">instruction_index</span>,
+    <span class="kw">let </span>defs = function
+        .all_inst_iter()
+        .filter_map(|inst| <span class="prelude-val">Some</span>((inst.result_id<span class="question-mark">?</span>, inst.clone())))
+        .collect::&lt;FxHashMap&lt;Word, Instruction&gt;&gt;();
+    <span class="kw">for </span>block <span class="kw">in </span><span class="kw-2">&amp;mut </span>function.blocks {
+        <span class="comment">// It&#39;d be nice to iterate over &amp;mut block.instructions, but there&#39;s a weird case: if we
+        // have a vector plus a collection of scalars, we want to pack the collection of scalars
+        // into a vector and do a vector+vector op. That means we need to insert an extra
+        // OpCompositeConstruct into the block, so, we need to manually keep track of the current
+        // index and do a while loop.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>instruction_index = <span class="number">0</span>;
+        <span class="kw">while </span>instruction_index &lt; block.instructions.len() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = process_instruction(
+                header,
+                types,
+                <span class="kw-2">&amp;</span>defs,
+                <span class="kw-2">&amp;mut </span>block.instructions,
+                <span class="kw-2">&amp;mut </span>instruction_index,
             ) {
-                <span class="comment">// Leave all the other instructions in the chain as dead code for other passes</span>
-                <span class="comment">// to clean up.</span>
-                <span class="ident">block</span>.<span class="ident">instructions</span>[<span class="ident">instruction_index</span>] <span class="op">=</span> <span class="ident">result</span>;
+                <span class="comment">// Leave all the other instructions in the chain as dead code for other passes
+                // to clean up.
+                </span>block.instructions[instruction_index] = result;
             }
 
-            <span class="ident">instruction_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            instruction_index += <span class="number">1</span>;
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">can_fuse_bool</span>(
-    <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">defs</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, (<span class="ident">usize</span>, <span class="ident">Instruction</span>)<span class="op">&gt;</span>,
-    <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>,
-) -&gt; <span class="ident">bool</span> {
-    <span class="kw">fn</span> <span class="ident">constant_value</span>(<span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>, <span class="ident">val</span>: <span class="ident">Word</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">types</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">val</span>) {
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">inst</span>) =&gt; <span class="ident">inst</span>,
+<span class="kw">fn </span>can_fuse_bool(
+    types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    defs: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, (usize, Instruction)&gt;,
+    inst: <span class="kw-2">&amp;</span>Instruction,
+) -&gt; bool {
+    <span class="kw">fn </span>constant_value(types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;, val: Word) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+        <span class="kw">let </span>inst = <span class="kw">match </span>types.get(<span class="kw-2">&amp;</span>val) {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+            <span class="prelude-val">Some</span>(inst) =&gt; inst,
         };
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Constant</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">if </span>inst.class.opcode != Op::Constant {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>] {
-            <span class="ident">Operand::LiteralInt32</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">match </span>inst.operands[<span class="number">0</span>] {
+            Operand::LiteralInt32(v) =&gt; <span class="prelude-val">Some</span>(v),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit</span>(
-        <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-        <span class="ident">defs</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, (<span class="ident">usize</span>, <span class="ident">Instruction</span>)<span class="op">&gt;</span>,
-        <span class="ident">visited</span>: <span class="kw-2">&amp;mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-        <span class="ident">value</span>: <span class="ident">Word</span>,
-    ) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="ident">visited</span>.<span class="ident">insert</span>(<span class="ident">value</span>) {
-            <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">defs</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) {
-                <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">inst</span>)) =&gt; <span class="ident">inst</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
+    <span class="kw">fn </span>visit(
+        types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+        defs: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, (usize, Instruction)&gt;,
+        visited: <span class="kw-2">&amp;mut </span>FxHashSet&lt;Word&gt;,
+        value: Word,
+    ) -&gt; bool {
+        <span class="kw">if </span>visited.insert(value) {
+            <span class="kw">let </span>inst = <span class="kw">match </span>defs.get(<span class="kw-2">&amp;</span>value) {
+                <span class="prelude-val">Some</span>((<span class="kw">_</span>, inst)) =&gt; inst,
+                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="bool-val">false</span>,
             };
-            <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-                <span class="ident">Op::Select</span> =&gt; {
-                    <span class="ident">constant_value</span>(<span class="ident">types</span>, <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>()) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="number">1</span>)
-                        <span class="op">&amp;&amp;</span> <span class="ident">constant_value</span>(<span class="ident">types</span>, <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">2</span>].<span class="ident">unwrap_id_ref</span>()) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="number">0</span>)
+            <span class="kw">match </span>inst.class.opcode {
+                Op::Select =&gt; {
+                    constant_value(types, inst.operands[<span class="number">1</span>].unwrap_id_ref()) == <span class="prelude-val">Some</span>(<span class="number">1</span>)
+                        &amp;&amp; constant_value(types, inst.operands[<span class="number">2</span>].unwrap_id_ref()) == <span class="prelude-val">Some</span>(<span class="number">0</span>)
                 }
-                <span class="ident">Op::Phi</span> =&gt; <span class="ident">inst</span>
-                    .<span class="ident">operands</span>
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">step_by</span>(<span class="number">2</span>)
-                    .<span class="ident">all</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">visit</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="ident">visited</span>, <span class="ident">op</span>.<span class="ident">unwrap_id_ref</span>())),
-                <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+                Op::Phi =&gt; inst
+                    .operands
+                    .iter()
+                    .step_by(<span class="number">2</span>)
+                    .all(|op| visit(types, defs, visited, op.unwrap_id_ref())),
+                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             }
-        } <span class="kw">else</span> {
-            <span class="bool-val">true</span>
-        }
+        } <span class="kw">else </span>{
+            <span class="bool-val">true
+        </span>}
     }
 
-    <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::INotEqual</span>
-        <span class="op">|</span><span class="op">|</span> <span class="ident">constant_value</span>(<span class="ident">types</span>, <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>()) <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="number">0</span>)
+    <span class="kw">if </span>inst.class.opcode != Op::INotEqual
+        || constant_value(types, inst.operands[<span class="number">1</span>].unwrap_id_ref()) != <span class="prelude-val">Some</span>(<span class="number">0</span>)
     {
-        <span class="kw">return</span> <span class="bool-val">false</span>;
+        <span class="kw">return </span><span class="bool-val">false</span>;
     }
-    <span class="kw">let</span> <span class="ident">int_value</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>();
+    <span class="kw">let </span>int_value = inst.operands[<span class="number">0</span>].unwrap_id_ref();
 
-    <span class="ident">visit</span>(<span class="ident">types</span>, <span class="ident">defs</span>, <span class="kw-2">&amp;mut</span> <span class="ident">FxHashSet::default</span>(), <span class="ident">int_value</span>)
+    visit(types, defs, <span class="kw-2">&amp;mut </span>FxHashSet::default(), int_value)
 }
 
-<span class="kw">fn</span> <span class="ident">fuse_bool</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">defs</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, (<span class="ident">usize</span>, <span class="ident">Instruction</span>)<span class="op">&gt;</span>,
-    <span class="ident">phis_to_insert</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">Instruction</span>)<span class="op">&gt;</span>,
-    <span class="ident">already_mapped</span>: <span class="kw-2">&amp;mut</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">bool_ty</span>: <span class="ident">Word</span>,
-    <span class="ident">int_value</span>: <span class="ident">Word</span>,
-) -&gt; <span class="ident">Word</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>) <span class="op">=</span> <span class="ident">already_mapped</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">int_value</span>) {
-        <span class="kw">return</span> <span class="ident">result</span>;
+<span class="kw">fn </span>fuse_bool(
+    header: <span class="kw-2">&amp;mut </span>ModuleHeader,
+    defs: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, (usize, Instruction)&gt;,
+    phis_to_insert: <span class="kw-2">&amp;mut </span>Vec&lt;(usize, Instruction)&gt;,
+    already_mapped: <span class="kw-2">&amp;mut </span>FxHashMap&lt;Word, Word&gt;,
+    bool_ty: Word,
+    int_value: Word,
+) -&gt; Word {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>result) = already_mapped.get(<span class="kw-2">&amp;</span>int_value) {
+        <span class="kw">return </span>result;
     }
-    <span class="kw">let</span> (<span class="ident">block_of_inst</span>, <span class="ident">inst</span>) <span class="op">=</span> <span class="ident">defs</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">int_value</span>).<span class="ident">unwrap</span>();
-    <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-        <span class="ident">Op::Select</span> =&gt; <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
-        <span class="ident">Op::Phi</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="ident">id</span>(<span class="ident">header</span>);
-            <span class="ident">already_mapped</span>.<span class="ident">insert</span>(<span class="ident">int_value</span>, <span class="ident">result_id</span>);
-            <span class="kw">let</span> <span class="ident">new_phi_args</span> <span class="op">=</span> <span class="ident">inst</span>
-                .<span class="ident">operands</span>
-                .<span class="ident">chunks</span>(<span class="number">2</span>)
-                .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">arr</span><span class="op">|</span> {
-                    <span class="kw">let</span> <span class="ident">phi_value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">arr</span>[<span class="number">0</span>];
-                    <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">arr</span>[<span class="number">1</span>];
+    <span class="kw">let </span>(block_of_inst, inst) = defs.get(<span class="kw-2">&amp;</span>int_value).unwrap();
+    <span class="kw">match </span>inst.class.opcode {
+        Op::Select =&gt; inst.operands[<span class="number">0</span>].unwrap_id_ref(),
+        Op::Phi =&gt; {
+            <span class="kw">let </span>result_id = id(header);
+            already_mapped.insert(int_value, result_id);
+            <span class="kw">let </span>new_phi_args = inst
+                .operands
+                .chunks(<span class="number">2</span>)
+                .flat_map(|arr| {
+                    <span class="kw">let </span>phi_value = <span class="kw-2">&amp;</span>arr[<span class="number">0</span>];
+                    <span class="kw">let </span>block = <span class="kw-2">&amp;</span>arr[<span class="number">1</span>];
                     [
-                        <span class="ident">Operand::IdRef</span>(<span class="ident">fuse_bool</span>(
-                            <span class="ident">header</span>,
-                            <span class="ident">defs</span>,
-                            <span class="ident">phis_to_insert</span>,
-                            <span class="ident">already_mapped</span>,
-                            <span class="ident">bool_ty</span>,
-                            <span class="ident">phi_value</span>.<span class="ident">unwrap_id_ref</span>(),
+                        Operand::IdRef(fuse_bool(
+                            header,
+                            defs,
+                            phis_to_insert,
+                            already_mapped,
+                            bool_ty,
+                            phi_value.unwrap_id_ref(),
                         )),
-                        <span class="ident">block</span>.<span class="ident">clone</span>(),
+                        block.clone(),
                     ]
                 })
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-            <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::new</span>(<span class="ident">Op::Phi</span>, <span class="prelude-val">Some</span>(<span class="ident">bool_ty</span>), <span class="prelude-val">Some</span>(<span class="ident">result_id</span>), <span class="ident">new_phi_args</span>);
-            <span class="ident">phis_to_insert</span>.<span class="ident">push</span>((<span class="kw-2">*</span><span class="ident">block_of_inst</span>, <span class="ident">inst</span>));
-            <span class="ident">result_id</span>
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+            <span class="kw">let </span>inst = Instruction::new(Op::Phi, <span class="prelude-val">Some</span>(bool_ty), <span class="prelude-val">Some</span>(result_id), new_phi_args);
+            phis_to_insert.push((<span class="kw-2">*</span>block_of_inst, inst));
+            result_id
         }
-        <span class="kw">_</span> =&gt; <span class="macro">bug!</span>(<span class="string">&quot;can_fuse_bool should have prevented this case&quot;</span>),
+        <span class="kw">_ </span>=&gt; <span class="macro">bug!</span>(<span class="string">&quot;can_fuse_bool should have prevented this case&quot;</span>),
     }
 }
 
-<span class="comment">// The compiler generates a lot of code that looks like this:</span>
-<span class="comment">// %v_int = OpSelect %int %v %const_1 %const_0</span>
-<span class="comment">// %v2 = OpINotEqual %bool %v_int %const_0</span>
-<span class="comment">// (This is due to rustc/spirv not supporting bools in memory, and needing to convert to u8, but</span>
-<span class="comment">// then things get inlined/mem2reg&#39;d)</span>
-<span class="comment">//</span>
-<span class="comment">// This pass fuses together those two instructions to strip out the intermediate integer variable.</span>
-<span class="comment">// The purpose is to make simple code that doesn&#39;t actually do memory-stuff with bools not require</span>
-<span class="comment">// the Int8 capability (and so we can&#39;t rely on spirv-opt to do this same pass).</span>
-<span class="comment">//</span>
-<span class="comment">// Unfortunately, things get complicated because of phis: the majority of actually useful cases to</span>
-<span class="comment">// do this pass need to track pseudo-bool ints through phi instructions.</span>
-<span class="comment">//</span>
-<span class="comment">// The logic goes like:</span>
-<span class="comment">// 1) Figure out what we *can* fuse. This means finding OpINotEqual instructions (converting back</span>
-<span class="comment">//    from int-&gt;bool) and tracing the value back recursively through any phis, and making sure each</span>
-<span class="comment">//    one terminates in either a loop back around to something we&#39;ve already seen, or an OpSelect</span>
-<span class="comment">//    (converting from bool-&gt;int).</span>
-<span class="comment">// 2) Do the fusion. Trace back through phis, generating a second bool-typed phi alongside the</span>
-<span class="comment">//    original int-typed phi, and when hitting an OpSelect, taking the bool value directly.</span>
-<span class="comment">// 3) DCE the dead OpSelects/int-typed OpPhis (done in a later pass). We don&#39;t nuke them here,</span>
-<span class="comment">//    since they might be used elsewhere, and don&#39;t want to accidentally leave a dangling</span>
-<span class="comment">//    reference.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bool_fusion</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">function</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Function</span>,
+<span class="comment">// The compiler generates a lot of code that looks like this:
+// %v_int = OpSelect %int %v %const_1 %const_0
+// %v2 = OpINotEqual %bool %v_int %const_0
+// (This is due to rustc/spirv not supporting bools in memory, and needing to convert to u8, but
+// then things get inlined/mem2reg&#39;d)
+//
+// This pass fuses together those two instructions to strip out the intermediate integer variable.
+// The purpose is to make simple code that doesn&#39;t actually do memory-stuff with bools not require
+// the Int8 capability (and so we can&#39;t rely on spirv-opt to do this same pass).
+//
+// Unfortunately, things get complicated because of phis: the majority of actually useful cases to
+// do this pass need to track pseudo-bool ints through phi instructions.
+//
+// The logic goes like:
+// 1) Figure out what we *can* fuse. This means finding OpINotEqual instructions (converting back
+//    from int-&gt;bool) and tracing the value back recursively through any phis, and making sure each
+//    one terminates in either a loop back around to something we&#39;ve already seen, or an OpSelect
+//    (converting from bool-&gt;int).
+// 2) Do the fusion. Trace back through phis, generating a second bool-typed phi alongside the
+//    original int-typed phi, and when hitting an OpSelect, taking the bool value directly.
+// 3) DCE the dead OpSelects/int-typed OpPhis (done in a later pass). We don&#39;t nuke them here,
+//    since they might be used elsewhere, and don&#39;t want to accidentally leave a dangling
+//    reference.
+</span><span class="kw">pub fn </span>bool_fusion(
+    header: <span class="kw-2">&amp;mut </span>ModuleHeader,
+    types: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Instruction&gt;,
+    function: <span class="kw-2">&amp;mut </span>Function,
 ) {
-    <span class="kw">let</span> <span class="ident">defs</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, (<span class="ident">usize</span>, <span class="ident">Instruction</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">function</span>
-        .<span class="ident">blocks</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">enumerate</span>()
-        .<span class="ident">flat_map</span>(<span class="op">|</span>(<span class="ident">block_id</span>, <span class="ident">block</span>)<span class="op">|</span> {
-            <span class="ident">block</span>
-                .<span class="ident">instructions</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">filter_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="prelude-val">Some</span>((<span class="ident">inst</span>.<span class="ident">result_id</span><span class="question-mark">?</span>, (<span class="ident">block_id</span>, <span class="ident">inst</span>.<span class="ident">clone</span>()))))
+    <span class="kw">let </span>defs: FxHashMap&lt;Word, (usize, Instruction)&gt; = function
+        .blocks
+        .iter()
+        .enumerate()
+        .flat_map(|(block_id, block)| {
+            block
+                .instructions
+                .iter()
+                .filter_map(<span class="kw">move </span>|inst| <span class="prelude-val">Some</span>((inst.result_id<span class="question-mark">?</span>, (block_id, inst.clone()))))
         })
-        .<span class="ident">collect</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewrite_rules</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">phis_to_insert</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">already_mapped</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">function</span>.<span class="ident">blocks</span> {
-        <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">block</span>.<span class="ident">instructions</span> {
-            <span class="kw">if</span> <span class="ident">can_fuse_bool</span>(<span class="ident">types</span>, <span class="kw-2">&amp;</span><span class="ident">defs</span>, <span class="ident">inst</span>) {
-                <span class="kw">let</span> <span class="ident">rewrite_to</span> <span class="op">=</span> <span class="ident">fuse_bool</span>(
-                    <span class="ident">header</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">defs</span>,
-                    <span class="kw-2">&amp;mut</span> <span class="ident">phis_to_insert</span>,
-                    <span class="kw-2">&amp;mut</span> <span class="ident">already_mapped</span>,
-                    <span class="ident">inst</span>.<span class="ident">result_type</span>.<span class="ident">unwrap</span>(),
-                    <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
+        .collect();
+    <span class="kw">let </span><span class="kw-2">mut </span>rewrite_rules = FxHashMap::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>phis_to_insert = Default::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>already_mapped = Default::default();
+    <span class="kw">for </span>block <span class="kw">in </span><span class="kw-2">&amp;mut </span>function.blocks {
+        <span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;mut </span>block.instructions {
+            <span class="kw">if </span>can_fuse_bool(types, <span class="kw-2">&amp;</span>defs, inst) {
+                <span class="kw">let </span>rewrite_to = fuse_bool(
+                    header,
+                    <span class="kw-2">&amp;</span>defs,
+                    <span class="kw-2">&amp;mut </span>phis_to_insert,
+                    <span class="kw-2">&amp;mut </span>already_mapped,
+                    inst.result_type.unwrap(),
+                    inst.operands[<span class="number">0</span>].unwrap_id_ref(),
                 );
-                <span class="ident">rewrite_rules</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>(), <span class="ident">rewrite_to</span>);
-                <span class="kw-2">*</span><span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::new</span>(<span class="ident">Op::Nop</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Vec::new</span>());
+                rewrite_rules.insert(inst.result_id.unwrap(), rewrite_to);
+                <span class="kw-2">*</span>inst = Instruction::new(Op::Nop, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, Vec::new());
             }
         }
     }
-    <span class="kw">for</span> (<span class="ident">block</span>, <span class="ident">phi</span>) <span class="kw">in</span> <span class="ident">phis_to_insert</span> {
-        <span class="ident">function</span>.<span class="ident">blocks</span>[<span class="ident">block</span>].<span class="ident">instructions</span>.<span class="ident">insert</span>(<span class="number">0</span>, <span class="ident">phi</span>);
+    <span class="kw">for </span>(block, phi) <span class="kw">in </span>phis_to_insert {
+        function.blocks[block].instructions.insert(<span class="number">0</span>, phi);
     }
-    <span class="ident"><span class="kw">super</span>::apply_rewrite_rules</span>(<span class="kw-2">&amp;</span><span class="ident">rewrite_rules</span>, <span class="kw-2">&amp;mut</span> <span class="ident">function</span>.<span class="ident">blocks</span>);
+    <span class="kw">super</span>::apply_rewrite_rules(<span class="kw-2">&amp;</span>rewrite_rules, <span class="kw-2">&amp;mut </span>function.blocks);
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

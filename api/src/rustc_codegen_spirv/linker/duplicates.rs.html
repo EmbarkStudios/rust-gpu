@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/duplicates.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>duplicates.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/duplicates.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>duplicates.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -302,304 +296,303 @@
 <span id="296">296</span>
 <span id="297">297</span>
 <span id="298">298</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::decorations</span>::{<span class="ident">CustomDecoration</span>, <span class="ident">ZombieDecoration</span>};
-<span class="kw">use</span> <span class="ident">rspirv::binary::Assemble</span>;
-<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">Op</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures::fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
-<span class="kw">use</span> <span class="ident">std::collections::hash_map</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::decorations::{CustomDecoration, ZombieDecoration};
+<span class="kw">use </span>rspirv::binary::Assemble;
+<span class="kw">use </span>rspirv::dr::{Instruction, Module, Operand};
+<span class="kw">use </span>rspirv::spirv::{Op, Word};
+<span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
+<span class="kw">use </span>rustc_middle::bug;
+<span class="kw">use </span>std::collections::hash_map;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_duplicate_extensions</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">set</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
+<span class="kw">pub fn </span>remove_duplicate_extensions(module: <span class="kw-2">&amp;mut </span>Module) {
+    <span class="kw">let </span><span class="kw-2">mut </span>set = FxHashSet::default();
 
-    <span class="ident">module</span>.<span class="ident">extensions</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-        <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Extension</span>
-            <span class="op">|</span><span class="op">|</span> <span class="ident">set</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_literal_string</span>().<span class="ident">to_string</span>())
+    module.extensions.retain(|inst| {
+        inst.class.opcode != Op::Extension
+            || set.insert(inst.operands[<span class="number">0</span>].unwrap_literal_string().to_string())
     });
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_duplicate_capablities</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">set</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="ident">module</span>.<span class="ident">capabilities</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-        <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Capability</span> <span class="op">|</span><span class="op">|</span> <span class="ident">set</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_capability</span>())
+<span class="kw">pub fn </span>remove_duplicate_capablities(module: <span class="kw-2">&amp;mut </span>Module) {
+    <span class="kw">let </span><span class="kw-2">mut </span>set = FxHashSet::default();
+    module.capabilities.retain(|inst| {
+        inst.class.opcode != Op::Capability || set.insert(inst.operands[<span class="number">0</span>].unwrap_capability())
     });
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_duplicate_ext_inst_imports</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) {
-    <span class="comment">// This is a simpler version of remove_duplicate_types, see that for comments</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ext_to_id</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewrite_rules</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
+<span class="kw">pub fn </span>remove_duplicate_ext_inst_imports(module: <span class="kw-2">&amp;mut </span>Module) {
+    <span class="comment">// This is a simpler version of remove_duplicate_types, see that for comments
+    </span><span class="kw">let </span><span class="kw-2">mut </span>ext_to_id = FxHashMap::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>rewrite_rules = FxHashMap::default();
 
-    <span class="comment">// First deduplicate the imports</span>
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">module</span>.<span class="ident">ext_inst_imports</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Operand::LiteralString</span>(<span class="ident">ext_inst_import</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>] {
-            <span class="kw">match</span> <span class="ident">ext_to_id</span>.<span class="ident">entry</span>(<span class="ident">ext_inst_import</span>.<span class="ident">clone</span>()) {
-                <span class="ident">hash_map::Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                    <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
+    <span class="comment">// First deduplicate the imports
+    </span><span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;mut </span>module.ext_inst_imports {
+        <span class="kw">if let </span>Operand::LiteralString(ext_inst_import) = <span class="kw-2">&amp;</span>inst.operands[<span class="number">0</span>] {
+            <span class="kw">match </span>ext_to_id.entry(ext_inst_import.clone()) {
+                hash_map::Entry::Vacant(entry) =&gt; {
+                    entry.insert(inst.result_id.unwrap());
                 }
-                <span class="ident">hash_map::Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; {
-                    <span class="kw">let</span> <span class="ident">old_value</span> <span class="op">=</span> <span class="ident">rewrite_rules</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>(), <span class="kw-2">*</span><span class="ident">entry</span>.<span class="ident">get</span>());
-                    <span class="macro">assert!</span>(<span class="ident">old_value</span>.<span class="ident">is_none</span>());
-                    <span class="comment">// We&#39;re iterating through the vec, so removing items is hard - nop it out.</span>
-                    <span class="kw-2">*</span><span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::new</span>(<span class="ident">Op::Nop</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]);
+                hash_map::Entry::Occupied(entry) =&gt; {
+                    <span class="kw">let </span>old_value = rewrite_rules.insert(inst.result_id.unwrap(), <span class="kw-2">*</span>entry.get());
+                    <span class="macro">assert!</span>(old_value.is_none());
+                    <span class="comment">// We&#39;re iterating through the vec, so removing items is hard - nop it out.
+                    </span><span class="kw-2">*</span>inst = Instruction::new(Op::Nop, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]);
                 }
             }
         }
     }
 
-    <span class="comment">// Delete the nops we inserted</span>
-    <span class="ident">module</span>
-        .<span class="ident">ext_inst_imports</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Nop</span>);
+    <span class="comment">// Delete the nops we inserted
+    </span>module
+        .ext_inst_imports
+        .retain(|op| op.class.opcode != Op::Nop);
 
-    <span class="comment">// Then rewrite all OpExtInst referencing the rewritten IDs</span>
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">all_inst_iter_mut</span>() {
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::ExtInst</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Operand::IdRef</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>] {
-                <span class="kw-2">*</span><span class="ident">id</span> <span class="op">=</span> <span class="ident">rewrite_rules</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">copied</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">*</span><span class="ident">id</span>);
+    <span class="comment">// Then rewrite all OpExtInst referencing the rewritten IDs
+    </span><span class="kw">for </span>inst <span class="kw">in </span>module.all_inst_iter_mut() {
+        <span class="kw">if </span>inst.class.opcode == Op::ExtInst {
+            <span class="kw">if let </span>Operand::IdRef(<span class="kw-2">ref mut </span>id) = inst.operands[<span class="number">0</span>] {
+                <span class="kw-2">*</span>id = rewrite_rules.get(id).copied().unwrap_or(<span class="kw-2">*</span>id);
             }
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">make_annotation_key</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="kw">as</span> <span class="ident">u32</span>];
+<span class="kw">fn </span>make_annotation_key(inst: <span class="kw-2">&amp;</span>Instruction) -&gt; Vec&lt;u32&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vec!</span>[inst.class.opcode <span class="kw">as </span>u32];
 
-    <span class="comment">// skip over the target ID</span>
-    <span class="kw">for</span> <span class="ident">op</span> <span class="kw">in</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
-        <span class="ident">op</span>.<span class="ident">assemble_into</span>(<span class="kw-2">&amp;mut</span> <span class="ident">data</span>);
+    <span class="comment">// skip over the target ID
+    </span><span class="kw">for </span>op <span class="kw">in </span>inst.operands.iter().skip(<span class="number">1</span>) {
+        op.assemble_into(<span class="kw-2">&amp;mut </span>data);
     }
 
-    <span class="ident">data</span>
+    data
 }
 
-<span class="kw">fn</span> <span class="ident">gather_annotations</span>(<span class="ident">annotations</span>: <span class="kw-2">&amp;</span>[<span class="ident">Instruction</span>]) -&gt; <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">annotations</span> {
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::Decorate</span> <span class="op">|</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::MemberDecorate</span> {
-            <span class="kw">match</span> <span class="ident">map</span>.<span class="ident">entry</span>(<span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>()) {
-                <span class="ident">hash_map::Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                    <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="macro">vec!</span>[<span class="ident">make_annotation_key</span>(<span class="ident">inst</span>)]);
+<span class="kw">fn </span>gather_annotations(annotations: <span class="kw-2">&amp;</span>[Instruction]) -&gt; FxHashMap&lt;Word, Vec&lt;u32&gt;&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>map = FxHashMap::default();
+    <span class="kw">for </span>inst <span class="kw">in </span>annotations {
+        <span class="kw">if </span>inst.class.opcode == Op::Decorate || inst.class.opcode == Op::MemberDecorate {
+            <span class="kw">match </span>map.entry(inst.operands[<span class="number">0</span>].id_ref_any().unwrap()) {
+                hash_map::Entry::Vacant(entry) =&gt; {
+                    entry.insert(<span class="macro">vec!</span>[make_annotation_key(inst)]);
                 }
-                <span class="ident">hash_map::Entry::Occupied</span>(<span class="kw-2">mut</span> <span class="ident">entry</span>) =&gt; {
-                    <span class="ident">entry</span>.<span class="ident">get_mut</span>().<span class="ident">push</span>(<span class="ident">make_annotation_key</span>(<span class="ident">inst</span>));
+                hash_map::Entry::Occupied(<span class="kw-2">mut </span>entry) =&gt; {
+                    entry.get_mut().push(make_annotation_key(inst));
                 }
             }
         }
     }
-    <span class="ident">map</span>.<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="kw-2">mut</span> <span class="ident">value</span>)<span class="op">|</span> {
-            (<span class="ident">key</span>, {
-                <span class="ident">value</span>.<span class="ident">sort</span>();
-                <span class="ident">value</span>.<span class="ident">concat</span>()
+    map.into_iter()
+        .map(|(key, <span class="kw-2">mut </span>value)| {
+            (key, {
+                value.sort();
+                value.concat()
             })
         })
-        .<span class="ident">collect</span>()
+        .collect()
 }
 
-<span class="kw">fn</span> <span class="ident">gather_names</span>(<span class="ident">debug_names</span>: <span class="kw-2">&amp;</span>[<span class="ident">Instruction</span>]) -&gt; <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="ident">debug_names</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::Name</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
+<span class="kw">fn </span>gather_names(debug_names: <span class="kw-2">&amp;</span>[Instruction]) -&gt; FxHashMap&lt;Word, String&gt; {
+    debug_names
+        .iter()
+        .filter(|inst| inst.class.opcode == Op::Name)
+        .map(|inst| {
             (
-                <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
-                <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_string</span>().<span class="ident">to_owned</span>(),
+                inst.operands[<span class="number">0</span>].unwrap_id_ref(),
+                inst.operands[<span class="number">1</span>].unwrap_literal_string().to_owned(),
             )
         })
-        .<span class="ident">collect</span>()
+        .collect()
 }
 
-<span class="kw">fn</span> <span class="ident">make_dedupe_key</span>(
-    <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>,
-    <span class="ident">unresolved_forward_pointers</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">zombies</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">annotations</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">names</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">String</span><span class="op">&gt;</span>,
-) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="kw">as</span> <span class="ident">u32</span>];
+<span class="kw">fn </span>make_dedupe_key(
+    inst: <span class="kw-2">&amp;</span>Instruction,
+    unresolved_forward_pointers: <span class="kw-2">&amp;</span>FxHashSet&lt;Word&gt;,
+    zombies: <span class="kw-2">&amp;</span>FxHashSet&lt;Word&gt;,
+    annotations: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Vec&lt;u32&gt;&gt;,
+    names: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, String&gt;,
+) -&gt; Vec&lt;u32&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vec!</span>[inst.class.opcode <span class="kw">as </span>u32];
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_type</span> {
-        <span class="comment">// We&#39;re not only deduplicating types here, but constants as well. Those contain result_types, and so we</span>
-        <span class="comment">// need to include those here. For example, OpConstant can have the same arg, but different result_type,</span>
-        <span class="comment">// and it should not be deduplicated (e.g. the constants 1u8 and 1u16).</span>
-        <span class="ident">data</span>.<span class="ident">push</span>(<span class="ident">id</span>);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = inst.result_type {
+        <span class="comment">// We&#39;re not only deduplicating types here, but constants as well. Those contain result_types, and so we
+        // need to include those here. For example, OpConstant can have the same arg, but different result_type,
+        // and it should not be deduplicated (e.g. the constants 1u8 and 1u16).
+        </span>data.push(id);
     }
-    <span class="kw">for</span> <span class="ident">op</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Operand::IdRef</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">op</span> {
-            <span class="kw">if</span> <span class="ident">unresolved_forward_pointers</span>.<span class="ident">contains</span>(<span class="ident">id</span>) {
-                <span class="comment">// TODO: This is implementing forward pointers incorrectly. All unresolved forward pointers will</span>
-                <span class="comment">// compare equal.</span>
-                <span class="ident">Operand::IdRef</span>(<span class="number">0</span>).<span class="ident">assemble_into</span>(<span class="kw-2">&amp;mut</span> <span class="ident">data</span>);
-            } <span class="kw">else</span> {
-                <span class="ident">op</span>.<span class="ident">assemble_into</span>(<span class="kw-2">&amp;mut</span> <span class="ident">data</span>);
+    <span class="kw">for </span>op <span class="kw">in </span><span class="kw-2">&amp;</span>inst.operands {
+        <span class="kw">if let </span>Operand::IdRef(id) = op {
+            <span class="kw">if </span>unresolved_forward_pointers.contains(id) {
+                <span class="comment">// TODO: This is implementing forward pointers incorrectly. All unresolved forward pointers will
+                // compare equal.
+                </span>Operand::IdRef(<span class="number">0</span>).assemble_into(<span class="kw-2">&amp;mut </span>data);
+            } <span class="kw">else </span>{
+                op.assemble_into(<span class="kw-2">&amp;mut </span>data);
             }
-        } <span class="kw">else</span> {
-            <span class="ident">op</span>.<span class="ident">assemble_into</span>(<span class="kw-2">&amp;mut</span> <span class="ident">data</span>);
+        } <span class="kw">else </span>{
+            op.assemble_into(<span class="kw-2">&amp;mut </span>data);
         }
     }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
-        <span class="ident">data</span>.<span class="ident">push</span>(<span class="kw">if</span> <span class="ident">zombies</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
-            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">result_type</span>.<span class="ident">is_some</span>() {
-                <span class="ident">id</span>
-            } <span class="kw">else</span> {
-                <span class="number">1</span>
-            }
-        } <span class="kw">else</span> {
-            <span class="number">0</span>
-        });
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">annos</span>) <span class="op">=</span> <span class="ident">annotations</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
-            <span class="ident">data</span>.<span class="ident">extend_from_slice</span>(<span class="ident">annos</span>);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = inst.result_id {
+        data.push(<span class="kw">if </span>zombies.contains(<span class="kw-2">&amp;</span>id) {
+            <span class="kw">if </span>inst.result_type.is_some() {
+                id
+            } <span class="kw">else </span>{
+                <span class="number">1
+            </span>}
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>});
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(annos) = annotations.get(<span class="kw-2">&amp;</span>id) {
+            data.extend_from_slice(annos);
         }
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::Variable</span> {
-            <span class="comment">// Names only matter for OpVariable.</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="ident">names</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
-                <span class="comment">// Jump through some hoops to shove a String into a Vec&lt;u32&gt;.</span>
-                <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="ident">name</span>.<span class="ident">as_bytes</span>().<span class="ident">chunks</span>(<span class="number">4</span>) {
-                    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">chunk</span> {
-                        [<span class="ident">a</span>] =&gt; [<span class="ident">a</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>],
-                        [<span class="ident">a</span>, <span class="ident">b</span>] =&gt; [<span class="ident">a</span>, <span class="ident">b</span>, <span class="number">0</span>, <span class="number">0</span>],
-                        [<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>] =&gt; [<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>, <span class="number">0</span>],
-                        [<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>] =&gt; [<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>],
-                        <span class="kw">_</span> =&gt; <span class="macro">bug!</span>(),
+        <span class="kw">if </span>inst.class.opcode == Op::Variable {
+            <span class="comment">// Names only matter for OpVariable.
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(name) = names.get(<span class="kw-2">&amp;</span>id) {
+                <span class="comment">// Jump through some hoops to shove a String into a Vec&lt;u32&gt;.
+                </span><span class="kw">for </span>chunk <span class="kw">in </span>name.as_bytes().chunks(<span class="number">4</span>) {
+                    <span class="kw">let </span>slice = <span class="kw">match </span><span class="kw-2">*</span>chunk {
+                        [a] =&gt; [a, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>],
+                        [a, b] =&gt; [a, b, <span class="number">0</span>, <span class="number">0</span>],
+                        [a, b, c] =&gt; [a, b, c, <span class="number">0</span>],
+                        [a, b, c, d] =&gt; [a, b, c, d],
+                        <span class="kw">_ </span>=&gt; <span class="macro">bug!</span>(),
                     };
-                    <span class="ident">data</span>.<span class="ident">push</span>(<span class="ident">u32::from_le_bytes</span>(<span class="ident">slice</span>));
+                    data.push(u32::from_le_bytes(slice));
                 }
             }
         }
     }
 
-    <span class="ident">data</span>
+    data
 }
 
-<span class="kw">fn</span> <span class="ident">rewrite_inst_with_rules</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Instruction</span>, <span class="ident">rules</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">u32</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_type</span> {
-        <span class="comment">// If the rewrite rules contain this ID, replace with the mapped value, otherwise don&#39;t touch it.</span>
-        <span class="kw-2">*</span><span class="ident">id</span> <span class="op">=</span> <span class="ident">rules</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">copied</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">*</span><span class="ident">id</span>);
+<span class="kw">fn </span>rewrite_inst_with_rules(inst: <span class="kw-2">&amp;mut </span>Instruction, rules: <span class="kw-2">&amp;</span>FxHashMap&lt;u32, u32&gt;) {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>id) = inst.result_type {
+        <span class="comment">// If the rewrite rules contain this ID, replace with the mapped value, otherwise don&#39;t touch it.
+        </span><span class="kw-2">*</span>id = rules.get(id).copied().unwrap_or(<span class="kw-2">*</span>id);
     }
-    <span class="kw">for</span> <span class="ident">op</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">inst</span>.<span class="ident">operands</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">op</span>.<span class="ident">id_ref_any_mut</span>() {
-            <span class="kw-2">*</span><span class="ident">id</span> <span class="op">=</span> <span class="ident">rules</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">copied</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">*</span><span class="ident">id</span>);
+    <span class="kw">for </span>op <span class="kw">in </span><span class="kw-2">&amp;mut </span>inst.operands {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = op.id_ref_any_mut() {
+            <span class="kw-2">*</span>id = rules.get(id).copied().unwrap_or(<span class="kw-2">*</span>id);
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_duplicate_types</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) {
-    <span class="comment">// Keep in mind, this algorithm requires forward type references to not exist - i.e. it&#39;s a valid spir-v module.</span>
+<span class="kw">pub fn </span>remove_duplicate_types(module: <span class="kw-2">&amp;mut </span>Module) {
+    <span class="comment">// Keep in mind, this algorithm requires forward type references to not exist - i.e. it&#39;s a valid spir-v module.
 
-    <span class="comment">// Include zombies in the key to not merge zombies with non-zombies</span>
-    <span class="kw">let</span> <span class="ident">zombies</span>: <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ZombieDecoration::decode_all</span>(<span class="ident">module</span>)
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">z</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">z</span>)
-        .<span class="ident">collect</span>();
+    // Include zombies in the key to not merge zombies with non-zombies
+    </span><span class="kw">let </span>zombies: FxHashSet&lt;Word&gt; = ZombieDecoration::decode_all(module)
+        .map(|(z, <span class="kw">_</span>)| z)
+        .collect();
 
-    <span class="comment">// When a duplicate type is encountered, then this is a map from the deleted ID, to the new, deduplicated ID.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewrite_rules</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
-    <span class="comment">// Instructions are encoded into &quot;keys&quot;: their opcode, followed by arguments, then annotations.</span>
-    <span class="comment">// Importantly, result_id is left out. This means that any instruction that declares the same</span>
-    <span class="comment">// type, but with different result_id, will result in the same key.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_to_result_id</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
-    <span class="comment">// TODO: This is implementing forward pointers incorrectly.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unresolved_forward_pointers</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
+    <span class="comment">// When a duplicate type is encountered, then this is a map from the deleted ID, to the new, deduplicated ID.
+    </span><span class="kw">let </span><span class="kw-2">mut </span>rewrite_rules = FxHashMap::default();
+    <span class="comment">// Instructions are encoded into &quot;keys&quot;: their opcode, followed by arguments, then annotations.
+    // Importantly, result_id is left out. This means that any instruction that declares the same
+    // type, but with different result_id, will result in the same key.
+    </span><span class="kw">let </span><span class="kw-2">mut </span>key_to_result_id = FxHashMap::default();
+    <span class="comment">// TODO: This is implementing forward pointers incorrectly.
+    </span><span class="kw">let </span><span class="kw-2">mut </span>unresolved_forward_pointers = FxHashSet::default();
 
-    <span class="comment">// Collect a map from type ID to an annotation &quot;key blob&quot; (to append to the type key)</span>
-    <span class="kw">let</span> <span class="ident">annotations</span> <span class="op">=</span> <span class="ident">gather_annotations</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">annotations</span>);
-    <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="ident">gather_names</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">debug_names</span>);
+    <span class="comment">// Collect a map from type ID to an annotation &quot;key blob&quot; (to append to the type key)
+    </span><span class="kw">let </span>annotations = gather_annotations(<span class="kw-2">&amp;</span>module.annotations);
+    <span class="kw">let </span>names = gather_names(<span class="kw-2">&amp;</span>module.debug_names);
 
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">module</span>.<span class="ident">types_global_values</span> {
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::TypeForwardPointer</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Operand::IdRef</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>] {
-                <span class="ident">unresolved_forward_pointers</span>.<span class="ident">insert</span>(<span class="ident">id</span>);
+    <span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;mut </span>module.types_global_values {
+        <span class="kw">if </span>inst.class.opcode == Op::TypeForwardPointer {
+            <span class="kw">if let </span>Operand::IdRef(id) = inst.operands[<span class="number">0</span>] {
+                unresolved_forward_pointers.insert(id);
                 <span class="kw">continue</span>;
             }
         }
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::TypePointer</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">unresolved_forward_pointers</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>())
+        <span class="kw">if </span>inst.class.opcode == Op::TypePointer
+            &amp;&amp; unresolved_forward_pointers.contains(<span class="kw-2">&amp;</span>inst.result_id.unwrap())
         {
-            <span class="ident">unresolved_forward_pointers</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
+            unresolved_forward_pointers.remove(<span class="kw-2">&amp;</span>inst.result_id.unwrap());
         }
-        <span class="comment">// This is an important spot: Say that we come upon a duplicated aggregate type (one that references</span>
-        <span class="comment">// other types). Its arguments may be duplicated themselves, and so building the key directly will fail</span>
-        <span class="comment">// to match up with the first type. However, **because forward references are not allowed**, we&#39;re</span>
-        <span class="comment">// guaranteed to have already found and deduplicated the argument types! So that means the deduplication</span>
-        <span class="comment">// translation is already in rewrite_rules, and we merely need to apply the mapping before generating</span>
-        <span class="comment">// the key.</span>
-        <span class="comment">// Nit: Overwriting the instruction isn&#39;t technically necessary, as it will get handled by the final</span>
-        <span class="comment">// all_inst_iter_mut pass below. However, the code is a lil bit cleaner this way I guess.</span>
-        <span class="ident">rewrite_inst_with_rules</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">rewrite_rules</span>);
+        <span class="comment">// This is an important spot: Say that we come upon a duplicated aggregate type (one that references
+        // other types). Its arguments may be duplicated themselves, and so building the key directly will fail
+        // to match up with the first type. However, **because forward references are not allowed**, we&#39;re
+        // guaranteed to have already found and deduplicated the argument types! So that means the deduplication
+        // translation is already in rewrite_rules, and we merely need to apply the mapping before generating
+        // the key.
+        // Nit: Overwriting the instruction isn&#39;t technically necessary, as it will get handled by the final
+        // all_inst_iter_mut pass below. However, the code is a lil bit cleaner this way I guess.
+        </span>rewrite_inst_with_rules(inst, <span class="kw-2">&amp;</span>rewrite_rules);
 
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">make_dedupe_key</span>(
-            <span class="ident">inst</span>,
-            <span class="kw-2">&amp;</span><span class="ident">unresolved_forward_pointers</span>,
-            <span class="kw-2">&amp;</span><span class="ident">zombies</span>,
-            <span class="kw-2">&amp;</span><span class="ident">annotations</span>,
-            <span class="kw-2">&amp;</span><span class="ident">names</span>,
+        <span class="kw">let </span>key = make_dedupe_key(
+            inst,
+            <span class="kw-2">&amp;</span>unresolved_forward_pointers,
+            <span class="kw-2">&amp;</span>zombies,
+            <span class="kw-2">&amp;</span>annotations,
+            <span class="kw-2">&amp;</span>names,
         );
 
-        <span class="kw">match</span> <span class="ident">key_to_result_id</span>.<span class="ident">entry</span>(<span class="ident">key</span>) {
-            <span class="ident">hash_map::Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="comment">// This is the first time we&#39;ve seen this key. Insert the key into the map, registering this type as</span>
-                <span class="comment">// something other types can deduplicate to.</span>
-                <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
+        <span class="kw">match </span>key_to_result_id.entry(key) {
+            hash_map::Entry::Vacant(entry) =&gt; {
+                <span class="comment">// This is the first time we&#39;ve seen this key. Insert the key into the map, registering this type as
+                // something other types can deduplicate to.
+                </span>entry.insert(inst.result_id.unwrap());
             }
-            <span class="ident">hash_map::Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="comment">// We&#39;ve already seen this key. We need to do two things:</span>
-                <span class="comment">// 1) Add a rewrite rule from this type to the type that we saw before.</span>
-                <span class="kw">let</span> <span class="ident">old_value</span> <span class="op">=</span> <span class="ident">rewrite_rules</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>(), <span class="kw-2">*</span><span class="ident">entry</span>.<span class="ident">get</span>());
-                <span class="comment">// 2) Erase this instruction. Because we&#39;re iterating over this vec, removing an element is hard, so</span>
-                <span class="comment">// clear it with OpNop, and then remove it in the retain() call below.</span>
-                <span class="macro">assert!</span>(<span class="ident">old_value</span>.<span class="ident">is_none</span>());
-                <span class="kw-2">*</span><span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::new</span>(<span class="ident">Op::Nop</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]);
+            hash_map::Entry::Occupied(entry) =&gt; {
+                <span class="comment">// We&#39;ve already seen this key. We need to do two things:
+                // 1) Add a rewrite rule from this type to the type that we saw before.
+                </span><span class="kw">let </span>old_value = rewrite_rules.insert(inst.result_id.unwrap(), <span class="kw-2">*</span>entry.get());
+                <span class="comment">// 2) Erase this instruction. Because we&#39;re iterating over this vec, removing an element is hard, so
+                // clear it with OpNop, and then remove it in the retain() call below.
+                </span><span class="macro">assert!</span>(old_value.is_none());
+                <span class="kw-2">*</span>inst = Instruction::new(Op::Nop, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]);
             }
         }
     }
 
-    <span class="comment">// We rewrote instructions we wanted to remove with OpNop. Remove them properly.</span>
-    <span class="ident">module</span>
-        .<span class="ident">types_global_values</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Nop</span>);
+    <span class="comment">// We rewrote instructions we wanted to remove with OpNop. Remove them properly.
+    </span>module
+        .types_global_values
+        .retain(|op| op.class.opcode != Op::Nop);
 
-    <span class="comment">// Apply the rewrite rules to the whole module</span>
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">all_inst_iter_mut</span>() {
-        <span class="ident">rewrite_inst_with_rules</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">rewrite_rules</span>);
+    <span class="comment">// Apply the rewrite rules to the whole module
+    </span><span class="kw">for </span>inst <span class="kw">in </span>module.all_inst_iter_mut() {
+        rewrite_inst_with_rules(inst, <span class="kw-2">&amp;</span>rewrite_rules);
     }
 
-    <span class="comment">// The same decorations for duplicated types will cause those different types to merge</span>
-    <span class="comment">// together. So, we need to deduplicate the annotations as well. (Note we *do* care about the</span>
-    <span class="comment">// ID of the type being applied to here, unlike `gather_annotations`)</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">anno_set</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="ident">module</span>
-        .<span class="ident">annotations</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">anno_set</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">assemble</span>()));
-    <span class="comment">// Same thing with OpName</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name_ids</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">member_name_ids</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="ident">module</span>.<span class="ident">debug_names</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-        (<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Name</span> <span class="op">|</span><span class="op">|</span> <span class="ident">name_ids</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>()))
-            <span class="op">&amp;&amp;</span> (<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::MemberName</span>
-                <span class="op">|</span><span class="op">|</span> <span class="ident">member_name_ids</span>.<span class="ident">insert</span>((
-                    <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
-                    <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_int32</span>(),
+    <span class="comment">// The same decorations for duplicated types will cause those different types to merge
+    // together. So, we need to deduplicate the annotations as well. (Note we *do* care about the
+    // ID of the type being applied to here, unlike `gather_annotations`)
+    </span><span class="kw">let </span><span class="kw-2">mut </span>anno_set = FxHashSet::default();
+    module
+        .annotations
+        .retain(|inst| anno_set.insert(inst.assemble()));
+    <span class="comment">// Same thing with OpName
+    </span><span class="kw">let </span><span class="kw-2">mut </span>name_ids = FxHashSet::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>member_name_ids = FxHashSet::default();
+    module.debug_names.retain(|inst| {
+        (inst.class.opcode != Op::Name || name_ids.insert(inst.operands[<span class="number">0</span>].unwrap_id_ref()))
+            &amp;&amp; (inst.class.opcode != Op::MemberName
+                || member_name_ids.insert((
+                    inst.operands[<span class="number">0</span>].unwrap_id_ref(),
+                    inst.operands[<span class="number">1</span>].unwrap_literal_int32(),
                 )))
     });
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_duplicate_lines</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) {
-    <span class="kw">for</span> <span class="ident">func</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">module</span>.<span class="ident">functions</span> {
-        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">func</span>.<span class="ident">blocks</span> {
-            <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">dedup_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">a</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::Line</span> <span class="op">&amp;&amp;</span> <span class="ident">b</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::Line</span> {
-                    <span class="comment">// dedup_by removes the *second* element in a pair of duplicates. We want to</span>
-                    <span class="comment">// remove the *first* (so the last OpLine is kept). So, swap them! :D</span>
-                    <span class="ident">std::mem::swap</span>(<span class="ident">a</span>, <span class="ident">b</span>);
-                    <span class="bool-val">true</span>
-                } <span class="kw">else</span> {
-                    <span class="bool-val">false</span>
-                }
+<span class="kw">pub fn </span>remove_duplicate_lines(module: <span class="kw-2">&amp;mut </span>Module) {
+    <span class="kw">for </span>func <span class="kw">in </span><span class="kw-2">&amp;mut </span>module.functions {
+        <span class="kw">for </span>block <span class="kw">in </span><span class="kw-2">&amp;mut </span>func.blocks {
+            block.instructions.dedup_by(|a, b| {
+                <span class="kw">if </span>a.class.opcode == Op::Line &amp;&amp; b.class.opcode == Op::Line {
+                    <span class="comment">// dedup_by removes the *second* element in a pair of duplicates. We want to
+                    // remove the *first* (so the last OpLine is kept). So, swap them! :D
+                    </span>std::mem::swap(a, b);
+                    <span class="bool-val">true
+                </span>} <span class="kw">else </span>{
+                    <span class="bool-val">false
+                </span>}
             });
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

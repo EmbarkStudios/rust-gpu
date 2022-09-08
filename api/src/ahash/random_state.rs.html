@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ahash-0.7.6/src/random_state.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>random_state.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../ahash/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ahash-0.7.6/src/random_state.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>random_state.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../ahash/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../ahash/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -362,364 +356,363 @@
 <span id="356">356</span>
 <span id="357">357</span>
 <span id="358">358</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>, <span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>, <span class="ident">test</span>))))]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::convert::Convert</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::BuildHasherExt</span>;
+</pre><pre class="rust"><code><span class="attribute">#[cfg(all(feature = <span class="string">&quot;runtime-rng&quot;</span>, not(all(feature = <span class="string">&quot;compile-time-rng&quot;</span>, test))))]
+</span><span class="kw">use </span><span class="kw">crate</span>::convert::Convert;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::BuildHasherExt;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(
-    <span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)),
-    <span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;crypto&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stdsimd&quot;</span>)
-))]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::aes_hash</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(any(
+    all(any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>), target_feature = <span class="string">&quot;aes&quot;</span>, not(miri)),
+    all(any(target_arch = <span class="string">&quot;arm&quot;</span>, target_arch = <span class="string">&quot;aarch64&quot;</span>), target_feature = <span class="string">&quot;crypto&quot;</span>, not(miri), feature = <span class="string">&quot;stdsimd&quot;</span>)
+))]
+</span><span class="kw">pub use </span><span class="kw">crate</span>::aes_hash::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(
-    <span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)),
-    <span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;crypto&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stdsimd&quot;</span>)
-)))]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fallback_hash</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(not(any(
+    all(any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>), target_feature = <span class="string">&quot;aes&quot;</span>, not(miri)),
+    all(any(target_arch = <span class="string">&quot;arm&quot;</span>, target_arch = <span class="string">&quot;aarch64&quot;</span>), target_feature = <span class="string">&quot;crypto&quot;</span>, not(miri), feature = <span class="string">&quot;stdsimd&quot;</span>)
+)))]
+</span><span class="kw">pub use </span><span class="kw">crate</span>::fallback_hash::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>, <span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>), <span class="ident">test</span>)))]</span>
-<span class="kw">use</span> <span class="ident">const_random::const_random</span>;
-<span class="kw">use</span> <span class="ident">core::any</span>::{<span class="ident">Any</span>, <span class="ident">TypeId</span>};
-<span class="kw">use</span> <span class="ident">core::fmt</span>;
-<span class="kw">use</span> <span class="ident">core::hash::BuildHasher</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::hash::Hash</span>;
-<span class="kw">use</span> <span class="ident">core::hash::Hasher</span>;
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;compile-time-rng&quot;</span>, any(not(feature = <span class="string">&quot;runtime-rng&quot;</span>), test)))]
+</span><span class="kw">use </span>const_random::const_random;
+<span class="kw">use </span>core::any::{Any, TypeId};
+<span class="kw">use </span>core::fmt;
+<span class="kw">use </span>core::hash::BuildHasher;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+</span><span class="kw">use </span>core::hash::Hash;
+<span class="kw">use </span>core::hash::Hasher;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>))]</span>
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">std</span> <span class="kw">as</span> <span class="ident">alloc</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
+</span><span class="kw">extern crate </span>alloc;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">extern crate </span>std <span class="kw">as </span>alloc;
 
-<span class="kw">use</span> <span class="ident">alloc::boxed::Box</span>;
-<span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)))]</span>
-<span class="kw">use</span> <span class="ident">once_cell::race::OnceBox</span>;
+<span class="kw">use </span>alloc::boxed::Box;
+<span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
+<span class="attribute">#[cfg(not(all(target_arch = <span class="string">&quot;arm&quot;</span>, target_os = <span class="string">&quot;none&quot;</span>)))]
+</span><span class="kw">use </span>once_cell::race::OnceBox;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(
-    <span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)),
-    <span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;crypto&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stdsimd&quot;</span>)
-))]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::aes_hash</span>::<span class="kw-2">*</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(
-    <span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)),
-    <span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;crypto&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stdsimd&quot;</span>)
-)))]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fallback_hash</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(any(
+    all(any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>), target_feature = <span class="string">&quot;aes&quot;</span>, not(miri)),
+    all(any(target_arch = <span class="string">&quot;arm&quot;</span>, target_arch = <span class="string">&quot;aarch64&quot;</span>), target_feature = <span class="string">&quot;crypto&quot;</span>, not(miri), feature = <span class="string">&quot;stdsimd&quot;</span>)
+))]
+</span><span class="kw">use </span><span class="kw">crate</span>::aes_hash::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(not(any(
+    all(any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>), target_feature = <span class="string">&quot;aes&quot;</span>, not(miri)),
+    all(any(target_arch = <span class="string">&quot;arm&quot;</span>, target_arch = <span class="string">&quot;aarch64&quot;</span>), target_feature = <span class="string">&quot;crypto&quot;</span>, not(miri), feature = <span class="string">&quot;stdsimd&quot;</span>)
+)))]
+</span><span class="kw">use </span><span class="kw">crate</span>::fallback_hash::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)))]</span>
-<span class="kw">static</span> <span class="ident">RAND_SOURCE</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">RandomSource</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
+<span class="attribute">#[cfg(not(all(target_arch = <span class="string">&quot;arm&quot;</span>, target_os = <span class="string">&quot;none&quot;</span>)))]
+</span><span class="kw">static </span>RAND_SOURCE: OnceBox&lt;Box&lt;<span class="kw">dyn </span>RandomSource + Send + Sync&gt;&gt; = OnceBox::new();
 
-<span class="doccomment">/// A supplier of Randomness used for different hashers.</span>
-<span class="doccomment">/// See [RandomState.set_random_source].</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RandomSource</span> {
+<span class="doccomment">/// A supplier of Randomness used for different hashers.
+/// See [RandomState.set_random_source].
+</span><span class="kw">pub trait </span>RandomSource {
 
-    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>];
+    <span class="kw">fn </span>get_fixed_seeds(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[[u64; <span class="number">4</span>]; <span class="number">2</span>];
 
-    <span class="kw">fn</span> <span class="ident">gen_hasher_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span>;
+    <span class="kw">fn </span>gen_hasher_seed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">PI</span>: [<span class="ident">u64</span>; <span class="number">4</span>] <span class="op">=</span> [
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>PI: [u64; <span class="number">4</span>] = [
     <span class="number">0x243f_6a88_85a3_08d3</span>,
     <span class="number">0x1319_8a2e_0370_7344</span>,
     <span class="number">0xa409_3822_299f_31d0</span>,
     <span class="number">0x082e_fa98_ec4e_6c89</span>,
 ];
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">PI2</span>: [<span class="ident">u64</span>; <span class="number">4</span>] <span class="op">=</span> [
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>PI2: [u64; <span class="number">4</span>] = [
     <span class="number">0x4528_21e6_38d0_1377</span>,
     <span class="number">0xbe54_66cf_34e9_0c6c</span>,
     <span class="number">0xc0ac_29b7_c97c_50dd</span>,
     <span class="number">0x3f84_d5b5_b547_0917</span>,
 ];
 
-<span class="kw">struct</span> <span class="ident">DefaultRandomSource</span> {
-    <span class="ident">counter</span>: <span class="ident">AtomicUsize</span>,
+<span class="kw">struct </span>DefaultRandomSource {
+    counter: AtomicUsize,
 }
 
-<span class="kw">impl</span> <span class="ident">DefaultRandomSource</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">DefaultRandomSource</span> {
-        <span class="ident">DefaultRandomSource</span> {
-            <span class="ident">counter</span>: <span class="ident">AtomicUsize::new</span>(<span class="kw-2">&amp;</span><span class="ident">PI</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>),
+<span class="kw">impl </span>DefaultRandomSource {
+    <span class="kw">fn </span>new() -&gt; DefaultRandomSource {
+        DefaultRandomSource {
+            counter: AtomicUsize::new(<span class="kw-2">&amp;</span>PI <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span>usize),
         }
     }
 
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">DefaultRandomSource</span> {
-        <span class="ident">DefaultRandomSource</span> {
-            <span class="ident">counter</span>: <span class="ident">AtomicUsize::new</span>(<span class="ident">PI</span>[<span class="number">3</span>] <span class="kw">as</span> <span class="ident">usize</span>),
+    <span class="kw">const fn </span>default() -&gt; DefaultRandomSource {
+        DefaultRandomSource {
+            counter: AtomicUsize::new(PI[<span class="number">3</span>] <span class="kw">as </span>usize),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">RandomSource</span> <span class="kw">for</span> <span class="ident">DefaultRandomSource</span> {
+<span class="kw">impl </span>RandomSource <span class="kw">for </span>DefaultRandomSource {
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>, <span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>, <span class="ident">test</span>))))]</span>
-    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] {
-        <span class="kw">static</span> <span class="ident">SEEDS</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span>[[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;runtime-rng&quot;</span>, not(all(feature = <span class="string">&quot;compile-time-rng&quot;</span>, test))))]
+    </span><span class="kw">fn </span>get_fixed_seeds(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[[u64; <span class="number">4</span>]; <span class="number">2</span>] {
+        <span class="kw">static </span>SEEDS: OnceBox&lt;[[u64; <span class="number">4</span>]; <span class="number">2</span>]&gt; = OnceBox::new();
 
-        <span class="ident">SEEDS</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span>: [<span class="ident">u8</span>; <span class="number">64</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">64</span>];
-            <span class="ident">getrandom::getrandom</span>(<span class="kw-2">&amp;mut</span> <span class="ident">result</span>).<span class="ident">expect</span>(<span class="string">&quot;getrandom::getrandom() failed.&quot;</span>);
-            <span class="ident">Box::new</span>(<span class="ident">result</span>.<span class="ident">convert</span>())
+        SEEDS.get_or_init(|| {
+            <span class="kw">let </span><span class="kw-2">mut </span>result: [u8; <span class="number">64</span>] = [<span class="number">0</span>; <span class="number">64</span>];
+            getrandom::getrandom(<span class="kw-2">&amp;mut </span>result).expect(<span class="string">&quot;getrandom::getrandom() failed.&quot;</span>);
+            Box::new(result.convert())
         })
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>, <span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>), <span class="ident">test</span>)))]</span>
-    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] {
-        <span class="kw">const</span> <span class="ident">RAND</span>: [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] <span class="op">=</span> [
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;compile-time-rng&quot;</span>, any(not(feature = <span class="string">&quot;runtime-rng&quot;</span>), test)))]
+    </span><span class="kw">fn </span>get_fixed_seeds(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[[u64; <span class="number">4</span>]; <span class="number">2</span>] {
+        <span class="kw">const </span>RAND: [[u64; <span class="number">4</span>]; <span class="number">2</span>] = [
             [
-                <span class="macro">const_random!</span>(<span class="ident">u64</span>),
-                <span class="macro">const_random!</span>(<span class="ident">u64</span>),
-                <span class="macro">const_random!</span>(<span class="ident">u64</span>),
-                <span class="macro">const_random!</span>(<span class="ident">u64</span>),
+                <span class="macro">const_random!</span>(u64),
+                <span class="macro">const_random!</span>(u64),
+                <span class="macro">const_random!</span>(u64),
+                <span class="macro">const_random!</span>(u64),
             ], [
-                <span class="macro">const_random!</span>(<span class="ident">u64</span>),
-                <span class="macro">const_random!</span>(<span class="ident">u64</span>),
-                <span class="macro">const_random!</span>(<span class="ident">u64</span>),
-                <span class="macro">const_random!</span>(<span class="ident">u64</span>),
+                <span class="macro">const_random!</span>(u64),
+                <span class="macro">const_random!</span>(u64),
+                <span class="macro">const_random!</span>(u64),
+                <span class="macro">const_random!</span>(u64),
             ]
         ];
-        <span class="kw-2">&amp;</span><span class="ident">RAND</span>
+        <span class="kw-2">&amp;</span>RAND
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>), <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>)))]</span>
-    <span class="kw">fn</span> <span class="ident">get_fixed_seeds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [[<span class="ident">u64</span>; <span class="number">4</span>]; <span class="number">2</span>] {
-        <span class="kw-2">&amp;</span>[<span class="ident">PI</span>, <span class="ident">PI2</span>]
+    <span class="attribute">#[cfg(all(not(feature = <span class="string">&quot;runtime-rng&quot;</span>), not(feature = <span class="string">&quot;compile-time-rng&quot;</span>)))]
+    </span><span class="kw">fn </span>get_fixed_seeds(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[[u64; <span class="number">4</span>]; <span class="number">2</span>] {
+        <span class="kw-2">&amp;</span>[PI, PI2]
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)))]</span>
-    <span class="kw">fn</span> <span class="ident">gen_hasher_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="self">self</span>.<span class="ident">counter</span>.<span class="ident">fetch_add</span>(<span class="ident">stack</span>, <span class="ident">Ordering::Relaxed</span>)
+    <span class="attribute">#[cfg(not(all(target_arch = <span class="string">&quot;arm&quot;</span>, target_os = <span class="string">&quot;none&quot;</span>)))]
+    </span><span class="kw">fn </span>gen_hasher_seed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="kw">let </span>stack = <span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span>usize;
+        <span class="self">self</span>.counter.fetch_add(stack, Ordering::Relaxed)
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">gen_hasher_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="kw">let</span> <span class="ident">previous</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">counter</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>);
-        <span class="kw">let</span> <span class="ident">new</span> <span class="op">=</span> <span class="ident">previous</span>.<span class="ident">wrapping_add</span>(<span class="ident">stack</span>);
-        <span class="self">self</span>.<span class="ident">counter</span>.<span class="ident">store</span>(<span class="ident">new</span>, <span class="ident">Ordering::Relaxed</span>);
-        <span class="ident">new</span>
-    }
-}
-
-<span class="doccomment">/// Provides a [Hasher] factory. This is typically used (e.g. by [HashMap]) to create</span>
-<span class="doccomment">/// [AHasher]s in order to hash the keys of the map. See `build_hasher` below.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [build_hasher]: ahash::</span>
-<span class="doccomment">/// [Hasher]: std::hash::Hasher</span>
-<span class="doccomment">/// [BuildHasher]: std::hash::BuildHasher</span>
-<span class="doccomment">/// [HashMap]: std::collections::HashMap</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RandomState</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">k0</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">k1</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">k2</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">k3</span>: <span class="ident">u64</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">RandomState</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">pad</span>(<span class="string">&quot;RandomState { .. }&quot;</span>)
+    <span class="attribute">#[cfg(all(target_arch = <span class="string">&quot;arm&quot;</span>, target_os = <span class="string">&quot;none&quot;</span>))]
+    </span><span class="kw">fn </span>gen_hasher_seed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="kw">let </span>stack = <span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span>usize;
+        <span class="kw">let </span>previous = <span class="self">self</span>.counter.load(Ordering::Relaxed);
+        <span class="kw">let </span>new = previous.wrapping_add(stack);
+        <span class="self">self</span>.counter.store(new, Ordering::Relaxed);
+        new
     }
 }
 
-<span class="kw">impl</span> <span class="ident">RandomState</span> {
+<span class="doccomment">/// Provides a [Hasher] factory. This is typically used (e.g. by [HashMap]) to create
+/// [AHasher]s in order to hash the keys of the map. See `build_hasher` below.
+///
+/// [build_hasher]: ahash::
+/// [Hasher]: std::hash::Hasher
+/// [BuildHasher]: std::hash::BuildHasher
+/// [HashMap]: std::collections::HashMap
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>RandomState {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) k0: u64,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) k1: u64,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) k2: u64,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) k3: u64,
+}
 
-    <span class="doccomment">/// Provides an optional way to manually supply a source of randomness for Hasher keys.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The provided [RandomSource] will be used to be used as a source of randomness by [RandomState] to generate new states.</span>
-    <span class="doccomment">/// If this method is not invoked the standard source of randomness is used as described in the Readme.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The source of randomness can only be set once, and must be set before the first RandomState is created.</span>
-    <span class="doccomment">/// If the source has already been specified `Err` is returned with a `bool` indicating if the set failed because</span>
-    <span class="doccomment">/// method was previously invoked (true) or if the default source is already being used (false).</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)))]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_random_source</span>(<span class="ident">source</span>: <span class="kw">impl</span> <span class="ident">RandomSource</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="ident">RAND_SOURCE</span>.<span class="ident">set</span>(<span class="ident">Box::new</span>(<span class="ident">Box::new</span>(<span class="ident">source</span>))).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">as_ref</span>().<span class="ident">type_id</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">TypeId::of</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DefaultRandomSource</span><span class="op">&gt;</span>())
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>RandomState {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.pad(<span class="string">&quot;RandomState { .. }&quot;</span>)
+    }
+}
+
+<span class="kw">impl </span>RandomState {
+
+    <span class="doccomment">/// Provides an optional way to manually supply a source of randomness for Hasher keys.
+    ///
+    /// The provided [RandomSource] will be used to be used as a source of randomness by [RandomState] to generate new states.
+    /// If this method is not invoked the standard source of randomness is used as described in the Readme.
+    ///
+    /// The source of randomness can only be set once, and must be set before the first RandomState is created.
+    /// If the source has already been specified `Err` is returned with a `bool` indicating if the set failed because
+    /// method was previously invoked (true) or if the default source is already being used (false).
+    </span><span class="attribute">#[cfg(not(all(target_arch = <span class="string">&quot;arm&quot;</span>, target_os = <span class="string">&quot;none&quot;</span>)))]
+    </span><span class="kw">pub fn </span>set_random_source(source: <span class="kw">impl </span>RandomSource + Send + Sync + <span class="lifetime">&#39;static</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), bool&gt; {
+        RAND_SOURCE.set(Box::new(Box::new(source))).map_err(|s| s.as_ref().type_id() != TypeId::of::&lt;<span class="kw-2">&amp;</span>DefaultRandomSource&gt;())
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>)))]</span>
-    <span class="kw">fn</span> <span class="ident">get_src</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">RandomSource</span> {
-        <span class="ident">RAND_SOURCE</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Box::new</span>(<span class="ident">Box::new</span>(<span class="ident">DefaultRandomSource::new</span>()))).<span class="ident">as_ref</span>()
+    <span class="attribute">#[inline]
+    #[cfg(not(all(target_arch = <span class="string">&quot;arm&quot;</span>, target_os = <span class="string">&quot;none&quot;</span>)))]
+    </span><span class="kw">fn </span>get_src() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>RandomSource {
+        RAND_SOURCE.get_or_init(|| Box::new(Box::new(DefaultRandomSource::new()))).as_ref()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;none&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">get_src</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">RandomSource</span> {
-        <span class="kw">static</span> <span class="ident">RAND_SOURCE</span>: <span class="ident">DefaultRandomSource</span> <span class="op">=</span> <span class="ident">DefaultRandomSource::default</span>();
-        <span class="kw-2">&amp;</span><span class="ident">RAND_SOURCE</span>
+    <span class="attribute">#[inline]
+    #[cfg(all(target_arch = <span class="string">&quot;arm&quot;</span>, target_os = <span class="string">&quot;none&quot;</span>))]
+    </span><span class="kw">fn </span>get_src() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>RandomSource {
+        <span class="kw">static </span>RAND_SOURCE: DefaultRandomSource = DefaultRandomSource::default();
+        <span class="kw-2">&amp;</span>RAND_SOURCE
     }
 
-    <span class="doccomment">/// Use randomly generated keys</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">RandomState</span> {
-        <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_src</span>();
-        <span class="kw">let</span> <span class="ident">fixed</span> <span class="op">=</span> <span class="ident">src</span>.<span class="ident">get_fixed_seeds</span>();
-        <span class="ident"><span class="self">Self</span>::from_keys</span>(<span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">0</span>], <span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">1</span>], <span class="ident">src</span>.<span class="ident">gen_hasher_seed</span>())
+    <span class="doccomment">/// Use randomly generated keys
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>new() -&gt; RandomState {
+        <span class="kw">let </span>src = <span class="self">Self</span>::get_src();
+        <span class="kw">let </span>fixed = src.get_fixed_seeds();
+        <span class="self">Self</span>::from_keys(<span class="kw-2">&amp;</span>fixed[<span class="number">0</span>], <span class="kw-2">&amp;</span>fixed[<span class="number">1</span>], src.gen_hasher_seed())
     }
 
-    <span class="doccomment">/// Allows for supplying seeds, but each time it is called the resulting state will be different.</span>
-    <span class="doccomment">/// This is done using a static counter, so it can safely be used with a fixed keys.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_with</span>(<span class="ident">k0</span>: <span class="ident">u64</span>, <span class="ident">k1</span>: <span class="ident">u64</span>, <span class="ident">k2</span>: <span class="ident">u64</span>, <span class="ident">k3</span>: <span class="ident">u64</span>) -&gt; <span class="ident">RandomState</span> {
-        <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_src</span>();
-        <span class="kw">let</span> <span class="ident">fixed</span> <span class="op">=</span> <span class="ident">src</span>.<span class="ident">get_fixed_seeds</span>();
-        <span class="ident">RandomState::from_keys</span>(<span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">0</span>], <span class="kw-2">&amp;</span>[<span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span>], <span class="ident">src</span>.<span class="ident">gen_hasher_seed</span>())
+    <span class="doccomment">/// Allows for supplying seeds, but each time it is called the resulting state will be different.
+    /// This is done using a static counter, so it can safely be used with a fixed keys.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>generate_with(k0: u64, k1: u64, k2: u64, k3: u64) -&gt; RandomState {
+        <span class="kw">let </span>src = <span class="self">Self</span>::get_src();
+        <span class="kw">let </span>fixed = src.get_fixed_seeds();
+        RandomState::from_keys(<span class="kw-2">&amp;</span>fixed[<span class="number">0</span>], <span class="kw-2">&amp;</span>[k0, k1, k2, k3], src.gen_hasher_seed())
     }
 
-    <span class="kw">fn</span> <span class="ident">from_keys</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>; <span class="number">4</span>], <span class="ident">b</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>; <span class="number">4</span>], <span class="ident">c</span>: <span class="ident">usize</span>) -&gt; <span class="ident">RandomState</span> {
-        <span class="kw">let</span> <span class="kw-2">&amp;</span>[<span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span>] <span class="op">=</span> <span class="ident">a</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasher::from_random_state</span>(<span class="kw-2">&amp;</span><span class="ident">RandomState</span> { <span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span> });
-        <span class="ident">hasher</span>.<span class="ident">write_usize</span>(<span class="ident">c</span>);
-        <span class="kw">let</span> <span class="ident">mix</span> <span class="op">=</span> <span class="op">|</span><span class="ident">k</span>: <span class="ident">u64</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">clone</span>();
-            <span class="ident">h</span>.<span class="ident">write_u64</span>(<span class="ident">k</span>);
-            <span class="ident">h</span>.<span class="ident">finish</span>()
+    <span class="kw">fn </span>from_keys(a: <span class="kw-2">&amp;</span>[u64; <span class="number">4</span>], b: <span class="kw-2">&amp;</span>[u64; <span class="number">4</span>], c: usize) -&gt; RandomState {
+        <span class="kw">let </span><span class="kw-2">&amp;</span>[k0, k1, k2, k3] = a;
+        <span class="kw">let </span><span class="kw-2">mut </span>hasher = AHasher::from_random_state(<span class="kw-2">&amp;</span>RandomState { k0, k1, k2, k3 });
+        hasher.write_usize(c);
+        <span class="kw">let </span>mix = |k: u64| {
+            <span class="kw">let </span><span class="kw-2">mut </span>h = hasher.clone();
+            h.write_u64(k);
+            h.finish()
         };
-        <span class="ident">RandomState</span> {
-            <span class="ident">k0</span>: <span class="ident">mix</span>(<span class="ident">b</span>[<span class="number">0</span>]),
-            <span class="ident">k1</span>: <span class="ident">mix</span>(<span class="ident">b</span>[<span class="number">1</span>]),
-            <span class="ident">k2</span>: <span class="ident">mix</span>(<span class="ident">b</span>[<span class="number">2</span>]),
-            <span class="ident">k3</span>: <span class="ident">mix</span>(<span class="ident">b</span>[<span class="number">3</span>]),
+        RandomState {
+            k0: mix(b[<span class="number">0</span>]),
+            k1: mix(b[<span class="number">1</span>]),
+            k2: mix(b[<span class="number">2</span>]),
+            k3: mix(b[<span class="number">3</span>]),
         }
     }
 
-    <span class="doccomment">/// Internal. Used by Default.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_fixed_keys</span>() -&gt; <span class="ident">RandomState</span> {
-        <span class="kw">let</span> [<span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span>] <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_src</span>().<span class="ident">get_fixed_seeds</span>()[<span class="number">0</span>];
-        <span class="ident">RandomState</span> { <span class="ident">k0</span>, <span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">k3</span> }
+    <span class="doccomment">/// Internal. Used by Default.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>with_fixed_keys() -&gt; RandomState {
+        <span class="kw">let </span>[k0, k1, k2, k3] = <span class="self">Self</span>::get_src().get_fixed_seeds()[<span class="number">0</span>];
+        RandomState { k0, k1, k2, k3 }
     }
 
-    <span class="doccomment">/// Allows for explicitly setting a seed to used.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note: This method does not require the provided seed to be strong.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_seed</span>(<span class="ident">key</span>: <span class="ident">usize</span>) -&gt; <span class="ident">RandomState</span> {
-        <span class="kw">let</span> <span class="ident">fixed</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_src</span>().<span class="ident">get_fixed_seeds</span>();
-        <span class="ident">RandomState::from_keys</span>(<span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">0</span>], <span class="kw-2">&amp;</span><span class="ident">fixed</span>[<span class="number">1</span>], <span class="ident">key</span>)
+    <span class="doccomment">/// Allows for explicitly setting a seed to used.
+    ///
+    /// Note: This method does not require the provided seed to be strong.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>with_seed(key: usize) -&gt; RandomState {
+        <span class="kw">let </span>fixed = <span class="self">Self</span>::get_src().get_fixed_seeds();
+        RandomState::from_keys(<span class="kw-2">&amp;</span>fixed[<span class="number">0</span>], <span class="kw-2">&amp;</span>fixed[<span class="number">1</span>], key)
     }
 
-    <span class="doccomment">/// Allows for explicitly setting the seeds to used.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note: This method is robust against 0s being passed for one or more of the parameters</span>
-    <span class="doccomment">/// or the same value being passed for more than one parameter.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_seeds</span>(<span class="ident">k0</span>: <span class="ident">u64</span>, <span class="ident">k1</span>: <span class="ident">u64</span>, <span class="ident">k2</span>: <span class="ident">u64</span>, <span class="ident">k3</span>: <span class="ident">u64</span>) -&gt; <span class="ident">RandomState</span> {
-        <span class="ident">RandomState</span> { <span class="ident">k0</span>: <span class="ident">k0</span> <span class="op">^</span> <span class="ident">PI2</span>[<span class="number">0</span>], <span class="ident">k1</span>: <span class="ident">k1</span> <span class="op">^</span> <span class="ident">PI2</span>[<span class="number">1</span>], <span class="ident">k2</span>: <span class="ident">k2</span> <span class="op">^</span> <span class="ident">PI2</span>[<span class="number">2</span>], <span class="ident">k3</span>: <span class="ident">k3</span> <span class="op">^</span> <span class="ident">PI2</span>[<span class="number">3</span>] }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">RandomState</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::new</span>()
+    <span class="doccomment">/// Allows for explicitly setting the seeds to used.
+    ///
+    /// Note: This method is robust against 0s being passed for one or more of the parameters
+    /// or the same value being passed for more than one parameter.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub const fn </span>with_seeds(k0: u64, k1: u64, k2: u64, k3: u64) -&gt; RandomState {
+        RandomState { k0: k0 ^ PI2[<span class="number">0</span>], k1: k1 ^ PI2[<span class="number">1</span>], k2: k2 ^ PI2[<span class="number">2</span>], k3: k3 ^ PI2[<span class="number">3</span>] }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildHasher</span> <span class="kw">for</span> <span class="ident">RandomState</span> {
-    <span class="kw">type</span> <span class="ident">Hasher</span> <span class="op">=</span> <span class="ident">AHasher</span>;
-
-    <span class="doccomment">/// Constructs a new [AHasher] with keys based on this [RandomState] object.</span>
-    <span class="doccomment">/// This means that two different [RandomState]s will will generate</span>
-    <span class="doccomment">/// [AHasher]s that will return different hashcodes, but [Hasher]s created from the same [BuildHasher]</span>
-    <span class="doccomment">/// will generate the same hashes for the same input data.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use ahash::{AHasher, RandomState};</span>
-    <span class="doccomment">/// use std::hash::{Hasher, BuildHasher};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let build_hasher = RandomState::new();</span>
-    <span class="doccomment">/// let mut hasher_1 = build_hasher.build_hasher();</span>
-    <span class="doccomment">/// let mut hasher_2 = build_hasher.build_hasher();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// hasher_1.write_u32(1234);</span>
-    <span class="doccomment">/// hasher_2.write_u32(1234);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(hasher_1.finish(), hasher_2.finish());</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let other_build_hasher = RandomState::new();</span>
-    <span class="doccomment">/// let mut different_hasher = other_build_hasher.build_hasher();</span>
-    <span class="doccomment">/// different_hasher.write_u32(1234);</span>
-    <span class="doccomment">/// assert_ne!(different_hasher.finish(), hasher_1.finish());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// [Hasher]: std::hash::Hasher</span>
-    <span class="doccomment">/// [BuildHasher]: std::hash::BuildHasher</span>
-    <span class="doccomment">/// [HashMap]: std::collections::HashMap</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">build_hasher</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">AHasher</span> {
-        <span class="ident">AHasher::from_random_state</span>(<span class="self">self</span>)
+<span class="kw">impl </span>Default <span class="kw">for </span>RandomState {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">BuildHasherExt</span> <span class="kw">for</span> <span class="ident">RandomState</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">hash_as_u64</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasherU64</span> {
-            <span class="ident">buffer</span>: <span class="self">self</span>.<span class="ident">k0</span>,
-            <span class="ident">pad</span>: <span class="self">self</span>.<span class="ident">k1</span>,
+<span class="kw">impl </span>BuildHasher <span class="kw">for </span>RandomState {
+    <span class="kw">type </span>Hasher = AHasher;
+
+    <span class="doccomment">/// Constructs a new [AHasher] with keys based on this [RandomState] object.
+    /// This means that two different [RandomState]s will will generate
+    /// [AHasher]s that will return different hashcodes, but [Hasher]s created from the same [BuildHasher]
+    /// will generate the same hashes for the same input data.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ahash::{AHasher, RandomState};
+    /// use std::hash::{Hasher, BuildHasher};
+    ///
+    /// let build_hasher = RandomState::new();
+    /// let mut hasher_1 = build_hasher.build_hasher();
+    /// let mut hasher_2 = build_hasher.build_hasher();
+    ///
+    /// hasher_1.write_u32(1234);
+    /// hasher_2.write_u32(1234);
+    ///
+    /// assert_eq!(hasher_1.finish(), hasher_2.finish());
+    ///
+    /// let other_build_hasher = RandomState::new();
+    /// let mut different_hasher = other_build_hasher.build_hasher();
+    /// different_hasher.write_u32(1234);
+    /// assert_ne!(different_hasher.finish(), hasher_1.finish());
+    /// ```
+    /// [Hasher]: std::hash::Hasher
+    /// [BuildHasher]: std::hash::BuildHasher
+    /// [HashMap]: std::collections::HashMap
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>build_hasher(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AHasher {
+        AHasher::from_random_state(<span class="self">self</span>)
+    }
+}
+
+<span class="attribute">#[cfg(feature = <span class="string">&quot;specialize&quot;</span>)]
+</span><span class="kw">impl </span>BuildHasherExt <span class="kw">for </span>RandomState {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>hash_as_u64&lt;T: Hash + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; u64 {
+        <span class="kw">let </span><span class="kw-2">mut </span>hasher = AHasherU64 {
+            buffer: <span class="self">self</span>.k0,
+            pad: <span class="self">self</span>.k1,
         };
-        <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;mut</span> <span class="ident">hasher</span>);
-        <span class="ident">hasher</span>.<span class="ident">finish</span>()
+        value.hash(<span class="kw-2">&amp;mut </span>hasher);
+        hasher.finish()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">hash_as_fixed_length</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasherFixed</span>(<span class="self">self</span>.<span class="ident">build_hasher</span>());
-        <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;mut</span> <span class="ident">hasher</span>);
-        <span class="ident">hasher</span>.<span class="ident">finish</span>()
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>hash_as_fixed_length&lt;T: Hash + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; u64 {
+        <span class="kw">let </span><span class="kw-2">mut </span>hasher = AHasherFixed(<span class="self">self</span>.build_hasher());
+        value.hash(<span class="kw-2">&amp;mut </span>hasher);
+        hasher.finish()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">hash_as_str</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">AHasherStr</span>(<span class="self">self</span>.<span class="ident">build_hasher</span>());
-        <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;mut</span> <span class="ident">hasher</span>);
-        <span class="ident">hasher</span>.<span class="ident">finish</span>()
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>hash_as_str&lt;T: Hash + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; u64 {
+        <span class="kw">let </span><span class="kw-2">mut </span>hasher = AHasherStr(<span class="self">self</span>.build_hasher());
+        value.hash(<span class="kw-2">&amp;mut </span>hasher);
+        hasher.finish()
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_unique</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">RandomState::new</span>();
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">RandomState::new</span>();
-        <span class="macro">assert_ne!</span>(<span class="ident">a</span>.<span class="ident">build_hasher</span>().<span class="ident">finish</span>(), <span class="ident">b</span>.<span class="ident">build_hasher</span>().<span class="ident">finish</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_unique() {
+        <span class="kw">let </span>a = RandomState::new();
+        <span class="kw">let </span>b = RandomState::new();
+        <span class="macro">assert_ne!</span>(a.build_hasher().finish(), b.build_hasher().finish());
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>, <span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>, <span class="ident">test</span>))))]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_not_pi</span>() {
-        <span class="macro">assert_ne!</span>(<span class="ident">PI</span>, <span class="ident">RandomState::get_src</span>().<span class="ident">get_fixed_seeds</span>()[<span class="number">0</span>]);
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;runtime-rng&quot;</span>, not(all(feature = <span class="string">&quot;compile-time-rng&quot;</span>, test))))]
+    #[test]
+    </span><span class="kw">fn </span>test_not_pi() {
+        <span class="macro">assert_ne!</span>(PI, RandomState::get_src().get_fixed_seeds()[<span class="number">0</span>]);
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>, <span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>), <span class="ident">test</span>)))]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_not_pi_const</span>() {
-        <span class="macro">assert_ne!</span>(<span class="ident">PI</span>, <span class="ident">RandomState::get_src</span>().<span class="ident">get_fixed_seeds</span>()[<span class="number">0</span>]);
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;compile-time-rng&quot;</span>, any(not(feature = <span class="string">&quot;runtime-rng&quot;</span>), test)))]
+    #[test]
+    </span><span class="kw">fn </span>test_not_pi_const() {
+        <span class="macro">assert_ne!</span>(PI, RandomState::get_src().get_fixed_seeds()[<span class="number">0</span>]);
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-rng&quot;</span>), <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>)))]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_pi</span>() {
-        <span class="macro">assert_eq!</span>(<span class="ident">PI</span>, <span class="ident">RandomState::get_src</span>().<span class="ident">get_fixed_seeds</span>()[<span class="number">0</span>]);
+    <span class="attribute">#[cfg(all(not(feature = <span class="string">&quot;runtime-rng&quot;</span>), not(feature = <span class="string">&quot;compile-time-rng&quot;</span>)))]
+    #[test]
+    </span><span class="kw">fn </span>test_pi() {
+        <span class="macro">assert_eq!</span>(PI, RandomState::get_src().get_fixed_seeds()[<span class="number">0</span>]);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_with_seeds_const</span>() {
-        <span class="kw">const</span> <span class="ident">_CONST_RANDOM_STATE</span>: <span class="ident">RandomState</span> <span class="op">=</span> <span class="ident">RandomState::with_seeds</span>(<span class="number">17</span>, <span class="number">19</span>, <span class="number">21</span>, <span class="number">23</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_with_seeds_const() {
+        <span class="kw">const </span>_CONST_RANDOM_STATE: RandomState = RandomState::with_seeds(<span class="number">17</span>, <span class="number">19</span>, <span class="number">21</span>, <span class="number">23</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ahash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ahash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

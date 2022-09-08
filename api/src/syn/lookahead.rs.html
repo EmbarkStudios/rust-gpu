@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/lookahead.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lookahead.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/lookahead.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lookahead.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -170,172 +164,171 @@
 <span id="164">164</span>
 <span id="165">165</span>
 <span id="166">166</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::buffer::Cursor</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error</span>::{<span class="self">self</span>, <span class="ident">Error</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sealed::lookahead::Sealed</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::span::IntoSpans</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::token::Token</span>;
-<span class="kw">use</span> <span class="ident">proc_macro2</span>::{<span class="ident">Delimiter</span>, <span class="ident">Span</span>};
-<span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::buffer::Cursor;
+<span class="kw">use </span><span class="kw">crate</span>::error::{<span class="self">self</span>, Error};
+<span class="kw">use </span><span class="kw">crate</span>::sealed::lookahead::Sealed;
+<span class="kw">use </span><span class="kw">crate</span>::span::IntoSpans;
+<span class="kw">use </span><span class="kw">crate</span>::token::Token;
+<span class="kw">use </span>proc_macro2::{Delimiter, Span};
+<span class="kw">use </span>std::cell::RefCell;
 
-<span class="doccomment">/// Support for checking the next token in a stream to decide how to parse.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// An important advantage over [`ParseStream::peek`] is that here we</span>
-<span class="doccomment">/// automatically construct an appropriate error message based on the token</span>
-<span class="doccomment">/// alternatives that get peeked. If you are producing your own error message,</span>
-<span class="doccomment">/// go ahead and use `ParseStream::peek` instead.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Use [`ParseStream::lookahead1`] to construct this object.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`ParseStream::peek`]: crate::parse::ParseBuffer::peek</span>
-<span class="doccomment">/// [`ParseStream::lookahead1`]: crate::parse::ParseBuffer::lookahead1</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use syn::{ConstParam, Ident, Lifetime, LifetimeDef, Result, Token, TypeParam};</span>
-<span class="doccomment">/// use syn::parse::{Parse, ParseStream};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // A generic parameter, a single one of the comma-separated elements inside</span>
-<span class="doccomment">/// // angle brackets in:</span>
-<span class="doccomment">/// //</span>
-<span class="doccomment">/// //     fn f&lt;T: Clone, &#39;a, &#39;b: &#39;a, const N: usize&gt;() { ... }</span>
-<span class="doccomment">/// //</span>
-<span class="doccomment">/// // On invalid input, lookahead gives us a reasonable error message.</span>
-<span class="doccomment">/// //</span>
-<span class="doccomment">/// //     error: expected one of: identifier, lifetime, `const`</span>
-<span class="doccomment">/// //       |</span>
-<span class="doccomment">/// //     5 |     fn f&lt;!Sized&gt;() {}</span>
-<span class="doccomment">/// //       |          ^</span>
-<span class="doccomment">/// enum GenericParam {</span>
-<span class="doccomment">///     Type(TypeParam),</span>
-<span class="doccomment">///     Lifetime(LifetimeDef),</span>
-<span class="doccomment">///     Const(ConstParam),</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// impl Parse for GenericParam {</span>
-<span class="doccomment">///     fn parse(input: ParseStream) -&gt; Result&lt;Self&gt; {</span>
-<span class="doccomment">///         let lookahead = input.lookahead1();</span>
-<span class="doccomment">///         if lookahead.peek(Ident) {</span>
-<span class="doccomment">///             input.parse().map(GenericParam::Type)</span>
-<span class="doccomment">///         } else if lookahead.peek(Lifetime) {</span>
-<span class="doccomment">///             input.parse().map(GenericParam::Lifetime)</span>
-<span class="doccomment">///         } else if lookahead.peek(Token![const]) {</span>
-<span class="doccomment">///             input.parse().map(GenericParam::Const)</span>
-<span class="doccomment">///         } else {</span>
-<span class="doccomment">///             Err(lookahead.error())</span>
-<span class="doccomment">///         }</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Lookahead1</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">scope</span>: <span class="ident">Span</span>,
-    <span class="ident">cursor</span>: <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    <span class="ident">comparisons</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Support for checking the next token in a stream to decide how to parse.
+///
+/// An important advantage over [`ParseStream::peek`] is that here we
+/// automatically construct an appropriate error message based on the token
+/// alternatives that get peeked. If you are producing your own error message,
+/// go ahead and use `ParseStream::peek` instead.
+///
+/// Use [`ParseStream::lookahead1`] to construct this object.
+///
+/// [`ParseStream::peek`]: crate::parse::ParseBuffer::peek
+/// [`ParseStream::lookahead1`]: crate::parse::ParseBuffer::lookahead1
+///
+/// # Example
+///
+/// ```
+/// use syn::{ConstParam, Ident, Lifetime, LifetimeDef, Result, Token, TypeParam};
+/// use syn::parse::{Parse, ParseStream};
+///
+/// // A generic parameter, a single one of the comma-separated elements inside
+/// // angle brackets in:
+/// //
+/// //     fn f&lt;T: Clone, &#39;a, &#39;b: &#39;a, const N: usize&gt;() { ... }
+/// //
+/// // On invalid input, lookahead gives us a reasonable error message.
+/// //
+/// //     error: expected one of: identifier, lifetime, `const`
+/// //       |
+/// //     5 |     fn f&lt;!Sized&gt;() {}
+/// //       |          ^
+/// enum GenericParam {
+///     Type(TypeParam),
+///     Lifetime(LifetimeDef),
+///     Const(ConstParam),
+/// }
+///
+/// impl Parse for GenericParam {
+///     fn parse(input: ParseStream) -&gt; Result&lt;Self&gt; {
+///         let lookahead = input.lookahead1();
+///         if lookahead.peek(Ident) {
+///             input.parse().map(GenericParam::Type)
+///         } else if lookahead.peek(Lifetime) {
+///             input.parse().map(GenericParam::Lifetime)
+///         } else if lookahead.peek(Token![const]) {
+///             input.parse().map(GenericParam::Const)
+///         } else {
+///             Err(lookahead.error())
+///         }
+///     }
+/// }
+/// ```
+</span><span class="kw">pub struct </span>Lookahead1&lt;<span class="lifetime">&#39;a</span>&gt; {
+    scope: Span,
+    cursor: Cursor&lt;<span class="lifetime">&#39;a</span>&gt;,
+    comparisons: RefCell&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">scope</span>: <span class="ident">Span</span>, <span class="ident">cursor</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">Lookahead1</span> {
-    <span class="ident">Lookahead1</span> {
-        <span class="ident">scope</span>,
-        <span class="ident">cursor</span>,
-        <span class="ident">comparisons</span>: <span class="ident">RefCell::new</span>(<span class="ident">Vec::new</span>()),
+<span class="kw">pub fn </span>new(scope: Span, cursor: Cursor) -&gt; Lookahead1 {
+    Lookahead1 {
+        scope,
+        cursor,
+        comparisons: RefCell::new(Vec::new()),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">peek_impl</span>(
-    <span class="ident">lookahead</span>: <span class="kw-2">&amp;</span><span class="ident">Lookahead1</span>,
-    <span class="ident">peek</span>: <span class="kw">fn</span>(<span class="ident">Cursor</span>) -&gt; <span class="ident">bool</span>,
-    <span class="ident">display</span>: <span class="kw">fn</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-) -&gt; <span class="ident">bool</span> {
-    <span class="kw">if</span> <span class="ident">peek</span>(<span class="ident">lookahead</span>.<span class="ident">cursor</span>) {
-        <span class="kw">return</span> <span class="bool-val">true</span>;
+<span class="kw">fn </span>peek_impl(
+    lookahead: <span class="kw-2">&amp;</span>Lookahead1,
+    peek: <span class="kw">fn</span>(Cursor) -&gt; bool,
+    display: <span class="kw">fn</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+) -&gt; bool {
+    <span class="kw">if </span>peek(lookahead.cursor) {
+        <span class="kw">return </span><span class="bool-val">true</span>;
     }
-    <span class="ident">lookahead</span>.<span class="ident">comparisons</span>.<span class="ident">borrow_mut</span>().<span class="ident">push</span>(<span class="ident">display</span>());
-    <span class="bool-val">false</span>
-}
+    lookahead.comparisons.borrow_mut().push(display());
+    <span class="bool-val">false
+</span>}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Lookahead1</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Looks at the next token in the parse stream to determine whether it</span>
-    <span class="doccomment">/// matches the requested type of token.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Syntax</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that this method does not use turbofish syntax. Pass the peek type</span>
-    <span class="doccomment">/// inside of parentheses.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// - `input.peek(Token![struct])`</span>
-    <span class="doccomment">/// - `input.peek(Token![==])`</span>
-    <span class="doccomment">/// - `input.peek(Ident)`&amp;emsp;*(does not accept keywords)*</span>
-    <span class="doccomment">/// - `input.peek(Ident::peek_any)`</span>
-    <span class="doccomment">/// - `input.peek(Lifetime)`</span>
-    <span class="doccomment">/// - `input.peek(token::Brace)`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">peek</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Peek</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">token</span>: <span class="ident">T</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">token</span>;
-        <span class="ident">peek_impl</span>(<span class="self">self</span>, <span class="ident">T::Token::peek</span>, <span class="ident">T::Token::display</span>)
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Lookahead1&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Looks at the next token in the parse stream to determine whether it
+    /// matches the requested type of token.
+    ///
+    /// # Syntax
+    ///
+    /// Note that this method does not use turbofish syntax. Pass the peek type
+    /// inside of parentheses.
+    ///
+    /// - `input.peek(Token![struct])`
+    /// - `input.peek(Token![==])`
+    /// - `input.peek(Ident)`&amp;emsp;*(does not accept keywords)*
+    /// - `input.peek(Ident::peek_any)`
+    /// - `input.peek(Lifetime)`
+    /// - `input.peek(token::Brace)`
+    </span><span class="kw">pub fn </span>peek&lt;T: Peek&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, token: T) -&gt; bool {
+        <span class="kw">let _ </span>= token;
+        peek_impl(<span class="self">self</span>, T::Token::peek, T::Token::display)
     }
 
-    <span class="doccomment">/// Triggers an error at the current position of the parse stream.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The error message will identify all of the expected token types that</span>
-    <span class="doccomment">/// have been peeked against this lookahead instance.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">error</span>(<span class="self">self</span>) -&gt; <span class="ident">Error</span> {
-        <span class="kw">let</span> <span class="ident">comparisons</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">comparisons</span>.<span class="ident">borrow</span>();
-        <span class="kw">match</span> <span class="ident">comparisons</span>.<span class="ident">len</span>() {
-            <span class="number">0</span> =&gt; {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">cursor</span>.<span class="ident">eof</span>() {
-                    <span class="ident">Error::new</span>(<span class="self">self</span>.<span class="ident">scope</span>, <span class="string">&quot;unexpected end of input&quot;</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">Error::new</span>(<span class="self">self</span>.<span class="ident">cursor</span>.<span class="ident">span</span>(), <span class="string">&quot;unexpected token&quot;</span>)
+    <span class="doccomment">/// Triggers an error at the current position of the parse stream.
+    ///
+    /// The error message will identify all of the expected token types that
+    /// have been peeked against this lookahead instance.
+    </span><span class="kw">pub fn </span>error(<span class="self">self</span>) -&gt; Error {
+        <span class="kw">let </span>comparisons = <span class="self">self</span>.comparisons.borrow();
+        <span class="kw">match </span>comparisons.len() {
+            <span class="number">0 </span>=&gt; {
+                <span class="kw">if </span><span class="self">self</span>.cursor.eof() {
+                    Error::new(<span class="self">self</span>.scope, <span class="string">&quot;unexpected end of input&quot;</span>)
+                } <span class="kw">else </span>{
+                    Error::new(<span class="self">self</span>.cursor.span(), <span class="string">&quot;unexpected token&quot;</span>)
                 }
             }
-            <span class="number">1</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;expected {}&quot;</span>, <span class="ident">comparisons</span>[<span class="number">0</span>]);
-                <span class="ident">error::new_at</span>(<span class="self">self</span>.<span class="ident">scope</span>, <span class="self">self</span>.<span class="ident">cursor</span>, <span class="ident">message</span>)
+            <span class="number">1 </span>=&gt; {
+                <span class="kw">let </span>message = <span class="macro">format!</span>(<span class="string">&quot;expected {}&quot;</span>, comparisons[<span class="number">0</span>]);
+                error::new_at(<span class="self">self</span>.scope, <span class="self">self</span>.cursor, message)
             }
-            <span class="number">2</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;expected {} or {}&quot;</span>, <span class="ident">comparisons</span>[<span class="number">0</span>], <span class="ident">comparisons</span>[<span class="number">1</span>]);
-                <span class="ident">error::new_at</span>(<span class="self">self</span>.<span class="ident">scope</span>, <span class="self">self</span>.<span class="ident">cursor</span>, <span class="ident">message</span>)
+            <span class="number">2 </span>=&gt; {
+                <span class="kw">let </span>message = <span class="macro">format!</span>(<span class="string">&quot;expected {} or {}&quot;</span>, comparisons[<span class="number">0</span>], comparisons[<span class="number">1</span>]);
+                error::new_at(<span class="self">self</span>.scope, <span class="self">self</span>.cursor, message)
             }
-            <span class="kw">_</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">join</span> <span class="op">=</span> <span class="ident">comparisons</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>);
-                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;expected one of: {}&quot;</span>, <span class="ident">join</span>);
-                <span class="ident">error::new_at</span>(<span class="self">self</span>.<span class="ident">scope</span>, <span class="self">self</span>.<span class="ident">cursor</span>, <span class="ident">message</span>)
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">let </span>join = comparisons.join(<span class="string">&quot;, &quot;</span>);
+                <span class="kw">let </span>message = <span class="macro">format!</span>(<span class="string">&quot;expected one of: {}&quot;</span>, join);
+                error::new_at(<span class="self">self</span>.scope, <span class="self">self</span>.cursor, message)
             }
         }
     }
 }
 
-<span class="doccomment">/// Types that can be parsed by looking at just one token.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Use [`ParseStream::peek`] to peek one of these types in a parse stream</span>
-<span class="doccomment">/// without consuming it from the stream.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This trait is sealed and cannot be implemented for types outside of Syn.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`ParseStream::peek`]: crate::parse::ParseBuffer::peek</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Peek</span>: <span class="ident">Sealed</span> {
-    <span class="comment">// Not public API.</span>
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">type</span> <span class="ident">Token</span>: <span class="ident">Token</span>;
+<span class="doccomment">/// Types that can be parsed by looking at just one token.
+///
+/// Use [`ParseStream::peek`] to peek one of these types in a parse stream
+/// without consuming it from the stream.
+///
+/// This trait is sealed and cannot be implemented for types outside of Syn.
+///
+/// [`ParseStream::peek`]: crate::parse::ParseBuffer::peek
+</span><span class="kw">pub trait </span>Peek: Sealed {
+    <span class="comment">// Not public API.
+    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="kw">type </span>Token: Token;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">FnOnce</span>(<span class="ident">TokenMarker</span>) -&gt; <span class="ident">T</span>, <span class="ident">T</span>: <span class="ident">Token</span><span class="op">&gt;</span> <span class="ident">Peek</span> <span class="kw">for</span> <span class="ident">F</span> {
-    <span class="kw">type</span> <span class="ident">Token</span> <span class="op">=</span> <span class="ident">T</span>;
+<span class="kw">impl</span>&lt;F: Copy + FnOnce(TokenMarker) -&gt; T, T: Token&gt; Peek <span class="kw">for </span>F {
+    <span class="kw">type </span>Token = T;
 }
 
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TokenMarker</span> {}
+<span class="kw">pub enum </span>TokenMarker {}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="ident">IntoSpans</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TokenMarker</span> {
-    <span class="kw">fn</span> <span class="ident">into_spans</span>(<span class="self">self</span>) -&gt; <span class="ident">S</span> {
-        <span class="kw">match</span> <span class="self">self</span> {}
+<span class="kw">impl</span>&lt;S&gt; IntoSpans&lt;S&gt; <span class="kw">for </span>TokenMarker {
+    <span class="kw">fn </span>into_spans(<span class="self">self</span>) -&gt; S {
+        <span class="kw">match </span><span class="self">self </span>{}
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_delimiter</span>(<span class="ident">cursor</span>: <span class="ident">Cursor</span>, <span class="ident">delimiter</span>: <span class="ident">Delimiter</span>) -&gt; <span class="ident">bool</span> {
-    <span class="ident">cursor</span>.<span class="ident">group</span>(<span class="ident">delimiter</span>).<span class="ident">is_some</span>()
+<span class="kw">pub fn </span>is_delimiter(cursor: Cursor, delimiter: Delimiter) -&gt; bool {
+    cursor.group(delimiter).is_some()
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">FnOnce</span>(<span class="ident">TokenMarker</span>) -&gt; <span class="ident">T</span>, <span class="ident">T</span>: <span class="ident">Token</span><span class="op">&gt;</span> <span class="ident">Sealed</span> <span class="kw">for</span> <span class="ident">F</span> {}
+<span class="kw">impl</span>&lt;F: Copy + FnOnce(TokenMarker) -&gt; T, T: Token&gt; Sealed <span class="kw">for </span>F {}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

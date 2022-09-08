@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/buffer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>buffer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/buffer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>buffer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -417,419 +411,418 @@
 <span id="411">411</span>
 <span id="412">412</span>
 <span id="413">413</span>
-</pre><pre class="rust"><code><span class="doccomment">//! A stably addressed token buffer supporting efficient traversal based on a</span>
-<span class="doccomment">//! cheaply copyable cursor.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! *This module is available only if Syn is built with the `&quot;parsing&quot;` feature.*</span>
+</pre><pre class="rust"><code><span class="doccomment">//! A stably addressed token buffer supporting efficient traversal based on a
+//! cheaply copyable cursor.
+//!
+//! *This module is available only if Syn is built with the `&quot;parsing&quot;` feature.*
 
-<span class="comment">// This module is heavily commented as it contains most of the unsafe code in</span>
-<span class="comment">// Syn, and caution should be used when editing it. The public-facing interface</span>
-<span class="comment">// is 100% safe but the implementation is fragile internally.</span>
+</span><span class="comment">// This module is heavily commented as it contains most of the unsafe code in
+// Syn, and caution should be used when editing it. The public-facing interface
+// is 100% safe but the implementation is fragile internally.
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-    <span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>, <span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;unknown&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;wasi&quot;</span>))),
-    <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;proc-macro&quot;</span>
-))]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::proc_macro</span> <span class="kw">as</span> <span class="ident">pm</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Lifetime</span>;
-<span class="kw">use</span> <span class="ident">proc_macro2</span>::{<span class="ident">Delimiter</span>, <span class="ident">Group</span>, <span class="ident">Ident</span>, <span class="ident">Literal</span>, <span class="ident">Punct</span>, <span class="ident">Spacing</span>, <span class="ident">Span</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenTree</span>};
-<span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std::ptr</span>;
-<span class="kw">use</span> <span class="ident">std::slice</span>;
+</span><span class="attribute">#[cfg(all(
+    not(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, any(target_os = <span class="string">&quot;unknown&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>))),
+    feature = <span class="string">&quot;proc-macro&quot;
+</span>))]
+</span><span class="kw">use </span><span class="kw">crate</span>::proc_macro <span class="kw">as </span>pm;
+<span class="kw">use </span><span class="kw">crate</span>::Lifetime;
+<span class="kw">use </span>proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
+<span class="kw">use </span>std::marker::PhantomData;
+<span class="kw">use </span>std::ptr;
+<span class="kw">use </span>std::slice;
 
-<span class="doccomment">/// Internal type which is used instead of `TokenTree` to represent a token tree</span>
-<span class="doccomment">/// within a `TokenBuffer`.</span>
-<span class="kw">enum</span> <span class="ident">Entry</span> {
-    <span class="comment">// Mimicking types from proc-macro.</span>
-    <span class="ident">Group</span>(<span class="ident">Group</span>, <span class="ident">TokenBuffer</span>),
-    <span class="ident">Ident</span>(<span class="ident">Ident</span>),
-    <span class="ident">Punct</span>(<span class="ident">Punct</span>),
-    <span class="ident">Literal</span>(<span class="ident">Literal</span>),
-    <span class="comment">// End entries contain a raw pointer to the entry from the containing</span>
-    <span class="comment">// token tree, or null if this is the outermost level.</span>
-    <span class="ident">End</span>(<span class="kw-2">*const</span> <span class="ident">Entry</span>),
+<span class="doccomment">/// Internal type which is used instead of `TokenTree` to represent a token tree
+/// within a `TokenBuffer`.
+</span><span class="kw">enum </span>Entry {
+    <span class="comment">// Mimicking types from proc-macro.
+    </span>Group(Group, TokenBuffer),
+    Ident(Ident),
+    Punct(Punct),
+    Literal(Literal),
+    <span class="comment">// End entries contain a raw pointer to the entry from the containing
+    // token tree, or null if this is the outermost level.
+    </span>End(<span class="kw-2">*const </span>Entry),
 }
 
-<span class="doccomment">/// A buffer that can be efficiently traversed multiple times, unlike</span>
-<span class="doccomment">/// `TokenStream` which requires a deep copy in order to traverse more than</span>
-<span class="doccomment">/// once.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// *This type is available only if Syn is built with the `&quot;parsing&quot;` feature.*</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenBuffer</span> {
-    <span class="comment">// NOTE: Do not implement clone on this - there are raw pointers inside</span>
-    <span class="comment">// these entries which will be messed up. Moving the `TokenBuffer` itself is</span>
-    <span class="comment">// safe as the data pointed to won&#39;t be moved.</span>
-    <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">Entry</span>,
-    <span class="ident">len</span>: <span class="ident">usize</span>,
+<span class="doccomment">/// A buffer that can be efficiently traversed multiple times, unlike
+/// `TokenStream` which requires a deep copy in order to traverse more than
+/// once.
+///
+/// *This type is available only if Syn is built with the `&quot;parsing&quot;` feature.*
+</span><span class="kw">pub struct </span>TokenBuffer {
+    <span class="comment">// NOTE: Do not implement clone on this - there are raw pointers inside
+    // these entries which will be messed up. Moving the `TokenBuffer` itself is
+    // safe as the data pointed to won&#39;t be moved.
+    </span>ptr: <span class="kw-2">*const </span>Entry,
+    len: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">TokenBuffer</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="ident">slice::from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Entry</span>, <span class="self">self</span>.<span class="ident">len</span>);
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">Box::from_raw</span>(<span class="ident">slice</span>);
+<span class="kw">impl </span>Drop <span class="kw">for </span>TokenBuffer {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>slice = slice::from_raw_parts_mut(<span class="self">self</span>.ptr <span class="kw">as </span><span class="kw-2">*mut </span>Entry, <span class="self">self</span>.len);
+            <span class="kw">let _ </span>= Box::from_raw(slice);
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TokenBuffer</span> {
-    <span class="comment">// NOTE: Do not mutate the Vec returned from this function once it returns;</span>
-    <span class="comment">// the address of its backing memory must remain stable.</span>
-    <span class="kw">fn</span> <span class="ident">inner_new</span>(<span class="ident">stream</span>: <span class="ident">TokenStream</span>, <span class="ident">up</span>: <span class="kw-2">*const</span> <span class="ident">Entry</span>) -&gt; <span class="ident">TokenBuffer</span> {
-        <span class="comment">// Build up the entries list, recording the locations of any Groups</span>
-        <span class="comment">// in the list to be processed later.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entries</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">groups</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">tt</span> <span class="kw">in</span> <span class="ident">stream</span> {
-            <span class="kw">match</span> <span class="ident">tt</span> {
-                <span class="ident">TokenTree::Ident</span>(<span class="ident">sym</span>) =&gt; {
-                    <span class="ident">entries</span>.<span class="ident">push</span>(<span class="ident">Entry::Ident</span>(<span class="ident">sym</span>));
+<span class="kw">impl </span>TokenBuffer {
+    <span class="comment">// NOTE: Do not mutate the Vec returned from this function once it returns;
+    // the address of its backing memory must remain stable.
+    </span><span class="kw">fn </span>inner_new(stream: TokenStream, up: <span class="kw-2">*const </span>Entry) -&gt; TokenBuffer {
+        <span class="comment">// Build up the entries list, recording the locations of any Groups
+        // in the list to be processed later.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>groups = Vec::new();
+        <span class="kw">for </span>tt <span class="kw">in </span>stream {
+            <span class="kw">match </span>tt {
+                TokenTree::Ident(sym) =&gt; {
+                    entries.push(Entry::Ident(sym));
                 }
-                <span class="ident">TokenTree::Punct</span>(<span class="ident">op</span>) =&gt; {
-                    <span class="ident">entries</span>.<span class="ident">push</span>(<span class="ident">Entry::Punct</span>(<span class="ident">op</span>));
+                TokenTree::Punct(op) =&gt; {
+                    entries.push(Entry::Punct(op));
                 }
-                <span class="ident">TokenTree::Literal</span>(<span class="ident">l</span>) =&gt; {
-                    <span class="ident">entries</span>.<span class="ident">push</span>(<span class="ident">Entry::Literal</span>(<span class="ident">l</span>));
+                TokenTree::Literal(l) =&gt; {
+                    entries.push(Entry::Literal(l));
                 }
-                <span class="ident">TokenTree::Group</span>(<span class="ident">g</span>) =&gt; {
-                    <span class="comment">// Record the index of the interesting entry, and store an</span>
-                    <span class="comment">// `End(null)` there temporarily.</span>
-                    <span class="ident">groups</span>.<span class="ident">push</span>((<span class="ident">entries</span>.<span class="ident">len</span>(), <span class="ident">g</span>));
-                    <span class="ident">entries</span>.<span class="ident">push</span>(<span class="ident">Entry::End</span>(<span class="ident">ptr::null</span>()));
+                TokenTree::Group(g) =&gt; {
+                    <span class="comment">// Record the index of the interesting entry, and store an
+                    // `End(null)` there temporarily.
+                    </span>groups.push((entries.len(), g));
+                    entries.push(Entry::End(ptr::null()));
                 }
             }
         }
-        <span class="comment">// Add an `End` entry to the end with a reference to the enclosing token</span>
-        <span class="comment">// stream which was passed in.</span>
-        <span class="ident">entries</span>.<span class="ident">push</span>(<span class="ident">Entry::End</span>(<span class="ident">up</span>));
+        <span class="comment">// Add an `End` entry to the end with a reference to the enclosing token
+        // stream which was passed in.
+        </span>entries.push(Entry::End(up));
 
-        <span class="comment">// NOTE: This is done to ensure that we don&#39;t accidentally modify the</span>
-        <span class="comment">// length of the backing buffer. The backing buffer must remain at a</span>
-        <span class="comment">// constant address after this point, as we are going to store a raw</span>
-        <span class="comment">// pointer into it.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entries</span> <span class="op">=</span> <span class="ident">entries</span>.<span class="ident">into_boxed_slice</span>();
-        <span class="kw">for</span> (<span class="ident">idx</span>, <span class="ident">group</span>) <span class="kw">in</span> <span class="ident">groups</span> {
-            <span class="comment">// We know that this index refers to one of the temporary</span>
-            <span class="comment">// `End(null)` entries, and we know that the last entry is</span>
-            <span class="comment">// `End(up)`, so the next index is also valid.</span>
-            <span class="kw">let</span> <span class="ident">group_up</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">entries</span>.<span class="ident">as_ptr</span>().<span class="ident">add</span>(<span class="ident">idx</span> <span class="op">+</span> <span class="number">1</span>) };
+        <span class="comment">// NOTE: This is done to ensure that we don&#39;t accidentally modify the
+        // length of the backing buffer. The backing buffer must remain at a
+        // constant address after this point, as we are going to store a raw
+        // pointer into it.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>entries = entries.into_boxed_slice();
+        <span class="kw">for </span>(idx, group) <span class="kw">in </span>groups {
+            <span class="comment">// We know that this index refers to one of the temporary
+            // `End(null)` entries, and we know that the last entry is
+            // `End(up)`, so the next index is also valid.
+            </span><span class="kw">let </span>group_up = <span class="kw">unsafe </span>{ entries.as_ptr().add(idx + <span class="number">1</span>) };
 
-            <span class="comment">// The end entry stored at the end of this Entry::Group should</span>
-            <span class="comment">// point to the Entry which follows the Group in the list.</span>
-            <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::inner_new</span>(<span class="ident">group</span>.<span class="ident">stream</span>(), <span class="ident">group_up</span>);
-            <span class="ident">entries</span>[<span class="ident">idx</span>] <span class="op">=</span> <span class="ident">Entry::Group</span>(<span class="ident">group</span>, <span class="ident">inner</span>);
+            <span class="comment">// The end entry stored at the end of this Entry::Group should
+            // point to the Entry which follows the Group in the list.
+            </span><span class="kw">let </span>inner = <span class="self">Self</span>::inner_new(group.stream(), group_up);
+            entries[idx] = Entry::Group(group, inner);
         }
 
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">entries</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">Box::into_raw</span>(<span class="ident">entries</span>);
-        <span class="ident">TokenBuffer</span> {
-            <span class="ident">ptr</span>: <span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">Entry</span>,
-            <span class="ident">len</span>,
+        <span class="kw">let </span>len = entries.len();
+        <span class="kw">let </span>ptr = Box::into_raw(entries);
+        TokenBuffer {
+            ptr: ptr <span class="kw">as </span><span class="kw-2">*const </span>Entry,
+            len,
         }
     }
 
-    <span class="doccomment">/// Creates a `TokenBuffer` containing all the tokens from the input</span>
-    <span class="doccomment">/// `TokenStream`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *This method is available only if Syn is built with both the `&quot;parsing&quot;` and</span>
-    <span class="doccomment">/// `&quot;proc-macro&quot;` features.*</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-        <span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>, <span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;unknown&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;wasi&quot;</span>))),
-        <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;proc-macro&quot;</span>
-    ))]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">stream</span>: <span class="ident">pm::TokenStream</span>) -&gt; <span class="ident">TokenBuffer</span> {
-        <span class="ident"><span class="self">Self</span>::new2</span>(<span class="ident">stream</span>.<span class="ident">into</span>())
+    <span class="doccomment">/// Creates a `TokenBuffer` containing all the tokens from the input
+    /// `TokenStream`.
+    ///
+    /// *This method is available only if Syn is built with both the `&quot;parsing&quot;` and
+    /// `&quot;proc-macro&quot;` features.*
+    </span><span class="attribute">#[cfg(all(
+        not(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, any(target_os = <span class="string">&quot;unknown&quot;</span>, target_os = <span class="string">&quot;wasi&quot;</span>))),
+        feature = <span class="string">&quot;proc-macro&quot;
+    </span>))]
+    </span><span class="kw">pub fn </span>new(stream: pm::TokenStream) -&gt; TokenBuffer {
+        <span class="self">Self</span>::new2(stream.into())
     }
 
-    <span class="doccomment">/// Creates a `TokenBuffer` containing all the tokens from the input</span>
-    <span class="doccomment">/// `TokenStream`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new2</span>(<span class="ident">stream</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenBuffer</span> {
-        <span class="ident"><span class="self">Self</span>::inner_new</span>(<span class="ident">stream</span>, <span class="ident">ptr::null</span>())
+    <span class="doccomment">/// Creates a `TokenBuffer` containing all the tokens from the input
+    /// `TokenStream`.
+    </span><span class="kw">pub fn </span>new2(stream: TokenStream) -&gt; TokenBuffer {
+        <span class="self">Self</span>::inner_new(stream, ptr::null())
     }
 
-    <span class="doccomment">/// Creates a cursor referencing the first token in the buffer and able to</span>
-    <span class="doccomment">/// traverse until the end of the buffer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">begin</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Cursor</span> {
-        <span class="kw">unsafe</span> { <span class="ident">Cursor::create</span>(<span class="self">self</span>.<span class="ident">ptr</span>, <span class="self">self</span>.<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="self">self</span>.<span class="ident">len</span> <span class="op">-</span> <span class="number">1</span>)) }
+    <span class="doccomment">/// Creates a cursor referencing the first token in the buffer and able to
+    /// traverse until the end of the buffer.
+    </span><span class="kw">pub fn </span>begin(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor {
+        <span class="kw">unsafe </span>{ Cursor::create(<span class="self">self</span>.ptr, <span class="self">self</span>.ptr.add(<span class="self">self</span>.len - <span class="number">1</span>)) }
     }
 }
 
-<span class="doccomment">/// A cheaply copyable cursor into a `TokenBuffer`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This cursor holds a shared reference into the immutable data which is used</span>
-<span class="doccomment">/// internally to represent a `TokenStream`, and can be efficiently manipulated</span>
-<span class="doccomment">/// and copied around.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// An empty `Cursor` can be created directly, or one may create a `TokenBuffer`</span>
-<span class="doccomment">/// object and get a cursor to its first token with `begin()`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Two cursors are equal if they have the same location in the same input</span>
-<span class="doccomment">/// stream, and have the same scope.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// *This type is available only if Syn is built with the `&quot;parsing&quot;` feature.*</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="comment">// The current entry which the `Cursor` is pointing at.</span>
-    <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">Entry</span>,
-    <span class="comment">// This is the only `Entry::End(..)` object which this cursor is allowed to</span>
-    <span class="comment">// point at. All other `End` objects are skipped over in `Cursor::create`.</span>
-    <span class="ident">scope</span>: <span class="kw-2">*const</span> <span class="ident">Entry</span>,
-    <span class="comment">// Cursor is covariant in &#39;a. This field ensures that our pointers are still</span>
-    <span class="comment">// valid.</span>
-    <span class="ident">marker</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Entry</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A cheaply copyable cursor into a `TokenBuffer`.
+///
+/// This cursor holds a shared reference into the immutable data which is used
+/// internally to represent a `TokenStream`, and can be efficiently manipulated
+/// and copied around.
+///
+/// An empty `Cursor` can be created directly, or one may create a `TokenBuffer`
+/// object and get a cursor to its first token with `begin()`.
+///
+/// Two cursors are equal if they have the same location in the same input
+/// stream, and have the same scope.
+///
+/// *This type is available only if Syn is built with the `&quot;parsing&quot;` feature.*
+</span><span class="kw">pub struct </span>Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="comment">// The current entry which the `Cursor` is pointing at.
+    </span>ptr: <span class="kw-2">*const </span>Entry,
+    <span class="comment">// This is the only `Entry::End(..)` object which this cursor is allowed to
+    // point at. All other `End` objects are skipped over in `Cursor::create`.
+    </span>scope: <span class="kw-2">*const </span>Entry,
+    <span class="comment">// Cursor is covariant in &#39;a. This field ensures that our pointers are still
+    // valid.
+    </span>marker: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Entry&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Creates a cursor referencing a static empty TokenStream.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">empty</span>() -&gt; <span class="self">Self</span> {
-        <span class="comment">// It&#39;s safe in this situation for us to put an `Entry` object in global</span>
-        <span class="comment">// storage, despite it not actually being safe to send across threads</span>
-        <span class="comment">// (`Ident` is a reference into a thread-local table). This is because</span>
-        <span class="comment">// this entry never includes a `Ident` object.</span>
-        <span class="comment">//</span>
-        <span class="comment">// This wrapper struct allows us to break the rules and put a `Sync`</span>
-        <span class="comment">// object in global storage.</span>
-        <span class="kw">struct</span> <span class="ident">UnsafeSyncEntry</span>(<span class="ident">Entry</span>);
-        <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">UnsafeSyncEntry</span> {}
-        <span class="kw">static</span> <span class="ident">EMPTY_ENTRY</span>: <span class="ident">UnsafeSyncEntry</span> <span class="op">=</span> <span class="ident">UnsafeSyncEntry</span>(<span class="ident">Entry::End</span>(<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">Entry</span>));
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Creates a cursor referencing a static empty TokenStream.
+    </span><span class="kw">pub fn </span>empty() -&gt; <span class="self">Self </span>{
+        <span class="comment">// It&#39;s safe in this situation for us to put an `Entry` object in global
+        // storage, despite it not actually being safe to send across threads
+        // (`Ident` is a reference into a thread-local table). This is because
+        // this entry never includes a `Ident` object.
+        //
+        // This wrapper struct allows us to break the rules and put a `Sync`
+        // object in global storage.
+        </span><span class="kw">struct </span>UnsafeSyncEntry(Entry);
+        <span class="kw">unsafe impl </span>Sync <span class="kw">for </span>UnsafeSyncEntry {}
+        <span class="kw">static </span>EMPTY_ENTRY: UnsafeSyncEntry = UnsafeSyncEntry(Entry::End(<span class="number">0 </span><span class="kw">as </span><span class="kw-2">*const </span>Entry));
 
-        <span class="ident">Cursor</span> {
-            <span class="ident">ptr</span>: <span class="kw-2">&amp;</span><span class="ident">EMPTY_ENTRY</span>.<span class="number">0</span>,
-            <span class="ident">scope</span>: <span class="kw-2">&amp;</span><span class="ident">EMPTY_ENTRY</span>.<span class="number">0</span>,
-            <span class="ident">marker</span>: <span class="ident">PhantomData</span>,
+        Cursor {
+            ptr: <span class="kw-2">&amp;</span>EMPTY_ENTRY.<span class="number">0</span>,
+            scope: <span class="kw-2">&amp;</span>EMPTY_ENTRY.<span class="number">0</span>,
+            marker: PhantomData,
         }
     }
 
-    <span class="doccomment">/// This create method intelligently exits non-explicitly-entered</span>
-    <span class="doccomment">/// `None`-delimited scopes when the cursor reaches the end of them,</span>
-    <span class="doccomment">/// allowing for them to be treated transparently.</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create</span>(<span class="kw-2">mut</span> <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">Entry</span>, <span class="ident">scope</span>: <span class="kw-2">*const</span> <span class="ident">Entry</span>) -&gt; <span class="self">Self</span> {
-        <span class="comment">// NOTE: If we&#39;re looking at a `End(..)`, we want to advance the cursor</span>
-        <span class="comment">// past it, unless `ptr == scope`, which means that we&#39;re at the edge of</span>
-        <span class="comment">// our cursor&#39;s scope. We should only have `ptr != scope` at the exit</span>
-        <span class="comment">// from None-delimited groups entered with `ignore_none`.</span>
-        <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Entry::End</span>(<span class="ident">exit</span>) <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ptr</span> {
-            <span class="kw">if</span> <span class="ident">ptr</span> <span class="op">==</span> <span class="ident">scope</span> {
+    <span class="doccomment">/// This create method intelligently exits non-explicitly-entered
+    /// `None`-delimited scopes when the cursor reaches the end of them,
+    /// allowing for them to be treated transparently.
+    </span><span class="kw">unsafe fn </span>create(<span class="kw-2">mut </span>ptr: <span class="kw-2">*const </span>Entry, scope: <span class="kw-2">*const </span>Entry) -&gt; <span class="self">Self </span>{
+        <span class="comment">// NOTE: If we&#39;re looking at a `End(..)`, we want to advance the cursor
+        // past it, unless `ptr == scope`, which means that we&#39;re at the edge of
+        // our cursor&#39;s scope. We should only have `ptr != scope` at the exit
+        // from None-delimited groups entered with `ignore_none`.
+        </span><span class="kw">while let </span>Entry::End(exit) = <span class="kw-2">*</span>ptr {
+            <span class="kw">if </span>ptr == scope {
                 <span class="kw">break</span>;
             }
-            <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">exit</span>;
+            ptr = exit;
         }
 
-        <span class="ident">Cursor</span> {
-            <span class="ident">ptr</span>,
-            <span class="ident">scope</span>,
-            <span class="ident">marker</span>: <span class="ident">PhantomData</span>,
+        Cursor {
+            ptr,
+            scope,
+            marker: PhantomData,
         }
     }
 
-    <span class="doccomment">/// Get the current entry.</span>
-    <span class="kw">fn</span> <span class="ident">entry</span>(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Entry</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">ptr</span> }
+    <span class="doccomment">/// Get the current entry.
+    </span><span class="kw">fn </span>entry(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Entry {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span><span class="self">self</span>.ptr }
     }
 
-    <span class="doccomment">/// Bump the cursor to point at the next token after the current one. This</span>
-    <span class="doccomment">/// is undefined behavior if the cursor is currently looking at an</span>
-    <span class="doccomment">/// `Entry::End`.</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">bump</span>(<span class="self">self</span>) -&gt; <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="ident">Cursor::create</span>(<span class="self">self</span>.<span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="number">1</span>), <span class="self">self</span>.<span class="ident">scope</span>)
+    <span class="doccomment">/// Bump the cursor to point at the next token after the current one. This
+    /// is undefined behavior if the cursor is currently looking at an
+    /// `Entry::End`.
+    </span><span class="kw">unsafe fn </span>bump(<span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {
+        Cursor::create(<span class="self">self</span>.ptr.offset(<span class="number">1</span>), <span class="self">self</span>.scope)
     }
 
-    <span class="doccomment">/// While the cursor is looking at a `None`-delimited group, move it to look</span>
-    <span class="doccomment">/// at the first token inside instead. If the group is empty, this will move</span>
-    <span class="doccomment">/// the cursor past the `None`-delimited group.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// WARNING: This mutates its argument.</span>
-    <span class="kw">fn</span> <span class="ident">ignore_none</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Entry::Group</span>(<span class="ident">group</span>, <span class="ident">buf</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">entry</span>() {
-            <span class="kw">if</span> <span class="ident">group</span>.<span class="ident">delimiter</span>() <span class="op">==</span> <span class="ident">Delimiter::None</span> {
-                <span class="comment">// NOTE: We call `Cursor::create` here to make sure that</span>
-                <span class="comment">// situations where we should immediately exit the span after</span>
-                <span class="comment">// entering it are handled correctly.</span>
-                <span class="kw">unsafe</span> {
-                    <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="ident">Cursor::create</span>(<span class="ident">buf</span>.<span class="ident">ptr</span>, <span class="self">self</span>.<span class="ident">scope</span>);
+    <span class="doccomment">/// While the cursor is looking at a `None`-delimited group, move it to look
+    /// at the first token inside instead. If the group is empty, this will move
+    /// the cursor past the `None`-delimited group.
+    ///
+    /// WARNING: This mutates its argument.
+    </span><span class="kw">fn </span>ignore_none(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">while let </span>Entry::Group(group, buf) = <span class="self">self</span>.entry() {
+            <span class="kw">if </span>group.delimiter() == Delimiter::None {
+                <span class="comment">// NOTE: We call `Cursor::create` here to make sure that
+                // situations where we should immediately exit the span after
+                // entering it are handled correctly.
+                </span><span class="kw">unsafe </span>{
+                    <span class="kw-2">*</span><span class="self">self </span>= Cursor::create(buf.ptr, <span class="self">self</span>.scope);
                 }
-            } <span class="kw">else</span> {
+            } <span class="kw">else </span>{
                 <span class="kw">break</span>;
             }
         }
     }
 
-    <span class="doccomment">/// Checks whether the cursor is currently pointing at the end of its valid</span>
-    <span class="doccomment">/// scope.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eof</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="comment">// We&#39;re at eof if we&#39;re at the end of our scope.</span>
-        <span class="self">self</span>.<span class="ident">ptr</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">scope</span>
+    <span class="doccomment">/// Checks whether the cursor is currently pointing at the end of its valid
+    /// scope.
+    </span><span class="kw">pub fn </span>eof(<span class="self">self</span>) -&gt; bool {
+        <span class="comment">// We&#39;re at eof if we&#39;re at the end of our scope.
+        </span><span class="self">self</span>.ptr == <span class="self">self</span>.scope
     }
 
-    <span class="doccomment">/// If the cursor is pointing at a `Group` with the given delimiter, returns</span>
-    <span class="doccomment">/// a cursor into that group and one pointing to the next `TokenTree`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">group</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">delim</span>: <span class="ident">Delimiter</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">Span</span>, <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="comment">// If we&#39;re not trying to enter a none-delimited group, we want to</span>
-        <span class="comment">// ignore them. We have to make sure to _not_ ignore them when we want</span>
-        <span class="comment">// to enter them, of course. For obvious reasons.</span>
-        <span class="kw">if</span> <span class="ident">delim</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Delimiter::None</span> {
-            <span class="self">self</span>.<span class="ident">ignore_none</span>();
+    <span class="doccomment">/// If the cursor is pointing at a `Group` with the given delimiter, returns
+    /// a cursor into that group and one pointing to the next `TokenTree`.
+    </span><span class="kw">pub fn </span>group(<span class="kw-2">mut </span><span class="self">self</span>, delim: Delimiter) -&gt; <span class="prelude-ty">Option</span>&lt;(Cursor&lt;<span class="lifetime">&#39;a</span>&gt;, Span, Cursor&lt;<span class="lifetime">&#39;a</span>&gt;)&gt; {
+        <span class="comment">// If we&#39;re not trying to enter a none-delimited group, we want to
+        // ignore them. We have to make sure to _not_ ignore them when we want
+        // to enter them, of course. For obvious reasons.
+        </span><span class="kw">if </span>delim != Delimiter::None {
+            <span class="self">self</span>.ignore_none();
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Entry::Group</span>(<span class="ident">group</span>, <span class="ident">buf</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">entry</span>() {
-            <span class="kw">if</span> <span class="ident">group</span>.<span class="ident">delimiter</span>() <span class="op">==</span> <span class="ident">delim</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">buf</span>.<span class="ident">begin</span>(), <span class="ident">group</span>.<span class="ident">span</span>(), <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">bump</span>() }));
+        <span class="kw">if let </span>Entry::Group(group, buf) = <span class="self">self</span>.entry() {
+            <span class="kw">if </span>group.delimiter() == delim {
+                <span class="kw">return </span><span class="prelude-val">Some</span>((buf.begin(), group.span(), <span class="kw">unsafe </span>{ <span class="self">self</span>.bump() }));
             }
         }
 
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 
-    <span class="doccomment">/// If the cursor is pointing at a `Ident`, returns it along with a cursor</span>
-    <span class="doccomment">/// pointing at the next `TokenTree`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ident</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Ident</span>, <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ignore_none</span>();
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entry</span>() {
-            <span class="ident">Entry::Ident</span>(<span class="ident">ident</span>) =&gt; <span class="prelude-val">Some</span>((<span class="ident">ident</span>.<span class="ident">clone</span>(), <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">bump</span>() })),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+    <span class="doccomment">/// If the cursor is pointing at a `Ident`, returns it along with a cursor
+    /// pointing at the next `TokenTree`.
+    </span><span class="kw">pub fn </span>ident(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(Ident, Cursor&lt;<span class="lifetime">&#39;a</span>&gt;)&gt; {
+        <span class="self">self</span>.ignore_none();
+        <span class="kw">match </span><span class="self">self</span>.entry() {
+            Entry::Ident(ident) =&gt; <span class="prelude-val">Some</span>((ident.clone(), <span class="kw">unsafe </span>{ <span class="self">self</span>.bump() })),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// If the cursor is pointing at an `Punct`, returns it along with a cursor</span>
-    <span class="doccomment">/// pointing at the next `TokenTree`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">punct</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Punct</span>, <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ignore_none</span>();
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entry</span>() {
-            <span class="ident">Entry::Punct</span>(<span class="ident">op</span>) <span class="kw">if</span> <span class="ident">op</span>.<span class="ident">as_char</span>() <span class="op">!</span><span class="op">=</span> <span class="string">&#39;\&#39;&#39;</span> =&gt; <span class="prelude-val">Some</span>((<span class="ident">op</span>.<span class="ident">clone</span>(), <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">bump</span>() })),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+    <span class="doccomment">/// If the cursor is pointing at an `Punct`, returns it along with a cursor
+    /// pointing at the next `TokenTree`.
+    </span><span class="kw">pub fn </span>punct(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(Punct, Cursor&lt;<span class="lifetime">&#39;a</span>&gt;)&gt; {
+        <span class="self">self</span>.ignore_none();
+        <span class="kw">match </span><span class="self">self</span>.entry() {
+            Entry::Punct(op) <span class="kw">if </span>op.as_char() != <span class="string">&#39;\&#39;&#39; </span>=&gt; <span class="prelude-val">Some</span>((op.clone(), <span class="kw">unsafe </span>{ <span class="self">self</span>.bump() })),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// If the cursor is pointing at a `Literal`, return it along with a cursor</span>
-    <span class="doccomment">/// pointing at the next `TokenTree`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">literal</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Literal</span>, <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ignore_none</span>();
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entry</span>() {
-            <span class="ident">Entry::Literal</span>(<span class="ident">lit</span>) =&gt; <span class="prelude-val">Some</span>((<span class="ident">lit</span>.<span class="ident">clone</span>(), <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">bump</span>() })),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+    <span class="doccomment">/// If the cursor is pointing at a `Literal`, return it along with a cursor
+    /// pointing at the next `TokenTree`.
+    </span><span class="kw">pub fn </span>literal(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(Literal, Cursor&lt;<span class="lifetime">&#39;a</span>&gt;)&gt; {
+        <span class="self">self</span>.ignore_none();
+        <span class="kw">match </span><span class="self">self</span>.entry() {
+            Entry::Literal(lit) =&gt; <span class="prelude-val">Some</span>((lit.clone(), <span class="kw">unsafe </span>{ <span class="self">self</span>.bump() })),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// If the cursor is pointing at a `Lifetime`, returns it along with a</span>
-    <span class="doccomment">/// cursor pointing at the next `TokenTree`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lifetime</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Lifetime</span>, <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ignore_none</span>();
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entry</span>() {
-            <span class="ident">Entry::Punct</span>(<span class="ident">op</span>) <span class="kw">if</span> <span class="ident">op</span>.<span class="ident">as_char</span>() <span class="op">==</span> <span class="string">&#39;\&#39;&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">op</span>.<span class="ident">spacing</span>() <span class="op">==</span> <span class="ident">Spacing::Joint</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">bump</span>() };
-                <span class="kw">match</span> <span class="ident">next</span>.<span class="ident">ident</span>() {
-                    <span class="prelude-val">Some</span>((<span class="ident">ident</span>, <span class="ident">rest</span>)) =&gt; {
-                        <span class="kw">let</span> <span class="ident">lifetime</span> <span class="op">=</span> <span class="ident">Lifetime</span> {
-                            <span class="ident">apostrophe</span>: <span class="ident">op</span>.<span class="ident">span</span>(),
-                            <span class="ident">ident</span>,
+    <span class="doccomment">/// If the cursor is pointing at a `Lifetime`, returns it along with a
+    /// cursor pointing at the next `TokenTree`.
+    </span><span class="kw">pub fn </span>lifetime(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(Lifetime, Cursor&lt;<span class="lifetime">&#39;a</span>&gt;)&gt; {
+        <span class="self">self</span>.ignore_none();
+        <span class="kw">match </span><span class="self">self</span>.entry() {
+            Entry::Punct(op) <span class="kw">if </span>op.as_char() == <span class="string">&#39;\&#39;&#39; </span>&amp;&amp; op.spacing() == Spacing::Joint =&gt; {
+                <span class="kw">let </span>next = <span class="kw">unsafe </span>{ <span class="self">self</span>.bump() };
+                <span class="kw">match </span>next.ident() {
+                    <span class="prelude-val">Some</span>((ident, rest)) =&gt; {
+                        <span class="kw">let </span>lifetime = Lifetime {
+                            apostrophe: op.span(),
+                            ident,
                         };
-                        <span class="prelude-val">Some</span>((<span class="ident">lifetime</span>, <span class="ident">rest</span>))
+                        <span class="prelude-val">Some</span>((lifetime, rest))
                     }
-                    <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
                 }
             }
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Copies all remaining tokens visible from this cursor into a</span>
-    <span class="doccomment">/// `TokenStream`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">token_stream</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenStream</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tts</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="self">self</span>;
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">tt</span>, <span class="ident">rest</span>)) <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">token_tree</span>() {
-            <span class="ident">tts</span>.<span class="ident">push</span>(<span class="ident">tt</span>);
-            <span class="ident">cursor</span> <span class="op">=</span> <span class="ident">rest</span>;
+    <span class="doccomment">/// Copies all remaining tokens visible from this cursor into a
+    /// `TokenStream`.
+    </span><span class="kw">pub fn </span>token_stream(<span class="self">self</span>) -&gt; TokenStream {
+        <span class="kw">let </span><span class="kw-2">mut </span>tts = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>;
+        <span class="kw">while let </span><span class="prelude-val">Some</span>((tt, rest)) = cursor.token_tree() {
+            tts.push(tt);
+            cursor = rest;
         }
-        <span class="ident">tts</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>()
+        tts.into_iter().collect()
     }
 
-    <span class="doccomment">/// If the cursor is pointing at a `TokenTree`, returns it along with a</span>
-    <span class="doccomment">/// cursor pointing at the next `TokenTree`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns `None` if the cursor has reached the end of its stream.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This method does not treat `None`-delimited groups as transparent, and</span>
-    <span class="doccomment">/// will return a `Group(None, ..)` if the cursor is looking at one.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">token_tree</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">TokenTree</span>, <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entry</span>() {
-            <span class="ident">Entry::Group</span>(<span class="ident">group</span>, <span class="kw">_</span>) =&gt; <span class="ident">group</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
-            <span class="ident">Entry::Literal</span>(<span class="ident">lit</span>) =&gt; <span class="ident">lit</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
-            <span class="ident">Entry::Ident</span>(<span class="ident">ident</span>) =&gt; <span class="ident">ident</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
-            <span class="ident">Entry::Punct</span>(<span class="ident">op</span>) =&gt; <span class="ident">op</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
-            <span class="ident">Entry::End</span>(..) =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+    <span class="doccomment">/// If the cursor is pointing at a `TokenTree`, returns it along with a
+    /// cursor pointing at the next `TokenTree`.
+    ///
+    /// Returns `None` if the cursor has reached the end of its stream.
+    ///
+    /// This method does not treat `None`-delimited groups as transparent, and
+    /// will return a `Group(None, ..)` if the cursor is looking at one.
+    </span><span class="kw">pub fn </span>token_tree(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(TokenTree, Cursor&lt;<span class="lifetime">&#39;a</span>&gt;)&gt; {
+        <span class="kw">let </span>tree = <span class="kw">match </span><span class="self">self</span>.entry() {
+            Entry::Group(group, <span class="kw">_</span>) =&gt; group.clone().into(),
+            Entry::Literal(lit) =&gt; lit.clone().into(),
+            Entry::Ident(ident) =&gt; ident.clone().into(),
+            Entry::Punct(op) =&gt; op.clone().into(),
+            Entry::End(..) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         };
 
-        <span class="prelude-val">Some</span>((<span class="ident">tree</span>, <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">bump</span>() }))
+        <span class="prelude-val">Some</span>((tree, <span class="kw">unsafe </span>{ <span class="self">self</span>.bump() }))
     }
 
-    <span class="doccomment">/// Returns the `Span` of the current token, or `Span::call_site()` if this</span>
-    <span class="doccomment">/// cursor points to eof.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">span</span>(<span class="self">self</span>) -&gt; <span class="ident">Span</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entry</span>() {
-            <span class="ident">Entry::Group</span>(<span class="ident">group</span>, <span class="kw">_</span>) =&gt; <span class="ident">group</span>.<span class="ident">span</span>(),
-            <span class="ident">Entry::Literal</span>(<span class="ident">l</span>) =&gt; <span class="ident">l</span>.<span class="ident">span</span>(),
-            <span class="ident">Entry::Ident</span>(<span class="ident">t</span>) =&gt; <span class="ident">t</span>.<span class="ident">span</span>(),
-            <span class="ident">Entry::Punct</span>(<span class="ident">o</span>) =&gt; <span class="ident">o</span>.<span class="ident">span</span>(),
-            <span class="ident">Entry::End</span>(..) =&gt; <span class="ident">Span::call_site</span>(),
+    <span class="doccomment">/// Returns the `Span` of the current token, or `Span::call_site()` if this
+    /// cursor points to eof.
+    </span><span class="kw">pub fn </span>span(<span class="self">self</span>) -&gt; Span {
+        <span class="kw">match </span><span class="self">self</span>.entry() {
+            Entry::Group(group, <span class="kw">_</span>) =&gt; group.span(),
+            Entry::Literal(l) =&gt; l.span(),
+            Entry::Ident(t) =&gt; t.span(),
+            Entry::Punct(o) =&gt; o.span(),
+            Entry::End(..) =&gt; Span::call_site(),
         }
     }
 
-    <span class="doccomment">/// Skip over the next token without cloning it. Returns `None` if this</span>
-    <span class="doccomment">/// cursor points to eof.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This method treats `&#39;lifetimes` as a single token.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">skip</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entry</span>() {
-            <span class="ident">Entry::End</span>(..) =&gt; <span class="prelude-val">None</span>,
+    <span class="doccomment">/// Skip over the next token without cloning it. Returns `None` if this
+    /// cursor points to eof.
+    ///
+    /// This method treats `&#39;lifetimes` as a single token.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>skip(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Cursor&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.entry() {
+            Entry::End(..) =&gt; <span class="prelude-val">None</span>,
 
-            <span class="comment">// Treat lifetimes as a single tt for the purposes of &#39;skip&#39;.</span>
-            <span class="ident">Entry::Punct</span>(<span class="ident">op</span>) <span class="kw">if</span> <span class="ident">op</span>.<span class="ident">as_char</span>() <span class="op">==</span> <span class="string">&#39;\&#39;&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">op</span>.<span class="ident">spacing</span>() <span class="op">==</span> <span class="ident">Spacing::Joint</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">bump</span>() };
-                <span class="kw">match</span> <span class="ident">next</span>.<span class="ident">entry</span>() {
-                    <span class="ident">Entry::Ident</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">unsafe</span> { <span class="ident">next</span>.<span class="ident">bump</span>() }),
-                    <span class="kw">_</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">next</span>),
+            <span class="comment">// Treat lifetimes as a single tt for the purposes of &#39;skip&#39;.
+            </span>Entry::Punct(op) <span class="kw">if </span>op.as_char() == <span class="string">&#39;\&#39;&#39; </span>&amp;&amp; op.spacing() == Spacing::Joint =&gt; {
+                <span class="kw">let </span>next = <span class="kw">unsafe </span>{ <span class="self">self</span>.bump() };
+                <span class="kw">match </span>next.entry() {
+                    Entry::Ident(<span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ next.bump() }),
+                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(next),
                 }
             }
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Some</span>(<span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">bump</span>() }),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ <span class="self">self</span>.bump() }),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Copy</span> <span class="kw">for</span> <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {}
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Copy <span class="kw">for </span>Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw-2">*</span><span class="self">self</span>
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Clone <span class="kw">for </span>Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw-2">*</span><span class="self">self
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Eq <span class="kw">for </span>Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PartialEq <span class="kw">for </span>Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="kw">let </span>Cursor { ptr, scope, marker } = <span class="self">self</span>;
+        <span class="kw">let _ </span>= marker;
+        <span class="kw-2">*</span>ptr == other.ptr &amp;&amp; <span class="kw-2">*</span>scope == other.scope
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {}
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>same_scope(a: Cursor, b: Cursor) -&gt; bool {
+    a.scope == b.scope
+}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">Cursor</span> { <span class="ident">ptr</span>, <span class="ident">scope</span>, <span class="ident">marker</span> } <span class="op">=</span> <span class="self">self</span>;
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">marker</span>;
-        <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">ptr</span> <span class="op">&amp;&amp;</span> <span class="kw-2">*</span><span class="ident">scope</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">scope</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>open_span_of_group(cursor: Cursor) -&gt; Span {
+    <span class="kw">match </span>cursor.entry() {
+        Entry::Group(group, <span class="kw">_</span>) =&gt; group.span_open(),
+        <span class="kw">_ </span>=&gt; cursor.span(),
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">same_scope</span>(<span class="ident">a</span>: <span class="ident">Cursor</span>, <span class="ident">b</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">bool</span> {
-    <span class="ident">a</span>.<span class="ident">scope</span> <span class="op">==</span> <span class="ident">b</span>.<span class="ident">scope</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">open_span_of_group</span>(<span class="ident">cursor</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">Span</span> {
-    <span class="kw">match</span> <span class="ident">cursor</span>.<span class="ident">entry</span>() {
-        <span class="ident">Entry::Group</span>(<span class="ident">group</span>, <span class="kw">_</span>) =&gt; <span class="ident">group</span>.<span class="ident">span_open</span>(),
-        <span class="kw">_</span> =&gt; <span class="ident">cursor</span>.<span class="ident">span</span>(),
-    }
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">close_span_of_group</span>(<span class="ident">cursor</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">Span</span> {
-    <span class="kw">match</span> <span class="ident">cursor</span>.<span class="ident">entry</span>() {
-        <span class="ident">Entry::Group</span>(<span class="ident">group</span>, <span class="kw">_</span>) =&gt; <span class="ident">group</span>.<span class="ident">span_close</span>(),
-        <span class="kw">_</span> =&gt; <span class="ident">cursor</span>.<span class="ident">span</span>(),
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>close_span_of_group(cursor: Cursor) -&gt; Span {
+    <span class="kw">match </span>cursor.entry() {
+        Entry::Group(group, <span class="kw">_</span>) =&gt; group.span_close(),
+        <span class="kw">_ </span>=&gt; cursor.span(),
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

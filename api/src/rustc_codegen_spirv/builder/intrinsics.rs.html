@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/intrinsics.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>intrinsics.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/intrinsics.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>intrinsics.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -381,383 +375,382 @@
 <span id="375">375</span>
 <span id="376">376</span>
 <span id="377">377</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx::CodegenCx</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv_type::SpirvType</span>;
-<span class="kw">use</span> <span class="ident">rspirv::spirv::GLOp</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::operand::OperandRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::place::PlaceRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{<span class="ident">BuilderMethods</span>, <span class="ident">IntrinsicCallMethods</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle::ty::layout::LayoutOf</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle::ty</span>::{<span class="ident">FnDef</span>, <span class="ident">Instance</span>, <span class="ident">ParamEnv</span>, <span class="ident">Ty</span>, <span class="ident">TyKind</span>};
-<span class="kw">use</span> <span class="ident">rustc_span::source_map::Span</span>;
-<span class="kw">use</span> <span class="ident">rustc_span::sym</span>;
-<span class="kw">use</span> <span class="ident">rustc_target::abi::call</span>::{<span class="ident">FnAbi</span>, <span class="ident">PassMode</span>};
-<span class="kw">use</span> <span class="ident">std::assert_matches::assert_matches</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
+<span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
+<span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvValue, SpirvValueExt};
+<span class="kw">use </span><span class="kw">crate</span>::codegen_cx::CodegenCx;
+<span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
+<span class="kw">use </span>rspirv::spirv::GLOp;
+<span class="kw">use </span>rustc_codegen_ssa::mir::operand::OperandRef;
+<span class="kw">use </span>rustc_codegen_ssa::mir::place::PlaceRef;
+<span class="kw">use </span>rustc_codegen_ssa::traits::{BuilderMethods, IntrinsicCallMethods};
+<span class="kw">use </span>rustc_middle::bug;
+<span class="kw">use </span>rustc_middle::ty::layout::LayoutOf;
+<span class="kw">use </span>rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyKind};
+<span class="kw">use </span>rustc_span::source_map::Span;
+<span class="kw">use </span>rustc_span::sym;
+<span class="kw">use </span>rustc_target::abi::call::{FnAbi, PassMode};
+<span class="kw">use </span>std::assert_matches::assert_matches;
 
-<span class="kw">fn</span> <span class="ident">int_type_width_signed</span>(<span class="ident">ty</span>: <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">u64</span>, <span class="ident">bool</span>)<span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">kind</span>() {
-        <span class="ident">TyKind::Int</span>(<span class="ident">t</span>) =&gt; <span class="prelude-val">Some</span>((
-            <span class="ident">t</span>.<span class="ident">bit_width</span>()
-                .<span class="ident">unwrap_or</span>(<span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">target</span>.<span class="ident">pointer_width</span> <span class="kw">as</span> <span class="ident">u64</span>),
+<span class="kw">fn </span>int_type_width_signed(ty: Ty&lt;<span class="lifetime">&#39;_</span>&gt;, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;(u64, bool)&gt; {
+    <span class="kw">match </span>ty.kind() {
+        TyKind::Int(t) =&gt; <span class="prelude-val">Some</span>((
+            t.bit_width()
+                .unwrap_or(cx.tcx.sess.target.pointer_width <span class="kw">as </span>u64),
             <span class="bool-val">true</span>,
         )),
-        <span class="ident">TyKind::Uint</span>(<span class="ident">t</span>) =&gt; <span class="prelude-val">Some</span>((
-            <span class="ident">t</span>.<span class="ident">bit_width</span>()
-                .<span class="ident">unwrap_or</span>(<span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">target</span>.<span class="ident">pointer_width</span> <span class="kw">as</span> <span class="ident">u64</span>),
+        TyKind::Uint(t) =&gt; <span class="prelude-val">Some</span>((
+            t.bit_width()
+                .unwrap_or(cx.tcx.sess.target.pointer_width <span class="kw">as </span>u64),
             <span class="bool-val">false</span>,
         )),
-        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">copysign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">SpirvValue</span>, <span class="ident">sign</span>: <span class="ident">SpirvValue</span>) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType::Float</span>(<span class="ident">width</span>) =&gt; <span class="ident">width</span>,
-            <span class="ident">other</span> =&gt; <span class="macro">bug!</span>(
+<span class="kw">impl </span>Builder&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">pub fn </span>copysign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: SpirvValue, sign: SpirvValue) -&gt; SpirvValue {
+        <span class="kw">let </span>width = <span class="kw">match </span><span class="self">self</span>.lookup_type(val.ty) {
+            SpirvType::Float(width) =&gt; width,
+            other =&gt; <span class="macro">bug!</span>(
                 <span class="string">&quot;copysign must have float argument, not {}&quot;</span>,
-                <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">val</span>.<span class="ident">ty</span>, <span class="self">self</span>)
+                other.debug(val.ty, <span class="self">self</span>)
             ),
         };
-        <span class="kw">let</span> <span class="ident">int_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Integer</span>(<span class="ident">width</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
-        <span class="kw">let</span> (<span class="ident">mask_sign</span>, <span class="ident">mask_value</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">width</span> {
-            <span class="number">32</span> =&gt; (
-                <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">31</span>),
-                <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">u32::max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
+        <span class="kw">let </span>int_ty = SpirvType::Integer(width, <span class="bool-val">false</span>).def(<span class="self">self</span>.span(), <span class="self">self</span>);
+        <span class="kw">let </span>(mask_sign, mask_value) = <span class="kw">match </span>width {
+            <span class="number">32 </span>=&gt; (
+                <span class="self">self</span>.constant_u32(<span class="self">self</span>.span(), <span class="number">1 </span>&lt;&lt; <span class="number">31</span>),
+                <span class="self">self</span>.constant_u32(<span class="self">self</span>.span(), u32::max_value() &gt;&gt; <span class="number">1</span>),
             ),
-            <span class="number">64</span> =&gt; (
-                <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">63</span>),
-                <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">u64::max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
+            <span class="number">64 </span>=&gt; (
+                <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">1 </span>&lt;&lt; <span class="number">63</span>),
+                <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), u64::max_value() &gt;&gt; <span class="number">1</span>),
             ),
-            <span class="kw">_</span> =&gt; <span class="macro">bug!</span>(<span class="string">&quot;copysign must have width 32 or 64, not {}&quot;</span>, <span class="ident">width</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">bug!</span>(<span class="string">&quot;copysign must have width 32 or 64, not {}&quot;</span>, width),
         };
-        <span class="kw">let</span> <span class="ident">val_bits</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bitcast</span>(<span class="ident">val</span>, <span class="ident">int_ty</span>);
-        <span class="kw">let</span> <span class="ident">sign_bits</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bitcast</span>(<span class="ident">sign</span>, <span class="ident">int_ty</span>);
-        <span class="kw">let</span> <span class="ident">val_masked</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">val_bits</span>, <span class="ident">mask_value</span>);
-        <span class="kw">let</span> <span class="ident">sign_masked</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">sign_bits</span>, <span class="ident">mask_sign</span>);
-        <span class="kw">let</span> <span class="ident">result_bits</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">val_masked</span>, <span class="ident">sign_masked</span>);
-        <span class="self">self</span>.<span class="ident">bitcast</span>(<span class="ident">result_bits</span>, <span class="ident">val</span>.<span class="ident">ty</span>)
+        <span class="kw">let </span>val_bits = <span class="self">self</span>.bitcast(val, int_ty);
+        <span class="kw">let </span>sign_bits = <span class="self">self</span>.bitcast(sign, int_ty);
+        <span class="kw">let </span>val_masked = <span class="self">self</span>.and(val_bits, mask_value);
+        <span class="kw">let </span>sign_masked = <span class="self">self</span>.and(sign_bits, mask_sign);
+        <span class="kw">let </span>result_bits = <span class="self">self</span>.or(val_masked, sign_masked);
+        <span class="self">self</span>.bitcast(result_bits, val.ty)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">IntrinsicCallMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">codegen_intrinsic_call</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="ident">fn_abi</span>: <span class="kw-2">&amp;</span><span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">OperandRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span>],
-        <span class="ident">llresult</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
-        <span class="ident">_span</span>: <span class="ident">Span</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; IntrinsicCallMethods&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>codegen_intrinsic_call(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        instance: Instance&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+        fn_abi: <span class="kw-2">&amp;</span>FnAbi&lt;<span class="lifetime">&#39;tcx</span>, Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;,
+        args: <span class="kw-2">&amp;</span>[OperandRef&lt;<span class="lifetime">&#39;tcx</span>, <span class="self">Self</span>::Value&gt;],
+        llresult: <span class="self">Self</span>::Value,
+        _span: Span,
     ) {
-        <span class="kw">let</span> <span class="ident">callee_ty</span> <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">ParamEnv::reveal_all</span>());
+        <span class="kw">let </span>callee_ty = instance.ty(<span class="self">self</span>.tcx, ParamEnv::reveal_all());
 
-        <span class="kw">let</span> (<span class="ident">def_id</span>, <span class="ident">substs</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">callee_ty</span>.<span class="ident">kind</span>() {
-            <span class="ident">FnDef</span>(<span class="ident">def_id</span>, <span class="ident">substs</span>) =&gt; (<span class="ident">def_id</span>, <span class="ident">substs</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">bug!</span>(<span class="string">&quot;expected fn item type, found {}&quot;</span>, <span class="ident">callee_ty</span>),
+        <span class="kw">let </span>(def_id, substs) = <span class="kw">match </span><span class="kw-2">*</span>callee_ty.kind() {
+            FnDef(def_id, substs) =&gt; (def_id, substs),
+            <span class="kw">_ </span>=&gt; <span class="macro">bug!</span>(<span class="string">&quot;expected fn item type, found {}&quot;</span>, callee_ty),
         };
 
-        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">callee_ty</span>.<span class="ident">fn_sig</span>(<span class="self">self</span>.<span class="ident">tcx</span>);
-        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">tcx</span>
-            .<span class="ident">normalize_erasing_late_bound_regions</span>(<span class="ident">ParamEnv::reveal_all</span>(), <span class="ident">sig</span>);
-        <span class="kw">let</span> <span class="ident">arg_tys</span> <span class="op">=</span> <span class="ident">sig</span>.<span class="ident">inputs</span>();
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">item_name</span>(<span class="ident">def_id</span>);
+        <span class="kw">let </span>sig = callee_ty.fn_sig(<span class="self">self</span>.tcx);
+        <span class="kw">let </span>sig = <span class="self">self
+            </span>.tcx
+            .normalize_erasing_late_bound_regions(ParamEnv::reveal_all(), sig);
+        <span class="kw">let </span>arg_tys = sig.inputs();
+        <span class="kw">let </span>name = <span class="self">self</span>.tcx.item_name(def_id);
 
-        <span class="kw">let</span> <span class="ident">ret_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">sig</span>.<span class="ident">output</span>()).<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">PlaceRef::new_sized</span>(<span class="ident">llresult</span>, <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">layout</span>);
+        <span class="kw">let </span>ret_ty = <span class="self">self</span>.layout_of(sig.output()).spirv_type(<span class="self">self</span>.span(), <span class="self">self</span>);
+        <span class="kw">let </span>result = PlaceRef::new_sized(llresult, fn_abi.ret.layout);
 
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">name</span> {
-            <span class="ident">sym::likely</span> <span class="op">|</span> <span class="ident">sym::unlikely</span> =&gt; {
-                <span class="comment">// Ignore these for now.</span>
-                <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()
+        <span class="kw">let </span>value = <span class="kw">match </span>name {
+            sym::likely | sym::unlikely =&gt; {
+                <span class="comment">// Ignore these for now.
+                </span>args[<span class="number">0</span>].immediate()
             }
 
-            <span class="ident">sym::breakpoint</span> =&gt; {
-                <span class="self">self</span>.<span class="ident">abort</span>();
-                <span class="macro">assert!</span>(<span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">is_ignore</span>());
+            sym::breakpoint =&gt; {
+                <span class="self">self</span>.abort();
+                <span class="macro">assert!</span>(fn_abi.ret.is_ignore());
                 <span class="kw">return</span>;
             }
 
-            <span class="ident">sym::volatile_load</span> <span class="op">|</span> <span class="ident">sym::unaligned_volatile_load</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>();
-                <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">substs</span>.<span class="ident">type_at</span>(<span class="number">0</span>));
-                <span class="kw">let</span> <span class="ident">load</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">volatile_load</span>(<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>), <span class="ident">ptr</span>);
-                <span class="self">self</span>.<span class="ident">to_immediate</span>(<span class="ident">load</span>, <span class="ident">layout</span>)
+            sym::volatile_load | sym::unaligned_volatile_load =&gt; {
+                <span class="kw">let </span>ptr = args[<span class="number">0</span>].immediate();
+                <span class="kw">let </span>layout = <span class="self">self</span>.layout_of(substs.type_at(<span class="number">0</span>));
+                <span class="kw">let </span>load = <span class="self">self</span>.volatile_load(layout.spirv_type(<span class="self">self</span>.span(), <span class="self">self</span>), ptr);
+                <span class="self">self</span>.to_immediate(load, layout)
             }
 
-            <span class="ident">sym::prefetch_read_data</span>
-            <span class="op">|</span> <span class="ident">sym::prefetch_write_data</span>
-            <span class="op">|</span> <span class="ident">sym::prefetch_read_instruction</span>
-            <span class="op">|</span> <span class="ident">sym::prefetch_write_instruction</span> =&gt; {
-                <span class="comment">// ignore</span>
-                <span class="macro">assert!</span>(<span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">is_ignore</span>());
+            sym::prefetch_read_data
+            | sym::prefetch_write_data
+            | sym::prefetch_read_instruction
+            | sym::prefetch_write_instruction =&gt; {
+                <span class="comment">// ignore
+                </span><span class="macro">assert!</span>(fn_abi.ret.is_ignore());
                 <span class="kw">return</span>;
             }
 
-            <span class="ident">sym::saturating_add</span> =&gt; {
-                <span class="macro">assert_eq!</span>(<span class="ident">arg_tys</span>[<span class="number">0</span>], <span class="ident">arg_tys</span>[<span class="number">1</span>]);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">arg_tys</span>[<span class="number">0</span>].<span class="ident">kind</span>() {
-                    <span class="ident">TyKind::Int</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">TyKind::Uint</span>(<span class="kw">_</span>) =&gt; {
-                        <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>())
+            sym::saturating_add =&gt; {
+                <span class="macro">assert_eq!</span>(arg_tys[<span class="number">0</span>], arg_tys[<span class="number">1</span>]);
+                <span class="kw">let </span>result = <span class="kw">match </span><span class="kw-2">&amp;</span>arg_tys[<span class="number">0</span>].kind() {
+                    TyKind::Int(<span class="kw">_</span>) | TyKind::Uint(<span class="kw">_</span>) =&gt; {
+                        <span class="self">self</span>.add(args[<span class="number">0</span>].immediate(), args[<span class="number">1</span>].immediate())
                     }
-                    <span class="ident">TyKind::Float</span>(<span class="kw">_</span>) =&gt; <span class="self">self</span>.<span class="ident">fadd</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()),
-                    <span class="ident">other</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    TyKind::Float(<span class="kw">_</span>) =&gt; <span class="self">self</span>.fadd(args[<span class="number">0</span>].immediate(), args[<span class="number">1</span>].immediate()),
+                    other =&gt; <span class="self">self</span>.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;Unimplemented saturating_add intrinsic type: {:#?}&quot;</span>,
-                        <span class="ident">other</span>
+                        other
                     )),
                 };
-                <span class="comment">// TODO: Implement this</span>
-                <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;saturating_add is not implemented yet&quot;</span>);
-                <span class="ident">result</span>
+                <span class="comment">// TODO: Implement this
+                </span><span class="self">self</span>.zombie(result.def(<span class="self">self</span>), <span class="string">&quot;saturating_add is not implemented yet&quot;</span>);
+                result
             }
-            <span class="ident">sym::saturating_sub</span> =&gt; {
-                <span class="macro">assert_eq!</span>(<span class="ident">arg_tys</span>[<span class="number">0</span>], <span class="ident">arg_tys</span>[<span class="number">1</span>]);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">arg_tys</span>[<span class="number">0</span>].<span class="ident">kind</span>() {
-                    <span class="ident">TyKind::Int</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">TyKind::Uint</span>(<span class="kw">_</span>) =&gt; {
-                        <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>())
+            sym::saturating_sub =&gt; {
+                <span class="macro">assert_eq!</span>(arg_tys[<span class="number">0</span>], arg_tys[<span class="number">1</span>]);
+                <span class="kw">let </span>result = <span class="kw">match </span><span class="kw-2">&amp;</span>arg_tys[<span class="number">0</span>].kind() {
+                    TyKind::Int(<span class="kw">_</span>) | TyKind::Uint(<span class="kw">_</span>) =&gt; {
+                        <span class="self">self</span>.sub(args[<span class="number">0</span>].immediate(), args[<span class="number">1</span>].immediate())
                     }
-                    <span class="ident">TyKind::Float</span>(<span class="kw">_</span>) =&gt; <span class="self">self</span>.<span class="ident">fsub</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()),
-                    <span class="ident">other</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    TyKind::Float(<span class="kw">_</span>) =&gt; <span class="self">self</span>.fsub(args[<span class="number">0</span>].immediate(), args[<span class="number">1</span>].immediate()),
+                    other =&gt; <span class="self">self</span>.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;Unimplemented saturating_sub intrinsic type: {:#?}&quot;</span>,
-                        <span class="ident">other</span>
+                        other
                     )),
                 };
-                <span class="comment">// TODO: Implement this</span>
-                <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;saturating_sub is not implemented yet&quot;</span>);
-                <span class="ident">result</span>
+                <span class="comment">// TODO: Implement this
+                </span><span class="self">self</span>.zombie(result.def(<span class="self">self</span>), <span class="string">&quot;saturating_sub is not implemented yet&quot;</span>);
+                result
             }
 
-            <span class="ident">sym::sqrtf32</span> <span class="op">|</span> <span class="ident">sym::sqrtf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Sqrt</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::powif32</span> <span class="op">|</span> <span class="ident">sym::powif64</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">float</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sitofp</span>(<span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>);
-                <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Pow</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">float</span>])
+            sym::sqrtf32 | sym::sqrtf64 =&gt; <span class="self">self</span>.gl_op(GLOp::Sqrt, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::powif32 | sym::powif64 =&gt; {
+                <span class="kw">let </span>float = <span class="self">self</span>.sitofp(args[<span class="number">1</span>].immediate(), args[<span class="number">0</span>].immediate().ty);
+                <span class="self">self</span>.gl_op(GLOp::Pow, ret_ty, [args[<span class="number">0</span>].immediate(), float])
             }
-            <span class="ident">sym::sinf32</span> <span class="op">|</span> <span class="ident">sym::sinf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Sin</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::cosf32</span> <span class="op">|</span> <span class="ident">sym::cosf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Cos</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::powf32</span> <span class="op">|</span> <span class="ident">sym::powf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(
-                <span class="ident">GLOp::Pow</span>,
-                <span class="ident">ret_ty</span>,
-                [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
+            sym::sinf32 | sym::sinf64 =&gt; <span class="self">self</span>.gl_op(GLOp::Sin, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::cosf32 | sym::cosf64 =&gt; <span class="self">self</span>.gl_op(GLOp::Cos, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::powf32 | sym::powf64 =&gt; <span class="self">self</span>.gl_op(
+                GLOp::Pow,
+                ret_ty,
+                [args[<span class="number">0</span>].immediate(), args[<span class="number">1</span>].immediate()],
             ),
-            <span class="ident">sym::expf32</span> <span class="op">|</span> <span class="ident">sym::expf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Exp</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::exp2f32</span> <span class="op">|</span> <span class="ident">sym::exp2f64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Exp2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::logf32</span> <span class="op">|</span> <span class="ident">sym::logf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Log</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::log2f32</span> <span class="op">|</span> <span class="ident">sym::log2f64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Log2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::log10f32</span> <span class="op">|</span> <span class="ident">sym::log10f64</span> =&gt; {
-                <span class="comment">// spir-v glsl doesn&#39;t have log10, so,</span>
-                <span class="comment">// log10(x) == (1 / ln(10)) * ln(x)</span>
-                <span class="kw">let</span> <span class="ident">mul</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_float</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>, <span class="number">1.0</span> <span class="op">/</span> <span class="number">10.0f64</span>.<span class="ident">ln</span>());
-                <span class="kw">let</span> <span class="ident">ln</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Log</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]);
-                <span class="self">self</span>.<span class="ident">mul</span>(<span class="ident">mul</span>, <span class="ident">ln</span>)
+            sym::expf32 | sym::expf64 =&gt; <span class="self">self</span>.gl_op(GLOp::Exp, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::exp2f32 | sym::exp2f64 =&gt; <span class="self">self</span>.gl_op(GLOp::Exp2, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::logf32 | sym::logf64 =&gt; <span class="self">self</span>.gl_op(GLOp::Log, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::log2f32 | sym::log2f64 =&gt; <span class="self">self</span>.gl_op(GLOp::Log2, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::log10f32 | sym::log10f64 =&gt; {
+                <span class="comment">// spir-v glsl doesn&#39;t have log10, so,
+                // log10(x) == (1 / ln(10)) * ln(x)
+                </span><span class="kw">let </span>mul = <span class="self">self</span>.constant_float(args[<span class="number">0</span>].immediate().ty, <span class="number">1.0 </span>/ <span class="number">10.0f64</span>.ln());
+                <span class="kw">let </span>ln = <span class="self">self</span>.gl_op(GLOp::Log, ret_ty, [args[<span class="number">0</span>].immediate()]);
+                <span class="self">self</span>.mul(mul, ln)
             }
-            <span class="ident">sym::fmaf32</span> <span class="op">|</span> <span class="ident">sym::fmaf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(
-                <span class="ident">GLOp::Fma</span>,
-                <span class="ident">ret_ty</span>,
+            sym::fmaf32 | sym::fmaf64 =&gt; <span class="self">self</span>.gl_op(
+                GLOp::Fma,
+                ret_ty,
                 [
-                    <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(),
-                    <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>(),
-                    <span class="ident">args</span>[<span class="number">2</span>].<span class="ident">immediate</span>(),
+                    args[<span class="number">0</span>].immediate(),
+                    args[<span class="number">1</span>].immediate(),
+                    args[<span class="number">2</span>].immediate(),
                 ],
             ),
-            <span class="ident">sym::fabsf32</span> <span class="op">|</span> <span class="ident">sym::fabsf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::FAbs</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::minnumf32</span> <span class="op">|</span> <span class="ident">sym::minnumf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(
-                <span class="ident">GLOp::FMin</span>,
-                <span class="ident">ret_ty</span>,
-                [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
+            sym::fabsf32 | sym::fabsf64 =&gt; <span class="self">self</span>.gl_op(GLOp::FAbs, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::minnumf32 | sym::minnumf64 =&gt; <span class="self">self</span>.gl_op(
+                GLOp::FMin,
+                ret_ty,
+                [args[<span class="number">0</span>].immediate(), args[<span class="number">1</span>].immediate()],
             ),
-            <span class="ident">sym::maxnumf32</span> <span class="op">|</span> <span class="ident">sym::maxnumf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(
-                <span class="ident">GLOp::FMax</span>,
-                <span class="ident">ret_ty</span>,
-                [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
+            sym::maxnumf32 | sym::maxnumf64 =&gt; <span class="self">self</span>.gl_op(
+                GLOp::FMax,
+                ret_ty,
+                [args[<span class="number">0</span>].immediate(), args[<span class="number">1</span>].immediate()],
             ),
-            <span class="ident">sym::copysignf32</span> <span class="op">|</span> <span class="ident">sym::copysignf64</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>();
-                <span class="kw">let</span> <span class="ident">sign</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>();
-                <span class="self">self</span>.<span class="ident">copysign</span>(<span class="ident">val</span>, <span class="ident">sign</span>)
+            sym::copysignf32 | sym::copysignf64 =&gt; {
+                <span class="kw">let </span>val = args[<span class="number">0</span>].immediate();
+                <span class="kw">let </span>sign = args[<span class="number">1</span>].immediate();
+                <span class="self">self</span>.copysign(val, sign)
             }
-            <span class="ident">sym::floorf32</span> <span class="op">|</span> <span class="ident">sym::floorf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Floor</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::ceilf32</span> <span class="op">|</span> <span class="ident">sym::ceilf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Ceil</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::truncf32</span> <span class="op">|</span> <span class="ident">sym::truncf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Trunc</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="comment">// TODO: Correctness of all these rounds</span>
-            <span class="ident">sym::rintf32</span> <span class="op">|</span> <span class="ident">sym::rintf64</span> =&gt; <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Round</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]),
-            <span class="ident">sym::nearbyintf32</span> <span class="op">|</span> <span class="ident">sym::nearbyintf64</span> <span class="op">|</span> <span class="ident">sym::roundf32</span> <span class="op">|</span> <span class="ident">sym::roundf64</span> =&gt; {
-                <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Round</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
-            }
-
-            <span class="ident">sym::rotate_left</span> <span class="op">|</span> <span class="ident">sym::rotate_right</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">is_left</span> <span class="op">=</span> <span class="ident">name</span> <span class="op">==</span> <span class="ident">sym::rotate_left</span>;
-                <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>();
-                <span class="kw">let</span> <span class="ident">shift</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>();
-                <span class="self">self</span>.<span class="ident">rotate</span>(<span class="ident">val</span>, <span class="ident">shift</span>, <span class="ident">is_left</span>)
+            sym::floorf32 | sym::floorf64 =&gt; <span class="self">self</span>.gl_op(GLOp::Floor, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::ceilf32 | sym::ceilf64 =&gt; <span class="self">self</span>.gl_op(GLOp::Ceil, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::truncf32 | sym::truncf64 =&gt; <span class="self">self</span>.gl_op(GLOp::Trunc, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            <span class="comment">// TODO: Correctness of all these rounds
+            </span>sym::rintf32 | sym::rintf64 =&gt; <span class="self">self</span>.gl_op(GLOp::Round, ret_ty, [args[<span class="number">0</span>].immediate()]),
+            sym::nearbyintf32 | sym::nearbyintf64 | sym::roundf32 | sym::roundf64 =&gt; {
+                <span class="self">self</span>.gl_op(GLOp::Round, ret_ty, [args[<span class="number">0</span>].immediate()])
             }
 
-            <span class="comment">// TODO: Do we want to manually implement these instead of using intel instructions?</span>
-            <span class="ident">sym::ctlz</span> <span class="op">|</span> <span class="ident">sym::ctlz_nonzero</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">emit</span>()
-                    .<span class="ident">u_count_leading_zeros_intel</span>(
-                        <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>,
+            sym::rotate_left | sym::rotate_right =&gt; {
+                <span class="kw">let </span>is_left = name == sym::rotate_left;
+                <span class="kw">let </span>val = args[<span class="number">0</span>].immediate();
+                <span class="kw">let </span>shift = args[<span class="number">1</span>].immediate();
+                <span class="self">self</span>.rotate(val, shift, is_left)
+            }
+
+            <span class="comment">// TODO: Do we want to manually implement these instead of using intel instructions?
+            </span>sym::ctlz | sym::ctlz_nonzero =&gt; {
+                <span class="kw">let </span>result = <span class="self">self
+                    </span>.emit()
+                    .u_count_leading_zeros_intel(
+                        args[<span class="number">0</span>].immediate().ty,
                         <span class="prelude-val">None</span>,
-                        <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">def</span>(<span class="self">self</span>),
+                        args[<span class="number">0</span>].immediate().def(<span class="self">self</span>),
                     )
-                    .<span class="ident">unwrap</span>();
-                <span class="self">self</span>.<span class="ident">ext_inst</span>
-                    .<span class="ident">borrow_mut</span>()
-                    .<span class="ident">require_integer_functions_2_intel</span>(<span class="self">self</span>, <span class="ident">result</span>);
-                <span class="ident">result</span>.<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>)
+                    .unwrap();
+                <span class="self">self</span>.ext_inst
+                    .borrow_mut()
+                    .require_integer_functions_2_intel(<span class="self">self</span>, result);
+                result.with_type(args[<span class="number">0</span>].immediate().ty)
             }
-            <span class="ident">sym::cttz</span> <span class="op">|</span> <span class="ident">sym::cttz_nonzero</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">emit</span>()
-                    .<span class="ident">u_count_trailing_zeros_intel</span>(
-                        <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>,
+            sym::cttz | sym::cttz_nonzero =&gt; {
+                <span class="kw">let </span>result = <span class="self">self
+                    </span>.emit()
+                    .u_count_trailing_zeros_intel(
+                        args[<span class="number">0</span>].immediate().ty,
                         <span class="prelude-val">None</span>,
-                        <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">def</span>(<span class="self">self</span>),
+                        args[<span class="number">0</span>].immediate().def(<span class="self">self</span>),
                     )
-                    .<span class="ident">unwrap</span>();
-                <span class="self">self</span>.<span class="ident">ext_inst</span>
-                    .<span class="ident">borrow_mut</span>()
-                    .<span class="ident">require_integer_functions_2_intel</span>(<span class="self">self</span>, <span class="ident">result</span>);
-                <span class="ident">result</span>.<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>)
+                    .unwrap();
+                <span class="self">self</span>.ext_inst
+                    .borrow_mut()
+                    .require_integer_functions_2_intel(<span class="self">self</span>, result);
+                result.with_type(args[<span class="number">0</span>].immediate().ty)
             }
 
-            <span class="ident">sym::ctpop</span> =&gt; <span class="self">self</span>
-                .<span class="ident">emit</span>()
-                .<span class="ident">bit_count</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">def</span>(<span class="self">self</span>))
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>),
-            <span class="ident">sym::bitreverse</span> =&gt; <span class="self">self</span>
-                .<span class="ident">emit</span>()
-                .<span class="ident">bit_reverse</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">def</span>(<span class="self">self</span>))
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>),
+            sym::ctpop =&gt; <span class="self">self
+                </span>.emit()
+                .bit_count(args[<span class="number">0</span>].immediate().ty, <span class="prelude-val">None</span>, args[<span class="number">0</span>].immediate().def(<span class="self">self</span>))
+                .unwrap()
+                .with_type(args[<span class="number">0</span>].immediate().ty),
+            sym::bitreverse =&gt; <span class="self">self
+                </span>.emit()
+                .bit_reverse(args[<span class="number">0</span>].immediate().ty, <span class="prelude-val">None</span>, args[<span class="number">0</span>].immediate().def(<span class="self">self</span>))
+                .unwrap()
+                .with_type(args[<span class="number">0</span>].immediate().ty),
 
-            <span class="ident">sym::bswap</span> =&gt; {
-                <span class="comment">// https://github.com/KhronosGroup/SPIRV-LLVM/pull/221/files</span>
-                <span class="comment">// TODO: Definitely add tests to make sure this impl is right.</span>
-                <span class="kw">let</span> <span class="ident">arg</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>();
-                <span class="kw">match</span> <span class="ident">int_type_width_signed</span>(<span class="ident">arg_tys</span>[<span class="number">0</span>], <span class="self">self</span>)
-                    .<span class="ident">expect</span>(<span class="string">&quot;bswap must have integer argument&quot;</span>)
-                    .<span class="number">0</span>
-                {
-                    <span class="number">8</span> =&gt; <span class="ident">arg</span>,
-                    <span class="number">16</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">offset8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u16</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">8</span>);
-                        <span class="kw">let</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
-                        <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
-                        <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">tmp1</span>, <span class="ident">tmp2</span>)
+            sym::bswap =&gt; {
+                <span class="comment">// https://github.com/KhronosGroup/SPIRV-LLVM/pull/221/files
+                // TODO: Definitely add tests to make sure this impl is right.
+                </span><span class="kw">let </span>arg = args[<span class="number">0</span>].immediate();
+                <span class="kw">match </span>int_type_width_signed(arg_tys[<span class="number">0</span>], <span class="self">self</span>)
+                    .expect(<span class="string">&quot;bswap must have integer argument&quot;</span>)
+                    .<span class="number">0
+                </span>{
+                    <span class="number">8 </span>=&gt; arg,
+                    <span class="number">16 </span>=&gt; {
+                        <span class="kw">let </span>offset8 = <span class="self">self</span>.constant_u16(<span class="self">self</span>.span(), <span class="number">8</span>);
+                        <span class="kw">let </span>tmp1 = <span class="self">self</span>.shl(arg, offset8);
+                        <span class="kw">let </span>tmp2 = <span class="self">self</span>.lshr(arg, offset8);
+                        <span class="self">self</span>.or(tmp1, tmp2)
                     }
-                    <span class="number">32</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">offset8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">8</span>);
-                        <span class="kw">let</span> <span class="ident">offset24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">24</span>);
-                        <span class="kw">let</span> <span class="ident">mask16</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xFF00</span>);
-                        <span class="kw">let</span> <span class="ident">mask24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xFF0000</span>);
-                        <span class="kw">let</span> <span class="ident">tmp4</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset24</span>);
-                        <span class="kw">let</span> <span class="ident">tmp3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
-                        <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
-                        <span class="kw">let</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">arg</span>, <span class="ident">offset24</span>);
-                        <span class="kw">let</span> <span class="ident">tmp3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">tmp3</span>, <span class="ident">mask24</span>);
-                        <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">tmp2</span>, <span class="ident">mask16</span>);
-                        <span class="kw">let</span> <span class="ident">res1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">tmp1</span>, <span class="ident">tmp2</span>);
-                        <span class="kw">let</span> <span class="ident">res2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">tmp3</span>, <span class="ident">tmp4</span>);
-                        <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">res1</span>, <span class="ident">res2</span>)
+                    <span class="number">32 </span>=&gt; {
+                        <span class="kw">let </span>offset8 = <span class="self">self</span>.constant_u32(<span class="self">self</span>.span(), <span class="number">8</span>);
+                        <span class="kw">let </span>offset24 = <span class="self">self</span>.constant_u32(<span class="self">self</span>.span(), <span class="number">24</span>);
+                        <span class="kw">let </span>mask16 = <span class="self">self</span>.constant_u32(<span class="self">self</span>.span(), <span class="number">0xFF00</span>);
+                        <span class="kw">let </span>mask24 = <span class="self">self</span>.constant_u32(<span class="self">self</span>.span(), <span class="number">0xFF0000</span>);
+                        <span class="kw">let </span>tmp4 = <span class="self">self</span>.shl(arg, offset24);
+                        <span class="kw">let </span>tmp3 = <span class="self">self</span>.shl(arg, offset8);
+                        <span class="kw">let </span>tmp2 = <span class="self">self</span>.lshr(arg, offset8);
+                        <span class="kw">let </span>tmp1 = <span class="self">self</span>.lshr(arg, offset24);
+                        <span class="kw">let </span>tmp3 = <span class="self">self</span>.and(tmp3, mask24);
+                        <span class="kw">let </span>tmp2 = <span class="self">self</span>.and(tmp2, mask16);
+                        <span class="kw">let </span>res1 = <span class="self">self</span>.or(tmp1, tmp2);
+                        <span class="kw">let </span>res2 = <span class="self">self</span>.or(tmp3, tmp4);
+                        <span class="self">self</span>.or(res1, res2)
                     }
-                    <span class="number">64</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">offset8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">8</span>);
-                        <span class="kw">let</span> <span class="ident">offset24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">24</span>);
-                        <span class="kw">let</span> <span class="ident">offset40</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">40</span>);
-                        <span class="kw">let</span> <span class="ident">offset56</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">56</span>);
-                        <span class="kw">let</span> <span class="ident">mask16</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff00</span>);
-                        <span class="kw">let</span> <span class="ident">mask24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff0000</span>);
-                        <span class="kw">let</span> <span class="ident">mask32</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff000000</span>);
-                        <span class="kw">let</span> <span class="ident">mask40</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff00000000</span>);
-                        <span class="kw">let</span> <span class="ident">mask48</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff0000000000</span>);
-                        <span class="kw">let</span> <span class="ident">mask56</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff000000000000</span>);
-                        <span class="kw">let</span> <span class="ident">tmp8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset56</span>);
-                        <span class="kw">let</span> <span class="ident">tmp7</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset40</span>);
-                        <span class="kw">let</span> <span class="ident">tmp6</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset24</span>);
-                        <span class="kw">let</span> <span class="ident">tmp5</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
-                        <span class="kw">let</span> <span class="ident">tmp4</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
-                        <span class="kw">let</span> <span class="ident">tmp3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">arg</span>, <span class="ident">offset24</span>);
-                        <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">arg</span>, <span class="ident">offset40</span>);
-                        <span class="kw">let</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">arg</span>, <span class="ident">offset56</span>);
-                        <span class="kw">let</span> <span class="ident">tmp7</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">tmp7</span>, <span class="ident">mask56</span>);
-                        <span class="kw">let</span> <span class="ident">tmp6</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">tmp6</span>, <span class="ident">mask48</span>);
-                        <span class="kw">let</span> <span class="ident">tmp5</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">tmp5</span>, <span class="ident">mask40</span>);
-                        <span class="kw">let</span> <span class="ident">tmp4</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">tmp4</span>, <span class="ident">mask32</span>);
-                        <span class="kw">let</span> <span class="ident">tmp3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">tmp3</span>, <span class="ident">mask24</span>);
-                        <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">tmp2</span>, <span class="ident">mask16</span>);
-                        <span class="kw">let</span> <span class="ident">res1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">tmp8</span>, <span class="ident">tmp7</span>);
-                        <span class="kw">let</span> <span class="ident">res2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">tmp6</span>, <span class="ident">tmp5</span>);
-                        <span class="kw">let</span> <span class="ident">res3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">tmp4</span>, <span class="ident">tmp3</span>);
-                        <span class="kw">let</span> <span class="ident">res4</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">tmp2</span>, <span class="ident">tmp1</span>);
-                        <span class="kw">let</span> <span class="ident">res1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">res1</span>, <span class="ident">res2</span>);
-                        <span class="kw">let</span> <span class="ident">res3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">res3</span>, <span class="ident">res4</span>);
-                        <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">res1</span>, <span class="ident">res3</span>)
+                    <span class="number">64 </span>=&gt; {
+                        <span class="kw">let </span>offset8 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">8</span>);
+                        <span class="kw">let </span>offset24 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">24</span>);
+                        <span class="kw">let </span>offset40 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">40</span>);
+                        <span class="kw">let </span>offset56 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">56</span>);
+                        <span class="kw">let </span>mask16 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">0xff00</span>);
+                        <span class="kw">let </span>mask24 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">0xff0000</span>);
+                        <span class="kw">let </span>mask32 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">0xff000000</span>);
+                        <span class="kw">let </span>mask40 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">0xff00000000</span>);
+                        <span class="kw">let </span>mask48 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">0xff0000000000</span>);
+                        <span class="kw">let </span>mask56 = <span class="self">self</span>.constant_u64(<span class="self">self</span>.span(), <span class="number">0xff000000000000</span>);
+                        <span class="kw">let </span>tmp8 = <span class="self">self</span>.shl(arg, offset56);
+                        <span class="kw">let </span>tmp7 = <span class="self">self</span>.shl(arg, offset40);
+                        <span class="kw">let </span>tmp6 = <span class="self">self</span>.shl(arg, offset24);
+                        <span class="kw">let </span>tmp5 = <span class="self">self</span>.shl(arg, offset8);
+                        <span class="kw">let </span>tmp4 = <span class="self">self</span>.lshr(arg, offset8);
+                        <span class="kw">let </span>tmp3 = <span class="self">self</span>.lshr(arg, offset24);
+                        <span class="kw">let </span>tmp2 = <span class="self">self</span>.lshr(arg, offset40);
+                        <span class="kw">let </span>tmp1 = <span class="self">self</span>.lshr(arg, offset56);
+                        <span class="kw">let </span>tmp7 = <span class="self">self</span>.and(tmp7, mask56);
+                        <span class="kw">let </span>tmp6 = <span class="self">self</span>.and(tmp6, mask48);
+                        <span class="kw">let </span>tmp5 = <span class="self">self</span>.and(tmp5, mask40);
+                        <span class="kw">let </span>tmp4 = <span class="self">self</span>.and(tmp4, mask32);
+                        <span class="kw">let </span>tmp3 = <span class="self">self</span>.and(tmp3, mask24);
+                        <span class="kw">let </span>tmp2 = <span class="self">self</span>.and(tmp2, mask16);
+                        <span class="kw">let </span>res1 = <span class="self">self</span>.or(tmp8, tmp7);
+                        <span class="kw">let </span>res2 = <span class="self">self</span>.or(tmp6, tmp5);
+                        <span class="kw">let </span>res3 = <span class="self">self</span>.or(tmp4, tmp3);
+                        <span class="kw">let </span>res4 = <span class="self">self</span>.or(tmp2, tmp1);
+                        <span class="kw">let </span>res1 = <span class="self">self</span>.or(res1, res2);
+                        <span class="kw">let </span>res3 = <span class="self">self</span>.or(res3, res4);
+                        <span class="self">self</span>.or(res1, res3)
                     }
-                    <span class="ident">other</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;bswap not implemented for int width {}&quot;</span>, <span class="ident">other</span>)),
+                    other =&gt; <span class="self">self</span>.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;bswap not implemented for int width {}&quot;</span>, other)),
                 }
             }
 
-            <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;TODO: Unknown intrinsic &#39;{}&#39;&quot;</span>, <span class="ident">name</span>)),
+            <span class="kw">_ </span>=&gt; <span class="self">self</span>.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;TODO: Unknown intrinsic &#39;{}&#39;&quot;</span>, name)),
         };
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">is_ignore</span>() {
-            <span class="macro">assert_matches!</span>(<span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">mode</span>, <span class="ident">PassMode::Direct</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode::Pair</span>(..));
-            <span class="ident">OperandRef::from_immediate_or_packed_pair</span>(<span class="self">self</span>, <span class="ident">value</span>, <span class="ident">result</span>.<span class="ident">layout</span>)
-                .<span class="ident">val</span>
-                .<span class="ident">store</span>(<span class="self">self</span>, <span class="ident">result</span>);
+        <span class="kw">if </span>!fn_abi.ret.is_ignore() {
+            <span class="macro">assert_matches!</span>(fn_abi.ret.mode, PassMode::Direct(<span class="kw">_</span>) | PassMode::Pair(..));
+            OperandRef::from_immediate_or_packed_pair(<span class="self">self</span>, value, result.layout)
+                .val
+                .store(<span class="self">self</span>, result);
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">abort</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="comment">// HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,</span>
-        <span class="comment">// so the best thing we can do is inject an infinite loop.</span>
-        <span class="comment">// (While there is `OpKill`, it doesn&#39;t really have the right semantics)</span>
-        <span class="kw">let</span> <span class="ident">abort_loop_bb</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">append_sibling_block</span>(<span class="string">&quot;abort_loop&quot;</span>);
-        <span class="kw">let</span> <span class="ident">abort_continue_bb</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">append_sibling_block</span>(<span class="string">&quot;abort_continue&quot;</span>);
-        <span class="self">self</span>.<span class="ident">br</span>(<span class="ident">abort_loop_bb</span>);
+    <span class="kw">fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
+        // so the best thing we can do is inject an infinite loop.
+        // (While there is `OpKill`, it doesn&#39;t really have the right semantics)
+        </span><span class="kw">let </span>abort_loop_bb = <span class="self">self</span>.append_sibling_block(<span class="string">&quot;abort_loop&quot;</span>);
+        <span class="kw">let </span>abort_continue_bb = <span class="self">self</span>.append_sibling_block(<span class="string">&quot;abort_continue&quot;</span>);
+        <span class="self">self</span>.br(abort_loop_bb);
 
-        <span class="self">self</span>.<span class="ident">switch_to_block</span>(<span class="ident">abort_loop_bb</span>);
-        <span class="self">self</span>.<span class="ident">br</span>(<span class="ident">abort_loop_bb</span>);
+        <span class="self">self</span>.switch_to_block(abort_loop_bb);
+        <span class="self">self</span>.br(abort_loop_bb);
 
-        <span class="self">self</span>.<span class="ident">switch_to_block</span>(<span class="ident">abort_continue_bb</span>);
+        <span class="self">self</span>.switch_to_block(abort_continue_bb);
     }
 
-    <span class="kw">fn</span> <span class="ident">assume</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
-        <span class="comment">// TODO: llvm.assume</span>
+    <span class="kw">fn </span>assume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _val: <span class="self">Self</span>::Value) {
+        <span class="comment">// TODO: llvm.assume
+    </span>}
+
+    <span class="kw">fn </span>expect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cond: <span class="self">Self</span>::Value, _expected: bool) -&gt; <span class="self">Self</span>::Value {
+        <span class="comment">// TODO: llvm.expect
+        </span>cond
     }
 
-    <span class="kw">fn</span> <span class="ident">expect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">cond</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_expected</span>: <span class="ident">bool</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
-        <span class="comment">// TODO: llvm.expect</span>
-        <span class="ident">cond</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">type_test</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_pointer</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_typeid</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn </span>type_test(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _pointer: <span class="self">Self</span>::Value, _typeid: <span class="self">Self</span>::Value) -&gt; <span class="self">Self</span>::Value {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">type_checked_load</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_llvtable</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
-        <span class="ident">_vtable_byte_offset</span>: <span class="ident">u64</span>,
-        <span class="ident">_typeid</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
-    ) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn </span>type_checked_load(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _llvtable: <span class="self">Self</span>::Value,
+        _vtable_byte_offset: u64,
+        _typeid: <span class="self">Self</span>::Value,
+    ) -&gt; <span class="self">Self</span>::Value {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">va_start</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn </span>va_start(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _val: <span class="self">Self</span>::Value) -&gt; <span class="self">Self</span>::Value {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">va_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn </span>va_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _val: <span class="self">Self</span>::Value) -&gt; <span class="self">Self</span>::Value {
         <span class="macro">todo!</span>()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

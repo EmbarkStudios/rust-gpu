@@ -1,12 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/distributions/weighted_index.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>weighted_index.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container">
-                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rand/index.html">
-                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/distributions/weighted_index.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>weighted_index.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container">
+                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rand/index.html">
+                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -459,459 +453,458 @@
 <span id="451">451</span>
 <span id="452">452</span>
 <span id="453">453</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
-<span class="comment">// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
-<span class="comment">// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your</span>
-<span class="comment">// option. This file may not be copied, modified, or distributed</span>
-<span class="comment">// except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license
+// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-<span class="doccomment">//! Weighted index sampling</span>
+</span><span class="doccomment">//! Weighted index sampling
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::distributions::uniform</span>::{<span class="ident">SampleBorrow</span>, <span class="ident">SampleUniform</span>, <span class="ident">UniformSampler</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::distributions::Distribution</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Rng</span>;
-<span class="kw">use</span> <span class="ident">core::cmp::PartialOrd</span>;
-<span class="kw">use</span> <span class="ident">core::fmt</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::distributions::uniform::{SampleBorrow, SampleUniform, UniformSampler};
+<span class="kw">use </span><span class="kw">crate</span>::distributions::Distribution;
+<span class="kw">use </span><span class="kw">crate</span>::Rng;
+<span class="kw">use </span>core::cmp::PartialOrd;
+<span class="kw">use </span>core::fmt;
 
-<span class="comment">// Note that this whole module is only imported if feature=&quot;alloc&quot; is enabled.</span>
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
+<span class="comment">// Note that this whole module is only imported if feature=&quot;alloc&quot; is enabled.
+</span><span class="kw">use </span>alloc::vec::Vec;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde1&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;serde1&quot;</span>)]
+</span><span class="kw">use </span>serde::{Serialize, Deserialize};
 
-<span class="doccomment">/// A distribution using weighted sampling of discrete items</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Sampling a `WeightedIndex` distribution returns the index of a randomly</span>
-<span class="doccomment">/// selected element from the iterator used when the `WeightedIndex` was</span>
-<span class="doccomment">/// created. The chance of a given element being picked is proportional to the</span>
-<span class="doccomment">/// value of the element. The weights can use any type `X` for which an</span>
-<span class="doccomment">/// implementation of [`Uniform&lt;X&gt;`] exists.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Performance</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Time complexity of sampling from `WeightedIndex` is `O(log N)` where</span>
-<span class="doccomment">/// `N` is the number of weights. As an alternative,</span>
-<span class="doccomment">/// [`rand_distr::weighted_alias`](https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html)</span>
-<span class="doccomment">/// supports `O(1)` sampling, but with much higher initialisation cost.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// A `WeightedIndex&lt;X&gt;` contains a `Vec&lt;X&gt;` and a [`Uniform&lt;X&gt;`] and so its</span>
-<span class="doccomment">/// size is the sum of the size of those objects, possibly plus some alignment.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Creating a `WeightedIndex&lt;X&gt;` will allocate enough space to hold `N - 1`</span>
-<span class="doccomment">/// weights of type `X`, where `N` is the number of weights. However, since</span>
-<span class="doccomment">/// `Vec` doesn&#39;t guarantee a particular growth strategy, additional memory</span>
-<span class="doccomment">/// might be allocated but not used. Since the `WeightedIndex` object also</span>
-<span class="doccomment">/// contains, this might cause additional allocations, though for primitive</span>
-<span class="doccomment">/// types, [`Uniform&lt;X&gt;`] doesn&#39;t allocate any memory.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Sampling from `WeightedIndex` will result in a single call to</span>
-<span class="doccomment">/// `Uniform&lt;X&gt;::sample` (method of the [`Distribution`] trait), which typically</span>
-<span class="doccomment">/// will request a single value from the underlying [`RngCore`], though the</span>
-<span class="doccomment">/// exact number depends on the implementation of `Uniform&lt;X&gt;::sample`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use rand::prelude::*;</span>
-<span class="doccomment">/// use rand::distributions::WeightedIndex;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let choices = [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;];</span>
-<span class="doccomment">/// let weights = [2,   1,   1];</span>
-<span class="doccomment">/// let dist = WeightedIndex::new(&amp;weights).unwrap();</span>
-<span class="doccomment">/// let mut rng = thread_rng();</span>
-<span class="doccomment">/// for _ in 0..100 {</span>
-<span class="doccomment">///     // 50% chance to print &#39;a&#39;, 25% chance to print &#39;b&#39;, 25% chance to print &#39;c&#39;</span>
-<span class="doccomment">///     println!(&quot;{}&quot;, choices[dist.sample(&amp;mut rng)]);</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let items = [(&#39;a&#39;, 0), (&#39;b&#39;, 3), (&#39;c&#39;, 7)];</span>
-<span class="doccomment">/// let dist2 = WeightedIndex::new(items.iter().map(|item| item.1)).unwrap();</span>
-<span class="doccomment">/// for _ in 0..100 {</span>
-<span class="doccomment">///     // 0% chance to print &#39;a&#39;, 30% chance to print &#39;b&#39;, 70% chance to print &#39;c&#39;</span>
-<span class="doccomment">///     println!(&quot;{}&quot;, items[dist2.sample(&amp;mut rng)].0);</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Uniform&lt;X&gt;`]: crate::distributions::Uniform</span>
-<span class="doccomment">/// [`RngCore`]: crate::RngCore</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde1&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>)))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WeightedIndex</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">SampleUniform</span> <span class="op">+</span> <span class="ident">PartialOrd</span><span class="op">&gt;</span> {
-    <span class="ident">cumulative_weights</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-    <span class="ident">total_weight</span>: <span class="ident">X</span>,
-    <span class="ident">weight_distribution</span>: <span class="ident">X::Sampler</span>,
+<span class="doccomment">/// A distribution using weighted sampling of discrete items
+///
+/// Sampling a `WeightedIndex` distribution returns the index of a randomly
+/// selected element from the iterator used when the `WeightedIndex` was
+/// created. The chance of a given element being picked is proportional to the
+/// value of the element. The weights can use any type `X` for which an
+/// implementation of [`Uniform&lt;X&gt;`] exists.
+///
+/// # Performance
+///
+/// Time complexity of sampling from `WeightedIndex` is `O(log N)` where
+/// `N` is the number of weights. As an alternative,
+/// [`rand_distr::weighted_alias`](https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html)
+/// supports `O(1)` sampling, but with much higher initialisation cost.
+///
+/// A `WeightedIndex&lt;X&gt;` contains a `Vec&lt;X&gt;` and a [`Uniform&lt;X&gt;`] and so its
+/// size is the sum of the size of those objects, possibly plus some alignment.
+///
+/// Creating a `WeightedIndex&lt;X&gt;` will allocate enough space to hold `N - 1`
+/// weights of type `X`, where `N` is the number of weights. However, since
+/// `Vec` doesn&#39;t guarantee a particular growth strategy, additional memory
+/// might be allocated but not used. Since the `WeightedIndex` object also
+/// contains, this might cause additional allocations, though for primitive
+/// types, [`Uniform&lt;X&gt;`] doesn&#39;t allocate any memory.
+///
+/// Sampling from `WeightedIndex` will result in a single call to
+/// `Uniform&lt;X&gt;::sample` (method of the [`Distribution`] trait), which typically
+/// will request a single value from the underlying [`RngCore`], though the
+/// exact number depends on the implementation of `Uniform&lt;X&gt;::sample`.
+///
+/// # Example
+///
+/// ```
+/// use rand::prelude::*;
+/// use rand::distributions::WeightedIndex;
+///
+/// let choices = [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;];
+/// let weights = [2,   1,   1];
+/// let dist = WeightedIndex::new(&amp;weights).unwrap();
+/// let mut rng = thread_rng();
+/// for _ in 0..100 {
+///     // 50% chance to print &#39;a&#39;, 25% chance to print &#39;b&#39;, 25% chance to print &#39;c&#39;
+///     println!(&quot;{}&quot;, choices[dist.sample(&amp;mut rng)]);
+/// }
+///
+/// let items = [(&#39;a&#39;, 0), (&#39;b&#39;, 3), (&#39;c&#39;, 7)];
+/// let dist2 = WeightedIndex::new(items.iter().map(|item| item.1)).unwrap();
+/// for _ in 0..100 {
+///     // 0% chance to print &#39;a&#39;, 30% chance to print &#39;b&#39;, 70% chance to print &#39;c&#39;
+///     println!(&quot;{}&quot;, items[dist2.sample(&amp;mut rng)].0);
+/// }
+/// ```
+///
+/// [`Uniform&lt;X&gt;`]: crate::distributions::Uniform
+/// [`RngCore`]: crate::RngCore
+</span><span class="attribute">#[derive(Debug, Clone)]
+#[cfg_attr(feature = <span class="string">&quot;serde1&quot;</span>, derive(Serialize, Deserialize))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="kw">pub struct </span>WeightedIndex&lt;X: SampleUniform + PartialOrd&gt; {
+    cumulative_weights: Vec&lt;X&gt;,
+    total_weight: X,
+    weight_distribution: X::Sampler,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">SampleUniform</span> <span class="op">+</span> <span class="ident">PartialOrd</span><span class="op">&gt;</span> <span class="ident">WeightedIndex</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Creates a new a `WeightedIndex` [`Distribution`] using the values</span>
-    <span class="doccomment">/// in `weights`. The weights can use any type `X` for which an</span>
-    <span class="doccomment">/// implementation of [`Uniform&lt;X&gt;`] exists.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an error if the iterator is empty, if any weight is `&lt; 0`, or</span>
-    <span class="doccomment">/// if its total value is 0.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Uniform&lt;X&gt;`]: crate::distributions::uniform::Uniform</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">weights</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">WeightedIndex</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">WeightedError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
-        <span class="ident">I::Item</span>: <span class="ident">SampleBorrow</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-        <span class="ident">X</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">::core::ops::AddAssign</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">X</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Default</span>,
+<span class="kw">impl</span>&lt;X: SampleUniform + PartialOrd&gt; WeightedIndex&lt;X&gt; {
+    <span class="doccomment">/// Creates a new a `WeightedIndex` [`Distribution`] using the values
+    /// in `weights`. The weights can use any type `X` for which an
+    /// implementation of [`Uniform&lt;X&gt;`] exists.
+    ///
+    /// Returns an error if the iterator is empty, if any weight is `&lt; 0`, or
+    /// if its total value is 0.
+    ///
+    /// [`Uniform&lt;X&gt;`]: crate::distributions::uniform::Uniform
+    </span><span class="kw">pub fn </span>new&lt;I&gt;(weights: I) -&gt; <span class="prelude-ty">Result</span>&lt;WeightedIndex&lt;X&gt;, WeightedError&gt;
+    <span class="kw">where
+        </span>I: IntoIterator,
+        I::Item: SampleBorrow&lt;X&gt;,
+        X: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; ::core::ops::AddAssign&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>X&gt; + Clone + Default,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">weights</span>.<span class="ident">into_iter</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_weight</span>: <span class="ident">X</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="ident">WeightedError::NoItem</span>)<span class="question-mark">?</span>.<span class="ident">borrow</span>().<span class="ident">clone</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = weights.into_iter();
+        <span class="kw">let </span><span class="kw-2">mut </span>total_weight: X = iter.next().ok_or(WeightedError::NoItem)<span class="question-mark">?</span>.borrow().clone();
 
-        <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">X</span> <span class="kw">as</span> <span class="ident">Default</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">if</span> <span class="op">!</span>(<span class="ident">total_weight</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">zero</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WeightedError::InvalidWeight</span>);
+        <span class="kw">let </span>zero = &lt;X <span class="kw">as </span>Default&gt;::default();
+        <span class="kw">if </span>!(total_weight &gt;= zero) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(WeightedError::InvalidWeight);
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">weights</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="ident">iter</span>.<span class="ident">size_hint</span>().<span class="number">0</span>);
-        <span class="kw">for</span> <span class="ident">w</span> <span class="kw">in</span> <span class="ident">iter</span> {
-            <span class="comment">// Note that `!(w &gt;= x)` is not equivalent to `w &lt; x` for partially</span>
-            <span class="comment">// ordered types due to NaNs which are equal to nothing.</span>
-            <span class="kw">if</span> <span class="op">!</span>(<span class="ident">w</span>.<span class="ident">borrow</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">zero</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WeightedError::InvalidWeight</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>weights = Vec::&lt;X&gt;::with_capacity(iter.size_hint().<span class="number">0</span>);
+        <span class="kw">for </span>w <span class="kw">in </span>iter {
+            <span class="comment">// Note that `!(w &gt;= x)` is not equivalent to `w &lt; x` for partially
+            // ordered types due to NaNs which are equal to nothing.
+            </span><span class="kw">if </span>!(w.borrow() &gt;= <span class="kw-2">&amp;</span>zero) {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(WeightedError::InvalidWeight);
             }
-            <span class="ident">weights</span>.<span class="ident">push</span>(<span class="ident">total_weight</span>.<span class="ident">clone</span>());
-            <span class="ident">total_weight</span> <span class="op">+</span><span class="op">=</span> <span class="ident">w</span>.<span class="ident">borrow</span>();
+            weights.push(total_weight.clone());
+            total_weight += w.borrow();
         }
 
-        <span class="kw">if</span> <span class="ident">total_weight</span> <span class="op">==</span> <span class="ident">zero</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WeightedError::AllWeightsZero</span>);
+        <span class="kw">if </span>total_weight == zero {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(WeightedError::AllWeightsZero);
         }
-        <span class="kw">let</span> <span class="ident">distr</span> <span class="op">=</span> <span class="ident">X::Sampler::new</span>(<span class="ident">zero</span>, <span class="ident">total_weight</span>.<span class="ident">clone</span>());
+        <span class="kw">let </span>distr = X::Sampler::new(zero, total_weight.clone());
 
-        <span class="prelude-val">Ok</span>(<span class="ident">WeightedIndex</span> {
-            <span class="ident">cumulative_weights</span>: <span class="ident">weights</span>,
-            <span class="ident">total_weight</span>,
-            <span class="ident">weight_distribution</span>: <span class="ident">distr</span>,
+        <span class="prelude-val">Ok</span>(WeightedIndex {
+            cumulative_weights: weights,
+            total_weight,
+            weight_distribution: distr,
         })
     }
 
-    <span class="doccomment">/// Update a subset of weights, without changing the number of weights.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// `new_weights` must be sorted by the index.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Using this method instead of `new` might be more efficient if only a small number of</span>
-    <span class="doccomment">/// weights is modified. No allocations are performed, unless the weight type `X` uses</span>
-    <span class="doccomment">/// allocation internally.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// In case of error, `self` is not modified.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_weights</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new_weights</span>: <span class="kw-2">&amp;</span>[(<span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">X</span>)]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">WeightedError</span><span class="op">&gt;</span>
-    <span class="kw">where</span> <span class="ident">X</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">::core::ops::AddAssign</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">X</span><span class="op">&gt;</span>
-            <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">::core::ops::SubAssign</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">X</span><span class="op">&gt;</span>
-            <span class="op">+</span> <span class="ident">Clone</span>
-            <span class="op">+</span> <span class="ident">Default</span> {
-        <span class="kw">if</span> <span class="ident">new_weights</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+    <span class="doccomment">/// Update a subset of weights, without changing the number of weights.
+    ///
+    /// `new_weights` must be sorted by the index.
+    ///
+    /// Using this method instead of `new` might be more efficient if only a small number of
+    /// weights is modified. No allocations are performed, unless the weight type `X` uses
+    /// allocation internally.
+    ///
+    /// In case of error, `self` is not modified.
+    </span><span class="kw">pub fn </span>update_weights(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_weights: <span class="kw-2">&amp;</span>[(usize, <span class="kw-2">&amp;</span>X)]) -&gt; <span class="prelude-ty">Result</span>&lt;(), WeightedError&gt;
+    <span class="kw">where </span>X: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; ::core::ops::AddAssign&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>X&gt;
+            + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; ::core::ops::SubAssign&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>X&gt;
+            + Clone
+            + Default {
+        <span class="kw">if </span>new_weights.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">X</span> <span class="kw">as</span> <span class="ident">Default</span><span class="op">&gt;</span><span class="ident">::default</span>();
+        <span class="kw">let </span>zero = &lt;X <span class="kw">as </span>Default&gt;::default();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_weight</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">total_weight</span>.<span class="ident">clone</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>total_weight = <span class="self">self</span>.total_weight.clone();
 
-        <span class="comment">// Check for errors first, so we don&#39;t modify `self` in case something</span>
-        <span class="comment">// goes wrong.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prev_i</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">i</span>, <span class="ident">w</span>) <span class="kw">in</span> <span class="ident">new_weights</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">old_i</span>) <span class="op">=</span> <span class="ident">prev_i</span> {
-                <span class="kw">if</span> <span class="ident">old_i</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">i</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WeightedError::InvalidWeight</span>);
+        <span class="comment">// Check for errors first, so we don&#39;t modify `self` in case something
+        // goes wrong.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>prev_i = <span class="prelude-val">None</span>;
+        <span class="kw">for </span><span class="kw-2">&amp;</span>(i, w) <span class="kw">in </span>new_weights {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(old_i) = prev_i {
+                <span class="kw">if </span>old_i &gt;= i {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(WeightedError::InvalidWeight);
                 }
             }
-            <span class="kw">if</span> <span class="op">!</span>(<span class="kw-2">*</span><span class="ident">w</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">zero</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WeightedError::InvalidWeight</span>);
+            <span class="kw">if </span>!(<span class="kw-2">*</span>w &gt;= zero) {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(WeightedError::InvalidWeight);
             }
-            <span class="kw">if</span> <span class="ident">i</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">cumulative_weights</span>.<span class="ident">len</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WeightedError::TooMany</span>);
+            <span class="kw">if </span>i &gt; <span class="self">self</span>.cumulative_weights.len() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(WeightedError::TooMany);
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old_w</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">cumulative_weights</span>.<span class="ident">len</span>() {
-                <span class="self">self</span>.<span class="ident">cumulative_weights</span>[<span class="ident">i</span>].<span class="ident">clone</span>()
-            } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">total_weight</span>.<span class="ident">clone</span>()
+            <span class="kw">let </span><span class="kw-2">mut </span>old_w = <span class="kw">if </span>i &lt; <span class="self">self</span>.cumulative_weights.len() {
+                <span class="self">self</span>.cumulative_weights[i].clone()
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.total_weight.clone()
             };
-            <span class="kw">if</span> <span class="ident">i</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                <span class="ident">old_w</span> <span class="op">-</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cumulative_weights</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>];
+            <span class="kw">if </span>i &gt; <span class="number">0 </span>{
+                old_w -= <span class="kw-2">&amp;</span><span class="self">self</span>.cumulative_weights[i - <span class="number">1</span>];
             }
 
-            <span class="ident">total_weight</span> <span class="op">-</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">old_w</span>;
-            <span class="ident">total_weight</span> <span class="op">+</span><span class="op">=</span> <span class="ident">w</span>;
-            <span class="ident">prev_i</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+            total_weight -= <span class="kw-2">&amp;</span>old_w;
+            total_weight += w;
+            prev_i = <span class="prelude-val">Some</span>(i);
         }
-        <span class="kw">if</span> <span class="ident">total_weight</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">zero</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WeightedError::AllWeightsZero</span>);
+        <span class="kw">if </span>total_weight &lt;= zero {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(WeightedError::AllWeightsZero);
         }
 
-        <span class="comment">// Update the weights. Because we checked all the preconditions in the</span>
-        <span class="comment">// previous loop, this should never panic.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">new_weights</span>.<span class="ident">iter</span>();
+        <span class="comment">// Update the weights. Because we checked all the preconditions in the
+        // previous loop, this should never panic.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>iter = new_weights.iter();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prev_weight</span> <span class="op">=</span> <span class="ident">zero</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">next_new_weight</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>();
-        <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="ident">first_new_index</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">next_new_weight</span>.<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cumulative_weight</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">first_new_index</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="self">self</span>.<span class="ident">cumulative_weights</span>[<span class="ident">first_new_index</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">clone</span>()
-        } <span class="kw">else</span> {
-            <span class="ident">zero</span>.<span class="ident">clone</span>()
+        <span class="kw">let </span><span class="kw-2">mut </span>prev_weight = zero.clone();
+        <span class="kw">let </span><span class="kw-2">mut </span>next_new_weight = iter.next();
+        <span class="kw">let </span><span class="kw-2">&amp;</span>(first_new_index, <span class="kw">_</span>) = next_new_weight.unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>cumulative_weight = <span class="kw">if </span>first_new_index &gt; <span class="number">0 </span>{
+            <span class="self">self</span>.cumulative_weights[first_new_index - <span class="number">1</span>].clone()
+        } <span class="kw">else </span>{
+            zero.clone()
         };
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">first_new_index</span>..<span class="self">self</span>.<span class="ident">cumulative_weights</span>.<span class="ident">len</span>() {
-            <span class="kw">match</span> <span class="ident">next_new_weight</span> {
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="ident">j</span>, <span class="ident">w</span>)) <span class="kw">if</span> <span class="ident">i</span> <span class="op">==</span> <span class="ident">j</span> =&gt; {
-                    <span class="ident">cumulative_weight</span> <span class="op">+</span><span class="op">=</span> <span class="ident">w</span>;
-                    <span class="ident">next_new_weight</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>();
+        <span class="kw">for </span>i <span class="kw">in </span>first_new_index..<span class="self">self</span>.cumulative_weights.len() {
+            <span class="kw">match </span>next_new_weight {
+                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(j, w)) <span class="kw">if </span>i == j =&gt; {
+                    cumulative_weight += w;
+                    next_new_weight = iter.next();
                 }
-                <span class="kw">_</span> =&gt; {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cumulative_weights</span>[<span class="ident">i</span>].<span class="ident">clone</span>();
-                    <span class="ident">tmp</span> <span class="op">-</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">prev_weight</span>; <span class="comment">// We know this is positive.</span>
-                    <span class="ident">cumulative_weight</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tmp</span>;
+                <span class="kw">_ </span>=&gt; {
+                    <span class="kw">let </span><span class="kw-2">mut </span>tmp = <span class="self">self</span>.cumulative_weights[i].clone();
+                    tmp -= <span class="kw-2">&amp;</span>prev_weight; <span class="comment">// We know this is positive.
+                    </span>cumulative_weight += <span class="kw-2">&amp;</span>tmp;
                 }
             }
-            <span class="ident">prev_weight</span> <span class="op">=</span> <span class="ident">cumulative_weight</span>.<span class="ident">clone</span>();
-            <span class="ident">core::mem::swap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prev_weight</span>, <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">cumulative_weights</span>[<span class="ident">i</span>]);
+            prev_weight = cumulative_weight.clone();
+            core::mem::swap(<span class="kw-2">&amp;mut </span>prev_weight, <span class="kw-2">&amp;mut </span><span class="self">self</span>.cumulative_weights[i]);
         }
 
-        <span class="self">self</span>.<span class="ident">total_weight</span> <span class="op">=</span> <span class="ident">total_weight</span>;
-        <span class="self">self</span>.<span class="ident">weight_distribution</span> <span class="op">=</span> <span class="ident">X::Sampler::new</span>(<span class="ident">zero</span>, <span class="self">self</span>.<span class="ident">total_weight</span>.<span class="ident">clone</span>());
+        <span class="self">self</span>.total_weight = total_weight;
+        <span class="self">self</span>.weight_distribution = X::Sampler::new(zero, <span class="self">self</span>.total_weight.clone());
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="ident">Distribution</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">WeightedIndex</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span> <span class="ident">X</span>: <span class="ident">SampleUniform</span> <span class="op">+</span> <span class="ident">PartialOrd</span>
+<span class="kw">impl</span>&lt;X&gt; Distribution&lt;usize&gt; <span class="kw">for </span>WeightedIndex&lt;X&gt;
+<span class="kw">where </span>X: SampleUniform + PartialOrd
 {
-    <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">use</span> <span class="ident">::core::cmp::Ordering</span>;
-        <span class="kw">let</span> <span class="ident">chosen_weight</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">weight_distribution</span>.<span class="ident">sample</span>(<span class="ident">rng</span>);
-        <span class="comment">// Find the first item which has a weight *higher* than the chosen weight.</span>
-        <span class="self">self</span>.<span class="ident">cumulative_weights</span>
-            .<span class="ident">binary_search_by</span>(<span class="op">|</span><span class="ident">w</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">w</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">chosen_weight</span> {
-                    <span class="ident">Ordering::Less</span>
-                } <span class="kw">else</span> {
-                    <span class="ident">Ordering::Greater</span>
+    <span class="kw">fn </span>sample&lt;R: Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; usize {
+        <span class="kw">use </span>::core::cmp::Ordering;
+        <span class="kw">let </span>chosen_weight = <span class="self">self</span>.weight_distribution.sample(rng);
+        <span class="comment">// Find the first item which has a weight *higher* than the chosen weight.
+        </span><span class="self">self</span>.cumulative_weights
+            .binary_search_by(|w| {
+                <span class="kw">if </span><span class="kw-2">*</span>w &lt;= chosen_weight {
+                    Ordering::Less
+                } <span class="kw">else </span>{
+                    Ordering::Greater
                 }
             })
-            .<span class="ident">unwrap_err</span>()
+            .unwrap_err()
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde1&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_weightedindex_serde1</span>() {
-        <span class="kw">let</span> <span class="ident">weighted_index</span> <span class="op">=</span> <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>, <span class="number">10</span>]).<span class="ident">unwrap</span>();
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;serde1&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>test_weightedindex_serde1() {
+        <span class="kw">let </span>weighted_index = WeightedIndex::new(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>, <span class="number">10</span>]).unwrap();
 
-        <span class="kw">let</span> <span class="ident">ser_weighted_index</span> <span class="op">=</span> <span class="ident">bincode::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">weighted_index</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">de_weighted_index</span>: <span class="ident">WeightedIndex</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span>
-            <span class="ident">bincode::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_weighted_index</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>ser_weighted_index = bincode::serialize(<span class="kw-2">&amp;</span>weighted_index).unwrap();
+        <span class="kw">let </span>de_weighted_index: WeightedIndex&lt;i32&gt; =
+            bincode::deserialize(<span class="kw-2">&amp;</span>ser_weighted_index).unwrap();
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">de_weighted_index</span>.<span class="ident">cumulative_weights</span>,
-            <span class="ident">weighted_index</span>.<span class="ident">cumulative_weights</span>
+            de_weighted_index.cumulative_weights,
+            weighted_index.cumulative_weights
         );
-        <span class="macro">assert_eq!</span>(<span class="ident">de_weighted_index</span>.<span class="ident">total_weight</span>, <span class="ident">weighted_index</span>.<span class="ident">total_weight</span>);
+        <span class="macro">assert_eq!</span>(de_weighted_index.total_weight, weighted_index.total_weight);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_accepting_nan</span>(){
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_accepting_nan(){
         <span class="macro">assert_eq!</span>(
-            <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="ident">core::f32::NAN</span>, <span class="number">0.5</span>]).<span class="ident">unwrap_err</span>(),
-            <span class="ident">WeightedError::InvalidWeight</span>,
+            WeightedIndex::new(<span class="kw-2">&amp;</span>[core::f32::NAN, <span class="number">0.5</span>]).unwrap_err(),
+            WeightedError::InvalidWeight,
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="ident">core::f32::NAN</span>]).<span class="ident">unwrap_err</span>(),
-            <span class="ident">WeightedError::InvalidWeight</span>,
+            WeightedIndex::new(<span class="kw-2">&amp;</span>[core::f32::NAN]).unwrap_err(),
+            WeightedError::InvalidWeight,
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="number">0.5</span>, <span class="ident">core::f32::NAN</span>]).<span class="ident">unwrap_err</span>(),
-            <span class="ident">WeightedError::InvalidWeight</span>,
+            WeightedIndex::new(<span class="kw-2">&amp;</span>[<span class="number">0.5</span>, core::f32::NAN]).unwrap_err(),
+            WeightedError::InvalidWeight,
         );
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="number">0.5</span>, <span class="number">7.0</span>])
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">update_weights</span>(<span class="kw-2">&amp;</span>[(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">core::f32::NAN</span>)])
-                .<span class="ident">unwrap_err</span>(),
-            <span class="ident">WeightedError::InvalidWeight</span>,
+            WeightedIndex::new(<span class="kw-2">&amp;</span>[<span class="number">0.5</span>, <span class="number">7.0</span>])
+                .unwrap()
+                .update_weights(<span class="kw-2">&amp;</span>[(<span class="number">0</span>, <span class="kw-2">&amp;</span>core::f32::NAN)])
+                .unwrap_err(),
+            WeightedError::InvalidWeight,
         )
     }
 
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">miri</span>, <span class="ident">ignore</span>)]</span> <span class="comment">// Miri is too slow</span>
-    <span class="kw">fn</span> <span class="ident">test_weightedindex</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test::rng</span>(<span class="number">700</span>);
-        <span class="kw">const</span> <span class="ident">N_REPS</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">5000</span>;
-        <span class="kw">let</span> <span class="ident">weights</span> <span class="op">=</span> [<span class="number">1u32</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">0</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>];
-        <span class="kw">let</span> <span class="ident">total_weight</span> <span class="op">=</span> <span class="ident">weights</span>.<span class="ident">iter</span>().<span class="ident">sum</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">f32</span>;
+    <span class="attribute">#[test]
+    #[cfg_attr(miri, ignore)] </span><span class="comment">// Miri is too slow
+    </span><span class="kw">fn </span>test_weightedindex() {
+        <span class="kw">let </span><span class="kw-2">mut </span>r = <span class="kw">crate</span>::test::rng(<span class="number">700</span>);
+        <span class="kw">const </span>N_REPS: u32 = <span class="number">5000</span>;
+        <span class="kw">let </span>weights = [<span class="number">1u32</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">0</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>];
+        <span class="kw">let </span>total_weight = weights.iter().sum::&lt;u32&gt;() <span class="kw">as </span>f32;
 
-        <span class="kw">let</span> <span class="ident">verify</span> <span class="op">=</span> <span class="op">|</span><span class="ident">result</span>: [<span class="ident">i32</span>; <span class="number">14</span>]<span class="op">|</span> {
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">count</span>) <span class="kw">in</span> <span class="ident">result</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> (<span class="ident">weights</span>[<span class="ident">i</span>] <span class="op">*</span> <span class="ident">N_REPS</span>) <span class="kw">as</span> <span class="ident">f32</span> <span class="op">/</span> <span class="ident">total_weight</span>;
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">count</span> <span class="kw">as</span> <span class="ident">f32</span> <span class="op">-</span> <span class="ident">exp</span>).<span class="ident">abs</span>();
-                <span class="kw">if</span> <span class="ident">err</span> <span class="op">!</span><span class="op">=</span> <span class="number">0.0</span> {
-                    <span class="ident">err</span> <span class="op">/</span><span class="op">=</span> <span class="ident">exp</span>;
+        <span class="kw">let </span>verify = |result: [i32; <span class="number">14</span>]| {
+            <span class="kw">for </span>(i, count) <span class="kw">in </span>result.iter().enumerate() {
+                <span class="kw">let </span>exp = (weights[i] * N_REPS) <span class="kw">as </span>f32 / total_weight;
+                <span class="kw">let </span><span class="kw-2">mut </span>err = (<span class="kw-2">*</span>count <span class="kw">as </span>f32 - exp).abs();
+                <span class="kw">if </span>err != <span class="number">0.0 </span>{
+                    err /= exp;
                 }
-                <span class="macro">assert!</span>(<span class="ident">err</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0.25</span>);
+                <span class="macro">assert!</span>(err &lt;= <span class="number">0.25</span>);
             }
         };
 
-        <span class="comment">// WeightedIndex from vec</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chosen</span> <span class="op">=</span> [<span class="number">0i32</span>; <span class="number">14</span>];
-        <span class="kw">let</span> <span class="ident">distr</span> <span class="op">=</span> <span class="ident">WeightedIndex::new</span>(<span class="ident">weights</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">N_REPS</span> {
-            <span class="ident">chosen</span>[<span class="ident">distr</span>.<span class="ident">sample</span>(<span class="kw-2">&amp;mut</span> <span class="ident">r</span>)] <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="comment">// WeightedIndex from vec
+        </span><span class="kw">let </span><span class="kw-2">mut </span>chosen = [<span class="number">0i32</span>; <span class="number">14</span>];
+        <span class="kw">let </span>distr = WeightedIndex::new(weights.to_vec()).unwrap();
+        <span class="kw">for _ in </span><span class="number">0</span>..N_REPS {
+            chosen[distr.sample(<span class="kw-2">&amp;mut </span>r)] += <span class="number">1</span>;
         }
-        <span class="ident">verify</span>(<span class="ident">chosen</span>);
+        verify(chosen);
 
-        <span class="comment">// WeightedIndex from slice</span>
-        <span class="ident">chosen</span> <span class="op">=</span> [<span class="number">0i32</span>; <span class="number">14</span>];
-        <span class="kw">let</span> <span class="ident">distr</span> <span class="op">=</span> <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span><span class="ident">weights</span>[..]).<span class="ident">unwrap</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">N_REPS</span> {
-            <span class="ident">chosen</span>[<span class="ident">distr</span>.<span class="ident">sample</span>(<span class="kw-2">&amp;mut</span> <span class="ident">r</span>)] <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="comment">// WeightedIndex from slice
+        </span>chosen = [<span class="number">0i32</span>; <span class="number">14</span>];
+        <span class="kw">let </span>distr = WeightedIndex::new(<span class="kw-2">&amp;</span>weights[..]).unwrap();
+        <span class="kw">for _ in </span><span class="number">0</span>..N_REPS {
+            chosen[distr.sample(<span class="kw-2">&amp;mut </span>r)] += <span class="number">1</span>;
         }
-        <span class="ident">verify</span>(<span class="ident">chosen</span>);
+        verify(chosen);
 
-        <span class="comment">// WeightedIndex from iterator</span>
-        <span class="ident">chosen</span> <span class="op">=</span> [<span class="number">0i32</span>; <span class="number">14</span>];
-        <span class="kw">let</span> <span class="ident">distr</span> <span class="op">=</span> <span class="ident">WeightedIndex::new</span>(<span class="ident">weights</span>.<span class="ident">iter</span>()).<span class="ident">unwrap</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">N_REPS</span> {
-            <span class="ident">chosen</span>[<span class="ident">distr</span>.<span class="ident">sample</span>(<span class="kw-2">&amp;mut</span> <span class="ident">r</span>)] <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="comment">// WeightedIndex from iterator
+        </span>chosen = [<span class="number">0i32</span>; <span class="number">14</span>];
+        <span class="kw">let </span>distr = WeightedIndex::new(weights.iter()).unwrap();
+        <span class="kw">for _ in </span><span class="number">0</span>..N_REPS {
+            chosen[distr.sample(<span class="kw-2">&amp;mut </span>r)] += <span class="number">1</span>;
         }
-        <span class="ident">verify</span>(<span class="ident">chosen</span>);
+        verify(chosen);
 
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">5</span> {
-            <span class="macro">assert_eq!</span>(<span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>]).<span class="ident">unwrap</span>().<span class="ident">sample</span>(<span class="kw-2">&amp;mut</span> <span class="ident">r</span>), <span class="number">1</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">0</span>]).<span class="ident">unwrap</span>().<span class="ident">sample</span>(<span class="kw-2">&amp;mut</span> <span class="ident">r</span>), <span class="number">0</span>);
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">5 </span>{
+            <span class="macro">assert_eq!</span>(WeightedIndex::new(<span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>]).unwrap().sample(<span class="kw-2">&amp;mut </span>r), <span class="number">1</span>);
+            <span class="macro">assert_eq!</span>(WeightedIndex::new(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">0</span>]).unwrap().sample(<span class="kw-2">&amp;mut </span>r), <span class="number">0</span>);
             <span class="macro">assert_eq!</span>(
-                <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">0</span>])
-                    .<span class="ident">unwrap</span>()
-                    .<span class="ident">sample</span>(<span class="kw-2">&amp;mut</span> <span class="ident">r</span>),
-                <span class="number">4</span>
-            );
+                WeightedIndex::new(<span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">0</span>])
+                    .unwrap()
+                    .sample(<span class="kw-2">&amp;mut </span>r),
+                <span class="number">4
+            </span>);
         }
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="number">10</span>][<span class="number">0</span>..<span class="number">0</span>]).<span class="ident">unwrap_err</span>(),
-            <span class="ident">WeightedError::NoItem</span>
+            WeightedIndex::new(<span class="kw-2">&amp;</span>[<span class="number">10</span>][<span class="number">0</span>..<span class="number">0</span>]).unwrap_err(),
+            WeightedError::NoItem
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>]).<span class="ident">unwrap_err</span>(),
-            <span class="ident">WeightedError::AllWeightsZero</span>
+            WeightedIndex::new(<span class="kw-2">&amp;</span>[<span class="number">0</span>]).unwrap_err(),
+            WeightedError::AllWeightsZero
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="number">10</span>, <span class="number">20</span>, <span class="op">-</span><span class="number">1</span>, <span class="number">30</span>]).<span class="ident">unwrap_err</span>(),
-            <span class="ident">WeightedError::InvalidWeight</span>
+            WeightedIndex::new(<span class="kw-2">&amp;</span>[<span class="number">10</span>, <span class="number">20</span>, -<span class="number">1</span>, <span class="number">30</span>]).unwrap_err(),
+            WeightedError::InvalidWeight
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="op">-</span><span class="number">10</span>, <span class="number">20</span>, <span class="number">1</span>, <span class="number">30</span>]).<span class="ident">unwrap_err</span>(),
-            <span class="ident">WeightedError::InvalidWeight</span>
+            WeightedIndex::new(<span class="kw-2">&amp;</span>[-<span class="number">10</span>, <span class="number">20</span>, <span class="number">1</span>, <span class="number">30</span>]).unwrap_err(),
+            WeightedError::InvalidWeight
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">WeightedIndex::new</span>(<span class="kw-2">&amp;</span>[<span class="op">-</span><span class="number">10</span>]).<span class="ident">unwrap_err</span>(),
-            <span class="ident">WeightedError::InvalidWeight</span>
+            WeightedIndex::new(<span class="kw-2">&amp;</span>[-<span class="number">10</span>]).unwrap_err(),
+            WeightedError::InvalidWeight
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_update_weights</span>() {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> [
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_update_weights() {
+        <span class="kw">let </span>data = [
             (
                 <span class="kw-2">&amp;</span>[<span class="number">10u32</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>][..],
-                <span class="kw-2">&amp;</span>[(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="number">100</span>), (<span class="number">2</span>, <span class="kw-2">&amp;</span><span class="number">4</span>)][..], <span class="comment">// positive change</span>
-                <span class="kw-2">&amp;</span>[<span class="number">10</span>, <span class="number">100</span>, <span class="number">4</span>, <span class="number">4</span>][..],
+                <span class="kw-2">&amp;</span>[(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="number">100</span>), (<span class="number">2</span>, <span class="kw-2">&amp;</span><span class="number">4</span>)][..], <span class="comment">// positive change
+                </span><span class="kw-2">&amp;</span>[<span class="number">10</span>, <span class="number">100</span>, <span class="number">4</span>, <span class="number">4</span>][..],
             ),
             (
                 <span class="kw-2">&amp;</span>[<span class="number">1u32</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">0</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>][..],
-                <span class="kw-2">&amp;</span>[(<span class="number">2</span>, <span class="kw-2">&amp;</span><span class="number">1</span>), (<span class="number">5</span>, <span class="kw-2">&amp;</span><span class="number">1</span>), (<span class="number">13</span>, <span class="kw-2">&amp;</span><span class="number">100</span>)][..], <span class="comment">// negative change and last element</span>
-                <span class="kw-2">&amp;</span>[<span class="number">1u32</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">5</span>, <span class="number">1</span>, <span class="number">7</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">100</span>][..],
+                <span class="kw-2">&amp;</span>[(<span class="number">2</span>, <span class="kw-2">&amp;</span><span class="number">1</span>), (<span class="number">5</span>, <span class="kw-2">&amp;</span><span class="number">1</span>), (<span class="number">13</span>, <span class="kw-2">&amp;</span><span class="number">100</span>)][..], <span class="comment">// negative change and last element
+                </span><span class="kw-2">&amp;</span>[<span class="number">1u32</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">5</span>, <span class="number">1</span>, <span class="number">7</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">100</span>][..],
             ),
         ];
 
-        <span class="kw">for</span> (<span class="ident">weights</span>, <span class="ident">update</span>, <span class="ident">expected_weights</span>) <span class="kw">in</span> <span class="ident">data</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">total_weight</span> <span class="op">=</span> <span class="ident">weights</span>.<span class="ident">iter</span>().<span class="ident">sum</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">distr</span> <span class="op">=</span> <span class="ident">WeightedIndex::new</span>(<span class="ident">weights</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">distr</span>.<span class="ident">total_weight</span>, <span class="ident">total_weight</span>);
+        <span class="kw">for </span>(weights, update, expected_weights) <span class="kw">in </span>data.iter() {
+            <span class="kw">let </span>total_weight = weights.iter().sum::&lt;u32&gt;();
+            <span class="kw">let </span><span class="kw-2">mut </span>distr = WeightedIndex::new(weights.to_vec()).unwrap();
+            <span class="macro">assert_eq!</span>(distr.total_weight, total_weight);
 
-            <span class="ident">distr</span>.<span class="ident">update_weights</span>(<span class="ident">update</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">expected_total_weight</span> <span class="op">=</span> <span class="ident">expected_weights</span>.<span class="ident">iter</span>().<span class="ident">sum</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>();
-            <span class="kw">let</span> <span class="ident">expected_distr</span> <span class="op">=</span> <span class="ident">WeightedIndex::new</span>(<span class="ident">expected_weights</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">distr</span>.<span class="ident">total_weight</span>, <span class="ident">expected_total_weight</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">distr</span>.<span class="ident">total_weight</span>, <span class="ident">expected_distr</span>.<span class="ident">total_weight</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">distr</span>.<span class="ident">cumulative_weights</span>, <span class="ident">expected_distr</span>.<span class="ident">cumulative_weights</span>);
+            distr.update_weights(update).unwrap();
+            <span class="kw">let </span>expected_total_weight = expected_weights.iter().sum::&lt;u32&gt;();
+            <span class="kw">let </span>expected_distr = WeightedIndex::new(expected_weights.to_vec()).unwrap();
+            <span class="macro">assert_eq!</span>(distr.total_weight, expected_total_weight);
+            <span class="macro">assert_eq!</span>(distr.total_weight, expected_distr.total_weight);
+            <span class="macro">assert_eq!</span>(distr.cumulative_weights, expected_distr.cumulative_weights);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">value_stability</span>() {
-        <span class="kw">fn</span> <span class="ident">test_samples</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">SampleUniform</span> <span class="op">+</span> <span class="ident">PartialOrd</span>, <span class="ident">I</span><span class="op">&gt;</span>(
-            <span class="ident">weights</span>: <span class="ident">I</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">usize</span>], <span class="ident">expected</span>: <span class="kw-2">&amp;</span>[<span class="ident">usize</span>],
-        ) <span class="kw">where</span>
-            <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
-            <span class="ident">I::Item</span>: <span class="ident">SampleBorrow</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-            <span class="ident">X</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">::core::ops::AddAssign</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">X</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Default</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>value_stability() {
+        <span class="kw">fn </span>test_samples&lt;X: SampleUniform + PartialOrd, I&gt;(
+            weights: I, buf: <span class="kw-2">&amp;mut </span>[usize], expected: <span class="kw-2">&amp;</span>[usize],
+        ) <span class="kw">where
+            </span>I: IntoIterator,
+            I::Item: SampleBorrow&lt;X&gt;,
+            X: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; ::core::ops::AddAssign&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>X&gt; + Clone + Default,
         {
-            <span class="macro">assert_eq!</span>(<span class="ident">buf</span>.<span class="ident">len</span>(), <span class="ident">expected</span>.<span class="ident">len</span>());
-            <span class="kw">let</span> <span class="ident">distr</span> <span class="op">=</span> <span class="ident">WeightedIndex::new</span>(<span class="ident">weights</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test::rng</span>(<span class="number">701</span>);
-            <span class="kw">for</span> <span class="ident">r</span> <span class="kw">in</span> <span class="ident">buf</span>.<span class="ident">iter_mut</span>() {
-                <span class="kw-2">*</span><span class="ident">r</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">sample</span>(<span class="kw-2">&amp;</span><span class="ident">distr</span>);
+            <span class="macro">assert_eq!</span>(buf.len(), expected.len());
+            <span class="kw">let </span>distr = WeightedIndex::new(weights).unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>rng = <span class="kw">crate</span>::test::rng(<span class="number">701</span>);
+            <span class="kw">for </span>r <span class="kw">in </span>buf.iter_mut() {
+                <span class="kw-2">*</span>r = rng.sample(<span class="kw-2">&amp;</span>distr);
             }
-            <span class="macro">assert_eq!</span>(<span class="ident">buf</span>, <span class="ident">expected</span>);
+            <span class="macro">assert_eq!</span>(buf, expected);
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">10</span>];
-        <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span>[<span class="number">1i32</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>], <span class="kw-2">&amp;mut</span> <span class="ident">buf</span>, <span class="kw-2">&amp;</span>[
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0</span>; <span class="number">10</span>];
+        test_samples(<span class="kw-2">&amp;</span>[<span class="number">1i32</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>], <span class="kw-2">&amp;mut </span>buf, <span class="kw-2">&amp;</span>[
             <span class="number">0</span>, <span class="number">6</span>, <span class="number">2</span>, <span class="number">6</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">2</span>, <span class="number">5</span>,
         ]);
-        <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span>[<span class="number">0.7f32</span>, <span class="number">0.1</span>, <span class="number">0.1</span>, <span class="number">0.1</span>], <span class="kw-2">&amp;mut</span> <span class="ident">buf</span>, <span class="kw-2">&amp;</span>[
+        test_samples(<span class="kw-2">&amp;</span>[<span class="number">0.7f32</span>, <span class="number">0.1</span>, <span class="number">0.1</span>, <span class="number">0.1</span>], <span class="kw-2">&amp;mut </span>buf, <span class="kw-2">&amp;</span>[
             <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">0</span>, <span class="number">0</span>,
         ]);
-        <span class="ident">test_samples</span>(<span class="kw-2">&amp;</span>[<span class="number">1.0f64</span>, <span class="number">0.999</span>, <span class="number">0.998</span>, <span class="number">0.997</span>], <span class="kw-2">&amp;mut</span> <span class="ident">buf</span>, <span class="kw-2">&amp;</span>[
+        test_samples(<span class="kw-2">&amp;</span>[<span class="number">1.0f64</span>, <span class="number">0.999</span>, <span class="number">0.998</span>, <span class="number">0.997</span>], <span class="kw-2">&amp;mut </span>buf, <span class="kw-2">&amp;</span>[
             <span class="number">2</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">3</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>,
         ]);
     }
 }
 
-<span class="doccomment">/// Error type returned from `WeightedIndex::new`.</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>)))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WeightedError</span> {
-    <span class="doccomment">/// The provided weight collection contains no items.</span>
-    <span class="ident">NoItem</span>,
+<span class="doccomment">/// Error type returned from `WeightedIndex::new`.
+</span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;alloc&quot;</span>)))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>WeightedError {
+    <span class="doccomment">/// The provided weight collection contains no items.
+    </span>NoItem,
 
-    <span class="doccomment">/// A weight is either less than zero, greater than the supported maximum,</span>
-    <span class="doccomment">/// NaN, or otherwise invalid.</span>
-    <span class="ident">InvalidWeight</span>,
+    <span class="doccomment">/// A weight is either less than zero, greater than the supported maximum,
+    /// NaN, or otherwise invalid.
+    </span>InvalidWeight,
 
-    <span class="doccomment">/// All items in the provided weight collection are zero.</span>
-    <span class="ident">AllWeightsZero</span>,
+    <span class="doccomment">/// All items in the provided weight collection are zero.
+    </span>AllWeightsZero,
 
-    <span class="doccomment">/// Too many weights are provided (length greater than `u32::MAX`)</span>
-    <span class="ident">TooMany</span>,
+    <span class="doccomment">/// Too many weights are provided (length greater than `u32::MAX`)
+    </span>TooMany,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">std::error::Error</span> <span class="kw">for</span> <span class="ident">WeightedError</span> {}
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl </span>std::error::Error <span class="kw">for </span>WeightedError {}
 
-<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">WeightedError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">WeightedError::NoItem</span> =&gt; <span class="string">&quot;No weights provided in distribution&quot;</span>,
-            <span class="ident">WeightedError::InvalidWeight</span> =&gt; <span class="string">&quot;A weight is invalid in distribution&quot;</span>,
-            <span class="ident">WeightedError::AllWeightsZero</span> =&gt; <span class="string">&quot;All weights are zero in distribution&quot;</span>,
-            <span class="ident">WeightedError::TooMany</span> =&gt; <span class="string">&quot;Too many weights (hit u32::MAX) in distribution&quot;</span>,
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>WeightedError {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        f.write_str(<span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            WeightedError::NoItem =&gt; <span class="string">&quot;No weights provided in distribution&quot;</span>,
+            WeightedError::InvalidWeight =&gt; <span class="string">&quot;A weight is invalid in distribution&quot;</span>,
+            WeightedError::AllWeightsZero =&gt; <span class="string">&quot;All weights are zero in distribution&quot;</span>,
+            WeightedError::TooMany =&gt; <span class="string">&quot;Too many weights (hit u32::MAX) in distribution&quot;</span>,
         })
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

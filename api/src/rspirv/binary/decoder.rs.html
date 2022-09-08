@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rspirv-0.11.0+1.5.4/binary/decoder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>decoder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rspirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rspirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rspirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rspirv-0.11.0+1.5.4/binary/decoder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>decoder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rspirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rspirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rspirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -440,442 +434,441 @@
 <span id="434">434</span>
 <span id="435">435</span>
 <span id="436">436</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::spirv;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::DecodeError</span> <span class="kw">as</span> <span class="ident">Error</span>;
-<span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
-<span class="kw">use</span> <span class="ident">std::result</span>;
-<span class="kw">use</span> <span class="ident">std::str</span>;
+<span class="kw">use </span><span class="kw">super</span>::DecodeError <span class="kw">as </span>Error;
+<span class="kw">use </span>std::convert::TryInto;
+<span class="kw">use </span>std::result;
+<span class="kw">use </span>std::str;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = result::Result&lt;T, Error&gt;;
 
-<span class="kw">const</span> <span class="ident">WORD_NUM_BYTES</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="kw">const </span>WORD_NUM_BYTES: usize = <span class="number">4</span>;
 
-<span class="doccomment">/// The SPIR-V binary decoder.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Takes in a vector of bytes, and serves requests for raw SPIR-V words</span>
-<span class="doccomment">/// or values of a specific SPIR-V enum type. Successful decoding will</span>
-<span class="doccomment">/// surely consume the number of words decoded, while unsuccessful decoding</span>
-<span class="doccomment">/// may consume any number of bytes.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// TODO: The decoder should not conume words if an error occurs.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Different from the [`Parser`](struct.Parser.html),</span>
-<span class="doccomment">/// this decoder is low-level; it has no knowledge of the SPIR-V grammar.</span>
-<span class="doccomment">/// Given a vector of bytes, it solely responds to word decoding requests</span>
-<span class="doccomment">/// via method calls: both raw words requests and decoding the raw words</span>
-<span class="doccomment">/// into a value of a specific SPIR-V enum type.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It also provides a limit mechanism. Users can set a limit, and then</span>
-<span class="doccomment">/// requesting words. If that limit is reached before the end of the</span>
-<span class="doccomment">/// stream, [`State::LimitReached`](enum.ParseState.html) will be</span>
-<span class="doccomment">/// returned.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Errors</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// For its methods, there can be the following errors:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// * `DecodeError::LimitReached(offset)` if the most recent limit has reached.</span>
-<span class="doccomment">/// * `DecodeError::StreamExpected(offset)` if more bytes are needed to decode</span>
-<span class="doccomment">///    the next word.</span>
-<span class="doccomment">/// * `DecodeError::&lt;spirv-enum&gt;Unknown(offset, value)` if failed to decode the</span>
-<span class="doccomment">///    next word as the given `&lt;spirv-enum&gt;`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// All errors contain the byte offset of the word failed decoding.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use rspirv::binary::{Decoder, DecodeError};</span>
-<span class="doccomment">/// use spirv::SourceLanguage;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// fn main() {</span>
-<span class="doccomment">///     let v = vec![0x12, 0x34, 0x56, 0x78,</span>
-<span class="doccomment">///                  0x90, 0xab, 0xcd, 0xef,</span>
-<span class="doccomment">///                  0x02, 0x00, 0x00, 0x00];</span>
-<span class="doccomment">///     let mut d = Decoder::new(&amp;v);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     assert_eq!(Ok(0x78563412), d.word());</span>
-<span class="doccomment">///     assert_eq!(Ok(0xefcdab90), d.word());</span>
-<span class="doccomment">///     assert_eq!(Ok(SourceLanguage::GLSL), d.source_language());</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     assert_eq!(Err(DecodeError::StreamExpected(12)), d.word());</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Decoder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Raw bytes to decode</span>
-    <span class="ident">bytes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>],
-    <span class="doccomment">/// Offset for next byte to decode</span>
-    <span class="ident">offset</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// Remaining limit of number of words before error</span>
-    <span class="ident">limit</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+<span class="doccomment">/// The SPIR-V binary decoder.
+///
+/// Takes in a vector of bytes, and serves requests for raw SPIR-V words
+/// or values of a specific SPIR-V enum type. Successful decoding will
+/// surely consume the number of words decoded, while unsuccessful decoding
+/// may consume any number of bytes.
+///
+/// TODO: The decoder should not conume words if an error occurs.
+///
+/// Different from the [`Parser`](struct.Parser.html),
+/// this decoder is low-level; it has no knowledge of the SPIR-V grammar.
+/// Given a vector of bytes, it solely responds to word decoding requests
+/// via method calls: both raw words requests and decoding the raw words
+/// into a value of a specific SPIR-V enum type.
+///
+/// It also provides a limit mechanism. Users can set a limit, and then
+/// requesting words. If that limit is reached before the end of the
+/// stream, [`State::LimitReached`](enum.ParseState.html) will be
+/// returned.
+///
+/// # Errors
+///
+/// For its methods, there can be the following errors:
+///
+/// * `DecodeError::LimitReached(offset)` if the most recent limit has reached.
+/// * `DecodeError::StreamExpected(offset)` if more bytes are needed to decode
+///    the next word.
+/// * `DecodeError::&lt;spirv-enum&gt;Unknown(offset, value)` if failed to decode the
+///    next word as the given `&lt;spirv-enum&gt;`.
+///
+/// All errors contain the byte offset of the word failed decoding.
+///
+/// # Examples
+///
+/// ```
+/// use rspirv::binary::{Decoder, DecodeError};
+/// use spirv::SourceLanguage;
+///
+/// fn main() {
+///     let v = vec![0x12, 0x34, 0x56, 0x78,
+///                  0x90, 0xab, 0xcd, 0xef,
+///                  0x02, 0x00, 0x00, 0x00];
+///     let mut d = Decoder::new(&amp;v);
+///
+///     assert_eq!(Ok(0x78563412), d.word());
+///     assert_eq!(Ok(0xefcdab90), d.word());
+///     assert_eq!(Ok(SourceLanguage::GLSL), d.source_language());
+///
+///     assert_eq!(Err(DecodeError::StreamExpected(12)), d.word());
+/// }
+/// ```
+</span><span class="kw">pub struct </span>Decoder&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Raw bytes to decode
+    </span>bytes: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8],
+    <span class="doccomment">/// Offset for next byte to decode
+    </span>offset: usize,
+    <span class="doccomment">/// Remaining limit of number of words before error
+    </span>limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Decoder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Creates a new `Decoder` instance.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="ident">Decoder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="ident">Decoder</span> {
-            <span class="ident">bytes</span>,
-            <span class="ident">offset</span>: <span class="number">0</span>,
-            <span class="ident">limit</span>: <span class="prelude-val">None</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Decoder&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Creates a new `Decoder` instance.
+    </span><span class="kw">pub fn </span>new(bytes: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; Decoder&lt;<span class="lifetime">&#39;a</span>&gt; {
+        Decoder {
+            bytes,
+            offset: <span class="number">0</span>,
+            limit: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Returns the offset of the byte to decode next.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">offset</span>
+    <span class="doccomment">/// Returns the offset of the byte to decode next.
+    </span><span class="kw">pub fn </span>offset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.offset
     }
 
-    <span class="doccomment">/// Decodes and returns the next raw SPIR-V word.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">word</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">has_limit</span>() {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">limit_reached</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::LimitReached</span>(<span class="self">self</span>.<span class="ident">offset</span>));
-            } <span class="kw">else</span> {
-                <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">limit</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>() <span class="op">-</span><span class="op">=</span> <span class="number">1</span>
-            }
+    <span class="doccomment">/// Decodes and returns the next raw SPIR-V word.
+    </span><span class="kw">pub fn </span>word(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;spirv::Word&gt; {
+        <span class="kw">if </span><span class="self">self</span>.has_limit() {
+            <span class="kw">if </span><span class="self">self</span>.limit_reached() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::LimitReached(<span class="self">self</span>.offset));
+            } <span class="kw">else </span>{
+                <span class="kw-2">*</span><span class="self">self</span>.limit.as_mut().unwrap() -= <span class="number">1
+            </span>}
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">offset</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">WORD_NUM_BYTES</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">len</span>() {
-            <span class="prelude-val">Err</span>(<span class="ident">Error::StreamExpected</span>(<span class="self">self</span>.<span class="ident">offset</span>))
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">WORD_NUM_BYTES</span>;
-            <span class="prelude-val">Ok</span>(<span class="ident">spirv::Word::from_le_bytes</span>(
-                <span class="self">self</span>.<span class="ident">bytes</span>[<span class="self">self</span>.<span class="ident">offset</span> <span class="op">-</span> <span class="number">4</span>..<span class="self">self</span>.<span class="ident">offset</span>].<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
+        <span class="kw">if </span><span class="self">self</span>.offset &gt;= <span class="self">self</span>.bytes.len() || <span class="self">self</span>.offset + WORD_NUM_BYTES &gt; <span class="self">self</span>.bytes.len() {
+            <span class="prelude-val">Err</span>(Error::StreamExpected(<span class="self">self</span>.offset))
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.offset += WORD_NUM_BYTES;
+            <span class="prelude-val">Ok</span>(spirv::Word::from_le_bytes(
+                <span class="self">self</span>.bytes[<span class="self">self</span>.offset - <span class="number">4</span>..<span class="self">self</span>.offset].try_into().unwrap(),
             ))
         }
     }
 
-    <span class="doccomment">/// Decodes and returns the next `n` raw SPIR-V words.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">words</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">words</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> {
-            <span class="ident">words</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">word</span>()<span class="question-mark">?</span>);
+    <span class="doccomment">/// Decodes and returns the next `n` raw SPIR-V words.
+    </span><span class="kw">pub fn </span>words(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;spirv::Word&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>words = Vec::new();
+        <span class="kw">for _ in </span><span class="number">0</span>..n {
+            words.push(<span class="self">self</span>.word()<span class="question-mark">?</span>);
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">words</span>)
+        <span class="prelude-val">Ok</span>(words)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Decoder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Sets the limit to `num_words` words.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The decoder will return [`State::LimitReached`](enum.ParseState.html)</span>
-    <span class="doccomment">/// after `num_words` words have been requested, if having not consumed</span>
-    <span class="doccomment">/// the whole stream.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_limit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">num_words</span>: <span class="ident">usize</span>) {
-        <span class="self">self</span>.<span class="ident">limit</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">num_words</span>)
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Decoder&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Sets the limit to `num_words` words.
+    ///
+    /// The decoder will return [`State::LimitReached`](enum.ParseState.html)
+    /// after `num_words` words have been requested, if having not consumed
+    /// the whole stream.
+    </span><span class="kw">pub fn </span>set_limit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, num_words: usize) {
+        <span class="self">self</span>.limit = <span class="prelude-val">Some</span>(num_words)
     }
 
-    <span class="doccomment">/// Clear the previously set limit (if any).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_limit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">limit</span> <span class="op">=</span> <span class="prelude-val">None</span>
+    <span class="doccomment">/// Clear the previously set limit (if any).
+    </span><span class="kw">pub fn </span>clear_limit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.limit = <span class="prelude-val">None
+    </span>}
+
+    <span class="doccomment">/// Returns true if a limit has been set on this decoder.
+    </span><span class="kw">pub fn </span>has_limit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.limit.is_some()
     }
 
-    <span class="doccomment">/// Returns true if a limit has been set on this decoder.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_limit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">limit</span>.<span class="ident">is_some</span>()
-    }
-
-    <span class="doccomment">/// Returns true if the previously set limit has been reached.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This will always return false if no limit has been ever set.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">limit_reached</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">left</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">limit</span> {
-            <span class="ident">left</span> <span class="op">==</span> <span class="number">0</span>
-        } <span class="kw">else</span> {
-            <span class="bool-val">false</span>
-        }
+    <span class="doccomment">/// Returns true if the previously set limit has been reached.
+    ///
+    /// This will always return false if no limit has been ever set.
+    </span><span class="kw">pub fn </span>limit_reached(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(left) = <span class="self">self</span>.limit {
+            left == <span class="number">0
+        </span>} <span class="kw">else </span>{
+            <span class="bool-val">false
+        </span>}
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Decoder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Decodes and returns the next SPIR-V word as an id.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">word</span>()
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Decoder&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Decodes and returns the next SPIR-V word as an id.
+    </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;spirv::Word&gt; {
+        <span class="self">self</span>.word()
     }
 
-    <span class="doccomment">/// Decodes and returns a literal string.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This method will consume as many words as necessary until finding a</span>
-    <span class="doccomment">/// null character (`\0`), or reaching the limit or end of the stream</span>
-    <span class="doccomment">/// and erroring out.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">string</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="comment">// If we have a limit, then don&#39;t search further than we need to.</span>
-        <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">limit</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">limit</span>) =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>[<span class="self">self</span>.<span class="ident">offset</span>..(<span class="self">self</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">limit</span> <span class="op">*</span> <span class="ident">WORD_NUM_BYTES</span>)],
-            <span class="prelude-val">None</span> =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>[<span class="self">self</span>.<span class="ident">offset</span>..],
+    <span class="doccomment">/// Decodes and returns a literal string.
+    ///
+    /// This method will consume as many words as necessary until finding a
+    /// null character (`\0`), or reaching the limit or end of the stream
+    /// and erroring out.
+    </span><span class="kw">pub fn </span>string(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="comment">// If we have a limit, then don&#39;t search further than we need to.
+        </span><span class="kw">let </span>slice = <span class="kw">match </span><span class="self">self</span>.limit {
+            <span class="prelude-val">Some</span>(limit) =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.bytes[<span class="self">self</span>.offset..(<span class="self">self</span>.offset + limit * WORD_NUM_BYTES)],
+            <span class="prelude-val">None </span>=&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.bytes[<span class="self">self</span>.offset..],
         };
-        <span class="comment">// Find the null terminator.</span>
-        <span class="kw">let</span> <span class="ident">first_null_byte</span> <span class="op">=</span>
-            <span class="ident">slice</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">position</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="number">0</span>)
-                .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">limit</span> {
-                    <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="ident">Error::LimitReached</span>(<span class="self">self</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">slice</span>.<span class="ident">len</span>()),
-                    <span class="prelude-val">None</span> =&gt; <span class="ident">Error::StreamExpected</span>(<span class="self">self</span>.<span class="ident">offset</span>),
+        <span class="comment">// Find the null terminator.
+        </span><span class="kw">let </span>first_null_byte =
+            slice
+                .iter()
+                .position(|<span class="kw-2">&amp;</span>c| c == <span class="number">0</span>)
+                .ok_or_else(|| <span class="kw">match </span><span class="self">self</span>.limit {
+                    <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; Error::LimitReached(<span class="self">self</span>.offset + slice.len()),
+                    <span class="prelude-val">None </span>=&gt; Error::StreamExpected(<span class="self">self</span>.offset),
                 })<span class="question-mark">?</span>;
-        <span class="comment">// Validate the string is utf8.</span>
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">slice</span>[..<span class="ident">first_null_byte</span>])
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DecodeStringFailed</span>(<span class="self">self</span>.<span class="ident">offset</span>, <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
-        <span class="comment">// Round up consumed words to include null byte(s).</span>
-        <span class="kw">let</span> <span class="ident">consumed_words</span> <span class="op">=</span> (<span class="ident">first_null_byte</span> <span class="op">/</span> <span class="ident">WORD_NUM_BYTES</span>) <span class="op">+</span> <span class="number">1</span>;
-        <span class="self">self</span>.<span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">consumed_words</span> <span class="op">*</span> <span class="ident">WORD_NUM_BYTES</span>;
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">limit</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">limit</span> {
-            <span class="comment">// This is guaranteed to be enough due to the slice limit above.</span>
-            <span class="kw-2">*</span><span class="ident">limit</span> <span class="op">-</span><span class="op">=</span> <span class="ident">consumed_words</span>;
+        <span class="comment">// Validate the string is utf8.
+        </span><span class="kw">let </span>result = str::from_utf8(<span class="kw-2">&amp;</span>slice[..first_null_byte])
+            .map_err(|e| Error::DecodeStringFailed(<span class="self">self</span>.offset, <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, e)))<span class="question-mark">?</span>;
+        <span class="comment">// Round up consumed words to include null byte(s).
+        </span><span class="kw">let </span>consumed_words = (first_null_byte / WORD_NUM_BYTES) + <span class="number">1</span>;
+        <span class="self">self</span>.offset += consumed_words * WORD_NUM_BYTES;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>limit) = <span class="self">self</span>.limit {
+            <span class="comment">// This is guaranteed to be enough due to the slice limit above.
+            </span><span class="kw-2">*</span>limit -= consumed_words;
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>.<span class="ident">to_string</span>())
+        <span class="prelude-val">Ok</span>(result.to_string())
     }
 
-    <span class="doccomment">/// Decodes and returns the next SPIR-V word as a 32-bit</span>
-    <span class="doccomment">/// literal integer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">int32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">word</span>()
+    <span class="doccomment">/// Decodes and returns the next SPIR-V word as a 32-bit
+    /// literal integer.
+    </span><span class="kw">pub fn </span>int32(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u32&gt; {
+        <span class="self">self</span>.word()
     }
 
-    <span class="doccomment">/// Decodes and returns the next two SPIR-V words as a 64-bit</span>
-    <span class="doccomment">/// literal integer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">int64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">low</span> <span class="op">=</span> <span class="ident">u64::from</span>(<span class="self">self</span>.<span class="ident">word</span>()<span class="question-mark">?</span>);
-        <span class="kw">let</span> <span class="ident">high</span> <span class="op">=</span> <span class="ident">u64::from</span>(<span class="self">self</span>.<span class="ident">word</span>()<span class="question-mark">?</span>);
-        <span class="prelude-val">Ok</span>((<span class="ident">high</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>) <span class="op">|</span> <span class="ident">low</span>)
+    <span class="doccomment">/// Decodes and returns the next two SPIR-V words as a 64-bit
+    /// literal integer.
+    </span><span class="kw">pub fn </span>int64(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+        <span class="kw">let </span>low = u64::from(<span class="self">self</span>.word()<span class="question-mark">?</span>);
+        <span class="kw">let </span>high = u64::from(<span class="self">self</span>.word()<span class="question-mark">?</span>);
+        <span class="prelude-val">Ok</span>((high &lt;&lt; <span class="number">32</span>) | low)
     }
 
-    <span class="doccomment">/// Decodes and returns the next SPIR-V word as a 32-bit</span>
-    <span class="doccomment">/// literal floating point number.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">float32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">word</span>()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">f32::from_bits</span>(<span class="ident">val</span>))
+    <span class="doccomment">/// Decodes and returns the next SPIR-V word as a 32-bit
+    /// literal floating point number.
+    </span><span class="kw">pub fn </span>float32(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;f32&gt; {
+        <span class="kw">let </span>val = <span class="self">self</span>.word()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(f32::from_bits(val))
     }
 
-    <span class="doccomment">/// Decodes and returns the next two SPIR-V words as a 64-bit</span>
-    <span class="doccomment">/// literal floating point number.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">float64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">low</span> <span class="op">=</span> <span class="ident">u64::from</span>(<span class="self">self</span>.<span class="ident">word</span>()<span class="question-mark">?</span>);
-        <span class="kw">let</span> <span class="ident">high</span> <span class="op">=</span> <span class="ident">u64::from</span>(<span class="self">self</span>.<span class="ident">word</span>()<span class="question-mark">?</span>);
-        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> (<span class="ident">high</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>) <span class="op">|</span> <span class="ident">low</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">f64::from_bits</span>(<span class="ident">val</span>))
+    <span class="doccomment">/// Decodes and returns the next two SPIR-V words as a 64-bit
+    /// literal floating point number.
+    </span><span class="kw">pub fn </span>float64(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;f64&gt; {
+        <span class="kw">let </span>low = u64::from(<span class="self">self</span>.word()<span class="question-mark">?</span>);
+        <span class="kw">let </span>high = u64::from(<span class="self">self</span>.word()<span class="question-mark">?</span>);
+        <span class="kw">let </span>val = (high &lt;&lt; <span class="number">32</span>) | low;
+        <span class="prelude-val">Ok</span>(f64::from_bits(val))
     }
 
-    <span class="doccomment">/// Decodes and returns the next SPIR-V word as a 32-bit</span>
-    <span class="doccomment">/// extended-instruction-set number.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ext_inst_integer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">word</span>()
+    <span class="doccomment">/// Decodes and returns the next SPIR-V word as a 32-bit
+    /// extended-instruction-set number.
+    </span><span class="kw">pub fn </span>ext_inst_integer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u32&gt; {
+        <span class="self">self</span>.word()
     }
 }
 
 <span class="macro">include!</span>(<span class="string">&quot;autogen_decode_operand.rs&quot;</span>);
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">crate</span>::spirv;
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Decoder</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::binary::DecodeError</span> <span class="kw">as</span> <span class="ident">Error</span>;
+    <span class="kw">use </span><span class="kw">super</span>::Decoder;
+    <span class="kw">use </span><span class="kw">crate</span>::binary::DecodeError <span class="kw">as </span>Error;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decoding_word_from_one_bytes</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">1</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::StreamExpected</span>(<span class="number">0</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decoding_word_from_one_bytes() {
+        <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">1</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::StreamExpected(<span class="number">0</span>)), d.word());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decoding_word_from_two_bytes</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::StreamExpected</span>(<span class="number">0</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decoding_word_from_two_bytes() {
+        <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::StreamExpected(<span class="number">0</span>)), d.word());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decoding_word_from_three_bytes</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::StreamExpected</span>(<span class="number">0</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decoding_word_from_three_bytes() {
+        <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::StreamExpected(<span class="number">0</span>)), d.word());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decoding_word_from_four_bytes</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0x78563412</span>), <span class="ident">d</span>.<span class="ident">word</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decoding_word_from_four_bytes() {
+        <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0x78563412</span>), d.word());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decoding_words</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>,
+    <span class="attribute">#[test]
+    #[rustfmt::skip]
+    </span><span class="kw">fn </span>test_decoding_words() {
+        <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>,
                      <span class="number">0x90</span>, <span class="number">0xab</span>, <span class="number">0xcd</span>, <span class="number">0xef</span>,
                      <span class="number">0x01</span>, <span class="number">0x23</span>, <span class="number">0x45</span>, <span class="number">0x67</span>,
                      <span class="number">0x89</span>, <span class="number">0xfe</span>, <span class="number">0xdc</span>, <span class="number">0xba</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="number">0x78563412</span>, <span class="number">0xefcdab90</span>]), <span class="ident">d</span>.<span class="ident">words</span>(<span class="number">2</span>));
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="number">0x67452301</span>]), <span class="ident">d</span>.<span class="ident">words</span>(<span class="number">1</span>));
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="number">0xbadcfe89</span>]), <span class="ident">d</span>.<span class="ident">words</span>(<span class="number">1</span>));
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="number">0x78563412</span>, <span class="number">0xefcdab90</span>]), d.words(<span class="number">2</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="number">0x67452301</span>]), d.words(<span class="number">1</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="number">0xbadcfe89</span>]), d.words(<span class="number">1</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decoding_string</span>() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decoding_string() {
         {
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x00</span>];
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="ident">String::new</span>()), <span class="ident">d</span>.<span class="ident">string</span>());
+            <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x00</span>];
+            <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(String::new()), d.string());
         }
         {
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="string">b&quot;ok&quot;</span>.<span class="ident">to_vec</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-            <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::StreamExpected</span>(<span class="number">0</span>)), <span class="ident">d</span>.<span class="ident">string</span>());
+            <span class="kw">let </span>b = <span class="string">b&quot;ok&quot;</span>.to_vec();
+            <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+            <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::StreamExpected(<span class="number">0</span>)), d.string());
         }
         {
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="string">b&quot;ok\0\0&quot;</span>.<span class="ident">to_vec</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;ok&quot;</span>.<span class="ident">to_string</span>()), <span class="ident">d</span>.<span class="ident">string</span>());
+            <span class="kw">let </span>b = <span class="string">b&quot;ok\0\0&quot;</span>.to_vec();
+            <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;ok&quot;</span>.to_string()), d.string());
         }
         {
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="string">b&quot;ok\0\0rust\0\0\0\0rocks\0\0\0&quot;</span>.<span class="ident">to_vec</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;ok&quot;</span>.<span class="ident">to_string</span>()), <span class="ident">d</span>.<span class="ident">string</span>());
-            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;rust&quot;</span>.<span class="ident">to_string</span>()), <span class="ident">d</span>.<span class="ident">string</span>());
-            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;rocks&quot;</span>.<span class="ident">to_string</span>()), <span class="ident">d</span>.<span class="ident">string</span>());
+            <span class="kw">let </span>b = <span class="string">b&quot;ok\0\0rust\0\0\0\0rocks\0\0\0&quot;</span>.to_vec();
+            <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;ok&quot;</span>.to_string()), d.string());
+            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;rust&quot;</span>.to_string()), d.string());
+            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;rocks&quot;</span>.to_string()), d.string());
         }
         {
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="string">b&quot;I..don&#39;t know..\0&quot;</span>.<span class="ident">to_vec</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;I..don&#39;t know..&quot;</span>.<span class="ident">to_string</span>()), <span class="ident">d</span>.<span class="ident">string</span>());
+            <span class="kw">let </span>b = <span class="string">b&quot;I..don&#39;t know..\0&quot;</span>.to_vec();
+            <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+            <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="string">&quot;I..don&#39;t know..&quot;</span>.to_string()), d.string());
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decoding_source_language</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x02</span>, <span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x00</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="ident">spirv::SourceLanguage::GLSL</span>), <span class="ident">d</span>.<span class="ident">source_language</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decoding_source_language() {
+        <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">0x02</span>, <span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x00</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(spirv::SourceLanguage::GLSL), d.source_language());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decoding_unknown_execution_model</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0xef</span>, <span class="number">0xbe</span>, <span class="number">0xad</span>, <span class="number">0xde</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decoding_unknown_execution_model() {
+        <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">0xef</span>, <span class="number">0xbe</span>, <span class="number">0xad</span>, <span class="number">0xde</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
         <span class="macro">assert_eq!</span>(
-            <span class="prelude-val">Err</span>(<span class="ident">Error::ExecutionModelUnknown</span>(<span class="number">0</span>, <span class="number">0xdeadbeef</span>)),
-            <span class="ident">d</span>.<span class="ident">execution_model</span>()
+            <span class="prelude-val">Err</span>(Error::ExecutionModelUnknown(<span class="number">0</span>, <span class="number">0xdeadbeef</span>)),
+            d.execution_model()
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_offset</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>,
+    <span class="attribute">#[test]
+    #[rustfmt::skip]
+    </span><span class="kw">fn </span>test_offset() {
+        <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>,
                      <span class="number">0x90</span>, <span class="number">0xab</span>, <span class="number">0xcd</span>, <span class="number">0xef</span>,
                      <span class="number">0x01</span>, <span class="number">0x23</span>, <span class="number">0x45</span>, <span class="number">0x67</span>,
                      <span class="number">0x89</span>, <span class="number">0xfe</span>, <span class="number">0xdc</span>, <span class="number">0xba</span>,
                      <span class="number">0x01</span>, <span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x00</span>,
                      <span class="number">0xff</span>, <span class="number">0xff</span>, <span class="number">0xff</span>, <span class="number">0xff</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
 
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, <span class="ident">d</span>.<span class="ident">offset</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">words</span>(<span class="number">1</span>).<span class="ident">is_ok</span>());
-        <span class="macro">assert_eq!</span>(<span class="number">4</span>, <span class="ident">d</span>.<span class="ident">offset</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">words</span>(<span class="number">2</span>).<span class="ident">is_ok</span>());
-        <span class="macro">assert_eq!</span>(<span class="number">12</span>, <span class="ident">d</span>.<span class="ident">offset</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">words</span>(<span class="number">1</span>).<span class="ident">is_ok</span>());
-        <span class="macro">assert_eq!</span>(<span class="number">16</span>, <span class="ident">d</span>.<span class="ident">offset</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0</span>, d.offset());
+        <span class="macro">assert!</span>(d.words(<span class="number">1</span>).is_ok());
+        <span class="macro">assert_eq!</span>(<span class="number">4</span>, d.offset());
+        <span class="macro">assert!</span>(d.words(<span class="number">2</span>).is_ok());
+        <span class="macro">assert_eq!</span>(<span class="number">12</span>, d.offset());
+        <span class="macro">assert!</span>(d.words(<span class="number">1</span>).is_ok());
+        <span class="macro">assert_eq!</span>(<span class="number">16</span>, d.offset());
 
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">source_language</span>().<span class="ident">is_ok</span>());
-        <span class="macro">assert_eq!</span>(<span class="number">20</span>, <span class="ident">d</span>.<span class="ident">offset</span>());
+        <span class="macro">assert!</span>(d.source_language().is_ok());
+        <span class="macro">assert_eq!</span>(<span class="number">20</span>, d.offset());
 
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">execution_model</span>().<span class="ident">is_err</span>());
-        <span class="macro">assert_eq!</span>(<span class="number">24</span>, <span class="ident">d</span>.<span class="ident">offset</span>());
+        <span class="macro">assert!</span>(d.execution_model().is_err());
+        <span class="macro">assert_eq!</span>(<span class="number">24</span>, d.offset());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decoding_after_errors</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0x78563412</span>), <span class="ident">d</span>.<span class="ident">word</span>());
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::StreamExpected</span>(<span class="number">4</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::StreamExpected</span>(<span class="number">4</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::StreamExpected</span>(<span class="number">4</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decoding_after_errors() {
+        <span class="kw">let </span>b = <span class="macro">vec!</span>[<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0x78563412</span>), d.word());
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::StreamExpected(<span class="number">4</span>)), d.word());
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::StreamExpected(<span class="number">4</span>)), d.word());
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::StreamExpected(<span class="number">4</span>)), d.word());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_limit</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">12</span> {
-            <span class="ident">v</span>.<span class="ident">push</span>(<span class="number">0xff</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_limit() {
+        <span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[];
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">12 </span>{
+            v.push(<span class="number">0xff</span>);
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>v);
 
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">d</span>.<span class="ident">limit_reached</span>());
+        <span class="macro">assert!</span>(!d.has_limit());
+        <span class="macro">assert!</span>(!d.limit_reached());
 
-        <span class="ident">d</span>.<span class="ident">set_limit</span>(<span class="number">4</span>);
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">d</span>.<span class="ident">limit_reached</span>());
+        d.set_limit(<span class="number">4</span>);
+        <span class="macro">assert!</span>(d.has_limit());
+        <span class="macro">assert!</span>(!d.limit_reached());
 
-        <span class="ident">d</span>.<span class="ident">clear_limit</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">d</span>.<span class="ident">limit_reached</span>());
+        d.clear_limit();
+        <span class="macro">assert!</span>(!d.has_limit());
+        <span class="macro">assert!</span>(!d.limit_reached());
 
-        <span class="ident">d</span>.<span class="ident">set_limit</span>(<span class="number">2</span>);
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">d</span>.<span class="ident">limit_reached</span>());
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0xffffffff</span>), <span class="ident">d</span>.<span class="ident">word</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">d</span>.<span class="ident">limit_reached</span>());
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0xffffffff</span>), <span class="ident">d</span>.<span class="ident">word</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">limit_reached</span>());
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::LimitReached</span>(<span class="number">8</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">limit_reached</span>());
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::LimitReached</span>(<span class="number">8</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">limit_reached</span>());
+        d.set_limit(<span class="number">2</span>);
+        <span class="macro">assert!</span>(d.has_limit());
+        <span class="macro">assert!</span>(!d.limit_reached());
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0xffffffff</span>), d.word());
+        <span class="macro">assert!</span>(d.has_limit());
+        <span class="macro">assert!</span>(!d.limit_reached());
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0xffffffff</span>), d.word());
+        <span class="macro">assert!</span>(d.has_limit());
+        <span class="macro">assert!</span>(d.limit_reached());
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::LimitReached(<span class="number">8</span>)), d.word());
+        <span class="macro">assert!</span>(d.has_limit());
+        <span class="macro">assert!</span>(d.limit_reached());
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::LimitReached(<span class="number">8</span>)), d.word());
+        <span class="macro">assert!</span>(d.has_limit());
+        <span class="macro">assert!</span>(d.limit_reached());
 
-        <span class="ident">d</span>.<span class="ident">clear_limit</span>();
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0xffffffff</span>), <span class="ident">d</span>.<span class="ident">word</span>());
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">d</span>.<span class="ident">limit_reached</span>());
+        d.clear_limit();
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0xffffffff</span>), d.word());
+        <span class="macro">assert!</span>(!d.has_limit());
+        <span class="macro">assert!</span>(!d.limit_reached());
 
-        <span class="ident">d</span>.<span class="ident">set_limit</span>(<span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::LimitReached</span>(<span class="number">12</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">has_limit</span>());
-        <span class="macro">assert!</span>(<span class="ident">d</span>.<span class="ident">limit_reached</span>());
+        d.set_limit(<span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::LimitReached(<span class="number">12</span>)), d.word());
+        <span class="macro">assert!</span>(d.has_limit());
+        <span class="macro">assert!</span>(d.limit_reached());
 
-        <span class="ident">d</span>.<span class="ident">clear_limit</span>();
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::StreamExpected</span>(<span class="number">12</span>)), <span class="ident">d</span>.<span class="ident">word</span>());
+        d.clear_limit();
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Err</span>(Error::StreamExpected(<span class="number">12</span>)), d.word());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decode_int64</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> [<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>, <span class="number">0x90</span>, <span class="number">0xab</span>, <span class="number">0xcd</span>, <span class="number">0xef</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0xefcdab9078563412</span>), <span class="ident">d</span>.<span class="ident">int64</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decode_int64() {
+        <span class="kw">let </span>b = [<span class="number">0x12</span>, <span class="number">0x34</span>, <span class="number">0x56</span>, <span class="number">0x78</span>, <span class="number">0x90</span>, <span class="number">0xab</span>, <span class="number">0xcd</span>, <span class="number">0xef</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">0xefcdab9078563412</span>), d.int64());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decode_float32</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> [<span class="number">0x14</span>, <span class="number">0xAE</span>, <span class="number">0x29</span>, <span class="number">0x42</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">42.42</span>), <span class="ident">d</span>.<span class="ident">float32</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decode_float32() {
+        <span class="kw">let </span>b = [<span class="number">0x14</span>, <span class="number">0xAE</span>, <span class="number">0x29</span>, <span class="number">0x42</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">42.42</span>), d.float32());
 
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> [<span class="number">0xA4</span>, <span class="number">0x70</span>, <span class="number">0x45</span>, <span class="number">0xC1</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="op">-</span><span class="number">12.34</span>), <span class="ident">d</span>.<span class="ident">float32</span>());
+        <span class="kw">let </span>b = [<span class="number">0xA4</span>, <span class="number">0x70</span>, <span class="number">0x45</span>, <span class="number">0xC1</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(-<span class="number">12.34</span>), d.float32());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decode_float64</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> [<span class="number">0xF6</span>, <span class="number">0x28</span>, <span class="number">0x5C</span>, <span class="number">0x8F</span>, <span class="number">0xC2</span>, <span class="number">0x35</span>, <span class="number">0x45</span>, <span class="number">0x40</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">42.42</span>), <span class="ident">d</span>.<span class="ident">float64</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decode_float64() {
+        <span class="kw">let </span>b = [<span class="number">0xF6</span>, <span class="number">0x28</span>, <span class="number">0x5C</span>, <span class="number">0x8F</span>, <span class="number">0xC2</span>, <span class="number">0x35</span>, <span class="number">0x45</span>, <span class="number">0x40</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="number">42.42</span>), d.float64());
 
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> [<span class="number">0xAE</span>, <span class="number">0x47</span>, <span class="number">0xE1</span>, <span class="number">0x7A</span>, <span class="number">0x14</span>, <span class="number">0xAE</span>, <span class="number">0x28</span>, <span class="number">0xC0</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Decoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(<span class="op">-</span><span class="number">12.34</span>), <span class="ident">d</span>.<span class="ident">float64</span>());
+        <span class="kw">let </span>b = [<span class="number">0xAE</span>, <span class="number">0x47</span>, <span class="number">0xE1</span>, <span class="number">0x7A</span>, <span class="number">0x14</span>, <span class="number">0xAE</span>, <span class="number">0x28</span>, <span class="number">0xC0</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>d = Decoder::new(<span class="kw-2">&amp;</span>b);
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Ok</span>(-<span class="number">12.34</span>), d.float64());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rspirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rspirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

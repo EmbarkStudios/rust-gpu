@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/vector.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vector.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/vector.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vector.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -102,104 +96,103 @@
 <span id="96">96</span>
 <span id="97">97</span>
 <span id="98">98</span>
-</pre><pre class="rust"><code><span class="doccomment">/// A trait for describing vector operations used by vectorized searchers.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The trait is highly constrained to low level vector operations needed. In</span>
-<span class="doccomment">/// general, it was invented mostly to be generic over x86&#39;s __m128i and</span>
-<span class="doccomment">/// __m256i types. It&#39;s likely that once std::simd becomes a thing, we can</span>
-<span class="doccomment">/// migrate to that since the operations required are quite simple.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// TODO: Consider moving this trait up a level and using it to implement</span>
-<span class="doccomment">/// memchr as well. The trait might need to grow one or two methods, but</span>
-<span class="doccomment">/// otherwise should be close to sufficient already.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Safety</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// All methods are not safe since they are intended to be implemented using</span>
-<span class="doccomment">/// vendor intrinsics, which are also not safe. Callers must ensure that the</span>
-<span class="doccomment">/// appropriate target features are enabled in the calling function, and that</span>
-<span class="doccomment">/// the current CPU supports them. All implementations should avoid marking the</span>
-<span class="doccomment">/// routines with #[target_feature] and instead mark them as #[inline(always)]</span>
-<span class="doccomment">/// to ensure they get appropriately inlined. (inline(always) cannot be used</span>
-<span class="doccomment">/// with target_feature.)</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait</span> <span class="ident">Vector</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">core::fmt::Debug</span> {
-    <span class="doccomment">/// _mm_set1_epi8 or _mm256_set1_epi8</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">splat</span>(<span class="ident">byte</span>: <span class="ident">u8</span>) -&gt; <span class="self">Self</span>;
-    <span class="doccomment">/// _mm_loadu_si128 or _mm256_loadu_si256</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load_unaligned</span>(<span class="ident">data</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="self">Self</span>;
-    <span class="doccomment">/// _mm_movemask_epi8 or _mm256_movemask_epi8</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">movemask</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span>;
-    <span class="doccomment">/// _mm_cmpeq_epi8 or _mm256_cmpeq_epi8</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">cmpeq</span>(<span class="self">self</span>, <span class="ident">vector2</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span>;
-    <span class="doccomment">/// _mm_and_si128 or _mm256_and_si256</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">and</span>(<span class="self">self</span>, <span class="ident">vector2</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span>;
+</pre><pre class="rust"><code><span class="doccomment">/// A trait for describing vector operations used by vectorized searchers.
+///
+/// The trait is highly constrained to low level vector operations needed. In
+/// general, it was invented mostly to be generic over x86&#39;s __m128i and
+/// __m256i types. It&#39;s likely that once std::simd becomes a thing, we can
+/// migrate to that since the operations required are quite simple.
+///
+/// TODO: Consider moving this trait up a level and using it to implement
+/// memchr as well. The trait might need to grow one or two methods, but
+/// otherwise should be close to sufficient already.
+///
+/// # Safety
+///
+/// All methods are not safe since they are intended to be implemented using
+/// vendor intrinsics, which are also not safe. Callers must ensure that the
+/// appropriate target features are enabled in the calling function, and that
+/// the current CPU supports them. All implementations should avoid marking the
+/// routines with #[target_feature] and instead mark them as #[inline(always)]
+/// to ensure they get appropriately inlined. (inline(always) cannot be used
+/// with target_feature.)
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>Vector: Copy + core::fmt::Debug {
+    <span class="doccomment">/// _mm_set1_epi8 or _mm256_set1_epi8
+    </span><span class="kw">unsafe fn </span>splat(byte: u8) -&gt; <span class="self">Self</span>;
+    <span class="doccomment">/// _mm_loadu_si128 or _mm256_loadu_si256
+    </span><span class="kw">unsafe fn </span>load_unaligned(data: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self</span>;
+    <span class="doccomment">/// _mm_movemask_epi8 or _mm256_movemask_epi8
+    </span><span class="kw">unsafe fn </span>movemask(<span class="self">self</span>) -&gt; u32;
+    <span class="doccomment">/// _mm_cmpeq_epi8 or _mm256_cmpeq_epi8
+    </span><span class="kw">unsafe fn </span>cmpeq(<span class="self">self</span>, vector2: <span class="self">Self</span>) -&gt; <span class="self">Self</span>;
+    <span class="doccomment">/// _mm_and_si128 or _mm256_and_si256
+    </span><span class="kw">unsafe fn </span>and(<span class="self">self</span>, vector2: <span class="self">Self</span>) -&gt; <span class="self">Self</span>;
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">x86sse</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Vector</span>;
-    <span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="kw">mod </span>x86sse {
+    <span class="kw">use </span><span class="kw">super</span>::Vector;
+    <span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
 
-    <span class="kw">impl</span> <span class="ident">Vector</span> <span class="kw">for</span> <span class="ident">__m128i</span> {
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">splat</span>(<span class="ident">byte</span>: <span class="ident">u8</span>) -&gt; <span class="ident">__m128i</span> {
-            <span class="ident">_mm_set1_epi8</span>(<span class="ident">byte</span> <span class="kw">as</span> <span class="ident">i8</span>)
+    <span class="kw">impl </span>Vector <span class="kw">for </span>__m128i {
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>splat(byte: u8) -&gt; __m128i {
+            _mm_set1_epi8(byte <span class="kw">as </span>i8)
         }
 
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load_unaligned</span>(<span class="ident">data</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="ident">__m128i</span> {
-            <span class="ident">_mm_loadu_si128</span>(<span class="ident">data</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>)
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>load_unaligned(data: <span class="kw-2">*const </span>u8) -&gt; __m128i {
+            _mm_loadu_si128(data <span class="kw">as </span><span class="kw-2">*const </span>__m128i)
         }
 
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">movemask</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-            <span class="ident">_mm_movemask_epi8</span>(<span class="self">self</span>) <span class="kw">as</span> <span class="ident">u32</span>
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>movemask(<span class="self">self</span>) -&gt; u32 {
+            _mm_movemask_epi8(<span class="self">self</span>) <span class="kw">as </span>u32
         }
 
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">cmpeq</span>(<span class="self">self</span>, <span class="ident">vector2</span>: <span class="self">Self</span>) -&gt; <span class="ident">__m128i</span> {
-            <span class="ident">_mm_cmpeq_epi8</span>(<span class="self">self</span>, <span class="ident">vector2</span>)
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>cmpeq(<span class="self">self</span>, vector2: <span class="self">Self</span>) -&gt; __m128i {
+            _mm_cmpeq_epi8(<span class="self">self</span>, vector2)
         }
 
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">and</span>(<span class="self">self</span>, <span class="ident">vector2</span>: <span class="self">Self</span>) -&gt; <span class="ident">__m128i</span> {
-            <span class="ident">_mm_and_si128</span>(<span class="self">self</span>, <span class="ident">vector2</span>)
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>and(<span class="self">self</span>, vector2: <span class="self">Self</span>) -&gt; __m128i {
+            _mm_and_si128(<span class="self">self</span>, vector2)
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>))]</span>
-<span class="kw">mod</span> <span class="ident">x86avx</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Vector</span>;
-    <span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>))]
+</span><span class="kw">mod </span>x86avx {
+    <span class="kw">use </span><span class="kw">super</span>::Vector;
+    <span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
 
-    <span class="kw">impl</span> <span class="ident">Vector</span> <span class="kw">for</span> <span class="ident">__m256i</span> {
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">splat</span>(<span class="ident">byte</span>: <span class="ident">u8</span>) -&gt; <span class="ident">__m256i</span> {
-            <span class="ident">_mm256_set1_epi8</span>(<span class="ident">byte</span> <span class="kw">as</span> <span class="ident">i8</span>)
+    <span class="kw">impl </span>Vector <span class="kw">for </span>__m256i {
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>splat(byte: u8) -&gt; __m256i {
+            _mm256_set1_epi8(byte <span class="kw">as </span>i8)
         }
 
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load_unaligned</span>(<span class="ident">data</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="ident">__m256i</span> {
-            <span class="ident">_mm256_loadu_si256</span>(<span class="ident">data</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m256i</span>)
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>load_unaligned(data: <span class="kw-2">*const </span>u8) -&gt; __m256i {
+            _mm256_loadu_si256(data <span class="kw">as </span><span class="kw-2">*const </span>__m256i)
         }
 
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">movemask</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-            <span class="ident">_mm256_movemask_epi8</span>(<span class="self">self</span>) <span class="kw">as</span> <span class="ident">u32</span>
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>movemask(<span class="self">self</span>) -&gt; u32 {
+            _mm256_movemask_epi8(<span class="self">self</span>) <span class="kw">as </span>u32
         }
 
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">cmpeq</span>(<span class="self">self</span>, <span class="ident">vector2</span>: <span class="self">Self</span>) -&gt; <span class="ident">__m256i</span> {
-            <span class="ident">_mm256_cmpeq_epi8</span>(<span class="self">self</span>, <span class="ident">vector2</span>)
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>cmpeq(<span class="self">self</span>, vector2: <span class="self">Self</span>) -&gt; __m256i {
+            _mm256_cmpeq_epi8(<span class="self">self</span>, vector2)
         }
 
-        <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">and</span>(<span class="self">self</span>, <span class="ident">vector2</span>: <span class="self">Self</span>) -&gt; <span class="ident">__m256i</span> {
-            <span class="ident">_mm256_and_si256</span>(<span class="self">self</span>, <span class="ident">vector2</span>)
+        <span class="attribute">#[inline(always)]
+        </span><span class="kw">unsafe fn </span>and(<span class="self">self</span>, vector2: <span class="self">Self</span>) -&gt; __m256i {
+            _mm256_and_si256(<span class="self">self</span>, vector2)
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

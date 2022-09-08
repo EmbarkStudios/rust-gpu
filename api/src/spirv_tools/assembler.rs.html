@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirv-tools-0.8.0/src/assembler.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>assembler.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_tools/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirv-tools-0.8.0/src/assembler.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>assembler.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_tools/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -130,132 +124,131 @@
 <span id="124">124</span>
 <span id="125">125</span>
 <span id="126">126</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-compiled-tools&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">compiled</span>;
+</pre><pre class="rust"><code><span class="attribute">#[cfg(feature = <span class="string">&quot;use-compiled-tools&quot;</span>)]
+</span><span class="kw">pub mod </span>compiled;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-installed-tools&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tool</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;use-installed-tools&quot;</span>)]
+</span><span class="kw">pub mod </span>tool;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AssemblerOptions</span> {
-    <span class="doccomment">/// Numeric IDs in the binary will have the same values as in the source.</span>
-    <span class="doccomment">/// Non-numeric IDs are allocated by filling in the gaps, starting with 1</span>
-    <span class="doccomment">/// and going up.</span>
-    <span class="kw">pub</span> <span class="ident">preserve_numeric_ids</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Copy, Clone, Default)]
+</span><span class="kw">pub struct </span>AssemblerOptions {
+    <span class="doccomment">/// Numeric IDs in the binary will have the same values as in the source.
+    /// Non-numeric IDs are allocated by filling in the gaps, starting with 1
+    /// and going up.
+    </span><span class="kw">pub </span>preserve_numeric_ids: bool,
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::from_over_into</span>)]</span>
-<span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AssemblerOptions</span> {
-    <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="comment">// This is weird, the &quot;none&quot; is 1, so I&#39;m not sure if that means having</span>
-        <span class="comment">// it disables all other options or...?</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="number">0</span>; <span class="comment">//assembler::BinaryOptions::None as u32;</span>
+<span class="attribute">#[allow(clippy::from_over_into)]
+</span><span class="kw">impl </span>Into&lt;u32&gt; <span class="kw">for </span>AssemblerOptions {
+    <span class="kw">fn </span>into(<span class="self">self</span>) -&gt; u32 {
+        <span class="comment">// This is weird, the &quot;none&quot; is 1, so I&#39;m not sure if that means having
+        // it disables all other options or...?
+        </span><span class="kw">let </span><span class="kw-2">mut </span>res = <span class="number">0</span>; <span class="comment">//assembler::BinaryOptions::None as u32;
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">preserve_numeric_ids</span> {
-            <span class="ident">res</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spirv_tools_sys::assembler::BinaryOptions::PreserveNumberIds</span> <span class="kw">as</span> <span class="ident">u32</span>;
+        </span><span class="kw">if </span><span class="self">self</span>.preserve_numeric_ids {
+            res |= spirv_tools_sys::assembler::BinaryOptions::PreserveNumberIds <span class="kw">as </span>u32;
         }
 
-        <span class="ident">res</span>
+        res
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DisassembleOptions</span> {
-    <span class="doccomment">/// Print to stdout.</span>
-    <span class="kw">pub</span> <span class="ident">print</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Add color codes to output</span>
-    <span class="kw">pub</span> <span class="ident">color</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Indent assembly</span>
-    <span class="kw">pub</span> <span class="ident">indent</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">show_byte_offset</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Do not output the module header as leading comments in the assembly.</span>
-    <span class="kw">pub</span> <span class="ident">no_header</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Use friendly names where possible.  The heuristic may expand over</span>
-    <span class="doccomment">/// time, but will use common names for scalar types, and debug names from</span>
-    <span class="doccomment">/// OpName instructions.</span>
-    <span class="kw">pub</span> <span class="ident">use_friendly_names</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Add some comments to the generated assembly</span>
-    <span class="kw">pub</span> <span class="ident">comment</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Copy, Clone)]
+</span><span class="kw">pub struct </span>DisassembleOptions {
+    <span class="doccomment">/// Print to stdout.
+    </span><span class="kw">pub </span>print: bool,
+    <span class="doccomment">/// Add color codes to output
+    </span><span class="kw">pub </span>color: bool,
+    <span class="doccomment">/// Indent assembly
+    </span><span class="kw">pub </span>indent: bool,
+    <span class="kw">pub </span>show_byte_offset: bool,
+    <span class="doccomment">/// Do not output the module header as leading comments in the assembly.
+    </span><span class="kw">pub </span>no_header: bool,
+    <span class="doccomment">/// Use friendly names where possible.  The heuristic may expand over
+    /// time, but will use common names for scalar types, and debug names from
+    /// OpName instructions.
+    </span><span class="kw">pub </span>use_friendly_names: bool,
+    <span class="doccomment">/// Add some comments to the generated assembly
+    </span><span class="kw">pub </span>comment: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DisassembleOptions</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">print</span>: <span class="bool-val">false</span>,
-            <span class="ident">color</span>: <span class="bool-val">false</span>,
-            <span class="ident">indent</span>: <span class="bool-val">true</span>,
-            <span class="ident">show_byte_offset</span>: <span class="bool-val">false</span>,
-            <span class="ident">no_header</span>: <span class="bool-val">false</span>,
-            <span class="ident">use_friendly_names</span>: <span class="bool-val">true</span>,
-            <span class="ident">comment</span>: <span class="bool-val">true</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>DisassembleOptions {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            print: <span class="bool-val">false</span>,
+            color: <span class="bool-val">false</span>,
+            indent: <span class="bool-val">true</span>,
+            show_byte_offset: <span class="bool-val">false</span>,
+            no_header: <span class="bool-val">false</span>,
+            use_friendly_names: <span class="bool-val">true</span>,
+            comment: <span class="bool-val">true</span>,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::from_over_into</span>)]</span>
-<span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DisassembleOptions</span> {
-    <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="attribute">#[allow(clippy::from_over_into)]
+</span><span class="kw">impl </span>Into&lt;u32&gt; <span class="kw">for </span>DisassembleOptions {
+    <span class="kw">fn </span>into(<span class="self">self</span>) -&gt; u32 {
+        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="number">0</span>;
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print</span> {
-            <span class="ident">res</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spirv_tools_sys::assembler::DisassembleOptions::Print</span> <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">if </span><span class="self">self</span>.print {
+            res |= spirv_tools_sys::assembler::DisassembleOptions::Print <span class="kw">as </span>u32;
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">color</span> {
-            <span class="ident">res</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spirv_tools_sys::assembler::DisassembleOptions::Color</span> <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">if </span><span class="self">self</span>.color {
+            res |= spirv_tools_sys::assembler::DisassembleOptions::Color <span class="kw">as </span>u32;
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">indent</span> {
-            <span class="ident">res</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spirv_tools_sys::assembler::DisassembleOptions::Indent</span> <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">if </span><span class="self">self</span>.indent {
+            res |= spirv_tools_sys::assembler::DisassembleOptions::Indent <span class="kw">as </span>u32;
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">show_byte_offset</span> {
-            <span class="ident">res</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spirv_tools_sys::assembler::DisassembleOptions::ShowByteOffset</span> <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">if </span><span class="self">self</span>.show_byte_offset {
+            res |= spirv_tools_sys::assembler::DisassembleOptions::ShowByteOffset <span class="kw">as </span>u32;
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">no_header</span> {
-            <span class="ident">res</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spirv_tools_sys::assembler::DisassembleOptions::NoHeader</span> <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">if </span><span class="self">self</span>.no_header {
+            res |= spirv_tools_sys::assembler::DisassembleOptions::NoHeader <span class="kw">as </span>u32;
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">use_friendly_names</span> {
-            <span class="ident">res</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spirv_tools_sys::assembler::DisassembleOptions::FriendlyNames</span> <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">if </span><span class="self">self</span>.use_friendly_names {
+            res |= spirv_tools_sys::assembler::DisassembleOptions::FriendlyNames <span class="kw">as </span>u32;
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">comment</span> {
-            <span class="ident">res</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spirv_tools_sys::assembler::DisassembleOptions::Comment</span> <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">if </span><span class="self">self</span>.comment {
+            res |= spirv_tools_sys::assembler::DisassembleOptions::Comment <span class="kw">as </span>u32;
         }
 
-        <span class="ident">res</span>
+        res
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Assembler</span>: <span class="ident">Default</span> {
-    <span class="kw">fn</span> <span class="ident">with_env</span>(<span class="ident">target_env</span>: <span class="ident"><span class="kw">crate</span>::TargetEnv</span>) -&gt; <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">assemble</span>(
+<span class="kw">pub trait </span>Assembler: Default {
+    <span class="kw">fn </span>with_env(target_env: <span class="kw">crate</span>::TargetEnv) -&gt; <span class="self">Self</span>;
+    <span class="kw">fn </span>assemble(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">options</span>: <span class="ident">AssemblerOptions</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::binary::Binary</span>, <span class="ident"><span class="kw">crate</span>::error::Error</span><span class="op">&gt;</span>;
-    <span class="kw">fn</span> <span class="ident">disassemble</span>(
+        text: <span class="kw-2">&amp;</span>str,
+        options: AssemblerOptions,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::binary::Binary, <span class="kw">crate</span>::error::Error&gt;;
+    <span class="kw">fn </span>disassemble(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>,
-        <span class="ident">options</span>: <span class="ident">DisassembleOptions</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident"><span class="kw">crate</span>::error::Error</span><span class="op">&gt;</span>;
+        binary: <span class="kw">impl </span>AsRef&lt;[u32]&gt;,
+        options: DisassembleOptions,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;, <span class="kw">crate</span>::error::Error&gt;;
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">te</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::TargetEnv</span><span class="op">&gt;</span>) -&gt; <span class="kw">impl</span> <span class="ident">Assembler</span> {
-    <span class="kw">let</span> <span class="ident">target_env</span> <span class="op">=</span> <span class="ident">te</span>.<span class="ident">unwrap_or_default</span>();
+<span class="kw">pub fn </span>create(te: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::TargetEnv&gt;) -&gt; <span class="kw">impl </span>Assembler {
+    <span class="kw">let </span>target_env = te.unwrap_or_default();
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-compiled-tools&quot;</span>)]</span>
-    {
-        <span class="ident">compiled::CompiledAssembler::with_env</span>(<span class="ident">target_env</span>)
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;use-compiled-tools&quot;</span>)]
+    </span>{
+        compiled::CompiledAssembler::with_env(target_env)
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-installed-tools&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-compiled-tools&quot;</span>)))]</span>
-    {
-        <span class="ident">tool::ToolAssembler::with_env</span>(<span class="ident">target_env</span>)
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;use-installed-tools&quot;</span>, not(feature = <span class="string">&quot;use-compiled-tools&quot;</span>)))]
+    </span>{
+        tool::ToolAssembler::with_env(target_env)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_tools" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_tools" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

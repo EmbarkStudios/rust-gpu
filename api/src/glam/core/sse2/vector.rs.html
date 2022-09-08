@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.20.2/src/core/sse2/vector.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vector.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.20.2/src/core/sse2/vector.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vector.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -868,870 +862,869 @@
 <span id="862">862</span>
 <span id="863">863</span>
 <span id="864">864</span>
-</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::many_single_char_names</span>)]</span>
+</pre><pre class="rust"><code><span class="attribute">#![allow(clippy::many_single_char_names)]
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::arch::x86_64</span>::<span class="kw-2">*</span>;
+#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+</span><span class="kw">use </span>core::arch::x86::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::float</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core</span>::{
-    <span class="ident">storage</span>::{<span class="ident">Align16</span>, <span class="ident">XY</span>, <span class="ident">XYZ</span>, <span class="ident">XYZW</span>},
-    <span class="ident">traits</span>::{<span class="ident">scalar</span>::<span class="kw-2">*</span>, <span class="ident">vector</span>::<span class="kw-2">*</span>},
+<span class="kw">use </span><span class="kw">super</span>::float::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::core::{
+    storage::{Align16, XY, XYZ, XYZW},
+    traits::{scalar::<span class="kw-2">*</span>, vector::<span class="kw-2">*</span>},
 };
-<span class="kw">use</span> <span class="ident">core::mem::MaybeUninit</span>;
+<span class="kw">use </span>core::mem::MaybeUninit;
 
-<span class="kw">impl</span> <span class="ident">MaskVectorConst</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="kw">const</span> <span class="ident">FALSE</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>; <span class="number">4</span>]);
+<span class="kw">impl </span>MaskVectorConst <span class="kw">for </span>__m128 {
+    <span class="kw">const </span>FALSE: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>; <span class="number">4</span>]);
 }
 
-<span class="kw">impl</span> <span class="ident">MaskVector</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">bitand</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_and_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+<span class="kw">impl </span>MaskVector <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>bitand(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_and_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_or_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>bitor(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_or_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">not</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_andnot_ps</span>(<span class="self">self</span>, <span class="ident">_mm_set_ps1</span>(<span class="ident">f32::from_bits</span>(<span class="number">0xff_ff_ff_ff</span>))) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>not(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_andnot_ps(<span class="self">self</span>, _mm_set_ps1(f32::from_bits(<span class="number">0xff_ff_ff_ff</span>))) }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">MaskVector3</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">x</span>: <span class="ident">bool</span>, <span class="ident">y</span>: <span class="ident">bool</span>, <span class="ident">z</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
-        <span class="comment">// A SSE2 mask can be any bit pattern but for the `MaskVector3` implementation of select we</span>
-        <span class="comment">// expect either 0 or 0xff_ff_ff_ff. This should be a safe assumption as this type can only</span>
-        <span class="comment">// be created via this function or by `Vector3` methods.</span>
+<span class="kw">impl </span>MaskVector3 <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>new(x: bool, y: bool, z: bool) -&gt; <span class="self">Self </span>{
+        <span class="comment">// A SSE2 mask can be any bit pattern but for the `MaskVector3` implementation of select we
+        // expect either 0 or 0xff_ff_ff_ff. This should be a safe assumption as this type can only
+        // be created via this function or by `Vector3` methods.
 
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_set_ps</span>(
+        </span><span class="kw">unsafe </span>{
+            _mm_set_ps(
                 <span class="number">0.0</span>,
-                <span class="ident">f32::from_bits</span>(<span class="ident">MaskConst::MASK</span>[<span class="ident">z</span> <span class="kw">as</span> <span class="ident">usize</span>]),
-                <span class="ident">f32::from_bits</span>(<span class="ident">MaskConst::MASK</span>[<span class="ident">y</span> <span class="kw">as</span> <span class="ident">usize</span>]),
-                <span class="ident">f32::from_bits</span>(<span class="ident">MaskConst::MASK</span>[<span class="ident">x</span> <span class="kw">as</span> <span class="ident">usize</span>]),
+                f32::from_bits(MaskConst::MASK[z <span class="kw">as </span>usize]),
+                f32::from_bits(MaskConst::MASK[y <span class="kw">as </span>usize]),
+                f32::from_bits(MaskConst::MASK[x <span class="kw">as </span>usize]),
             )
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">bitmask</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="kw">unsafe</span> { (<span class="ident">_mm_movemask_ps</span>(<span class="self">self</span>) <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&amp;</span> <span class="number">0x7</span> }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>bitmask(<span class="self">self</span>) -&gt; u32 {
+        <span class="kw">unsafe </span>{ (_mm_movemask_ps(<span class="self">self</span>) <span class="kw">as </span>u32) &amp; <span class="number">0x7 </span>}
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">any</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">unsafe</span> { (<span class="ident">_mm_movemask_ps</span>(<span class="self">self</span>) <span class="op">&amp;</span> <span class="number">0x7</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>any(<span class="self">self</span>) -&gt; bool {
+        <span class="kw">unsafe </span>{ (_mm_movemask_ps(<span class="self">self</span>) &amp; <span class="number">0x7</span>) != <span class="number">0 </span>}
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">all</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">unsafe</span> { (<span class="ident">_mm_movemask_ps</span>(<span class="self">self</span>) <span class="op">&amp;</span> <span class="number">0x7</span>) <span class="op">==</span> <span class="number">0x7</span> }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>all(<span class="self">self</span>) -&gt; bool {
+        <span class="kw">unsafe </span>{ (_mm_movemask_ps(<span class="self">self</span>) &amp; <span class="number">0x7</span>) == <span class="number">0x7 </span>}
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_bool_array</span>(<span class="self">self</span>) -&gt; [<span class="ident">bool</span>; <span class="number">3</span>] {
-        <span class="kw">let</span> <span class="ident">bitmask</span> <span class="op">=</span> <span class="ident">MaskVector3::bitmask</span>(<span class="self">self</span>);
-        [(<span class="ident">bitmask</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>, (<span class="ident">bitmask</span> <span class="op">&amp;</span> <span class="number">2</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>, (<span class="ident">bitmask</span> <span class="op">&amp;</span> <span class="number">4</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>]
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_bool_array(<span class="self">self</span>) -&gt; [bool; <span class="number">3</span>] {
+        <span class="kw">let </span>bitmask = MaskVector3::bitmask(<span class="self">self</span>);
+        [(bitmask &amp; <span class="number">1</span>) != <span class="number">0</span>, (bitmask &amp; <span class="number">2</span>) != <span class="number">0</span>, (bitmask &amp; <span class="number">4</span>) != <span class="number">0</span>]
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_u32_array</span>(<span class="self">self</span>) -&gt; [<span class="ident">u32</span>; <span class="number">3</span>] {
-        <span class="kw">let</span> <span class="ident">bitmask</span> <span class="op">=</span> <span class="ident">MaskVector3::bitmask</span>(<span class="self">self</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_u32_array(<span class="self">self</span>) -&gt; [u32; <span class="number">3</span>] {
+        <span class="kw">let </span>bitmask = MaskVector3::bitmask(<span class="self">self</span>);
         [
-            <span class="ident">MaskConst::MASK</span>[(<span class="ident">bitmask</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">usize</span>],
-            <span class="ident">MaskConst::MASK</span>[((<span class="ident">bitmask</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>) <span class="op">&amp;</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">usize</span>],
-            <span class="ident">MaskConst::MASK</span>[((<span class="ident">bitmask</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">2</span>) <span class="op">&amp;</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">usize</span>],
+            MaskConst::MASK[(bitmask &amp; <span class="number">1</span>) <span class="kw">as </span>usize],
+            MaskConst::MASK[((bitmask &gt;&gt; <span class="number">1</span>) &amp; <span class="number">1</span>) <span class="kw">as </span>usize],
+            MaskConst::MASK[((bitmask &gt;&gt; <span class="number">2</span>) &amp; <span class="number">1</span>) <span class="kw">as </span>usize],
         ]
     }
 }
 
-<span class="kw">impl</span> <span class="ident">MaskVector4</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">x</span>: <span class="ident">bool</span>, <span class="ident">y</span>: <span class="ident">bool</span>, <span class="ident">z</span>: <span class="ident">bool</span>, <span class="ident">w</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
-        <span class="comment">// A SSE2 mask can be any bit pattern but for the `Vec4Mask` implementation of select we</span>
-        <span class="comment">// expect either 0 or 0xff_ff_ff_ff. This should be a safe assumption as this type can only</span>
-        <span class="comment">// be created via this function or by `Vec4` methods.</span>
+<span class="kw">impl </span>MaskVector4 <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>new(x: bool, y: bool, z: bool, w: bool) -&gt; <span class="self">Self </span>{
+        <span class="comment">// A SSE2 mask can be any bit pattern but for the `Vec4Mask` implementation of select we
+        // expect either 0 or 0xff_ff_ff_ff. This should be a safe assumption as this type can only
+        // be created via this function or by `Vec4` methods.
 
-        <span class="kw">const</span> <span class="ident">MASK</span>: [<span class="ident">u32</span>; <span class="number">2</span>] <span class="op">=</span> [<span class="number">0</span>, <span class="number">0xff_ff_ff_ff</span>];
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_set_ps</span>(
-                <span class="ident">f32::from_bits</span>(<span class="ident">MASK</span>[<span class="ident">w</span> <span class="kw">as</span> <span class="ident">usize</span>]),
-                <span class="ident">f32::from_bits</span>(<span class="ident">MASK</span>[<span class="ident">z</span> <span class="kw">as</span> <span class="ident">usize</span>]),
-                <span class="ident">f32::from_bits</span>(<span class="ident">MASK</span>[<span class="ident">y</span> <span class="kw">as</span> <span class="ident">usize</span>]),
-                <span class="ident">f32::from_bits</span>(<span class="ident">MASK</span>[<span class="ident">x</span> <span class="kw">as</span> <span class="ident">usize</span>]),
+        </span><span class="kw">const </span>MASK: [u32; <span class="number">2</span>] = [<span class="number">0</span>, <span class="number">0xff_ff_ff_ff</span>];
+        <span class="kw">unsafe </span>{
+            _mm_set_ps(
+                f32::from_bits(MASK[w <span class="kw">as </span>usize]),
+                f32::from_bits(MASK[z <span class="kw">as </span>usize]),
+                f32::from_bits(MASK[y <span class="kw">as </span>usize]),
+                f32::from_bits(MASK[x <span class="kw">as </span>usize]),
             )
         }
     }
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">bitmask</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_movemask_ps</span>(<span class="self">self</span>) <span class="kw">as</span> <span class="ident">u32</span> }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>bitmask(<span class="self">self</span>) -&gt; u32 {
+        <span class="kw">unsafe </span>{ _mm_movemask_ps(<span class="self">self</span>) <span class="kw">as </span>u32 }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">any</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_movemask_ps</span>(<span class="self">self</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>any(<span class="self">self</span>) -&gt; bool {
+        <span class="kw">unsafe </span>{ _mm_movemask_ps(<span class="self">self</span>) != <span class="number">0 </span>}
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">all</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_movemask_ps</span>(<span class="self">self</span>) <span class="op">==</span> <span class="number">0xf</span> }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>all(<span class="self">self</span>) -&gt; bool {
+        <span class="kw">unsafe </span>{ _mm_movemask_ps(<span class="self">self</span>) == <span class="number">0xf </span>}
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_bool_array</span>(<span class="self">self</span>) -&gt; [<span class="ident">bool</span>; <span class="number">4</span>] {
-        <span class="kw">let</span> <span class="ident">bitmask</span> <span class="op">=</span> <span class="ident">MaskVector4::bitmask</span>(<span class="self">self</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_bool_array(<span class="self">self</span>) -&gt; [bool; <span class="number">4</span>] {
+        <span class="kw">let </span>bitmask = MaskVector4::bitmask(<span class="self">self</span>);
         [
-            (<span class="ident">bitmask</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
-            (<span class="ident">bitmask</span> <span class="op">&amp;</span> <span class="number">2</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
-            (<span class="ident">bitmask</span> <span class="op">&amp;</span> <span class="number">4</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
-            (<span class="ident">bitmask</span> <span class="op">&amp;</span> <span class="number">8</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+            (bitmask &amp; <span class="number">1</span>) != <span class="number">0</span>,
+            (bitmask &amp; <span class="number">2</span>) != <span class="number">0</span>,
+            (bitmask &amp; <span class="number">4</span>) != <span class="number">0</span>,
+            (bitmask &amp; <span class="number">8</span>) != <span class="number">0</span>,
         ]
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_u32_array</span>(<span class="self">self</span>) -&gt; [<span class="ident">u32</span>; <span class="number">4</span>] {
-        <span class="kw">let</span> <span class="ident">bitmask</span> <span class="op">=</span> <span class="ident">MaskVector4::bitmask</span>(<span class="self">self</span>);
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_u32_array(<span class="self">self</span>) -&gt; [u32; <span class="number">4</span>] {
+        <span class="kw">let </span>bitmask = MaskVector4::bitmask(<span class="self">self</span>);
         [
-            <span class="ident">MaskConst::MASK</span>[(<span class="ident">bitmask</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">usize</span>],
-            <span class="ident">MaskConst::MASK</span>[((<span class="ident">bitmask</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>) <span class="op">&amp;</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">usize</span>],
-            <span class="ident">MaskConst::MASK</span>[((<span class="ident">bitmask</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">2</span>) <span class="op">&amp;</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">usize</span>],
-            <span class="ident">MaskConst::MASK</span>[((<span class="ident">bitmask</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>) <span class="op">&amp;</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">usize</span>],
+            MaskConst::MASK[(bitmask &amp; <span class="number">1</span>) <span class="kw">as </span>usize],
+            MaskConst::MASK[((bitmask &gt;&gt; <span class="number">1</span>) &amp; <span class="number">1</span>) <span class="kw">as </span>usize],
+            MaskConst::MASK[((bitmask &gt;&gt; <span class="number">2</span>) &amp; <span class="number">1</span>) <span class="kw">as </span>usize],
+            MaskConst::MASK[((bitmask &gt;&gt; <span class="number">3</span>) &amp; <span class="number">1</span>) <span class="kw">as </span>usize],
         ]
     }
 }
 
-<span class="doccomment">/// Calculates the vector 3 dot product and returns answer in x lane of __m128.</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dot3_in_x</span>(<span class="ident">lhs</span>: <span class="ident">__m128</span>, <span class="ident">rhs</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
-    <span class="kw">let</span> <span class="ident">x2_y2_z2_w2</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>);
-    <span class="kw">let</span> <span class="ident">y2_0_0_0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">x2_y2_z2_w2</span>, <span class="ident">x2_y2_z2_w2</span>, <span class="number">0b00_00_00_01</span>);
-    <span class="kw">let</span> <span class="ident">z2_0_0_0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">x2_y2_z2_w2</span>, <span class="ident">x2_y2_z2_w2</span>, <span class="number">0b00_00_00_10</span>);
-    <span class="kw">let</span> <span class="ident">x2y2_0_0_0</span> <span class="op">=</span> <span class="ident">_mm_add_ss</span>(<span class="ident">x2_y2_z2_w2</span>, <span class="ident">y2_0_0_0</span>);
-    <span class="ident">_mm_add_ss</span>(<span class="ident">x2y2_0_0_0</span>, <span class="ident">z2_0_0_0</span>)
+<span class="doccomment">/// Calculates the vector 3 dot product and returns answer in x lane of __m128.
+</span><span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>dot3_in_x(lhs: __m128, rhs: __m128) -&gt; __m128 {
+    <span class="kw">let </span>x2_y2_z2_w2 = _mm_mul_ps(lhs, rhs);
+    <span class="kw">let </span>y2_0_0_0 = _mm_shuffle_ps(x2_y2_z2_w2, x2_y2_z2_w2, <span class="number">0b00_00_00_01</span>);
+    <span class="kw">let </span>z2_0_0_0 = _mm_shuffle_ps(x2_y2_z2_w2, x2_y2_z2_w2, <span class="number">0b00_00_00_10</span>);
+    <span class="kw">let </span>x2y2_0_0_0 = _mm_add_ss(x2_y2_z2_w2, y2_0_0_0);
+    _mm_add_ss(x2y2_0_0_0, z2_0_0_0)
 }
 
-<span class="doccomment">/// Calculates the vector 4 dot product and returns answer in x lane of __m128.</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dot4_in_x</span>(<span class="ident">lhs</span>: <span class="ident">__m128</span>, <span class="ident">rhs</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">__m128</span> {
-    <span class="kw">let</span> <span class="ident">x2_y2_z2_w2</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>);
-    <span class="kw">let</span> <span class="ident">z2_w2_0_0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">x2_y2_z2_w2</span>, <span class="ident">x2_y2_z2_w2</span>, <span class="number">0b00_00_11_10</span>);
-    <span class="kw">let</span> <span class="ident">x2z2_y2w2_0_0</span> <span class="op">=</span> <span class="ident">_mm_add_ps</span>(<span class="ident">x2_y2_z2_w2</span>, <span class="ident">z2_w2_0_0</span>);
-    <span class="kw">let</span> <span class="ident">y2w2_0_0_0</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">x2z2_y2w2_0_0</span>, <span class="ident">x2z2_y2w2_0_0</span>, <span class="number">0b00_00_00_01</span>);
-    <span class="ident">_mm_add_ps</span>(<span class="ident">x2z2_y2w2_0_0</span>, <span class="ident">y2w2_0_0_0</span>)
+<span class="doccomment">/// Calculates the vector 4 dot product and returns answer in x lane of __m128.
+</span><span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>dot4_in_x(lhs: __m128, rhs: __m128) -&gt; __m128 {
+    <span class="kw">let </span>x2_y2_z2_w2 = _mm_mul_ps(lhs, rhs);
+    <span class="kw">let </span>z2_w2_0_0 = _mm_shuffle_ps(x2_y2_z2_w2, x2_y2_z2_w2, <span class="number">0b00_00_11_10</span>);
+    <span class="kw">let </span>x2z2_y2w2_0_0 = _mm_add_ps(x2_y2_z2_w2, z2_w2_0_0);
+    <span class="kw">let </span>y2w2_0_0_0 = _mm_shuffle_ps(x2z2_y2w2_0_0, x2z2_y2w2_0_0, <span class="number">0b00_00_00_01</span>);
+    _mm_add_ps(x2z2_y2w2_0_0, y2w2_0_0_0)
 }
 
-<span class="kw">impl</span> <span class="ident">VectorConst</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="kw">const</span> <span class="ident">ZERO</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>; <span class="number">4</span>]);
-    <span class="kw">const</span> <span class="ident">ONE</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>; <span class="number">4</span>]);
+<span class="kw">impl </span>VectorConst <span class="kw">for </span>__m128 {
+    <span class="kw">const </span>ZERO: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>; <span class="number">4</span>]);
+    <span class="kw">const </span>ONE: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>; <span class="number">4</span>]);
 }
 
-<span class="kw">impl</span> <span class="ident">Vector3Const</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="kw">const</span> <span class="ident">X</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
-    <span class="kw">const</span> <span class="ident">Y</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
-    <span class="kw">const</span> <span class="ident">Z</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>]);
+<span class="kw">impl </span>Vector3Const <span class="kw">for </span>__m128 {
+    <span class="kw">const </span>X: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
+    <span class="kw">const </span>Y: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
+    <span class="kw">const </span>Z: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>]);
 }
 
-<span class="kw">impl</span> <span class="ident">Vector4Const</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="kw">const</span> <span class="ident">X</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
-    <span class="kw">const</span> <span class="ident">Y</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
-    <span class="kw">const</span> <span class="ident">Z</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>]);
-    <span class="kw">const</span> <span class="ident">W</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]);
+<span class="kw">impl </span>Vector4Const <span class="kw">for </span>__m128 {
+    <span class="kw">const </span>X: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
+    <span class="kw">const </span>Y: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
+    <span class="kw">const </span>Z: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>]);
+    <span class="kw">const </span>W: __m128 = <span class="macro">const_f32x4!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]);
 }
 
-<span class="kw">impl</span> <span class="ident">NanConstEx</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="kw">const</span> <span class="ident">NAN</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="ident">f32::NAN</span>; <span class="number">4</span>]);
+<span class="kw">impl </span>NanConstEx <span class="kw">for </span>__m128 {
+    <span class="kw">const </span>NAN: __m128 = <span class="macro">const_f32x4!</span>([f32::NAN; <span class="number">4</span>]);
 }
 
-<span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="kw">type</span> <span class="ident">Mask</span> <span class="op">=</span> <span class="ident">__m128</span>;
+<span class="kw">impl </span>Vector&lt;f32&gt; <span class="kw">for </span>__m128 {
+    <span class="kw">type </span>Mask = __m128;
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">splat</span>(<span class="ident">s</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps1</span>(<span class="ident">s</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>splat(s: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_set_ps1(s) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">select</span>(<span class="ident">mask</span>: <span class="ident"><span class="self">Self</span>::Mask</span>, <span class="ident">if_true</span>: <span class="self">Self</span>, <span class="ident">if_false</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_or_ps</span>(<span class="ident">_mm_andnot_ps</span>(<span class="ident">mask</span>, <span class="ident">if_false</span>), <span class="ident">_mm_and_ps</span>(<span class="ident">if_true</span>, <span class="ident">mask</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>select(mask: <span class="self">Self</span>::Mask, if_true: <span class="self">Self</span>, if_false: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_or_ps(_mm_andnot_ps(mask, if_false), _mm_and_ps(if_true, mask)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">cmpeq</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Mask</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cmpeq_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>cmpeq(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Mask {
+        <span class="kw">unsafe </span>{ _mm_cmpeq_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">cmpne</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Mask</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cmpneq_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>cmpne(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Mask {
+        <span class="kw">unsafe </span>{ _mm_cmpneq_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">cmpge</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Mask</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cmpge_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>cmpge(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Mask {
+        <span class="kw">unsafe </span>{ _mm_cmpge_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">cmpgt</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Mask</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cmpgt_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>cmpgt(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Mask {
+        <span class="kw">unsafe </span>{ _mm_cmpgt_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">cmple</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Mask</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cmple_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>cmple(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Mask {
+        <span class="kw">unsafe </span>{ _mm_cmple_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">cmplt</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Mask</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cmplt_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>cmplt(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Mask {
+        <span class="kw">unsafe </span>{ _mm_cmplt_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_add_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>add(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_add_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_div_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>div(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_div_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_mul_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>mul(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_mul_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>: <span class="self">Self</span>, <span class="ident">b</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">m128_mul_add</span>(<span class="self">self</span>, <span class="ident">a</span>, <span class="ident">b</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>mul_add(<span class="self">self</span>, a: <span class="self">Self</span>, b: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ m128_mul_add(<span class="self">self</span>, a, b) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_sub_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>sub(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_sub_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">add_scalar</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_add_ps</span>(<span class="self">self</span>, <span class="ident">_mm_set_ps1</span>(<span class="ident">other</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>add_scalar(<span class="self">self</span>, other: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_add_ps(<span class="self">self</span>, _mm_set_ps1(other)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">sub_scalar</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_sub_ps</span>(<span class="self">self</span>, <span class="ident">_mm_set_ps1</span>(<span class="ident">other</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>sub_scalar(<span class="self">self</span>, other: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_sub_ps(<span class="self">self</span>, _mm_set_ps1(other)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">mul_scalar</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_mul_ps</span>(<span class="self">self</span>, <span class="ident">_mm_set_ps1</span>(<span class="ident">other</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>mul_scalar(<span class="self">self</span>, other: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_mul_ps(<span class="self">self</span>, _mm_set_ps1(other)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">div_scalar</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_div_ps</span>(<span class="self">self</span>, <span class="ident">_mm_set_ps1</span>(<span class="ident">other</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>div_scalar(<span class="self">self</span>, other: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_div_ps(<span class="self">self</span>, _mm_set_ps1(other)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">m128_floor</span>(<span class="ident">_mm_div_ps</span>(<span class="self">self</span>, <span class="ident">other</span>));
-            <span class="ident">_mm_sub_ps</span>(<span class="self">self</span>, <span class="ident">_mm_mul_ps</span>(<span class="ident">n</span>, <span class="ident">other</span>))
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>rem(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>n = m128_floor(_mm_div_ps(<span class="self">self</span>, other));
+            _mm_sub_ps(<span class="self">self</span>, _mm_mul_ps(n, other))
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">rem_scalar</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">rem</span>(<span class="ident">_mm_set1_ps</span>(<span class="ident">other</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>rem_scalar(<span class="self">self</span>, other: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.rem(_mm_set1_ps(other)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">min</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_min_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>min(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_min_ps(<span class="self">self</span>, other) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">max</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_max_ps</span>(<span class="self">self</span>, <span class="ident">other</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>max(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_max_ps(<span class="self">self</span>, other) }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span>, <span class="ident">z</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">z</span>, <span class="ident">z</span>, <span class="ident">y</span>, <span class="ident">x</span>) }
+<span class="kw">impl </span>Vector3&lt;f32&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>new(x: f32, y: f32, z: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_set_ps(z, z, y, x) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">x</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cvtss_f32</span>(<span class="self">self</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>x(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{ _mm_cvtss_f32(<span class="self">self</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">y</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cvtss_f32</span>(<span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_01_01</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>y(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{ _mm_cvtss_f32(_mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_01_01</span>)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">z</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cvtss_f32</span>(<span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b10_10_10_10</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>z(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{ _mm_cvtss_f32(_mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b10_10_10_10</span>)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">splat_x</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b00_00_00_00</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>splat_x(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b00_00_00_00</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">splat_y</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_01_01</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>splat_y(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_01_01</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">splat_z</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b10_10_10_10</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>splat_z(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b10_10_10_10</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_slice_unaligned</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="ident">f32</span>]) -&gt; <span class="self">Self</span> {
-        <span class="ident">Vector3::new</span>(<span class="ident">slice</span>[<span class="number">0</span>], <span class="ident">slice</span>[<span class="number">1</span>], <span class="ident">slice</span>[<span class="number">2</span>])
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_slice_unaligned(slice: <span class="kw-2">&amp;</span>[f32]) -&gt; <span class="self">Self </span>{
+        Vector3::new(slice[<span class="number">0</span>], slice[<span class="number">1</span>], slice[<span class="number">2</span>])
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">write_to_slice_unaligned</span>(<span class="self">self</span>, <span class="ident">slice</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">f32</span>]) {
-        <span class="kw">let</span> <span class="ident">xyz</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_ref_xyz</span>();
-        <span class="ident">slice</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">xyz</span>.<span class="ident">x</span>;
-        <span class="ident">slice</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">xyz</span>.<span class="ident">y</span>;
-        <span class="ident">slice</span>[<span class="number">2</span>] <span class="op">=</span> <span class="ident">xyz</span>.<span class="ident">z</span>;
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>write_to_slice_unaligned(<span class="self">self</span>, slice: <span class="kw-2">&amp;mut </span>[f32]) {
+        <span class="kw">let </span>xyz = <span class="self">self</span>.as_ref_xyz();
+        slice[<span class="number">0</span>] = xyz.x;
+        slice[<span class="number">1</span>] = xyz.y;
+        slice[<span class="number">2</span>] = xyz.z;
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">as_ref_xyz</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="self">Self</span>).<span class="ident">cast</span>() }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>as_ref_xyz(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>XYZ&lt;f32&gt; {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(<span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="self">Self</span>).cast() }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">as_mut_xyz</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="self">Self</span>).<span class="ident">cast</span>() }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>as_mut_xyz(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>XYZ&lt;f32&gt; {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(<span class="self">self </span><span class="kw">as </span><span class="kw-2">*mut </span><span class="self">Self</span>).cast() }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">into_xy</span>(<span class="self">self</span>) -&gt; <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span><span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="self">self</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>into_xy(<span class="self">self</span>) -&gt; XY&lt;f32&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;XY&lt;f32&gt;&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), <span class="self">self</span>);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_xyzw(<span class="self">self</span>, w: f32) -&gt; XYZW&lt;f32&gt; {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>t = _mm_move_ss(<span class="self">self</span>, _mm_set_ss(w));
+            t = _mm_shuffle_ps(t, t, <span class="number">0b00_10_01_00</span>);
+            <span class="comment">// TODO: need a SIMD path
+            </span><span class="kw-2">*</span>_mm_move_ss(t, <span class="self">self</span>).as_ref_xyzw()
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_xyzw</span>(<span class="self">self</span>, <span class="ident">w</span>: <span class="ident">f32</span>) -&gt; <span class="ident">XYZW</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">_mm_move_ss</span>(<span class="self">self</span>, <span class="ident">_mm_set_ss</span>(<span class="ident">w</span>));
-            <span class="ident">t</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">t</span>, <span class="ident">t</span>, <span class="number">0b00_10_01_00</span>);
-            <span class="comment">// TODO: need a SIMD path</span>
-            <span class="kw-2">*</span><span class="ident">_mm_move_ss</span>(<span class="ident">t</span>, <span class="self">self</span>).<span class="ident">as_ref_xyzw</span>()
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_array(a: [f32; <span class="number">3</span>]) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_set_ps(a[<span class="number">2</span>], a[<span class="number">2</span>], a[<span class="number">1</span>], a[<span class="number">0</span>]) }
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>into_array(<span class="self">self</span>) -&gt; [f32; <span class="number">3</span>] {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;[f32; <span class="number">3</span>]&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), <span class="self">self</span>);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_tuple(t: (f32, f32, f32)) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_set_ps(t.<span class="number">2</span>, t.<span class="number">2</span>, t.<span class="number">1</span>, t.<span class="number">0</span>) }
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>into_tuple(<span class="self">self</span>) -&gt; (f32, f32, f32) {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;(f32, f32, f32)&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), <span class="self">self</span>);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>min_element(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>v = <span class="self">self</span>;
+            <span class="kw">let </span>v = _mm_min_ps(v, _mm_shuffle_ps(v, v, <span class="number">0b01_01_10_10</span>));
+            <span class="kw">let </span>v = _mm_min_ps(v, _mm_shuffle_ps(v, v, <span class="number">0b00_00_00_01</span>));
+            _mm_cvtss_f32(v)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_array</span>(<span class="ident">a</span>: [<span class="ident">f32</span>; <span class="number">3</span>]) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">a</span>[<span class="number">2</span>], <span class="ident">a</span>[<span class="number">2</span>], <span class="ident">a</span>[<span class="number">1</span>], <span class="ident">a</span>[<span class="number">0</span>]) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">into_array</span>(<span class="self">self</span>) -&gt; [<span class="ident">f32</span>; <span class="number">3</span>] {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span>[<span class="ident">f32</span>; <span class="number">3</span>]<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="self">self</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>max_element(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>v = <span class="self">self</span>;
+            <span class="kw">let </span>v = _mm_max_ps(v, _mm_shuffle_ps(v, v, <span class="number">0b00_00_10_10</span>));
+            <span class="kw">let </span>v = _mm_max_ps(v, _mm_shuffle_ps(v, v, <span class="number">0b00_00_00_01</span>));
+            _mm_cvtss_f32(v)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_tuple</span>(<span class="ident">t</span>: (<span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">f32</span>)) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">t</span>.<span class="number">2</span>, <span class="ident">t</span>.<span class="number">2</span>, <span class="ident">t</span>.<span class="number">1</span>, <span class="ident">t</span>.<span class="number">0</span>) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>dot(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{ _mm_cvtss_f32(dot3_in_x(<span class="self">self</span>, other)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">into_tuple</span>(<span class="self">self</span>) -&gt; (<span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">f32</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span>(<span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">f32</span>)<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="self">self</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>dot_into_vec(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>dot_in_x = dot3_in_x(<span class="self">self</span>, other);
+            _mm_shuffle_ps(dot_in_x, dot_in_x, <span class="number">0b00_00_00_00</span>)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">min_element</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">_mm_min_ps</span>(<span class="ident">v</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">v</span>, <span class="ident">v</span>, <span class="number">0b01_01_10_10</span>));
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">_mm_min_ps</span>(<span class="ident">v</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">v</span>, <span class="ident">v</span>, <span class="number">0b00_00_00_01</span>));
-            <span class="ident">_mm_cvtss_f32</span>(<span class="ident">v</span>)
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>cross(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="comment">// x  &lt;-  a.y*b.z - a.z*b.y
+            // y  &lt;-  a.z*b.x - a.x*b.z
+            // z  &lt;-  a.x*b.y - a.y*b.x
+            // We can save a shuffle by grouping it in this wacky order:
+            // (self.zxy() * other - self * other.zxy()).zxy()
+            </span><span class="kw">let </span>lhszxy = _mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_00_10</span>);
+            <span class="kw">let </span>rhszxy = _mm_shuffle_ps(other, other, <span class="number">0b01_01_00_10</span>);
+            <span class="kw">let </span>lhszxy_rhs = _mm_mul_ps(lhszxy, other);
+            <span class="kw">let </span>rhszxy_lhs = _mm_mul_ps(rhszxy, <span class="self">self</span>);
+            <span class="kw">let </span>sub = _mm_sub_ps(lhszxy_rhs, rhszxy_lhs);
+            _mm_shuffle_ps(sub, sub, <span class="number">0b01_01_00_10</span>)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">max_element</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">_mm_max_ps</span>(<span class="ident">v</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">v</span>, <span class="ident">v</span>, <span class="number">0b00_00_10_10</span>));
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">_mm_max_ps</span>(<span class="ident">v</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">v</span>, <span class="ident">v</span>, <span class="number">0b00_00_00_01</span>));
-            <span class="ident">_mm_cvtss_f32</span>(<span class="ident">v</span>)
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">dot</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cvtss_f32</span>(<span class="ident">dot3_in_x</span>(<span class="self">self</span>, <span class="ident">other</span>)) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">dot_into_vec</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">dot_in_x</span> <span class="op">=</span> <span class="ident">dot3_in_x</span>(<span class="self">self</span>, <span class="ident">other</span>);
-            <span class="ident">_mm_shuffle_ps</span>(<span class="ident">dot_in_x</span>, <span class="ident">dot_in_x</span>, <span class="number">0b00_00_00_00</span>)
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">cross</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="comment">// x  &lt;-  a.y*b.z - a.z*b.y</span>
-            <span class="comment">// y  &lt;-  a.z*b.x - a.x*b.z</span>
-            <span class="comment">// z  &lt;-  a.x*b.y - a.y*b.x</span>
-            <span class="comment">// We can save a shuffle by grouping it in this wacky order:</span>
-            <span class="comment">// (self.zxy() * other - self * other.zxy()).zxy()</span>
-            <span class="kw">let</span> <span class="ident">lhszxy</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_00_10</span>);
-            <span class="kw">let</span> <span class="ident">rhszxy</span> <span class="op">=</span> <span class="ident">_mm_shuffle_ps</span>(<span class="ident">other</span>, <span class="ident">other</span>, <span class="number">0b01_01_00_10</span>);
-            <span class="kw">let</span> <span class="ident">lhszxy_rhs</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">lhszxy</span>, <span class="ident">other</span>);
-            <span class="kw">let</span> <span class="ident">rhszxy_lhs</span> <span class="op">=</span> <span class="ident">_mm_mul_ps</span>(<span class="ident">rhszxy</span>, <span class="self">self</span>);
-            <span class="kw">let</span> <span class="ident">sub</span> <span class="op">=</span> <span class="ident">_mm_sub_ps</span>(<span class="ident">lhszxy_rhs</span>, <span class="ident">rhszxy_lhs</span>);
-            <span class="ident">_mm_shuffle_ps</span>(<span class="ident">sub</span>, <span class="ident">sub</span>, <span class="number">0b01_01_00_10</span>)
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">clamp</span>(<span class="self">self</span>, <span class="ident">min</span>: <span class="self">Self</span>, <span class="ident">max</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>clamp(<span class="self">self</span>, min: <span class="self">Self</span>, max: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
         <span class="macro">glam_assert!</span>(
-            <span class="ident">MaskVector3::all</span>(<span class="ident">min</span>.<span class="ident">cmple</span>(<span class="ident">max</span>)),
-            <span class="string">&quot;clamp: expected min &lt;= max&quot;</span>
-        );
-        <span class="self">self</span>.<span class="ident">max</span>(<span class="ident">min</span>).<span class="ident">min</span>(<span class="ident">max</span>)
+            MaskVector3::all(min.cmple(max)),
+            <span class="string">&quot;clamp: expected min &lt;= max&quot;
+        </span>);
+        <span class="self">self</span>.max(min).min(max)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Vector4</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span>, <span class="ident">z</span>: <span class="ident">f32</span>, <span class="ident">w</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">w</span>, <span class="ident">z</span>, <span class="ident">y</span>, <span class="ident">x</span>) }
+<span class="kw">impl </span>Vector4&lt;f32&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>new(x: f32, y: f32, z: f32, w: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_set_ps(w, z, y, x) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">x</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cvtss_f32</span>(<span class="self">self</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>x(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{ _mm_cvtss_f32(<span class="self">self</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">y</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cvtss_f32</span>(<span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_01_01</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>y(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{ _mm_cvtss_f32(_mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_01_01</span>)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">z</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cvtss_f32</span>(<span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b10_10_10_10</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>z(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{ _mm_cvtss_f32(_mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b10_10_10_10</span>)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">w</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cvtss_f32</span>(<span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b11_11_11_11</span>)) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>w(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{ _mm_cvtss_f32(_mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b11_11_11_11</span>)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">splat_x</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b00_00_00_00</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>splat_x(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b00_00_00_00</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">splat_y</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_01_01</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>splat_y(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b01_01_01_01</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">splat_z</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b10_10_10_10</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>splat_z(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b10_10_10_10</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">splat_w</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_shuffle_ps</span>(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b11_11_11_11</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>splat_w(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_shuffle_ps(<span class="self">self</span>, <span class="self">self</span>, <span class="number">0b11_11_11_11</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_slice_unaligned</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="ident">f32</span>]) -&gt; <span class="self">Self</span> {
-        <span class="macro">assert!</span>(<span class="ident">slice</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">4</span>);
-        <span class="kw">unsafe</span> { <span class="ident">_mm_loadu_ps</span>(<span class="ident">slice</span>.<span class="ident">as_ptr</span>()) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_slice_unaligned(slice: <span class="kw-2">&amp;</span>[f32]) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert!</span>(slice.len() &gt;= <span class="number">4</span>);
+        <span class="kw">unsafe </span>{ _mm_loadu_ps(slice.as_ptr()) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">write_to_slice_unaligned</span>(<span class="self">self</span>, <span class="ident">slice</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">f32</span>]) {
-        <span class="kw">unsafe</span> {
-            <span class="macro">assert!</span>(<span class="ident">slice</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">4</span>);
-            <span class="ident">_mm_storeu_ps</span>(<span class="ident">slice</span>.<span class="ident">as_mut_ptr</span>(), <span class="self">self</span>);
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>write_to_slice_unaligned(<span class="self">self</span>, slice: <span class="kw-2">&amp;mut </span>[f32]) {
+        <span class="kw">unsafe </span>{
+            <span class="macro">assert!</span>(slice.len() &gt;= <span class="number">4</span>);
+            _mm_storeu_ps(slice.as_mut_ptr(), <span class="self">self</span>);
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">as_ref_xyzw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">XYZW</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="self">Self</span>).<span class="ident">cast</span>() }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>as_ref_xyzw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>XYZW&lt;f32&gt; {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(<span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="self">Self</span>).cast() }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">as_mut_xyzw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">XYZW</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="self">Self</span>).<span class="ident">cast</span>() }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>as_mut_xyzw(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>XYZW&lt;f32&gt; {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(<span class="self">self </span><span class="kw">as </span><span class="kw-2">*mut </span><span class="self">Self</span>).cast() }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">into_xy</span>(<span class="self">self</span>) -&gt; <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span><span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="self">self</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>into_xy(<span class="self">self</span>) -&gt; XY&lt;f32&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;XY&lt;f32&gt;&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), <span class="self">self</span>);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>into_xyz(<span class="self">self</span>) -&gt; XYZ&lt;f32&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;XYZ&lt;f32&gt;&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), <span class="self">self</span>);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_array(a: [f32; <span class="number">4</span>]) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_loadu_ps(a.as_ptr()) }
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>into_array(<span class="self">self</span>) -&gt; [f32; <span class="number">4</span>] {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;[f32; <span class="number">4</span>]&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), <span class="self">self</span>);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from_tuple(t: (f32, f32, f32, f32)) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_set_ps(t.<span class="number">3</span>, t.<span class="number">2</span>, t.<span class="number">1</span>, t.<span class="number">0</span>) }
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>into_tuple(<span class="self">self</span>) -&gt; (f32, f32, f32, f32) {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;(f32, f32, f32, f32)&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), <span class="self">self</span>);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>min_element(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>v = <span class="self">self</span>;
+            <span class="kw">let </span>v = _mm_min_ps(v, _mm_shuffle_ps(v, v, <span class="number">0b00_00_11_10</span>));
+            <span class="kw">let </span>v = _mm_min_ps(v, _mm_shuffle_ps(v, v, <span class="number">0b00_00_00_01</span>));
+            _mm_cvtss_f32(v)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">into_xyz</span>(<span class="self">self</span>) -&gt; <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span><span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="self">self</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>max_element(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>v = <span class="self">self</span>;
+            <span class="kw">let </span>v = _mm_max_ps(v, _mm_shuffle_ps(v, v, <span class="number">0b00_00_11_10</span>));
+            <span class="kw">let </span>v = _mm_max_ps(v, _mm_shuffle_ps(v, v, <span class="number">0b00_00_00_01</span>));
+            _mm_cvtss_f32(v)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_array</span>(<span class="ident">a</span>: [<span class="ident">f32</span>; <span class="number">4</span>]) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_loadu_ps</span>(<span class="ident">a</span>.<span class="ident">as_ptr</span>()) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>dot(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{ _mm_cvtss_f32(dot4_in_x(<span class="self">self</span>, other)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">into_array</span>(<span class="self">self</span>) -&gt; [<span class="ident">f32</span>; <span class="number">4</span>] {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span>[<span class="ident">f32</span>; <span class="number">4</span>]<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="self">self</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>dot_into_vec(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>dot_in_x = dot4_in_x(<span class="self">self</span>, other);
+            _mm_shuffle_ps(dot_in_x, dot_in_x, <span class="number">0b00_00_00_00</span>)
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_tuple</span>(<span class="ident">t</span>: (<span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">f32</span>)) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">t</span>.<span class="number">3</span>, <span class="ident">t</span>.<span class="number">2</span>, <span class="ident">t</span>.<span class="number">1</span>, <span class="ident">t</span>.<span class="number">0</span>) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">into_tuple</span>(<span class="self">self</span>) -&gt; (<span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">f32</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span>(<span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">f32</span>)<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="self">self</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">min_element</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">_mm_min_ps</span>(<span class="ident">v</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">v</span>, <span class="ident">v</span>, <span class="number">0b00_00_11_10</span>));
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">_mm_min_ps</span>(<span class="ident">v</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">v</span>, <span class="ident">v</span>, <span class="number">0b00_00_00_01</span>));
-            <span class="ident">_mm_cvtss_f32</span>(<span class="ident">v</span>)
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">max_element</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>;
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">_mm_max_ps</span>(<span class="ident">v</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">v</span>, <span class="ident">v</span>, <span class="number">0b00_00_11_10</span>));
-            <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">_mm_max_ps</span>(<span class="ident">v</span>, <span class="ident">_mm_shuffle_ps</span>(<span class="ident">v</span>, <span class="ident">v</span>, <span class="number">0b00_00_00_01</span>));
-            <span class="ident">_mm_cvtss_f32</span>(<span class="ident">v</span>)
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">dot</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cvtss_f32</span>(<span class="ident">dot4_in_x</span>(<span class="self">self</span>, <span class="ident">other</span>)) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">dot_into_vec</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">dot_in_x</span> <span class="op">=</span> <span class="ident">dot4_in_x</span>(<span class="self">self</span>, <span class="ident">other</span>);
-            <span class="ident">_mm_shuffle_ps</span>(<span class="ident">dot_in_x</span>, <span class="ident">dot_in_x</span>, <span class="number">0b00_00_00_00</span>)
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">clamp</span>(<span class="self">self</span>, <span class="ident">min</span>: <span class="self">Self</span>, <span class="ident">max</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>clamp(<span class="self">self</span>, min: <span class="self">Self</span>, max: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
         <span class="macro">glam_assert!</span>(
-            <span class="ident">MaskVector4::all</span>(<span class="ident">min</span>.<span class="ident">cmple</span>(<span class="ident">max</span>)),
-            <span class="string">&quot;clamp: expected min &lt;= max&quot;</span>
-        );
-        <span class="self">self</span>.<span class="ident">max</span>(<span class="ident">min</span>).<span class="ident">min</span>(<span class="ident">max</span>)
+            MaskVector4::all(min.cmple(max)),
+            <span class="string">&quot;clamp: expected min &lt;= max&quot;
+        </span>);
+        <span class="self">self</span>.max(min).min(max)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SignedVector</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">neg</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_sub_ps</span>(<span class="ident"><span class="self">Self</span>::ZERO</span>, <span class="self">self</span>) }
+<span class="kw">impl </span>SignedVector&lt;f32&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>neg(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_sub_ps(<span class="self">Self</span>::ZERO, <span class="self">self</span>) }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SignedVector3</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">m128_abs</span>(<span class="self">self</span>) }
+<span class="kw">impl </span>SignedVector3&lt;f32&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>abs(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ m128_abs(<span class="self">self</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">signum</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">const</span> <span class="ident">NEG_ONE</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="op">-</span><span class="number">1.0</span>; <span class="number">4</span>]);
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cmpge</span>(<span class="ident"><span class="self">Self</span>::ZERO</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::select</span>(<span class="ident">mask</span>, <span class="ident"><span class="self">Self</span>::ONE</span>, <span class="ident">NEG_ONE</span>);
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">_mm_cmpunord_ps</span>(<span class="self">self</span>, <span class="self">self</span>) };
-        <span class="ident"><span class="self">Self</span>::select</span>(<span class="ident">mask</span>, <span class="self">self</span>, <span class="ident">result</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">FloatVector3</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">is_finite</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>) <span class="op">=</span> <span class="ident">Vector3::into_tuple</span>(<span class="self">self</span>);
-        <span class="ident">x</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="ident">y</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="ident">z</span>.<span class="ident">is_finite</span>()
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">is_nan</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="ident">MaskVector3::any</span>(<span class="ident">FloatVector3::is_nan_mask</span>(<span class="self">self</span>))
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">is_nan_mask</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Mask</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cmpunord_ps</span>(<span class="self">self</span>, <span class="self">self</span>) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">floor</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">m128_floor</span>(<span class="self">self</span>) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">ceil</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">m128_ceil</span>(<span class="self">self</span>) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">round</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">m128_round</span>(<span class="self">self</span>) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">recip</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_div_ps</span>(<span class="ident"><span class="self">Self</span>::ONE</span>, <span class="self">self</span>) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">exp</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>) <span class="op">=</span> <span class="ident">Vector3::into_tuple</span>(<span class="self">self</span>);
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="number">0.0</span>, <span class="ident">z</span>.<span class="ident">exp</span>(), <span class="ident">y</span>.<span class="ident">exp</span>(), <span class="ident">x</span>.<span class="ident">exp</span>()) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">powf</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>) <span class="op">=</span> <span class="ident">Vector3::into_tuple</span>(<span class="self">self</span>);
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="number">0.0</span>, <span class="ident">z</span>.<span class="ident">powf</span>(<span class="ident">n</span>), <span class="ident">y</span>.<span class="ident">powf</span>(<span class="ident">n</span>), <span class="ident">x</span>.<span class="ident">powf</span>(<span class="ident">n</span>)) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">length</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="ident">dot3_in_x</span>(<span class="self">self</span>, <span class="self">self</span>);
-            <span class="ident">_mm_cvtss_f32</span>(<span class="ident">_mm_sqrt_ps</span>(<span class="ident">dot</span>))
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">length_recip</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="ident">dot3_in_x</span>(<span class="self">self</span>, <span class="self">self</span>);
-            <span class="ident">_mm_cvtss_f32</span>(<span class="ident">_mm_div_ps</span>(<span class="ident"><span class="self">Self</span>::ONE</span>, <span class="ident">_mm_sqrt_ps</span>(<span class="ident">dot</span>)))
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">normalize</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">_mm_sqrt_ps</span>(<span class="ident">Vector3::dot_into_vec</span>(<span class="self">self</span>, <span class="self">self</span>));
-            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::let_and_return</span>)]</span>
-            <span class="kw">let</span> <span class="ident">normalized</span> <span class="op">=</span> <span class="ident">_mm_div_ps</span>(<span class="self">self</span>, <span class="ident">length</span>);
-            <span class="macro">glam_assert!</span>(<span class="ident">FloatVector3::is_finite</span>(<span class="ident">normalized</span>));
-            <span class="ident">normalized</span>
-        }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>signum(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">const </span>NEG_ONE: __m128 = <span class="macro">const_f32x4!</span>([-<span class="number">1.0</span>; <span class="number">4</span>]);
+        <span class="kw">let </span>mask = <span class="self">self</span>.cmpge(<span class="self">Self</span>::ZERO);
+        <span class="kw">let </span>result = <span class="self">Self</span>::select(mask, <span class="self">Self</span>::ONE, NEG_ONE);
+        <span class="kw">let </span>mask = <span class="kw">unsafe </span>{ _mm_cmpunord_ps(<span class="self">self</span>, <span class="self">self</span>) };
+        <span class="self">Self</span>::select(mask, <span class="self">self</span>, result)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SignedVector4</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">m128_abs</span>(<span class="self">self</span>) }
+<span class="kw">impl </span>FloatVector3&lt;f32&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>is_finite(<span class="self">self</span>) -&gt; bool {
+        <span class="kw">let </span>(x, y, z) = Vector3::into_tuple(<span class="self">self</span>);
+        x.is_finite() &amp;&amp; y.is_finite() &amp;&amp; z.is_finite()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">signum</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">const</span> <span class="ident">NEG_ONE</span>: <span class="ident">__m128</span> <span class="op">=</span> <span class="macro">const_f32x4!</span>([<span class="op">-</span><span class="number">1.0</span>; <span class="number">4</span>]);
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cmpge</span>(<span class="ident"><span class="self">Self</span>::ZERO</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::select</span>(<span class="ident">mask</span>, <span class="ident"><span class="self">Self</span>::ONE</span>, <span class="ident">NEG_ONE</span>);
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">_mm_cmpunord_ps</span>(<span class="self">self</span>, <span class="self">self</span>) };
-        <span class="ident"><span class="self">Self</span>::select</span>(<span class="ident">mask</span>, <span class="self">self</span>, <span class="ident">result</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">FloatVector4</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">is_finite</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>, <span class="ident">w</span>) <span class="op">=</span> <span class="ident">Vector4::into_tuple</span>(<span class="self">self</span>);
-        <span class="ident">x</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="ident">y</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="ident">z</span>.<span class="ident">is_finite</span>() <span class="op">&amp;&amp;</span> <span class="ident">w</span>.<span class="ident">is_finite</span>()
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>is_nan(<span class="self">self</span>) -&gt; bool {
+        MaskVector3::any(FloatVector3::is_nan_mask(<span class="self">self</span>))
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">is_nan</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="ident">MaskVector4::any</span>(<span class="ident">FloatVector4::is_nan_mask</span>(<span class="self">self</span>))
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>is_nan_mask(<span class="self">self</span>) -&gt; <span class="self">Self</span>::Mask {
+        <span class="kw">unsafe </span>{ _mm_cmpunord_ps(<span class="self">self</span>, <span class="self">self</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">is_nan_mask</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Mask</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_cmpunord_ps</span>(<span class="self">self</span>, <span class="self">self</span>) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>floor(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ m128_floor(<span class="self">self</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">floor</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">m128_floor</span>(<span class="self">self</span>) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>ceil(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ m128_ceil(<span class="self">self</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">ceil</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">m128_ceil</span>(<span class="self">self</span>) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>round(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ m128_round(<span class="self">self</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">round</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">m128_round</span>(<span class="self">self</span>) }
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>recip(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_div_ps(<span class="self">Self</span>::ONE, <span class="self">self</span>) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">recip</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_div_ps</span>(<span class="ident"><span class="self">Self</span>::ONE</span>, <span class="self">self</span>) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>exp(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>(x, y, z) = Vector3::into_tuple(<span class="self">self</span>);
+        <span class="kw">unsafe </span>{ _mm_set_ps(<span class="number">0.0</span>, z.exp(), y.exp(), x.exp()) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">exp</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>, <span class="ident">w</span>) <span class="op">=</span> <span class="ident">Vector4::into_tuple</span>(<span class="self">self</span>);
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">w</span>.<span class="ident">exp</span>(), <span class="ident">z</span>.<span class="ident">exp</span>(), <span class="ident">y</span>.<span class="ident">exp</span>(), <span class="ident">x</span>.<span class="ident">exp</span>()) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>powf(<span class="self">self</span>, n: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>(x, y, z) = Vector3::into_tuple(<span class="self">self</span>);
+        <span class="kw">unsafe </span>{ _mm_set_ps(<span class="number">0.0</span>, z.powf(n), y.powf(n), x.powf(n)) }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">powf</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>, <span class="ident">w</span>) <span class="op">=</span> <span class="ident">Vector4::into_tuple</span>(<span class="self">self</span>);
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">w</span>.<span class="ident">powf</span>(<span class="ident">n</span>), <span class="ident">z</span>.<span class="ident">powf</span>(<span class="ident">n</span>), <span class="ident">y</span>.<span class="ident">powf</span>(<span class="ident">n</span>), <span class="ident">x</span>.<span class="ident">powf</span>(<span class="ident">n</span>)) }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">length</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="ident">dot4_in_x</span>(<span class="self">self</span>, <span class="self">self</span>);
-            <span class="ident">_mm_cvtss_f32</span>(<span class="ident">_mm_sqrt_ps</span>(<span class="ident">dot</span>))
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>length(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>dot = dot3_in_x(<span class="self">self</span>, <span class="self">self</span>);
+            _mm_cvtss_f32(_mm_sqrt_ps(dot))
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">length_recip</span>(<span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="ident">dot4_in_x</span>(<span class="self">self</span>, <span class="self">self</span>);
-            <span class="ident">_mm_cvtss_f32</span>(<span class="ident">_mm_div_ps</span>(<span class="ident"><span class="self">Self</span>::ONE</span>, <span class="ident">_mm_sqrt_ps</span>(<span class="ident">dot</span>)))
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>length_recip(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>dot = dot3_in_x(<span class="self">self</span>, <span class="self">self</span>);
+            _mm_cvtss_f32(_mm_div_ps(<span class="self">Self</span>::ONE, _mm_sqrt_ps(dot)))
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">normalize</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="ident">Vector4::dot_into_vec</span>(<span class="self">self</span>, <span class="self">self</span>);
-            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::let_and_return</span>)]</span>
-            <span class="kw">let</span> <span class="ident">normalized</span> <span class="op">=</span> <span class="ident">_mm_div_ps</span>(<span class="self">self</span>, <span class="ident">_mm_sqrt_ps</span>(<span class="ident">dot</span>));
-            <span class="macro">glam_assert!</span>(<span class="ident">FloatVector4::is_finite</span>(<span class="ident">normalized</span>));
-            <span class="ident">normalized</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>normalize(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>length = _mm_sqrt_ps(Vector3::dot_into_vec(<span class="self">self</span>, <span class="self">self</span>));
+            <span class="attribute">#[allow(clippy::let_and_return)]
+            </span><span class="kw">let </span>normalized = _mm_div_ps(<span class="self">self</span>, length);
+            <span class="macro">glam_assert!</span>(FloatVector3::is_finite(normalized));
+            normalized
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">XYZW</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">XYZW</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">__m128</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">v</span>.<span class="ident">w</span>, <span class="ident">v</span>.<span class="ident">z</span>, <span class="ident">v</span>.<span class="ident">y</span>, <span class="ident">v</span>.<span class="ident">x</span>) }
+<span class="kw">impl </span>SignedVector4&lt;f32&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>abs(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ m128_abs(<span class="self">self</span>) }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>signum(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">const </span>NEG_ONE: __m128 = <span class="macro">const_f32x4!</span>([-<span class="number">1.0</span>; <span class="number">4</span>]);
+        <span class="kw">let </span>mask = <span class="self">self</span>.cmpge(<span class="self">Self</span>::ZERO);
+        <span class="kw">let </span>result = <span class="self">Self</span>::select(mask, <span class="self">Self</span>::ONE, NEG_ONE);
+        <span class="kw">let </span>mask = <span class="kw">unsafe </span>{ _mm_cmpunord_ps(<span class="self">self</span>, <span class="self">self</span>) };
+        <span class="self">Self</span>::select(mask, <span class="self">self</span>, result)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">__m128</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">v</span>.<span class="ident">z</span>, <span class="ident">v</span>.<span class="ident">z</span>, <span class="ident">v</span>.<span class="ident">y</span>, <span class="ident">v</span>.<span class="ident">x</span>) }
+<span class="kw">impl </span>FloatVector4&lt;f32&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>is_finite(<span class="self">self</span>) -&gt; bool {
+        <span class="kw">let </span>(x, y, z, w) = Vector4::into_tuple(<span class="self">self</span>);
+        x.is_finite() &amp;&amp; y.is_finite() &amp;&amp; z.is_finite() &amp;&amp; w.is_finite()
     }
-}
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">__m128</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident">__m128</span> {
-        <span class="kw">unsafe</span> { <span class="ident">_mm_set_ps</span>(<span class="ident">v</span>.<span class="ident">y</span>, <span class="ident">v</span>.<span class="ident">y</span>, <span class="ident">v</span>.<span class="ident">y</span>, <span class="ident">v</span>.<span class="ident">x</span>) }
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>is_nan(<span class="self">self</span>) -&gt; bool {
+        MaskVector4::any(FloatVector4::is_nan_mask(<span class="self">self</span>))
     }
-}
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">XYZW</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">XYZW</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span><span class="ident">XYZW</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="ident">v</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>is_nan_mask(<span class="self">self</span>) -&gt; <span class="self">Self</span>::Mask {
+        <span class="kw">unsafe </span>{ _mm_cmpunord_ps(<span class="self">self</span>, <span class="self">self</span>) }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>floor(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ m128_floor(<span class="self">self</span>) }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>ceil(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ m128_ceil(<span class="self">self</span>) }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>round(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ m128_round(<span class="self">self</span>) }
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>recip(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ _mm_div_ps(<span class="self">Self</span>::ONE, <span class="self">self</span>) }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>exp(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>(x, y, z, w) = Vector4::into_tuple(<span class="self">self</span>);
+        <span class="kw">unsafe </span>{ _mm_set_ps(w.exp(), z.exp(), y.exp(), x.exp()) }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>powf(<span class="self">self</span>, n: f32) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>(x, y, z, w) = Vector4::into_tuple(<span class="self">self</span>);
+        <span class="kw">unsafe </span>{ _mm_set_ps(w.powf(n), z.powf(n), y.powf(n), x.powf(n)) }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>length(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>dot = dot4_in_x(<span class="self">self</span>, <span class="self">self</span>);
+            _mm_cvtss_f32(_mm_sqrt_ps(dot))
+        }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>length_recip(<span class="self">self</span>) -&gt; f32 {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>dot = dot4_in_x(<span class="self">self</span>, <span class="self">self</span>);
+            _mm_cvtss_f32(_mm_div_ps(<span class="self">Self</span>::ONE, _mm_sqrt_ps(dot)))
+        }
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>normalize(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>dot = Vector4::dot_into_vec(<span class="self">self</span>, <span class="self">self</span>);
+            <span class="attribute">#[allow(clippy::let_and_return)]
+            </span><span class="kw">let </span>normalized = _mm_div_ps(<span class="self">self</span>, _mm_sqrt_ps(dot));
+            <span class="macro">glam_assert!</span>(FloatVector4::is_finite(normalized));
+            normalized
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span><span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="ident">v</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
-        }
+<span class="kw">impl </span>From&lt;XYZW&lt;f32&gt;&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from(v: XYZW&lt;f32&gt;) -&gt; __m128 {
+        <span class="kw">unsafe </span>{ _mm_set_ps(v.w, v.z, v.y, v.x) }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">__m128</span>) -&gt; <span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span>: <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Align16</span><span class="op">&lt;</span><span class="ident">XY</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>();
-        <span class="kw">unsafe</span> {
-            <span class="ident">_mm_store_ps</span>(<span class="ident">out</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="ident">v</span>);
-            <span class="ident">out</span>.<span class="ident">assume_init</span>().<span class="number">0</span>
-        }
+<span class="kw">impl </span>From&lt;XYZ&lt;f32&gt;&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from(v: XYZ&lt;f32&gt;) -&gt; __m128 {
+        <span class="kw">unsafe </span>{ _mm_set_ps(v.z, v.z, v.y, v.x) }
+    }
+}
+
+<span class="kw">impl </span>From&lt;XY&lt;f32&gt;&gt; <span class="kw">for </span>__m128 {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from(v: XY&lt;f32&gt;) -&gt; __m128 {
+        <span class="kw">unsafe </span>{ _mm_set_ps(v.y, v.y, v.y, v.x) }
+    }
+}
+
+<span class="kw">impl </span>From&lt;__m128&gt; <span class="kw">for </span>XYZW&lt;f32&gt; {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from(v: __m128) -&gt; XYZW&lt;f32&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;XYZW&lt;f32&gt;&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), v);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+}
+
+<span class="kw">impl </span>From&lt;__m128&gt; <span class="kw">for </span>XYZ&lt;f32&gt; {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from(v: __m128) -&gt; XYZ&lt;f32&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;XYZ&lt;f32&gt;&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), v);
+            out.assume_init().<span class="number">0
+        </span>}
+    }
+}
+
+<span class="kw">impl </span>From&lt;__m128&gt; <span class="kw">for </span>XY&lt;f32&gt; {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>from(v: __m128) -&gt; XY&lt;f32&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>out: MaybeUninit&lt;Align16&lt;XY&lt;f32&gt;&gt;&gt; = MaybeUninit::uninit();
+        <span class="kw">unsafe </span>{
+            _mm_store_ps(out.as_mut_ptr().cast(), v);
+            out.assume_init().<span class="number">0
+        </span>}
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="glam" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="glam" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

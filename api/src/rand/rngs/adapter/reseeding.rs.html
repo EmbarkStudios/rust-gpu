@@ -1,12 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/rngs/adapter/reseeding.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>reseeding.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../rand/index.html"><div class="logo-container">
-                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../rand/index.html">
-                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/rngs/adapter/reseeding.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>reseeding.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../rand/index.html"><div class="logo-container">
+                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../rand/index.html">
+                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -378,378 +372,377 @@
 <span id="370">370</span>
 <span id="371">371</span>
 <span id="372">372</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.</span>
-<span class="comment">// Copyright 2013 The Rust Project Developers.</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
-<span class="comment">// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
-<span class="comment">// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your</span>
-<span class="comment">// option. This file may not be copied, modified, or distributed</span>
-<span class="comment">// except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2018 Developers of the Rand project.
+// Copyright 2013 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license
+// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-<span class="doccomment">//! A wrapper around another PRNG that reseeds it after it</span>
-<span class="doccomment">//! generates a certain number of random bytes.</span>
+</span><span class="doccomment">//! A wrapper around another PRNG that reseeds it after it
+//! generates a certain number of random bytes.
 
-<span class="kw">use</span> <span class="ident">core::mem::size_of</span>;
+</span><span class="kw">use </span>core::mem::size_of;
 
-<span class="kw">use</span> <span class="ident">rand_core::block</span>::{<span class="ident">BlockRng</span>, <span class="ident">BlockRngCore</span>};
-<span class="kw">use</span> <span class="ident">rand_core</span>::{<span class="ident">CryptoRng</span>, <span class="ident">Error</span>, <span class="ident">RngCore</span>, <span class="ident">SeedableRng</span>};
+<span class="kw">use </span>rand_core::block::{BlockRng, BlockRngCore};
+<span class="kw">use </span>rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
-<span class="doccomment">/// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the</span>
-<span class="doccomment">/// ability to reseed it.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `ReseedingRng` reseeds the underlying PRNG in the following cases:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// - On a manual call to [`reseed()`].</span>
-<span class="doccomment">/// - After `clone()`, the clone will be reseeded on first use.</span>
-<span class="doccomment">/// - After a process is forked, the RNG in the child process is reseeded within</span>
-<span class="doccomment">///   the next few generated values, depending on the block size of the</span>
-<span class="doccomment">///   underlying PRNG. For ChaCha and Hc128 this is a maximum of</span>
-<span class="doccomment">///   15 `u32` values before reseeding.</span>
-<span class="doccomment">/// - After the PRNG has generated a configurable number of random bytes.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # When should reseeding after a fixed number of generated bytes be used?</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Reseeding after a fixed number of generated bytes is never strictly</span>
-<span class="doccomment">/// *necessary*. Cryptographic PRNGs don&#39;t have a limited number of bytes they</span>
-<span class="doccomment">/// can output, or at least not a limit reachable in any practical way. There is</span>
-<span class="doccomment">/// no such thing as &#39;running out of entropy&#39;.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Occasionally reseeding can be seen as some form of &#39;security in depth&#39;. Even</span>
-<span class="doccomment">/// if in the future a cryptographic weakness is found in the CSPRNG being used,</span>
-<span class="doccomment">/// or a flaw in the implementation, occasionally reseeding should make</span>
-<span class="doccomment">/// exploiting it much more difficult or even impossible.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Use [`ReseedingRng::new`] with a `threshold` of `0` to disable reseeding</span>
-<span class="doccomment">/// after a fixed number of generated bytes.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Error handling</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Although unlikely, reseeding the wrapped PRNG can fail. `ReseedingRng` will</span>
-<span class="doccomment">/// never panic but try to handle the error intelligently through some</span>
-<span class="doccomment">/// combination of retrying and delaying reseeding until later.</span>
-<span class="doccomment">/// If handling the source error fails `ReseedingRng` will continue generating</span>
-<span class="doccomment">/// data from the wrapped PRNG without reseeding.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Manually calling [`reseed()`] will not have this retry or delay logic, but</span>
-<span class="doccomment">/// reports the error.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use rand::prelude::*;</span>
-<span class="doccomment">/// use rand_chacha::ChaCha20Core; // Internal part of ChaChaRng that</span>
-<span class="doccomment">///                              // implements BlockRngCore</span>
-<span class="doccomment">/// use rand::rngs::OsRng;</span>
-<span class="doccomment">/// use rand::rngs::adapter::ReseedingRng;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let prng = ChaCha20Core::from_entropy();</span>
-<span class="doccomment">/// let mut reseeding_rng = ReseedingRng::new(prng, 0, OsRng);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// println!(&quot;{}&quot;, reseeding_rng.gen::&lt;u64&gt;());</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let mut cloned_rng = reseeding_rng.clone();</span>
-<span class="doccomment">/// assert!(reseeding_rng.gen::&lt;u64&gt;() != cloned_rng.gen::&lt;u64&gt;());</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`BlockRngCore`]: rand_core::block::BlockRngCore</span>
-<span class="doccomment">/// [`ReseedingRng::new`]: ReseedingRng::new</span>
-<span class="doccomment">/// [`reseed()`]: ReseedingRng::reseed</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReseedingRng</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span>(<span class="ident">BlockRng</span><span class="op">&lt;</span><span class="ident">ReseedingCore</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span><span class="op">&gt;</span>)
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">BlockRngCore</span> <span class="op">+</span> <span class="ident">SeedableRng</span>,
-    <span class="ident">Rsdr</span>: <span class="ident">RngCore</span>;
+<span class="doccomment">/// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
+/// ability to reseed it.
+///
+/// `ReseedingRng` reseeds the underlying PRNG in the following cases:
+///
+/// - On a manual call to [`reseed()`].
+/// - After `clone()`, the clone will be reseeded on first use.
+/// - After a process is forked, the RNG in the child process is reseeded within
+///   the next few generated values, depending on the block size of the
+///   underlying PRNG. For ChaCha and Hc128 this is a maximum of
+///   15 `u32` values before reseeding.
+/// - After the PRNG has generated a configurable number of random bytes.
+///
+/// # When should reseeding after a fixed number of generated bytes be used?
+///
+/// Reseeding after a fixed number of generated bytes is never strictly
+/// *necessary*. Cryptographic PRNGs don&#39;t have a limited number of bytes they
+/// can output, or at least not a limit reachable in any practical way. There is
+/// no such thing as &#39;running out of entropy&#39;.
+///
+/// Occasionally reseeding can be seen as some form of &#39;security in depth&#39;. Even
+/// if in the future a cryptographic weakness is found in the CSPRNG being used,
+/// or a flaw in the implementation, occasionally reseeding should make
+/// exploiting it much more difficult or even impossible.
+///
+/// Use [`ReseedingRng::new`] with a `threshold` of `0` to disable reseeding
+/// after a fixed number of generated bytes.
+///
+/// # Error handling
+///
+/// Although unlikely, reseeding the wrapped PRNG can fail. `ReseedingRng` will
+/// never panic but try to handle the error intelligently through some
+/// combination of retrying and delaying reseeding until later.
+/// If handling the source error fails `ReseedingRng` will continue generating
+/// data from the wrapped PRNG without reseeding.
+///
+/// Manually calling [`reseed()`] will not have this retry or delay logic, but
+/// reports the error.
+///
+/// # Example
+///
+/// ```
+/// use rand::prelude::*;
+/// use rand_chacha::ChaCha20Core; // Internal part of ChaChaRng that
+///                              // implements BlockRngCore
+/// use rand::rngs::OsRng;
+/// use rand::rngs::adapter::ReseedingRng;
+///
+/// let prng = ChaCha20Core::from_entropy();
+/// let mut reseeding_rng = ReseedingRng::new(prng, 0, OsRng);
+///
+/// println!(&quot;{}&quot;, reseeding_rng.gen::&lt;u64&gt;());
+///
+/// let mut cloned_rng = reseeding_rng.clone();
+/// assert!(reseeding_rng.gen::&lt;u64&gt;() != cloned_rng.gen::&lt;u64&gt;());
+/// ```
+///
+/// [`BlockRngCore`]: rand_core::block::BlockRngCore
+/// [`ReseedingRng::new`]: ReseedingRng::new
+/// [`reseed()`]: ReseedingRng::reseed
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>ReseedingRng&lt;R, Rsdr&gt;(BlockRng&lt;ReseedingCore&lt;R, Rsdr&gt;&gt;)
+<span class="kw">where
+    </span>R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> <span class="ident">ReseedingRng</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">BlockRngCore</span> <span class="op">+</span> <span class="ident">SeedableRng</span>,
-    <span class="ident">Rsdr</span>: <span class="ident">RngCore</span>,
+<span class="kw">impl</span>&lt;R, Rsdr&gt; ReseedingRng&lt;R, Rsdr&gt;
+<span class="kw">where
+    </span>R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore,
 {
-    <span class="doccomment">/// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG</span>
-    <span class="doccomment">/// to use as reseeder.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// `threshold` sets the number of generated bytes after which to reseed the</span>
-    <span class="doccomment">/// PRNG. Set it to zero to never reseed based on the number of generated</span>
-    <span class="doccomment">/// values.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">rng</span>: <span class="ident">R</span>, <span class="ident">threshold</span>: <span class="ident">u64</span>, <span class="ident">reseeder</span>: <span class="ident">Rsdr</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">ReseedingRng</span>(<span class="ident">BlockRng::new</span>(<span class="ident">ReseedingCore::new</span>(<span class="ident">rng</span>, <span class="ident">threshold</span>, <span class="ident">reseeder</span>)))
+    <span class="doccomment">/// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG
+    /// to use as reseeder.
+    ///
+    /// `threshold` sets the number of generated bytes after which to reseed the
+    /// PRNG. Set it to zero to never reseed based on the number of generated
+    /// values.
+    </span><span class="kw">pub fn </span>new(rng: R, threshold: u64, reseeder: Rsdr) -&gt; <span class="self">Self </span>{
+        ReseedingRng(BlockRng::new(ReseedingCore::new(rng, threshold, reseeder)))
     }
 
-    <span class="doccomment">/// Reseed the internal PRNG.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reseed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">core</span>.<span class="ident">reseed</span>()
+    <span class="doccomment">/// Reseed the internal PRNG.
+    </span><span class="kw">pub fn </span>reseed(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.core.reseed()
     }
 }
 
-<span class="comment">// TODO: this should be implemented for any type where the inner type</span>
-<span class="comment">// implements RngCore, but we can&#39;t specify that because ReseedingCore is private</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span>: <span class="ident">RngCore</span><span class="op">&gt;</span> <span class="ident">RngCore</span> <span class="kw">for</span> <span class="ident">ReseedingRng</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">BlockRngCore</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">u32</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">SeedableRng</span>,
-    <span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">BlockRngCore</span><span class="op">&gt;</span><span class="ident">::Results</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">AsMut</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>,
+<span class="comment">// TODO: this should be implemented for any type where the inner type
+// implements RngCore, but we can&#39;t specify that because ReseedingCore is private
+</span><span class="kw">impl</span>&lt;R, Rsdr: RngCore&gt; RngCore <span class="kw">for </span>ReseedingRng&lt;R, Rsdr&gt;
+<span class="kw">where
+    </span>R: BlockRngCore&lt;Item = u32&gt; + SeedableRng,
+    &lt;R <span class="kw">as </span>BlockRngCore&gt;::Results: AsRef&lt;[u32]&gt; + AsMut&lt;[u32]&gt;,
 {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">next_u32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">next_u32</span>()
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>next_u32(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.<span class="number">0</span>.next_u32()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">next_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">next_u64</span>()
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>next_u64(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.<span class="number">0</span>.next_u64()
     }
 
-    <span class="kw">fn</span> <span class="ident">fill_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">fill_bytes</span>(<span class="ident">dest</span>)
+    <span class="kw">fn </span>fill_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dest: <span class="kw-2">&amp;mut </span>[u8]) {
+        <span class="self">self</span>.<span class="number">0</span>.fill_bytes(dest)
     }
 
-    <span class="kw">fn</span> <span class="ident">try_fill_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">try_fill_bytes</span>(<span class="ident">dest</span>)
+    <span class="kw">fn </span>try_fill_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dest: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.try_fill_bytes(dest)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">ReseedingRng</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">BlockRngCore</span> <span class="op">+</span> <span class="ident">SeedableRng</span> <span class="op">+</span> <span class="ident">Clone</span>,
-    <span class="ident">Rsdr</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">Clone</span>,
+<span class="kw">impl</span>&lt;R, Rsdr&gt; Clone <span class="kw">for </span>ReseedingRng&lt;R, Rsdr&gt;
+<span class="kw">where
+    </span>R: BlockRngCore + SeedableRng + Clone,
+    Rsdr: RngCore + Clone,
 {
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ReseedingRng</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> {
-        <span class="comment">// Recreating `BlockRng` seems easier than cloning it and resetting</span>
-        <span class="comment">// the index.</span>
-        <span class="ident">ReseedingRng</span>(<span class="ident">BlockRng::new</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">core</span>.<span class="ident">clone</span>()))
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ReseedingRng&lt;R, Rsdr&gt; {
+        <span class="comment">// Recreating `BlockRng` seems easier than cloning it and resetting
+        // the index.
+        </span>ReseedingRng(BlockRng::new(<span class="self">self</span>.<span class="number">0</span>.core.clone()))
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> <span class="ident">CryptoRng</span> <span class="kw">for</span> <span class="ident">ReseedingRng</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">BlockRngCore</span> <span class="op">+</span> <span class="ident">SeedableRng</span> <span class="op">+</span> <span class="ident">CryptoRng</span>,
-    <span class="ident">Rsdr</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span>,
+<span class="kw">impl</span>&lt;R, Rsdr&gt; CryptoRng <span class="kw">for </span>ReseedingRng&lt;R, Rsdr&gt;
+<span class="kw">where
+    </span>R: BlockRngCore + SeedableRng + CryptoRng,
+    Rsdr: RngCore + CryptoRng,
 {
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ReseedingCore</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="ident">R</span>,
-    <span class="ident">reseeder</span>: <span class="ident">Rsdr</span>,
-    <span class="ident">threshold</span>: <span class="ident">i64</span>,
-    <span class="ident">bytes_until_reseed</span>: <span class="ident">i64</span>,
-    <span class="ident">fork_counter</span>: <span class="ident">usize</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">struct </span>ReseedingCore&lt;R, Rsdr&gt; {
+    inner: R,
+    reseeder: Rsdr,
+    threshold: i64,
+    bytes_until_reseed: i64,
+    fork_counter: usize,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> <span class="ident">BlockRngCore</span> <span class="kw">for</span> <span class="ident">ReseedingCore</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">BlockRngCore</span> <span class="op">+</span> <span class="ident">SeedableRng</span>,
-    <span class="ident">Rsdr</span>: <span class="ident">RngCore</span>,
+<span class="kw">impl</span>&lt;R, Rsdr&gt; BlockRngCore <span class="kw">for </span>ReseedingCore&lt;R, Rsdr&gt;
+<span class="kw">where
+    </span>R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore,
 {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">BlockRngCore</span><span class="op">&gt;</span><span class="ident">::Item</span>;
-    <span class="kw">type</span> <span class="ident">Results</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">BlockRngCore</span><span class="op">&gt;</span><span class="ident">::Results</span>;
+    <span class="kw">type </span>Item = &lt;R <span class="kw">as </span>BlockRngCore&gt;::Item;
+    <span class="kw">type </span>Results = &lt;R <span class="kw">as </span>BlockRngCore&gt;::Results;
 
-    <span class="kw">fn</span> <span class="ident">generate</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">results</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Results</span>) {
-        <span class="kw">let</span> <span class="ident">global_fork_counter</span> <span class="op">=</span> <span class="ident">fork::get_fork_counter</span>();
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes_until_reseed</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">is_forked</span>(<span class="ident">global_fork_counter</span>) {
-            <span class="comment">// We get better performance by not calling only `reseed` here</span>
-            <span class="comment">// and continuing with the rest of the function, but by directly</span>
-            <span class="comment">// returning from a non-inlined function.</span>
-            <span class="kw">return</span> <span class="self">self</span>.<span class="ident">reseed_and_generate</span>(<span class="ident">results</span>, <span class="ident">global_fork_counter</span>);
+    <span class="kw">fn </span>generate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, results: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Results) {
+        <span class="kw">let </span>global_fork_counter = fork::get_fork_counter();
+        <span class="kw">if </span><span class="self">self</span>.bytes_until_reseed &lt;= <span class="number">0 </span>|| <span class="self">self</span>.is_forked(global_fork_counter) {
+            <span class="comment">// We get better performance by not calling only `reseed` here
+            // and continuing with the rest of the function, but by directly
+            // returning from a non-inlined function.
+            </span><span class="kw">return </span><span class="self">self</span>.reseed_and_generate(results, global_fork_counter);
         }
-        <span class="kw">let</span> <span class="ident">num_bytes</span> <span class="op">=</span> <span class="ident">results</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">*</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span>();
-        <span class="self">self</span>.<span class="ident">bytes_until_reseed</span> <span class="op">-</span><span class="op">=</span> <span class="ident">num_bytes</span> <span class="kw">as</span> <span class="ident">i64</span>;
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">generate</span>(<span class="ident">results</span>);
+        <span class="kw">let </span>num_bytes = results.as_ref().len() * size_of::&lt;<span class="self">Self</span>::Item&gt;();
+        <span class="self">self</span>.bytes_until_reseed -= num_bytes <span class="kw">as </span>i64;
+        <span class="self">self</span>.inner.generate(results);
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> <span class="ident">ReseedingCore</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">BlockRngCore</span> <span class="op">+</span> <span class="ident">SeedableRng</span>,
-    <span class="ident">Rsdr</span>: <span class="ident">RngCore</span>,
+<span class="kw">impl</span>&lt;R, Rsdr&gt; ReseedingCore&lt;R, Rsdr&gt;
+<span class="kw">where
+    </span>R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore,
 {
-    <span class="doccomment">/// Create a new `ReseedingCore`.</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">rng</span>: <span class="ident">R</span>, <span class="ident">threshold</span>: <span class="ident">u64</span>, <span class="ident">reseeder</span>: <span class="ident">Rsdr</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">use</span> <span class="ident">::core::i64::MAX</span>;
-        <span class="ident">fork::register_fork_handler</span>();
+    <span class="doccomment">/// Create a new `ReseedingCore`.
+    </span><span class="kw">fn </span>new(rng: R, threshold: u64, reseeder: Rsdr) -&gt; <span class="self">Self </span>{
+        <span class="kw">use </span>::core::i64::MAX;
+        fork::register_fork_handler();
 
-        <span class="comment">// Because generating more values than `i64::MAX` takes centuries on</span>
-        <span class="comment">// current hardware, we just clamp to that value.</span>
-        <span class="comment">// Also we set a threshold of 0, which indicates no limit, to that</span>
-        <span class="comment">// value.</span>
-        <span class="kw">let</span> <span class="ident">threshold</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">threshold</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="ident">MAX</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">threshold</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">u64</span> {
-            <span class="ident">threshold</span> <span class="kw">as</span> <span class="ident">i64</span>
-        } <span class="kw">else</span> {
-            <span class="ident">MAX</span>
+        <span class="comment">// Because generating more values than `i64::MAX` takes centuries on
+        // current hardware, we just clamp to that value.
+        // Also we set a threshold of 0, which indicates no limit, to that
+        // value.
+        </span><span class="kw">let </span>threshold = <span class="kw">if </span>threshold == <span class="number">0 </span>{
+            MAX
+        } <span class="kw">else if </span>threshold &lt;= MAX <span class="kw">as </span>u64 {
+            threshold <span class="kw">as </span>i64
+        } <span class="kw">else </span>{
+            MAX
         };
 
-        <span class="ident">ReseedingCore</span> {
-            <span class="ident">inner</span>: <span class="ident">rng</span>,
-            <span class="ident">reseeder</span>,
-            <span class="ident">threshold</span>: <span class="ident">threshold</span> <span class="kw">as</span> <span class="ident">i64</span>,
-            <span class="ident">bytes_until_reseed</span>: <span class="ident">threshold</span> <span class="kw">as</span> <span class="ident">i64</span>,
-            <span class="ident">fork_counter</span>: <span class="number">0</span>,
+        ReseedingCore {
+            inner: rng,
+            reseeder,
+            threshold: threshold <span class="kw">as </span>i64,
+            bytes_until_reseed: threshold <span class="kw">as </span>i64,
+            fork_counter: <span class="number">0</span>,
         }
     }
 
-    <span class="doccomment">/// Reseed the internal PRNG.</span>
-    <span class="kw">fn</span> <span class="ident">reseed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="ident">R::from_rng</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">reseeder</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">result</span><span class="op">|</span> {
-            <span class="self">self</span>.<span class="ident">bytes_until_reseed</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">threshold</span>;
-            <span class="self">self</span>.<span class="ident">inner</span> <span class="op">=</span> <span class="ident">result</span>
+    <span class="doccomment">/// Reseed the internal PRNG.
+    </span><span class="kw">fn </span>reseed(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        R::from_rng(<span class="kw-2">&amp;mut </span><span class="self">self</span>.reseeder).map(|result| {
+            <span class="self">self</span>.bytes_until_reseed = <span class="self">self</span>.threshold;
+            <span class="self">self</span>.inner = result
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">is_forked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">global_fork_counter</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-        <span class="comment">// In theory, on 32-bit platforms, it is possible for</span>
-        <span class="comment">// `global_fork_counter` to wrap around after ~4e9 forks.</span>
-        <span class="comment">//</span>
-        <span class="comment">// This check will detect a fork in the normal case where</span>
-        <span class="comment">// `fork_counter &lt; global_fork_counter`, and also when the difference</span>
-        <span class="comment">// between both is greater than `isize::MAX` (wrapped around).</span>
-        <span class="comment">//</span>
-        <span class="comment">// It will still fail to detect a fork if there have been more than</span>
-        <span class="comment">// `isize::MAX` forks, without any reseed in between. Seems unlikely</span>
-        <span class="comment">// enough.</span>
-        (<span class="self">self</span>.<span class="ident">fork_counter</span>.<span class="ident">wrapping_sub</span>(<span class="ident">global_fork_counter</span>) <span class="kw">as</span> <span class="ident">isize</span>) <span class="op">&lt;</span> <span class="number">0</span>
-    }
+    <span class="kw">fn </span>is_forked(<span class="kw-2">&amp;</span><span class="self">self</span>, global_fork_counter: usize) -&gt; bool {
+        <span class="comment">// In theory, on 32-bit platforms, it is possible for
+        // `global_fork_counter` to wrap around after ~4e9 forks.
+        //
+        // This check will detect a fork in the normal case where
+        // `fork_counter &lt; global_fork_counter`, and also when the difference
+        // between both is greater than `isize::MAX` (wrapped around).
+        //
+        // It will still fail to detect a fork if there have been more than
+        // `isize::MAX` forks, without any reseed in between. Seems unlikely
+        // enough.
+        </span>(<span class="self">self</span>.fork_counter.wrapping_sub(global_fork_counter) <span class="kw">as </span>isize) &lt; <span class="number">0
+    </span>}
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">never</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">reseed_and_generate</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">results</span>: <span class="kw-2">&amp;mut</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">BlockRngCore</span><span class="op">&gt;</span><span class="ident">::Results</span>, <span class="ident">global_fork_counter</span>: <span class="ident">usize</span>,
+    <span class="attribute">#[inline(never)]
+    </span><span class="kw">fn </span>reseed_and_generate(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>, results: <span class="kw-2">&amp;mut </span>&lt;<span class="self">Self </span><span class="kw">as </span>BlockRngCore&gt;::Results, global_fork_counter: usize,
     ) {
-        <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::if_same_then_else</span>)]</span> <span class="comment">// false positive</span>
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_forked</span>(<span class="ident">global_fork_counter</span>) {
+        <span class="attribute">#![allow(clippy::if_same_then_else)] </span><span class="comment">// false positive
+        </span><span class="kw">if </span><span class="self">self</span>.is_forked(global_fork_counter) {
             <span class="macro">info!</span>(<span class="string">&quot;Fork detected, reseeding RNG&quot;</span>);
-        } <span class="kw">else</span> {
+        } <span class="kw">else </span>{
             <span class="macro">trace!</span>(<span class="string">&quot;Reseeding RNG (periodic reseed)&quot;</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">num_bytes</span> <span class="op">=</span> <span class="ident">results</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">*</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">BlockRngCore</span><span class="op">&gt;</span><span class="ident">::Item</span><span class="op">&gt;</span>();
+        <span class="kw">let </span>num_bytes = results.as_ref().len() * size_of::&lt;&lt;R <span class="kw">as </span>BlockRngCore&gt;::Item&gt;();
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">reseed</span>() {
-            <span class="macro">warn!</span>(<span class="string">&quot;Reseeding RNG failed: {}&quot;</span>, <span class="ident">e</span>);
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">e</span>;
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.reseed() {
+            <span class="macro">warn!</span>(<span class="string">&quot;Reseeding RNG failed: {}&quot;</span>, e);
+            <span class="kw">let _ </span>= e;
         }
-        <span class="self">self</span>.<span class="ident">fork_counter</span> <span class="op">=</span> <span class="ident">global_fork_counter</span>;
+        <span class="self">self</span>.fork_counter = global_fork_counter;
 
-        <span class="self">self</span>.<span class="ident">bytes_until_reseed</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">threshold</span> <span class="op">-</span> <span class="ident">num_bytes</span> <span class="kw">as</span> <span class="ident">i64</span>;
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">generate</span>(<span class="ident">results</span>);
+        <span class="self">self</span>.bytes_until_reseed = <span class="self">self</span>.threshold - num_bytes <span class="kw">as </span>i64;
+        <span class="self">self</span>.inner.generate(results);
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">ReseedingCore</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">BlockRngCore</span> <span class="op">+</span> <span class="ident">SeedableRng</span> <span class="op">+</span> <span class="ident">Clone</span>,
-    <span class="ident">Rsdr</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">Clone</span>,
+<span class="kw">impl</span>&lt;R, Rsdr&gt; Clone <span class="kw">for </span>ReseedingCore&lt;R, Rsdr&gt;
+<span class="kw">where
+    </span>R: BlockRngCore + SeedableRng + Clone,
+    Rsdr: RngCore + Clone,
 {
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ReseedingCore</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> {
-        <span class="ident">ReseedingCore</span> {
-            <span class="ident">inner</span>: <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">clone</span>(),
-            <span class="ident">reseeder</span>: <span class="self">self</span>.<span class="ident">reseeder</span>.<span class="ident">clone</span>(),
-            <span class="ident">threshold</span>: <span class="self">self</span>.<span class="ident">threshold</span>,
-            <span class="ident">bytes_until_reseed</span>: <span class="number">0</span>, <span class="comment">// reseed clone on first use</span>
-            <span class="ident">fork_counter</span>: <span class="self">self</span>.<span class="ident">fork_counter</span>,
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ReseedingCore&lt;R, Rsdr&gt; {
+        ReseedingCore {
+            inner: <span class="self">self</span>.inner.clone(),
+            reseeder: <span class="self">self</span>.reseeder.clone(),
+            threshold: <span class="self">self</span>.threshold,
+            bytes_until_reseed: <span class="number">0</span>, <span class="comment">// reseed clone on first use
+            </span>fork_counter: <span class="self">self</span>.fork_counter,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span> <span class="ident">CryptoRng</span> <span class="kw">for</span> <span class="ident">ReseedingCore</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Rsdr</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">BlockRngCore</span> <span class="op">+</span> <span class="ident">SeedableRng</span> <span class="op">+</span> <span class="ident">CryptoRng</span>,
-    <span class="ident">Rsdr</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span>,
+<span class="kw">impl</span>&lt;R, Rsdr&gt; CryptoRng <span class="kw">for </span>ReseedingCore&lt;R, Rsdr&gt;
+<span class="kw">where
+    </span>R: BlockRngCore + SeedableRng + CryptoRng,
+    Rsdr: RngCore + CryptoRng,
 {
 }
 
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">unix</span>, <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>)))]</span>
-<span class="kw">mod</span> <span class="ident">fork</span> {
-    <span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
-    <span class="kw">use</span> <span class="ident">std::sync::Once</span>;
+<span class="attribute">#[cfg(all(unix, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
+</span><span class="kw">mod </span>fork {
+    <span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
+    <span class="kw">use </span>std::sync::Once;
 
-    <span class="comment">// Fork protection</span>
-    <span class="comment">//</span>
-    <span class="comment">// We implement fork protection on Unix using `pthread_atfork`.</span>
-    <span class="comment">// When the process is forked, we increment `RESEEDING_RNG_FORK_COUNTER`.</span>
-    <span class="comment">// Every `ReseedingRng` stores the last known value of the static in</span>
-    <span class="comment">// `fork_counter`. If the cached `fork_counter` is less than</span>
-    <span class="comment">// `RESEEDING_RNG_FORK_COUNTER`, it is time to reseed this RNG.</span>
-    <span class="comment">//</span>
-    <span class="comment">// If reseeding fails, we don&#39;t deal with this by setting a delay, but just</span>
-    <span class="comment">// don&#39;t update `fork_counter`, so a reseed is attempted as soon as</span>
-    <span class="comment">// possible.</span>
+    <span class="comment">// Fork protection
+    //
+    // We implement fork protection on Unix using `pthread_atfork`.
+    // When the process is forked, we increment `RESEEDING_RNG_FORK_COUNTER`.
+    // Every `ReseedingRng` stores the last known value of the static in
+    // `fork_counter`. If the cached `fork_counter` is less than
+    // `RESEEDING_RNG_FORK_COUNTER`, it is time to reseed this RNG.
+    //
+    // If reseeding fails, we don&#39;t deal with this by setting a delay, but just
+    // don&#39;t update `fork_counter`, so a reseed is attempted as soon as
+    // possible.
 
-    <span class="kw">static</span> <span class="ident">RESEEDING_RNG_FORK_COUNTER</span>: <span class="ident">AtomicUsize</span> <span class="op">=</span> <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>);
+    </span><span class="kw">static </span>RESEEDING_RNG_FORK_COUNTER: AtomicUsize = AtomicUsize::new(<span class="number">0</span>);
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_fork_counter</span>() -&gt; <span class="ident">usize</span> {
-        <span class="ident">RESEEDING_RNG_FORK_COUNTER</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>)
+    <span class="kw">pub fn </span>get_fork_counter() -&gt; usize {
+        RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
     }
 
-    <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">fork_handler</span>() {
-        <span class="comment">// Note: fetch_add is defined to wrap on overflow</span>
-        <span class="comment">// (which is what we want).</span>
-        <span class="ident">RESEEDING_RNG_FORK_COUNTER</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::Relaxed</span>);
+    <span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>fork_handler() {
+        <span class="comment">// Note: fetch_add is defined to wrap on overflow
+        // (which is what we want).
+        </span>RESEEDING_RNG_FORK_COUNTER.fetch_add(<span class="number">1</span>, Ordering::Relaxed);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register_fork_handler</span>() {
-        <span class="kw">static</span> <span class="ident">REGISTER</span>: <span class="ident">Once</span> <span class="op">=</span> <span class="ident">Once::new</span>();
-        <span class="ident">REGISTER</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">unsafe</span> {
-            <span class="ident">libc::pthread_atfork</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">fork_handler</span>));
+    <span class="kw">pub fn </span>register_fork_handler() {
+        <span class="kw">static </span>REGISTER: Once = Once::new();
+        REGISTER.call_once(|| <span class="kw">unsafe </span>{
+            libc::pthread_atfork(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(fork_handler));
         });
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">unix</span>, <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>))))]</span>
-<span class="kw">mod</span> <span class="ident">fork</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_fork_counter</span>() -&gt; <span class="ident">usize</span> {
-        <span class="number">0</span>
-    }
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register_fork_handler</span>() {}
+<span class="attribute">#[cfg(not(all(unix, not(target_os = <span class="string">&quot;emscripten&quot;</span>))))]
+</span><span class="kw">mod </span>fork {
+    <span class="kw">pub fn </span>get_fork_counter() -&gt; usize {
+        <span class="number">0
+    </span>}
+    <span class="kw">pub fn </span>register_fork_handler() {}
 }
 
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std_rng&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::ReseedingRng</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rngs::mock::StepRng</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rngs::std::Core</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Rng</span>, <span class="ident">SeedableRng</span>};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std_rng&quot;</span>)]
+#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use </span><span class="kw">super</span>::ReseedingRng;
+    <span class="kw">use </span><span class="kw">crate</span>::rngs::mock::StepRng;
+    <span class="kw">use </span><span class="kw">crate</span>::rngs::std::Core;
+    <span class="kw">use crate</span>::{Rng, SeedableRng};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_reseeding</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zero</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">Core::from_rng</span>(<span class="kw-2">&amp;mut</span> <span class="ident">zero</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">thresh</span> <span class="op">=</span> <span class="number">1</span>; <span class="comment">// reseed every time the buffer is exhausted</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reseeding</span> <span class="op">=</span> <span class="ident">ReseedingRng::new</span>(<span class="ident">rng</span>, <span class="ident">thresh</span>, <span class="ident">zero</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_reseeding() {
+        <span class="kw">let </span><span class="kw-2">mut </span>zero = StepRng::new(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="kw">let </span>rng = Core::from_rng(<span class="kw-2">&amp;mut </span>zero).unwrap();
+        <span class="kw">let </span>thresh = <span class="number">1</span>; <span class="comment">// reseed every time the buffer is exhausted
+        </span><span class="kw">let </span><span class="kw-2">mut </span>reseeding = ReseedingRng::new(rng, thresh, zero);
 
-        <span class="comment">// RNG buffer size is [u32; 64]</span>
-        <span class="comment">// Debug is only implemented up to length 32 so use two arrays</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> ([<span class="number">0u32</span>; <span class="number">32</span>], [<span class="number">0u32</span>; <span class="number">32</span>]);
-        <span class="ident">reseeding</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>.<span class="number">0</span>);
-        <span class="ident">reseeding</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>.<span class="number">1</span>);
-        <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">buf</span>;
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
-            <span class="ident">reseeding</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>.<span class="number">0</span>);
-            <span class="ident">reseeding</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>.<span class="number">1</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">buf</span>, <span class="ident">seq</span>);
+        <span class="comment">// RNG buffer size is [u32; 64]
+        // Debug is only implemented up to length 32 so use two arrays
+        </span><span class="kw">let </span><span class="kw-2">mut </span>buf = ([<span class="number">0u32</span>; <span class="number">32</span>], [<span class="number">0u32</span>; <span class="number">32</span>]);
+        reseeding.fill(<span class="kw-2">&amp;mut </span>buf.<span class="number">0</span>);
+        reseeding.fill(<span class="kw-2">&amp;mut </span>buf.<span class="number">1</span>);
+        <span class="kw">let </span>seq = buf;
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
+            reseeding.fill(<span class="kw-2">&amp;mut </span>buf.<span class="number">0</span>);
+            reseeding.fill(<span class="kw-2">&amp;mut </span>buf.<span class="number">1</span>);
+            <span class="macro">assert_eq!</span>(buf, seq);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_clone_reseeding</span>() {
-        <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::redundant_clone</span>)]</span>
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_clone_reseeding() {
+        <span class="attribute">#![allow(clippy::redundant_clone)]
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zero</span> <span class="op">=</span> <span class="ident">StepRng::new</span>(<span class="number">0</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">Core::from_rng</span>(<span class="kw-2">&amp;mut</span> <span class="ident">zero</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng1</span> <span class="op">=</span> <span class="ident">ReseedingRng::new</span>(<span class="ident">rng</span>, <span class="number">32</span> <span class="op">*</span> <span class="number">4</span>, <span class="ident">zero</span>);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>zero = StepRng::new(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="kw">let </span>rng = Core::from_rng(<span class="kw-2">&amp;mut </span>zero).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng1 = ReseedingRng::new(rng, <span class="number">32 </span>* <span class="number">4</span>, zero);
 
-        <span class="kw">let</span> <span class="ident">first</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">rng1</span>.<span class="ident">gen</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">rng1</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>();
+        <span class="kw">let </span>first: u32 = rng1.gen();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
+            <span class="kw">let _ </span>= rng1.gen::&lt;u32&gt;();
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng2</span> <span class="op">=</span> <span class="ident">rng1</span>.<span class="ident">clone</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">first</span>, <span class="ident">rng2</span>.<span class="ident">gen</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>rng2 = rng1.clone();
+        <span class="macro">assert_eq!</span>(first, rng2.gen::&lt;u32&gt;());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

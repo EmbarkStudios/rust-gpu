@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/arch/atomics.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>atomics.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spirv_std/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/arch/atomics.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>atomics.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spirv_std/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -615,122 +609,122 @@
 <span id="609">609</span>
 <span id="610">610</span>
 <span id="611">611</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::arch::asm</span>;
+</pre><pre class="rust"><code><span class="attribute">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
+</span><span class="kw">use </span>core::arch::asm;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">float::Float</span>,
-    <span class="ident">integer</span>::{<span class="ident">Integer</span>, <span class="ident">SignedInteger</span>, <span class="ident">UnsignedInteger</span>},
-    <span class="ident">number::Number</span>,
+<span class="kw">use crate</span>::{
+    float::Float,
+    integer::{Integer, SignedInteger, UnsignedInteger},
+    number::Number,
 };
 
-<span class="doccomment">/// Atomically load through `ptr` using the given `SEMANTICS`. All subparts of</span>
-<span class="doccomment">/// the value that is loaded are read atomically with respect to all other</span>
-<span class="doccomment">/// atomic accesses to it within `SCOPE`.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicLoad&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_load</span><span class="op">&lt;</span><span class="ident">N</span>: <span class="ident">Number</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(<span class="ident">ptr</span>: <span class="kw-2">&amp;</span><span class="ident">N</span>) -&gt; <span class="ident">N</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">N::default</span>();
+<span class="doccomment">/// Atomically load through `ptr` using the given `SEMANTICS`. All subparts of
+/// the value that is loaded are read atomically with respect to all other
+/// atomic accesses to it within `SCOPE`.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicLoad&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_load&lt;N: Number, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(ptr: <span class="kw-2">&amp;</span>N) -&gt; N {
+    <span class="kw">let </span><span class="kw-2">mut </span>result = N::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%result = OpAtomicLoad _ {ptr} %scope %semantics&quot;</span>,
         <span class="string">&quot;OpStore {result} %result&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">result</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">result</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result
     }
 
-    <span class="ident">result</span>
+    result
 }
 
-<span class="doccomment">/// Atomically store through `ptr` using the given `SEMANTICS`. All subparts of</span>
-<span class="doccomment">/// `value` are written atomically with respect to all other atomic accesses to</span>
-<span class="doccomment">/// it within `SCOPE`.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicStore&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_store</span><span class="op">&lt;</span><span class="ident">N</span>: <span class="ident">Number</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">N</span>,
-    <span class="ident">value</span>: <span class="ident">N</span>,
+<span class="doccomment">/// Atomically store through `ptr` using the given `SEMANTICS`. All subparts of
+/// `value` are written atomically with respect to all other atomic accesses to
+/// it within `SCOPE`.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicStore&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_store&lt;N: Number, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>N,
+    value: N,
 ) {
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;OpAtomicStore {ptr} %scope %semantics %value&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within `SCOPE` to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get the original value,</span>
-<span class="doccomment">/// 2. Get a new value from copying `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicExchange&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_exchange</span><span class="op">&lt;</span><span class="ident">N</span>: <span class="ident">Number</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">N</span>,
-    <span class="ident">value</span>: <span class="ident">N</span>,
-) -&gt; <span class="ident">N</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">N::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1. Load through `ptr` to get the original value,
+/// 2. Get a new value from copying `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicExchange&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_exchange&lt;N: Number, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>N,
+    value: N,
+) -&gt; N {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = N::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicExchange _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within `SCOPE` to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get the original value</span>
-<span class="doccomment">/// 2. Get a new value from `value` only if the original value equals</span>
-<span class="doccomment">///    `comparator`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`, only if the original value</span>
-<span class="doccomment">///    equaled `comparator`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicCompareExchange&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_compare_exchange</span><span class="op">&lt;</span>
-    <span class="ident">I</span>: <span class="ident">Integer</span>,
-    <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>,
-    <span class="kw">const</span> <span class="ident">EQUAL</span>: <span class="ident">u32</span>,
-    <span class="kw">const</span> <span class="ident">UNEQUAL</span>: <span class="ident">u32</span>,
-<span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>,
-    <span class="ident">value</span>: <span class="ident">I</span>,
-    <span class="ident">comparator</span>: <span class="ident">I</span>,
-) -&gt; <span class="ident">I</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">I::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1. Load through `ptr` to get the original value
+/// 2. Get a new value from `value` only if the original value equals
+///    `comparator`, and
+/// 3. Store the new value back through `ptr`, only if the original value
+///    equaled `comparator`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicCompareExchange&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_compare_exchange&lt;
+    I: Integer,
+    <span class="kw">const </span>SCOPE: u32,
+    <span class="kw">const </span>EQUAL: u32,
+    <span class="kw">const </span>UNEQUAL: u32,
+&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>I,
+    value: I,
+    comparator: I,
+) -&gt; I {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = I::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%equal = OpConstant %u32 {equal}&quot;</span>,
@@ -739,493 +733,492 @@
         <span class="string">&quot;%comparator = OpLoad _ {comparator}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicCompareExchange _ {ptr} %scope %equal %unequal %value %comparator&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">equal</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">EQUAL</span>,
-        <span class="ident">unequal</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">UNEQUAL</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>,
-        <span class="ident">comparator</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">comparator</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
+        scope = <span class="kw">const </span>SCOPE,
+        equal = <span class="kw">const </span>EQUAL,
+        unequal = <span class="kw">const </span>UNEQUAL,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value,
+        comparator = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>comparator,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within `SCOPE` to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value through integer addition of 1 to original value, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicIIncrement&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_i_increment</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Integer</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>,
-) -&gt; <span class="ident">I</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">I::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value through integer addition of 1 to original value, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicIIncrement&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_i_increment&lt;I: Integer, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>I,
+) -&gt; I {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = I::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicIIncrement _ {ptr} %scope %semantics&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within `SCOPE` to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1) load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2) get a new value through integer subtraction of 1 from original value, and</span>
-<span class="doccomment">/// 3) store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicIDecrement&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_i_decrement</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Integer</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>,
-) -&gt; <span class="ident">I</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">I::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1) load through `ptr` to get an original value,
+/// 2) get a new value through integer subtraction of 1 from original value, and
+/// 3) store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicIDecrement&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_i_decrement&lt;I: Integer, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>I,
+) -&gt; I {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = I::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicIDecrement _ {ptr} %scope %semantics&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within `SCOPE` to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1) load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2) get a new value by integer addition of original value and `value`, and</span>
-<span class="doccomment">/// 3) store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the Original Value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicIAdd&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_i_add</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Integer</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>,
-    <span class="ident">value</span>: <span class="ident">I</span>,
-) -&gt; <span class="ident">I</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">I::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1) load through `ptr` to get an original value,
+/// 2) get a new value by integer addition of original value and `value`, and
+/// 3) store the new value back through `ptr`.
+///
+/// The result is the Original Value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicIAdd&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_i_add&lt;I: Integer, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>I,
+    value: I,
+) -&gt; I {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = I::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicIAdd _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within `SCOPE` to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1) load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2) get a new value by integer subtraction of original value and `value`, and</span>
-<span class="doccomment">/// 3) store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the Original Value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicISub&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_i_sub</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Integer</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>,
-    <span class="ident">value</span>: <span class="ident">I</span>,
-) -&gt; <span class="ident">I</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">I::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1) load through `ptr` to get an original value,
+/// 2) get a new value by integer subtraction of original value and `value`, and
+/// 3) store the new value back through `ptr`.
+///
+/// The result is the Original Value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicISub&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_i_sub&lt;I: Integer, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>I,
+    value: I,
+) -&gt; I {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = I::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicISub _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within Scope to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value by finding the smallest signed integer of original value</span>
-<span class="doccomment">///    and `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicSMin&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_s_min</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">SignedInteger</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">S</span>,
-    <span class="ident">value</span>: <span class="ident">S</span>,
-) -&gt; <span class="ident">S</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">S::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the smallest signed integer of original value
+///    and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicSMin&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_s_min&lt;S: SignedInteger, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>S,
+    value: S,
+) -&gt; S {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = S::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicSMin _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within Scope to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value by finding the smallest unsigned integer of original</span>
-<span class="doccomment">///    value and `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicUMin&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_u_min</span><span class="op">&lt;</span><span class="ident">U</span>: <span class="ident">UnsignedInteger</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">U</span>,
-    <span class="ident">value</span>: <span class="ident">U</span>,
-) -&gt; <span class="ident">U</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">U::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the smallest unsigned integer of original
+///    value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicUMin&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_u_min&lt;U: UnsignedInteger, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>U,
+    value: U,
+) -&gt; U {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = U::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicUMin _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within Scope to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value by finding the largest signed integer of original value</span>
-<span class="doccomment">///    and `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicSMax&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_s_max</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">SignedInteger</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">S</span>,
-    <span class="ident">value</span>: <span class="ident">S</span>,
-) -&gt; <span class="ident">S</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">S::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the largest signed integer of original value
+///    and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicSMax&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_s_max&lt;S: SignedInteger, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>S,
+    value: S,
+) -&gt; S {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = S::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicSMax _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within Scope to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value by finding the largest unsigned integer of original</span>
-<span class="doccomment">///    value and `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicUMax&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_u_max</span><span class="op">&lt;</span><span class="ident">U</span>: <span class="ident">UnsignedInteger</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">U</span>,
-    <span class="ident">value</span>: <span class="ident">U</span>,
-) -&gt; <span class="ident">U</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">U::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the largest unsigned integer of original
+///    value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicUMax&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_u_max&lt;U: UnsignedInteger, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>U,
+    value: U,
+) -&gt; U {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = U::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicUMax _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within Scope to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value by the bitwise AND of the original value and `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicAnd&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_and</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Integer</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>,
-    <span class="ident">value</span>: <span class="ident">I</span>,
-) -&gt; <span class="ident">I</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">I::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by the bitwise AND of the original value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicAnd&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_and&lt;I: Integer, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>I,
+    value: I,
+) -&gt; I {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = I::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicAnd _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within Scope to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value by the bitwise OR of the original value and `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicOr&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_or</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Integer</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>,
-    <span class="ident">value</span>: <span class="ident">I</span>,
-) -&gt; <span class="ident">I</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">I::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by the bitwise OR of the original value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicOr&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_or&lt;I: Integer, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>I,
+    value: I,
+) -&gt; I {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = I::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicOr _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within Scope to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value by the bitwise XOR of the original value and `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicXor&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_xor</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Integer</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>,
-    <span class="ident">value</span>: <span class="ident">I</span>,
-) -&gt; <span class="ident">I</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">I::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by the bitwise XOR of the original value and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicXor&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_xor&lt;I: Integer, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>I,
+    value: I,
+) -&gt; I {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = I::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicXor _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within Scope to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value by finding the smallest signed integer of original value</span>
-<span class="doccomment">///    and `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicFMinEXT&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_f_min</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span>,
-    <span class="ident">value</span>: <span class="ident">F</span>,
-) -&gt; <span class="ident">F</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">F::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the smallest signed integer of original value
+///    and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicFMinEXT&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_f_min&lt;F: Float, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>F,
+    value: F,
+) -&gt; F {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = F::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicFMinEXT _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within Scope to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. Load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2. Get a new value by finding the largest signed integer of original value</span>
-<span class="doccomment">///    and `value`, and</span>
-<span class="doccomment">/// 3. Store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the original value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicFMaxEXT&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_f_max</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span>,
-    <span class="ident">value</span>: <span class="ident">F</span>,
-) -&gt; <span class="ident">F</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">F::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within Scope to the same location:
+///
+/// 1. Load through `ptr` to get an original value,
+/// 2. Get a new value by finding the largest signed integer of original value
+///    and `value`, and
+/// 3. Store the new value back through `ptr`.
+///
+/// The result is the original value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicFMaxEXT&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_f_max&lt;F: Float, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>F,
+    value: F,
+) -&gt; F {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = F::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicFMaxEXT _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 
-<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic</span>
-<span class="doccomment">/// accesses within `SCOPE` to the same location:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1) load through `ptr` to get an original value,</span>
-<span class="doccomment">/// 2) get a new value by integer addition of original value and `value`, and</span>
-<span class="doccomment">/// 3) store the new value back through `ptr`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The result is the Original Value.</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpAtomicFAddEXT&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">atomic_f_add</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span>, <span class="kw">const</span> <span class="ident">SCOPE</span>: <span class="ident">u32</span>, <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span><span class="op">&gt;</span>(
-    <span class="ident">ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span>,
-    <span class="ident">value</span>: <span class="ident">F</span>,
-) -&gt; <span class="ident">F</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">F::default</span>();
+<span class="doccomment">/// Perform the following steps atomically with respect to any other atomic
+/// accesses within `SCOPE` to the same location:
+///
+/// 1) load through `ptr` to get an original value,
+/// 2) get a new value by integer addition of original value and `value`, and
+/// 3) store the new value back through `ptr`.
+///
+/// The result is the Original Value.
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpAtomicFAddEXT&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>atomic_f_add&lt;F: Float, <span class="kw">const </span>SCOPE: u32, <span class="kw">const </span>SEMANTICS: u32&gt;(
+    ptr: <span class="kw-2">&amp;mut </span>F,
+    value: F,
+) -&gt; F {
+    <span class="kw">let </span><span class="kw-2">mut </span>old = F::default();
 
-    <span class="macro">asm!</span> {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%scope = OpConstant %u32 {scope}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;%value = OpLoad _ {value}&quot;</span>,
         <span class="string">&quot;%old = OpAtomicFMaxEXT _ {ptr} %scope %semantics %value&quot;</span>,
         <span class="string">&quot;OpStore {old} %old&quot;</span>,
-        <span class="ident">scope</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SCOPE</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">ptr</span>,
-        <span class="ident">old</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;mut</span> <span class="ident">old</span>,
-        <span class="ident">value</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">value</span>
+        scope = <span class="kw">const </span>SCOPE,
+        semantics = <span class="kw">const </span>SEMANTICS,
+        ptr = <span class="kw">in</span>(reg) ptr,
+        old = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>old,
+        value = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>value
     }
 
-    <span class="ident">old</span>
+    old
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_std" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_std" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

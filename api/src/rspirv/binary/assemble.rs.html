@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rspirv-0.11.0+1.5.4/binary/assemble.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>assemble.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rspirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rspirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rspirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rspirv-0.11.0+1.5.4/binary/assemble.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>assemble.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rspirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rspirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rspirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -391,393 +385,392 @@
 <span id="385">385</span>
 <span id="386">386</span>
 <span id="387">387</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::dr</span>;
-<span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::dr;
+<span class="kw">use </span>std::convert::TryInto;
 
-<span class="doccomment">/// Trait for assembling functionalities.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Assemble</span> {
-    <span class="doccomment">/// Assembles the current object into the `result` vector, reducing the need for lots of allocations</span>
-    <span class="kw">fn</span> <span class="ident">assemble_into</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">result</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>);
+<span class="doccomment">/// Trait for assembling functionalities.
+</span><span class="kw">pub trait </span>Assemble {
+    <span class="doccomment">/// Assembles the current object into the `result` vector, reducing the need for lots of allocations
+    </span><span class="kw">fn </span>assemble_into(<span class="kw-2">&amp;</span><span class="self">self</span>, result: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;);
 
-    <span class="doccomment">/// Assembles the current object and returns the binary code.</span>
-    <span class="doccomment">/// Helper method to remain backwards compatible, calls `assemble_into`</span>
-    <span class="kw">fn</span> <span class="ident">assemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="self">self</span>.<span class="ident">assemble_into</span>(<span class="kw-2">&amp;mut</span> <span class="ident">v</span>);
-        <span class="ident">v</span>
+    <span class="doccomment">/// Assembles the current object and returns the binary code.
+    /// Helper method to remain backwards compatible, calls `assemble_into`
+    </span><span class="kw">fn </span>assemble(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;u32&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[];
+        <span class="self">self</span>.assemble_into(<span class="kw-2">&amp;mut </span>v);
+        v
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Assemble</span> <span class="kw">for</span> <span class="ident">dr::ModuleHeader</span> {
-    <span class="kw">fn</span> <span class="ident">assemble_into</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">result</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
-        <span class="ident">result</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span>[
-            <span class="self">self</span>.<span class="ident">magic_number</span>,
-            <span class="self">self</span>.<span class="ident">version</span>,
-            <span class="self">self</span>.<span class="ident">generator</span>,
-            <span class="self">self</span>.<span class="ident">bound</span>,
-            <span class="self">self</span>.<span class="ident">reserved_word</span>,
+<span class="kw">impl </span>Assemble <span class="kw">for </span>dr::ModuleHeader {
+    <span class="kw">fn </span>assemble_into(<span class="kw-2">&amp;</span><span class="self">self</span>, result: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;) {
+        result.extend(<span class="kw-2">&amp;</span>[
+            <span class="self">self</span>.magic_number,
+            <span class="self">self</span>.version,
+            <span class="self">self</span>.generator,
+            <span class="self">self</span>.bound,
+            <span class="self">self</span>.reserved_word,
         ])
     }
 }
 
-<span class="kw">fn</span> <span class="ident">assemble_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">result</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
-    <span class="kw">let</span> <span class="ident">chunks</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">as_bytes</span>().<span class="ident">chunks_exact</span>(<span class="number">4</span>);
-    <span class="kw">let</span> <span class="ident">remainder</span> <span class="op">=</span> <span class="ident">chunks</span>.<span class="ident">remainder</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">4</span>];
-    <span class="ident">last</span>[..<span class="ident">remainder</span>.<span class="ident">len</span>()].<span class="ident">copy_from_slice</span>(<span class="ident">remainder</span>);
-    <span class="ident">result</span>.<span class="ident">extend</span>(<span class="ident">chunks</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">chunk</span><span class="op">|</span> <span class="ident">u32::from_le_bytes</span>(<span class="ident">chunk</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>())));
-    <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">u32::from_le_bytes</span>(<span class="ident">last</span>));
+<span class="kw">fn </span>assemble_str(s: <span class="kw-2">&amp;</span>str, result: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;) {
+    <span class="kw">let </span>chunks = s.as_bytes().chunks_exact(<span class="number">4</span>);
+    <span class="kw">let </span>remainder = chunks.remainder();
+    <span class="kw">let </span><span class="kw-2">mut </span>last = [<span class="number">0</span>; <span class="number">4</span>];
+    last[..remainder.len()].copy_from_slice(remainder);
+    result.extend(chunks.map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap())));
+    result.push(u32::from_le_bytes(last));
 }
 
-<span class="kw">impl</span> <span class="ident">Assemble</span> <span class="kw">for</span> <span class="ident">dr::Operand</span> {
-    <span class="kw">fn</span> <span class="ident">assemble_into</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">result</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">dr::Operand::ImageOperands</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
-            <span class="ident">dr::Operand::FPFastMathMode</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
-            <span class="ident">dr::Operand::SelectionControl</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
-            <span class="ident">dr::Operand::LoopControl</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
-            <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
-            <span class="ident">dr::Operand::MemorySemantics</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
-            <span class="ident">dr::Operand::MemoryAccess</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
-            <span class="ident">dr::Operand::KernelProfilingInfo</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
-            <span class="ident">dr::Operand::SourceLanguage</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::ExecutionModel</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::AddressingModel</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::MemoryModel</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::ExecutionMode</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::StorageClass</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::Dim</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::SamplerAddressingMode</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::SamplerFilterMode</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::ImageFormat</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::ImageChannelOrder</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::ImageChannelDataType</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::FPRoundingMode</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::LinkageType</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::AccessQualifier</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::FunctionParameterAttribute</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::Decoration</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::BuiltIn</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::Scope</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::GroupOperation</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::KernelEnqueueFlags</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::Capability</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::IdMemorySemantics</span>(<span class="ident">v</span>)
-            <span class="op">|</span> <span class="ident">dr::Operand::IdScope</span>(<span class="ident">v</span>)
-            <span class="op">|</span> <span class="ident">dr::Operand::IdRef</span>(<span class="ident">v</span>)
-            <span class="op">|</span> <span class="ident">dr::Operand::LiteralInt32</span>(<span class="ident">v</span>)
-            <span class="op">|</span> <span class="ident">dr::Operand::LiteralExtInstInteger</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>),
-            <span class="ident">dr::Operand::LiteralInt64</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span>[<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>, (<span class="ident">v</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>]),
-            <span class="ident">dr::Operand::LiteralFloat32</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">to_bits</span>()),
-            <span class="ident">dr::Operand::LiteralFloat64</span>(<span class="ident">v</span>) =&gt; {
-                <span class="ident">result</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span>[<span class="ident">v</span>.<span class="ident">to_bits</span>() <span class="kw">as</span> <span class="ident">u32</span>, (<span class="ident">v</span>.<span class="ident">to_bits</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>])
+<span class="kw">impl </span>Assemble <span class="kw">for </span>dr::Operand {
+    <span class="kw">fn </span>assemble_into(<span class="kw-2">&amp;</span><span class="self">self</span>, result: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;) {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            dr::Operand::ImageOperands(v) =&gt; result.push(v.bits()),
+            dr::Operand::FPFastMathMode(v) =&gt; result.push(v.bits()),
+            dr::Operand::SelectionControl(v) =&gt; result.push(v.bits()),
+            dr::Operand::LoopControl(v) =&gt; result.push(v.bits()),
+            dr::Operand::FunctionControl(v) =&gt; result.push(v.bits()),
+            dr::Operand::MemorySemantics(v) =&gt; result.push(v.bits()),
+            dr::Operand::MemoryAccess(v) =&gt; result.push(v.bits()),
+            dr::Operand::KernelProfilingInfo(v) =&gt; result.push(v.bits()),
+            dr::Operand::SourceLanguage(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::ExecutionModel(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::AddressingModel(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::MemoryModel(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::ExecutionMode(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::StorageClass(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::Dim(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::SamplerAddressingMode(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::SamplerFilterMode(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::ImageFormat(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::ImageChannelOrder(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::ImageChannelDataType(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::FPRoundingMode(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::LinkageType(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::AccessQualifier(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::FunctionParameterAttribute(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::Decoration(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::BuiltIn(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::Scope(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::GroupOperation(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::KernelEnqueueFlags(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::Capability(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::IdMemorySemantics(v)
+            | dr::Operand::IdScope(v)
+            | dr::Operand::IdRef(v)
+            | dr::Operand::LiteralInt32(v)
+            | dr::Operand::LiteralExtInstInteger(v) =&gt; result.push(v),
+            dr::Operand::LiteralInt64(v) =&gt; result.extend(<span class="kw-2">&amp;</span>[v <span class="kw">as </span>u32, (v &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32]),
+            dr::Operand::LiteralFloat32(v) =&gt; result.push(v.to_bits()),
+            dr::Operand::LiteralFloat64(v) =&gt; {
+                result.extend(<span class="kw-2">&amp;</span>[v.to_bits() <span class="kw">as </span>u32, (v.to_bits() &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32])
             }
-            <span class="ident">dr::Operand::LiteralSpecConstantOpInteger</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::LiteralString</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) =&gt; <span class="ident">assemble_str</span>(<span class="ident">v</span>, <span class="ident">result</span>),
-            <span class="ident">dr::Operand::RayFlags</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
-            <span class="ident">dr::Operand::RayQueryIntersection</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::RayQueryCommittedIntersectionType</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::RayQueryCandidateIntersectionType</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">dr::Operand::FragmentShadingRate</span>(<span class="ident">v</span>) =&gt; <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">v</span>.<span class="ident">bits</span>()),
+            dr::Operand::LiteralSpecConstantOpInteger(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::LiteralString(<span class="kw-2">ref </span>v) =&gt; assemble_str(v, result),
+            dr::Operand::RayFlags(<span class="kw-2">ref </span>v) =&gt; result.push(v.bits()),
+            dr::Operand::RayQueryIntersection(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::RayQueryCommittedIntersectionType(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::RayQueryCandidateIntersectionType(v) =&gt; result.push(v <span class="kw">as </span>u32),
+            dr::Operand::FragmentShadingRate(v) =&gt; result.push(v.bits()),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Assemble</span> <span class="kw">for</span> <span class="ident">dr::Instruction</span> {
-    <span class="kw">fn</span> <span class="ident">assemble_into</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">result</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">len</span>();
-        <span class="ident">result</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="kw">as</span> <span class="ident">u32</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">r</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">result_type</span> {
-            <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">r</span>);
+<span class="kw">impl </span>Assemble <span class="kw">for </span>dr::Instruction {
+    <span class="kw">fn </span>assemble_into(<span class="kw-2">&amp;</span><span class="self">self</span>, result: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;) {
+        <span class="kw">let </span>start = result.len();
+        result.push(<span class="self">self</span>.class.opcode <span class="kw">as </span>u32);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(r) = <span class="self">self</span>.result_type {
+            result.push(r);
         }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">r</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">result_id</span> {
-            <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">r</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(r) = <span class="self">self</span>.result_id {
+            result.push(r);
         }
-        <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operands</span> {
-            <span class="ident">operand</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
+        <span class="kw">for </span>operand <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.operands {
+            operand.assemble_into(result);
         }
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">start</span>;
-        <span class="ident">result</span>[<span class="ident">start</span>] <span class="op">|</span><span class="op">=</span> (<span class="ident">end</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>;
+        <span class="kw">let </span>end = result.len() - start;
+        result[start] |= (end <span class="kw">as </span>u32) &lt;&lt; <span class="number">16</span>;
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Assemble</span> <span class="kw">for</span> <span class="ident">dr::Block</span> {
-    <span class="kw">fn</span> <span class="ident">assemble_into</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">result</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">l</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">label</span> {
-            <span class="ident">l</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
+<span class="kw">impl </span>Assemble <span class="kw">for </span>dr::Block {
+    <span class="kw">fn </span>assemble_into(<span class="kw-2">&amp;</span><span class="self">self</span>, result: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>l) = <span class="self">self</span>.label {
+            l.assemble_into(result);
         }
-        <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instructions</span> {
-            <span class="ident">inst</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
-        }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Assemble</span> <span class="kw">for</span> <span class="ident">dr::Function</span> {
-    <span class="kw">fn</span> <span class="ident">assemble_into</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">result</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">d</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">def</span> {
-            <span class="ident">d</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
-        }
-        <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">parameters</span> {
-            <span class="ident">param</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
-        }
-        <span class="kw">for</span> <span class="ident">bb</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">blocks</span> {
-            <span class="ident">bb</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
-        }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">end</span> {
-            <span class="ident">e</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
+        <span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.instructions {
+            inst.assemble_into(result);
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Assemble</span> <span class="kw">for</span> <span class="ident">dr::Module</span> {
-    <span class="kw">fn</span> <span class="ident">assemble_into</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">result</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">h</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">header</span> {
-            <span class="ident">h</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
+<span class="kw">impl </span>Assemble <span class="kw">for </span>dr::Function {
+    <span class="kw">fn </span>assemble_into(<span class="kw-2">&amp;</span><span class="self">self</span>, result: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>d) = <span class="self">self</span>.def {
+            d.assemble_into(result);
         }
-
-        <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">global_inst_iter</span>() {
-            <span class="ident">inst</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
+        <span class="kw">for </span>param <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.parameters {
+            param.assemble_into(result);
         }
-
-        <span class="kw">for</span> <span class="ident">f</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">functions</span> {
-            <span class="ident">f</span>.<span class="ident">assemble_into</span>(<span class="ident">result</span>);
+        <span class="kw">for </span>bb <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.blocks {
+            bb.assemble_into(result);
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>e) = <span class="self">self</span>.end {
+            e.assemble_into(result);
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::dr</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv</span>;
-
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::assemble_str</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::binary::Assemble</span>;
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_assemble_str</span>() {
-        <span class="kw">fn</span> <span class="ident">assemble_str_helper</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-            <span class="ident">assemble_str</span>(<span class="ident">s</span>, <span class="kw-2">&amp;mut</span> <span class="ident">v</span>);
-            <span class="ident">v</span>
+<span class="kw">impl </span>Assemble <span class="kw">for </span>dr::Module {
+    <span class="kw">fn </span>assemble_into(<span class="kw-2">&amp;</span><span class="self">self</span>, result: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>h) = <span class="self">self</span>.header {
+            h.assemble_into(result);
         }
-        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[<span class="number">0u32</span>], <span class="ident">assemble_str_helper</span>(<span class="string">&quot;&quot;</span>));
+
+        <span class="kw">for </span>inst <span class="kw">in </span><span class="self">self</span>.global_inst_iter() {
+            inst.assemble_into(result);
+        }
+
+        <span class="kw">for </span>f <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.functions {
+            f.assemble_into(result);
+        }
+    }
+}
+
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">crate</span>::dr;
+    <span class="kw">use </span><span class="kw">crate</span>::spirv;
+
+    <span class="kw">use </span><span class="kw">super</span>::assemble_str;
+    <span class="kw">use </span><span class="kw">crate</span>::binary::Assemble;
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_assemble_str() {
+        <span class="kw">fn </span>assemble_str_helper(s: <span class="kw-2">&amp;</span>str) -&gt; Vec&lt;u32&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[];
+            assemble_str(s, <span class="kw-2">&amp;mut </span>v);
+            v
+        }
+        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[<span class="number">0u32</span>], assemble_str_helper(<span class="string">&quot;&quot;</span>));
         <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[<span class="ident">u32::from_le_bytes</span>(<span class="kw-2">*</span><span class="string">b&quot;h\0\0\0&quot;</span>)],
-            <span class="ident">assemble_str_helper</span>(<span class="string">&quot;h&quot;</span>)
+            <span class="macro">vec!</span>[u32::from_le_bytes(<span class="kw-2">*</span><span class="string">b&quot;h\0\0\0&quot;</span>)],
+            assemble_str_helper(<span class="string">&quot;h&quot;</span>)
         );
         <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[<span class="ident">u32::from_le_bytes</span>(<span class="kw-2">*</span><span class="string">b&quot;hell&quot;</span>), <span class="number">0u32</span>],
-            <span class="ident">assemble_str_helper</span>(<span class="string">&quot;hell&quot;</span>)
+            <span class="macro">vec!</span>[u32::from_le_bytes(<span class="kw-2">*</span><span class="string">b&quot;hell&quot;</span>), <span class="number">0u32</span>],
+            assemble_str_helper(<span class="string">&quot;hell&quot;</span>)
         );
         <span class="macro">assert_eq!</span>(
             <span class="macro">vec!</span>[
-                <span class="ident">u32::from_le_bytes</span>(<span class="kw-2">*</span><span class="string">b&quot;hell&quot;</span>),
-                <span class="ident">u32::from_le_bytes</span>(<span class="kw-2">*</span><span class="string">b&quot;o\0\0\0&quot;</span>)
+                u32::from_le_bytes(<span class="kw-2">*</span><span class="string">b&quot;hell&quot;</span>),
+                u32::from_le_bytes(<span class="kw-2">*</span><span class="string">b&quot;o\0\0\0&quot;</span>)
             ],
-            <span class="ident">assemble_str_helper</span>(<span class="string">&quot;hello&quot;</span>)
+            assemble_str_helper(<span class="string">&quot;hello&quot;</span>)
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_assemble_operand_bitmask</span>() {
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">spirv::FunctionControl::DONT_INLINE</span>;
-        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[<span class="ident">v</span>.<span class="ident">bits</span>()], <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">v</span>).<span class="ident">assemble</span>());
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">spirv::FunctionControl::PURE</span>;
-        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[<span class="ident">v</span>.<span class="ident">bits</span>()], <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">v</span>).<span class="ident">assemble</span>());
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">spirv::FunctionControl::CONST</span>;
-        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[<span class="ident">v</span>.<span class="ident">bits</span>()], <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">v</span>).<span class="ident">assemble</span>());
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">spirv::FunctionControl::DONT_INLINE</span> <span class="op">|</span> <span class="ident">spirv::FunctionControl::CONST</span>;
-        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[<span class="ident">v</span>.<span class="ident">bits</span>()], <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">v</span>).<span class="ident">assemble</span>());
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">spirv::FunctionControl::DONT_INLINE</span>
-            <span class="op">|</span> <span class="ident">spirv::FunctionControl::PURE</span>
-            <span class="op">|</span> <span class="ident">spirv::FunctionControl::CONST</span>;
-        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[<span class="ident">v</span>.<span class="ident">bits</span>()], <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">v</span>).<span class="ident">assemble</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_assemble_operand_bitmask() {
+        <span class="kw">let </span>v = spirv::FunctionControl::DONT_INLINE;
+        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[v.bits()], dr::Operand::FunctionControl(v).assemble());
+        <span class="kw">let </span>v = spirv::FunctionControl::PURE;
+        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[v.bits()], dr::Operand::FunctionControl(v).assemble());
+        <span class="kw">let </span>v = spirv::FunctionControl::CONST;
+        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[v.bits()], dr::Operand::FunctionControl(v).assemble());
+        <span class="kw">let </span>v = spirv::FunctionControl::DONT_INLINE | spirv::FunctionControl::CONST;
+        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[v.bits()], dr::Operand::FunctionControl(v).assemble());
+        <span class="kw">let </span>v = spirv::FunctionControl::DONT_INLINE
+            | spirv::FunctionControl::PURE
+            | spirv::FunctionControl::CONST;
+        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[v.bits()], dr::Operand::FunctionControl(v).assemble());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_assemble_operand_enum</span>() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_assemble_operand_enum() {
         <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[<span class="ident">spirv::BuiltIn::Position</span> <span class="kw">as</span> <span class="ident">u32</span>],
-            <span class="ident">dr::Operand::BuiltIn</span>(<span class="ident">spirv::BuiltIn::Position</span>).<span class="ident">assemble</span>()
-        );
-        <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[<span class="ident">spirv::BuiltIn::PointSize</span> <span class="kw">as</span> <span class="ident">u32</span>],
-            <span class="ident">dr::Operand::BuiltIn</span>(<span class="ident">spirv::BuiltIn::PointSize</span>).<span class="ident">assemble</span>()
+            <span class="macro">vec!</span>[spirv::BuiltIn::Position <span class="kw">as </span>u32],
+            dr::Operand::BuiltIn(spirv::BuiltIn::Position).assemble()
         );
         <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[<span class="ident">spirv::BuiltIn::InstanceId</span> <span class="kw">as</span> <span class="ident">u32</span>],
-            <span class="ident">dr::Operand::BuiltIn</span>(<span class="ident">spirv::BuiltIn::InstanceId</span>).<span class="ident">assemble</span>()
+            <span class="macro">vec!</span>[spirv::BuiltIn::PointSize <span class="kw">as </span>u32],
+            dr::Operand::BuiltIn(spirv::BuiltIn::PointSize).assemble()
         );
-    }
-
-    <span class="kw">fn</span> <span class="ident">wc_op</span>(<span class="ident">wc</span>: <span class="ident">u32</span>, <span class="ident">op</span>: <span class="ident">spirv::Op</span>) -&gt; <span class="ident">u32</span> {
-        (<span class="ident">wc</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>) <span class="op">|</span> <span class="ident">op</span> <span class="kw">as</span> <span class="ident">u32</span>
-    }
-
-    <span class="comment">// No operands</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_assemble_inst_nop</span>() {
         <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[<span class="ident">wc_op</span>(<span class="number">1</span>, <span class="ident">spirv::Op::Nop</span>)],
-            <span class="ident">dr::Instruction::new</span>(<span class="ident">spirv::Op::Nop</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]).<span class="ident">assemble</span>()
+            <span class="macro">vec!</span>[spirv::BuiltIn::InstanceId <span class="kw">as </span>u32],
+            dr::Operand::BuiltIn(spirv::BuiltIn::InstanceId).assemble()
         );
     }
 
-    <span class="comment">// No result type and result id</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_assemble_inst_memory_model</span>() {
-        <span class="kw">let</span> <span class="ident">operands</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">dr::Operand::AddressingModel</span>(<span class="ident">spirv::AddressingModel::Physical32</span>),
-            <span class="ident">dr::Operand::MemoryModel</span>(<span class="ident">spirv::MemoryModel::OpenCL</span>),
+    <span class="kw">fn </span>wc_op(wc: u32, op: spirv::Op) -&gt; u32 {
+        (wc &lt;&lt; <span class="number">16</span>) | op <span class="kw">as </span>u32
+    }
+
+    <span class="comment">// No operands
+    </span><span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_assemble_inst_nop() {
+        <span class="macro">assert_eq!</span>(
+            <span class="macro">vec!</span>[wc_op(<span class="number">1</span>, spirv::Op::Nop)],
+            dr::Instruction::new(spirv::Op::Nop, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]).assemble()
+        );
+    }
+
+    <span class="comment">// No result type and result id
+    </span><span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_assemble_inst_memory_model() {
+        <span class="kw">let </span>operands = <span class="macro">vec!</span>[
+            dr::Operand::AddressingModel(spirv::AddressingModel::Physical32),
+            dr::Operand::MemoryModel(spirv::MemoryModel::OpenCL),
         ];
         <span class="macro">assert_eq!</span>(
             <span class="macro">vec!</span>[
-                <span class="ident">wc_op</span>(<span class="number">3</span>, <span class="ident">spirv::Op::MemoryModel</span>),
-                <span class="ident">spirv::AddressingModel::Physical32</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="ident">spirv::MemoryModel::OpenCL</span> <span class="kw">as</span> <span class="ident">u32</span>
+                wc_op(<span class="number">3</span>, spirv::Op::MemoryModel),
+                spirv::AddressingModel::Physical32 <span class="kw">as </span>u32,
+                spirv::MemoryModel::OpenCL <span class="kw">as </span>u32
             ],
-            <span class="ident">dr::Instruction::new</span>(<span class="ident">spirv::Op::MemoryModel</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">operands</span>).<span class="ident">assemble</span>()
+            dr::Instruction::new(spirv::Op::MemoryModel, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, operands).assemble()
         );
     }
 
-    <span class="comment">// No result type, having result id</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_assemble_inst_type_int</span>() {
-        <span class="kw">let</span> <span class="ident">operands</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">dr::Operand::LiteralInt32</span>(<span class="number">32</span>), <span class="ident">dr::Operand::LiteralInt32</span>(<span class="number">1</span>)];
+    <span class="comment">// No result type, having result id
+    </span><span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_assemble_inst_type_int() {
+        <span class="kw">let </span>operands = <span class="macro">vec!</span>[dr::Operand::LiteralInt32(<span class="number">32</span>), dr::Operand::LiteralInt32(<span class="number">1</span>)];
         <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[<span class="ident">wc_op</span>(<span class="number">4</span>, <span class="ident">spirv::Op::TypeInt</span>), <span class="number">42</span>, <span class="number">32</span>, <span class="number">1</span>],
-            <span class="ident">dr::Instruction::new</span>(<span class="ident">spirv::Op::TypeInt</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="number">42</span>), <span class="ident">operands</span>).<span class="ident">assemble</span>()
+            <span class="macro">vec!</span>[wc_op(<span class="number">4</span>, spirv::Op::TypeInt), <span class="number">42</span>, <span class="number">32</span>, <span class="number">1</span>],
+            dr::Instruction::new(spirv::Op::TypeInt, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="number">42</span>), operands).assemble()
         );
     }
 
-    <span class="comment">// Having result type and id</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_assemble_inst_iadd</span>() {
-        <span class="kw">let</span> <span class="ident">operands</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">dr::Operand::IdRef</span>(<span class="number">0xef</span>), <span class="ident">dr::Operand::IdRef</span>(<span class="number">0x78</span>)];
+    <span class="comment">// Having result type and id
+    </span><span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_assemble_inst_iadd() {
+        <span class="kw">let </span>operands = <span class="macro">vec!</span>[dr::Operand::IdRef(<span class="number">0xef</span>), dr::Operand::IdRef(<span class="number">0x78</span>)];
         <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[<span class="ident">wc_op</span>(<span class="number">5</span>, <span class="ident">spirv::Op::IAdd</span>), <span class="number">0xab</span>, <span class="number">0xcd</span>, <span class="number">0xef</span>, <span class="number">0x78</span>],
-            <span class="ident">dr::Instruction::new</span>(<span class="ident">spirv::Op::IAdd</span>, <span class="prelude-val">Some</span>(<span class="number">0xab</span>), <span class="prelude-val">Some</span>(<span class="number">0xcd</span>), <span class="ident">operands</span>).<span class="ident">assemble</span>()
+            <span class="macro">vec!</span>[wc_op(<span class="number">5</span>, spirv::Op::IAdd), <span class="number">0xab</span>, <span class="number">0xcd</span>, <span class="number">0xef</span>, <span class="number">0x78</span>],
+            dr::Instruction::new(spirv::Op::IAdd, <span class="prelude-val">Some</span>(<span class="number">0xab</span>), <span class="prelude-val">Some</span>(<span class="number">0xcd</span>), operands).assemble()
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_assemble_function_void</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">dr::Builder::new</span>();
-        <span class="ident">b</span>.<span class="ident">memory_model</span>(<span class="ident">spirv::AddressingModel::Logical</span>, <span class="ident">spirv::MemoryModel::Simple</span>);
-        <span class="kw">let</span> <span class="ident">void</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_void</span>();
-        <span class="kw">let</span> <span class="ident">voidfvoid</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_function</span>(<span class="ident">void</span>, <span class="macro">vec!</span>[<span class="ident">void</span>]);
-        <span class="ident">b</span>.<span class="ident">begin_function</span>(<span class="ident">void</span>, <span class="prelude-val">None</span>, <span class="ident">spirv::FunctionControl::CONST</span>, <span class="ident">voidfvoid</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="ident">b</span>.<span class="ident">begin_block</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
-        <span class="ident">b</span>.<span class="ident">ret</span>().<span class="ident">unwrap</span>();
-        <span class="ident">b</span>.<span class="ident">end_function</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_assemble_function_void() {
+        <span class="kw">let </span><span class="kw-2">mut </span>b = dr::Builder::new();
+        b.memory_model(spirv::AddressingModel::Logical, spirv::MemoryModel::Simple);
+        <span class="kw">let </span>void = b.type_void();
+        <span class="kw">let </span>voidfvoid = b.type_function(void, <span class="macro">vec!</span>[void]);
+        b.begin_function(void, <span class="prelude-val">None</span>, spirv::FunctionControl::CONST, voidfvoid)
+            .unwrap();
+        b.begin_block(<span class="prelude-val">None</span>).unwrap();
+        b.ret().unwrap();
+        b.end_function().unwrap();
 
         <span class="macro">assert_eq!</span>(
             <span class="macro">vec!</span>[
-                <span class="ident">spirv::MAGIC_NUMBER</span>,
-                (<span class="ident">u32::from</span>(<span class="ident">spirv::MAJOR_VERSION</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>) <span class="op">|</span> (<span class="ident">u32::from</span>(<span class="ident">spirv::MINOR_VERSION</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>),
+                spirv::MAGIC_NUMBER,
+                (u32::from(spirv::MAJOR_VERSION) &lt;&lt; <span class="number">16</span>) | (u32::from(spirv::MINOR_VERSION) &lt;&lt; <span class="number">8</span>),
                 <span class="number">0x000f0000</span>,
                 <span class="number">5</span>,
                 <span class="number">0</span>,
-                <span class="ident">wc_op</span>(<span class="number">3</span>, <span class="ident">spirv::Op::MemoryModel</span>),
-                <span class="ident">spirv::AddressingModel::Logical</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="ident">spirv::MemoryModel::Simple</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="ident">wc_op</span>(<span class="number">2</span>, <span class="ident">spirv::Op::TypeVoid</span>),
+                wc_op(<span class="number">3</span>, spirv::Op::MemoryModel),
+                spirv::AddressingModel::Logical <span class="kw">as </span>u32,
+                spirv::MemoryModel::Simple <span class="kw">as </span>u32,
+                wc_op(<span class="number">2</span>, spirv::Op::TypeVoid),
                 <span class="number">1</span>,
-                <span class="ident">wc_op</span>(<span class="number">4</span>, <span class="ident">spirv::Op::TypeFunction</span>),
+                wc_op(<span class="number">4</span>, spirv::Op::TypeFunction),
                 <span class="number">2</span>,
                 <span class="number">1</span>,
                 <span class="number">1</span>,
-                <span class="ident">wc_op</span>(<span class="number">5</span>, <span class="ident">spirv::Op::Function</span>),
+                wc_op(<span class="number">5</span>, spirv::Op::Function),
                 <span class="number">1</span>,
                 <span class="number">3</span>,
-                <span class="ident">spirv::FunctionControl::CONST</span>.<span class="ident">bits</span>(),
+                spirv::FunctionControl::CONST.bits(),
                 <span class="number">2</span>,
-                <span class="ident">wc_op</span>(<span class="number">2</span>, <span class="ident">spirv::Op::Label</span>),
+                wc_op(<span class="number">2</span>, spirv::Op::Label),
                 <span class="number">4</span>,
-                <span class="ident">wc_op</span>(<span class="number">1</span>, <span class="ident">spirv::Op::Return</span>),
-                <span class="ident">wc_op</span>(<span class="number">1</span>, <span class="ident">spirv::Op::FunctionEnd</span>)
+                wc_op(<span class="number">1</span>, spirv::Op::Return),
+                wc_op(<span class="number">1</span>, spirv::Op::FunctionEnd)
             ],
-            <span class="ident">b</span>.<span class="ident">module</span>().<span class="ident">assemble</span>()
+            b.module().assemble()
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_assemble_function_parameters</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">dr::Builder::new</span>();
-        <span class="ident">b</span>.<span class="ident">memory_model</span>(<span class="ident">spirv::AddressingModel::Logical</span>, <span class="ident">spirv::MemoryModel::Simple</span>);
-        <span class="kw">let</span> <span class="ident">float</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_float</span>(<span class="number">32</span>);
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_pointer</span>(<span class="prelude-val">None</span>, <span class="ident">spirv::StorageClass::Function</span>, <span class="ident">float</span>);
-        <span class="kw">let</span> <span class="ident">fff</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_function</span>(<span class="ident">float</span>, <span class="macro">vec!</span>[<span class="ident">float</span>, <span class="ident">float</span>]);
-        <span class="ident">b</span>.<span class="ident">begin_function</span>(<span class="ident">float</span>, <span class="prelude-val">None</span>, <span class="ident">spirv::FunctionControl::CONST</span>, <span class="ident">fff</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">param1</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">function_parameter</span>(<span class="ident">ptr</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">param2</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">function_parameter</span>(<span class="ident">ptr</span>).<span class="ident">unwrap</span>();
-        <span class="ident">b</span>.<span class="ident">begin_block</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">v1</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">load</span>(<span class="ident">float</span>, <span class="prelude-val">None</span>, <span class="ident">param1</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">v2</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">load</span>(<span class="ident">float</span>, <span class="prelude-val">None</span>, <span class="ident">param2</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">f_add</span>(<span class="ident">float</span>, <span class="prelude-val">None</span>, <span class="ident">v1</span>, <span class="ident">v2</span>).<span class="ident">unwrap</span>();
-        <span class="ident">b</span>.<span class="ident">ret_value</span>(<span class="ident">v</span>).<span class="ident">unwrap</span>();
-        <span class="ident">b</span>.<span class="ident">end_function</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_assemble_function_parameters() {
+        <span class="kw">let </span><span class="kw-2">mut </span>b = dr::Builder::new();
+        b.memory_model(spirv::AddressingModel::Logical, spirv::MemoryModel::Simple);
+        <span class="kw">let </span>float = b.type_float(<span class="number">32</span>);
+        <span class="kw">let </span>ptr = b.type_pointer(<span class="prelude-val">None</span>, spirv::StorageClass::Function, float);
+        <span class="kw">let </span>fff = b.type_function(float, <span class="macro">vec!</span>[float, float]);
+        b.begin_function(float, <span class="prelude-val">None</span>, spirv::FunctionControl::CONST, fff)
+            .unwrap();
+        <span class="kw">let </span>param1 = b.function_parameter(ptr).unwrap();
+        <span class="kw">let </span>param2 = b.function_parameter(ptr).unwrap();
+        b.begin_block(<span class="prelude-val">None</span>).unwrap();
+        <span class="kw">let </span>v1 = b.load(float, <span class="prelude-val">None</span>, param1, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]).unwrap();
+        <span class="kw">let </span>v2 = b.load(float, <span class="prelude-val">None</span>, param2, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[]).unwrap();
+        <span class="kw">let </span>v = b.f_add(float, <span class="prelude-val">None</span>, v1, v2).unwrap();
+        b.ret_value(v).unwrap();
+        b.end_function().unwrap();
 
         <span class="macro">assert_eq!</span>(
             <span class="macro">vec!</span>[
-                <span class="comment">// Header</span>
-                <span class="ident">spirv::MAGIC_NUMBER</span>,
-                (<span class="ident">u32::from</span>(<span class="ident">spirv::MAJOR_VERSION</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>) <span class="op">|</span> (<span class="ident">u32::from</span>(<span class="ident">spirv::MINOR_VERSION</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>),
+                <span class="comment">// Header
+                </span>spirv::MAGIC_NUMBER,
+                (u32::from(spirv::MAJOR_VERSION) &lt;&lt; <span class="number">16</span>) | (u32::from(spirv::MINOR_VERSION) &lt;&lt; <span class="number">8</span>),
                 <span class="number">0x000f0000</span>,
-                <span class="number">11</span>, <span class="comment">// bound</span>
-                <span class="number">0</span>,
-                <span class="comment">// Instructions</span>
-                <span class="ident">wc_op</span>(<span class="number">3</span>, <span class="ident">spirv::Op::MemoryModel</span>),
-                <span class="ident">spirv::AddressingModel::Logical</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="ident">spirv::MemoryModel::Simple</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="ident">wc_op</span>(<span class="number">3</span>, <span class="ident">spirv::Op::TypeFloat</span>),
-                <span class="number">1</span>,  <span class="comment">// result id</span>
-                <span class="number">32</span>, <span class="comment">// bitwidth</span>
-                <span class="ident">wc_op</span>(<span class="number">4</span>, <span class="ident">spirv::Op::TypePointer</span>),
-                <span class="number">2</span>, <span class="comment">// result id</span>
-                <span class="ident">spirv::StorageClass::Function</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="number">1</span>, <span class="comment">// float result id</span>
-                <span class="ident">wc_op</span>(<span class="number">5</span>, <span class="ident">spirv::Op::TypeFunction</span>),
-                <span class="number">3</span>, <span class="comment">// result id</span>
-                <span class="number">1</span>, <span class="comment">// result type</span>
-                <span class="number">1</span>, <span class="comment">// parameter type</span>
-                <span class="number">1</span>, <span class="comment">// parameter type</span>
-                <span class="ident">wc_op</span>(<span class="number">5</span>, <span class="ident">spirv::Op::Function</span>),
-                <span class="number">1</span>, <span class="comment">// result type id</span>
-                <span class="number">4</span>, <span class="comment">// result id</span>
-                <span class="ident">spirv::FunctionControl::CONST</span>.<span class="ident">bits</span>(),
-                <span class="number">3</span>, <span class="comment">// function type id</span>
-                <span class="ident">wc_op</span>(<span class="number">3</span>, <span class="ident">spirv::Op::FunctionParameter</span>),
-                <span class="number">2</span>, <span class="comment">// result type id</span>
-                <span class="number">5</span>, <span class="comment">// result id</span>
-                <span class="ident">wc_op</span>(<span class="number">3</span>, <span class="ident">spirv::Op::FunctionParameter</span>),
-                <span class="number">2</span>, <span class="comment">// result type id</span>
-                <span class="number">6</span>, <span class="comment">// result id</span>
-                <span class="ident">wc_op</span>(<span class="number">2</span>, <span class="ident">spirv::Op::Label</span>),
-                <span class="number">7</span>, <span class="comment">// result id</span>
-                <span class="ident">wc_op</span>(<span class="number">4</span>, <span class="ident">spirv::Op::Load</span>),
-                <span class="number">1</span>, <span class="comment">// result type id</span>
-                <span class="number">8</span>, <span class="comment">// result id</span>
-                <span class="number">5</span>, <span class="comment">// parameter id</span>
-                <span class="ident">wc_op</span>(<span class="number">4</span>, <span class="ident">spirv::Op::Load</span>),
-                <span class="number">1</span>, <span class="comment">// result type id</span>
-                <span class="number">9</span>, <span class="comment">// result id</span>
-                <span class="number">6</span>, <span class="comment">// parameter id</span>
-                <span class="ident">wc_op</span>(<span class="number">5</span>, <span class="ident">spirv::Op::FAdd</span>),
-                <span class="number">1</span>,  <span class="comment">// result type id</span>
-                <span class="number">10</span>, <span class="comment">// result id</span>
-                <span class="number">8</span>,  <span class="comment">// operand</span>
-                <span class="number">9</span>,  <span class="comment">// operand</span>
-                <span class="ident">wc_op</span>(<span class="number">2</span>, <span class="ident">spirv::Op::ReturnValue</span>),
+                <span class="number">11</span>, <span class="comment">// bound
+                </span><span class="number">0</span>,
+                <span class="comment">// Instructions
+                </span>wc_op(<span class="number">3</span>, spirv::Op::MemoryModel),
+                spirv::AddressingModel::Logical <span class="kw">as </span>u32,
+                spirv::MemoryModel::Simple <span class="kw">as </span>u32,
+                wc_op(<span class="number">3</span>, spirv::Op::TypeFloat),
+                <span class="number">1</span>,  <span class="comment">// result id
+                </span><span class="number">32</span>, <span class="comment">// bitwidth
+                </span>wc_op(<span class="number">4</span>, spirv::Op::TypePointer),
+                <span class="number">2</span>, <span class="comment">// result id
+                </span>spirv::StorageClass::Function <span class="kw">as </span>u32,
+                <span class="number">1</span>, <span class="comment">// float result id
+                </span>wc_op(<span class="number">5</span>, spirv::Op::TypeFunction),
+                <span class="number">3</span>, <span class="comment">// result id
+                </span><span class="number">1</span>, <span class="comment">// result type
+                </span><span class="number">1</span>, <span class="comment">// parameter type
+                </span><span class="number">1</span>, <span class="comment">// parameter type
+                </span>wc_op(<span class="number">5</span>, spirv::Op::Function),
+                <span class="number">1</span>, <span class="comment">// result type id
+                </span><span class="number">4</span>, <span class="comment">// result id
+                </span>spirv::FunctionControl::CONST.bits(),
+                <span class="number">3</span>, <span class="comment">// function type id
+                </span>wc_op(<span class="number">3</span>, spirv::Op::FunctionParameter),
+                <span class="number">2</span>, <span class="comment">// result type id
+                </span><span class="number">5</span>, <span class="comment">// result id
+                </span>wc_op(<span class="number">3</span>, spirv::Op::FunctionParameter),
+                <span class="number">2</span>, <span class="comment">// result type id
+                </span><span class="number">6</span>, <span class="comment">// result id
+                </span>wc_op(<span class="number">2</span>, spirv::Op::Label),
+                <span class="number">7</span>, <span class="comment">// result id
+                </span>wc_op(<span class="number">4</span>, spirv::Op::Load),
+                <span class="number">1</span>, <span class="comment">// result type id
+                </span><span class="number">8</span>, <span class="comment">// result id
+                </span><span class="number">5</span>, <span class="comment">// parameter id
+                </span>wc_op(<span class="number">4</span>, spirv::Op::Load),
+                <span class="number">1</span>, <span class="comment">// result type id
+                </span><span class="number">9</span>, <span class="comment">// result id
+                </span><span class="number">6</span>, <span class="comment">// parameter id
+                </span>wc_op(<span class="number">5</span>, spirv::Op::FAdd),
+                <span class="number">1</span>,  <span class="comment">// result type id
+                </span><span class="number">10</span>, <span class="comment">// result id
+                </span><span class="number">8</span>,  <span class="comment">// operand
+                </span><span class="number">9</span>,  <span class="comment">// operand
+                </span>wc_op(<span class="number">2</span>, spirv::Op::ReturnValue),
                 <span class="number">10</span>,
-                <span class="ident">wc_op</span>(<span class="number">1</span>, <span class="ident">spirv::Op::FunctionEnd</span>)
+                wc_op(<span class="number">1</span>, spirv::Op::FunctionEnd)
             ],
-            <span class="ident">b</span>.<span class="ident">module</span>().<span class="ident">assemble</span>()
+            b.module().assemble()
         );
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rspirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rspirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

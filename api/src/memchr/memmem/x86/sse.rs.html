@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/x86/sse.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>sse.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../memchr/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/x86/sse.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>sse.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../memchr/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -93,95 +87,94 @@
 <span id="87">87</span>
 <span id="88">88</span>
 <span id="89">89</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::arch::x86_64::__m128i</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>core::arch::x86_64::__m128i;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::memmem</span>::{<span class="ident">genericsimd</span>, <span class="ident">NeedleInfo</span>};
+<span class="kw">use </span><span class="kw">crate</span>::memmem::{genericsimd, NeedleInfo};
 
-<span class="doccomment">/// An SSE accelerated vectorized substring search routine that only works on</span>
-<span class="doccomment">/// small needles.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Forward</span>(<span class="ident">genericsimd::Forward</span>);
+<span class="doccomment">/// An SSE accelerated vectorized substring search routine that only works on
+/// small needles.
+</span><span class="attribute">#[derive(Clone, Copy, Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Forward(genericsimd::Forward);
 
-<span class="kw">impl</span> <span class="ident">Forward</span> {
-    <span class="doccomment">/// Create a new &quot;generic simd&quot; forward searcher. If one could not be</span>
-    <span class="doccomment">/// created from the given inputs, then None is returned.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">ninfo</span>: <span class="kw-2">&amp;</span><span class="ident">NeedleInfo</span>, <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Forward</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">memchr_runtime_sse2</span>) {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="kw">impl </span>Forward {
+    <span class="doccomment">/// Create a new &quot;generic simd&quot; forward searcher. If one could not be
+    /// created from the given inputs, then None is returned.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(ninfo: <span class="kw-2">&amp;</span>NeedleInfo, needle: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;Forward&gt; {
+        <span class="kw">if </span>!<span class="macro">cfg!</span>(memchr_runtime_sse2) {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="ident">genericsimd::Forward::new</span>(<span class="ident">ninfo</span>, <span class="ident">needle</span>).<span class="ident">map</span>(<span class="ident">Forward</span>)
+        genericsimd::Forward::new(ninfo, needle).map(Forward)
     }
 
-    <span class="doccomment">/// Returns the minimum length of haystack that is needed for this searcher</span>
-    <span class="doccomment">/// to work. Passing a haystack with a length smaller than this will cause</span>
-    <span class="doccomment">/// `find` to panic.</span>
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">min_haystack_len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">min_haystack_len</span>::<span class="op">&lt;</span><span class="ident">__m128i</span><span class="op">&gt;</span>()
+    <span class="doccomment">/// Returns the minimum length of haystack that is needed for this searcher
+    /// to work. Passing a haystack with a length smaller than this will cause
+    /// `find` to panic.
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>min_haystack_len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.<span class="number">0</span>.min_haystack_len::&lt;__m128i&gt;()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">find</span>(
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>find(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="comment">// SAFETY: sse2 is enabled on all x86_64 targets, so this is always</span>
-        <span class="comment">// safe to call.</span>
-        <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">find_impl</span>(<span class="ident">haystack</span>, <span class="ident">needle</span>) }
+        haystack: <span class="kw-2">&amp;</span>[u8],
+        needle: <span class="kw-2">&amp;</span>[u8],
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="comment">// SAFETY: sse2 is enabled on all x86_64 targets, so this is always
+        // safe to call.
+        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.find_impl(haystack, needle) }
     }
 
-    <span class="doccomment">/// The implementation of find marked with the appropriate target feature.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is safe to call in all cases since sse2 is guaranteed to be part</span>
-    <span class="doccomment">/// of x86_64. It is marked as unsafe because of the target feature</span>
-    <span class="doccomment">/// attribute.</span>
-    <span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">find_impl</span>(
+    <span class="doccomment">/// The implementation of find marked with the appropriate target feature.
+    ///
+    /// # Safety
+    ///
+    /// This is safe to call in all cases since sse2 is guaranteed to be part
+    /// of x86_64. It is marked as unsafe because of the target feature
+    /// attribute.
+    </span><span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+    </span><span class="kw">unsafe fn </span>find_impl(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="ident">genericsimd::fwd_find</span>::<span class="op">&lt;</span><span class="ident">__m128i</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="ident">haystack</span>, <span class="ident">needle</span>)
+        haystack: <span class="kw-2">&amp;</span>[u8],
+        needle: <span class="kw-2">&amp;</span>[u8],
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        genericsimd::fwd_find::&lt;__m128i&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, haystack, needle)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::memmem</span>::{<span class="ident">prefilter::PrefilterState</span>, <span class="ident">NeedleInfo</span>};
+<span class="attribute">#[cfg(all(test, feature = <span class="string">&quot;std&quot;</span>, not(miri)))]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">crate</span>::memmem::{prefilter::PrefilterState, NeedleInfo};
 
-    <span class="kw">fn</span> <span class="ident">find</span>(
-        <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PrefilterState</span>,
-        <span class="ident">ninfo</span>: <span class="kw-2">&amp;</span><span class="ident">NeedleInfo</span>,
-        <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="ident"><span class="kw">super</span>::Forward::new</span>(<span class="ident">ninfo</span>, <span class="ident">needle</span>).<span class="ident">unwrap</span>().<span class="ident">find</span>(<span class="ident">haystack</span>, <span class="ident">needle</span>)
+    <span class="kw">fn </span>find(
+        <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>PrefilterState,
+        ninfo: <span class="kw-2">&amp;</span>NeedleInfo,
+        haystack: <span class="kw-2">&amp;</span>[u8],
+        needle: <span class="kw-2">&amp;</span>[u8],
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="kw">super</span>::Forward::new(ninfo, needle).unwrap().find(haystack, needle)
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">prefilter_permutations</span>() {
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::memmem::prefilter::tests::PrefilterTest</span>;
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>prefilter_permutations() {
+        <span class="kw">use </span><span class="kw">crate</span>::memmem::prefilter::tests::PrefilterTest;
 
-        <span class="comment">// SAFETY: sse2 is enabled on all x86_64 targets, so this is always</span>
-        <span class="comment">// safe to call.</span>
-        <span class="kw">unsafe</span> {
-            <span class="ident">PrefilterTest::run_all_tests_filter</span>(<span class="ident">find</span>, <span class="op">|</span><span class="ident">t</span><span class="op">|</span> {
-                <span class="comment">// This substring searcher only works on certain configs, so</span>
-                <span class="comment">// filter our tests such that Forward::new will be guaranteed</span>
-                <span class="comment">// to succeed. (And also remove tests with a haystack that is</span>
-                <span class="comment">// too small.)</span>
-                <span class="kw">let</span> <span class="ident">fwd</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident"><span class="kw">super</span>::Forward::new</span>(<span class="kw-2">&amp;</span><span class="ident">t</span>.<span class="ident">ninfo</span>, <span class="kw-2">&amp;</span><span class="ident">t</span>.<span class="ident">needle</span>) {
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
-                    <span class="prelude-val">Some</span>(<span class="ident">fwd</span>) =&gt; <span class="ident">fwd</span>,
+        <span class="comment">// SAFETY: sse2 is enabled on all x86_64 targets, so this is always
+        // safe to call.
+        </span><span class="kw">unsafe </span>{
+            PrefilterTest::run_all_tests_filter(find, |t| {
+                <span class="comment">// This substring searcher only works on certain configs, so
+                // filter our tests such that Forward::new will be guaranteed
+                // to succeed. (And also remove tests with a haystack that is
+                // too small.)
+                </span><span class="kw">let </span>fwd = <span class="kw">match </span><span class="kw">super</span>::Forward::new(<span class="kw-2">&amp;</span>t.ninfo, <span class="kw-2">&amp;</span>t.needle) {
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="bool-val">false</span>,
+                    <span class="prelude-val">Some</span>(fwd) =&gt; fwd,
                 };
-                <span class="ident">t</span>.<span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">fwd</span>.<span class="ident">min_haystack_len</span>()
+                t.haystack.len() &gt;= fwd.min_haystack_len()
             })
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

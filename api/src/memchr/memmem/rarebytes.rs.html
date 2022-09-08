@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/rarebytes.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rarebytes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/rarebytes.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rarebytes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -140,142 +134,141 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
-</pre><pre class="rust"><code><span class="doccomment">/// A heuristic frequency based detection of rare bytes for substring search.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This detector attempts to pick out two bytes in a needle that are predicted</span>
-<span class="doccomment">/// to occur least frequently. The purpose is to use these bytes to implement</span>
-<span class="doccomment">/// fast candidate search using vectorized code.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// A set of offsets is only computed for needles of length 2 or greater.</span>
-<span class="doccomment">/// Smaller needles should be special cased by the substring search algorithm</span>
-<span class="doccomment">/// in use. (e.g., Use memchr for single byte needles.)</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that we use `u8` to represent the offsets of the rare bytes in a</span>
-<span class="doccomment">/// needle to reduce space usage. This means that rare byte occurring after the</span>
-<span class="doccomment">/// first 255 bytes in a needle will never be used.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">RareNeedleBytes</span> {
-    <span class="doccomment">/// The leftmost offset of the rarest byte in the needle, according to</span>
-    <span class="doccomment">/// pre-computed frequency analysis. The &quot;leftmost offset&quot; means that</span>
-    <span class="doccomment">/// rare1i &lt;= i for all i where needle[i] == needle[rare1i].</span>
-    <span class="ident">rare1i</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// The leftmost offset of the second rarest byte in the needle, according</span>
-    <span class="doccomment">/// to pre-computed frequency analysis. The &quot;leftmost offset&quot; means that</span>
-    <span class="doccomment">/// rare2i &lt;= i for all i where needle[i] == needle[rare2i].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The second rarest byte is used as a type of guard for quickly detecting</span>
-    <span class="doccomment">/// a mismatch if the first byte matches. This is a hedge against</span>
-    <span class="doccomment">/// pathological cases where the pre-computed frequency analysis may be</span>
-    <span class="doccomment">/// off. (But of course, does not prevent *all* pathological cases.)</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// In general, rare1i != rare2i by construction, although there is no hard</span>
-    <span class="doccomment">/// requirement that they be different. However, since the case of a single</span>
-    <span class="doccomment">/// byte needle is handled specially by memchr itself, rare2i generally</span>
-    <span class="doccomment">/// always should be different from rare1i since it would otherwise be</span>
-    <span class="doccomment">/// ineffective as a guard.</span>
-    <span class="ident">rare2i</span>: <span class="ident">u8</span>,
+</pre><pre class="rust"><code><span class="doccomment">/// A heuristic frequency based detection of rare bytes for substring search.
+///
+/// This detector attempts to pick out two bytes in a needle that are predicted
+/// to occur least frequently. The purpose is to use these bytes to implement
+/// fast candidate search using vectorized code.
+///
+/// A set of offsets is only computed for needles of length 2 or greater.
+/// Smaller needles should be special cased by the substring search algorithm
+/// in use. (e.g., Use memchr for single byte needles.)
+///
+/// Note that we use `u8` to represent the offsets of the rare bytes in a
+/// needle to reduce space usage. This means that rare byte occurring after the
+/// first 255 bytes in a needle will never be used.
+</span><span class="attribute">#[derive(Clone, Copy, Debug, Default)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RareNeedleBytes {
+    <span class="doccomment">/// The leftmost offset of the rarest byte in the needle, according to
+    /// pre-computed frequency analysis. The &quot;leftmost offset&quot; means that
+    /// rare1i &lt;= i for all i where needle[i] == needle[rare1i].
+    </span>rare1i: u8,
+    <span class="doccomment">/// The leftmost offset of the second rarest byte in the needle, according
+    /// to pre-computed frequency analysis. The &quot;leftmost offset&quot; means that
+    /// rare2i &lt;= i for all i where needle[i] == needle[rare2i].
+    ///
+    /// The second rarest byte is used as a type of guard for quickly detecting
+    /// a mismatch if the first byte matches. This is a hedge against
+    /// pathological cases where the pre-computed frequency analysis may be
+    /// off. (But of course, does not prevent *all* pathological cases.)
+    ///
+    /// In general, rare1i != rare2i by construction, although there is no hard
+    /// requirement that they be different. However, since the case of a single
+    /// byte needle is handled specially by memchr itself, rare2i generally
+    /// always should be different from rare1i since it would otherwise be
+    /// ineffective as a guard.
+    </span>rare2i: u8,
 }
 
-<span class="kw">impl</span> <span class="ident">RareNeedleBytes</span> {
-    <span class="doccomment">/// Create a new pair of rare needle bytes with the given offsets. This is</span>
-    <span class="doccomment">/// only used in tests for generating input data.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>))]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">rare1i</span>: <span class="ident">u8</span>, <span class="ident">rare2i</span>: <span class="ident">u8</span>) -&gt; <span class="ident">RareNeedleBytes</span> {
-        <span class="ident">RareNeedleBytes</span> { <span class="ident">rare1i</span>, <span class="ident">rare2i</span> }
+<span class="kw">impl </span>RareNeedleBytes {
+    <span class="doccomment">/// Create a new pair of rare needle bytes with the given offsets. This is
+    /// only used in tests for generating input data.
+    </span><span class="attribute">#[cfg(all(test, feature = <span class="string">&quot;std&quot;</span>))]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(rare1i: u8, rare2i: u8) -&gt; RareNeedleBytes {
+        RareNeedleBytes { rare1i, rare2i }
     }
 
-    <span class="doccomment">/// Detect the leftmost offsets of the two rarest bytes in the given</span>
-    <span class="doccomment">/// needle.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">forward</span>(<span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">RareNeedleBytes</span> {
-        <span class="kw">if</span> <span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">core::u8::MAX</span> <span class="kw">as</span> <span class="ident">usize</span> {
-            <span class="comment">// For needles bigger than u8::MAX, our offsets aren&#39;t big enough.</span>
-            <span class="comment">// (We make our offsets small to reduce stack copying.)</span>
-            <span class="comment">// If you have a use case for it, please file an issue. In that</span>
-            <span class="comment">// case, we should probably just adjust the routine below to pick</span>
-            <span class="comment">// some rare bytes from the first 255 bytes of the needle.</span>
-            <span class="comment">//</span>
-            <span class="comment">// Also note that for needles of size 0 or 1, they are special</span>
-            <span class="comment">// cased in Two-Way.</span>
-            <span class="comment">//</span>
-            <span class="comment">// TODO: Benchmar this.</span>
-            <span class="kw">return</span> <span class="ident">RareNeedleBytes</span> { <span class="ident">rare1i</span>: <span class="number">0</span>, <span class="ident">rare2i</span>: <span class="number">0</span> };
+    <span class="doccomment">/// Detect the leftmost offsets of the two rarest bytes in the given
+    /// needle.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>forward(needle: <span class="kw-2">&amp;</span>[u8]) -&gt; RareNeedleBytes {
+        <span class="kw">if </span>needle.len() &lt;= <span class="number">1 </span>|| needle.len() &gt; core::u8::MAX <span class="kw">as </span>usize {
+            <span class="comment">// For needles bigger than u8::MAX, our offsets aren&#39;t big enough.
+            // (We make our offsets small to reduce stack copying.)
+            // If you have a use case for it, please file an issue. In that
+            // case, we should probably just adjust the routine below to pick
+            // some rare bytes from the first 255 bytes of the needle.
+            //
+            // Also note that for needles of size 0 or 1, they are special
+            // cased in Two-Way.
+            //
+            // TODO: Benchmar this.
+            </span><span class="kw">return </span>RareNeedleBytes { rare1i: <span class="number">0</span>, rare2i: <span class="number">0 </span>};
         }
 
-        <span class="comment">// Find the rarest two bytes. We make them distinct by construction.</span>
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">rare1</span>, <span class="kw-2">mut</span> <span class="ident">rare1i</span>) <span class="op">=</span> (<span class="ident">needle</span>[<span class="number">0</span>], <span class="number">0</span>);
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">rare2</span>, <span class="kw-2">mut</span> <span class="ident">rare2i</span>) <span class="op">=</span> (<span class="ident">needle</span>[<span class="number">1</span>], <span class="number">1</span>);
-        <span class="kw">if</span> <span class="ident">rank</span>(<span class="ident">rare2</span>) <span class="op">&lt;</span> <span class="ident">rank</span>(<span class="ident">rare1</span>) {
-            <span class="ident">core::mem::swap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rare1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">rare2</span>);
-            <span class="ident">core::mem::swap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rare1i</span>, <span class="kw-2">&amp;mut</span> <span class="ident">rare2i</span>);
+        <span class="comment">// Find the rarest two bytes. We make them distinct by construction.
+        </span><span class="kw">let </span>(<span class="kw-2">mut </span>rare1, <span class="kw-2">mut </span>rare1i) = (needle[<span class="number">0</span>], <span class="number">0</span>);
+        <span class="kw">let </span>(<span class="kw-2">mut </span>rare2, <span class="kw-2">mut </span>rare2i) = (needle[<span class="number">1</span>], <span class="number">1</span>);
+        <span class="kw">if </span>rank(rare2) &lt; rank(rare1) {
+            core::mem::swap(<span class="kw-2">&amp;mut </span>rare1, <span class="kw-2">&amp;mut </span>rare2);
+            core::mem::swap(<span class="kw-2">&amp;mut </span>rare1i, <span class="kw-2">&amp;mut </span>rare2i);
         }
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>) <span class="kw">in</span> <span class="ident">needle</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>().<span class="ident">skip</span>(<span class="number">2</span>) {
-            <span class="kw">if</span> <span class="ident">rank</span>(<span class="ident">b</span>) <span class="op">&lt;</span> <span class="ident">rank</span>(<span class="ident">rare1</span>) {
-                <span class="ident">rare2</span> <span class="op">=</span> <span class="ident">rare1</span>;
-                <span class="ident">rare2i</span> <span class="op">=</span> <span class="ident">rare1i</span>;
-                <span class="ident">rare1</span> <span class="op">=</span> <span class="ident">b</span>;
-                <span class="ident">rare1i</span> <span class="op">=</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>;
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">b</span> <span class="op">!</span><span class="op">=</span> <span class="ident">rare1</span> <span class="op">&amp;&amp;</span> <span class="ident">rank</span>(<span class="ident">b</span>) <span class="op">&lt;</span> <span class="ident">rank</span>(<span class="ident">rare2</span>) {
-                <span class="ident">rare2</span> <span class="op">=</span> <span class="ident">b</span>;
-                <span class="ident">rare2i</span> <span class="op">=</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>;
+        <span class="kw">for </span>(i, <span class="kw-2">&amp;</span>b) <span class="kw">in </span>needle.iter().enumerate().skip(<span class="number">2</span>) {
+            <span class="kw">if </span>rank(b) &lt; rank(rare1) {
+                rare2 = rare1;
+                rare2i = rare1i;
+                rare1 = b;
+                rare1i = i <span class="kw">as </span>u8;
+            } <span class="kw">else if </span>b != rare1 &amp;&amp; rank(b) &lt; rank(rare2) {
+                rare2 = b;
+                rare2i = i <span class="kw">as </span>u8;
             }
         }
-        <span class="comment">// While not strictly required, we really don&#39;t want these to be</span>
-        <span class="comment">// equivalent. If they were, it would reduce the effectiveness of</span>
-        <span class="comment">// candidate searching using these rare bytes by increasing the rate of</span>
-        <span class="comment">// false positives.</span>
-        <span class="macro">assert_ne!</span>(<span class="ident">rare1i</span>, <span class="ident">rare2i</span>);
-        <span class="ident">RareNeedleBytes</span> { <span class="ident">rare1i</span>, <span class="ident">rare2i</span> }
+        <span class="comment">// While not strictly required, we really don&#39;t want these to be
+        // equivalent. If they were, it would reduce the effectiveness of
+        // candidate searching using these rare bytes by increasing the rate of
+        // false positives.
+        </span><span class="macro">assert_ne!</span>(rare1i, rare2i);
+        RareNeedleBytes { rare1i, rare2i }
     }
 
-    <span class="doccomment">/// Return the rare bytes in the given needle in the forward direction.</span>
-    <span class="doccomment">/// The needle given must be the same one given to the RareNeedleBytes</span>
-    <span class="doccomment">/// constructor.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">as_rare_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; (<span class="ident">u8</span>, <span class="ident">u8</span>) {
-        (<span class="ident">needle</span>[<span class="self">self</span>.<span class="ident">rare1i</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">needle</span>[<span class="self">self</span>.<span class="ident">rare2i</span> <span class="kw">as</span> <span class="ident">usize</span>])
+    <span class="doccomment">/// Return the rare bytes in the given needle in the forward direction.
+    /// The needle given must be the same one given to the RareNeedleBytes
+    /// constructor.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_rare_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>, needle: <span class="kw-2">&amp;</span>[u8]) -&gt; (u8, u8) {
+        (needle[<span class="self">self</span>.rare1i <span class="kw">as </span>usize], needle[<span class="self">self</span>.rare2i <span class="kw">as </span>usize])
     }
 
-    <span class="doccomment">/// Return the rare offsets such that the first offset is always &lt;= to the</span>
-    <span class="doccomment">/// second offset. This is useful when the caller doesn&#39;t care whether</span>
-    <span class="doccomment">/// rare1 is rarer than rare2, but just wants to ensure that they are</span>
-    <span class="doccomment">/// ordered with respect to one another.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">memchr_runtime_simd</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">as_rare_ordered_usize</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="kw">let</span> (<span class="ident">rare1i</span>, <span class="ident">rare2i</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_rare_ordered_u8</span>();
-        (<span class="ident">rare1i</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">rare2i</span> <span class="kw">as</span> <span class="ident">usize</span>)
+    <span class="doccomment">/// Return the rare offsets such that the first offset is always &lt;= to the
+    /// second offset. This is useful when the caller doesn&#39;t care whether
+    /// rare1 is rarer than rare2, but just wants to ensure that they are
+    /// ordered with respect to one another.
+    </span><span class="attribute">#[cfg(memchr_runtime_simd)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_rare_ordered_usize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, usize) {
+        <span class="kw">let </span>(rare1i, rare2i) = <span class="self">self</span>.as_rare_ordered_u8();
+        (rare1i <span class="kw">as </span>usize, rare2i <span class="kw">as </span>usize)
     }
 
-    <span class="doccomment">/// Like as_rare_ordered_usize, but returns the offsets as their native</span>
-    <span class="doccomment">/// u8 values.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">memchr_runtime_simd</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">as_rare_ordered_u8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">u8</span>, <span class="ident">u8</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rare1i</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">rare2i</span> {
-            (<span class="self">self</span>.<span class="ident">rare1i</span>, <span class="self">self</span>.<span class="ident">rare2i</span>)
-        } <span class="kw">else</span> {
-            (<span class="self">self</span>.<span class="ident">rare2i</span>, <span class="self">self</span>.<span class="ident">rare1i</span>)
+    <span class="doccomment">/// Like as_rare_ordered_usize, but returns the offsets as their native
+    /// u8 values.
+    </span><span class="attribute">#[cfg(memchr_runtime_simd)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_rare_ordered_u8(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u8, u8) {
+        <span class="kw">if </span><span class="self">self</span>.rare1i &lt;= <span class="self">self</span>.rare2i {
+            (<span class="self">self</span>.rare1i, <span class="self">self</span>.rare2i)
+        } <span class="kw">else </span>{
+            (<span class="self">self</span>.rare2i, <span class="self">self</span>.rare1i)
         }
     }
 
-    <span class="doccomment">/// Return the rare offsets as usize values in the order in which they were</span>
-    <span class="doccomment">/// constructed. rare1, for example, is constructed as the &quot;rarer&quot; byte,</span>
-    <span class="doccomment">/// and thus, callers may want to treat it differently from rare2.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">as_rare_usize</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        (<span class="self">self</span>.<span class="ident">rare1i</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="self">self</span>.<span class="ident">rare2i</span> <span class="kw">as</span> <span class="ident">usize</span>)
+    <span class="doccomment">/// Return the rare offsets as usize values in the order in which they were
+    /// constructed. rare1, for example, is constructed as the &quot;rarer&quot; byte,
+    /// and thus, callers may want to treat it differently from rare2.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_rare_usize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, usize) {
+        (<span class="self">self</span>.rare1i <span class="kw">as </span>usize, <span class="self">self</span>.rare2i <span class="kw">as </span>usize)
     }
 
-    <span class="doccomment">/// Return the byte frequency rank of each byte. The higher the rank, the</span>
-    <span class="doccomment">/// more frequency the byte is predicted to be. The needle given must be</span>
-    <span class="doccomment">/// the same one given to the RareNeedleBytes constructor.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">as_ranks</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="kw">let</span> (<span class="ident">b1</span>, <span class="ident">b2</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_rare_bytes</span>(<span class="ident">needle</span>);
-        (<span class="ident">rank</span>(<span class="ident">b1</span>), <span class="ident">rank</span>(<span class="ident">b2</span>))
+    <span class="doccomment">/// Return the byte frequency rank of each byte. The higher the rank, the
+    /// more frequency the byte is predicted to be. The needle given must be
+    /// the same one given to the RareNeedleBytes constructor.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_ranks(<span class="kw-2">&amp;</span><span class="self">self</span>, needle: <span class="kw-2">&amp;</span>[u8]) -&gt; (usize, usize) {
+        <span class="kw">let </span>(b1, b2) = <span class="self">self</span>.as_rare_bytes(needle);
+        (rank(b1), rank(b2))
     }
 }
 
-<span class="doccomment">/// Return the heuristical frequency rank of the given byte. A lower rank</span>
-<span class="doccomment">/// means the byte is believed to occur less frequently.</span>
-<span class="kw">fn</span> <span class="ident">rank</span>(<span class="ident">b</span>: <span class="ident">u8</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident"><span class="kw">crate</span>::memmem::byte_frequencies::BYTE_FREQUENCIES</span>[<span class="ident">b</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="kw">as</span> <span class="ident">usize</span>
+<span class="doccomment">/// Return the heuristical frequency rank of the given byte. A lower rank
+/// means the byte is believed to occur less frequently.
+</span><span class="kw">fn </span>rank(b: u8) -&gt; usize {
+    <span class="kw">crate</span>::memmem::byte_frequencies::BYTE_FREQUENCIES[b <span class="kw">as </span>usize] <span class="kw">as </span>usize
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

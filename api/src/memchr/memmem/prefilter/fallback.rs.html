@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/prefilter/fallback.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fallback.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../memchr/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/prefilter/fallback.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fallback.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../memchr/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -154,100 +148,99 @@ insight long before me.
 
 Another version of this also appeared in bstr:
 https://github.com/BurntSushi/bstr/blob/a444256ca7407fe180ee32534688549655b7a38e/src/search/prefilter.rs#L83-L340
-*/</span>
+*/
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::memmem</span>::{
-    <span class="ident">prefilter</span>::{<span class="ident">PrefilterFnTy</span>, <span class="ident">PrefilterState</span>},
-    <span class="ident">NeedleInfo</span>,
+</span><span class="kw">use </span><span class="kw">crate</span>::memmem::{
+    prefilter::{PrefilterFnTy, PrefilterState},
+    NeedleInfo,
 };
 
-<span class="comment">// Check that the functions below satisfy the Prefilter function type.</span>
-<span class="kw">const</span> <span class="kw">_</span>: <span class="ident">PrefilterFnTy</span> <span class="op">=</span> <span class="ident">find</span>;
+<span class="comment">// Check that the functions below satisfy the Prefilter function type.
+</span><span class="kw">const _</span>: PrefilterFnTy = find;
 
-<span class="doccomment">/// Look for a possible occurrence of needle. The position returned</span>
-<span class="doccomment">/// corresponds to the beginning of the occurrence, if one exists.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Callers may assume that this never returns false negatives (i.e., it</span>
-<span class="doccomment">/// never misses an actual occurrence), but must check that the returned</span>
-<span class="doccomment">/// position corresponds to a match. That is, it can return false</span>
-<span class="doccomment">/// positives.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This should only be used when Freqy is constructed for forward</span>
-<span class="doccomment">/// searching.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">find</span>(
-    <span class="ident">prestate</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PrefilterState</span>,
-    <span class="ident">ninfo</span>: <span class="kw-2">&amp;</span><span class="ident">NeedleInfo</span>,
-    <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> (<span class="ident">rare1i</span>, <span class="ident">rare2i</span>) <span class="op">=</span> <span class="ident">ninfo</span>.<span class="ident">rarebytes</span>.<span class="ident">as_rare_usize</span>();
-    <span class="kw">let</span> (<span class="ident">rare1</span>, <span class="ident">rare2</span>) <span class="op">=</span> <span class="ident">ninfo</span>.<span class="ident">rarebytes</span>.<span class="ident">as_rare_bytes</span>(<span class="ident">needle</span>);
-    <span class="kw">while</span> <span class="ident">prestate</span>.<span class="ident">is_effective</span>() {
-        <span class="comment">// Use a fast vectorized implementation to skip to the next</span>
-        <span class="comment">// occurrence of the rarest byte (heuristically chosen) in the</span>
-        <span class="comment">// needle.</span>
-        <span class="kw">let</span> <span class="ident">found</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::memchr</span>(<span class="ident">rare1</span>, <span class="kw-2">&amp;</span><span class="ident">haystack</span>[<span class="ident">i</span>..])<span class="question-mark">?</span>;
-        <span class="ident">prestate</span>.<span class="ident">update</span>(<span class="ident">found</span>);
-        <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="ident">found</span>;
+<span class="doccomment">/// Look for a possible occurrence of needle. The position returned
+/// corresponds to the beginning of the occurrence, if one exists.
+///
+/// Callers may assume that this never returns false negatives (i.e., it
+/// never misses an actual occurrence), but must check that the returned
+/// position corresponds to a match. That is, it can return false
+/// positives.
+///
+/// This should only be used when Freqy is constructed for forward
+/// searching.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>find(
+    prestate: <span class="kw-2">&amp;mut </span>PrefilterState,
+    ninfo: <span class="kw-2">&amp;</span>NeedleInfo,
+    haystack: <span class="kw-2">&amp;</span>[u8],
+    needle: <span class="kw-2">&amp;</span>[u8],
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
+    <span class="kw">let </span>(rare1i, rare2i) = ninfo.rarebytes.as_rare_usize();
+    <span class="kw">let </span>(rare1, rare2) = ninfo.rarebytes.as_rare_bytes(needle);
+    <span class="kw">while </span>prestate.is_effective() {
+        <span class="comment">// Use a fast vectorized implementation to skip to the next
+        // occurrence of the rarest byte (heuristically chosen) in the
+        // needle.
+        </span><span class="kw">let </span>found = <span class="kw">crate</span>::memchr(rare1, <span class="kw-2">&amp;</span>haystack[i..])<span class="question-mark">?</span>;
+        prestate.update(found);
+        i += found;
 
-        <span class="comment">// If we can&#39;t align our first match with the haystack, then a</span>
-        <span class="comment">// match is impossible.</span>
-        <span class="kw">if</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">rare1i</span> {
-            <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="comment">// If we can&#39;t align our first match with the haystack, then a
+        // match is impossible.
+        </span><span class="kw">if </span>i &lt; rare1i {
+            i += <span class="number">1</span>;
             <span class="kw">continue</span>;
         }
 
-        <span class="comment">// Align our rare2 byte with the haystack. A mismatch means that</span>
-        <span class="comment">// a match is impossible.</span>
-        <span class="kw">let</span> <span class="ident">aligned_rare2i</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">-</span> <span class="ident">rare1i</span> <span class="op">+</span> <span class="ident">rare2i</span>;
-        <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">get</span>(<span class="ident">aligned_rare2i</span>) <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">rare2</span>) {
-            <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="comment">// Align our rare2 byte with the haystack. A mismatch means that
+        // a match is impossible.
+        </span><span class="kw">let </span>aligned_rare2i = i - rare1i + rare2i;
+        <span class="kw">if </span>haystack.get(aligned_rare2i) != <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>rare2) {
+            i += <span class="number">1</span>;
             <span class="kw">continue</span>;
         }
 
-        <span class="comment">// We&#39;ve done what we can. There might be a match here.</span>
-        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span> <span class="op">-</span> <span class="ident">rare1i</span>);
+        <span class="comment">// We&#39;ve done what we can. There might be a match here.
+        </span><span class="kw">return </span><span class="prelude-val">Some</span>(i - rare1i);
     }
-    <span class="comment">// The only way we get here is if we believe our skipping heuristic</span>
-    <span class="comment">// has become ineffective. We&#39;re allowed to return false positives,</span>
-    <span class="comment">// so return the position at which we advanced to, aligned to the</span>
-    <span class="comment">// haystack.</span>
-    <span class="prelude-val">Some</span>(<span class="ident">i</span>.<span class="ident">saturating_sub</span>(<span class="ident">rare1i</span>))
+    <span class="comment">// The only way we get here is if we believe our skipping heuristic
+    // has become ineffective. We&#39;re allowed to return false positives,
+    // so return the position at which we advanced to, aligned to the
+    // haystack.
+    </span><span class="prelude-val">Some</span>(i.saturating_sub(rare1i))
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>))]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(all(test, feature = <span class="string">&quot;std&quot;</span>))]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">fn</span> <span class="ident">freqy_find</span>(<span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ninfo</span> <span class="op">=</span> <span class="ident">NeedleInfo::new</span>(<span class="ident">needle</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prestate</span> <span class="op">=</span> <span class="ident">PrefilterState::new</span>();
-        <span class="ident">find</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prestate</span>, <span class="kw-2">&amp;</span><span class="ident">ninfo</span>, <span class="ident">haystack</span>, <span class="ident">needle</span>)
+    <span class="kw">fn </span>freqy_find(haystack: <span class="kw-2">&amp;</span>[u8], needle: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="kw">let </span>ninfo = NeedleInfo::new(needle);
+        <span class="kw">let </span><span class="kw-2">mut </span>prestate = PrefilterState::new();
+        find(<span class="kw-2">&amp;mut </span>prestate, <span class="kw-2">&amp;</span>ninfo, haystack, needle)
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">freqy_forward</span>() {
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="ident">freqy_find</span>(<span class="string">b&quot;BARFOO&quot;</span>, <span class="string">b&quot;BAR&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="ident">freqy_find</span>(<span class="string">b&quot;FOOBAR&quot;</span>, <span class="string">b&quot;BAR&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="ident">freqy_find</span>(<span class="string">b&quot;zyzz&quot;</span>, <span class="string">b&quot;zyzy&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">2</span>), <span class="ident">freqy_find</span>(<span class="string">b&quot;zzzy&quot;</span>, <span class="string">b&quot;zyzy&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">None</span>, <span class="ident">freqy_find</span>(<span class="string">b&quot;zazb&quot;</span>, <span class="string">b&quot;zyzy&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="ident">freqy_find</span>(<span class="string">b&quot;yzyy&quot;</span>, <span class="string">b&quot;yzyz&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">2</span>), <span class="ident">freqy_find</span>(<span class="string">b&quot;yyyz&quot;</span>, <span class="string">b&quot;yzyz&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="prelude-val">None</span>, <span class="ident">freqy_find</span>(<span class="string">b&quot;yayb&quot;</span>, <span class="string">b&quot;yzyz&quot;</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>freqy_forward() {
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>), freqy_find(<span class="string">b&quot;BARFOO&quot;</span>, <span class="string">b&quot;BAR&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">3</span>), freqy_find(<span class="string">b&quot;FOOBAR&quot;</span>, <span class="string">b&quot;BAR&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>), freqy_find(<span class="string">b&quot;zyzz&quot;</span>, <span class="string">b&quot;zyzy&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">2</span>), freqy_find(<span class="string">b&quot;zzzy&quot;</span>, <span class="string">b&quot;zyzy&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">None</span>, freqy_find(<span class="string">b&quot;zazb&quot;</span>, <span class="string">b&quot;zyzy&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>), freqy_find(<span class="string">b&quot;yzyy&quot;</span>, <span class="string">b&quot;yzyz&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="number">2</span>), freqy_find(<span class="string">b&quot;yyyz&quot;</span>, <span class="string">b&quot;yzyz&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">None</span>, freqy_find(<span class="string">b&quot;yayb&quot;</span>, <span class="string">b&quot;yzyz&quot;</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">miri</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">prefilter_permutations</span>() {
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::memmem::prefilter::tests::PrefilterTest</span>;
+    <span class="attribute">#[test]
+    #[cfg(not(miri))]
+    </span><span class="kw">fn </span>prefilter_permutations() {
+        <span class="kw">use </span><span class="kw">crate</span>::memmem::prefilter::tests::PrefilterTest;
 
-        <span class="comment">// SAFETY: super::find is safe to call for all inputs and on all</span>
-        <span class="comment">// platforms.</span>
-        <span class="kw">unsafe</span> { <span class="ident">PrefilterTest::run_all_tests</span>(<span class="ident"><span class="kw">super</span>::find</span>) };
+        <span class="comment">// SAFETY: super::find is safe to call for all inputs and on all
+        // platforms.
+        </span><span class="kw">unsafe </span>{ PrefilterTest::run_all_tests(<span class="kw">super</span>::find) };
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

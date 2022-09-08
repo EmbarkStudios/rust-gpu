@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/hir/visitor.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>visitor.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/hir/visitor.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>visitor.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -207,190 +201,190 @@
 <span id="201">201</span>
 <span id="202">202</span>
 <span id="203">203</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::hir</span>::{<span class="self">self</span>, <span class="ident">Hir</span>, <span class="ident">HirKind</span>};
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::hir::{<span class="self">self</span>, Hir, HirKind};
 
-<span class="doccomment">/// A trait for visiting the high-level IR (HIR) in depth first order.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The principle aim of this trait is to enable callers to perform case</span>
-<span class="doccomment">/// analysis on a high-level intermediate representation of a regular</span>
-<span class="doccomment">/// expression without necessarily using recursion. In particular, this permits</span>
-<span class="doccomment">/// callers to do case analysis with constant stack usage, which can be</span>
-<span class="doccomment">/// important since the size of an HIR may be proportional to end user input.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Typical usage of this trait involves providing an implementation and then</span>
-<span class="doccomment">/// running it using the [`visit`](fn.visit.html) function.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Visitor</span> {
-    <span class="doccomment">/// The result of visiting an HIR.</span>
-    <span class="kw">type</span> <span class="ident">Output</span>;
-    <span class="doccomment">/// An error that visiting an HIR might return.</span>
-    <span class="kw">type</span> <span class="prelude-val">Err</span>;
+<span class="doccomment">/// A trait for visiting the high-level IR (HIR) in depth first order.
+///
+/// The principle aim of this trait is to enable callers to perform case
+/// analysis on a high-level intermediate representation of a regular
+/// expression without necessarily using recursion. In particular, this permits
+/// callers to do case analysis with constant stack usage, which can be
+/// important since the size of an HIR may be proportional to end user input.
+///
+/// Typical usage of this trait involves providing an implementation and then
+/// running it using the [`visit`](fn.visit.html) function.
+</span><span class="kw">pub trait </span>Visitor {
+    <span class="doccomment">/// The result of visiting an HIR.
+    </span><span class="kw">type </span>Output;
+    <span class="doccomment">/// An error that visiting an HIR might return.
+    </span><span class="kw">type </span><span class="prelude-val">Err</span>;
 
-    <span class="doccomment">/// All implementors of `Visitor` must provide a `finish` method, which</span>
-    <span class="doccomment">/// yields the result of visiting the HIR or an error.</span>
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// All implementors of `Visitor` must provide a `finish` method, which
+    /// yields the result of visiting the HIR or an error.
+    </span><span class="kw">fn </span>finish(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, <span class="self">Self</span>::Err&gt;;
 
-    <span class="doccomment">/// This method is called before beginning traversal of the HIR.</span>
-    <span class="kw">fn</span> <span class="ident">start</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {}
+    <span class="doccomment">/// This method is called before beginning traversal of the HIR.
+    </span><span class="kw">fn </span>start(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {}
 
-    <span class="doccomment">/// This method is called on an `Hir` before descending into child `Hir`</span>
-    <span class="doccomment">/// nodes.</span>
-    <span class="kw">fn</span> <span class="ident">visit_pre</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_hir</span>: <span class="kw-2">&amp;</span><span class="ident">Hir</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// This method is called on an `Hir` before descending into child `Hir`
+    /// nodes.
+    </span><span class="kw">fn </span>visit_pre(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _hir: <span class="kw-2">&amp;</span>Hir) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Err&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// This method is called on an `Hir` after descending all of its child</span>
-    <span class="doccomment">/// `Hir` nodes.</span>
-    <span class="kw">fn</span> <span class="ident">visit_post</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_hir</span>: <span class="kw-2">&amp;</span><span class="ident">Hir</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// This method is called on an `Hir` after descending all of its child
+    /// `Hir` nodes.
+    </span><span class="kw">fn </span>visit_post(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _hir: <span class="kw-2">&amp;</span>Hir) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Err&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// This method is called between child nodes of an alternation.</span>
-    <span class="kw">fn</span> <span class="ident">visit_alternation_in</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// This method is called between child nodes of an alternation.
+    </span><span class="kw">fn </span>visit_alternation_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Err&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="doccomment">/// Executes an implementation of `Visitor` in constant stack space.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This function will visit every node in the given `Hir` while calling</span>
-<span class="doccomment">/// appropriate methods provided by the</span>
-<span class="doccomment">/// [`Visitor`](trait.Visitor.html) trait.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The primary use case for this method is when one wants to perform case</span>
-<span class="doccomment">/// analysis over an `Hir` without using a stack size proportional to the depth</span>
-<span class="doccomment">/// of the `Hir`. Namely, this method will instead use constant stack space,</span>
-<span class="doccomment">/// but will use heap space proportional to the size of the `Hir`. This may be</span>
-<span class="doccomment">/// desirable in cases where the size of `Hir` is proportional to end user</span>
-<span class="doccomment">/// input.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If the visitor returns an error at any point, then visiting is stopped and</span>
-<span class="doccomment">/// the error is returned.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">visit</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&gt;</span>(<span class="ident">hir</span>: <span class="kw-2">&amp;</span><span class="ident">Hir</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Output</span>, <span class="ident">V::Err</span><span class="op">&gt;</span> {
-    <span class="ident">HeapVisitor::new</span>().<span class="ident">visit</span>(<span class="ident">hir</span>, <span class="ident">visitor</span>)
+<span class="doccomment">/// Executes an implementation of `Visitor` in constant stack space.
+///
+/// This function will visit every node in the given `Hir` while calling
+/// appropriate methods provided by the
+/// [`Visitor`](trait.Visitor.html) trait.
+///
+/// The primary use case for this method is when one wants to perform case
+/// analysis over an `Hir` without using a stack size proportional to the depth
+/// of the `Hir`. Namely, this method will instead use constant stack space,
+/// but will use heap space proportional to the size of the `Hir`. This may be
+/// desirable in cases where the size of `Hir` is proportional to end user
+/// input.
+///
+/// If the visitor returns an error at any point, then visiting is stopped and
+/// the error is returned.
+</span><span class="kw">pub fn </span>visit&lt;V: Visitor&gt;(hir: <span class="kw-2">&amp;</span>Hir, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Output, V::Err&gt; {
+    HeapVisitor::new().visit(hir, visitor)
 }
 
-<span class="doccomment">/// HeapVisitor visits every item in an `Hir` recursively using constant stack</span>
-<span class="doccomment">/// size and a heap size proportional to the size of the `Hir`.</span>
-<span class="kw">struct</span> <span class="ident">HeapVisitor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// A stack of `Hir` nodes. This is roughly analogous to the call stack</span>
-    <span class="doccomment">/// used in a typical recursive visitor.</span>
-    <span class="ident">stack</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Hir</span>, <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+<span class="doccomment">/// HeapVisitor visits every item in an `Hir` recursively using constant stack
+/// size and a heap size proportional to the size of the `Hir`.
+</span><span class="kw">struct </span>HeapVisitor&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// A stack of `Hir` nodes. This is roughly analogous to the call stack
+    /// used in a typical recursive visitor.
+    </span>stack: Vec&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Hir, Frame&lt;<span class="lifetime">&#39;a</span>&gt;)&gt;,
 }
 
-<span class="doccomment">/// Represents a single stack frame while performing structural induction over</span>
-<span class="doccomment">/// an `Hir`.</span>
-<span class="kw">enum</span> <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// A stack frame allocated just before descending into a repetition</span>
-    <span class="doccomment">/// operator&#39;s child node.</span>
-    <span class="ident">Repetition</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">hir::Repetition</span>),
-    <span class="doccomment">/// A stack frame allocated just before descending into a group&#39;s child</span>
-    <span class="doccomment">/// node.</span>
-    <span class="ident">Group</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">hir::Group</span>),
-    <span class="doccomment">/// The stack frame used while visiting every child node of a concatenation</span>
-    <span class="doccomment">/// of expressions.</span>
-    <span class="ident">Concat</span> {
-        <span class="doccomment">/// The child node we are currently visiting.</span>
-        <span class="ident">head</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Hir</span>,
-        <span class="doccomment">/// The remaining child nodes to visit (which may be empty).</span>
-        <span class="ident">tail</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Hir</span>],
+<span class="doccomment">/// Represents a single stack frame while performing structural induction over
+/// an `Hir`.
+</span><span class="kw">enum </span>Frame&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// A stack frame allocated just before descending into a repetition
+    /// operator&#39;s child node.
+    </span>Repetition(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>hir::Repetition),
+    <span class="doccomment">/// A stack frame allocated just before descending into a group&#39;s child
+    /// node.
+    </span>Group(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>hir::Group),
+    <span class="doccomment">/// The stack frame used while visiting every child node of a concatenation
+    /// of expressions.
+    </span>Concat {
+        <span class="doccomment">/// The child node we are currently visiting.
+        </span>head: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Hir,
+        <span class="doccomment">/// The remaining child nodes to visit (which may be empty).
+        </span>tail: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Hir],
     },
-    <span class="doccomment">/// The stack frame used while visiting every child node of an alternation</span>
-    <span class="doccomment">/// of expressions.</span>
-    <span class="ident">Alternation</span> {
-        <span class="doccomment">/// The child node we are currently visiting.</span>
-        <span class="ident">head</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Hir</span>,
-        <span class="doccomment">/// The remaining child nodes to visit (which may be empty).</span>
-        <span class="ident">tail</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Hir</span>],
+    <span class="doccomment">/// The stack frame used while visiting every child node of an alternation
+    /// of expressions.
+    </span>Alternation {
+        <span class="doccomment">/// The child node we are currently visiting.
+        </span>head: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Hir,
+        <span class="doccomment">/// The remaining child nodes to visit (which may be empty).
+        </span>tail: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Hir],
     },
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">HeapVisitor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">HeapVisitor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="ident">HeapVisitor</span> { <span class="ident">stack</span>: <span class="macro">vec!</span>[] }
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; HeapVisitor&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>new() -&gt; HeapVisitor&lt;<span class="lifetime">&#39;a</span>&gt; {
+        HeapVisitor { stack: <span class="macro">vec!</span>[] }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="kw-2">mut</span> <span class="ident">hir</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Hir</span>,
-        <span class="kw-2">mut</span> <span class="ident">visitor</span>: <span class="ident">V</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Output</span>, <span class="ident">V::Err</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">clear</span>();
+    <span class="kw">fn </span>visit&lt;V: Visitor&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw-2">mut </span>hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Hir,
+        <span class="kw-2">mut </span>visitor: V,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;V::Output, V::Err&gt; {
+        <span class="self">self</span>.stack.clear();
 
-        <span class="ident">visitor</span>.<span class="ident">start</span>();
-        <span class="kw">loop</span> {
-            <span class="ident">visitor</span>.<span class="ident">visit_pre</span>(<span class="ident">hir</span>)<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">x</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">induct</span>(<span class="ident">hir</span>) {
-                <span class="kw">let</span> <span class="ident">child</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">child</span>();
-                <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">push</span>((<span class="ident">hir</span>, <span class="ident">x</span>));
-                <span class="ident">hir</span> <span class="op">=</span> <span class="ident">child</span>;
+        visitor.start();
+        <span class="kw">loop </span>{
+            visitor.visit_pre(hir)<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(x) = <span class="self">self</span>.induct(hir) {
+                <span class="kw">let </span>child = x.child();
+                <span class="self">self</span>.stack.push((hir, x));
+                hir = child;
                 <span class="kw">continue</span>;
             }
-            <span class="comment">// No induction means we have a base case, so we can post visit</span>
-            <span class="comment">// it now.</span>
-            <span class="ident">visitor</span>.<span class="ident">visit_post</span>(<span class="ident">hir</span>)<span class="question-mark">?</span>;
+            <span class="comment">// No induction means we have a base case, so we can post visit
+            // it now.
+            </span>visitor.visit_post(hir)<span class="question-mark">?</span>;
 
-            <span class="comment">// At this point, we now try to pop our call stack until it is</span>
-            <span class="comment">// either empty or we hit another inductive case.</span>
-            <span class="kw">loop</span> {
-                <span class="kw">let</span> (<span class="ident">post_hir</span>, <span class="ident">frame</span>) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">pop</span>() {
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">visitor</span>.<span class="ident">finish</span>(),
-                    <span class="prelude-val">Some</span>((<span class="ident">post_hir</span>, <span class="ident">frame</span>)) =&gt; (<span class="ident">post_hir</span>, <span class="ident">frame</span>),
+            <span class="comment">// At this point, we now try to pop our call stack until it is
+            // either empty or we hit another inductive case.
+            </span><span class="kw">loop </span>{
+                <span class="kw">let </span>(post_hir, frame) = <span class="kw">match </span><span class="self">self</span>.stack.pop() {
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>visitor.finish(),
+                    <span class="prelude-val">Some</span>((post_hir, frame)) =&gt; (post_hir, frame),
                 };
-                <span class="comment">// If this is a concat/alternate, then we might have additional</span>
-                <span class="comment">// inductive steps to process.</span>
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">x</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">pop</span>(<span class="ident">frame</span>) {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Frame::Alternation</span> { .. } <span class="op">=</span> <span class="ident">x</span> {
-                        <span class="ident">visitor</span>.<span class="ident">visit_alternation_in</span>()<span class="question-mark">?</span>;
+                <span class="comment">// If this is a concat/alternate, then we might have additional
+                // inductive steps to process.
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(x) = <span class="self">self</span>.pop(frame) {
+                    <span class="kw">if let </span>Frame::Alternation { .. } = x {
+                        visitor.visit_alternation_in()<span class="question-mark">?</span>;
                     }
-                    <span class="ident">hir</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">child</span>();
-                    <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">push</span>((<span class="ident">post_hir</span>, <span class="ident">x</span>));
+                    hir = x.child();
+                    <span class="self">self</span>.stack.push((post_hir, x));
                     <span class="kw">break</span>;
                 }
-                <span class="comment">// Otherwise, we&#39;ve finished visiting all the child nodes for</span>
-                <span class="comment">// this HIR, so we can post visit it now.</span>
-                <span class="ident">visitor</span>.<span class="ident">visit_post</span>(<span class="ident">post_hir</span>)<span class="question-mark">?</span>;
+                <span class="comment">// Otherwise, we&#39;ve finished visiting all the child nodes for
+                // this HIR, so we can post visit it now.
+                </span>visitor.visit_post(post_hir)<span class="question-mark">?</span>;
             }
         }
     }
 
-    <span class="doccomment">/// Build a stack frame for the given HIR if one is needed (which occurs if</span>
-    <span class="doccomment">/// and only if there are child nodes in the HIR). Otherwise, return None.</span>
-    <span class="kw">fn</span> <span class="ident">induct</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hir</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Hir</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">hir</span>.<span class="ident">kind</span>() {
-            <span class="ident">HirKind::Repetition</span>(<span class="kw-2">ref</span> <span class="ident">x</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">Frame::Repetition</span>(<span class="ident">x</span>)),
-            <span class="ident">HirKind::Group</span>(<span class="kw-2">ref</span> <span class="ident">x</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">Frame::Group</span>(<span class="ident">x</span>)),
-            <span class="ident">HirKind::Concat</span>(<span class="kw-2">ref</span> <span class="ident">x</span>) <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">is_empty</span>() =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">HirKind::Concat</span>(<span class="kw-2">ref</span> <span class="ident">x</span>) =&gt; {
-                <span class="prelude-val">Some</span>(<span class="ident">Frame::Concat</span> { <span class="ident">head</span>: <span class="kw-2">&amp;</span><span class="ident">x</span>[<span class="number">0</span>], <span class="ident">tail</span>: <span class="kw-2">&amp;</span><span class="ident">x</span>[<span class="number">1</span>..] })
+    <span class="doccomment">/// Build a stack frame for the given HIR if one is needed (which occurs if
+    /// and only if there are child nodes in the HIR). Otherwise, return None.
+    </span><span class="kw">fn </span>induct(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Hir) -&gt; <span class="prelude-ty">Option</span>&lt;Frame&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        <span class="kw">match </span><span class="kw-2">*</span>hir.kind() {
+            HirKind::Repetition(<span class="kw-2">ref </span>x) =&gt; <span class="prelude-val">Some</span>(Frame::Repetition(x)),
+            HirKind::Group(<span class="kw-2">ref </span>x) =&gt; <span class="prelude-val">Some</span>(Frame::Group(x)),
+            HirKind::Concat(<span class="kw-2">ref </span>x) <span class="kw">if </span>x.is_empty() =&gt; <span class="prelude-val">None</span>,
+            HirKind::Concat(<span class="kw-2">ref </span>x) =&gt; {
+                <span class="prelude-val">Some</span>(Frame::Concat { head: <span class="kw-2">&amp;</span>x[<span class="number">0</span>], tail: <span class="kw-2">&amp;</span>x[<span class="number">1</span>..] })
             }
-            <span class="ident">HirKind::Alternation</span>(<span class="kw-2">ref</span> <span class="ident">x</span>) <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">is_empty</span>() =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">HirKind::Alternation</span>(<span class="kw-2">ref</span> <span class="ident">x</span>) =&gt; {
-                <span class="prelude-val">Some</span>(<span class="ident">Frame::Alternation</span> { <span class="ident">head</span>: <span class="kw-2">&amp;</span><span class="ident">x</span>[<span class="number">0</span>], <span class="ident">tail</span>: <span class="kw-2">&amp;</span><span class="ident">x</span>[<span class="number">1</span>..] })
+            HirKind::Alternation(<span class="kw-2">ref </span>x) <span class="kw">if </span>x.is_empty() =&gt; <span class="prelude-val">None</span>,
+            HirKind::Alternation(<span class="kw-2">ref </span>x) =&gt; {
+                <span class="prelude-val">Some</span>(Frame::Alternation { head: <span class="kw-2">&amp;</span>x[<span class="number">0</span>], tail: <span class="kw-2">&amp;</span>x[<span class="number">1</span>..] })
             }
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Pops the given frame. If the frame has an additional inductive step,</span>
-    <span class="doccomment">/// then return it, otherwise return `None`.</span>
-    <span class="kw">fn</span> <span class="ident">pop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">induct</span>: <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">induct</span> {
-            <span class="ident">Frame::Repetition</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">Frame::Group</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">Frame::Concat</span> { <span class="ident">tail</span>, .. } =&gt; {
-                <span class="kw">if</span> <span class="ident">tail</span>.<span class="ident">is_empty</span>() {
-                    <span class="prelude-val">None</span>
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">Frame::Concat</span> { <span class="ident">head</span>: <span class="kw-2">&amp;</span><span class="ident">tail</span>[<span class="number">0</span>], <span class="ident">tail</span>: <span class="kw-2">&amp;</span><span class="ident">tail</span>[<span class="number">1</span>..] })
+    <span class="doccomment">/// Pops the given frame. If the frame has an additional inductive step,
+    /// then return it, otherwise return `None`.
+    </span><span class="kw">fn </span>pop(<span class="kw-2">&amp;</span><span class="self">self</span>, induct: Frame&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Frame&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        <span class="kw">match </span>induct {
+            Frame::Repetition(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            Frame::Group(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            Frame::Concat { tail, .. } =&gt; {
+                <span class="kw">if </span>tail.is_empty() {
+                    <span class="prelude-val">None
+                </span>} <span class="kw">else </span>{
+                    <span class="prelude-val">Some</span>(Frame::Concat { head: <span class="kw-2">&amp;</span>tail[<span class="number">0</span>], tail: <span class="kw-2">&amp;</span>tail[<span class="number">1</span>..] })
                 }
             }
-            <span class="ident">Frame::Alternation</span> { <span class="ident">tail</span>, .. } =&gt; {
-                <span class="kw">if</span> <span class="ident">tail</span>.<span class="ident">is_empty</span>() {
-                    <span class="prelude-val">None</span>
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">Frame::Alternation</span> {
-                        <span class="ident">head</span>: <span class="kw-2">&amp;</span><span class="ident">tail</span>[<span class="number">0</span>],
-                        <span class="ident">tail</span>: <span class="kw-2">&amp;</span><span class="ident">tail</span>[<span class="number">1</span>..],
+            Frame::Alternation { tail, .. } =&gt; {
+                <span class="kw">if </span>tail.is_empty() {
+                    <span class="prelude-val">None
+                </span>} <span class="kw">else </span>{
+                    <span class="prelude-val">Some</span>(Frame::Alternation {
+                        head: <span class="kw-2">&amp;</span>tail[<span class="number">0</span>],
+                        tail: <span class="kw-2">&amp;</span>tail[<span class="number">1</span>..],
                     })
                 }
             }
@@ -398,18 +392,17 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Perform the next inductive step on this frame and return the next</span>
-    <span class="doccomment">/// child HIR node to visit.</span>
-    <span class="kw">fn</span> <span class="ident">child</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Hir</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">Frame::Repetition</span>(<span class="ident">rep</span>) =&gt; <span class="kw-2">&amp;</span><span class="ident">rep</span>.<span class="ident">hir</span>,
-            <span class="ident">Frame::Group</span>(<span class="ident">group</span>) =&gt; <span class="kw-2">&amp;</span><span class="ident">group</span>.<span class="ident">hir</span>,
-            <span class="ident">Frame::Concat</span> { <span class="ident">head</span>, .. } =&gt; <span class="ident">head</span>,
-            <span class="ident">Frame::Alternation</span> { <span class="ident">head</span>, .. } =&gt; <span class="ident">head</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Frame&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Perform the next inductive step on this frame and return the next
+    /// child HIR node to visit.
+    </span><span class="kw">fn </span>child(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Hir {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            Frame::Repetition(rep) =&gt; <span class="kw-2">&amp;</span>rep.hir,
+            Frame::Group(group) =&gt; <span class="kw-2">&amp;</span>group.hir,
+            Frame::Concat { head, .. } =&gt; head,
+            Frame::Alternation { head, .. } =&gt; head,
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

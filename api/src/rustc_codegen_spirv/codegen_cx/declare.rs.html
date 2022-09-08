@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/codegen_cx/declare.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>declare.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/codegen_cx/declare.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>declare.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -311,313 +305,312 @@
 <span id="305">305</span>
 <span id="306">306</span>
 <span id="307">307</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::CodegenCx</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::attr::AggregatedSpirvAttributes</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv_type::SpirvType</span>;
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">FunctionControl</span>, <span class="ident">LinkageType</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_attr::InlineAttr</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">PreDefineMethods</span>, <span class="ident">StaticMethods</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle::middle::codegen_fn_attrs</span>::{<span class="ident">CodegenFnAttrFlags</span>, <span class="ident">CodegenFnAttrs</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::mir::mono</span>::{<span class="ident">Linkage</span>, <span class="ident">MonoItem</span>, <span class="ident">Visibility</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::ty::layout</span>::{<span class="ident">FnAbiOf</span>, <span class="ident">LayoutOf</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::ty</span>::{<span class="self">self</span>, <span class="ident">Instance</span>, <span class="ident">ParamEnv</span>, <span class="ident">TypeVisitable</span>};
-<span class="kw">use</span> <span class="ident">rustc_span::def_id::DefId</span>;
-<span class="kw">use</span> <span class="ident">rustc_span::Span</span>;
-<span class="kw">use</span> <span class="ident">rustc_target::abi::Align</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::CodegenCx;
+<span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
+<span class="kw">use </span><span class="kw">crate</span>::attr::AggregatedSpirvAttributes;
+<span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
+<span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
+<span class="kw">use </span>rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
+<span class="kw">use </span>rustc_attr::InlineAttr;
+<span class="kw">use </span>rustc_codegen_ssa::traits::{BaseTypeMethods, PreDefineMethods, StaticMethods};
+<span class="kw">use </span>rustc_middle::bug;
+<span class="kw">use </span>rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
+<span class="kw">use </span>rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
+<span class="kw">use </span>rustc_middle::ty::layout::{FnAbiOf, LayoutOf};
+<span class="kw">use </span>rustc_middle::ty::{<span class="self">self</span>, Instance, ParamEnv, TypeVisitable};
+<span class="kw">use </span>rustc_span::def_id::DefId;
+<span class="kw">use </span>rustc_span::Span;
+<span class="kw">use </span>rustc_target::abi::Align;
 
-<span class="kw">fn</span> <span class="ident">attrs_to_spirv</span>(<span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenFnAttrs</span>) -&gt; <span class="ident">FunctionControl</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">control</span> <span class="op">=</span> <span class="ident">FunctionControl::NONE</span>;
-    <span class="kw">match</span> <span class="ident">attrs</span>.<span class="ident">inline</span> {
-        <span class="ident">InlineAttr::None</span> =&gt; (),
-        <span class="ident">InlineAttr::Hint</span> <span class="op">|</span> <span class="ident">InlineAttr::Always</span> =&gt; <span class="ident">control</span>.<span class="ident">insert</span>(<span class="ident">FunctionControl::INLINE</span>),
-        <span class="ident">InlineAttr::Never</span> =&gt; <span class="ident">control</span>.<span class="ident">insert</span>(<span class="ident">FunctionControl::DONT_INLINE</span>),
+<span class="kw">fn </span>attrs_to_spirv(attrs: <span class="kw-2">&amp;</span>CodegenFnAttrs) -&gt; FunctionControl {
+    <span class="kw">let </span><span class="kw-2">mut </span>control = FunctionControl::NONE;
+    <span class="kw">match </span>attrs.inline {
+        InlineAttr::None =&gt; (),
+        InlineAttr::Hint | InlineAttr::Always =&gt; control.insert(FunctionControl::INLINE),
+        InlineAttr::Never =&gt; control.insert(FunctionControl::DONT_INLINE),
     }
-    <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">CodegenFnAttrFlags::FFI_PURE</span>) {
-        <span class="ident">control</span>.<span class="ident">insert</span>(<span class="ident">FunctionControl::PURE</span>);
+    <span class="kw">if </span>attrs.flags.contains(CodegenFnAttrFlags::FFI_PURE) {
+        control.insert(FunctionControl::PURE);
     }
-    <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">CodegenFnAttrFlags::FFI_CONST</span>) {
-        <span class="ident">control</span>.<span class="ident">insert</span>(<span class="ident">FunctionControl::CONST</span>);
+    <span class="kw">if </span>attrs.flags.contains(CodegenFnAttrFlags::FFI_CONST) {
+        control.insert(FunctionControl::CONST);
     }
-    <span class="ident">control</span>
+    control
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns a function if it already exists, or declares a header if it doesn&#39;t.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_fn_ext</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">instance</span>.<span class="ident">substs</span>.<span class="ident">needs_infer</span>());
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">instance</span>.<span class="ident">substs</span>.<span class="ident">has_escaping_bound_vars</span>());
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="doccomment">/// Returns a function if it already exists, or declares a header if it doesn&#39;t.
+    </span><span class="kw">pub fn </span>get_fn_ext(<span class="kw-2">&amp;</span><span class="self">self</span>, instance: Instance&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; SpirvValue {
+        <span class="macro">assert!</span>(!instance.substs.needs_infer());
+        <span class="macro">assert!</span>(!instance.substs.has_escaping_bound_vars());
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">func</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">instances</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">instance</span>) {
-            <span class="kw">return</span> <span class="ident">func</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>func) = <span class="self">self</span>.instances.borrow().get(<span class="kw-2">&amp;</span>instance) {
+            <span class="kw">return </span>func;
         }
 
-        <span class="comment">// Because we&#39;ve already declared everything with predefine_fn, if we hit this branch, we&#39;re guaranteed to be</span>
-        <span class="comment">// importing this function from elsewhere. So, slap an extern on it.</span>
-        <span class="kw">let</span> <span class="ident">linkage</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">LinkageType::Import</span>);
-        <span class="kw">let</span> <span class="ident">llfn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">declare_fn_ext</span>(<span class="ident">instance</span>, <span class="ident">linkage</span>);
+        <span class="comment">// Because we&#39;ve already declared everything with predefine_fn, if we hit this branch, we&#39;re guaranteed to be
+        // importing this function from elsewhere. So, slap an extern on it.
+        </span><span class="kw">let </span>linkage = <span class="prelude-val">Some</span>(LinkageType::Import);
+        <span class="kw">let </span>llfn = <span class="self">self</span>.declare_fn_ext(instance, linkage);
 
-        <span class="self">self</span>.<span class="ident">instances</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">instance</span>, <span class="ident">llfn</span>);
+        <span class="self">self</span>.instances.borrow_mut().insert(instance, llfn);
 
-        <span class="ident">llfn</span>
+        llfn
     }
 
-    <span class="comment">// The call graph of how this is reachable is a little tangled, so:</span>
-    <span class="comment">// MiscMethods::get_fn -&gt; get_fn_ext -&gt; declare_fn_ext</span>
-    <span class="comment">// MiscMethods::get_fn_addr -&gt; get_fn_ext -&gt; declare_fn_ext</span>
-    <span class="comment">// PreDefineMethods::predefine_fn -&gt; declare_fn_ext</span>
-    <span class="kw">fn</span> <span class="ident">declare_fn_ext</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">linkage</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LinkageType</span><span class="op">&gt;</span>) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">control</span> <span class="op">=</span> <span class="ident">attrs_to_spirv</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">codegen_fn_attrs</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>()));
-        <span class="kw">let</span> <span class="ident">fn_abi</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">fn_abi_of_instance</span>(<span class="ident">instance</span>, <span class="ident">ty::List::empty</span>());
-        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>());
-        <span class="kw">let</span> <span class="ident">function_type</span> <span class="op">=</span> <span class="ident">fn_abi</span>.<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="kw">let</span> (<span class="ident">return_type</span>, <span class="ident">argument_types</span>) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">function_type</span>) {
-            <span class="ident">SpirvType::Function</span> {
-                <span class="ident">return_type</span>,
-                <span class="ident">arguments</span>,
-            } =&gt; (<span class="ident">return_type</span>, <span class="ident">arguments</span>),
-            <span class="ident">other</span> =&gt; <span class="macro">bug!</span>(<span class="string">&quot;fn_abi type {}&quot;</span>, <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">function_type</span>, <span class="self">self</span>)),
+    <span class="comment">// The call graph of how this is reachable is a little tangled, so:
+    // MiscMethods::get_fn -&gt; get_fn_ext -&gt; declare_fn_ext
+    // MiscMethods::get_fn_addr -&gt; get_fn_ext -&gt; declare_fn_ext
+    // PreDefineMethods::predefine_fn -&gt; declare_fn_ext
+    </span><span class="kw">fn </span>declare_fn_ext(<span class="kw-2">&amp;</span><span class="self">self</span>, instance: Instance&lt;<span class="lifetime">&#39;tcx</span>&gt;, linkage: <span class="prelude-ty">Option</span>&lt;LinkageType&gt;) -&gt; SpirvValue {
+        <span class="kw">let </span>control = attrs_to_spirv(<span class="self">self</span>.tcx.codegen_fn_attrs(instance.def_id()));
+        <span class="kw">let </span>fn_abi = <span class="self">self</span>.fn_abi_of_instance(instance, ty::List::empty());
+        <span class="kw">let </span>span = <span class="self">self</span>.tcx.def_span(instance.def_id());
+        <span class="kw">let </span>function_type = fn_abi.spirv_type(span, <span class="self">self</span>);
+        <span class="kw">let </span>(return_type, argument_types) = <span class="kw">match </span><span class="self">self</span>.lookup_type(function_type) {
+            SpirvType::Function {
+                return_type,
+                arguments,
+            } =&gt; (return_type, arguments),
+            other =&gt; <span class="macro">bug!</span>(<span class="string">&quot;fn_abi type {}&quot;</span>, other.debug(function_type, <span class="self">self</span>)),
         };
 
-        <span class="kw">if</span> <span class="ident"><span class="kw">crate</span>::is_blocklisted_fn</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sym</span>, <span class="ident">instance</span>) {
-            <span class="comment">// This can happen if we call a blocklisted function in another crate.</span>
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">function_type</span>);
-            <span class="self">self</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="ident">span</span>, <span class="string">&quot;called blocklisted fn&quot;</span>);
-            <span class="kw">return</span> <span class="ident">result</span>;
+        <span class="kw">if </span><span class="kw">crate</span>::is_blocklisted_fn(<span class="self">self</span>.tcx, <span class="kw-2">&amp;</span><span class="self">self</span>.sym, instance) {
+            <span class="comment">// This can happen if we call a blocklisted function in another crate.
+            </span><span class="kw">let </span>result = <span class="self">self</span>.undef(function_type);
+            <span class="self">self</span>.zombie_with_span(result.def_cx(<span class="self">self</span>), span, <span class="string">&quot;called blocklisted fn&quot;</span>);
+            <span class="kw">return </span>result;
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit_global</span>();
-        <span class="kw">let</span> <span class="ident">fn_id</span> <span class="op">=</span> <span class="ident">emit</span>
-            .<span class="ident">begin_function</span>(<span class="ident">return_type</span>, <span class="prelude-val">None</span>, <span class="ident">control</span>, <span class="ident">function_type</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="kw">if</span> <span class="ident">linkage</span> <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">LinkageType::Import</span>) {
-            <span class="kw">let</span> <span class="ident">parameter_values</span> <span class="op">=</span> <span class="ident">argument_types</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">ty</span><span class="op">|</span> <span class="ident">emit</span>.<span class="ident">function_parameter</span>(<span class="ident">ty</span>).<span class="ident">unwrap</span>().<span class="ident">with_type</span>(<span class="ident">ty</span>))
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-            <span class="self">self</span>.<span class="ident">function_parameter_values</span>
-                .<span class="ident">borrow_mut</span>()
-                .<span class="ident">insert</span>(<span class="ident">fn_id</span>, <span class="ident">parameter_values</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>emit = <span class="self">self</span>.emit_global();
+        <span class="kw">let </span>fn_id = emit
+            .begin_function(return_type, <span class="prelude-val">None</span>, control, function_type)
+            .unwrap();
+        <span class="kw">if </span>linkage != <span class="prelude-val">Some</span>(LinkageType::Import) {
+            <span class="kw">let </span>parameter_values = argument_types
+                .iter()
+                .map(|<span class="kw-2">&amp;</span>ty| emit.function_parameter(ty).unwrap().with_type(ty))
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+            <span class="self">self</span>.function_parameter_values
+                .borrow_mut()
+                .insert(fn_id, parameter_values);
         }
-        <span class="ident">emit</span>.<span class="ident">end_function</span>().<span class="ident">unwrap</span>();
+        emit.end_function().unwrap();
 
-        <span class="comment">// HACK(eddyb) this is a bit roundabout, but the easiest way to get a</span>
-        <span class="comment">// fully absolute path that contains at least as much information as</span>
-        <span class="comment">// `instance.to_string()` (at least with `-C symbol-mangling-version=v0`).</span>
-        <span class="comment">// While we could use the mangled symbol instead, like we do for linkage,</span>
-        <span class="comment">// `OpName` is more of a debugging aid, so not having to separately</span>
-        <span class="comment">// demangle the SPIR-V can help. However, if some tools assume `OpName`</span>
-        <span class="comment">// is always a valid identifier, we may have to offer the mangled name</span>
-        <span class="comment">// (as some sort of opt-in, or toggled based on the platform, etc.).</span>
-        <span class="kw">let</span> <span class="ident">symbol_name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">symbol_name</span>(<span class="ident">instance</span>).<span class="ident">name</span>;
-        <span class="kw">let</span> <span class="ident">demangled_symbol_name</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:#}&quot;</span>, <span class="ident">rustc_demangle::demangle</span>(<span class="ident">symbol_name</span>));
-        <span class="ident">emit</span>.<span class="ident">name</span>(<span class="ident">fn_id</span>, <span class="kw-2">&amp;</span><span class="ident">demangled_symbol_name</span>);
+        <span class="comment">// HACK(eddyb) this is a bit roundabout, but the easiest way to get a
+        // fully absolute path that contains at least as much information as
+        // `instance.to_string()` (at least with `-C symbol-mangling-version=v0`).
+        // While we could use the mangled symbol instead, like we do for linkage,
+        // `OpName` is more of a debugging aid, so not having to separately
+        // demangle the SPIR-V can help. However, if some tools assume `OpName`
+        // is always a valid identifier, we may have to offer the mangled name
+        // (as some sort of opt-in, or toggled based on the platform, etc.).
+        </span><span class="kw">let </span>symbol_name = <span class="self">self</span>.tcx.symbol_name(instance).name;
+        <span class="kw">let </span>demangled_symbol_name = <span class="macro">format!</span>(<span class="string">&quot;{:#}&quot;</span>, rustc_demangle::demangle(symbol_name));
+        emit.name(fn_id, <span class="kw-2">&amp;</span>demangled_symbol_name);
 
-        <span class="ident">drop</span>(<span class="ident">emit</span>); <span class="comment">// set_linkage uses emit</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">linkage</span>) <span class="op">=</span> <span class="ident">linkage</span> {
-            <span class="self">self</span>.<span class="ident">set_linkage</span>(<span class="ident">fn_id</span>, <span class="ident">symbol_name</span>.<span class="ident">to_owned</span>(), <span class="ident">linkage</span>);
-        }
-
-        <span class="kw">let</span> <span class="ident">declared</span> <span class="op">=</span> <span class="ident">fn_id</span>.<span class="ident">with_type</span>(<span class="ident">function_type</span>);
-
-        <span class="kw">let</span> <span class="ident">attrs</span> <span class="op">=</span>
-            <span class="ident">AggregatedSpirvAttributes::parse</span>(<span class="self">self</span>, <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">get_attrs_unchecked</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>()));
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="ident">attrs</span>.<span class="ident">entry</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> <span class="ident">attr</span>.<span class="ident">value</span>) {
-            <span class="kw">let</span> <span class="ident">entry_name</span> <span class="op">=</span> <span class="ident">entry</span>
-                .<span class="ident">name</span>
-                .<span class="ident">as_ref</span>()
-                .<span class="ident">map_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">instance</span>.<span class="ident">to_string</span>(), <span class="ident">ToString::to_string</span>);
-            <span class="self">self</span>.<span class="ident">entry_stub</span>(<span class="kw-2">&amp;</span><span class="ident">instance</span>, <span class="ident">fn_abi</span>, <span class="ident">declared</span>, <span class="ident">entry_name</span>, <span class="ident">entry</span>);
-        }
-        <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">unroll_loops</span>.<span class="ident">is_some</span>() {
-            <span class="self">self</span>.<span class="ident">unroll_loops_decorations</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">fn_id</span>);
-        }
-        <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">buffer_load_intrinsic</span>.<span class="ident">is_some</span>() {
-            <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">mode</span>;
-            <span class="self">self</span>.<span class="ident">buffer_load_intrinsic_fn_id</span>
-                .<span class="ident">borrow_mut</span>()
-                .<span class="ident">insert</span>(<span class="ident">fn_id</span>, <span class="ident">mode</span>);
-        }
-        <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">buffer_store_intrinsic</span>.<span class="ident">is_some</span>() {
-            <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="ident">fn_abi</span>.<span class="ident">args</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>().<span class="ident">mode</span>;
-            <span class="self">self</span>.<span class="ident">buffer_store_intrinsic_fn_id</span>
-                .<span class="ident">borrow_mut</span>()
-                .<span class="ident">insert</span>(<span class="ident">fn_id</span>, <span class="ident">mode</span>);
+        drop(emit); <span class="comment">// set_linkage uses emit
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(linkage) = linkage {
+            <span class="self">self</span>.set_linkage(fn_id, symbol_name.to_owned(), linkage);
         }
 
-        <span class="kw">let</span> <span class="ident">instance_def_id</span> <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">def_id</span>();
+        <span class="kw">let </span>declared = fn_id.with_type(function_type);
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">instance_def_id</span>.<span class="ident">krate</span>) <span class="op">==</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">libm</span> {
-            <span class="kw">let</span> <span class="ident">item_name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">item_name</span>(<span class="ident">instance_def_id</span>);
-            <span class="kw">let</span> <span class="ident">intrinsic</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">libm_intrinsics</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">item_name</span>);
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">visibility</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>()) <span class="op">==</span> <span class="ident">ty::Visibility::Public</span> {
-                <span class="kw">match</span> <span class="ident">intrinsic</span> {
-                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">intrinsic</span>) =&gt; {
-                        <span class="self">self</span>.<span class="ident">libm_intrinsics</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">fn_id</span>, <span class="ident">intrinsic</span>);
+        <span class="kw">let </span>attrs =
+            AggregatedSpirvAttributes::parse(<span class="self">self</span>, <span class="self">self</span>.tcx.get_attrs_unchecked(instance.def_id()));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = attrs.entry.map(|attr| attr.value) {
+            <span class="kw">let </span>entry_name = entry
+                .name
+                .as_ref()
+                .map_or_else(|| instance.to_string(), ToString::to_string);
+            <span class="self">self</span>.entry_stub(<span class="kw-2">&amp;</span>instance, fn_abi, declared, entry_name, entry);
+        }
+        <span class="kw">if </span>attrs.unroll_loops.is_some() {
+            <span class="self">self</span>.unroll_loops_decorations.borrow_mut().insert(fn_id);
+        }
+        <span class="kw">if </span>attrs.buffer_load_intrinsic.is_some() {
+            <span class="kw">let </span>mode = fn_abi.ret.mode;
+            <span class="self">self</span>.buffer_load_intrinsic_fn_id
+                .borrow_mut()
+                .insert(fn_id, mode);
+        }
+        <span class="kw">if </span>attrs.buffer_store_intrinsic.is_some() {
+            <span class="kw">let </span>mode = fn_abi.args.last().unwrap().mode;
+            <span class="self">self</span>.buffer_store_intrinsic_fn_id
+                .borrow_mut()
+                .insert(fn_id, mode);
+        }
+
+        <span class="kw">let </span>instance_def_id = instance.def_id();
+
+        <span class="kw">if </span><span class="self">self</span>.tcx.crate_name(instance_def_id.krate) == <span class="self">self</span>.sym.libm {
+            <span class="kw">let </span>item_name = <span class="self">self</span>.tcx.item_name(instance_def_id);
+            <span class="kw">let </span>intrinsic = <span class="self">self</span>.sym.libm_intrinsics.get(<span class="kw-2">&amp;</span>item_name);
+            <span class="kw">if </span><span class="self">self</span>.tcx.visibility(instance.def_id()) == ty::Visibility::Public {
+                <span class="kw">match </span>intrinsic {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>intrinsic) =&gt; {
+                        <span class="self">self</span>.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
                     }
-                    <span class="prelude-val">None</span> =&gt; {
-                        <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="prelude-val">None </span>=&gt; {
+                        <span class="self">self</span>.tcx.sess.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                             <span class="string">&quot;missing libm intrinsic {}, which is {}&quot;</span>,
-                            <span class="ident">symbol_name</span>, <span class="ident">instance</span>
+                            symbol_name, instance
                         ));
                     }
                 }
             }
         }
 
-        <span class="kw">if</span> <span class="prelude-val">Some</span>(<span class="ident">instance_def_id</span>) <span class="op">==</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">lang_items</span>().<span class="ident">panic_fn</span>() {
-            <span class="self">self</span>.<span class="ident">panic_fn_id</span>.<span class="ident">set</span>(<span class="prelude-val">Some</span>(<span class="ident">fn_id</span>));
+        <span class="kw">if </span><span class="prelude-val">Some</span>(instance_def_id) == <span class="self">self</span>.tcx.lang_items().panic_fn() {
+            <span class="self">self</span>.panic_fn_id.set(<span class="prelude-val">Some</span>(fn_id));
         }
-        <span class="kw">if</span> <span class="prelude-val">Some</span>(<span class="ident">instance_def_id</span>) <span class="op">==</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">lang_items</span>().<span class="ident">panic_bounds_check_fn</span>() {
-            <span class="self">self</span>.<span class="ident">panic_bounds_check_fn_id</span>.<span class="ident">set</span>(<span class="prelude-val">Some</span>(<span class="ident">fn_id</span>));
+        <span class="kw">if </span><span class="prelude-val">Some</span>(instance_def_id) == <span class="self">self</span>.tcx.lang_items().panic_bounds_check_fn() {
+            <span class="self">self</span>.panic_bounds_check_fn_id.set(<span class="prelude-val">Some</span>(fn_id));
         }
 
-        <span class="ident">declared</span>
+        declared
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_static</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <span class="ident">DefId</span>) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">Instance::mono</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">def_id</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">g</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">instances</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">instance</span>) {
-            <span class="kw">return</span> <span class="ident">g</span>;
+    <span class="kw">pub fn </span>get_static(<span class="kw-2">&amp;</span><span class="self">self</span>, def_id: DefId) -&gt; SpirvValue {
+        <span class="kw">let </span>instance = Instance::mono(<span class="self">self</span>.tcx, def_id);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>g) = <span class="self">self</span>.instances.borrow().get(<span class="kw-2">&amp;</span>instance) {
+            <span class="kw">return </span>g;
         }
 
-        <span class="kw">let</span> <span class="ident">defined_in_current_codegen_unit</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">codegen_unit</span>
-            .<span class="ident">items</span>()
-            .<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">MonoItem::Static</span>(<span class="ident">def_id</span>));
+        <span class="kw">let </span>defined_in_current_codegen_unit = <span class="self">self
+            </span>.codegen_unit
+            .items()
+            .contains_key(<span class="kw-2">&amp;</span>MonoItem::Static(def_id));
         <span class="macro">assert!</span>(
-            <span class="op">!</span><span class="ident">defined_in_current_codegen_unit</span>,
+            !defined_in_current_codegen_unit,
             <span class="string">&quot;get_static() should always hit the cache for statics defined in the same CGU, but did not for `{:?}`&quot;</span>,
-            <span class="ident">def_id</span>
+            def_id
         );
 
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">ParamEnv::reveal_all</span>());
-        <span class="kw">let</span> <span class="ident">sym</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">symbol_name</span>(<span class="ident">instance</span>).<span class="ident">name</span>;
-        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">def_id</span>);
-        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">declare_global</span>(<span class="ident">span</span>, <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">ty</span>).<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="self">self</span>));
-        <span class="self">self</span>.<span class="ident">instances</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">instance</span>, <span class="ident">g</span>);
-        <span class="self">self</span>.<span class="ident">set_linkage</span>(<span class="ident">g</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="ident">sym</span>.<span class="ident">to_string</span>(), <span class="ident">LinkageType::Import</span>);
-        <span class="ident">g</span>
+        <span class="kw">let </span>ty = instance.ty(<span class="self">self</span>.tcx, ParamEnv::reveal_all());
+        <span class="kw">let </span>sym = <span class="self">self</span>.tcx.symbol_name(instance).name;
+        <span class="kw">let </span>span = <span class="self">self</span>.tcx.def_span(def_id);
+        <span class="kw">let </span>g = <span class="self">self</span>.declare_global(span, <span class="self">self</span>.layout_of(ty).spirv_type(span, <span class="self">self</span>));
+        <span class="self">self</span>.instances.borrow_mut().insert(instance, g);
+        <span class="self">self</span>.set_linkage(g.def_cx(<span class="self">self</span>), sym.to_string(), LinkageType::Import);
+        g
     }
 
-    <span class="kw">fn</span> <span class="ident">declare_global</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ptr_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span>: <span class="ident">ty</span> }.<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="comment">// FIXME(eddyb) figure out what the correct storage class is.</span>
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">emit_global</span>()
-            .<span class="ident">variable</span>(<span class="ident">ptr_ty</span>, <span class="prelude-val">None</span>, <span class="ident">StorageClass::Private</span>, <span class="prelude-val">None</span>)
-            .<span class="ident">with_type</span>(<span class="ident">ptr_ty</span>);
-        <span class="comment">// TODO: These should be StorageClass::Private, so just zombie for now.</span>
-        <span class="self">self</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="ident">span</span>, <span class="string">&quot;Globals are not supported yet&quot;</span>);
-        <span class="ident">result</span>
+    <span class="kw">fn </span>declare_global(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, ty: Word) -&gt; SpirvValue {
+        <span class="kw">let </span>ptr_ty = SpirvType::Pointer { pointee: ty }.def(span, <span class="self">self</span>);
+        <span class="comment">// FIXME(eddyb) figure out what the correct storage class is.
+        </span><span class="kw">let </span>result = <span class="self">self
+            </span>.emit_global()
+            .variable(ptr_ty, <span class="prelude-val">None</span>, StorageClass::Private, <span class="prelude-val">None</span>)
+            .with_type(ptr_ty);
+        <span class="comment">// TODO: These should be StorageClass::Private, so just zombie for now.
+        </span><span class="self">self</span>.zombie_with_span(result.def_cx(<span class="self">self</span>), span, <span class="string">&quot;Globals are not supported yet&quot;</span>);
+        result
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">PreDefineMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">predefine_static</span>(
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; PreDefineMethods&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>predefine_static(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">def_id</span>: <span class="ident">DefId</span>,
-        <span class="ident">linkage</span>: <span class="ident">Linkage</span>,
-        <span class="ident">_visibility</span>: <span class="ident">Visibility</span>,
-        <span class="ident">symbol_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+        def_id: DefId,
+        linkage: Linkage,
+        _visibility: Visibility,
+        symbol_name: <span class="kw-2">&amp;</span>str,
     ) {
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">Instance::mono</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">def_id</span>);
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">ParamEnv::reveal_all</span>());
-        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">def_id</span>);
-        <span class="kw">let</span> <span class="ident">spvty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">ty</span>).<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="kw">let</span> <span class="ident">linkage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">linkage</span> {
-            <span class="ident">Linkage::External</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">LinkageType::Export</span>),
-            <span class="ident">Linkage::Internal</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">other</span> =&gt; {
-                <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+        <span class="kw">let </span>instance = Instance::mono(<span class="self">self</span>.tcx, def_id);
+        <span class="kw">let </span>ty = instance.ty(<span class="self">self</span>.tcx, ParamEnv::reveal_all());
+        <span class="kw">let </span>span = <span class="self">self</span>.tcx.def_span(def_id);
+        <span class="kw">let </span>spvty = <span class="self">self</span>.layout_of(ty).spirv_type(span, <span class="self">self</span>);
+        <span class="kw">let </span>linkage = <span class="kw">match </span>linkage {
+            Linkage::External =&gt; <span class="prelude-val">Some</span>(LinkageType::Export),
+            Linkage::Internal =&gt; <span class="prelude-val">None</span>,
+            other =&gt; {
+                <span class="self">self</span>.tcx.sess.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;TODO: Linkage type {:?} not supported yet for static var symbol {}&quot;</span>,
-                    <span class="ident">other</span>, <span class="ident">symbol_name</span>
+                    other, symbol_name
                 ));
-                <span class="prelude-val">None</span>
-            }
+                <span class="prelude-val">None
+            </span>}
         };
 
-        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">declare_global</span>(<span class="ident">span</span>, <span class="ident">spvty</span>);
+        <span class="kw">let </span>g = <span class="self">self</span>.declare_global(span, spvty);
 
-        <span class="self">self</span>.<span class="ident">instances</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">instance</span>, <span class="ident">g</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">linkage</span>) <span class="op">=</span> <span class="ident">linkage</span> {
-            <span class="self">self</span>.<span class="ident">set_linkage</span>(<span class="ident">g</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="ident">symbol_name</span>.<span class="ident">to_string</span>(), <span class="ident">linkage</span>);
+        <span class="self">self</span>.instances.borrow_mut().insert(instance, g);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(linkage) = linkage {
+            <span class="self">self</span>.set_linkage(g.def_cx(<span class="self">self</span>), symbol_name.to_string(), linkage);
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">predefine_fn</span>(
+    <span class="kw">fn </span>predefine_fn(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="ident">linkage</span>: <span class="ident">Linkage</span>,
-        <span class="ident">_visibility</span>: <span class="ident">Visibility</span>,
-        <span class="ident">symbol_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+        instance: Instance&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+        linkage: Linkage,
+        _visibility: Visibility,
+        symbol_name: <span class="kw-2">&amp;</span>str,
     ) {
-        <span class="kw">let</span> <span class="ident">linkage2</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">linkage</span> {
-            <span class="comment">// super sketchy hack: memcpy, memmove, memset, memcmp, and bcmp in the</span>
-            <span class="comment">// compiler_builtins crate use the WeakAny linkage type. Treat it as actually External</span>
-            <span class="comment">// linkage because we know there&#39;s only one of them.</span>
-            <span class="ident">Linkage::External</span> <span class="op">|</span> <span class="ident">Linkage::WeakAny</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">LinkageType::Export</span>),
-            <span class="ident">Linkage::Internal</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">other</span> =&gt; {
-                <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+        <span class="kw">let </span>linkage2 = <span class="kw">match </span>linkage {
+            <span class="comment">// super sketchy hack: memcpy, memmove, memset, memcmp, and bcmp in the
+            // compiler_builtins crate use the WeakAny linkage type. Treat it as actually External
+            // linkage because we know there&#39;s only one of them.
+            </span>Linkage::External | Linkage::WeakAny =&gt; <span class="prelude-val">Some</span>(LinkageType::Export),
+            Linkage::Internal =&gt; <span class="prelude-val">None</span>,
+            other =&gt; {
+                <span class="self">self</span>.tcx.sess.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;TODO: Linkage type {:?} not supported yet for function symbol {}&quot;</span>,
-                    <span class="ident">other</span>, <span class="ident">symbol_name</span>
+                    other, symbol_name
                 ));
-                <span class="prelude-val">None</span>
-            }
+                <span class="prelude-val">None
+            </span>}
         };
-        <span class="kw">let</span> <span class="ident">declared</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">declare_fn_ext</span>(<span class="ident">instance</span>, <span class="ident">linkage2</span>);
+        <span class="kw">let </span>declared = <span class="self">self</span>.declare_fn_ext(instance, linkage2);
 
-        <span class="self">self</span>.<span class="ident">instances</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">instance</span>, <span class="ident">declared</span>);
+        <span class="self">self</span>.instances.borrow_mut().insert(instance, declared);
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">StaticMethods</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">static_addr_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cv</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>, <span class="ident">_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(
-            <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">cv</span>.<span class="ident">ty</span>),
-            <span class="ident">SpirvConst::PtrTo</span> {
-                <span class="ident">pointee</span>: <span class="ident">cv</span>.<span class="ident">def_cx</span>(<span class="self">self</span>),
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; StaticMethods <span class="kw">for </span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>static_addr_of(<span class="kw-2">&amp;</span><span class="self">self</span>, cv: <span class="self">Self</span>::Value, _align: Align, _kind: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="self">Self</span>::Value {
+        <span class="self">self</span>.builder.def_constant(
+            <span class="self">self</span>.type_ptr_to(cv.ty),
+            SpirvConst::PtrTo {
+                pointee: cv.def_cx(<span class="self">self</span>),
             },
         )
     }
 
-    <span class="kw">fn</span> <span class="ident">codegen_static</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <span class="ident">DefId</span>, <span class="ident">_is_mutable</span>: <span class="ident">bool</span>) {
-        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_static</span>(<span class="ident">def_id</span>);
+    <span class="kw">fn </span>codegen_static(<span class="kw-2">&amp;</span><span class="self">self</span>, def_id: DefId, _is_mutable: bool) {
+        <span class="kw">let </span>g = <span class="self">self</span>.get_static(def_id);
 
-        <span class="kw">let</span> <span class="ident">alloc</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">eval_static_initializer</span>(<span class="ident">def_id</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">alloc</span>) =&gt; <span class="ident">alloc</span>,
-            <span class="comment">// Error has already been reported</span>
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span>,
+        <span class="kw">let </span>alloc = <span class="kw">match </span><span class="self">self</span>.tcx.eval_static_initializer(def_id) {
+            <span class="prelude-val">Ok</span>(alloc) =&gt; alloc,
+            <span class="comment">// Error has already been reported
+            </span><span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span>,
         };
-        <span class="kw">let</span> <span class="ident">value_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">g</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } =&gt; <span class="ident">pointee</span>,
-            <span class="ident">other</span> =&gt; <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+        <span class="kw">let </span>value_ty = <span class="kw">match </span><span class="self">self</span>.lookup_type(g.ty) {
+            SpirvType::Pointer { pointee } =&gt; pointee,
+            other =&gt; <span class="self">self</span>.tcx.sess.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;global had non-pointer type {}&quot;</span>,
-                <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">g</span>.<span class="ident">ty</span>, <span class="self">self</span>)
+                other.debug(g.ty, <span class="self">self</span>)
             )),
         };
-        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_const_alloc</span>(<span class="ident">alloc</span>, <span class="ident">value_ty</span>);
-        <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">value_ty</span>, <span class="ident">v</span>.<span class="ident">ty</span>);
-        <span class="self">self</span>.<span class="ident">builder</span>
-            .<span class="ident">set_global_initializer</span>(<span class="ident">g</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="ident">v</span>.<span class="ident">def_cx</span>(<span class="self">self</span>));
+        <span class="kw">let </span>v = <span class="self">self</span>.create_const_alloc(alloc, value_ty);
+        <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, value_ty, v.ty);
+        <span class="self">self</span>.builder
+            .set_global_initializer(g.def_cx(<span class="self">self</span>), v.def_cx(<span class="self">self</span>));
     }
 
-    <span class="doccomment">/// Mark the given global value as &quot;used&quot;, to prevent the compiler and linker from potentially</span>
-    <span class="doccomment">/// removing a static variable that may otherwise appear unused.</span>
-    <span class="kw">fn</span> <span class="ident">add_used_global</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_global</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
-        <span class="comment">// TODO: Ignore for now.</span>
-    }
+    <span class="doccomment">/// Mark the given global value as &quot;used&quot;, to prevent the compiler and linker from potentially
+    /// removing a static variable that may otherwise appear unused.
+    </span><span class="kw">fn </span>add_used_global(<span class="kw-2">&amp;</span><span class="self">self</span>, _global: <span class="self">Self</span>::Value) {
+        <span class="comment">// TODO: Ignore for now.
+    </span>}
 
-    <span class="doccomment">/// Same as `add_used_global`, but only prevent the compiler from potentially removing an</span>
-    <span class="doccomment">/// otherwise unused symbol. The linker is still permitted to drop it.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This corresponds to the semantics of the `#[used]` attribute.</span>
-    <span class="kw">fn</span> <span class="ident">add_compiler_used_global</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_global</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {
-        <span class="comment">// TODO: Ignore for now.</span>
-    }
+    <span class="doccomment">/// Same as `add_used_global`, but only prevent the compiler from potentially removing an
+    /// otherwise unused symbol. The linker is still permitted to drop it.
+    ///
+    /// This corresponds to the semantics of the `#[used]` attribute.
+    </span><span class="kw">fn </span>add_compiler_used_global(<span class="kw-2">&amp;</span><span class="self">self</span>, _global: <span class="self">Self</span>::Value) {
+        <span class="comment">// TODO: Ignore for now.
+    </span>}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

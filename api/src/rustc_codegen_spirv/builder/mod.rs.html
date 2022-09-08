@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -455,457 +449,456 @@
 <span id="449">449</span>
 <span id="450">450</span>
 <span id="451">451</span>
-</pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">builder_methods</span>;
-<span class="kw">mod</span> <span class="ident">byte_addressable_buffer</span>;
-<span class="kw">mod</span> <span class="ident">ext_inst</span>;
-<span class="kw">mod</span> <span class="ident">intrinsics</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">libm_intrinsics</span>;
-<span class="kw">mod</span> <span class="ident">spirv_asm</span>;
+</pre><pre class="rust"><code><span class="kw">mod </span>builder_methods;
+<span class="kw">mod </span>byte_addressable_buffer;
+<span class="kw">mod </span>ext_inst;
+<span class="kw">mod </span>intrinsics;
+<span class="kw">pub mod </span>libm_intrinsics;
+<span class="kw">mod </span>spirv_asm;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ext_inst::ExtInst</span>;
-<span class="kw">use</span> <span class="ident">rustc_span::DUMMY_SP</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">spirv_asm::InstructionTable</span>;
+<span class="kw">pub use </span>ext_inst::ExtInst;
+<span class="kw">use </span>rustc_span::DUMMY_SP;
+<span class="kw">pub use </span>spirv_asm::InstructionTable;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx::CodegenCx</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv_type::SpirvType</span>;
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="self">self</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::operand::OperandValue</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::place::PlaceRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{
-    <span class="ident">AbiBuilderMethods</span>, <span class="ident">ArgAbiMethods</span>, <span class="ident">BackendTypes</span>, <span class="ident">BuilderMethods</span>, <span class="ident">CoverageInfoBuilderMethods</span>,
-    <span class="ident">DebugInfoBuilderMethods</span>, <span class="ident">HasCodegen</span>, <span class="ident">StaticBuilderMethods</span>, <span class="ident">TypeMembershipMethods</span>,
+<span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
+<span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
+<span class="kw">use </span><span class="kw">crate</span>::codegen_cx::CodegenCx;
+<span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
+<span class="kw">use </span>rspirv::spirv::{<span class="self">self</span>, Word};
+<span class="kw">use </span>rustc_codegen_ssa::mir::operand::OperandValue;
+<span class="kw">use </span>rustc_codegen_ssa::mir::place::PlaceRef;
+<span class="kw">use </span>rustc_codegen_ssa::traits::{
+    AbiBuilderMethods, ArgAbiMethods, BackendTypes, BuilderMethods, CoverageInfoBuilderMethods,
+    DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods, TypeMembershipMethods,
 };
-<span class="kw">use</span> <span class="ident">rustc_errors</span>::{<span class="ident">DiagnosticBuilder</span>, <span class="ident">ErrorGuaranteed</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::mir::coverage</span>::{
-    <span class="ident">CodeRegion</span>, <span class="ident">CounterValueReference</span>, <span class="ident">ExpressionOperandId</span>, <span class="ident">InjectedExpressionId</span>, <span class="ident">Op</span>,
+<span class="kw">use </span>rustc_errors::{DiagnosticBuilder, ErrorGuaranteed};
+<span class="kw">use </span>rustc_middle::mir::coverage::{
+    CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionId, Op,
 };
-<span class="kw">use</span> <span class="ident">rustc_middle::span_bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle::ty::layout</span>::{
-    <span class="ident">FnAbiError</span>, <span class="ident">FnAbiOfHelpers</span>, <span class="ident">FnAbiRequest</span>, <span class="ident">HasParamEnv</span>, <span class="ident">HasTyCtxt</span>, <span class="ident">LayoutError</span>, <span class="ident">LayoutOfHelpers</span>,
-    <span class="ident">TyAndLayout</span>,
+<span class="kw">use </span>rustc_middle::span_bug;
+<span class="kw">use </span>rustc_middle::ty::layout::{
+    FnAbiError, FnAbiOfHelpers, FnAbiRequest, HasParamEnv, HasTyCtxt, LayoutError, LayoutOfHelpers,
+    TyAndLayout,
 };
-<span class="kw">use</span> <span class="ident">rustc_middle::ty</span>::{<span class="ident">Instance</span>, <span class="ident">ParamEnv</span>, <span class="ident">Ty</span>, <span class="ident">TyCtxt</span>};
-<span class="kw">use</span> <span class="ident">rustc_span::def_id::DefId</span>;
-<span class="kw">use</span> <span class="ident">rustc_span::source_map::Span</span>;
-<span class="kw">use</span> <span class="ident">rustc_target::abi::call</span>::{<span class="ident">ArgAbi</span>, <span class="ident">FnAbi</span>, <span class="ident">PassMode</span>};
-<span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{<span class="ident">HasDataLayout</span>, <span class="ident">Size</span>, <span class="ident">TargetDataLayout</span>};
-<span class="kw">use</span> <span class="ident">rustc_target::spec</span>::{<span class="ident">HasTargetSpec</span>, <span class="ident">Target</span>};
-<span class="kw">use</span> <span class="ident">std::ops::Deref</span>;
+<span class="kw">use </span>rustc_middle::ty::{Instance, ParamEnv, Ty, TyCtxt};
+<span class="kw">use </span>rustc_span::def_id::DefId;
+<span class="kw">use </span>rustc_span::source_map::Span;
+<span class="kw">use </span>rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
+<span class="kw">use </span>rustc_target::abi::{HasDataLayout, Size, TargetDataLayout};
+<span class="kw">use </span>rustc_target::spec::{HasTargetSpec, Target};
+<span class="kw">use </span>std::ops::Deref;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-    <span class="ident">cursor</span>: <span class="ident">BuilderCursor</span>,
-    <span class="ident">current_fn</span>: <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::Function</span>,
-    <span class="ident">basic_block</span>: <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::BasicBlock</span>,
-    <span class="ident">current_span</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+    cursor: BuilderCursor,
+    current_fn: &lt;<span class="self">Self </span><span class="kw">as </span>BackendTypes&gt;::Function,
+    basic_block: &lt;<span class="self">Self </span><span class="kw">as </span>BackendTypes&gt;::BasicBlock,
+    current_span: <span class="prelude-ty">Option</span>&lt;Span&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// See comment on `BuilderCursor`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">emit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">std::cell::RefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">rspirv::dr::Builder</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">emit_with_cursor</span>(<span class="self">self</span>.<span class="ident">cursor</span>)
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="doccomment">/// See comment on `BuilderCursor`
+    </span><span class="kw">pub fn </span>emit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; std::cell::RefMut&lt;<span class="lifetime">&#39;_</span>, rspirv::dr::Builder&gt; {
+        <span class="self">self</span>.emit_with_cursor(<span class="self">self</span>.cursor)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zombie</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">word</span>: <span class="ident">Word</span>, <span class="ident">reason</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">current_span</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_span</span> {
-            <span class="self">self</span>.<span class="ident">zombie_with_span</span>(<span class="ident">word</span>, <span class="ident">current_span</span>, <span class="ident">reason</span>);
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">word</span>, <span class="ident">reason</span>);
+    <span class="kw">pub fn </span>zombie(<span class="kw-2">&amp;</span><span class="self">self</span>, word: Word, reason: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(current_span) = <span class="self">self</span>.current_span {
+            <span class="self">self</span>.zombie_with_span(word, current_span, reason);
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.zombie_no_span(word, reason);
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_atomic</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>, <span class="ident">to_zombie</span>: <span class="ident">Word</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">i8_i16_atomics_allowed</span> {
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
-                <span class="ident">SpirvType::Integer</span>(<span class="ident">width</span>, <span class="kw">_</span>) <span class="kw">if</span> <span class="ident">width</span> <span class="op">&lt;</span> <span class="number">32</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">to_zombie</span>, <span class="string">&quot;atomic on i8 or i16 when disallowed by runtime&quot;</span>);
+    <span class="kw">pub fn </span>validate_atomic(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word, to_zombie: Word) {
+        <span class="kw">if </span>!<span class="self">self</span>.i8_i16_atomics_allowed {
+            <span class="kw">match </span><span class="self">self</span>.lookup_type(ty) {
+                SpirvType::Integer(width, <span class="kw">_</span>) <span class="kw">if </span>width &lt; <span class="number">32 </span>=&gt; {
+                    <span class="self">self</span>.zombie(to_zombie, <span class="string">&quot;atomic on i8 or i16 when disallowed by runtime&quot;</span>);
                 }
-                <span class="kw">_</span> =&gt; (),
+                <span class="kw">_ </span>=&gt; (),
             }
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">DiagnosticBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">ErrorGuaranteed</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">current_span</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_span</span> {
-            <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">struct_span_err</span>(<span class="ident">current_span</span>, <span class="ident">msg</span>)
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="ident">msg</span>)
+    <span class="kw">pub fn </span>struct_err(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span>str) -&gt; DiagnosticBuilder&lt;<span class="lifetime">&#39;_</span>, ErrorGuaranteed&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(current_span) = <span class="self">self</span>.current_span {
+            <span class="self">self</span>.tcx.sess.struct_span_err(current_span, msg)
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.tcx.sess.struct_err(msg)
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">current_span</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_span</span> {
-            <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(<span class="ident">current_span</span>, <span class="ident">msg</span>);
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="ident">msg</span>);
+    <span class="kw">pub fn </span>err(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(current_span) = <span class="self">self</span>.current_span {
+            <span class="self">self</span>.tcx.sess.span_err(current_span, msg);
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.tcx.sess.err(msg);
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="op">!</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">current_span</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_span</span> {
-            <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_fatal</span>(<span class="ident">current_span</span>, <span class="ident">msg</span>)
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="ident">msg</span>)
+    <span class="kw">pub fn </span>fatal(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span>str) -&gt; ! {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(current_span) = <span class="self">self</span>.current_span {
+            <span class="self">self</span>.tcx.sess.span_fatal(current_span, msg)
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.tcx.sess.fatal(msg)
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Span</span> {
-        <span class="self">self</span>.<span class="ident">current_span</span>.<span class="ident">unwrap_or</span>(<span class="ident">DUMMY_SP</span>)
+    <span class="kw">pub fn </span>span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Span {
+        <span class="self">self</span>.current_span.unwrap_or(DUMMY_SP)
     }
 
-    <span class="comment">// Given an ID, check if it&#39;s defined by an OpAccessChain, and if it is, return its ptr/indices</span>
-    <span class="kw">fn</span> <span class="ident">find_access_chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">spirv::Word</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">spirv::Word</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">emit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit</span>();
-        <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">module_ref</span>();
-        <span class="kw">let</span> <span class="ident">func</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">emit</span>.<span class="ident">selected_function</span>().<span class="ident">unwrap</span>()];
-        <span class="kw">let</span> <span class="ident">ptr_def_inst</span> <span class="op">=</span> <span class="ident">func</span>.<span class="ident">all_inst_iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">result_id</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>));
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ptr_def_inst</span>) <span class="op">=</span> <span class="ident">ptr_def_inst</span> {
-            <span class="kw">if</span> <span class="ident">ptr_def_inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">spirv::Op::AccessChain</span>
-                <span class="op">|</span><span class="op">|</span> <span class="ident">ptr_def_inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">spirv::Op::InBoundsAccessChain</span>
+    <span class="comment">// Given an ID, check if it&#39;s defined by an OpAccessChain, and if it is, return its ptr/indices
+    </span><span class="kw">fn </span>find_access_chain(<span class="kw-2">&amp;</span><span class="self">self</span>, id: spirv::Word) -&gt; <span class="prelude-ty">Option</span>&lt;(spirv::Word, Vec&lt;spirv::Word&gt;)&gt; {
+        <span class="kw">let </span>emit = <span class="self">self</span>.emit();
+        <span class="kw">let </span>module = emit.module_ref();
+        <span class="kw">let </span>func = <span class="kw-2">&amp;</span>module.functions[emit.selected_function().unwrap()];
+        <span class="kw">let </span>ptr_def_inst = func.all_inst_iter().find(|inst| inst.result_id == <span class="prelude-val">Some</span>(id));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ptr_def_inst) = ptr_def_inst {
+            <span class="kw">if </span>ptr_def_inst.class.opcode == spirv::Op::AccessChain
+                || ptr_def_inst.class.opcode == spirv::Op::InBoundsAccessChain
             {
-                <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr_def_inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>();
-                <span class="kw">let</span> <span class="ident">indices</span> <span class="op">=</span> <span class="ident">ptr_def_inst</span>.<span class="ident">operands</span>[<span class="number">1</span>..]
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">unwrap_id_ref</span>())
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">ptr</span>, <span class="ident">indices</span>));
+                <span class="kw">let </span>ptr = ptr_def_inst.operands[<span class="number">0</span>].unwrap_id_ref();
+                <span class="kw">let </span>indices = ptr_def_inst.operands[<span class="number">1</span>..]
+                    .iter()
+                    .map(|op| op.unwrap_id_ref())
+                    .collect::&lt;Vec&lt;spirv::Word&gt;&gt;();
+                <span class="kw">return </span><span class="prelude-val">Some</span>((ptr, indices));
             }
         }
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gep_help</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">ty</span>: <span class="ident">Word</span>,
-        <span class="ident">ptr</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">indices</span>: <span class="kw-2">&amp;</span>[<span class="ident">SpirvValue</span>],
-        <span class="ident">is_inbounds</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="comment">// The first index is an offset to the pointer, the rest are actual members.</span>
-        <span class="comment">// https://llvm.org/docs/GetElementPtr.html</span>
-        <span class="comment">// &quot;An OpAccessChain instruction is the equivalent of an LLVM getelementptr instruction where the first index element is zero.&quot;</span>
-        <span class="comment">// https://github.com/gpuweb/gpuweb/issues/33</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result_indices</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">indices</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result_pointee_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } =&gt; {
-                <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">ty</span>, <span class="ident">pointee</span>);
-                <span class="ident">pointee</span>
+    <span class="kw">pub fn </span>gep_help(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ty: Word,
+        ptr: SpirvValue,
+        indices: <span class="kw-2">&amp;</span>[SpirvValue],
+        is_inbounds: bool,
+    ) -&gt; SpirvValue {
+        <span class="comment">// The first index is an offset to the pointer, the rest are actual members.
+        // https://llvm.org/docs/GetElementPtr.html
+        // &quot;An OpAccessChain instruction is the equivalent of an LLVM getelementptr instruction where the first index element is zero.&quot;
+        // https://github.com/gpuweb/gpuweb/issues/33
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result_indices = Vec::with_capacity(indices.len() - <span class="number">1</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>result_pointee_type = <span class="kw">match </span><span class="self">self</span>.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } =&gt; {
+                <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, ty, pointee);
+                pointee
             }
-            <span class="ident">other_type</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+            other_type =&gt; <span class="self">self</span>.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;GEP first deref not implemented for type {:?}&quot;</span>,
-                <span class="ident">other_type</span>
+                other_type
             )),
         };
-        <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="ident">indices</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
-            <span class="ident">result_indices</span>.<span class="ident">push</span>(<span class="ident">index</span>.<span class="ident">def</span>(<span class="self">self</span>));
-            <span class="ident">result_pointee_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">result_pointee_type</span>) {
-                <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. } <span class="op">|</span> <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span> } =&gt; <span class="ident">element</span>,
-                <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+        <span class="kw">for </span>index <span class="kw">in </span>indices.iter().cloned().skip(<span class="number">1</span>) {
+            result_indices.push(index.def(<span class="self">self</span>));
+            result_pointee_type = <span class="kw">match </span><span class="self">self</span>.lookup_type(result_pointee_type) {
+                SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } =&gt; element,
+                <span class="kw">_ </span>=&gt; <span class="self">self</span>.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;GEP not implemented for type {}&quot;</span>,
-                    <span class="self">self</span>.<span class="ident">debug_type</span>(<span class="ident">result_pointee_type</span>)
+                    <span class="self">self</span>.debug_type(result_pointee_type)
                 )),
             };
         }
-        <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="ident">SpirvType::Pointer</span> {
-            <span class="ident">pointee</span>: <span class="ident">result_pointee_type</span>,
+        <span class="kw">let </span>result_type = SpirvType::Pointer {
+            pointee: result_pointee_type,
         }
-        .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
+        .def(<span class="self">self</span>.span(), <span class="self">self</span>);
 
-        <span class="kw">let</span> <span class="ident">ptr_id</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">def</span>(<span class="self">self</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">original_ptr</span>, <span class="kw-2">mut</span> <span class="ident">original_indices</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_access_chain</span>(<span class="ident">ptr_id</span>) {
-            <span class="comment">// Transform the following:</span>
-            <span class="comment">// OpAccessChain original_ptr [a, b, c]</span>
-            <span class="comment">// OpPtrAccessChain ptr base [d, e, f]</span>
-            <span class="comment">// into</span>
-            <span class="comment">// OpAccessChain original_ptr [a, b, c + base, d, e, f]</span>
-            <span class="comment">// to remove the need for OpPtrAccessChain</span>
-            <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">original_indices</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
-            <span class="kw-2">*</span><span class="ident">last</span> <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">add</span>(<span class="ident">last</span>.<span class="ident">with_type</span>(<span class="ident">indices</span>[<span class="number">0</span>].<span class="ident">ty</span>), <span class="ident">indices</span>[<span class="number">0</span>])
-                .<span class="ident">def</span>(<span class="self">self</span>);
-            <span class="ident">original_indices</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">result_indices</span>);
-            <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">indices</span>[<span class="number">0</span>].<span class="ident">ty</span>, <span class="number">0</span>);
-            <span class="self">self</span>.<span class="ident">emit_access_chain</span>(
-                <span class="ident">result_type</span>,
-                <span class="ident">original_ptr</span>,
-                <span class="ident">zero</span>,
-                <span class="ident">original_indices</span>,
-                <span class="ident">is_inbounds</span>,
+        <span class="kw">let </span>ptr_id = ptr.def(<span class="self">self</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((original_ptr, <span class="kw-2">mut </span>original_indices)) = <span class="self">self</span>.find_access_chain(ptr_id) {
+            <span class="comment">// Transform the following:
+            // OpAccessChain original_ptr [a, b, c]
+            // OpPtrAccessChain ptr base [d, e, f]
+            // into
+            // OpAccessChain original_ptr [a, b, c + base, d, e, f]
+            // to remove the need for OpPtrAccessChain
+            </span><span class="kw">let </span>last = original_indices.last_mut().unwrap();
+            <span class="kw-2">*</span>last = <span class="self">self
+                </span>.add(last.with_type(indices[<span class="number">0</span>].ty), indices[<span class="number">0</span>])
+                .def(<span class="self">self</span>);
+            original_indices.append(<span class="kw-2">&amp;mut </span>result_indices);
+            <span class="kw">let </span>zero = <span class="self">self</span>.constant_int(indices[<span class="number">0</span>].ty, <span class="number">0</span>);
+            <span class="self">self</span>.emit_access_chain(
+                result_type,
+                original_ptr,
+                zero,
+                original_indices,
+                is_inbounds,
             )
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">emit_access_chain</span>(<span class="ident">result_type</span>, <span class="ident">ptr_id</span>, <span class="ident">indices</span>[<span class="number">0</span>], <span class="ident">result_indices</span>, <span class="ident">is_inbounds</span>)
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.emit_access_chain(result_type, ptr_id, indices[<span class="number">0</span>], result_indices, is_inbounds)
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">emit_access_chain</span>(
+    <span class="kw">fn </span>emit_access_chain(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">result_type</span>: <span class="ident">spirv::Word</span>,
-        <span class="ident">pointer</span>: <span class="ident">spirv::Word</span>,
-        <span class="ident">base</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">spirv::Word</span><span class="op">&gt;</span>,
-        <span class="ident">is_inbounds</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit</span>();
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">base</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="number">0</span>) {
-            <span class="kw">if</span> <span class="ident">is_inbounds</span> {
-                <span class="ident">emit</span>.<span class="ident">in_bounds_access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">pointer</span>, <span class="ident">indices</span>)
-            } <span class="kw">else</span> {
-                <span class="ident">emit</span>.<span class="ident">access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">pointer</span>, <span class="ident">indices</span>)
+        result_type: spirv::Word,
+        pointer: spirv::Word,
+        base: SpirvValue,
+        indices: Vec&lt;spirv::Word&gt;,
+        is_inbounds: bool,
+    ) -&gt; SpirvValue {
+        <span class="kw">let </span><span class="kw-2">mut </span>emit = <span class="self">self</span>.emit();
+        <span class="kw">if </span><span class="self">self</span>.builder.lookup_const_u64(base) == <span class="prelude-val">Some</span>(<span class="number">0</span>) {
+            <span class="kw">if </span>is_inbounds {
+                emit.in_bounds_access_chain(result_type, <span class="prelude-val">None</span>, pointer, indices)
+            } <span class="kw">else </span>{
+                emit.access_chain(result_type, <span class="prelude-val">None</span>, pointer, indices)
             }
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_inbounds</span> {
-                <span class="ident">emit</span>.<span class="ident">in_bounds_ptr_access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">pointer</span>, <span class="ident">base</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">indices</span>)
-            } <span class="kw">else</span> {
-                <span class="ident">emit</span>.<span class="ident">ptr_access_chain</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">pointer</span>, <span class="ident">base</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">indices</span>)
+            .unwrap()
+            .with_type(result_type)
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>result = <span class="kw">if </span>is_inbounds {
+                emit.in_bounds_ptr_access_chain(result_type, <span class="prelude-val">None</span>, pointer, base.def(<span class="self">self</span>), indices)
+            } <span class="kw">else </span>{
+                emit.ptr_access_chain(result_type, <span class="prelude-val">None</span>, pointer, base.def(<span class="self">self</span>), indices)
             }
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">with_type</span>(<span class="ident">result_type</span>);
-            <span class="self">self</span>.<span class="ident">zombie</span>(
-                <span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>),
+            .unwrap()
+            .with_type(result_type);
+            <span class="self">self</span>.zombie(
+                result.def(<span class="self">self</span>),
                 <span class="string">&quot;Cannot offset a pointer to an arbitrary element&quot;</span>,
             );
-            <span class="ident">result</span>
+            result
         }
     }
 
-    <span class="comment">// TODO: Definitely add tests to make sure this impl is right.</span>
-    <span class="kw">fn</span> <span class="ident">rotate</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">SpirvValue</span>, <span class="ident">shift</span>: <span class="ident">SpirvValue</span>, <span class="ident">is_left</span>: <span class="ident">bool</span>) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">shift</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType::Integer</span>(<span class="ident">width</span>, <span class="kw">_</span>) =&gt; <span class="ident">width</span>,
-            <span class="ident">other</span> =&gt; <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+    <span class="comment">// TODO: Definitely add tests to make sure this impl is right.
+    </span><span class="kw">fn </span>rotate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: SpirvValue, shift: SpirvValue, is_left: bool) -&gt; SpirvValue {
+        <span class="kw">let </span>width = <span class="kw">match </span><span class="self">self</span>.lookup_type(shift.ty) {
+            SpirvType::Integer(width, <span class="kw">_</span>) =&gt; width,
+            other =&gt; <span class="self">self</span>.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;Cannot rotate non-integer type: {}&quot;</span>,
-                <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">shift</span>.<span class="ident">ty</span>, <span class="self">self</span>)
+                other.debug(shift.ty, <span class="self">self</span>)
             )),
         };
-        <span class="kw">let</span> <span class="ident">int_size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">shift</span>.<span class="ident">ty</span>, <span class="ident">width</span> <span class="kw">as</span> <span class="ident">u64</span>);
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">shift</span>.<span class="ident">ty</span>, (<span class="ident">width</span> <span class="op">-</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u64</span>);
-        <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">shift</span>.<span class="ident">ty</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">bool</span> <span class="op">=</span> <span class="ident">SpirvType::Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
-        <span class="comment">// https://stackoverflow.com/a/10134877</span>
-        <span class="kw">let</span> <span class="ident">mask_shift</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">shift</span>, <span class="ident">mask</span>);
-        <span class="kw">let</span> <span class="ident">sub</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">int_size</span>, <span class="ident">mask_shift</span>);
-        <span class="kw">let</span> (<span class="ident">lhs</span>, <span class="ident">rhs</span>) <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_left</span> {
-            (<span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">value</span>, <span class="ident">mask_shift</span>), <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">value</span>, <span class="ident">sub</span>))
-        } <span class="kw">else</span> {
-            (<span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">value</span>, <span class="ident">mask_shift</span>), <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">value</span>, <span class="ident">sub</span>))
+        <span class="kw">let </span>int_size = <span class="self">self</span>.constant_int(shift.ty, width <span class="kw">as </span>u64);
+        <span class="kw">let </span>mask = <span class="self">self</span>.constant_int(shift.ty, (width - <span class="number">1</span>) <span class="kw">as </span>u64);
+        <span class="kw">let </span>zero = <span class="self">self</span>.constant_int(shift.ty, <span class="number">0</span>);
+        <span class="kw">let </span>bool = SpirvType::Bool.def(<span class="self">self</span>.span(), <span class="self">self</span>);
+        <span class="comment">// https://stackoverflow.com/a/10134877
+        </span><span class="kw">let </span>mask_shift = <span class="self">self</span>.and(shift, mask);
+        <span class="kw">let </span>sub = <span class="self">self</span>.sub(int_size, mask_shift);
+        <span class="kw">let </span>(lhs, rhs) = <span class="kw">if </span>is_left {
+            (<span class="self">self</span>.shl(value, mask_shift), <span class="self">self</span>.lshr(value, sub))
+        } <span class="kw">else </span>{
+            (<span class="self">self</span>.lshr(value, mask_shift), <span class="self">self</span>.shl(value, sub))
         };
-        <span class="kw">let</span> <span class="ident">or</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>);
-        <span class="comment">// &quot;The result is undefined if Shift is greater than or equal to the bit width of the components of Base.&quot;</span>
-        <span class="comment">// So we need to check for zero shift, and don&#39;t use the shift result if it is.</span>
-        <span class="kw">let</span> <span class="ident">mask_is_zero</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">emit</span>()
-            .<span class="ident">i_not_equal</span>(<span class="ident">bool</span>, <span class="prelude-val">None</span>, <span class="ident">mask_shift</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">zero</span>.<span class="ident">def</span>(<span class="self">self</span>))
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">with_type</span>(<span class="ident">bool</span>);
-        <span class="self">self</span>.<span class="ident">select</span>(<span class="ident">mask_is_zero</span>, <span class="ident">value</span>, <span class="ident">or</span>)
+        <span class="kw">let </span>or = <span class="self">self</span>.or(lhs, rhs);
+        <span class="comment">// &quot;The result is undefined if Shift is greater than or equal to the bit width of the components of Base.&quot;
+        // So we need to check for zero shift, and don&#39;t use the shift result if it is.
+        </span><span class="kw">let </span>mask_is_zero = <span class="self">self
+            </span>.emit()
+            .i_not_equal(bool, <span class="prelude-val">None</span>, mask_shift.def(<span class="self">self</span>), zero.def(<span class="self">self</span>))
+            .unwrap()
+            .with_type(bool);
+        <span class="self">self</span>.select(mask_is_zero, value, or)
     }
 }
 
-<span class="comment">// Important: This lets us use CodegenCx methods on Builder</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>;
+<span class="comment">// Important: This lets us use CodegenCx methods on Builder
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; Deref <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">type </span>Target = CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;;
 
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
-        <span class="self">self</span>.<span class="ident">cx</span>
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="self">self</span>.cx
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CoverageInfoBuilderMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">set_function_source_hash</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">rustc_middle::ty::Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="kw">_</span>: <span class="ident">u64</span>) -&gt; <span class="ident">bool</span> {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; CoverageInfoBuilderMethods&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>set_function_source_hash(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: rustc_middle::ty::Instance&lt;<span class="lifetime">&#39;tcx</span>&gt;, <span class="kw">_</span>: u64) -&gt; bool {
         <span class="macro">todo!</span>()
     }
-    <span class="kw">fn</span> <span class="ident">add_coverage_counter</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="kw">_</span>: <span class="ident">CounterValueReference</span>,
-        <span class="kw">_</span>: <span class="ident">CodeRegion</span>,
-    ) -&gt; <span class="ident">bool</span> {
+    <span class="kw">fn </span>add_coverage_counter(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw">_</span>: Instance&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+        <span class="kw">_</span>: CounterValueReference,
+        <span class="kw">_</span>: CodeRegion,
+    ) -&gt; bool {
         <span class="macro">todo!</span>()
     }
-    <span class="kw">fn</span> <span class="ident">add_coverage_counter_expression</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="kw">_</span>: <span class="ident">InjectedExpressionId</span>,
-        <span class="kw">_</span>: <span class="ident">ExpressionOperandId</span>,
-        <span class="kw">_</span>: <span class="ident">Op</span>,
-        <span class="kw">_</span>: <span class="ident">ExpressionOperandId</span>,
-        <span class="kw">_</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CodeRegion</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident">bool</span> {
+    <span class="kw">fn </span>add_coverage_counter_expression(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw">_</span>: Instance&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+        <span class="kw">_</span>: InjectedExpressionId,
+        <span class="kw">_</span>: ExpressionOperandId,
+        <span class="kw">_</span>: Op,
+        <span class="kw">_</span>: ExpressionOperandId,
+        <span class="kw">_</span>: <span class="prelude-ty">Option</span>&lt;CodeRegion&gt;,
+    ) -&gt; bool {
         <span class="macro">todo!</span>()
     }
-    <span class="kw">fn</span> <span class="ident">add_coverage_unreachable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="kw">_</span>: <span class="ident">CodeRegion</span>) -&gt; <span class="ident">bool</span> {
+    <span class="kw">fn </span>add_coverage_unreachable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: Instance&lt;<span class="lifetime">&#39;tcx</span>&gt;, <span class="kw">_</span>: CodeRegion) -&gt; bool {
         <span class="macro">todo!</span>()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">DebugInfoBuilderMethods</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">dbg_var_addr</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_dbg_var</span>: <span class="ident"><span class="self">Self</span>::DIVariable</span>,
-        <span class="ident">_scope_metadata</span>: <span class="ident"><span class="self">Self</span>::DILocation</span>,
-        <span class="ident">_variable_alloca</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
-        <span class="ident">_direct_offset</span>: <span class="ident">Size</span>,
-        <span class="comment">// NB: each offset implies a deref (i.e. they&#39;re steps in a pointer chain).</span>
-        <span class="ident">_indirect_offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">Size</span>],
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; DebugInfoBuilderMethods <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>dbg_var_addr(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _dbg_var: <span class="self">Self</span>::DIVariable,
+        _scope_metadata: <span class="self">Self</span>::DILocation,
+        _variable_alloca: <span class="self">Self</span>::Value,
+        _direct_offset: Size,
+        <span class="comment">// NB: each offset implies a deref (i.e. they&#39;re steps in a pointer chain).
+        </span>_indirect_offsets: <span class="kw-2">&amp;</span>[Size],
     ) {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">set_dbg_loc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident"><span class="self">Self</span>::DILocation</span>) {
+    <span class="kw">fn </span>set_dbg_loc(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="self">Self</span>::DILocation) {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">insert_reference_to_gdb_debug_scripts_section_global</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+    <span class="kw">fn </span>insert_reference_to_gdb_debug_scripts_section_global(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">set_var_name</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_value</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
+    <span class="kw">fn </span>set_var_name(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _value: <span class="self">Self</span>::Value, _name: <span class="kw-2">&amp;</span>str) {
         <span class="macro">todo!</span>()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">ArgAbiMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">store_fn_arg</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">arg_abi</span>: <span class="kw-2">&amp;</span><span class="ident">ArgAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">idx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">usize</span>,
-        <span class="ident">dst</span>: <span class="ident">PlaceRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; ArgAbiMethods&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>store_fn_arg(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        arg_abi: <span class="kw-2">&amp;</span>ArgAbi&lt;<span class="lifetime">&#39;tcx</span>, Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;,
+        idx: <span class="kw-2">&amp;mut </span>usize,
+        dst: PlaceRef&lt;<span class="lifetime">&#39;tcx</span>, <span class="self">Self</span>::Value&gt;,
     ) {
-        <span class="kw">fn</span> <span class="ident">next</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(<span class="ident">bx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">idx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">usize</span>) -&gt; <span class="ident">SpirvValue</span> {
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">bx</span>.<span class="ident">function_parameter_values</span>.<span class="ident">borrow</span>()[<span class="kw-2">&amp;</span><span class="ident">bx</span>.<span class="ident">current_fn</span>.<span class="ident">def</span>(<span class="ident">bx</span>)][<span class="kw-2">*</span><span class="ident">idx</span>];
-            <span class="kw-2">*</span><span class="ident">idx</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="ident">val</span>
+        <span class="kw">fn </span>next&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt;(bx: <span class="kw-2">&amp;mut </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt;, idx: <span class="kw-2">&amp;mut </span>usize) -&gt; SpirvValue {
+            <span class="kw">let </span>val = bx.function_parameter_values.borrow()[<span class="kw-2">&amp;</span>bx.current_fn.def(bx)][<span class="kw-2">*</span>idx];
+            <span class="kw-2">*</span>idx += <span class="number">1</span>;
+            val
         }
-        <span class="kw">match</span> <span class="ident">arg_abi</span>.<span class="ident">mode</span> {
-            <span class="ident">PassMode::Ignore</span> =&gt; {}
-            <span class="ident">PassMode::Direct</span>(<span class="kw">_</span>) =&gt; {
-                <span class="ident">OperandValue::Immediate</span>(<span class="ident">next</span>(<span class="self">self</span>, <span class="ident">idx</span>)).<span class="ident">store</span>(<span class="self">self</span>, <span class="ident">dst</span>);
+        <span class="kw">match </span>arg_abi.mode {
+            PassMode::Ignore =&gt; {}
+            PassMode::Direct(<span class="kw">_</span>) =&gt; {
+                OperandValue::Immediate(next(<span class="self">self</span>, idx)).store(<span class="self">self</span>, dst);
             }
-            <span class="ident">PassMode::Pair</span>(..) =&gt; {
-                <span class="ident">OperandValue::Pair</span>(<span class="ident">next</span>(<span class="self">self</span>, <span class="ident">idx</span>), <span class="ident">next</span>(<span class="self">self</span>, <span class="ident">idx</span>)).<span class="ident">store</span>(<span class="self">self</span>, <span class="ident">dst</span>);
+            PassMode::Pair(..) =&gt; {
+                OperandValue::Pair(next(<span class="self">self</span>, idx), next(<span class="self">self</span>, idx)).store(<span class="self">self</span>, dst);
             }
-            <span class="ident">PassMode::Cast</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode::Indirect</span> { .. } =&gt; <span class="macro">span_bug!</span>(
-                <span class="self">self</span>.<span class="ident">span</span>(),
+            PassMode::Cast(<span class="kw">_</span>) | PassMode::Indirect { .. } =&gt; <span class="macro">span_bug!</span>(
+                <span class="self">self</span>.span(),
                 <span class="string">&quot;query hooks should&#39;ve made this `PassMode` impossible: {:#?}&quot;</span>,
-                <span class="ident">arg_abi</span>
+                arg_abi
             ),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">store_arg</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">arg_abi</span>: <span class="kw-2">&amp;</span><span class="ident">ArgAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>,
-        <span class="ident">dst</span>: <span class="ident">PlaceRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident"><span class="self">Self</span>::Value</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>store_arg(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        arg_abi: <span class="kw-2">&amp;</span>ArgAbi&lt;<span class="lifetime">&#39;tcx</span>, Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;,
+        val: <span class="self">Self</span>::Value,
+        dst: PlaceRef&lt;<span class="lifetime">&#39;tcx</span>, <span class="self">Self</span>::Value&gt;,
     ) {
-        <span class="kw">match</span> <span class="ident">arg_abi</span>.<span class="ident">mode</span> {
-            <span class="ident">PassMode::Ignore</span> =&gt; {}
-            <span class="ident">PassMode::Direct</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode::Pair</span>(..) =&gt; {
-                <span class="ident">OperandValue::Immediate</span>(<span class="ident">val</span>).<span class="ident">store</span>(<span class="self">self</span>, <span class="ident">dst</span>);
+        <span class="kw">match </span>arg_abi.mode {
+            PassMode::Ignore =&gt; {}
+            PassMode::Direct(<span class="kw">_</span>) | PassMode::Pair(..) =&gt; {
+                OperandValue::Immediate(val).store(<span class="self">self</span>, dst);
             }
-            <span class="ident">PassMode::Cast</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode::Indirect</span> { .. } =&gt; <span class="macro">span_bug!</span>(
-                <span class="self">self</span>.<span class="ident">span</span>(),
+            PassMode::Cast(<span class="kw">_</span>) | PassMode::Indirect { .. } =&gt; <span class="macro">span_bug!</span>(
+                <span class="self">self</span>.span(),
                 <span class="string">&quot;query hooks should&#39;ve made this `PassMode` impossible: {:#?}&quot;</span>,
-                <span class="ident">arg_abi</span>
+                arg_abi
             ),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">arg_memory_ty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">arg_abi</span>: <span class="kw-2">&amp;</span><span class="ident">ArgAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Type</span> {
-        <span class="ident">arg_abi</span>.<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>)
+    <span class="kw">fn </span>arg_memory_ty(<span class="kw-2">&amp;</span><span class="self">self</span>, arg_abi: <span class="kw-2">&amp;</span>ArgAbi&lt;<span class="lifetime">&#39;tcx</span>, Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;) -&gt; <span class="self">Self</span>::Type {
+        arg_abi.layout.spirv_type(<span class="self">self</span>.span(), <span class="self">self</span>)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">AbiBuilderMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">apply_attrs_callsite</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_fn_abi</span>: <span class="kw-2">&amp;</span><span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">_callsite</span>: <span class="ident"><span class="self">Self</span>::Value</span>) {}
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; AbiBuilderMethods&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>apply_attrs_callsite(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _fn_abi: <span class="kw-2">&amp;</span>FnAbi&lt;<span class="lifetime">&#39;tcx</span>, Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;, _callsite: <span class="self">Self</span>::Value) {}
 
-    <span class="kw">fn</span> <span class="ident">get_param</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
-        <span class="self">self</span>.<span class="ident">function_parameter_values</span>.<span class="ident">borrow</span>()[<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">current_fn</span>.<span class="ident">def</span>(<span class="self">self</span>)][<span class="ident">index</span>]
+    <span class="kw">fn </span>get_param(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="self">Self</span>::Value {
+        <span class="self">self</span>.function_parameter_values.borrow()[<span class="kw-2">&amp;</span><span class="self">self</span>.current_fn.def(<span class="self">self</span>)][index]
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">StaticBuilderMethods</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">get_static</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">def_id</span>: <span class="ident">DefId</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
-        <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">get_static</span>(<span class="ident">def_id</span>)
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; StaticBuilderMethods <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>get_static(<span class="kw-2">&amp;mut </span><span class="self">self</span>, def_id: DefId) -&gt; <span class="self">Self</span>::Value {
+        <span class="self">self</span>.cx.get_static(def_id)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">BackendTypes</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::Value</span>;
-    <span class="kw">type</span> <span class="ident">Function</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::Function</span>;
-    <span class="kw">type</span> <span class="ident">BasicBlock</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::BasicBlock</span>;
-    <span class="kw">type</span> <span class="ident">Type</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::Type</span>;
-    <span class="kw">type</span> <span class="ident">Funclet</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::Funclet</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; BackendTypes <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">type </span>Value = &lt;CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">as </span>BackendTypes&gt;::Value;
+    <span class="kw">type </span>Function = &lt;CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">as </span>BackendTypes&gt;::Function;
+    <span class="kw">type </span>BasicBlock = &lt;CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">as </span>BackendTypes&gt;::BasicBlock;
+    <span class="kw">type </span>Type = &lt;CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">as </span>BackendTypes&gt;::Type;
+    <span class="kw">type </span>Funclet = &lt;CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">as </span>BackendTypes&gt;::Funclet;
 
-    <span class="kw">type</span> <span class="ident">DIScope</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::DIScope</span>;
-    <span class="kw">type</span> <span class="ident">DIVariable</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::DIVariable</span>;
-    <span class="kw">type</span> <span class="ident">DILocation</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">BackendTypes</span><span class="op">&gt;</span><span class="ident">::DILocation</span>;
+    <span class="kw">type </span>DIScope = &lt;CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">as </span>BackendTypes&gt;::DIScope;
+    <span class="kw">type </span>DIVariable = &lt;CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">as </span>BackendTypes&gt;::DIVariable;
+    <span class="kw">type </span>DILocation = &lt;CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">as </span>BackendTypes&gt;::DILocation;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">HasCodegen</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">CodegenCx</span> <span class="op">=</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; HasCodegen&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">type </span>CodegenCx = CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">HasParamEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">param_env</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ParamEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">param_env</span>()
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; HasParamEnv&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>param_env(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ParamEnv&lt;<span class="lifetime">&#39;tcx</span>&gt; {
+        <span class="self">self</span>.cx.param_env()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">HasTargetSpec</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">target_spec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Target</span> {
-        <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">target_spec</span>()
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; HasTargetSpec <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>target_spec(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Target {
+        <span class="self">self</span>.cx.target_spec()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">HasTyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">tcx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">tcx</span>
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; HasTyCtxt&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>tcx(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TyCtxt&lt;<span class="lifetime">&#39;tcx</span>&gt; {
+        <span class="self">self</span>.cx.tcx
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">HasDataLayout</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">data_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">TargetDataLayout</span> {
-        <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">data_layout</span>()
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; HasDataLayout <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>data_layout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>TargetDataLayout {
+        <span class="self">self</span>.cx.data_layout()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">LayoutOfHelpers</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">LayoutOfResult</span> <span class="op">=</span> <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; LayoutOfHelpers&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">type </span>LayoutOfResult = TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt;;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">handle_layout_err</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">err</span>: <span class="ident">LayoutError</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) -&gt; <span class="op">!</span> {
-        <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">handle_layout_err</span>(<span class="ident">err</span>, <span class="ident">span</span>, <span class="ident">ty</span>)
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>handle_layout_err(<span class="kw-2">&amp;</span><span class="self">self</span>, err: LayoutError&lt;<span class="lifetime">&#39;tcx</span>&gt;, span: Span, ty: Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; ! {
+        <span class="self">self</span>.cx.handle_layout_err(err, span, ty)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">FnAbiOfHelpers</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">FnAbiOfResult</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; FnAbiOfHelpers&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>Builder&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">type </span>FnAbiOfResult = <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx </span>FnAbi&lt;<span class="lifetime">&#39;tcx</span>, Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">handle_fn_abi_err</span>(
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>handle_fn_abi_err(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">err</span>: <span class="ident">FnAbiError</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="ident">span</span>: <span class="ident">Span</span>,
-        <span class="ident">fn_abi_request</span>: <span class="ident">FnAbiRequest</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="op">!</span> {
-        <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">handle_fn_abi_err</span>(<span class="ident">err</span>, <span class="ident">span</span>, <span class="ident">fn_abi_request</span>)
+        err: FnAbiError&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+        span: Span,
+        fn_abi_request: FnAbiRequest&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+    ) -&gt; ! {
+        <span class="self">self</span>.cx.handle_fn_abi_err(err, span, fn_abi_request)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">TypeMembershipMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">set_type_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_function</span>: <span class="ident"><span class="self">Self</span>::Function</span>, <span class="ident">_typeid</span>: <span class="ident">String</span>) {
-        <span class="comment">// ignore</span>
-    }
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; TypeMembershipMethods&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>set_type_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>, _function: <span class="self">Self</span>::Function, _typeid: String) {
+        <span class="comment">// ignore
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">typeid_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_typeid</span>: <span class="ident">String</span>) -&gt; <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn </span>typeid_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>, _typeid: String) -&gt; <span class="self">Self</span>::Value {
         <span class="macro">todo!</span>()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

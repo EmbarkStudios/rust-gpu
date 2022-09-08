@@ -1,12 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/tempfile-3.2.0/src/file/imp/unix.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>unix.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../tempfile/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../tempfile/index.html"><div class="logo-container">
-                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../tempfile/index.html">
-                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/tempfile-3.2.0/src/file/imp/unix.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>unix.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../tempfile/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../tempfile/index.html"><div class="logo-container">
+                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../tempfile/index.html">
+                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -143,143 +137,142 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::env</span>;
-<span class="kw">use</span> <span class="ident">std::ffi</span>::{<span class="ident">CString</span>, <span class="ident">OsStr</span>};
-<span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
-<span class="kw">use</span> <span class="ident">std::io</span>;
-<span class="kw">use</span> <span class="ident">std::os::unix::ffi::OsStrExt</span>;
-<span class="kw">use</span> <span class="ident">std::os::unix::fs</span>::{<span class="ident">MetadataExt</span>, <span class="ident">OpenOptionsExt</span>};
-<span class="kw">use</span> <span class="ident">std::path::Path</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::env;
+<span class="kw">use </span>std::ffi::{CString, OsStr};
+<span class="kw">use </span>std::fs::{<span class="self">self</span>, File, OpenOptions};
+<span class="kw">use </span>std::io;
+<span class="kw">use </span>std::os::unix::ffi::OsStrExt;
+<span class="kw">use </span>std::os::unix::fs::{MetadataExt, OpenOptionsExt};
+<span class="kw">use </span>std::path::Path;
+<span class="kw">use </span><span class="kw">crate</span>::util;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">libc</span>::{<span class="ident">c_char</span>, <span class="ident">c_int</span>, <span class="ident">link</span>, <span class="ident">rename</span>, <span class="ident">unlink</span>};
+<span class="attribute">#[cfg(not(target_os = <span class="string">&quot;redox&quot;</span>))]
+</span><span class="kw">use </span>libc::{c_char, c_int, link, rename, unlink};
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cvt_err</span>(<span class="ident">result</span>: <span class="ident">c_int</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">c_int</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">result</span> <span class="op">==</span> <span class="op">-</span><span class="number">1</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">io::Error::last_os_error</span>())
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
+<span class="attribute">#[cfg(not(target_os = <span class="string">&quot;redox&quot;</span>))]
+#[inline(always)]
+</span><span class="kw">pub fn </span>cvt_err(result: c_int) -&gt; io::Result&lt;c_int&gt; {
+    <span class="kw">if </span>result == -<span class="number">1 </span>{
+        <span class="prelude-val">Err</span>(io::Error::last_os_error())
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Ok</span>(result)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cvt_err</span>(<span class="ident">result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">syscall::Error</span><span class="op">&gt;</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="ident">result</span>.<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">io::Error::from_raw_os_error</span>(<span class="ident">err</span>.<span class="ident">errno</span>))
+<span class="attribute">#[cfg(target_os = <span class="string">&quot;redox&quot;</span>)]
+#[inline(always)]
+</span><span class="kw">pub fn </span>cvt_err(result: <span class="prelude-ty">Result</span>&lt;usize, syscall::Error&gt;) -&gt; io::Result&lt;usize&gt; {
+    result.map_err(|err| io::Error::from_raw_os_error(err.errno))
 }
 
-<span class="comment">// Stolen from std.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cstr</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">CString</span><span class="op">&gt;</span> {
-    <span class="ident">CString::new</span>(<span class="ident">path</span>.<span class="ident">as_os_str</span>().<span class="ident">as_bytes</span>())
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::InvalidInput</span>, <span class="string">&quot;path contained a null&quot;</span>))
+<span class="comment">// Stolen from std.
+</span><span class="kw">pub fn </span>cstr(path: <span class="kw-2">&amp;</span>Path) -&gt; io::Result&lt;CString&gt; {
+    CString::new(path.as_os_str().as_bytes())
+        .map_err(|<span class="kw">_</span>| io::Error::new(io::ErrorKind::InvalidInput, <span class="string">&quot;path contained a null&quot;</span>))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_named</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">open_options</span>: <span class="kw-2">&amp;mut</span> <span class="ident">OpenOptions</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
-    <span class="ident">open_options</span>
-        .<span class="ident">read</span>(<span class="bool-val">true</span>)
-        .<span class="ident">write</span>(<span class="bool-val">true</span>)
-        .<span class="ident">create_new</span>(<span class="bool-val">true</span>)
-        .<span class="ident">mode</span>(<span class="number">0o600</span>)
-        .<span class="ident">open</span>(<span class="ident">path</span>)
+<span class="kw">pub fn </span>create_named(path: <span class="kw-2">&amp;</span>Path, open_options: <span class="kw-2">&amp;mut </span>OpenOptions) -&gt; io::Result&lt;File&gt; {
+    open_options
+        .read(<span class="bool-val">true</span>)
+        .write(<span class="bool-val">true</span>)
+        .create_new(<span class="bool-val">true</span>)
+        .mode(<span class="number">0o600</span>)
+        .open(path)
 }
 
-<span class="kw">fn</span> <span class="ident">create_unlinked</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">tmp</span>;
-    <span class="comment">// shadow this to decrease the lifetime. It can&#39;t live longer than `tmp`.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>;
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">path</span>.<span class="ident">is_absolute</span>() {
-        <span class="kw">let</span> <span class="ident">cur_dir</span> <span class="op">=</span> <span class="ident">env::current_dir</span>()<span class="question-mark">?</span>;
-        <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">cur_dir</span>.<span class="ident">join</span>(<span class="ident">path</span>);
-        <span class="ident">path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tmp</span>;
+<span class="kw">fn </span>create_unlinked(path: <span class="kw-2">&amp;</span>Path) -&gt; io::Result&lt;File&gt; {
+    <span class="kw">let </span>tmp;
+    <span class="comment">// shadow this to decrease the lifetime. It can&#39;t live longer than `tmp`.
+    </span><span class="kw">let </span><span class="kw-2">mut </span>path = path;
+    <span class="kw">if </span>!path.is_absolute() {
+        <span class="kw">let </span>cur_dir = env::current_dir()<span class="question-mark">?</span>;
+        tmp = cur_dir.join(path);
+        path = <span class="kw-2">&amp;</span>tmp;
     }
 
-    <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">create_named</span>(<span class="ident">path</span>, <span class="kw-2">&amp;mut</span> <span class="ident">OpenOptions::new</span>())<span class="question-mark">?</span>;
-    <span class="comment">// don&#39;t care whether the path has already been unlinked,</span>
-    <span class="comment">// but perhaps there are some IO error conditions we should send up?</span>
-    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">fs::remove_file</span>(<span class="ident">path</span>);
-    <span class="prelude-val">Ok</span>(<span class="ident">f</span>)
+    <span class="kw">let </span>f = create_named(path, <span class="kw-2">&amp;mut </span>OpenOptions::new())<span class="question-mark">?</span>;
+    <span class="comment">// don&#39;t care whether the path has already been unlinked,
+    // but perhaps there are some IO error conditions we should send up?
+    </span><span class="kw">let _ </span>= fs::remove_file(path);
+    <span class="prelude-val">Ok</span>(f)
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;linux&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="ident">libc</span>::{<span class="ident">EISDIR</span>, <span class="ident">ENOENT</span>, <span class="ident">EOPNOTSUPP</span>, <span class="ident">O_EXCL</span>, <span class="ident">O_TMPFILE</span>};
-    <span class="ident">OpenOptions::new</span>()
-        .<span class="ident">read</span>(<span class="bool-val">true</span>)
-        .<span class="ident">write</span>(<span class="bool-val">true</span>)
-        .<span class="ident">custom_flags</span>(<span class="ident">O_TMPFILE</span> <span class="op">|</span> <span class="ident">O_EXCL</span>) <span class="comment">// do not mix with `create_new(true)`</span>
-        .<span class="ident">open</span>(<span class="ident">dir</span>)
-        .<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-            <span class="kw">match</span> <span class="ident">e</span>.<span class="ident">raw_os_error</span>() {
-                <span class="comment">// These are the three &quot;not supported&quot; error codes for O_TMPFILE.</span>
-                <span class="prelude-val">Some</span>(<span class="ident">EOPNOTSUPP</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">EISDIR</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">ENOENT</span>) =&gt; <span class="ident">create_unix</span>(<span class="ident">dir</span>),
-                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">e</span>),
+<span class="attribute">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+</span><span class="kw">pub fn </span>create(dir: <span class="kw-2">&amp;</span>Path) -&gt; io::Result&lt;File&gt; {
+    <span class="kw">use </span>libc::{EISDIR, ENOENT, EOPNOTSUPP, O_EXCL, O_TMPFILE};
+    OpenOptions::new()
+        .read(<span class="bool-val">true</span>)
+        .write(<span class="bool-val">true</span>)
+        .custom_flags(O_TMPFILE | O_EXCL) <span class="comment">// do not mix with `create_new(true)`
+        </span>.open(dir)
+        .or_else(|e| {
+            <span class="kw">match </span>e.raw_os_error() {
+                <span class="comment">// These are the three &quot;not supported&quot; error codes for O_TMPFILE.
+                </span><span class="prelude-val">Some</span>(EOPNOTSUPP) | <span class="prelude-val">Some</span>(EISDIR) | <span class="prelude-val">Some</span>(ENOENT) =&gt; create_unix(dir),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(e),
             }
         })
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;linux&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
-    <span class="ident">create_unix</span>(<span class="ident">dir</span>)
+<span class="attribute">#[cfg(not(target_os = <span class="string">&quot;linux&quot;</span>))]
+</span><span class="kw">pub fn </span>create(dir: <span class="kw-2">&amp;</span>Path) -&gt; io::Result&lt;File&gt; {
+    create_unix(dir)
 }
 
-<span class="kw">fn</span> <span class="ident">create_unix</span>(<span class="ident">dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
-    <span class="ident">util::create_helper</span>(
-        <span class="ident">dir</span>,
-        <span class="ident">OsStr::new</span>(<span class="string">&quot;.tmp&quot;</span>),
-        <span class="ident">OsStr::new</span>(<span class="string">&quot;&quot;</span>),
-        <span class="ident"><span class="kw">crate</span>::NUM_RAND_CHARS</span>,
-        <span class="op">|</span><span class="ident">path</span><span class="op">|</span> <span class="ident">create_unlinked</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>),
+<span class="kw">fn </span>create_unix(dir: <span class="kw-2">&amp;</span>Path) -&gt; io::Result&lt;File&gt; {
+    util::create_helper(
+        dir,
+        OsStr::new(<span class="string">&quot;.tmp&quot;</span>),
+        OsStr::new(<span class="string">&quot;&quot;</span>),
+        <span class="kw">crate</span>::NUM_RAND_CHARS,
+        |path| create_unlinked(<span class="kw-2">&amp;</span>path),
     )
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reopen</span>(<span class="ident">file</span>: <span class="kw-2">&amp;</span><span class="ident">File</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">File</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">new_file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>().<span class="ident">read</span>(<span class="bool-val">true</span>).<span class="ident">write</span>(<span class="bool-val">true</span>).<span class="ident">open</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">old_meta</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">metadata</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">new_meta</span> <span class="op">=</span> <span class="ident">new_file</span>.<span class="ident">metadata</span>()<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="ident">old_meta</span>.<span class="ident">dev</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">new_meta</span>.<span class="ident">dev</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">old_meta</span>.<span class="ident">ino</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">new_meta</span>.<span class="ident">ino</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">io::Error::new</span>(
-            <span class="ident">io::ErrorKind::NotFound</span>,
+<span class="kw">pub fn </span>reopen(file: <span class="kw-2">&amp;</span>File, path: <span class="kw-2">&amp;</span>Path) -&gt; io::Result&lt;File&gt; {
+    <span class="kw">let </span>new_file = OpenOptions::new().read(<span class="bool-val">true</span>).write(<span class="bool-val">true</span>).open(path)<span class="question-mark">?</span>;
+    <span class="kw">let </span>old_meta = file.metadata()<span class="question-mark">?</span>;
+    <span class="kw">let </span>new_meta = new_file.metadata()<span class="question-mark">?</span>;
+    <span class="kw">if </span>old_meta.dev() != new_meta.dev() || old_meta.ino() != new_meta.ino() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(io::Error::new(
+            io::ErrorKind::NotFound,
             <span class="string">&quot;original tempfile has been replaced&quot;</span>,
         ));
     }
-    <span class="prelude-val">Ok</span>(<span class="ident">new_file</span>)
+    <span class="prelude-val">Ok</span>(new_file)
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">persist</span>(<span class="ident">old_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">new_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">overwrite</span>: <span class="ident">bool</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">old_path</span> <span class="op">=</span> <span class="ident">cstr</span>(<span class="ident">old_path</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">new_path</span> <span class="op">=</span> <span class="ident">cstr</span>(<span class="ident">new_path</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">overwrite</span> {
-            <span class="ident">cvt_err</span>(<span class="ident">rename</span>(
-                <span class="ident">old_path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">c_char</span>,
-                <span class="ident">new_path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">c_char</span>,
+<span class="attribute">#[cfg(not(target_os = <span class="string">&quot;redox&quot;</span>))]
+</span><span class="kw">pub fn </span>persist(old_path: <span class="kw-2">&amp;</span>Path, new_path: <span class="kw-2">&amp;</span>Path, overwrite: bool) -&gt; io::Result&lt;()&gt; {
+    <span class="kw">unsafe </span>{
+        <span class="kw">let </span>old_path = cstr(old_path)<span class="question-mark">?</span>;
+        <span class="kw">let </span>new_path = cstr(new_path)<span class="question-mark">?</span>;
+        <span class="kw">if </span>overwrite {
+            cvt_err(rename(
+                old_path.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>c_char,
+                new_path.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>c_char,
             ))<span class="question-mark">?</span>;
-        } <span class="kw">else</span> {
-            <span class="ident">cvt_err</span>(<span class="ident">link</span>(
-                <span class="ident">old_path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">c_char</span>,
-                <span class="ident">new_path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">c_char</span>,
+        } <span class="kw">else </span>{
+            cvt_err(link(
+                old_path.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>c_char,
+                new_path.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>c_char,
             ))<span class="question-mark">?</span>;
-            <span class="comment">// Ignore unlink errors. Can we do better?</span>
-            <span class="comment">// On recent linux, we can use renameat2 to do this atomically.</span>
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">unlink</span>(<span class="ident">old_path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">c_char</span>);
+            <span class="comment">// Ignore unlink errors. Can we do better?
+            // On recent linux, we can use renameat2 to do this atomically.
+            </span><span class="kw">let _ </span>= unlink(old_path.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>c_char);
         }
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">persist</span>(<span class="ident">old_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">new_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">overwrite</span>: <span class="ident">bool</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="comment">// XXX implement when possible</span>
-    <span class="prelude-val">Err</span>(<span class="ident">io::Error::from_raw_os_error</span>(<span class="ident">syscall::ENOSYS</span>))
+<span class="attribute">#[cfg(target_os = <span class="string">&quot;redox&quot;</span>)]
+</span><span class="kw">pub fn </span>persist(old_path: <span class="kw-2">&amp;</span>Path, new_path: <span class="kw-2">&amp;</span>Path, overwrite: bool) -&gt; io::Result&lt;()&gt; {
+    <span class="comment">// XXX implement when possible
+    </span><span class="prelude-val">Err</span>(io::Error::from_raw_os_error(syscall::ENOSYS))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keep</span>(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub fn </span>keep(<span class="kw">_</span>: <span class="kw-2">&amp;</span>Path) -&gt; io::Result&lt;()&gt; {
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="tempfile" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="tempfile" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/hir/print.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>print.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/hir/print.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>print.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -373,371 +367,370 @@
 <span id="367">367</span>
 </pre><pre class="rust"><code><span class="doccomment">/*!
 This module provides a regular expression printer for `Hir`.
-*/</span>
+*/
 
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
+</span><span class="kw">use </span>std::fmt;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::hir::visitor</span>::{<span class="self">self</span>, <span class="ident">Visitor</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::hir</span>::{<span class="self">self</span>, <span class="ident">Hir</span>, <span class="ident">HirKind</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::is_meta_character</span>;
+<span class="kw">use </span><span class="kw">crate</span>::hir::visitor::{<span class="self">self</span>, Visitor};
+<span class="kw">use </span><span class="kw">crate</span>::hir::{<span class="self">self</span>, Hir, HirKind};
+<span class="kw">use </span><span class="kw">crate</span>::is_meta_character;
 
-<span class="doccomment">/// A builder for constructing a printer.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that since a printer doesn&#39;t have any configuration knobs, this type</span>
-<span class="doccomment">/// remains unexported.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">PrinterBuilder</span> {
-    <span class="ident">_priv</span>: (),
+<span class="doccomment">/// A builder for constructing a printer.
+///
+/// Note that since a printer doesn&#39;t have any configuration knobs, this type
+/// remains unexported.
+</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">struct </span>PrinterBuilder {
+    _priv: (),
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PrinterBuilder</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">PrinterBuilder</span> {
-        <span class="ident">PrinterBuilder::new</span>()
+<span class="kw">impl </span>Default <span class="kw">for </span>PrinterBuilder {
+    <span class="kw">fn </span>default() -&gt; PrinterBuilder {
+        PrinterBuilder::new()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">PrinterBuilder</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">PrinterBuilder</span> {
-        <span class="ident">PrinterBuilder</span> { <span class="ident">_priv</span>: () }
+<span class="kw">impl </span>PrinterBuilder {
+    <span class="kw">fn </span>new() -&gt; PrinterBuilder {
+        PrinterBuilder { _priv: () }
     }
 
-    <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Printer</span> {
-        <span class="ident">Printer</span> { <span class="ident">_priv</span>: () }
-    }
-}
-
-<span class="doccomment">/// A printer for a regular expression&#39;s high-level intermediate</span>
-<span class="doccomment">/// representation.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// A printer converts a high-level intermediate representation (HIR) to a</span>
-<span class="doccomment">/// regular expression pattern string. This particular printer uses constant</span>
-<span class="doccomment">/// stack space and heap space proportional to the size of the HIR.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Since this printer is only using the HIR, the pattern it prints will likely</span>
-<span class="doccomment">/// not resemble the original pattern at all. For example, a pattern like</span>
-<span class="doccomment">/// `\pL` will have its entire class written out.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The purpose of this printer is to provide a means to mutate an HIR and then</span>
-<span class="doccomment">/// build a regular expression from the result of that mutation. (A regex</span>
-<span class="doccomment">/// library could provide a constructor from this HIR explicitly, but that</span>
-<span class="doccomment">/// creates an unnecessary public coupling between the regex library and this</span>
-<span class="doccomment">/// specific HIR representation.)</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Printer</span> {
-    <span class="ident">_priv</span>: (),
-}
-
-<span class="kw">impl</span> <span class="ident">Printer</span> {
-    <span class="doccomment">/// Create a new printer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Printer</span> {
-        <span class="ident">PrinterBuilder::new</span>().<span class="ident">build</span>()
-    }
-
-    <span class="doccomment">/// Print the given `Ast` to the given writer. The writer must implement</span>
-    <span class="doccomment">/// `fmt::Write`. Typical implementations of `fmt::Write` that can be used</span>
-    <span class="doccomment">/// here are a `fmt::Formatter` (which is available in `fmt::Display`</span>
-    <span class="doccomment">/// implementations) or a `&amp;mut String`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">fmt::Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hir</span>: <span class="kw-2">&amp;</span><span class="ident">Hir</span>, <span class="ident">wtr</span>: <span class="ident">W</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">visitor::visit</span>(<span class="ident">hir</span>, <span class="ident">Writer</span> { <span class="ident">wtr</span> })
+    <span class="kw">fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Printer {
+        Printer { _priv: () }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span> {
-    <span class="ident">wtr</span>: <span class="ident">W</span>,
+<span class="doccomment">/// A printer for a regular expression&#39;s high-level intermediate
+/// representation.
+///
+/// A printer converts a high-level intermediate representation (HIR) to a
+/// regular expression pattern string. This particular printer uses constant
+/// stack space and heap space proportional to the size of the HIR.
+///
+/// Since this printer is only using the HIR, the pattern it prints will likely
+/// not resemble the original pattern at all. For example, a pattern like
+/// `\pL` will have its entire class written out.
+///
+/// The purpose of this printer is to provide a means to mutate an HIR and then
+/// build a regular expression from the result of that mutation. (A regex
+/// library could provide a constructor from this HIR explicitly, but that
+/// creates an unnecessary public coupling between the regex library and this
+/// specific HIR representation.)
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Printer {
+    _priv: (),
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">fmt::Write</span><span class="op">&gt;</span> <span class="ident">Visitor</span> <span class="kw">for</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> ();
-    <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">fmt::Error</span>;
+<span class="kw">impl </span>Printer {
+    <span class="doccomment">/// Create a new printer.
+    </span><span class="kw">pub fn </span>new() -&gt; Printer {
+        PrinterBuilder::new().build()
+    }
 
-    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) -&gt; <span class="ident">fmt::Result</span> {
+    <span class="doccomment">/// Print the given `Ast` to the given writer. The writer must implement
+    /// `fmt::Write`. Typical implementations of `fmt::Write` that can be used
+    /// here are a `fmt::Formatter` (which is available in `fmt::Display`
+    /// implementations) or a `&amp;mut String`.
+    </span><span class="kw">pub fn </span>print&lt;W: fmt::Write&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hir: <span class="kw-2">&amp;</span>Hir, wtr: W) -&gt; fmt::Result {
+        visitor::visit(hir, Writer { wtr })
+    }
+}
+
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">struct </span>Writer&lt;W&gt; {
+    wtr: W,
+}
+
+<span class="kw">impl</span>&lt;W: fmt::Write&gt; Visitor <span class="kw">for </span>Writer&lt;W&gt; {
+    <span class="kw">type </span>Output = ();
+    <span class="kw">type </span><span class="prelude-val">Err </span>= fmt::Error;
+
+    <span class="kw">fn </span>finish(<span class="self">self</span>) -&gt; fmt::Result {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_pre</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hir</span>: <span class="kw-2">&amp;</span><span class="ident">Hir</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">hir</span>.<span class="ident">kind</span>() {
-            <span class="ident">HirKind::Empty</span>
-            <span class="op">|</span> <span class="ident">HirKind::Repetition</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">HirKind::Concat</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">HirKind::Alternation</span>(<span class="kw">_</span>) =&gt; {}
-            <span class="ident">HirKind::Literal</span>(<span class="ident">hir::Literal::Unicode</span>(<span class="ident">c</span>)) =&gt; {
-                <span class="self">self</span>.<span class="ident">write_literal_char</span>(<span class="ident">c</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>visit_pre(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hir: <span class="kw-2">&amp;</span>Hir) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="kw-2">*</span>hir.kind() {
+            HirKind::Empty
+            | HirKind::Repetition(<span class="kw">_</span>)
+            | HirKind::Concat(<span class="kw">_</span>)
+            | HirKind::Alternation(<span class="kw">_</span>) =&gt; {}
+            HirKind::Literal(hir::Literal::Unicode(c)) =&gt; {
+                <span class="self">self</span>.write_literal_char(c)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::Literal</span>(<span class="ident">hir::Literal::Byte</span>(<span class="ident">b</span>)) =&gt; {
-                <span class="self">self</span>.<span class="ident">write_literal_byte</span>(<span class="ident">b</span>)<span class="question-mark">?</span>;
+            HirKind::Literal(hir::Literal::Byte(b)) =&gt; {
+                <span class="self">self</span>.write_literal_byte(b)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::Class</span>(<span class="ident">hir::Class::Unicode</span>(<span class="kw-2">ref</span> <span class="ident">cls</span>)) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;[&quot;</span>)<span class="question-mark">?</span>;
-                <span class="kw">for</span> <span class="ident">range</span> <span class="kw">in</span> <span class="ident">cls</span>.<span class="ident">iter</span>() {
-                    <span class="kw">if</span> <span class="ident">range</span>.<span class="ident">start</span>() <span class="op">==</span> <span class="ident">range</span>.<span class="ident">end</span>() {
-                        <span class="self">self</span>.<span class="ident">write_literal_char</span>(<span class="ident">range</span>.<span class="ident">start</span>())<span class="question-mark">?</span>;
-                    } <span class="kw">else</span> {
-                        <span class="self">self</span>.<span class="ident">write_literal_char</span>(<span class="ident">range</span>.<span class="ident">start</span>())<span class="question-mark">?</span>;
-                        <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;-&quot;</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.<span class="ident">write_literal_char</span>(<span class="ident">range</span>.<span class="ident">end</span>())<span class="question-mark">?</span>;
+            HirKind::Class(hir::Class::Unicode(<span class="kw-2">ref </span>cls)) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">&quot;[&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">for </span>range <span class="kw">in </span>cls.iter() {
+                    <span class="kw">if </span>range.start() == range.end() {
+                        <span class="self">self</span>.write_literal_char(range.start())<span class="question-mark">?</span>;
+                    } <span class="kw">else </span>{
+                        <span class="self">self</span>.write_literal_char(range.start())<span class="question-mark">?</span>;
+                        <span class="self">self</span>.wtr.write_str(<span class="string">&quot;-&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_literal_char(range.end())<span class="question-mark">?</span>;
                     }
                 }
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;]&quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.wtr.write_str(<span class="string">&quot;]&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::Class</span>(<span class="ident">hir::Class::Bytes</span>(<span class="kw-2">ref</span> <span class="ident">cls</span>)) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;(?-u:[&quot;</span>)<span class="question-mark">?</span>;
-                <span class="kw">for</span> <span class="ident">range</span> <span class="kw">in</span> <span class="ident">cls</span>.<span class="ident">iter</span>() {
-                    <span class="kw">if</span> <span class="ident">range</span>.<span class="ident">start</span>() <span class="op">==</span> <span class="ident">range</span>.<span class="ident">end</span>() {
-                        <span class="self">self</span>.<span class="ident">write_literal_class_byte</span>(<span class="ident">range</span>.<span class="ident">start</span>())<span class="question-mark">?</span>;
-                    } <span class="kw">else</span> {
-                        <span class="self">self</span>.<span class="ident">write_literal_class_byte</span>(<span class="ident">range</span>.<span class="ident">start</span>())<span class="question-mark">?</span>;
-                        <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;-&quot;</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.<span class="ident">write_literal_class_byte</span>(<span class="ident">range</span>.<span class="ident">end</span>())<span class="question-mark">?</span>;
+            HirKind::Class(hir::Class::Bytes(<span class="kw-2">ref </span>cls)) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">&quot;(?-u:[&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">for </span>range <span class="kw">in </span>cls.iter() {
+                    <span class="kw">if </span>range.start() == range.end() {
+                        <span class="self">self</span>.write_literal_class_byte(range.start())<span class="question-mark">?</span>;
+                    } <span class="kw">else </span>{
+                        <span class="self">self</span>.write_literal_class_byte(range.start())<span class="question-mark">?</span>;
+                        <span class="self">self</span>.wtr.write_str(<span class="string">&quot;-&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_literal_class_byte(range.end())<span class="question-mark">?</span>;
                     }
                 }
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;])&quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.wtr.write_str(<span class="string">&quot;])&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::Anchor</span>(<span class="ident">hir::Anchor::StartLine</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;(?m:^)&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::Anchor(hir::Anchor::StartLine) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">&quot;(?m:^)&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::Anchor</span>(<span class="ident">hir::Anchor::EndLine</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;(?m:$)&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::Anchor(hir::Anchor::EndLine) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">&quot;(?m:$)&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::Anchor</span>(<span class="ident">hir::Anchor::StartText</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">r&quot;\A&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::Anchor(hir::Anchor::StartText) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\A&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::Anchor</span>(<span class="ident">hir::Anchor::EndText</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">r&quot;\z&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::Anchor(hir::Anchor::EndText) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\z&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::WordBoundary</span>(<span class="ident">hir::WordBoundary::Unicode</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">r&quot;\b&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::WordBoundary(hir::WordBoundary::Unicode) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\b&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::WordBoundary</span>(<span class="ident">hir::WordBoundary::UnicodeNegate</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">r&quot;\B&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::WordBoundary(hir::WordBoundary::UnicodeNegate) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;\B&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::WordBoundary</span>(<span class="ident">hir::WordBoundary::Ascii</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">r&quot;(?-u:\b)&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::WordBoundary(hir::WordBoundary::Ascii) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;(?-u:\b)&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::WordBoundary</span>(<span class="ident">hir::WordBoundary::AsciiNegate</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">r&quot;(?-u:\B)&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::WordBoundary(hir::WordBoundary::AsciiNegate) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">r&quot;(?-u:\B)&quot;</span>)<span class="question-mark">?</span>;
             }
-            <span class="ident">HirKind::Group</span>(<span class="kw-2">ref</span> <span class="ident">x</span>) =&gt; <span class="kw">match</span> <span class="ident">x</span>.<span class="ident">kind</span> {
-                <span class="ident">hir::GroupKind::CaptureIndex</span>(<span class="kw">_</span>) =&gt; {
-                    <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;(&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::Group(<span class="kw-2">ref </span>x) =&gt; <span class="kw">match </span>x.kind {
+                hir::GroupKind::CaptureIndex(<span class="kw">_</span>) =&gt; {
+                    <span class="self">self</span>.wtr.write_str(<span class="string">&quot;(&quot;</span>)<span class="question-mark">?</span>;
                 }
-                <span class="ident">hir::GroupKind::CaptureName</span> { <span class="kw-2">ref</span> <span class="ident">name</span>, .. } =&gt; {
-                    <span class="macro">write!</span>(<span class="self">self</span>.<span class="ident">wtr</span>, <span class="string">&quot;(?P&lt;{}&gt;&quot;</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
+                hir::GroupKind::CaptureName { <span class="kw-2">ref </span>name, .. } =&gt; {
+                    <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">&quot;(?P&lt;{}&gt;&quot;</span>, name)<span class="question-mark">?</span>;
                 }
-                <span class="ident">hir::GroupKind::NonCapturing</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;(?:&quot;</span>)<span class="question-mark">?</span>;
+                hir::GroupKind::NonCapturing =&gt; {
+                    <span class="self">self</span>.wtr.write_str(<span class="string">&quot;(?:&quot;</span>)<span class="question-mark">?</span>;
                 }
             },
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_post</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hir</span>: <span class="kw-2">&amp;</span><span class="ident">Hir</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">hir</span>.<span class="ident">kind</span>() {
-            <span class="comment">// Handled during visit_pre</span>
-            <span class="ident">HirKind::Empty</span>
-            <span class="op">|</span> <span class="ident">HirKind::Literal</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">HirKind::Class</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">HirKind::Anchor</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">HirKind::WordBoundary</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">HirKind::Concat</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="ident">HirKind::Alternation</span>(<span class="kw">_</span>) =&gt; {}
-            <span class="ident">HirKind::Repetition</span>(<span class="kw-2">ref</span> <span class="ident">x</span>) =&gt; {
-                <span class="kw">match</span> <span class="ident">x</span>.<span class="ident">kind</span> {
-                    <span class="ident">hir::RepetitionKind::ZeroOrOne</span> =&gt; {
-                        <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;?&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>visit_post(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hir: <span class="kw-2">&amp;</span>Hir) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="kw-2">*</span>hir.kind() {
+            <span class="comment">// Handled during visit_pre
+            </span>HirKind::Empty
+            | HirKind::Literal(<span class="kw">_</span>)
+            | HirKind::Class(<span class="kw">_</span>)
+            | HirKind::Anchor(<span class="kw">_</span>)
+            | HirKind::WordBoundary(<span class="kw">_</span>)
+            | HirKind::Concat(<span class="kw">_</span>)
+            | HirKind::Alternation(<span class="kw">_</span>) =&gt; {}
+            HirKind::Repetition(<span class="kw-2">ref </span>x) =&gt; {
+                <span class="kw">match </span>x.kind {
+                    hir::RepetitionKind::ZeroOrOne =&gt; {
+                        <span class="self">self</span>.wtr.write_str(<span class="string">&quot;?&quot;</span>)<span class="question-mark">?</span>;
                     }
-                    <span class="ident">hir::RepetitionKind::ZeroOrMore</span> =&gt; {
-                        <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;*&quot;</span>)<span class="question-mark">?</span>;
+                    hir::RepetitionKind::ZeroOrMore =&gt; {
+                        <span class="self">self</span>.wtr.write_str(<span class="string">&quot;*&quot;</span>)<span class="question-mark">?</span>;
                     }
-                    <span class="ident">hir::RepetitionKind::OneOrMore</span> =&gt; {
-                        <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;+&quot;</span>)<span class="question-mark">?</span>;
+                    hir::RepetitionKind::OneOrMore =&gt; {
+                        <span class="self">self</span>.wtr.write_str(<span class="string">&quot;+&quot;</span>)<span class="question-mark">?</span>;
                     }
-                    <span class="ident">hir::RepetitionKind::Range</span>(<span class="kw-2">ref</span> <span class="ident">x</span>) =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">x</span> {
-                        <span class="ident">hir::RepetitionRange::Exactly</span>(<span class="ident">m</span>) =&gt; {
-                            <span class="macro">write!</span>(<span class="self">self</span>.<span class="ident">wtr</span>, <span class="string">&quot;{{{}}}&quot;</span>, <span class="ident">m</span>)<span class="question-mark">?</span>;
+                    hir::RepetitionKind::Range(<span class="kw-2">ref </span>x) =&gt; <span class="kw">match </span><span class="kw-2">*</span>x {
+                        hir::RepetitionRange::Exactly(m) =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">&quot;{{{}}}&quot;</span>, m)<span class="question-mark">?</span>;
                         }
-                        <span class="ident">hir::RepetitionRange::AtLeast</span>(<span class="ident">m</span>) =&gt; {
-                            <span class="macro">write!</span>(<span class="self">self</span>.<span class="ident">wtr</span>, <span class="string">&quot;{{{},}}&quot;</span>, <span class="ident">m</span>)<span class="question-mark">?</span>;
+                        hir::RepetitionRange::AtLeast(m) =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">&quot;{{{},}}&quot;</span>, m)<span class="question-mark">?</span>;
                         }
-                        <span class="ident">hir::RepetitionRange::Bounded</span>(<span class="ident">m</span>, <span class="ident">n</span>) =&gt; {
-                            <span class="macro">write!</span>(<span class="self">self</span>.<span class="ident">wtr</span>, <span class="string">&quot;{{{},{}}}&quot;</span>, <span class="ident">m</span>, <span class="ident">n</span>)<span class="question-mark">?</span>;
+                        hir::RepetitionRange::Bounded(m, n) =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">&quot;{{{},{}}}&quot;</span>, m, n)<span class="question-mark">?</span>;
                         }
                     },
                 }
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">x</span>.<span class="ident">greedy</span> {
-                    <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;?&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">if </span>!x.greedy {
+                    <span class="self">self</span>.wtr.write_str(<span class="string">&quot;?&quot;</span>)<span class="question-mark">?</span>;
                 }
             }
-            <span class="ident">HirKind::Group</span>(<span class="kw">_</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+            HirKind::Group(<span class="kw">_</span>) =&gt; {
+                <span class="self">self</span>.wtr.write_str(<span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
             }
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_alternation_in</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;|&quot;</span>)
+    <span class="kw">fn </span>visit_alternation_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; fmt::Result {
+        <span class="self">self</span>.wtr.write_str(<span class="string">&quot;|&quot;</span>)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">fmt::Write</span><span class="op">&gt;</span> <span class="ident">Writer</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">write_literal_char</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">c</span>: <span class="ident">char</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">if</span> <span class="ident">is_meta_character</span>(<span class="ident">c</span>) {
-            <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_str</span>(<span class="string">&quot;\\&quot;</span>)<span class="question-mark">?</span>;
+<span class="kw">impl</span>&lt;W: fmt::Write&gt; Writer&lt;W&gt; {
+    <span class="kw">fn </span>write_literal_char(<span class="kw-2">&amp;mut </span><span class="self">self</span>, c: char) -&gt; fmt::Result {
+        <span class="kw">if </span>is_meta_character(c) {
+            <span class="self">self</span>.wtr.write_str(<span class="string">&quot;\\&quot;</span>)<span class="question-mark">?</span>;
         }
-        <span class="self">self</span>.<span class="ident">wtr</span>.<span class="ident">write_char</span>(<span class="ident">c</span>)
+        <span class="self">self</span>.wtr.write_char(c)
     }
 
-    <span class="kw">fn</span> <span class="ident">write_literal_byte</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">b</span>: <span class="ident">u8</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">b</span> <span class="kw">as</span> <span class="ident">char</span>;
-        <span class="kw">if</span> <span class="ident">c</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0x7F</span> <span class="kw">as</span> <span class="ident">char</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">c</span>.<span class="ident">is_control</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">c</span>.<span class="ident">is_whitespace</span>() {
-            <span class="self">self</span>.<span class="ident">write_literal_char</span>(<span class="ident">c</span>)
-        } <span class="kw">else</span> {
-            <span class="macro">write!</span>(<span class="self">self</span>.<span class="ident">wtr</span>, <span class="string">&quot;(?-u:\\x{:02X})&quot;</span>, <span class="ident">b</span>)
+    <span class="kw">fn </span>write_literal_byte(<span class="kw-2">&amp;mut </span><span class="self">self</span>, b: u8) -&gt; fmt::Result {
+        <span class="kw">let </span>c = b <span class="kw">as </span>char;
+        <span class="kw">if </span>c &lt;= <span class="number">0x7F </span><span class="kw">as </span>char &amp;&amp; !c.is_control() &amp;&amp; !c.is_whitespace() {
+            <span class="self">self</span>.write_literal_char(c)
+        } <span class="kw">else </span>{
+            <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">&quot;(?-u:\\x{:02X})&quot;</span>, b)
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">write_literal_class_byte</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">b</span>: <span class="ident">u8</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">b</span> <span class="kw">as</span> <span class="ident">char</span>;
-        <span class="kw">if</span> <span class="ident">c</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0x7F</span> <span class="kw">as</span> <span class="ident">char</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">c</span>.<span class="ident">is_control</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">c</span>.<span class="ident">is_whitespace</span>() {
-            <span class="self">self</span>.<span class="ident">write_literal_char</span>(<span class="ident">c</span>)
-        } <span class="kw">else</span> {
-            <span class="macro">write!</span>(<span class="self">self</span>.<span class="ident">wtr</span>, <span class="string">&quot;\\x{:02X}&quot;</span>, <span class="ident">b</span>)
+    <span class="kw">fn </span>write_literal_class_byte(<span class="kw-2">&amp;mut </span><span class="self">self</span>, b: u8) -&gt; fmt::Result {
+        <span class="kw">let </span>c = b <span class="kw">as </span>char;
+        <span class="kw">if </span>c &lt;= <span class="number">0x7F </span><span class="kw">as </span>char &amp;&amp; !c.is_control() &amp;&amp; !c.is_whitespace() {
+            <span class="self">self</span>.write_literal_char(c)
+        } <span class="kw">else </span>{
+            <span class="macro">write!</span>(<span class="self">self</span>.wtr, <span class="string">&quot;\\x{:02X}&quot;</span>, b)
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Printer</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ParserBuilder</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">super</span>::Printer;
+    <span class="kw">use </span><span class="kw">crate</span>::ParserBuilder;
 
-    <span class="kw">fn</span> <span class="ident">roundtrip</span>(<span class="ident">given</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="ident">roundtrip_with</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>, <span class="ident">given</span>, <span class="ident">expected</span>);
+    <span class="kw">fn </span>roundtrip(given: <span class="kw-2">&amp;</span>str, expected: <span class="kw-2">&amp;</span>str) {
+        roundtrip_with(|b| b, given, expected);
     }
 
-    <span class="kw">fn</span> <span class="ident">roundtrip_bytes</span>(<span class="ident">given</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="ident">roundtrip_with</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">allow_invalid_utf8</span>(<span class="bool-val">true</span>), <span class="ident">given</span>, <span class="ident">expected</span>);
+    <span class="kw">fn </span>roundtrip_bytes(given: <span class="kw-2">&amp;</span>str, expected: <span class="kw-2">&amp;</span>str) {
+        roundtrip_with(|b| b.allow_invalid_utf8(<span class="bool-val">true</span>), given, expected);
     }
 
-    <span class="kw">fn</span> <span class="ident">roundtrip_with</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">f</span>: <span class="ident">F</span>, <span class="ident">given</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>)
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span>,
+    <span class="kw">fn </span>roundtrip_with&lt;F&gt;(<span class="kw-2">mut </span>f: F, given: <span class="kw-2">&amp;</span>str, expected: <span class="kw-2">&amp;</span>str)
+    <span class="kw">where
+        </span>F: FnMut(<span class="kw-2">&amp;mut </span>ParserBuilder) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">ParserBuilder::new</span>();
-        <span class="ident">f</span>(<span class="kw-2">&amp;mut</span> <span class="ident">builder</span>);
-        <span class="kw">let</span> <span class="ident">hir</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">build</span>().<span class="ident">parse</span>(<span class="ident">given</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = ParserBuilder::new();
+        f(<span class="kw-2">&amp;mut </span>builder);
+        <span class="kw">let </span>hir = builder.build().parse(given).unwrap();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">printer</span> <span class="op">=</span> <span class="ident">Printer::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">String::new</span>();
-        <span class="ident">printer</span>.<span class="ident">print</span>(<span class="kw-2">&amp;</span><span class="ident">hir</span>, <span class="kw-2">&amp;mut</span> <span class="ident">dst</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>printer = Printer::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>dst = String::new();
+        printer.print(<span class="kw-2">&amp;</span>hir, <span class="kw-2">&amp;mut </span>dst).unwrap();
 
-        <span class="comment">// Check that the result is actually valid.</span>
-        <span class="ident">builder</span>.<span class="ident">build</span>().<span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="ident">dst</span>).<span class="ident">unwrap</span>();
+        <span class="comment">// Check that the result is actually valid.
+        </span>builder.build().parse(<span class="kw-2">&amp;</span>dst).unwrap();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">dst</span>);
+        <span class="macro">assert_eq!</span>(expected, dst);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">print_literal</span>() {
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;a&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;\xff&quot;</span>, <span class="string">&quot;\u{FF}&quot;</span>);
-        <span class="ident">roundtrip_bytes</span>(<span class="string">r&quot;\xff&quot;</span>, <span class="string">&quot;\u{FF}&quot;</span>);
-        <span class="ident">roundtrip_bytes</span>(<span class="string">r&quot;(?-u)\xff&quot;</span>, <span class="string">r&quot;(?-u:\xFF)&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;☃&quot;</span>, <span class="string">&quot;☃&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>print_literal() {
+        roundtrip(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;a&quot;</span>);
+        roundtrip(<span class="string">r&quot;\xff&quot;</span>, <span class="string">&quot;\u{FF}&quot;</span>);
+        roundtrip_bytes(<span class="string">r&quot;\xff&quot;</span>, <span class="string">&quot;\u{FF}&quot;</span>);
+        roundtrip_bytes(<span class="string">r&quot;(?-u)\xff&quot;</span>, <span class="string">r&quot;(?-u:\xFF)&quot;</span>);
+        roundtrip(<span class="string">&quot;☃&quot;</span>, <span class="string">&quot;☃&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">print_class</span>() {
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;[a]&quot;</span>, <span class="string">r&quot;[a]&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;[a-z]&quot;</span>, <span class="string">r&quot;[a-z]&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;[a-z--b-c--x-y]&quot;</span>, <span class="string">r&quot;[ad-wz]&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;[^\x01-\u{10FFFF}]&quot;</span>, <span class="string">&quot;[\u{0}]&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;[-]&quot;</span>, <span class="string">r&quot;[\-]&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;[☃-⛄]&quot;</span>, <span class="string">r&quot;[☃-⛄]&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>print_class() {
+        roundtrip(<span class="string">r&quot;[a]&quot;</span>, <span class="string">r&quot;[a]&quot;</span>);
+        roundtrip(<span class="string">r&quot;[a-z]&quot;</span>, <span class="string">r&quot;[a-z]&quot;</span>);
+        roundtrip(<span class="string">r&quot;[a-z--b-c--x-y]&quot;</span>, <span class="string">r&quot;[ad-wz]&quot;</span>);
+        roundtrip(<span class="string">r&quot;[^\x01-\u{10FFFF}]&quot;</span>, <span class="string">&quot;[\u{0}]&quot;</span>);
+        roundtrip(<span class="string">r&quot;[-]&quot;</span>, <span class="string">r&quot;[\-]&quot;</span>);
+        roundtrip(<span class="string">r&quot;[☃-⛄]&quot;</span>, <span class="string">r&quot;[☃-⛄]&quot;</span>);
 
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;(?-u)[a]&quot;</span>, <span class="string">r&quot;(?-u:[a])&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;(?-u)[a-z]&quot;</span>, <span class="string">r&quot;(?-u:[a-z])&quot;</span>);
-        <span class="ident">roundtrip_bytes</span>(<span class="string">r&quot;(?-u)[a-\xFF]&quot;</span>, <span class="string">r&quot;(?-u:[a-\xFF])&quot;</span>);
+        roundtrip(<span class="string">r&quot;(?-u)[a]&quot;</span>, <span class="string">r&quot;(?-u:[a])&quot;</span>);
+        roundtrip(<span class="string">r&quot;(?-u)[a-z]&quot;</span>, <span class="string">r&quot;(?-u:[a-z])&quot;</span>);
+        roundtrip_bytes(<span class="string">r&quot;(?-u)[a-\xFF]&quot;</span>, <span class="string">r&quot;(?-u:[a-\xFF])&quot;</span>);
 
-        <span class="comment">// The following test that the printer escapes meta characters</span>
-        <span class="comment">// in character classes.</span>
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;[\[]&quot;</span>, <span class="string">r&quot;[\[]&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;[Z-_]&quot;</span>, <span class="string">r&quot;[Z-_]&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;[Z-_--Z]&quot;</span>, <span class="string">r&quot;[\[-_]&quot;</span>);
+        <span class="comment">// The following test that the printer escapes meta characters
+        // in character classes.
+        </span>roundtrip(<span class="string">r&quot;[\[]&quot;</span>, <span class="string">r&quot;[\[]&quot;</span>);
+        roundtrip(<span class="string">r&quot;[Z-_]&quot;</span>, <span class="string">r&quot;[Z-_]&quot;</span>);
+        roundtrip(<span class="string">r&quot;[Z-_--Z]&quot;</span>, <span class="string">r&quot;[\[-_]&quot;</span>);
 
-        <span class="comment">// The following test that the printer escapes meta characters</span>
-        <span class="comment">// in byte oriented character classes.</span>
-        <span class="ident">roundtrip_bytes</span>(<span class="string">r&quot;(?-u)[\[]&quot;</span>, <span class="string">r&quot;(?-u:[\[])&quot;</span>);
-        <span class="ident">roundtrip_bytes</span>(<span class="string">r&quot;(?-u)[Z-_]&quot;</span>, <span class="string">r&quot;(?-u:[Z-_])&quot;</span>);
-        <span class="ident">roundtrip_bytes</span>(<span class="string">r&quot;(?-u)[Z-_--Z]&quot;</span>, <span class="string">r&quot;(?-u:[\[-_])&quot;</span>);
+        <span class="comment">// The following test that the printer escapes meta characters
+        // in byte oriented character classes.
+        </span>roundtrip_bytes(<span class="string">r&quot;(?-u)[\[]&quot;</span>, <span class="string">r&quot;(?-u:[\[])&quot;</span>);
+        roundtrip_bytes(<span class="string">r&quot;(?-u)[Z-_]&quot;</span>, <span class="string">r&quot;(?-u:[Z-_])&quot;</span>);
+        roundtrip_bytes(<span class="string">r&quot;(?-u)[Z-_--Z]&quot;</span>, <span class="string">r&quot;(?-u:[\[-_])&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">print_anchor</span>() {
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;^&quot;</span>, <span class="string">r&quot;\A&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;$&quot;</span>, <span class="string">r&quot;\z&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;(?m)^&quot;</span>, <span class="string">r&quot;(?m:^)&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;(?m)$&quot;</span>, <span class="string">r&quot;(?m:$)&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>print_anchor() {
+        roundtrip(<span class="string">r&quot;^&quot;</span>, <span class="string">r&quot;\A&quot;</span>);
+        roundtrip(<span class="string">r&quot;$&quot;</span>, <span class="string">r&quot;\z&quot;</span>);
+        roundtrip(<span class="string">r&quot;(?m)^&quot;</span>, <span class="string">r&quot;(?m:^)&quot;</span>);
+        roundtrip(<span class="string">r&quot;(?m)$&quot;</span>, <span class="string">r&quot;(?m:$)&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">print_word_boundary</span>() {
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;\b&quot;</span>, <span class="string">r&quot;\b&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;\B&quot;</span>, <span class="string">r&quot;\B&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">r&quot;(?-u)\b&quot;</span>, <span class="string">r&quot;(?-u:\b)&quot;</span>);
-        <span class="ident">roundtrip_bytes</span>(<span class="string">r&quot;(?-u)\B&quot;</span>, <span class="string">r&quot;(?-u:\B)&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>print_word_boundary() {
+        roundtrip(<span class="string">r&quot;\b&quot;</span>, <span class="string">r&quot;\b&quot;</span>);
+        roundtrip(<span class="string">r&quot;\B&quot;</span>, <span class="string">r&quot;\B&quot;</span>);
+        roundtrip(<span class="string">r&quot;(?-u)\b&quot;</span>, <span class="string">r&quot;(?-u:\b)&quot;</span>);
+        roundtrip_bytes(<span class="string">r&quot;(?-u)\B&quot;</span>, <span class="string">r&quot;(?-u:\B)&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">print_repetition</span>() {
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a?&quot;</span>, <span class="string">&quot;a?&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a??&quot;</span>, <span class="string">&quot;a??&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?U)a?&quot;</span>, <span class="string">&quot;a??&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>print_repetition() {
+        roundtrip(<span class="string">&quot;a?&quot;</span>, <span class="string">&quot;a?&quot;</span>);
+        roundtrip(<span class="string">&quot;a??&quot;</span>, <span class="string">&quot;a??&quot;</span>);
+        roundtrip(<span class="string">&quot;(?U)a?&quot;</span>, <span class="string">&quot;a??&quot;</span>);
 
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a*&quot;</span>, <span class="string">&quot;a*&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a*?&quot;</span>, <span class="string">&quot;a*?&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?U)a*&quot;</span>, <span class="string">&quot;a*?&quot;</span>);
+        roundtrip(<span class="string">&quot;a*&quot;</span>, <span class="string">&quot;a*&quot;</span>);
+        roundtrip(<span class="string">&quot;a*?&quot;</span>, <span class="string">&quot;a*?&quot;</span>);
+        roundtrip(<span class="string">&quot;(?U)a*&quot;</span>, <span class="string">&quot;a*?&quot;</span>);
 
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a+&quot;</span>, <span class="string">&quot;a+&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a+?&quot;</span>, <span class="string">&quot;a+?&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?U)a+&quot;</span>, <span class="string">&quot;a+?&quot;</span>);
+        roundtrip(<span class="string">&quot;a+&quot;</span>, <span class="string">&quot;a+&quot;</span>);
+        roundtrip(<span class="string">&quot;a+?&quot;</span>, <span class="string">&quot;a+?&quot;</span>);
+        roundtrip(<span class="string">&quot;(?U)a+&quot;</span>, <span class="string">&quot;a+?&quot;</span>);
 
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a{1}&quot;</span>, <span class="string">&quot;a{1}&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a{1,}&quot;</span>, <span class="string">&quot;a{1,}&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a{1,5}&quot;</span>, <span class="string">&quot;a{1,5}&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a{1}?&quot;</span>, <span class="string">&quot;a{1}?&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a{1,}?&quot;</span>, <span class="string">&quot;a{1,}?&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a{1,5}?&quot;</span>, <span class="string">&quot;a{1,5}?&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?U)a{1}&quot;</span>, <span class="string">&quot;a{1}?&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?U)a{1,}&quot;</span>, <span class="string">&quot;a{1,}?&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?U)a{1,5}&quot;</span>, <span class="string">&quot;a{1,5}?&quot;</span>);
+        roundtrip(<span class="string">&quot;a{1}&quot;</span>, <span class="string">&quot;a{1}&quot;</span>);
+        roundtrip(<span class="string">&quot;a{1,}&quot;</span>, <span class="string">&quot;a{1,}&quot;</span>);
+        roundtrip(<span class="string">&quot;a{1,5}&quot;</span>, <span class="string">&quot;a{1,5}&quot;</span>);
+        roundtrip(<span class="string">&quot;a{1}?&quot;</span>, <span class="string">&quot;a{1}?&quot;</span>);
+        roundtrip(<span class="string">&quot;a{1,}?&quot;</span>, <span class="string">&quot;a{1,}?&quot;</span>);
+        roundtrip(<span class="string">&quot;a{1,5}?&quot;</span>, <span class="string">&quot;a{1,5}?&quot;</span>);
+        roundtrip(<span class="string">&quot;(?U)a{1}&quot;</span>, <span class="string">&quot;a{1}?&quot;</span>);
+        roundtrip(<span class="string">&quot;(?U)a{1,}&quot;</span>, <span class="string">&quot;a{1,}?&quot;</span>);
+        roundtrip(<span class="string">&quot;(?U)a{1,5}&quot;</span>, <span class="string">&quot;a{1,5}?&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">print_group</span>() {
-        <span class="ident">roundtrip</span>(<span class="string">&quot;()&quot;</span>, <span class="string">&quot;()&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?P&lt;foo&gt;)&quot;</span>, <span class="string">&quot;(?P&lt;foo&gt;)&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?:)&quot;</span>, <span class="string">&quot;(?:)&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>print_group() {
+        roundtrip(<span class="string">&quot;()&quot;</span>, <span class="string">&quot;()&quot;</span>);
+        roundtrip(<span class="string">&quot;(?P&lt;foo&gt;)&quot;</span>, <span class="string">&quot;(?P&lt;foo&gt;)&quot;</span>);
+        roundtrip(<span class="string">&quot;(?:)&quot;</span>, <span class="string">&quot;(?:)&quot;</span>);
 
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(a)&quot;</span>, <span class="string">&quot;(a)&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?P&lt;foo&gt;a)&quot;</span>, <span class="string">&quot;(?P&lt;foo&gt;a)&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;(?:a)&quot;</span>, <span class="string">&quot;(?:a)&quot;</span>);
+        roundtrip(<span class="string">&quot;(a)&quot;</span>, <span class="string">&quot;(a)&quot;</span>);
+        roundtrip(<span class="string">&quot;(?P&lt;foo&gt;a)&quot;</span>, <span class="string">&quot;(?P&lt;foo&gt;a)&quot;</span>);
+        roundtrip(<span class="string">&quot;(?:a)&quot;</span>, <span class="string">&quot;(?:a)&quot;</span>);
 
-        <span class="ident">roundtrip</span>(<span class="string">&quot;((((a))))&quot;</span>, <span class="string">&quot;((((a))))&quot;</span>);
+        roundtrip(<span class="string">&quot;((((a))))&quot;</span>, <span class="string">&quot;((((a))))&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">print_alternation</span>() {
-        <span class="ident">roundtrip</span>(<span class="string">&quot;|&quot;</span>, <span class="string">&quot;|&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;||&quot;</span>, <span class="string">&quot;||&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>print_alternation() {
+        roundtrip(<span class="string">&quot;|&quot;</span>, <span class="string">&quot;|&quot;</span>);
+        roundtrip(<span class="string">&quot;||&quot;</span>, <span class="string">&quot;||&quot;</span>);
 
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a|b&quot;</span>, <span class="string">&quot;a|b&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;a|b|c&quot;</span>, <span class="string">&quot;a|b|c&quot;</span>);
-        <span class="ident">roundtrip</span>(<span class="string">&quot;foo|bar|quux&quot;</span>, <span class="string">&quot;foo|bar|quux&quot;</span>);
+        roundtrip(<span class="string">&quot;a|b&quot;</span>, <span class="string">&quot;a|b&quot;</span>);
+        roundtrip(<span class="string">&quot;a|b|c&quot;</span>, <span class="string">&quot;a|b|c&quot;</span>);
+        roundtrip(<span class="string">&quot;foo|bar|quux&quot;</span>, <span class="string">&quot;foo|bar|quux&quot;</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

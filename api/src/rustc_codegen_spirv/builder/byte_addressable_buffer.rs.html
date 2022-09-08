@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/byte_addressable_buffer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>byte_addressable_buffer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/byte_addressable_buffer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>byte_addressable_buffer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -392,394 +386,393 @@
 <span id="386">386</span>
 <span id="387">387</span>
 <span id="388">388</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv_type::SpirvType</span>;
-<span class="kw">use</span> <span class="ident">rspirv::spirv::Word</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">BuilderMethods</span>};
-<span class="kw">use</span> <span class="ident">rustc_errors::ErrorGuaranteed</span>;
-<span class="kw">use</span> <span class="ident">rustc_span::DUMMY_SP</span>;
-<span class="kw">use</span> <span class="ident">rustc_target::abi::call::PassMode</span>;
-<span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{<span class="ident">Align</span>, <span class="ident">Size</span>};
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
+<span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvValue, SpirvValueExt, SpirvValueKind};
+<span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
+<span class="kw">use </span>rspirv::spirv::Word;
+<span class="kw">use </span>rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
+<span class="kw">use </span>rustc_errors::ErrorGuaranteed;
+<span class="kw">use </span>rustc_span::DUMMY_SP;
+<span class="kw">use </span>rustc_target::abi::call::PassMode;
+<span class="kw">use </span>rustc_target::abi::{Align, Size};
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">load_err</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">original_type</span>: <span class="ident">Word</span>, <span class="ident">invalid_type</span>: <span class="ident">Word</span>) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">fn </span>load_err(<span class="kw-2">&amp;mut </span><span class="self">self</span>, original_type: Word, invalid_type: Word) -&gt; SpirvValue {
+        <span class="kw">let </span><span class="kw-2">mut </span>err = <span class="self">self</span>.struct_err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
             <span class="string">&quot;Cannot load type {} in an untyped buffer load&quot;</span>,
-            <span class="self">self</span>.<span class="ident">debug_type</span>(<span class="ident">original_type</span>)
+            <span class="self">self</span>.debug_type(original_type)
         ));
-        <span class="kw">if</span> <span class="ident">original_type</span> <span class="op">!</span><span class="op">=</span> <span class="ident">invalid_type</span> {
-            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+        <span class="kw">if </span>original_type != invalid_type {
+            err.note(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;due to containing type {}&quot;</span>,
-                <span class="self">self</span>.<span class="ident">debug_type</span>(<span class="ident">invalid_type</span>)
+                <span class="self">self</span>.debug_type(invalid_type)
             ));
         }
-        <span class="ident">err</span>.<span class="ident">emit</span>();
-        <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">invalid_type</span>)
+        err.emit();
+        <span class="self">self</span>.undef(invalid_type)
     }
 
-    <span class="kw">fn</span> <span class="ident">load_u32</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">array</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">dynamic_index</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">constant_offset</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">actual_index</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">constant_offset</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="ident">const_offset_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">constant_offset</span>);
-            <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">dynamic_index</span>, <span class="ident">const_offset_val</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">dynamic_index</span>
+    <span class="kw">fn </span>load_u32(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        array: SpirvValue,
+        dynamic_index: SpirvValue,
+        constant_offset: u32,
+    ) -&gt; SpirvValue {
+        <span class="kw">let </span>actual_index = <span class="kw">if </span>constant_offset != <span class="number">0 </span>{
+            <span class="kw">let </span>const_offset_val = <span class="self">self</span>.constant_u32(DUMMY_SP, constant_offset);
+            <span class="self">self</span>.add(dynamic_index, const_offset_val)
+        } <span class="kw">else </span>{
+            dynamic_index
         };
-        <span class="kw">let</span> <span class="ident">u32_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Integer</span>(<span class="number">32</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
-        <span class="kw">let</span> <span class="ident">u32_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">u32_ty</span>);
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">emit</span>()
-            .<span class="ident">in_bounds_access_chain</span>(<span class="ident">u32_ptr</span>, <span class="prelude-val">None</span>, <span class="ident">array</span>.<span class="ident">def</span>(<span class="self">self</span>), [<span class="ident">actual_index</span>.<span class="ident">def</span>(<span class="self">self</span>)])
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">with_type</span>(<span class="ident">u32_ptr</span>);
-        <span class="self">self</span>.<span class="ident">load</span>(<span class="ident">u32_ty</span>, <span class="ident">ptr</span>, <span class="ident">Align::ONE</span>)
+        <span class="kw">let </span>u32_ty = SpirvType::Integer(<span class="number">32</span>, <span class="bool-val">false</span>).def(DUMMY_SP, <span class="self">self</span>);
+        <span class="kw">let </span>u32_ptr = <span class="self">self</span>.type_ptr_to(u32_ty);
+        <span class="kw">let </span>ptr = <span class="self">self
+            </span>.emit()
+            .in_bounds_access_chain(u32_ptr, <span class="prelude-val">None</span>, array.def(<span class="self">self</span>), [actual_index.def(<span class="self">self</span>)])
+            .unwrap()
+            .with_type(u32_ptr);
+        <span class="self">self</span>.load(u32_ty, ptr, Align::ONE)
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">load_vec_mat_arr</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">original_type</span>: <span class="ident">Word</span>,
-        <span class="ident">result_type</span>: <span class="ident">Word</span>,
-        <span class="ident">array</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">dynamic_word_index</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">constant_word_offset</span>: <span class="ident">u32</span>,
-        <span class="ident">element</span>: <span class="ident">Word</span>,
-        <span class="ident">count</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">element_size_bytes</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>).<span class="ident">sizeof</span>(<span class="self">self</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">size</span>) =&gt; <span class="ident">size</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="self">self</span>.<span class="ident">load_err</span>(<span class="ident">original_type</span>, <span class="ident">result_type</span>),
+    <span class="attribute">#[allow(clippy::too_many_arguments)]
+    </span><span class="kw">fn </span>load_vec_mat_arr(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        original_type: Word,
+        result_type: Word,
+        array: SpirvValue,
+        dynamic_word_index: SpirvValue,
+        constant_word_offset: u32,
+        element: Word,
+        count: u32,
+    ) -&gt; SpirvValue {
+        <span class="kw">let </span>element_size_bytes = <span class="kw">match </span><span class="self">self</span>.lookup_type(element).sizeof(<span class="self">self</span>) {
+            <span class="prelude-val">Some</span>(size) =&gt; size,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="self">self</span>.load_err(original_type, result_type),
         };
-        <span class="kw">if</span> <span class="ident">element_size_bytes</span>.<span class="ident">bytes</span>() <span class="op">%</span> <span class="number">4</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="self">self</span>.<span class="ident">load_err</span>(<span class="ident">original_type</span>, <span class="ident">result_type</span>);
+        <span class="kw">if </span>element_size_bytes.bytes() % <span class="number">4 </span>!= <span class="number">0 </span>{
+            <span class="kw">return </span><span class="self">self</span>.load_err(original_type, result_type);
         }
-        <span class="kw">let</span> <span class="ident">element_size_words</span> <span class="op">=</span> (<span class="ident">element_size_bytes</span>.<span class="ident">bytes</span>() <span class="op">/</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">count</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">index</span><span class="op">|</span> {
-                <span class="self">self</span>.<span class="ident">recurse_load_type</span>(
-                    <span class="ident">original_type</span>,
-                    <span class="ident">element</span>,
-                    <span class="ident">array</span>,
-                    <span class="ident">dynamic_word_index</span>,
-                    <span class="ident">constant_word_offset</span> <span class="op">+</span> <span class="ident">element_size_words</span> <span class="op">*</span> <span class="ident">index</span>,
+        <span class="kw">let </span>element_size_words = (element_size_bytes.bytes() / <span class="number">4</span>) <span class="kw">as </span>u32;
+        <span class="kw">let </span>args = (<span class="number">0</span>..count)
+            .map(|index| {
+                <span class="self">self</span>.recurse_load_type(
+                    original_type,
+                    element,
+                    array,
+                    dynamic_word_index,
+                    constant_word_offset + element_size_words * index,
                 )
-                .<span class="ident">def</span>(<span class="self">self</span>)
+                .def(<span class="self">self</span>)
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="self">self</span>.<span class="ident">emit</span>()
-            .<span class="ident">composite_construct</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">args</span>)
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="self">self</span>.emit()
+            .composite_construct(result_type, <span class="prelude-val">None</span>, args)
+            .unwrap()
+            .with_type(result_type)
     }
 
-    <span class="kw">fn</span> <span class="ident">recurse_load_type</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">original_type</span>: <span class="ident">Word</span>,
-        <span class="ident">result_type</span>: <span class="ident">Word</span>,
-        <span class="ident">array</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">dynamic_word_index</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">constant_word_offset</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">result_type</span>) {
-            <span class="ident">SpirvType::Integer</span>(<span class="number">32</span>, <span class="ident">signed</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">load_u32</span>(<span class="ident">array</span>, <span class="ident">dynamic_word_index</span>, <span class="ident">constant_word_offset</span>);
-                <span class="self">self</span>.<span class="ident">intcast</span>(<span class="ident">val</span>, <span class="ident">result_type</span>, <span class="ident">signed</span>)
+    <span class="kw">fn </span>recurse_load_type(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        original_type: Word,
+        result_type: Word,
+        array: SpirvValue,
+        dynamic_word_index: SpirvValue,
+        constant_word_offset: u32,
+    ) -&gt; SpirvValue {
+        <span class="kw">match </span><span class="self">self</span>.lookup_type(result_type) {
+            SpirvType::Integer(<span class="number">32</span>, signed) =&gt; {
+                <span class="kw">let </span>val = <span class="self">self</span>.load_u32(array, dynamic_word_index, constant_word_offset);
+                <span class="self">self</span>.intcast(val, result_type, signed)
             }
-            <span class="ident">SpirvType::Float</span>(<span class="number">32</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">load_u32</span>(<span class="ident">array</span>, <span class="ident">dynamic_word_index</span>, <span class="ident">constant_word_offset</span>);
-                <span class="self">self</span>.<span class="ident">bitcast</span>(<span class="ident">val</span>, <span class="ident">result_type</span>)
+            SpirvType::Float(<span class="number">32</span>) =&gt; {
+                <span class="kw">let </span>val = <span class="self">self</span>.load_u32(array, dynamic_word_index, constant_word_offset);
+                <span class="self">self</span>.bitcast(val, result_type)
             }
-            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, <span class="ident">count</span> } =&gt; <span class="self">self</span>
-                .<span class="ident">load_vec_mat_arr</span>(
-                    <span class="ident">original_type</span>,
-                    <span class="ident">result_type</span>,
-                    <span class="ident">array</span>,
-                    <span class="ident">dynamic_word_index</span>,
-                    <span class="ident">constant_word_offset</span>,
-                    <span class="ident">element</span>,
-                    <span class="ident">count</span>,
+            SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } =&gt; <span class="self">self
+                </span>.load_vec_mat_arr(
+                    original_type,
+                    result_type,
+                    array,
+                    dynamic_word_index,
+                    constant_word_offset,
+                    element,
+                    count,
                 ),
-            <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } =&gt; {
-                <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">count</span>) =&gt; <span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="self">self</span>.<span class="ident">load_err</span>(<span class="ident">original_type</span>, <span class="ident">result_type</span>),
+            SpirvType::Array { element, count } =&gt; {
+                <span class="kw">let </span>count = <span class="kw">match </span><span class="self">self</span>.builder.lookup_const_u64(count) {
+                    <span class="prelude-val">Some</span>(count) =&gt; count <span class="kw">as </span>u32,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="self">self</span>.load_err(original_type, result_type),
                 };
-                <span class="self">self</span>.<span class="ident">load_vec_mat_arr</span>(
-                    <span class="ident">original_type</span>,
-                    <span class="ident">result_type</span>,
-                    <span class="ident">array</span>,
-                    <span class="ident">dynamic_word_index</span>,
-                    <span class="ident">constant_word_offset</span>,
-                    <span class="ident">element</span>,
-                    <span class="ident">count</span>,
+                <span class="self">self</span>.load_vec_mat_arr(
+                    original_type,
+                    result_type,
+                    array,
+                    dynamic_word_index,
+                    constant_word_offset,
+                    element,
+                    count,
                 )
             }
-            <span class="ident">SpirvType::Adt</span> {
-                <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
-                <span class="ident">field_types</span>,
-                <span class="ident">field_offsets</span>,
+            SpirvType::Adt {
+                size: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
+                field_types,
+                field_offsets,
                 ..
             } =&gt; {
-                <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">field_types</span>
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">zip</span>(<span class="ident">field_offsets</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span>(<span class="kw-2">&amp;</span><span class="ident">field_type</span>, <span class="ident">byte_offset</span>)<span class="op">|</span> {
-                        <span class="kw">if</span> <span class="ident">byte_offset</span>.<span class="ident">bytes</span>() <span class="op">%</span> <span class="number">4</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                            <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="kw">let </span>args = field_types
+                    .iter()
+                    .zip(field_offsets)
+                    .map(|(<span class="kw-2">&amp;</span>field_type, byte_offset)| {
+                        <span class="kw">if </span>byte_offset.bytes() % <span class="number">4 </span>!= <span class="number">0 </span>{
+                            <span class="kw">return </span><span class="prelude-val">None</span>;
                         }
-                        <span class="kw">let</span> <span class="ident">word_offset</span> <span class="op">=</span> (<span class="ident">byte_offset</span>.<span class="ident">bytes</span>() <span class="op">/</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+                        <span class="kw">let </span>word_offset = (byte_offset.bytes() / <span class="number">4</span>) <span class="kw">as </span>u32;
                         <span class="prelude-val">Some</span>(
-                            <span class="self">self</span>.<span class="ident">recurse_load_type</span>(
-                                <span class="ident">original_type</span>,
-                                <span class="ident">field_type</span>,
-                                <span class="ident">array</span>,
-                                <span class="ident">dynamic_word_index</span>,
-                                <span class="ident">constant_word_offset</span> <span class="op">+</span> <span class="ident">word_offset</span>,
+                            <span class="self">self</span>.recurse_load_type(
+                                original_type,
+                                field_type,
+                                array,
+                                dynamic_word_index,
+                                constant_word_offset + word_offset,
                             )
-                            .<span class="ident">def</span>(<span class="self">self</span>),
+                            .def(<span class="self">self</span>),
                         )
                     })
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                <span class="kw">match</span> <span class="ident">args</span> {
-                    <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">load_err</span>(<span class="ident">original_type</span>, <span class="ident">result_type</span>),
-                    <span class="prelude-val">Some</span>(<span class="ident">args</span>) =&gt; <span class="self">self</span>
-                        .<span class="ident">emit</span>()
-                        .<span class="ident">composite_construct</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">args</span>)
-                        .<span class="ident">unwrap</span>()
-                        .<span class="ident">with_type</span>(<span class="ident">result_type</span>),
+                    .collect::&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;();
+                <span class="kw">match </span>args {
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.load_err(original_type, result_type),
+                    <span class="prelude-val">Some</span>(args) =&gt; <span class="self">self
+                        </span>.emit()
+                        .composite_construct(result_type, <span class="prelude-val">None</span>, args)
+                        .unwrap()
+                        .with_type(result_type),
                 }
             }
 
-            <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">load_err</span>(<span class="ident">original_type</span>, <span class="ident">result_type</span>),
+            <span class="kw">_ </span>=&gt; <span class="self">self</span>.load_err(original_type, result_type),
         }
     }
 
-    <span class="doccomment">/// Note: DOES NOT do bounds checking! Bounds checking is expected to be done in the caller.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">codegen_buffer_load_intrinsic</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">result_type</span>: <span class="ident">Word</span>,
-        <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">SpirvValue</span>],
-        <span class="ident">pass_mode</span>: <span class="ident">PassMode</span>,
-    ) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">match</span> <span class="ident">pass_mode</span> {
-            <span class="ident">PassMode::Ignore</span> =&gt; {
-                <span class="kw">return</span> <span class="ident">SpirvValue</span> {
-                    <span class="ident">kind</span>: <span class="ident">SpirvValueKind::IllegalTypeUsed</span>(<span class="ident">result_type</span>),
-                    <span class="ident">ty</span>: <span class="ident">result_type</span>,
+    <span class="doccomment">/// Note: DOES NOT do bounds checking! Bounds checking is expected to be done in the caller.
+    </span><span class="kw">pub fn </span>codegen_buffer_load_intrinsic(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        result_type: Word,
+        args: <span class="kw-2">&amp;</span>[SpirvValue],
+        pass_mode: PassMode,
+    ) -&gt; SpirvValue {
+        <span class="kw">match </span>pass_mode {
+            PassMode::Ignore =&gt; {
+                <span class="kw">return </span>SpirvValue {
+                    kind: SpirvValueKind::IllegalTypeUsed(result_type),
+                    ty: result_type,
                 }
             }
-            <span class="comment">// PassMode::Pair is identical to PassMode::Direct - it&#39;s returned as a struct</span>
-            <span class="ident">PassMode::Direct</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode::Pair</span>(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; (),
-            <span class="ident">PassMode::Cast</span>(<span class="kw">_</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;PassMode::Cast not supported in codegen_buffer_load_intrinsic&quot;</span>)
+            <span class="comment">// PassMode::Pair is identical to PassMode::Direct - it&#39;s returned as a struct
+            </span>PassMode::Direct(<span class="kw">_</span>) | PassMode::Pair(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; (),
+            PassMode::Cast(<span class="kw">_</span>) =&gt; {
+                <span class="self">self</span>.fatal(<span class="string">&quot;PassMode::Cast not supported in codegen_buffer_load_intrinsic&quot;</span>)
             }
-            <span class="ident">PassMode::Indirect</span> { .. } =&gt; {
-                <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;PassMode::Indirect not supported in codegen_buffer_load_intrinsic&quot;</span>)
+            PassMode::Indirect { .. } =&gt; {
+                <span class="self">self</span>.fatal(<span class="string">&quot;PassMode::Indirect not supported in codegen_buffer_load_intrinsic&quot;</span>)
             }
         }
 
-        <span class="comment">// Signature: fn load&lt;T&gt;(array: &amp;[u32], index: u32) -&gt; T;</span>
-        <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">3</span> {
-            <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+        <span class="comment">// Signature: fn load&lt;T&gt;(array: &amp;[u32], index: u32) -&gt; T;
+        </span><span class="kw">if </span>args.len() != <span class="number">3 </span>{
+            <span class="self">self</span>.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;buffer_load_intrinsic should have 3 args, it has {}&quot;</span>,
-                <span class="ident">args</span>.<span class="ident">len</span>()
+                args.len()
             ));
         }
-        <span class="comment">// Note that the &amp;[u32] gets split into two arguments - pointer, length</span>
-        <span class="kw">let</span> <span class="ident">array</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>];
-        <span class="kw">let</span> <span class="ident">byte_index</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">2</span>];
-        <span class="kw">let</span> <span class="ident">two</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">DUMMY_SP</span>, <span class="number">2</span>);
-        <span class="kw">let</span> <span class="ident">word_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">byte_index</span>, <span class="ident">two</span>);
-        <span class="self">self</span>.<span class="ident">recurse_load_type</span>(<span class="ident">result_type</span>, <span class="ident">result_type</span>, <span class="ident">array</span>, <span class="ident">word_index</span>, <span class="number">0</span>)
+        <span class="comment">// Note that the &amp;[u32] gets split into two arguments - pointer, length
+        </span><span class="kw">let </span>array = args[<span class="number">0</span>];
+        <span class="kw">let </span>byte_index = args[<span class="number">2</span>];
+        <span class="kw">let </span>two = <span class="self">self</span>.constant_u32(DUMMY_SP, <span class="number">2</span>);
+        <span class="kw">let </span>word_index = <span class="self">self</span>.lshr(byte_index, two);
+        <span class="self">self</span>.recurse_load_type(result_type, result_type, array, word_index, <span class="number">0</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">store_err</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">original_type</span>: <span class="ident">Word</span>, <span class="ident">value</span>: <span class="ident">SpirvValue</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ErrorGuaranteed</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+    <span class="kw">fn </span>store_err(<span class="kw-2">&amp;mut </span><span class="self">self</span>, original_type: Word, value: SpirvValue) -&gt; <span class="prelude-ty">Result</span>&lt;(), ErrorGuaranteed&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>err = <span class="self">self</span>.struct_err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
             <span class="string">&quot;Cannot store type {} in an untyped buffer store&quot;</span>,
-            <span class="self">self</span>.<span class="ident">debug_type</span>(<span class="ident">original_type</span>)
+            <span class="self">self</span>.debug_type(original_type)
         ));
-        <span class="kw">if</span> <span class="ident">original_type</span> <span class="op">!</span><span class="op">=</span> <span class="ident">value</span>.<span class="ident">ty</span> {
-            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;due to containing type {}&quot;</span>, <span class="ident">value</span>.<span class="ident">ty</span>));
+        <span class="kw">if </span>original_type != value.ty {
+            err.note(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;due to containing type {}&quot;</span>, value.ty));
         }
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">emit</span>())
+        <span class="prelude-val">Err</span>(err.emit())
     }
 
-    <span class="kw">fn</span> <span class="ident">store_u32</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">array</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">dynamic_index</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">constant_offset</span>: <span class="ident">u32</span>,
-        <span class="ident">value</span>: <span class="ident">SpirvValue</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ErrorGuaranteed</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">actual_index</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">constant_offset</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="ident">const_offset_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">constant_offset</span>);
-            <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">dynamic_index</span>, <span class="ident">const_offset_val</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">dynamic_index</span>
+    <span class="kw">fn </span>store_u32(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        array: SpirvValue,
+        dynamic_index: SpirvValue,
+        constant_offset: u32,
+        value: SpirvValue,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ErrorGuaranteed&gt; {
+        <span class="kw">let </span>actual_index = <span class="kw">if </span>constant_offset != <span class="number">0 </span>{
+            <span class="kw">let </span>const_offset_val = <span class="self">self</span>.constant_u32(DUMMY_SP, constant_offset);
+            <span class="self">self</span>.add(dynamic_index, const_offset_val)
+        } <span class="kw">else </span>{
+            dynamic_index
         };
-        <span class="kw">let</span> <span class="ident">u32_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Integer</span>(<span class="number">32</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
-        <span class="kw">let</span> <span class="ident">u32_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">u32_ty</span>);
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">emit</span>()
-            .<span class="ident">in_bounds_access_chain</span>(<span class="ident">u32_ptr</span>, <span class="prelude-val">None</span>, <span class="ident">array</span>.<span class="ident">def</span>(<span class="self">self</span>), [<span class="ident">actual_index</span>.<span class="ident">def</span>(<span class="self">self</span>)])
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">with_type</span>(<span class="ident">u32_ptr</span>);
-        <span class="self">self</span>.<span class="ident">store</span>(<span class="ident">value</span>, <span class="ident">ptr</span>, <span class="ident">Align::ONE</span>);
+        <span class="kw">let </span>u32_ty = SpirvType::Integer(<span class="number">32</span>, <span class="bool-val">false</span>).def(DUMMY_SP, <span class="self">self</span>);
+        <span class="kw">let </span>u32_ptr = <span class="self">self</span>.type_ptr_to(u32_ty);
+        <span class="kw">let </span>ptr = <span class="self">self
+            </span>.emit()
+            .in_bounds_access_chain(u32_ptr, <span class="prelude-val">None</span>, array.def(<span class="self">self</span>), [actual_index.def(<span class="self">self</span>)])
+            .unwrap()
+            .with_type(u32_ptr);
+        <span class="self">self</span>.store(value, ptr, Align::ONE);
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">store_vec_mat_arr</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">original_type</span>: <span class="ident">Word</span>,
-        <span class="ident">value</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">array</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">dynamic_word_index</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">constant_word_offset</span>: <span class="ident">u32</span>,
-        <span class="ident">element</span>: <span class="ident">Word</span>,
-        <span class="ident">count</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ErrorGuaranteed</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">element_size_bytes</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>).<span class="ident">sizeof</span>(<span class="self">self</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">size</span>) =&gt; <span class="ident">size</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="self">self</span>.<span class="ident">store_err</span>(<span class="ident">original_type</span>, <span class="ident">value</span>),
+    <span class="attribute">#[allow(clippy::too_many_arguments)]
+    </span><span class="kw">fn </span>store_vec_mat_arr(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        original_type: Word,
+        value: SpirvValue,
+        array: SpirvValue,
+        dynamic_word_index: SpirvValue,
+        constant_word_offset: u32,
+        element: Word,
+        count: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ErrorGuaranteed&gt; {
+        <span class="kw">let </span>element_size_bytes = <span class="kw">match </span><span class="self">self</span>.lookup_type(element).sizeof(<span class="self">self</span>) {
+            <span class="prelude-val">Some</span>(size) =&gt; size,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="self">self</span>.store_err(original_type, value),
         };
-        <span class="kw">if</span> <span class="ident">element_size_bytes</span>.<span class="ident">bytes</span>() <span class="op">%</span> <span class="number">4</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="self">self</span>.<span class="ident">store_err</span>(<span class="ident">original_type</span>, <span class="ident">value</span>);
+        <span class="kw">if </span>element_size_bytes.bytes() % <span class="number">4 </span>!= <span class="number">0 </span>{
+            <span class="kw">return </span><span class="self">self</span>.store_err(original_type, value);
         }
-        <span class="kw">let</span> <span class="ident">element_size_words</span> <span class="op">=</span> (<span class="ident">element_size_bytes</span>.<span class="ident">bytes</span>() <span class="op">/</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">count</span> {
-            <span class="kw">let</span> <span class="ident">element</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">extract_value</span>(<span class="ident">value</span>, <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u64</span>);
-            <span class="self">self</span>.<span class="ident">recurse_store_type</span>(
-                <span class="ident">original_type</span>,
-                <span class="ident">element</span>,
-                <span class="ident">array</span>,
-                <span class="ident">dynamic_word_index</span>,
-                <span class="ident">constant_word_offset</span> <span class="op">+</span> <span class="ident">element_size_words</span> <span class="op">*</span> <span class="ident">index</span>,
+        <span class="kw">let </span>element_size_words = (element_size_bytes.bytes() / <span class="number">4</span>) <span class="kw">as </span>u32;
+        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
+            <span class="kw">let </span>element = <span class="self">self</span>.extract_value(value, index <span class="kw">as </span>u64);
+            <span class="self">self</span>.recurse_store_type(
+                original_type,
+                element,
+                array,
+                dynamic_word_index,
+                constant_word_offset + element_size_words * index,
             )<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">recurse_store_type</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">original_type</span>: <span class="ident">Word</span>,
-        <span class="ident">value</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">array</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">dynamic_word_index</span>: <span class="ident">SpirvValue</span>,
-        <span class="ident">constant_word_offset</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ErrorGuaranteed</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">value</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType::Integer</span>(<span class="number">32</span>, <span class="ident">signed</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">u32_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Integer</span>(<span class="number">32</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
-                <span class="kw">let</span> <span class="ident">value_u32</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">intcast</span>(<span class="ident">value</span>, <span class="ident">u32_ty</span>, <span class="ident">signed</span>);
-                <span class="self">self</span>.<span class="ident">store_u32</span>(<span class="ident">array</span>, <span class="ident">dynamic_word_index</span>, <span class="ident">constant_word_offset</span>, <span class="ident">value_u32</span>)
+    <span class="kw">fn </span>recurse_store_type(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        original_type: Word,
+        value: SpirvValue,
+        array: SpirvValue,
+        dynamic_word_index: SpirvValue,
+        constant_word_offset: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ErrorGuaranteed&gt; {
+        <span class="kw">match </span><span class="self">self</span>.lookup_type(value.ty) {
+            SpirvType::Integer(<span class="number">32</span>, signed) =&gt; {
+                <span class="kw">let </span>u32_ty = SpirvType::Integer(<span class="number">32</span>, <span class="bool-val">false</span>).def(DUMMY_SP, <span class="self">self</span>);
+                <span class="kw">let </span>value_u32 = <span class="self">self</span>.intcast(value, u32_ty, signed);
+                <span class="self">self</span>.store_u32(array, dynamic_word_index, constant_word_offset, value_u32)
             }
-            <span class="ident">SpirvType::Float</span>(<span class="number">32</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">u32_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Integer</span>(<span class="number">32</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
-                <span class="kw">let</span> <span class="ident">value_u32</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bitcast</span>(<span class="ident">value</span>, <span class="ident">u32_ty</span>);
-                <span class="self">self</span>.<span class="ident">store_u32</span>(<span class="ident">array</span>, <span class="ident">dynamic_word_index</span>, <span class="ident">constant_word_offset</span>, <span class="ident">value_u32</span>)
+            SpirvType::Float(<span class="number">32</span>) =&gt; {
+                <span class="kw">let </span>u32_ty = SpirvType::Integer(<span class="number">32</span>, <span class="bool-val">false</span>).def(DUMMY_SP, <span class="self">self</span>);
+                <span class="kw">let </span>value_u32 = <span class="self">self</span>.bitcast(value, u32_ty);
+                <span class="self">self</span>.store_u32(array, dynamic_word_index, constant_word_offset, value_u32)
             }
-            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, <span class="ident">count</span> } =&gt; <span class="self">self</span>
-                .<span class="ident">store_vec_mat_arr</span>(
-                    <span class="ident">original_type</span>,
-                    <span class="ident">value</span>,
-                    <span class="ident">array</span>,
-                    <span class="ident">dynamic_word_index</span>,
-                    <span class="ident">constant_word_offset</span>,
-                    <span class="ident">element</span>,
-                    <span class="ident">count</span>,
+            SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } =&gt; <span class="self">self
+                </span>.store_vec_mat_arr(
+                    original_type,
+                    value,
+                    array,
+                    dynamic_word_index,
+                    constant_word_offset,
+                    element,
+                    count,
                 ),
-            <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } =&gt; {
-                <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">count</span>) =&gt; <span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="self">self</span>.<span class="ident">store_err</span>(<span class="ident">original_type</span>, <span class="ident">value</span>),
+            SpirvType::Array { element, count } =&gt; {
+                <span class="kw">let </span>count = <span class="kw">match </span><span class="self">self</span>.builder.lookup_const_u64(count) {
+                    <span class="prelude-val">Some</span>(count) =&gt; count <span class="kw">as </span>u32,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="self">self</span>.store_err(original_type, value),
                 };
-                <span class="self">self</span>.<span class="ident">store_vec_mat_arr</span>(
-                    <span class="ident">original_type</span>,
-                    <span class="ident">value</span>,
-                    <span class="ident">array</span>,
-                    <span class="ident">dynamic_word_index</span>,
-                    <span class="ident">constant_word_offset</span>,
-                    <span class="ident">element</span>,
-                    <span class="ident">count</span>,
+                <span class="self">self</span>.store_vec_mat_arr(
+                    original_type,
+                    value,
+                    array,
+                    dynamic_word_index,
+                    constant_word_offset,
+                    element,
+                    count,
                 )
             }
-            <span class="ident">SpirvType::Adt</span> {
-                <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
-                <span class="ident">field_offsets</span>,
+            SpirvType::Adt {
+                size: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
+                field_offsets,
                 ..
             } =&gt; {
-                <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">byte_offset</span>) <span class="kw">in</span> <span class="ident">field_offsets</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="kw">if</span> <span class="ident">byte_offset</span>.<span class="ident">bytes</span>() <span class="op">%</span> <span class="number">4</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                        <span class="kw">return</span> <span class="self">self</span>.<span class="ident">store_err</span>(<span class="ident">original_type</span>, <span class="ident">value</span>);
+                <span class="kw">for </span>(index, byte_offset) <span class="kw">in </span>field_offsets.iter().enumerate() {
+                    <span class="kw">if </span>byte_offset.bytes() % <span class="number">4 </span>!= <span class="number">0 </span>{
+                        <span class="kw">return </span><span class="self">self</span>.store_err(original_type, value);
                     }
-                    <span class="kw">let</span> <span class="ident">word_offset</span> <span class="op">=</span> (<span class="ident">byte_offset</span>.<span class="ident">bytes</span>() <span class="op">/</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-                    <span class="kw">let</span> <span class="ident">field</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">extract_value</span>(<span class="ident">value</span>, <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u64</span>);
-                    <span class="self">self</span>.<span class="ident">recurse_store_type</span>(
-                        <span class="ident">original_type</span>,
-                        <span class="ident">field</span>,
-                        <span class="ident">array</span>,
-                        <span class="ident">dynamic_word_index</span>,
-                        <span class="ident">constant_word_offset</span> <span class="op">+</span> <span class="ident">word_offset</span>,
+                    <span class="kw">let </span>word_offset = (byte_offset.bytes() / <span class="number">4</span>) <span class="kw">as </span>u32;
+                    <span class="kw">let </span>field = <span class="self">self</span>.extract_value(value, index <span class="kw">as </span>u64);
+                    <span class="self">self</span>.recurse_store_type(
+                        original_type,
+                        field,
+                        array,
+                        dynamic_word_index,
+                        constant_word_offset + word_offset,
                     )<span class="question-mark">?</span>;
                 }
                 <span class="prelude-val">Ok</span>(())
             }
 
-            <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">store_err</span>(<span class="ident">original_type</span>, <span class="ident">value</span>),
+            <span class="kw">_ </span>=&gt; <span class="self">self</span>.store_err(original_type, value),
         }
     }
 
-    <span class="doccomment">/// Note: DOES NOT do bounds checking! Bounds checking is expected to be done in the caller.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">codegen_buffer_store_intrinsic</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">SpirvValue</span>], <span class="ident">pass_mode</span>: <span class="ident">PassMode</span>) {
-        <span class="comment">// Signature: fn store&lt;T&gt;(array: &amp;[u32], index: u32, value: T);</span>
-        <span class="kw">let</span> <span class="ident">is_pair</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">pass_mode</span> {
-            <span class="comment">// haha shrug</span>
-            <span class="ident">PassMode::Ignore</span> =&gt; <span class="kw">return</span>,
-            <span class="ident">PassMode::Direct</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
-            <span class="ident">PassMode::Pair</span>(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
-            <span class="ident">PassMode::Cast</span>(<span class="kw">_</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;PassMode::Cast not supported in codegen_buffer_store_intrinsic&quot;</span>)
+    <span class="doccomment">/// Note: DOES NOT do bounds checking! Bounds checking is expected to be done in the caller.
+    </span><span class="kw">pub fn </span>codegen_buffer_store_intrinsic(<span class="kw-2">&amp;mut </span><span class="self">self</span>, args: <span class="kw-2">&amp;</span>[SpirvValue], pass_mode: PassMode) {
+        <span class="comment">// Signature: fn store&lt;T&gt;(array: &amp;[u32], index: u32, value: T);
+        </span><span class="kw">let </span>is_pair = <span class="kw">match </span>pass_mode {
+            <span class="comment">// haha shrug
+            </span>PassMode::Ignore =&gt; <span class="kw">return</span>,
+            PassMode::Direct(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
+            PassMode::Pair(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+            PassMode::Cast(<span class="kw">_</span>) =&gt; {
+                <span class="self">self</span>.fatal(<span class="string">&quot;PassMode::Cast not supported in codegen_buffer_store_intrinsic&quot;</span>)
             }
-            <span class="ident">PassMode::Indirect</span> { .. } =&gt; {
-                <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;PassMode::Indirect not supported in codegen_buffer_store_intrinsic&quot;</span>)
+            PassMode::Indirect { .. } =&gt; {
+                <span class="self">self</span>.fatal(<span class="string">&quot;PassMode::Indirect not supported in codegen_buffer_store_intrinsic&quot;</span>)
             }
         };
-        <span class="kw">let</span> <span class="ident">expected_args</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_pair</span> { <span class="number">5</span> } <span class="kw">else</span> { <span class="number">4</span> };
-        <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">expected_args</span> {
-            <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+        <span class="kw">let </span>expected_args = <span class="kw">if </span>is_pair { <span class="number">5 </span>} <span class="kw">else </span>{ <span class="number">4 </span>};
+        <span class="kw">if </span>args.len() != expected_args {
+            <span class="self">self</span>.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;buffer_store_intrinsic should have {} args, it has {}&quot;</span>,
-                <span class="ident">expected_args</span>,
-                <span class="ident">args</span>.<span class="ident">len</span>()
+                expected_args,
+                args.len()
             ));
         }
-        <span class="comment">// Note that the &amp;[u32] gets split into two arguments - pointer, length</span>
-        <span class="kw">let</span> <span class="ident">array</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>];
-        <span class="kw">let</span> <span class="ident">byte_index</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">2</span>];
-        <span class="kw">let</span> <span class="ident">two</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">DUMMY_SP</span>, <span class="number">2</span>);
-        <span class="kw">let</span> <span class="ident">word_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">byte_index</span>, <span class="ident">two</span>);
-        <span class="kw">if</span> <span class="ident">is_pair</span> {
-            <span class="kw">let</span> <span class="ident">value_one</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">3</span>];
-            <span class="kw">let</span> <span class="ident">value_two</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">4</span>];
-            <span class="kw">let</span> <span class="ident">one_result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">recurse_store_type</span>(<span class="ident">value_one</span>.<span class="ident">ty</span>, <span class="ident">value_one</span>, <span class="ident">array</span>, <span class="ident">word_index</span>, <span class="number">0</span>);
+        <span class="comment">// Note that the &amp;[u32] gets split into two arguments - pointer, length
+        </span><span class="kw">let </span>array = args[<span class="number">0</span>];
+        <span class="kw">let </span>byte_index = args[<span class="number">2</span>];
+        <span class="kw">let </span>two = <span class="self">self</span>.constant_u32(DUMMY_SP, <span class="number">2</span>);
+        <span class="kw">let </span>word_index = <span class="self">self</span>.lshr(byte_index, two);
+        <span class="kw">if </span>is_pair {
+            <span class="kw">let </span>value_one = args[<span class="number">3</span>];
+            <span class="kw">let </span>value_two = args[<span class="number">4</span>];
+            <span class="kw">let </span>one_result = <span class="self">self</span>.recurse_store_type(value_one.ty, value_one, array, word_index, <span class="number">0</span>);
 
-            <span class="kw">let</span> <span class="ident">size_of_one</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">value_one</span>.<span class="ident">ty</span>).<span class="ident">sizeof</span>(<span class="self">self</span>);
-            <span class="kw">if</span> <span class="ident">one_result</span>.<span class="ident">is_ok</span>() <span class="op">&amp;&amp;</span> <span class="ident">size_of_one</span> <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Size::from_bytes</span>(<span class="number">4</span>)) {
-                <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;Expected PassMode::Pair first element to have size 4&quot;</span>);
+            <span class="kw">let </span>size_of_one = <span class="self">self</span>.lookup_type(value_one.ty).sizeof(<span class="self">self</span>);
+            <span class="kw">if </span>one_result.is_ok() &amp;&amp; size_of_one != <span class="prelude-val">Some</span>(Size::from_bytes(<span class="number">4</span>)) {
+                <span class="self">self</span>.fatal(<span class="string">&quot;Expected PassMode::Pair first element to have size 4&quot;</span>);
             }
 
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">recurse_store_type</span>(<span class="ident">value_two</span>.<span class="ident">ty</span>, <span class="ident">value_two</span>, <span class="ident">array</span>, <span class="ident">word_index</span>, <span class="number">1</span>);
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">3</span>];
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">recurse_store_type</span>(<span class="ident">value</span>.<span class="ident">ty</span>, <span class="ident">value</span>, <span class="ident">array</span>, <span class="ident">word_index</span>, <span class="number">0</span>);
+            <span class="kw">let _ </span>= <span class="self">self</span>.recurse_store_type(value_two.ty, value_two, array, word_index, <span class="number">1</span>);
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>value = args[<span class="number">3</span>];
+            <span class="kw">let _ </span>= <span class="self">self</span>.recurse_store_type(value.ty, value, array, word_index, <span class="number">0</span>);
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

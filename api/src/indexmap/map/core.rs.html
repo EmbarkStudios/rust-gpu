@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/indexmap-1.7.0/src/map/core.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>core.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../indexmap/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../indexmap/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../indexmap/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/indexmap-1.7.0/src/map/core.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>core.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../indexmap/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../indexmap/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../indexmap/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -652,654 +646,653 @@
 <span id="646">646</span>
 <span id="647">647</span>
 <span id="648">648</span>
-</pre><pre class="rust"><code><span class="doccomment">//! This is the core implementation that doesn&#39;t depend on the hasher at all.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The methods of `IndexMapCore` don&#39;t use any Hash properties of K.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! It&#39;s cleaner to separate them out, then the compiler checks that we are not</span>
-<span class="doccomment">//! using Hash at all in these methods.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! However, we should probably not let this show in the public API or docs.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! This is the core implementation that doesn&#39;t depend on the hasher at all.
+//!
+//! The methods of `IndexMapCore` don&#39;t use any Hash properties of K.
+//!
+//! It&#39;s cleaner to separate them out, then the compiler checks that we are not
+//! using Hash at all in these methods.
+//!
+//! However, we should probably not let this show in the public API or docs.
 
-<span class="kw">mod</span> <span class="ident">raw</span>;
+</span><span class="kw">mod </span>raw;
 
-<span class="kw">use</span> <span class="ident">hashbrown::raw::RawTable</span>;
+<span class="kw">use </span>hashbrown::raw::RawTable;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vec</span>::{<span class="ident">Drain</span>, <span class="ident">Vec</span>};
-<span class="kw">use</span> <span class="ident">core::cmp</span>;
-<span class="kw">use</span> <span class="ident">core::fmt</span>;
-<span class="kw">use</span> <span class="ident">core::mem::replace</span>;
-<span class="kw">use</span> <span class="ident">core::ops::RangeBounds</span>;
+<span class="kw">use </span><span class="kw">crate</span>::vec::{Drain, Vec};
+<span class="kw">use </span>core::cmp;
+<span class="kw">use </span>core::fmt;
+<span class="kw">use </span>core::mem::replace;
+<span class="kw">use </span>core::ops::RangeBounds;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::equivalent::Equivalent</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util</span>::{<span class="ident">enumerate</span>, <span class="ident">simplify_range</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Bucket</span>, <span class="ident">Entries</span>, <span class="ident">HashValue</span>};
+<span class="kw">use </span><span class="kw">crate</span>::equivalent::Equivalent;
+<span class="kw">use </span><span class="kw">crate</span>::util::{enumerate, simplify_range};
+<span class="kw">use crate</span>::{Bucket, Entries, HashValue};
 
-<span class="doccomment">/// Core of the map that does not depend on S</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">IndexMapCore</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// indices mapping from the entry hash to its index.</span>
-    <span class="ident">indices</span>: <span class="ident">RawTable</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// entries is a dense vec of entries in their order.</span>
-    <span class="ident">entries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Bucket</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Core of the map that does not depend on S
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>IndexMapCore&lt;K, V&gt; {
+    <span class="doccomment">/// indices mapping from the entry hash to its index.
+    </span>indices: RawTable&lt;usize&gt;,
+    <span class="doccomment">/// entries is a dense vec of entries in their order.
+    </span>entries: Vec&lt;Bucket&lt;K, V&gt;&gt;,
 }
 
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">fn</span> <span class="ident">get_hash</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>(<span class="ident">entries</span>: <span class="kw-2">&amp;</span>[<span class="ident">Bucket</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>]) -&gt; <span class="kw">impl</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">usize</span>) -&gt; <span class="ident">u64</span> <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">i</span><span class="op">|</span> <span class="ident">entries</span>[<span class="ident">i</span>].<span class="ident">hash</span>.<span class="ident">get</span>()
+<span class="attribute">#[inline(always)]
+</span><span class="kw">fn </span>get_hash&lt;K, V&gt;(entries: <span class="kw-2">&amp;</span>[Bucket&lt;K, V&gt;]) -&gt; <span class="kw">impl </span>Fn(<span class="kw-2">&amp;</span>usize) -&gt; u64 + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">move </span>|<span class="kw-2">&amp;</span>i| entries[i].hash.get()
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">equivalent</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span>, <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Equivalent</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-    <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Q</span>,
-    <span class="ident">entries</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Bucket</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>],
-) -&gt; <span class="kw">impl</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">usize</span>) -&gt; <span class="ident">bool</span> <span class="op">+</span> <span class="lifetime">&#39;a</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">i</span><span class="op">|</span> <span class="ident">Q::equivalent</span>(<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">entries</span>[<span class="ident">i</span>].<span class="ident">key</span>)
+<span class="attribute">#[inline]
+</span><span class="kw">fn </span>equivalent&lt;<span class="lifetime">&#39;a</span>, K, V, Q: <span class="question-mark">?</span>Sized + Equivalent&lt;K&gt;&gt;(
+    key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Q,
+    entries: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Bucket&lt;K, V&gt;],
+) -&gt; <span class="kw">impl </span>Fn(<span class="kw-2">&amp;</span>usize) -&gt; bool + <span class="lifetime">&#39;a </span>{
+    <span class="kw">move </span>|<span class="kw-2">&amp;</span>i| Q::equivalent(key, <span class="kw-2">&amp;</span>entries[i].key)
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">erase_index</span>(<span class="ident">table</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RawTable</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">hash</span>: <span class="ident">HashValue</span>, <span class="ident">index</span>: <span class="ident">usize</span>) {
-    <span class="ident">table</span>.<span class="ident">erase_entry</span>(<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="kw">move</span> <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span> <span class="op">==</span> <span class="ident">index</span>);
+<span class="attribute">#[inline]
+</span><span class="kw">fn </span>erase_index(table: <span class="kw-2">&amp;mut </span>RawTable&lt;usize&gt;, hash: HashValue, index: usize) {
+    table.erase_entry(hash.get(), <span class="kw">move </span>|<span class="kw-2">&amp;</span>i| i == index);
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">update_index</span>(<span class="ident">table</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RawTable</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">hash</span>: <span class="ident">HashValue</span>, <span class="ident">old</span>: <span class="ident">usize</span>, <span class="ident">new</span>: <span class="ident">usize</span>) {
-    <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">table</span>
-        .<span class="ident">get_mut</span>(<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="kw">move</span> <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span> <span class="op">==</span> <span class="ident">old</span>)
-        .<span class="ident">expect</span>(<span class="string">&quot;index not found&quot;</span>);
-    <span class="kw-2">*</span><span class="ident">index</span> <span class="op">=</span> <span class="ident">new</span>;
+<span class="attribute">#[inline]
+</span><span class="kw">fn </span>update_index(table: <span class="kw-2">&amp;mut </span>RawTable&lt;usize&gt;, hash: HashValue, old: usize, new: usize) {
+    <span class="kw">let </span>index = table
+        .get_mut(hash.get(), <span class="kw">move </span>|<span class="kw-2">&amp;</span>i| i == old)
+        .expect(<span class="string">&quot;index not found&quot;</span>);
+    <span class="kw-2">*</span>index = new;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">IndexMapCore</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">K</span>: <span class="ident">Clone</span>,
-    <span class="ident">V</span>: <span class="ident">Clone</span>,
+<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>IndexMapCore&lt;K, V&gt;
+<span class="kw">where
+    </span>K: Clone,
+    V: Clone,
 {
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">indices</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entries</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">indices</span>.<span class="ident">capacity</span>());
-        <span class="ident">entries</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>);
-        <span class="ident">IndexMapCore</span> { <span class="ident">indices</span>, <span class="ident">entries</span> }
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>indices = <span class="self">self</span>.indices.clone();
+        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(indices.capacity());
+        entries.clone_from(<span class="kw-2">&amp;</span><span class="self">self</span>.entries);
+        IndexMapCore { indices, entries }
     }
 
-    <span class="kw">fn</span> <span class="ident">clone_from</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
-        <span class="kw">let</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">get_hash</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">entries</span>);
-        <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">clone_from_with_hasher</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">indices</span>, <span class="ident">hasher</span>);
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">capacity</span>() <span class="op">&lt;</span> <span class="ident">other</span>.<span class="ident">entries</span>.<span class="ident">len</span>() {
-            <span class="comment">// If we must resize, match the indices capacity</span>
-            <span class="self">self</span>.<span class="ident">reserve_entries</span>();
+    <span class="kw">fn </span>clone_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
+        <span class="kw">let </span>hasher = get_hash(<span class="kw-2">&amp;</span>other.entries);
+        <span class="self">self</span>.indices.clone_from_with_hasher(<span class="kw-2">&amp;</span>other.indices, hasher);
+        <span class="kw">if </span><span class="self">self</span>.entries.capacity() &lt; other.entries.len() {
+            <span class="comment">// If we must resize, match the indices capacity
+            </span><span class="self">self</span>.reserve_entries();
         }
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">entries</span>);
+        <span class="self">self</span>.entries.clone_from(<span class="kw-2">&amp;</span>other.entries);
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">IndexMapCore</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">K</span>: <span class="ident">fmt::Debug</span>,
-    <span class="ident">V</span>: <span class="ident">fmt::Debug</span>,
+<span class="kw">impl</span>&lt;K, V&gt; fmt::Debug <span class="kw">for </span>IndexMapCore&lt;K, V&gt;
+<span class="kw">where
+    </span>K: fmt::Debug,
+    V: fmt::Debug,
 {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;IndexMapCore&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;indices&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">raw::DebugIndices</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">indices</span>))
-            .<span class="ident">field</span>(<span class="string">&quot;entries&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>)
-            .<span class="ident">finish</span>()
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;IndexMapCore&quot;</span>)
+            .field(<span class="string">&quot;indices&quot;</span>, <span class="kw-2">&amp;</span>raw::DebugIndices(<span class="kw-2">&amp;</span><span class="self">self</span>.indices))
+            .field(<span class="string">&quot;entries&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.entries)
+            .finish()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">Entries</span> <span class="kw">for</span> <span class="ident">IndexMapCore</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Entry</span> <span class="op">=</span> <span class="ident">Bucket</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;K, V&gt; Entries <span class="kw">for </span>IndexMapCore&lt;K, V&gt; {
+    <span class="kw">type </span>Entry = Bucket&lt;K, V&gt;;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_entries</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Entry</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">entries</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_entries(<span class="self">self</span>) -&gt; Vec&lt;<span class="self">Self</span>::Entry&gt; {
+        <span class="self">self</span>.entries
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">as_entries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Entry</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>as_entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Entry] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.entries
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">as_entries_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident"><span class="self">Self</span>::Entry</span>] {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">entries</span>
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>as_entries_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[<span class="self">Self</span>::Entry] {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries
     }
 
-    <span class="kw">fn</span> <span class="ident">with_entries</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>)
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;mut</span> [<span class="ident"><span class="self">Self</span>::Entry</span>]),
+    <span class="kw">fn </span>with_entries&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F)
+    <span class="kw">where
+        </span>F: FnOnce(<span class="kw-2">&amp;mut </span>[<span class="self">Self</span>::Entry]),
     {
-        <span class="ident">f</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">entries</span>);
-        <span class="self">self</span>.<span class="ident">rebuild_hash_table</span>();
+        f(<span class="kw-2">&amp;mut </span><span class="self">self</span>.entries);
+        <span class="self">self</span>.rebuild_hash_table();
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">IndexMapCore</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">IndexMapCore</span> {
-            <span class="ident">indices</span>: <span class="ident">RawTable::new</span>(),
-            <span class="ident">entries</span>: <span class="ident">Vec::new</span>(),
+<span class="kw">impl</span>&lt;K, V&gt; IndexMapCore&lt;K, V&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        IndexMapCore {
+            indices: RawTable::new(),
+            entries: Vec::new(),
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_capacity</span>(<span class="ident">n</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">IndexMapCore</span> {
-            <span class="ident">indices</span>: <span class="ident">RawTable::with_capacity</span>(<span class="ident">n</span>),
-            <span class="ident">entries</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">n</span>),
+    <span class="attribute">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>with_capacity(n: usize) -&gt; <span class="self">Self </span>{
+        IndexMapCore {
+            indices: RawTable::with_capacity(n),
+            entries: Vec::with_capacity(n),
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">len</span>()
+    <span class="attribute">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.indices.len()
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">capacity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="ident">cmp::min</span>(<span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">capacity</span>(), <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">capacity</span>())
+    <span class="attribute">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>capacity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        cmp::min(<span class="self">self</span>.indices.capacity(), <span class="self">self</span>.entries.capacity())
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">clear</span>();
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">clear</span>();
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.indices.clear();
+        <span class="self">self</span>.entries.clear();
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">truncate</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">len</span>: <span class="ident">usize</span>) {
-        <span class="kw">if</span> <span class="ident">len</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">len</span>() {
-            <span class="self">self</span>.<span class="ident">erase_indices</span>(<span class="ident">len</span>, <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>());
-            <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">truncate</span>(<span class="ident">len</span>);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>truncate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, len: usize) {
+        <span class="kw">if </span>len &lt; <span class="self">self</span>.len() {
+            <span class="self">self</span>.erase_indices(len, <span class="self">self</span>.entries.len());
+            <span class="self">self</span>.entries.truncate(len);
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">drain</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">range</span>: <span class="ident">R</span>) -&gt; <span class="ident">Drain</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Bucket</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">RangeBounds</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain&lt;R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: R) -&gt; Drain&lt;<span class="lifetime">&#39;_</span>, Bucket&lt;K, V&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt;,
     {
-        <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="ident">simplify_range</span>(<span class="ident">range</span>, <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>());
-        <span class="self">self</span>.<span class="ident">erase_indices</span>(<span class="ident">range</span>.<span class="ident">start</span>, <span class="ident">range</span>.<span class="ident">end</span>);
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">drain</span>(<span class="ident">range</span>)
+        <span class="kw">let </span>range = simplify_range(range, <span class="self">self</span>.entries.len());
+        <span class="self">self</span>.erase_indices(range.start, range.end);
+        <span class="self">self</span>.entries.drain(range)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">split_off</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">at</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="macro">assert!</span>(<span class="ident">at</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>());
-        <span class="self">self</span>.<span class="ident">erase_indices</span>(<span class="ident">at</span>, <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="ident">entries</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">split_off</span>(<span class="ident">at</span>);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>split_off(<span class="kw-2">&amp;mut </span><span class="self">self</span>, at: usize) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert!</span>(at &lt;= <span class="self">self</span>.entries.len());
+        <span class="self">self</span>.erase_indices(at, <span class="self">self</span>.entries.len());
+        <span class="kw">let </span>entries = <span class="self">self</span>.entries.split_off(at);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">indices</span> <span class="op">=</span> <span class="ident">RawTable::with_capacity</span>(<span class="ident">entries</span>.<span class="ident">len</span>());
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">entry</span>) <span class="kw">in</span> <span class="ident">enumerate</span>(<span class="kw-2">&amp;</span><span class="ident">entries</span>) {
-            <span class="ident">indices</span>.<span class="ident">insert_no_grow</span>(<span class="ident">entry</span>.<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="ident">i</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>indices = RawTable::with_capacity(entries.len());
+        <span class="kw">for </span>(i, entry) <span class="kw">in </span>enumerate(<span class="kw-2">&amp;</span>entries) {
+            indices.insert_no_grow(entry.hash.get(), i);
         }
-        <span class="self">Self</span> { <span class="ident">indices</span>, <span class="ident">entries</span> }
+        <span class="self">Self </span>{ indices, entries }
     }
 
-    <span class="doccomment">/// Reserve capacity for `additional` more key-value pairs.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">reserve</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">additional</span>: <span class="ident">usize</span>) {
-        <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">reserve</span>(<span class="ident">additional</span>, <span class="ident">get_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>));
-        <span class="self">self</span>.<span class="ident">reserve_entries</span>();
+    <span class="doccomment">/// Reserve capacity for `additional` more key-value pairs.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>reserve(<span class="kw-2">&amp;mut </span><span class="self">self</span>, additional: usize) {
+        <span class="self">self</span>.indices.reserve(additional, get_hash(<span class="kw-2">&amp;</span><span class="self">self</span>.entries));
+        <span class="self">self</span>.reserve_entries();
     }
 
-    <span class="doccomment">/// Reserve entries capacity to match the indices</span>
-    <span class="kw">fn</span> <span class="ident">reserve_entries</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">additional</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">capacity</span>() <span class="op">-</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>();
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">reserve_exact</span>(<span class="ident">additional</span>);
+    <span class="doccomment">/// Reserve entries capacity to match the indices
+    </span><span class="kw">fn </span>reserve_entries(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>additional = <span class="self">self</span>.indices.capacity() - <span class="self">self</span>.entries.len();
+        <span class="self">self</span>.entries.reserve_exact(additional);
     }
 
-    <span class="doccomment">/// Shrink the capacity of the map as much as possible.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">shrink_to_fit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">shrink_to</span>(<span class="number">0</span>, <span class="ident">get_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>));
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">shrink_to_fit</span>();
+    <span class="doccomment">/// Shrink the capacity of the map as much as possible.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>shrink_to_fit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.indices.shrink_to(<span class="number">0</span>, get_hash(<span class="kw-2">&amp;</span><span class="self">self</span>.entries));
+        <span class="self">self</span>.entries.shrink_to_fit();
     }
 
-    <span class="doccomment">/// Remove the last key-value pair</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">pop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">K</span>, <span class="ident">V</span>)<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">pop</span>() {
-            <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>();
-            <span class="ident">erase_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">indices</span>, <span class="ident">entry</span>.<span class="ident">hash</span>, <span class="ident">last</span>);
-            <span class="prelude-val">Some</span>((<span class="ident">entry</span>.<span class="ident">key</span>, <span class="ident">entry</span>.<span class="ident">value</span>))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
+    <span class="doccomment">/// Remove the last key-value pair
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(K, V)&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = <span class="self">self</span>.entries.pop() {
+            <span class="kw">let </span>last = <span class="self">self</span>.entries.len();
+            erase_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>.indices, entry.hash, last);
+            <span class="prelude-val">Some</span>((entry.key, entry.value))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
+    }
+
+    <span class="doccomment">/// Append a key-value pair, *without* checking whether it already exists,
+    /// and return the pair&#39;s new index.
+    </span><span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: HashValue, key: K, value: V) -&gt; usize {
+        <span class="kw">let </span>i = <span class="self">self</span>.entries.len();
+        <span class="self">self</span>.indices.insert(hash.get(), i, get_hash(<span class="kw-2">&amp;</span><span class="self">self</span>.entries));
+        <span class="kw">if </span>i == <span class="self">self</span>.entries.capacity() {
+            <span class="comment">// Reserve our own capacity synced to the indices,
+            // rather than letting `Vec::push` just double it.
+            </span><span class="self">self</span>.reserve_entries();
         }
+        <span class="self">self</span>.entries.push(Bucket { hash, key, value });
+        i
     }
 
-    <span class="doccomment">/// Append a key-value pair, *without* checking whether it already exists,</span>
-    <span class="doccomment">/// and return the pair&#39;s new index.</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">HashValue</span>, <span class="ident">key</span>: <span class="ident">K</span>, <span class="ident">value</span>: <span class="ident">V</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>();
-        <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">insert</span>(<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="ident">i</span>, <span class="ident">get_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>));
-        <span class="kw">if</span> <span class="ident">i</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">capacity</span>() {
-            <span class="comment">// Reserve our own capacity synced to the indices,</span>
-            <span class="comment">// rather than letting `Vec::push` just double it.</span>
-            <span class="self">self</span>.<span class="ident">reserve_entries</span>();
-        }
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">push</span>(<span class="ident">Bucket</span> { <span class="ident">hash</span>, <span class="ident">key</span>, <span class="ident">value</span> });
-        <span class="ident">i</span>
-    }
-
-    <span class="doccomment">/// Return the index in `entries` where an equivalent key can be found</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_index_of</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">HashValue</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Equivalent</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Return the index in `entries` where an equivalent key can be found
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_index_of&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: HashValue, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt;
+    <span class="kw">where
+        </span>Q: <span class="question-mark">?</span>Sized + Equivalent&lt;K&gt;,
     {
-        <span class="kw">let</span> <span class="ident">eq</span> <span class="op">=</span> <span class="ident">equivalent</span>(<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>);
-        <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">get</span>(<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="ident">eq</span>).<span class="ident">copied</span>()
+        <span class="kw">let </span>eq = equivalent(key, <span class="kw-2">&amp;</span><span class="self">self</span>.entries);
+        <span class="self">self</span>.indices.get(hash.get(), eq).copied()
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">insert_full</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">HashValue</span>, <span class="ident">key</span>: <span class="ident">K</span>, <span class="ident">value</span>: <span class="ident">V</span>) -&gt; (<span class="ident">usize</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>)
-    <span class="kw">where</span>
-        <span class="ident">K</span>: <span class="ident">Eq</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_full(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: HashValue, key: K, value: V) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;V&gt;)
+    <span class="kw">where
+        </span>K: Eq,
     {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_index_of</span>(<span class="ident">hash</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">i</span>) =&gt; (<span class="ident">i</span>, <span class="prelude-val">Some</span>(<span class="ident">replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">entries</span>[<span class="ident">i</span>].<span class="ident">value</span>, <span class="ident">value</span>))),
-            <span class="prelude-val">None</span> =&gt; (<span class="self">self</span>.<span class="ident">push</span>(<span class="ident">hash</span>, <span class="ident">key</span>, <span class="ident">value</span>), <span class="prelude-val">None</span>),
+        <span class="kw">match </span><span class="self">self</span>.get_index_of(hash, <span class="kw-2">&amp;</span>key) {
+            <span class="prelude-val">Some</span>(i) =&gt; (i, <span class="prelude-val">Some</span>(replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[i].value, value))),
+            <span class="prelude-val">None </span>=&gt; (<span class="self">self</span>.push(hash, key, value), <span class="prelude-val">None</span>),
         }
     }
 
-    <span class="doccomment">/// Remove an entry by shifting all entries that follow it</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">shift_remove_full</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">HashValue</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">K</span>, <span class="ident">V</span>)<span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Equivalent</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Remove an entry by shifting all entries that follow it
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>shift_remove_full&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: HashValue, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, K, V)&gt;
+    <span class="kw">where
+        </span>Q: <span class="question-mark">?</span>Sized + Equivalent&lt;K&gt;,
     {
-        <span class="kw">let</span> <span class="ident">eq</span> <span class="op">=</span> <span class="ident">equivalent</span>(<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>);
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">remove_entry</span>(<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="ident">eq</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">index</span>) =&gt; {
-                <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">value</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">shift_remove_finish</span>(<span class="ident">index</span>);
-                <span class="prelude-val">Some</span>((<span class="ident">index</span>, <span class="ident">key</span>, <span class="ident">value</span>))
+        <span class="kw">let </span>eq = equivalent(key, <span class="kw-2">&amp;</span><span class="self">self</span>.entries);
+        <span class="kw">match </span><span class="self">self</span>.indices.remove_entry(hash.get(), eq) {
+            <span class="prelude-val">Some</span>(index) =&gt; {
+                <span class="kw">let </span>(key, value) = <span class="self">self</span>.shift_remove_finish(index);
+                <span class="prelude-val">Some</span>((index, key, value))
             }
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Remove an entry by shifting all entries that follow it</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">shift_remove_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">K</span>, <span class="ident">V</span>)<span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">get</span>(<span class="ident">index</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="ident">erase_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">indices</span>, <span class="ident">entry</span>.<span class="ident">hash</span>, <span class="ident">index</span>);
-                <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">shift_remove_finish</span>(<span class="ident">index</span>))
+    <span class="doccomment">/// Remove an entry by shifting all entries that follow it
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>shift_remove_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;(K, V)&gt; {
+        <span class="kw">match </span><span class="self">self</span>.entries.get(index) {
+            <span class="prelude-val">Some</span>(entry) =&gt; {
+                erase_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>.indices, entry.hash, index);
+                <span class="prelude-val">Some</span>(<span class="self">self</span>.shift_remove_finish(index))
             }
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Remove an entry by shifting all entries that follow it</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The index should already be removed from `self.indices`.</span>
-    <span class="kw">fn</span> <span class="ident">shift_remove_finish</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; (<span class="ident">K</span>, <span class="ident">V</span>) {
-        <span class="comment">// use Vec::remove, but then we need to update the indices that point</span>
-        <span class="comment">// to all of the other entries that have to move</span>
-        <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">remove</span>(<span class="ident">index</span>);
+    <span class="doccomment">/// Remove an entry by shifting all entries that follow it
+    ///
+    /// The index should already be removed from `self.indices`.
+    </span><span class="kw">fn </span>shift_remove_finish(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; (K, V) {
+        <span class="comment">// use Vec::remove, but then we need to update the indices that point
+        // to all of the other entries that have to move
+        </span><span class="kw">let </span>entry = <span class="self">self</span>.entries.remove(index);
 
-        <span class="comment">// correct indices that point to the entries that followed the removed entry.</span>
-        <span class="comment">// use a heuristic between a full sweep vs. a `find()` for every shifted item.</span>
-        <span class="kw">let</span> <span class="ident">raw_capacity</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">buckets</span>();
-        <span class="kw">let</span> <span class="ident">shifted_entries</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>[<span class="ident">index</span>..];
-        <span class="kw">if</span> <span class="ident">shifted_entries</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">raw_capacity</span> <span class="op">/</span> <span class="number">2</span> {
-            <span class="comment">// shift all indices greater than `index`</span>
-            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">indices_mut</span>() {
-                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">i</span> <span class="op">&gt;</span> <span class="ident">index</span> {
-                    <span class="kw-2">*</span><span class="ident">i</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="comment">// correct indices that point to the entries that followed the removed entry.
+        // use a heuristic between a full sweep vs. a `find()` for every shifted item.
+        </span><span class="kw">let </span>raw_capacity = <span class="self">self</span>.indices.buckets();
+        <span class="kw">let </span>shifted_entries = <span class="kw-2">&amp;</span><span class="self">self</span>.entries[index..];
+        <span class="kw">if </span>shifted_entries.len() &gt; raw_capacity / <span class="number">2 </span>{
+            <span class="comment">// shift all indices greater than `index`
+            </span><span class="kw">for </span>i <span class="kw">in </span><span class="self">self</span>.indices_mut() {
+                <span class="kw">if </span><span class="kw-2">*</span>i &gt; index {
+                    <span class="kw-2">*</span>i -= <span class="number">1</span>;
                 }
             }
-        } <span class="kw">else</span> {
-            <span class="comment">// find each following entry to shift its index</span>
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">entry</span>) <span class="kw">in</span> (<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>..).<span class="ident">zip</span>(<span class="ident">shifted_entries</span>) {
-                <span class="ident">update_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">indices</span>, <span class="ident">entry</span>.<span class="ident">hash</span>, <span class="ident">i</span>, <span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>);
+        } <span class="kw">else </span>{
+            <span class="comment">// find each following entry to shift its index
+            </span><span class="kw">for </span>(i, entry) <span class="kw">in </span>(index + <span class="number">1</span>..).zip(shifted_entries) {
+                update_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>.indices, entry.hash, i, i - <span class="number">1</span>);
             }
         }
 
-        (<span class="ident">entry</span>.<span class="ident">key</span>, <span class="ident">entry</span>.<span class="ident">value</span>)
+        (entry.key, entry.value)
     }
 
-    <span class="doccomment">/// Remove an entry by swapping it with the last</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">swap_remove_full</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">HashValue</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">K</span>, <span class="ident">V</span>)<span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Equivalent</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Remove an entry by swapping it with the last
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>swap_remove_full&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: HashValue, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, K, V)&gt;
+    <span class="kw">where
+        </span>Q: <span class="question-mark">?</span>Sized + Equivalent&lt;K&gt;,
     {
-        <span class="kw">let</span> <span class="ident">eq</span> <span class="op">=</span> <span class="ident">equivalent</span>(<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>);
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">remove_entry</span>(<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="ident">eq</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">index</span>) =&gt; {
-                <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">value</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">swap_remove_finish</span>(<span class="ident">index</span>);
-                <span class="prelude-val">Some</span>((<span class="ident">index</span>, <span class="ident">key</span>, <span class="ident">value</span>))
+        <span class="kw">let </span>eq = equivalent(key, <span class="kw-2">&amp;</span><span class="self">self</span>.entries);
+        <span class="kw">match </span><span class="self">self</span>.indices.remove_entry(hash.get(), eq) {
+            <span class="prelude-val">Some</span>(index) =&gt; {
+                <span class="kw">let </span>(key, value) = <span class="self">self</span>.swap_remove_finish(index);
+                <span class="prelude-val">Some</span>((index, key, value))
             }
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Remove an entry by swapping it with the last</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">swap_remove_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">K</span>, <span class="ident">V</span>)<span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">get</span>(<span class="ident">index</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="ident">erase_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">indices</span>, <span class="ident">entry</span>.<span class="ident">hash</span>, <span class="ident">index</span>);
-                <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">swap_remove_finish</span>(<span class="ident">index</span>))
+    <span class="doccomment">/// Remove an entry by swapping it with the last
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>swap_remove_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;(K, V)&gt; {
+        <span class="kw">match </span><span class="self">self</span>.entries.get(index) {
+            <span class="prelude-val">Some</span>(entry) =&gt; {
+                erase_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>.indices, entry.hash, index);
+                <span class="prelude-val">Some</span>(<span class="self">self</span>.swap_remove_finish(index))
             }
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Finish removing an entry by swapping it with the last</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The index should already be removed from `self.indices`.</span>
-    <span class="kw">fn</span> <span class="ident">swap_remove_finish</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; (<span class="ident">K</span>, <span class="ident">V</span>) {
-        <span class="comment">// use swap_remove, but then we need to update the index that points</span>
-        <span class="comment">// to the other entry that has to move</span>
-        <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">swap_remove</span>(<span class="ident">index</span>);
+    <span class="doccomment">/// Finish removing an entry by swapping it with the last
+    ///
+    /// The index should already be removed from `self.indices`.
+    </span><span class="kw">fn </span>swap_remove_finish(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; (K, V) {
+        <span class="comment">// use swap_remove, but then we need to update the index that points
+        // to the other entry that has to move
+        </span><span class="kw">let </span>entry = <span class="self">self</span>.entries.swap_remove(index);
 
-        <span class="comment">// correct index that points to the entry that had to swap places</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">get</span>(<span class="ident">index</span>) {
-            <span class="comment">// was not last element</span>
-            <span class="comment">// examine new element in `index` and find it in indices</span>
-            <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>();
-            <span class="ident">update_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">indices</span>, <span class="ident">entry</span>.<span class="ident">hash</span>, <span class="ident">last</span>, <span class="ident">index</span>);
+        <span class="comment">// correct index that points to the entry that had to swap places
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = <span class="self">self</span>.entries.get(index) {
+            <span class="comment">// was not last element
+            // examine new element in `index` and find it in indices
+            </span><span class="kw">let </span>last = <span class="self">self</span>.entries.len();
+            update_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>.indices, entry.hash, last, index);
         }
 
-        (<span class="ident">entry</span>.<span class="ident">key</span>, <span class="ident">entry</span>.<span class="ident">value</span>)
+        (entry.key, entry.value)
     }
 
-    <span class="doccomment">/// Erase `start..end` from `indices`, and shift `end..` indices down to `start..`</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// All of these items should still be at their original location in `entries`.</span>
-    <span class="doccomment">/// This is used by `drain`, which will let `Vec::drain` do the work on `entries`.</span>
-    <span class="kw">fn</span> <span class="ident">erase_indices</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">end</span>: <span class="ident">usize</span>) {
-        <span class="kw">let</span> (<span class="ident">init</span>, <span class="ident">shifted_entries</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">split_at</span>(<span class="ident">end</span>);
-        <span class="kw">let</span> (<span class="ident">start_entries</span>, <span class="ident">erased_entries</span>) <span class="op">=</span> <span class="ident">init</span>.<span class="ident">split_at</span>(<span class="ident">start</span>);
+    <span class="doccomment">/// Erase `start..end` from `indices`, and shift `end..` indices down to `start..`
+    ///
+    /// All of these items should still be at their original location in `entries`.
+    /// This is used by `drain`, which will let `Vec::drain` do the work on `entries`.
+    </span><span class="kw">fn </span>erase_indices(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start: usize, end: usize) {
+        <span class="kw">let </span>(init, shifted_entries) = <span class="self">self</span>.entries.split_at(end);
+        <span class="kw">let </span>(start_entries, erased_entries) = init.split_at(start);
 
-        <span class="kw">let</span> <span class="ident">erased</span> <span class="op">=</span> <span class="ident">erased_entries</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">shifted</span> <span class="op">=</span> <span class="ident">shifted_entries</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">half_capacity</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">buckets</span>() <span class="op">/</span> <span class="number">2</span>;
+        <span class="kw">let </span>erased = erased_entries.len();
+        <span class="kw">let </span>shifted = shifted_entries.len();
+        <span class="kw">let </span>half_capacity = <span class="self">self</span>.indices.buckets() / <span class="number">2</span>;
 
-        <span class="comment">// Use a heuristic between different strategies</span>
-        <span class="kw">if</span> <span class="ident">erased</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="comment">// Degenerate case, nothing to do</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">start</span> <span class="op">+</span> <span class="ident">shifted</span> <span class="op">&lt;</span> <span class="ident">half_capacity</span> <span class="op">&amp;&amp;</span> <span class="ident">start</span> <span class="op">&lt;</span> <span class="ident">erased</span> {
-            <span class="comment">// Reinsert everything, as there are few kept indices</span>
-            <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">clear</span>();
+        <span class="comment">// Use a heuristic between different strategies
+        </span><span class="kw">if </span>erased == <span class="number">0 </span>{
+            <span class="comment">// Degenerate case, nothing to do
+        </span>} <span class="kw">else if </span>start + shifted &lt; half_capacity &amp;&amp; start &lt; erased {
+            <span class="comment">// Reinsert everything, as there are few kept indices
+            </span><span class="self">self</span>.indices.clear();
 
-            <span class="comment">// Reinsert stable indices</span>
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">entry</span>) <span class="kw">in</span> <span class="ident">enumerate</span>(<span class="ident">start_entries</span>) {
-                <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">insert_no_grow</span>(<span class="ident">entry</span>.<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="ident">i</span>);
+            <span class="comment">// Reinsert stable indices
+            </span><span class="kw">for </span>(i, entry) <span class="kw">in </span>enumerate(start_entries) {
+                <span class="self">self</span>.indices.insert_no_grow(entry.hash.get(), i);
             }
 
-            <span class="comment">// Reinsert shifted indices</span>
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">entry</span>) <span class="kw">in</span> (<span class="ident">start</span>..).<span class="ident">zip</span>(<span class="ident">shifted_entries</span>) {
-                <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">insert_no_grow</span>(<span class="ident">entry</span>.<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="ident">i</span>);
+            <span class="comment">// Reinsert shifted indices
+            </span><span class="kw">for </span>(i, entry) <span class="kw">in </span>(start..).zip(shifted_entries) {
+                <span class="self">self</span>.indices.insert_no_grow(entry.hash.get(), i);
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">erased</span> <span class="op">+</span> <span class="ident">shifted</span> <span class="op">&lt;</span> <span class="ident">half_capacity</span> {
-            <span class="comment">// Find each affected index, as there are few to adjust</span>
+        } <span class="kw">else if </span>erased + shifted &lt; half_capacity {
+            <span class="comment">// Find each affected index, as there are few to adjust
 
-            <span class="comment">// Find erased indices</span>
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">entry</span>) <span class="kw">in</span> (<span class="ident">start</span>..).<span class="ident">zip</span>(<span class="ident">erased_entries</span>) {
-                <span class="ident">erase_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">indices</span>, <span class="ident">entry</span>.<span class="ident">hash</span>, <span class="ident">i</span>);
+            // Find erased indices
+            </span><span class="kw">for </span>(i, entry) <span class="kw">in </span>(start..).zip(erased_entries) {
+                erase_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>.indices, entry.hash, i);
             }
 
-            <span class="comment">// Find shifted indices</span>
-            <span class="kw">for</span> ((<span class="ident">new</span>, <span class="ident">old</span>), <span class="ident">entry</span>) <span class="kw">in</span> (<span class="ident">start</span>..).<span class="ident">zip</span>(<span class="ident">end</span>..).<span class="ident">zip</span>(<span class="ident">shifted_entries</span>) {
-                <span class="ident">update_index</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">indices</span>, <span class="ident">entry</span>.<span class="ident">hash</span>, <span class="ident">old</span>, <span class="ident">new</span>);
+            <span class="comment">// Find shifted indices
+            </span><span class="kw">for </span>((new, old), entry) <span class="kw">in </span>(start..).zip(end..).zip(shifted_entries) {
+                update_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>.indices, entry.hash, old, new);
             }
-        } <span class="kw">else</span> {
-            <span class="comment">// Sweep the whole table for adjustments</span>
-            <span class="self">self</span>.<span class="ident">erase_indices_sweep</span>(<span class="ident">start</span>, <span class="ident">end</span>);
+        } <span class="kw">else </span>{
+            <span class="comment">// Sweep the whole table for adjustments
+            </span><span class="self">self</span>.erase_indices_sweep(start, end);
         }
 
-        <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">len</span>(), <span class="ident">start</span> <span class="op">+</span> <span class="ident">shifted</span>);
+        <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.indices.len(), start + shifted);
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">retain_in_order</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">keep</span>: <span class="ident">F</span>)
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">K</span>, <span class="kw-2">&amp;mut</span> <span class="ident">V</span>) -&gt; <span class="ident">bool</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>retain_in_order&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>keep: F)
+    <span class="kw">where
+        </span>F: FnMut(<span class="kw-2">&amp;mut </span>K, <span class="kw-2">&amp;mut </span>V) -&gt; bool,
     {
-        <span class="comment">// Like Vec::retain in self.entries, but with mutable K and V.</span>
-        <span class="comment">// We swap-shift all the items we want to keep, truncate the rest,</span>
-        <span class="comment">// then rebuild the raw hash table with the new indexes.</span>
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">n_deleted</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">len</span> {
-            <span class="kw">let</span> <span class="ident">will_keep</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">entries</span>[<span class="ident">i</span>];
-                <span class="ident">keep</span>(<span class="kw-2">&amp;mut</span> <span class="ident">entry</span>.<span class="ident">key</span>, <span class="kw-2">&amp;mut</span> <span class="ident">entry</span>.<span class="ident">value</span>)
+        <span class="comment">// Like Vec::retain in self.entries, but with mutable K and V.
+        // We swap-shift all the items we want to keep, truncate the rest,
+        // then rebuild the raw hash table with the new indexes.
+        </span><span class="kw">let </span>len = <span class="self">self</span>.entries.len();
+        <span class="kw">let </span><span class="kw-2">mut </span>n_deleted = <span class="number">0</span>;
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..len {
+            <span class="kw">let </span>will_keep = {
+                <span class="kw">let </span>entry = <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[i];
+                keep(<span class="kw-2">&amp;mut </span>entry.key, <span class="kw-2">&amp;mut </span>entry.value)
             };
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">will_keep</span> {
-                <span class="ident">n_deleted</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">n_deleted</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">swap</span>(<span class="ident">i</span> <span class="op">-</span> <span class="ident">n_deleted</span>, <span class="ident">i</span>);
+            <span class="kw">if </span>!will_keep {
+                n_deleted += <span class="number">1</span>;
+            } <span class="kw">else if </span>n_deleted &gt; <span class="number">0 </span>{
+                <span class="self">self</span>.entries.swap(i - n_deleted, i);
             }
         }
-        <span class="kw">if</span> <span class="ident">n_deleted</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">truncate</span>(<span class="ident">len</span> <span class="op">-</span> <span class="ident">n_deleted</span>);
-            <span class="self">self</span>.<span class="ident">rebuild_hash_table</span>();
+        <span class="kw">if </span>n_deleted &gt; <span class="number">0 </span>{
+            <span class="self">self</span>.entries.truncate(len - n_deleted);
+            <span class="self">self</span>.rebuild_hash_table();
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">rebuild_hash_table</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">clear</span>();
-        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">capacity</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>());
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">entry</span>) <span class="kw">in</span> <span class="ident">enumerate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>) {
-            <span class="comment">// We should never have to reallocate, so there&#39;s no need for a real hasher.</span>
-            <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">insert_no_grow</span>(<span class="ident">entry</span>.<span class="ident">hash</span>.<span class="ident">get</span>(), <span class="ident">i</span>);
+    <span class="kw">fn </span>rebuild_hash_table(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.indices.clear();
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.indices.capacity() &gt;= <span class="self">self</span>.entries.len());
+        <span class="kw">for </span>(i, entry) <span class="kw">in </span>enumerate(<span class="kw-2">&amp;</span><span class="self">self</span>.entries) {
+            <span class="comment">// We should never have to reallocate, so there&#39;s no need for a real hasher.
+            </span><span class="self">self</span>.indices.insert_no_grow(entry.hash.get(), i);
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">reverse</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">reverse</span>();
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>reverse(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.entries.reverse();
 
-        <span class="comment">// No need to save hash indices, can easily calculate what they should</span>
-        <span class="comment">// be, given that this is an in-place reversal.</span>
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">len</span>();
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">indices_mut</span>() {
-            <span class="kw-2">*</span><span class="ident">i</span> <span class="op">=</span> <span class="ident">len</span> <span class="op">-</span> <span class="kw-2">*</span><span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>;
+        <span class="comment">// No need to save hash indices, can easily calculate what they should
+        // be, given that this is an in-place reversal.
+        </span><span class="kw">let </span>len = <span class="self">self</span>.entries.len();
+        <span class="kw">for </span>i <span class="kw">in </span><span class="self">self</span>.indices_mut() {
+            <span class="kw-2">*</span>i = len - <span class="kw-2">*</span>i - <span class="number">1</span>;
         }
     }
 }
 
-<span class="doccomment">/// Entry for an existing key-value pair or a vacant location to</span>
-<span class="doccomment">/// insert one.</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Entry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Existing slot with equivalent key.</span>
-    <span class="ident">Occupied</span>(<span class="ident">OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// Vacant slot (no equivalent key in the map).</span>
-    <span class="ident">Vacant</span>(<span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>),
+<span class="doccomment">/// Entry for an existing key-value pair or a vacant location to
+/// insert one.
+</span><span class="kw">pub enum </span>Entry&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+    <span class="doccomment">/// Existing slot with equivalent key.
+    </span>Occupied(OccupiedEntry&lt;<span class="lifetime">&#39;a</span>, K, V&gt;),
+    <span class="doccomment">/// Vacant slot (no equivalent key in the map).
+    </span>Vacant(VacantEntry&lt;<span class="lifetime">&#39;a</span>, K, V&gt;),
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">Entry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Inserts the given default value in the entry if it is vacant and returns a mutable</span>
-    <span class="doccomment">/// reference to it. Otherwise a mutable reference to an already existent value is returned.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Computes in **O(1)** time (amortized average).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">or_insert</span>(<span class="self">self</span>, <span class="ident">default</span>: <span class="ident">V</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">V</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">into_mut</span>(),
-            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">default</span>),
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Entry&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+    <span class="doccomment">/// Inserts the given default value in the entry if it is vacant and returns a mutable
+    /// reference to it. Otherwise a mutable reference to an already existent value is returned.
+    ///
+    /// Computes in **O(1)** time (amortized average).
+    </span><span class="kw">pub fn </span>or_insert(<span class="self">self</span>, default: V) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V {
+        <span class="kw">match </span><span class="self">self </span>{
+            Entry::Occupied(entry) =&gt; entry.into_mut(),
+            Entry::Vacant(entry) =&gt; entry.insert(default),
         }
     }
 
-    <span class="doccomment">/// Inserts the result of the `call` function in the entry if it is vacant and returns a mutable</span>
-    <span class="doccomment">/// reference to it. Otherwise a mutable reference to an already existent value is returned.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Computes in **O(1)** time (amortized average).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">or_insert_with</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">call</span>: <span class="ident">F</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">V</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnOnce</span>() -&gt; <span class="ident">V</span>,
+    <span class="doccomment">/// Inserts the result of the `call` function in the entry if it is vacant and returns a mutable
+    /// reference to it. Otherwise a mutable reference to an already existent value is returned.
+    ///
+    /// Computes in **O(1)** time (amortized average).
+    </span><span class="kw">pub fn </span>or_insert_with&lt;F&gt;(<span class="self">self</span>, call: F) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V
+    <span class="kw">where
+        </span>F: FnOnce() -&gt; V,
     {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">into_mut</span>(),
-            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">call</span>()),
+        <span class="kw">match </span><span class="self">self </span>{
+            Entry::Occupied(entry) =&gt; entry.into_mut(),
+            Entry::Vacant(entry) =&gt; entry.insert(call()),
         }
     }
 
-    <span class="doccomment">/// Inserts the result of the `call` function with a reference to the entry&#39;s key if it is</span>
-    <span class="doccomment">/// vacant, and returns a mutable reference to the new value. Otherwise a mutable reference to</span>
-    <span class="doccomment">/// an already existent value is returned.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Computes in **O(1)** time (amortized average).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">or_insert_with_key</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">call</span>: <span class="ident">F</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">V</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="ident">K</span>) -&gt; <span class="ident">V</span>,
+    <span class="doccomment">/// Inserts the result of the `call` function with a reference to the entry&#39;s key if it is
+    /// vacant, and returns a mutable reference to the new value. Otherwise a mutable reference to
+    /// an already existent value is returned.
+    ///
+    /// Computes in **O(1)** time (amortized average).
+    </span><span class="kw">pub fn </span>or_insert_with_key&lt;F&gt;(<span class="self">self</span>, call: F) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V
+    <span class="kw">where
+        </span>F: FnOnce(<span class="kw-2">&amp;</span>K) -&gt; V,
     {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">into_mut</span>(),
-            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="ident">entry</span>.<span class="ident">key</span>);
-                <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">value</span>)
+        <span class="kw">match </span><span class="self">self </span>{
+            Entry::Occupied(entry) =&gt; entry.into_mut(),
+            Entry::Vacant(entry) =&gt; {
+                <span class="kw">let </span>value = call(<span class="kw-2">&amp;</span>entry.key);
+                entry.insert(value)
             }
         }
     }
 
-    <span class="doccomment">/// Gets a reference to the entry&#39;s key, either within the map if occupied,</span>
-    <span class="doccomment">/// or else the new key that was used to find the entry.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">K</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">Entry::Occupied</span>(<span class="kw-2">ref</span> <span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">key</span>(),
-            <span class="ident">Entry::Vacant</span>(<span class="kw-2">ref</span> <span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">key</span>(),
+    <span class="doccomment">/// Gets a reference to the entry&#39;s key, either within the map if occupied,
+    /// or else the new key that was used to find the entry.
+    </span><span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>K {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            Entry::Occupied(<span class="kw-2">ref </span>entry) =&gt; entry.key(),
+            Entry::Vacant(<span class="kw-2">ref </span>entry) =&gt; entry.key(),
         }
     }
 
-    <span class="doccomment">/// Return the index where the key-value pair exists or will be inserted.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">Entry::Occupied</span>(<span class="kw-2">ref</span> <span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">index</span>(),
-            <span class="ident">Entry::Vacant</span>(<span class="kw-2">ref</span> <span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">index</span>(),
+    <span class="doccomment">/// Return the index where the key-value pair exists or will be inserted.
+    </span><span class="kw">pub fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            Entry::Occupied(<span class="kw-2">ref </span>entry) =&gt; entry.index(),
+            Entry::Vacant(<span class="kw-2">ref </span>entry) =&gt; entry.index(),
         }
     }
 
-    <span class="doccomment">/// Modifies the entry if it is occupied.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">and_modify</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;mut</span> <span class="ident">V</span>),
+    <span class="doccomment">/// Modifies the entry if it is occupied.
+    </span><span class="kw">pub fn </span>and_modify&lt;F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>F: FnOnce(<span class="kw-2">&amp;mut </span>V),
     {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry::Occupied</span>(<span class="kw-2">mut</span> <span class="ident">o</span>) =&gt; {
-                <span class="ident">f</span>(<span class="ident">o</span>.<span class="ident">get_mut</span>());
-                <span class="ident">Entry::Occupied</span>(<span class="ident">o</span>)
+        <span class="kw">match </span><span class="self">self </span>{
+            Entry::Occupied(<span class="kw-2">mut </span>o) =&gt; {
+                f(o.get_mut());
+                Entry::Occupied(o)
             }
-            <span class="ident">x</span> =&gt; <span class="ident">x</span>,
+            x =&gt; x,
         }
     }
 
-    <span class="doccomment">/// Inserts a default-constructed value in the entry if it is vacant and returns a mutable</span>
-    <span class="doccomment">/// reference to it. Otherwise a mutable reference to an already existent value is returned.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Computes in **O(1)** time (amortized average).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">or_default</span>(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">V</span>
-    <span class="kw">where</span>
-        <span class="ident">V</span>: <span class="ident">Default</span>,
+    <span class="doccomment">/// Inserts a default-constructed value in the entry if it is vacant and returns a mutable
+    /// reference to it. Otherwise a mutable reference to an already existent value is returned.
+    ///
+    /// Computes in **O(1)** time (amortized average).
+    </span><span class="kw">pub fn </span>or_default(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V
+    <span class="kw">where
+        </span>V: Default,
     {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">into_mut</span>(),
-            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">V::default</span>()),
+        <span class="kw">match </span><span class="self">self </span>{
+            Entry::Occupied(entry) =&gt; entry.into_mut(),
+            Entry::Vacant(entry) =&gt; entry.insert(V::default()),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>: <span class="ident">fmt::Debug</span>, <span class="ident">V</span>: <span class="ident">fmt::Debug</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Entry</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">Entry::Vacant</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) =&gt; <span class="ident">f</span>.<span class="ident">debug_tuple</span>(<span class="macro">stringify!</span>(<span class="ident">Entry</span>)).<span class="ident">field</span>(<span class="ident">v</span>).<span class="ident">finish</span>(),
-            <span class="ident">Entry::Occupied</span>(<span class="kw-2">ref</span> <span class="ident">o</span>) =&gt; <span class="ident">f</span>.<span class="ident">debug_tuple</span>(<span class="macro">stringify!</span>(<span class="ident">Entry</span>)).<span class="ident">field</span>(<span class="ident">o</span>).<span class="ident">finish</span>(),
+<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>Entry&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            Entry::Vacant(<span class="kw-2">ref </span>v) =&gt; f.debug_tuple(<span class="macro">stringify!</span>(Entry)).field(v).finish(),
+            Entry::Occupied(<span class="kw-2">ref </span>o) =&gt; f.debug_tuple(<span class="macro">stringify!</span>(Entry)).field(o).finish(),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::raw::OccupiedEntry</span>;
+<span class="kw">pub use </span><span class="self">self</span>::raw::OccupiedEntry;
 
-<span class="comment">// Extra methods that don&#39;t threaten the unsafe encapsulation.</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Sets the value of the entry to `value`, and returns the entry&#39;s old value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">V</span>) -&gt; <span class="ident">V</span> {
-        <span class="ident">replace</span>(<span class="self">self</span>.<span class="ident">get_mut</span>(), <span class="ident">value</span>)
+<span class="comment">// Extra methods that don&#39;t threaten the unsafe encapsulation.
+</span><span class="kw">impl</span>&lt;K, V&gt; OccupiedEntry&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    <span class="doccomment">/// Sets the value of the entry to `value`, and returns the entry&#39;s old value.
+    </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: V) -&gt; V {
+        replace(<span class="self">self</span>.get_mut(), value)
     }
 
-    <span class="doccomment">/// Remove the key, value pair stored in the map for this entry, and return the value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// **NOTE:** This is equivalent to `.swap_remove()`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="self">self</span>) -&gt; <span class="ident">V</span> {
-        <span class="self">self</span>.<span class="ident">swap_remove</span>()
+    <span class="doccomment">/// Remove the key, value pair stored in the map for this entry, and return the value.
+    ///
+    /// **NOTE:** This is equivalent to `.swap_remove()`.
+    </span><span class="kw">pub fn </span>remove(<span class="self">self</span>) -&gt; V {
+        <span class="self">self</span>.swap_remove()
     }
 
-    <span class="doccomment">/// Remove the key, value pair stored in the map for this entry, and return the value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Like `Vec::swap_remove`, the pair is removed by swapping it with the</span>
-    <span class="doccomment">/// last element of the map and popping it off. **This perturbs</span>
-    <span class="doccomment">/// the position of what used to be the last element!**</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Computes in **O(1)** time (average).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">swap_remove</span>(<span class="self">self</span>) -&gt; <span class="ident">V</span> {
-        <span class="self">self</span>.<span class="ident">swap_remove_entry</span>().<span class="number">1</span>
-    }
+    <span class="doccomment">/// Remove the key, value pair stored in the map for this entry, and return the value.
+    ///
+    /// Like `Vec::swap_remove`, the pair is removed by swapping it with the
+    /// last element of the map and popping it off. **This perturbs
+    /// the position of what used to be the last element!**
+    ///
+    /// Computes in **O(1)** time (average).
+    </span><span class="kw">pub fn </span>swap_remove(<span class="self">self</span>) -&gt; V {
+        <span class="self">self</span>.swap_remove_entry().<span class="number">1
+    </span>}
 
-    <span class="doccomment">/// Remove the key, value pair stored in the map for this entry, and return the value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Like `Vec::remove`, the pair is removed by shifting all of the</span>
-    <span class="doccomment">/// elements that follow it, preserving their relative order.</span>
-    <span class="doccomment">/// **This perturbs the index of all of those elements!**</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Computes in **O(n)** time (average).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">shift_remove</span>(<span class="self">self</span>) -&gt; <span class="ident">V</span> {
-        <span class="self">self</span>.<span class="ident">shift_remove_entry</span>().<span class="number">1</span>
-    }
+    <span class="doccomment">/// Remove the key, value pair stored in the map for this entry, and return the value.
+    ///
+    /// Like `Vec::remove`, the pair is removed by shifting all of the
+    /// elements that follow it, preserving their relative order.
+    /// **This perturbs the index of all of those elements!**
+    ///
+    /// Computes in **O(n)** time (average).
+    </span><span class="kw">pub fn </span>shift_remove(<span class="self">self</span>) -&gt; V {
+        <span class="self">self</span>.shift_remove_entry().<span class="number">1
+    </span>}
 
-    <span class="doccomment">/// Remove and return the key, value pair stored in the map for this entry</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// **NOTE:** This is equivalent to `.swap_remove_entry()`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_entry</span>(<span class="self">self</span>) -&gt; (<span class="ident">K</span>, <span class="ident">V</span>) {
-        <span class="self">self</span>.<span class="ident">swap_remove_entry</span>()
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>: <span class="ident">fmt::Debug</span>, <span class="ident">V</span>: <span class="ident">fmt::Debug</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="macro">stringify!</span>(<span class="ident">OccupiedEntry</span>))
-            .<span class="ident">field</span>(<span class="string">&quot;key&quot;</span>, <span class="self">self</span>.<span class="ident">key</span>())
-            .<span class="ident">field</span>(<span class="string">&quot;value&quot;</span>, <span class="self">self</span>.<span class="ident">get</span>())
-            .<span class="ident">finish</span>()
+    <span class="doccomment">/// Remove and return the key, value pair stored in the map for this entry
+    ///
+    /// **NOTE:** This is equivalent to `.swap_remove_entry()`.
+    </span><span class="kw">pub fn </span>remove_entry(<span class="self">self</span>) -&gt; (K, V) {
+        <span class="self">self</span>.swap_remove_entry()
     }
 }
 
-<span class="doccomment">/// A view into a vacant entry in a `IndexMap`.</span>
-<span class="doccomment">/// It is part of the [`Entry`] enum.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Entry`]: enum.Entry.html</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">map</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">IndexMapCore</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>,
-    <span class="ident">hash</span>: <span class="ident">HashValue</span>,
-    <span class="ident">key</span>: <span class="ident">K</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Gets a reference to the key that was used to find the entry.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">K</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key</span>
-    }
-
-    <span class="doccomment">/// Takes ownership of the key, leaving the entry vacant.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_key</span>(<span class="self">self</span>) -&gt; <span class="ident">K</span> {
-        <span class="self">self</span>.<span class="ident">key</span>
-    }
-
-    <span class="doccomment">/// Return the index where the key-value pair will be inserted.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">len</span>()
-    }
-
-    <span class="doccomment">/// Inserts the entry&#39;s key and the given value into the map, and returns a mutable reference</span>
-    <span class="doccomment">/// to the value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">V</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">V</span> {
-        <span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">hash</span>, <span class="self">self</span>.<span class="ident">key</span>, <span class="ident">value</span>);
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">entries</span>[<span class="ident">i</span>].<span class="ident">value</span>
+<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>OccupiedEntry&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="macro">stringify!</span>(OccupiedEntry))
+            .field(<span class="string">&quot;key&quot;</span>, <span class="self">self</span>.key())
+            .field(<span class="string">&quot;value&quot;</span>, <span class="self">self</span>.get())
+            .finish()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>: <span class="ident">fmt::Debug</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_tuple</span>(<span class="macro">stringify!</span>(<span class="ident">VacantEntry</span>))
-            .<span class="ident">field</span>(<span class="self">self</span>.<span class="ident">key</span>())
-            .<span class="ident">finish</span>()
+<span class="doccomment">/// A view into a vacant entry in a `IndexMap`.
+/// It is part of the [`Entry`] enum.
+///
+/// [`Entry`]: enum.Entry.html
+</span><span class="kw">pub struct </span>VacantEntry&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+    map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>IndexMapCore&lt;K, V&gt;,
+    hash: HashValue,
+    key: K,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; VacantEntry&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+    <span class="doccomment">/// Gets a reference to the key that was used to find the entry.
+    </span><span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>K {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.key
+    }
+
+    <span class="doccomment">/// Takes ownership of the key, leaving the entry vacant.
+    </span><span class="kw">pub fn </span>into_key(<span class="self">self</span>) -&gt; K {
+        <span class="self">self</span>.key
+    }
+
+    <span class="doccomment">/// Return the index where the key-value pair will be inserted.
+    </span><span class="kw">pub fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.map.len()
+    }
+
+    <span class="doccomment">/// Inserts the entry&#39;s key and the given value into the map, and returns a mutable reference
+    /// to the value.
+    </span><span class="kw">pub fn </span>insert(<span class="self">self</span>, value: V) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V {
+        <span class="kw">let </span>i = <span class="self">self</span>.map.push(<span class="self">self</span>.hash, <span class="self">self</span>.key, value);
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.map.entries[i].value
     }
 }
 
-<span class="attribute">#[<span class="ident">test</span>]</span>
-<span class="kw">fn</span> <span class="ident">assert_send_sync</span>() {
-    <span class="kw">fn</span> <span class="ident">assert_send_sync</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span><span class="op">&gt;</span>() {}
-    <span class="ident">assert_send_sync</span>::<span class="op">&lt;</span><span class="ident">IndexMapCore</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">i32</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="ident">assert_send_sync</span>::<span class="op">&lt;</span><span class="ident">Entry</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">i32</span>, <span class="ident">i32</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+<span class="kw">impl</span>&lt;K: fmt::Debug, V&gt; fmt::Debug <span class="kw">for </span>VacantEntry&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="macro">stringify!</span>(VacantEntry))
+            .field(<span class="self">self</span>.key())
+            .finish()
+    }
+}
+
+<span class="attribute">#[test]
+</span><span class="kw">fn </span>assert_send_sync() {
+    <span class="kw">fn </span>assert_send_sync&lt;T: Send + Sync&gt;() {}
+    assert_send_sync::&lt;IndexMapCore&lt;i32, i32&gt;&gt;();
+    assert_send_sync::&lt;Entry&lt;<span class="lifetime">&#39;_</span>, i32, i32&gt;&gt;();
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="indexmap" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="indexmap" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

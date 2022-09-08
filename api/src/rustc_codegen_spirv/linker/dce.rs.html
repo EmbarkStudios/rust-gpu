@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/dce.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>dce.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/dce.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>dce.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -277,279 +271,278 @@
 <span id="271">271</span>
 <span id="272">272</span>
 <span id="273">273</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Dead code elimination</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This pass removes any instruction that doesn&#39;t affect the module. It does so by considering all</span>
-<span class="doccomment">//! `OpEntryPoint` instructions to be &quot;rooted&quot;, and then everything a rooted instruction touches is</span>
-<span class="doccomment">//! also rooted (done transitively). Then, any instruction not rooted is removed. It gets a little</span>
-<span class="doccomment">//! weird with things like `OpDecorate`, where the reference is reversed - an `OpDecorate` that</span>
-<span class="doccomment">//! *references* a rooted thing is also rooted, not the other way around - but that&#39;s the basic</span>
-<span class="doccomment">//! concept.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Dead code elimination
+//!
+//! This pass removes any instruction that doesn&#39;t affect the module. It does so by considering all
+//! `OpEntryPoint` instructions to be &quot;rooted&quot;, and then everything a rooted instruction touches is
+//! also rooted (done transitively). Then, any instruction not rooted is removed. It gets a little
+//! weird with things like `OpDecorate`, where the reference is reversed - an `OpDecorate` that
+//! *references* a rooted thing is also rooted, not the other way around - but that&#39;s the basic
+//! concept.
 
-<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">Op</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures::fx::FxHashSet</span>;
+</span><span class="kw">use </span>rspirv::dr::{Function, Instruction, Module, Operand};
+<span class="kw">use </span>rspirv::spirv::{Op, StorageClass, Word};
+<span class="kw">use </span>rustc_data_structures::fx::FxHashSet;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dce</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rooted</span> <span class="op">=</span> <span class="ident">collect_roots</span>(<span class="ident">module</span>);
-    <span class="kw">while</span> <span class="ident">spread_roots</span>(<span class="ident">module</span>, <span class="kw-2">&amp;mut</span> <span class="ident">rooted</span>) {}
-    <span class="ident">kill_unrooted</span>(<span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">rooted</span>);
+<span class="kw">pub fn </span>dce(module: <span class="kw-2">&amp;mut </span>Module) {
+    <span class="kw">let </span><span class="kw-2">mut </span>rooted = collect_roots(module);
+    <span class="kw">while </span>spread_roots(module, <span class="kw-2">&amp;mut </span>rooted) {}
+    kill_unrooted(module, <span class="kw-2">&amp;</span>rooted);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">collect_roots</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) -&gt; <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rooted</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">entry_points</span> {
-        <span class="ident">root</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;mut</span> <span class="ident">rooted</span>);
+<span class="kw">pub fn </span>collect_roots(module: <span class="kw-2">&amp;</span>Module) -&gt; FxHashSet&lt;Word&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>rooted = FxHashSet::default();
+    <span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;</span>module.entry_points {
+        root(inst, <span class="kw-2">&amp;mut </span>rooted);
     }
-    <span class="ident">rooted</span>
+    rooted
 }
 
-<span class="comment">// Exactly the same as Function::all_inst_iter, except return type is `impl DoubleEndedIterator`</span>
-<span class="comment">// instead of `impl Iterator`</span>
-<span class="kw">fn</span> <span class="ident">all_inst_iter</span>(<span class="ident">func</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>) -&gt; <span class="kw">impl</span> <span class="ident">DoubleEndedIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">Instruction</span><span class="op">&gt;</span> {
-    <span class="ident">func</span>.<span class="ident">def</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">chain</span>(<span class="ident">func</span>.<span class="ident">parameters</span>.<span class="ident">iter</span>())
-        .<span class="ident">chain</span>(
-            <span class="ident">func</span>.<span class="ident">blocks</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">label</span>.<span class="ident">iter</span>().<span class="ident">chain</span>(<span class="ident">b</span>.<span class="ident">instructions</span>.<span class="ident">iter</span>())),
+<span class="comment">// Exactly the same as Function::all_inst_iter, except return type is `impl DoubleEndedIterator`
+// instead of `impl Iterator`
+</span><span class="kw">fn </span>all_inst_iter(func: <span class="kw-2">&amp;</span>Function) -&gt; <span class="kw">impl </span>DoubleEndedIterator&lt;Item = <span class="kw-2">&amp;</span>Instruction&gt; {
+    func.def
+        .iter()
+        .chain(func.parameters.iter())
+        .chain(
+            func.blocks
+                .iter()
+                .flat_map(|b| b.label.iter().chain(b.instructions.iter())),
         )
-        .<span class="ident">chain</span>(<span class="ident">func</span>.<span class="ident">end</span>.<span class="ident">iter</span>())
+        .chain(func.end.iter())
 }
 
-<span class="kw">fn</span> <span class="ident">spread_roots</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any</span> <span class="op">=</span> <span class="bool-val">false</span>;
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">global_inst_iter</span>() {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
-            <span class="kw">if</span> <span class="ident">rooted</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
-                <span class="ident">any</span> <span class="op">|</span><span class="op">=</span> <span class="ident">root</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>);
+<span class="kw">fn </span>spread_roots(module: <span class="kw-2">&amp;</span>Module, rooted: <span class="kw-2">&amp;mut </span>FxHashSet&lt;Word&gt;) -&gt; bool {
+    <span class="kw">let </span><span class="kw-2">mut </span>any = <span class="bool-val">false</span>;
+    <span class="kw">for </span>inst <span class="kw">in </span>module.global_inst_iter() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = inst.result_id {
+            <span class="kw">if </span>rooted.contains(<span class="kw-2">&amp;</span>id) {
+                any |= root(inst, rooted);
             }
         }
     }
-    <span class="kw">for</span> <span class="ident">func</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">functions</span> {
-        <span class="kw">if</span> <span class="ident">rooted</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">func</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>()) {
-            <span class="comment">// NB (Mobius 2021) - since later insts are much more likely to reference</span>
-            <span class="comment">// earlier insts, by reversing the iteration order, we&#39;re more likely to root the</span>
-            <span class="comment">// entire relevant function at once.</span>
-            <span class="comment">// See https://github.com/EmbarkStudios/rust-gpu/pull/691#discussion_r681477091</span>
-            <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">all_inst_iter</span>(<span class="ident">func</span>).<span class="ident">rev</span>() {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">instruction_is_pure</span>(<span class="ident">inst</span>) {
-                    <span class="ident">any</span> <span class="op">|</span><span class="op">=</span> <span class="ident">root</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>);
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
-                    <span class="kw">if</span> <span class="ident">rooted</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
-                        <span class="ident">any</span> <span class="op">|</span><span class="op">=</span> <span class="ident">root</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>);
+    <span class="kw">for </span>func <span class="kw">in </span><span class="kw-2">&amp;</span>module.functions {
+        <span class="kw">if </span>rooted.contains(<span class="kw-2">&amp;</span>func.def_id().unwrap()) {
+            <span class="comment">// NB (Mobius 2021) - since later insts are much more likely to reference
+            // earlier insts, by reversing the iteration order, we&#39;re more likely to root the
+            // entire relevant function at once.
+            // See https://github.com/EmbarkStudios/rust-gpu/pull/691#discussion_r681477091
+            </span><span class="kw">for </span>inst <span class="kw">in </span>all_inst_iter(func).rev() {
+                <span class="kw">if </span>!instruction_is_pure(inst) {
+                    any |= root(inst, rooted);
+                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(id) = inst.result_id {
+                    <span class="kw">if </span>rooted.contains(<span class="kw-2">&amp;</span>id) {
+                        any |= root(inst, rooted);
                     }
                 }
             }
         }
     }
-    <span class="ident">any</span>
+    any
 }
 
-<span class="kw">fn</span> <span class="ident">root</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any</span> <span class="op">=</span> <span class="bool-val">false</span>;
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_type</span> {
-        <span class="ident">any</span> <span class="op">|</span><span class="op">=</span> <span class="ident">rooted</span>.<span class="ident">insert</span>(<span class="ident">id</span>);
+<span class="kw">fn </span>root(inst: <span class="kw-2">&amp;</span>Instruction, rooted: <span class="kw-2">&amp;mut </span>FxHashSet&lt;Word&gt;) -&gt; bool {
+    <span class="kw">let </span><span class="kw-2">mut </span>any = <span class="bool-val">false</span>;
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = inst.result_type {
+        any |= rooted.insert(id);
     }
-    <span class="kw">for</span> <span class="ident">op</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">op</span>.<span class="ident">id_ref_any</span>() {
-            <span class="ident">any</span> <span class="op">|</span><span class="op">=</span> <span class="ident">rooted</span>.<span class="ident">insert</span>(<span class="ident">id</span>);
+    <span class="kw">for </span>op <span class="kw">in </span><span class="kw-2">&amp;</span>inst.operands {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = op.id_ref_any() {
+            any |= rooted.insert(id);
         }
     }
-    <span class="ident">any</span>
+    any
 }
 
-<span class="kw">fn</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
-        <span class="ident">rooted</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">result_id</span>)
-    } <span class="kw">else</span> {
-        <span class="comment">// For things like OpDecorate which apply attributes to rooted things, but are not</span>
-        <span class="comment">// referenced by roots</span>
-        <span class="ident">inst</span>.<span class="ident">operands</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">id_ref_any</span>().<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="ident">rooted</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">w</span>)))
+<span class="kw">fn </span>is_rooted(inst: <span class="kw-2">&amp;</span>Instruction, rooted: <span class="kw-2">&amp;</span>FxHashSet&lt;Word&gt;) -&gt; bool {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(result_id) = inst.result_id {
+        rooted.contains(<span class="kw-2">&amp;</span>result_id)
+    } <span class="kw">else </span>{
+        <span class="comment">// For things like OpDecorate which apply attributes to rooted things, but are not
+        // referenced by roots
+        </span>inst.operands
+            .iter()
+            .any(|op| op.id_ref_any().map_or(<span class="bool-val">false</span>, |w| rooted.contains(<span class="kw-2">&amp;</span>w)))
     }
 }
 
-<span class="kw">fn</span> <span class="ident">kill_unrooted</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>, <span class="ident">rooted</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) {
-    <span class="ident">module</span>
-        .<span class="ident">ext_inst_imports</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>));
-    <span class="ident">module</span>
-        .<span class="ident">execution_modes</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>));
-    <span class="ident">module</span>
-        .<span class="ident">debug_string_source</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>));
-    <span class="ident">module</span>.<span class="ident">debug_names</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>));
-    <span class="ident">module</span>
-        .<span class="ident">debug_module_processed</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>));
-    <span class="ident">module</span>.<span class="ident">annotations</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>));
-    <span class="ident">module</span>
-        .<span class="ident">types_global_values</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>));
-    <span class="ident">module</span>
-        .<span class="ident">functions</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">is_rooted</span>(<span class="ident">f</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(), <span class="ident">rooted</span>));
-    <span class="kw">for</span> <span class="ident">fun</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">module</span>.<span class="ident">functions</span> {
-        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">fun</span>.<span class="ident">blocks</span> {
-            <span class="ident">block</span>
-                .<span class="ident">instructions</span>
-                .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="op">!</span><span class="ident">instruction_is_pure</span>(<span class="ident">inst</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">is_rooted</span>(<span class="ident">inst</span>, <span class="ident">rooted</span>));
+<span class="kw">fn </span>kill_unrooted(module: <span class="kw-2">&amp;mut </span>Module, rooted: <span class="kw-2">&amp;</span>FxHashSet&lt;Word&gt;) {
+    module
+        .ext_inst_imports
+        .retain(|inst| is_rooted(inst, rooted));
+    module
+        .execution_modes
+        .retain(|inst| is_rooted(inst, rooted));
+    module
+        .debug_string_source
+        .retain(|inst| is_rooted(inst, rooted));
+    module.debug_names.retain(|inst| is_rooted(inst, rooted));
+    module
+        .debug_module_processed
+        .retain(|inst| is_rooted(inst, rooted));
+    module.annotations.retain(|inst| is_rooted(inst, rooted));
+    module
+        .types_global_values
+        .retain(|inst| is_rooted(inst, rooted));
+    module
+        .functions
+        .retain(|f| is_rooted(f.def.as_ref().unwrap(), rooted));
+    <span class="kw">for </span>fun <span class="kw">in </span><span class="kw-2">&amp;mut </span>module.functions {
+        <span class="kw">for </span>block <span class="kw">in </span><span class="kw-2">&amp;mut </span>fun.blocks {
+            block
+                .instructions
+                .retain(|inst| !instruction_is_pure(inst) || is_rooted(inst, rooted));
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dce_phi</span>(<span class="ident">func</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Function</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="kw">loop</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">changed</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">func</span>.<span class="ident">all_inst_iter</span>() {
-            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Phi</span> <span class="op">|</span><span class="op">|</span> <span class="ident">used</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>()) {
-                <span class="kw">for</span> <span class="ident">op</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span> {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">op</span>.<span class="ident">id_ref_any</span>() {
-                        <span class="ident">changed</span> <span class="op">|</span><span class="op">=</span> <span class="ident">used</span>.<span class="ident">insert</span>(<span class="ident">id</span>);
+<span class="kw">pub fn </span>dce_phi(func: <span class="kw-2">&amp;mut </span>Function) {
+    <span class="kw">let </span><span class="kw-2">mut </span>used = FxHashSet::default();
+    <span class="kw">loop </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>changed = <span class="bool-val">false</span>;
+        <span class="kw">for </span>inst <span class="kw">in </span>func.all_inst_iter() {
+            <span class="kw">if </span>inst.class.opcode != Op::Phi || used.contains(<span class="kw-2">&amp;</span>inst.result_id.unwrap()) {
+                <span class="kw">for </span>op <span class="kw">in </span><span class="kw-2">&amp;</span>inst.operands {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = op.id_ref_any() {
+                        changed |= used.insert(id);
                     }
                 }
             }
         }
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">changed</span> {
+        <span class="kw">if </span>!changed {
             <span class="kw">break</span>;
         }
     }
-    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">func</span>.<span class="ident">blocks</span> {
-        <span class="ident">block</span>
-            .<span class="ident">instructions</span>
-            .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Phi</span> <span class="op">|</span><span class="op">|</span> <span class="ident">used</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>()));
+    <span class="kw">for </span>block <span class="kw">in </span><span class="kw-2">&amp;mut </span>func.blocks {
+        block
+            .instructions
+            .retain(|inst| inst.class.opcode != Op::Phi || used.contains(<span class="kw-2">&amp;</span>inst.result_id.unwrap()));
     }
 }
 
-<span class="kw">fn</span> <span class="ident">instruction_is_pure</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">use</span> <span class="ident">Op</span>::<span class="kw-2">*</span>;
-    <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-        <span class="ident">Nop</span>
-        <span class="op">|</span> <span class="ident">Undef</span>
-        <span class="op">|</span> <span class="ident">ConstantTrue</span>
-        <span class="op">|</span> <span class="ident">ConstantFalse</span>
-        <span class="op">|</span> <span class="ident">Constant</span>
-        <span class="op">|</span> <span class="ident">ConstantComposite</span>
-        <span class="op">|</span> <span class="ident">ConstantSampler</span>
-        <span class="op">|</span> <span class="ident">ConstantNull</span>
-        <span class="op">|</span> <span class="ident">AccessChain</span>
-        <span class="op">|</span> <span class="ident">InBoundsAccessChain</span>
-        <span class="op">|</span> <span class="ident">PtrAccessChain</span>
-        <span class="op">|</span> <span class="ident">ArrayLength</span>
-        <span class="op">|</span> <span class="ident">InBoundsPtrAccessChain</span>
-        <span class="op">|</span> <span class="ident">CompositeConstruct</span>
-        <span class="op">|</span> <span class="ident">CompositeExtract</span>
-        <span class="op">|</span> <span class="ident">CompositeInsert</span>
-        <span class="op">|</span> <span class="ident">CopyObject</span>
-        <span class="op">|</span> <span class="ident">Transpose</span>
-        <span class="op">|</span> <span class="ident">ConvertFToU</span>
-        <span class="op">|</span> <span class="ident">ConvertFToS</span>
-        <span class="op">|</span> <span class="ident">ConvertSToF</span>
-        <span class="op">|</span> <span class="ident">ConvertUToF</span>
-        <span class="op">|</span> <span class="ident">UConvert</span>
-        <span class="op">|</span> <span class="ident">SConvert</span>
-        <span class="op">|</span> <span class="ident">FConvert</span>
-        <span class="op">|</span> <span class="ident">QuantizeToF16</span>
-        <span class="op">|</span> <span class="ident">ConvertPtrToU</span>
-        <span class="op">|</span> <span class="ident">SatConvertSToU</span>
-        <span class="op">|</span> <span class="ident">SatConvertUToS</span>
-        <span class="op">|</span> <span class="ident">ConvertUToPtr</span>
-        <span class="op">|</span> <span class="ident">PtrCastToGeneric</span>
-        <span class="op">|</span> <span class="ident">GenericCastToPtr</span>
-        <span class="op">|</span> <span class="ident">GenericCastToPtrExplicit</span>
-        <span class="op">|</span> <span class="ident">Bitcast</span>
-        <span class="op">|</span> <span class="ident">SNegate</span>
-        <span class="op">|</span> <span class="ident">FNegate</span>
-        <span class="op">|</span> <span class="ident">IAdd</span>
-        <span class="op">|</span> <span class="ident">FAdd</span>
-        <span class="op">|</span> <span class="ident">ISub</span>
-        <span class="op">|</span> <span class="ident">FSub</span>
-        <span class="op">|</span> <span class="ident">IMul</span>
-        <span class="op">|</span> <span class="ident">FMul</span>
-        <span class="op">|</span> <span class="ident">UDiv</span>
-        <span class="op">|</span> <span class="ident">SDiv</span>
-        <span class="op">|</span> <span class="ident">FDiv</span>
-        <span class="op">|</span> <span class="ident">UMod</span>
-        <span class="op">|</span> <span class="ident">SRem</span>
-        <span class="op">|</span> <span class="ident">SMod</span>
-        <span class="op">|</span> <span class="ident">FRem</span>
-        <span class="op">|</span> <span class="ident">FMod</span>
-        <span class="op">|</span> <span class="ident">VectorTimesScalar</span>
-        <span class="op">|</span> <span class="ident">MatrixTimesScalar</span>
-        <span class="op">|</span> <span class="ident">VectorTimesMatrix</span>
-        <span class="op">|</span> <span class="ident">MatrixTimesVector</span>
-        <span class="op">|</span> <span class="ident">MatrixTimesMatrix</span>
-        <span class="op">|</span> <span class="ident">OuterProduct</span>
-        <span class="op">|</span> <span class="ident">Dot</span>
-        <span class="op">|</span> <span class="ident">IAddCarry</span>
-        <span class="op">|</span> <span class="ident">ISubBorrow</span>
-        <span class="op">|</span> <span class="ident">UMulExtended</span>
-        <span class="op">|</span> <span class="ident">SMulExtended</span>
-        <span class="op">|</span> <span class="ident">Any</span>
-        <span class="op">|</span> <span class="ident">All</span>
-        <span class="op">|</span> <span class="ident">IsNan</span>
-        <span class="op">|</span> <span class="ident">IsInf</span>
-        <span class="op">|</span> <span class="ident">IsFinite</span>
-        <span class="op">|</span> <span class="ident">IsNormal</span>
-        <span class="op">|</span> <span class="ident">SignBitSet</span>
-        <span class="op">|</span> <span class="ident">LessOrGreater</span>
-        <span class="op">|</span> <span class="ident">Ordered</span>
-        <span class="op">|</span> <span class="ident">Unordered</span>
-        <span class="op">|</span> <span class="ident">LogicalEqual</span>
-        <span class="op">|</span> <span class="ident">LogicalNotEqual</span>
-        <span class="op">|</span> <span class="ident">LogicalOr</span>
-        <span class="op">|</span> <span class="ident">LogicalAnd</span>
-        <span class="op">|</span> <span class="ident">LogicalNot</span>
-        <span class="op">|</span> <span class="ident">Select</span>
-        <span class="op">|</span> <span class="ident">IEqual</span>
-        <span class="op">|</span> <span class="ident">INotEqual</span>
-        <span class="op">|</span> <span class="ident">UGreaterThan</span>
-        <span class="op">|</span> <span class="ident">SGreaterThan</span>
-        <span class="op">|</span> <span class="ident">UGreaterThanEqual</span>
-        <span class="op">|</span> <span class="ident">SGreaterThanEqual</span>
-        <span class="op">|</span> <span class="ident">ULessThan</span>
-        <span class="op">|</span> <span class="ident">SLessThan</span>
-        <span class="op">|</span> <span class="ident">ULessThanEqual</span>
-        <span class="op">|</span> <span class="ident">SLessThanEqual</span>
-        <span class="op">|</span> <span class="ident">FOrdEqual</span>
-        <span class="op">|</span> <span class="ident">FUnordEqual</span>
-        <span class="op">|</span> <span class="ident">FOrdNotEqual</span>
-        <span class="op">|</span> <span class="ident">FUnordNotEqual</span>
-        <span class="op">|</span> <span class="ident">FOrdLessThan</span>
-        <span class="op">|</span> <span class="ident">FUnordLessThan</span>
-        <span class="op">|</span> <span class="ident">FOrdGreaterThan</span>
-        <span class="op">|</span> <span class="ident">FUnordGreaterThan</span>
-        <span class="op">|</span> <span class="ident">FOrdLessThanEqual</span>
-        <span class="op">|</span> <span class="ident">FUnordLessThanEqual</span>
-        <span class="op">|</span> <span class="ident">FOrdGreaterThanEqual</span>
-        <span class="op">|</span> <span class="ident">FUnordGreaterThanEqual</span>
-        <span class="op">|</span> <span class="ident">ShiftRightLogical</span>
-        <span class="op">|</span> <span class="ident">ShiftRightArithmetic</span>
-        <span class="op">|</span> <span class="ident">ShiftLeftLogical</span>
-        <span class="op">|</span> <span class="ident">BitwiseOr</span>
-        <span class="op">|</span> <span class="ident">BitwiseXor</span>
-        <span class="op">|</span> <span class="ident">BitwiseAnd</span>
-        <span class="op">|</span> <span class="ident">Not</span>
-        <span class="op">|</span> <span class="ident">BitFieldInsert</span>
-        <span class="op">|</span> <span class="ident">BitFieldSExtract</span>
-        <span class="op">|</span> <span class="ident">BitFieldUExtract</span>
-        <span class="op">|</span> <span class="ident">BitReverse</span>
-        <span class="op">|</span> <span class="ident">BitCount</span>
-        <span class="op">|</span> <span class="ident">Phi</span>
-        <span class="op">|</span> <span class="ident">SizeOf</span>
-        <span class="op">|</span> <span class="ident">CopyLogical</span>
-        <span class="op">|</span> <span class="ident">PtrEqual</span>
-        <span class="op">|</span> <span class="ident">PtrNotEqual</span>
-        <span class="op">|</span> <span class="ident">PtrDiff</span> =&gt; <span class="bool-val">true</span>,
-        <span class="ident">Variable</span> =&gt; <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">get</span>(<span class="number">0</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">Operand::StorageClass</span>(<span class="ident">StorageClass::Function</span>)),
-        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+<span class="kw">fn </span>instruction_is_pure(inst: <span class="kw-2">&amp;</span>Instruction) -&gt; bool {
+    <span class="kw">use </span>Op::<span class="kw-2">*</span>;
+    <span class="kw">match </span>inst.class.opcode {
+        Nop
+        | Undef
+        | ConstantTrue
+        | ConstantFalse
+        | Constant
+        | ConstantComposite
+        | ConstantSampler
+        | ConstantNull
+        | AccessChain
+        | InBoundsAccessChain
+        | PtrAccessChain
+        | ArrayLength
+        | InBoundsPtrAccessChain
+        | CompositeConstruct
+        | CompositeExtract
+        | CompositeInsert
+        | CopyObject
+        | Transpose
+        | ConvertFToU
+        | ConvertFToS
+        | ConvertSToF
+        | ConvertUToF
+        | UConvert
+        | SConvert
+        | FConvert
+        | QuantizeToF16
+        | ConvertPtrToU
+        | SatConvertSToU
+        | SatConvertUToS
+        | ConvertUToPtr
+        | PtrCastToGeneric
+        | GenericCastToPtr
+        | GenericCastToPtrExplicit
+        | Bitcast
+        | SNegate
+        | FNegate
+        | IAdd
+        | FAdd
+        | ISub
+        | FSub
+        | IMul
+        | FMul
+        | UDiv
+        | SDiv
+        | FDiv
+        | UMod
+        | SRem
+        | SMod
+        | FRem
+        | FMod
+        | VectorTimesScalar
+        | MatrixTimesScalar
+        | VectorTimesMatrix
+        | MatrixTimesVector
+        | MatrixTimesMatrix
+        | OuterProduct
+        | Dot
+        | IAddCarry
+        | ISubBorrow
+        | UMulExtended
+        | SMulExtended
+        | Any
+        | All
+        | IsNan
+        | IsInf
+        | IsFinite
+        | IsNormal
+        | SignBitSet
+        | LessOrGreater
+        | Ordered
+        | Unordered
+        | LogicalEqual
+        | LogicalNotEqual
+        | LogicalOr
+        | LogicalAnd
+        | LogicalNot
+        | Select
+        | IEqual
+        | INotEqual
+        | UGreaterThan
+        | SGreaterThan
+        | UGreaterThanEqual
+        | SGreaterThanEqual
+        | ULessThan
+        | SLessThan
+        | ULessThanEqual
+        | SLessThanEqual
+        | FOrdEqual
+        | FUnordEqual
+        | FOrdNotEqual
+        | FUnordNotEqual
+        | FOrdLessThan
+        | FUnordLessThan
+        | FOrdGreaterThan
+        | FUnordGreaterThan
+        | FOrdLessThanEqual
+        | FUnordLessThanEqual
+        | FOrdGreaterThanEqual
+        | FUnordGreaterThanEqual
+        | ShiftRightLogical
+        | ShiftRightArithmetic
+        | ShiftLeftLogical
+        | BitwiseOr
+        | BitwiseXor
+        | BitwiseAnd
+        | Not
+        | BitFieldInsert
+        | BitFieldSExtract
+        | BitFieldUExtract
+        | BitReverse
+        | BitCount
+        | Phi
+        | SizeOf
+        | CopyLogical
+        | PtrEqual
+        | PtrNotEqual
+        | PtrDiff =&gt; <span class="bool-val">true</span>,
+        Variable =&gt; inst.operands.get(<span class="number">0</span>) == <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Operand::StorageClass(StorageClass::Function)),
+        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

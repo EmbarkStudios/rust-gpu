@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/parser.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../regex_syntax/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/parser.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../regex_syntax/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -204,206 +198,205 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ast</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::hir</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::ast;
+<span class="kw">use </span><span class="kw">crate</span>::hir;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Result</span>;
+<span class="kw">use </span><span class="kw">crate</span>::Result;
 
-<span class="doccomment">/// A builder for a regular expression parser.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This builder permits modifying configuration options for the parser.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This type combines the builder options for both the</span>
-<span class="doccomment">/// [AST `ParserBuilder`](ast/parse/struct.ParserBuilder.html)</span>
-<span class="doccomment">/// and the</span>
-<span class="doccomment">/// [HIR `TranslatorBuilder`](hir/translate/struct.TranslatorBuilder.html).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ParserBuilder</span> {
-    <span class="ident">ast</span>: <span class="ident">ast::parse::ParserBuilder</span>,
-    <span class="ident">hir</span>: <span class="ident">hir::translate::TranslatorBuilder</span>,
+<span class="doccomment">/// A builder for a regular expression parser.
+///
+/// This builder permits modifying configuration options for the parser.
+///
+/// This type combines the builder options for both the
+/// [AST `ParserBuilder`](ast/parse/struct.ParserBuilder.html)
+/// and the
+/// [HIR `TranslatorBuilder`](hir/translate/struct.TranslatorBuilder.html).
+</span><span class="attribute">#[derive(Clone, Debug, Default)]
+</span><span class="kw">pub struct </span>ParserBuilder {
+    ast: ast::parse::ParserBuilder,
+    hir: hir::translate::TranslatorBuilder,
 }
 
-<span class="kw">impl</span> <span class="ident">ParserBuilder</span> {
-    <span class="doccomment">/// Create a new parser builder with a default configuration.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">ParserBuilder</span> {
-        <span class="ident">ParserBuilder::default</span>()
+<span class="kw">impl </span>ParserBuilder {
+    <span class="doccomment">/// Create a new parser builder with a default configuration.
+    </span><span class="kw">pub fn </span>new() -&gt; ParserBuilder {
+        ParserBuilder::default()
     }
 
-    <span class="doccomment">/// Build a parser from this configuration with the given pattern.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Parser</span> {
-        <span class="ident">Parser</span> { <span class="ident">ast</span>: <span class="self">self</span>.<span class="ident">ast</span>.<span class="ident">build</span>(), <span class="ident">hir</span>: <span class="self">self</span>.<span class="ident">hir</span>.<span class="ident">build</span>() }
+    <span class="doccomment">/// Build a parser from this configuration with the given pattern.
+    </span><span class="kw">pub fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Parser {
+        Parser { ast: <span class="self">self</span>.ast.build(), hir: <span class="self">self</span>.hir.build() }
     }
 
-    <span class="doccomment">/// Set the nesting limit for this parser.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The nesting limit controls how deep the abstract syntax tree is allowed</span>
-    <span class="doccomment">/// to be. If the AST exceeds the given limit (e.g., with too many nested</span>
-    <span class="doccomment">/// groups), then an error is returned by the parser.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The purpose of this limit is to act as a heuristic to prevent stack</span>
-    <span class="doccomment">/// overflow for consumers that do structural induction on an `Ast` using</span>
-    <span class="doccomment">/// explicit recursion. While this crate never does this (instead using</span>
-    <span class="doccomment">/// constant stack space and moving the call stack to the heap), other</span>
-    <span class="doccomment">/// crates may.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This limit is not checked until the entire Ast is parsed. Therefore,</span>
-    <span class="doccomment">/// if callers want to put a limit on the amount of heap space used, then</span>
-    <span class="doccomment">/// they should impose a limit on the length, in bytes, of the concrete</span>
-    <span class="doccomment">/// pattern string. In particular, this is viable since this parser</span>
-    <span class="doccomment">/// implementation will limit itself to heap space proportional to the</span>
-    <span class="doccomment">/// length of the pattern string.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that a nest limit of `0` will return a nest limit error for most</span>
-    <span class="doccomment">/// patterns but not all. For example, a nest limit of `0` permits `a` but</span>
-    <span class="doccomment">/// not `ab`, since `ab` requires a concatenation, which results in a nest</span>
-    <span class="doccomment">/// depth of `1`. In general, a nest limit is not something that manifests</span>
-    <span class="doccomment">/// in an obvious way in the concrete syntax, therefore, it should not be</span>
-    <span class="doccomment">/// used in a granular way.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">nest_limit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">limit</span>: <span class="ident">u32</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span> {
-        <span class="self">self</span>.<span class="ident">ast</span>.<span class="ident">nest_limit</span>(<span class="ident">limit</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Set the nesting limit for this parser.
+    ///
+    /// The nesting limit controls how deep the abstract syntax tree is allowed
+    /// to be. If the AST exceeds the given limit (e.g., with too many nested
+    /// groups), then an error is returned by the parser.
+    ///
+    /// The purpose of this limit is to act as a heuristic to prevent stack
+    /// overflow for consumers that do structural induction on an `Ast` using
+    /// explicit recursion. While this crate never does this (instead using
+    /// constant stack space and moving the call stack to the heap), other
+    /// crates may.
+    ///
+    /// This limit is not checked until the entire Ast is parsed. Therefore,
+    /// if callers want to put a limit on the amount of heap space used, then
+    /// they should impose a limit on the length, in bytes, of the concrete
+    /// pattern string. In particular, this is viable since this parser
+    /// implementation will limit itself to heap space proportional to the
+    /// length of the pattern string.
+    ///
+    /// Note that a nest limit of `0` will return a nest limit error for most
+    /// patterns but not all. For example, a nest limit of `0` permits `a` but
+    /// not `ab`, since `ab` requires a concatenation, which results in a nest
+    /// depth of `1`. In general, a nest limit is not something that manifests
+    /// in an obvious way in the concrete syntax, therefore, it should not be
+    /// used in a granular way.
+    </span><span class="kw">pub fn </span>nest_limit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, limit: u32) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder {
+        <span class="self">self</span>.ast.nest_limit(limit);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Whether to support octal syntax or not.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Octal syntax is a little-known way of uttering Unicode codepoints in</span>
-    <span class="doccomment">/// a regular expression. For example, `a`, `\x61`, `\u0061` and</span>
-    <span class="doccomment">/// `\141` are all equivalent regular expressions, where the last example</span>
-    <span class="doccomment">/// shows octal syntax.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// While supporting octal syntax isn&#39;t in and of itself a problem, it does</span>
-    <span class="doccomment">/// make good error messages harder. That is, in PCRE based regex engines,</span>
-    <span class="doccomment">/// syntax like `\0` invokes a backreference, which is explicitly</span>
-    <span class="doccomment">/// unsupported in Rust&#39;s regex engine. However, many users expect it to</span>
-    <span class="doccomment">/// be supported. Therefore, when octal support is disabled, the error</span>
-    <span class="doccomment">/// message will explicitly mention that backreferences aren&#39;t supported.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Octal syntax is disabled by default.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">octal</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span> {
-        <span class="self">self</span>.<span class="ident">ast</span>.<span class="ident">octal</span>(<span class="ident">yes</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Whether to support octal syntax or not.
+    ///
+    /// Octal syntax is a little-known way of uttering Unicode codepoints in
+    /// a regular expression. For example, `a`, `\x61`, `\u0061` and
+    /// `\141` are all equivalent regular expressions, where the last example
+    /// shows octal syntax.
+    ///
+    /// While supporting octal syntax isn&#39;t in and of itself a problem, it does
+    /// make good error messages harder. That is, in PCRE based regex engines,
+    /// syntax like `\0` invokes a backreference, which is explicitly
+    /// unsupported in Rust&#39;s regex engine. However, many users expect it to
+    /// be supported. Therefore, when octal support is disabled, the error
+    /// message will explicitly mention that backreferences aren&#39;t supported.
+    ///
+    /// Octal syntax is disabled by default.
+    </span><span class="kw">pub fn </span>octal(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder {
+        <span class="self">self</span>.ast.octal(yes);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// When enabled, the parser will permit the construction of a regular</span>
-    <span class="doccomment">/// expression that may match invalid UTF-8.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// When disabled (the default), the parser is guaranteed to produce</span>
-    <span class="doccomment">/// an expression that will only ever match valid UTF-8 (otherwise, the</span>
-    <span class="doccomment">/// parser will return an error).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Perhaps surprisingly, when invalid UTF-8 isn&#39;t allowed, a negated ASCII</span>
-    <span class="doccomment">/// word boundary (uttered as `(?-u:\B)` in the concrete syntax) will cause</span>
-    <span class="doccomment">/// the parser to return an error. Namely, a negated ASCII word boundary</span>
-    <span class="doccomment">/// can result in matching positions that aren&#39;t valid UTF-8 boundaries.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_invalid_utf8</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span> {
-        <span class="self">self</span>.<span class="ident">hir</span>.<span class="ident">allow_invalid_utf8</span>(<span class="ident">yes</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// When enabled, the parser will permit the construction of a regular
+    /// expression that may match invalid UTF-8.
+    ///
+    /// When disabled (the default), the parser is guaranteed to produce
+    /// an expression that will only ever match valid UTF-8 (otherwise, the
+    /// parser will return an error).
+    ///
+    /// Perhaps surprisingly, when invalid UTF-8 isn&#39;t allowed, a negated ASCII
+    /// word boundary (uttered as `(?-u:\B)` in the concrete syntax) will cause
+    /// the parser to return an error. Namely, a negated ASCII word boundary
+    /// can result in matching positions that aren&#39;t valid UTF-8 boundaries.
+    </span><span class="kw">pub fn </span>allow_invalid_utf8(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder {
+        <span class="self">self</span>.hir.allow_invalid_utf8(yes);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Enable verbose mode in the regular expression.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// When enabled, verbose mode permits insignificant whitespace in many</span>
-    <span class="doccomment">/// places in the regular expression, as well as comments. Comments are</span>
-    <span class="doccomment">/// started using `#` and continue until the end of the line.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default, this is disabled. It may be selectively enabled in the</span>
-    <span class="doccomment">/// regular expression by using the `x` flag regardless of this setting.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ignore_whitespace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span> {
-        <span class="self">self</span>.<span class="ident">ast</span>.<span class="ident">ignore_whitespace</span>(<span class="ident">yes</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Enable verbose mode in the regular expression.
+    ///
+    /// When enabled, verbose mode permits insignificant whitespace in many
+    /// places in the regular expression, as well as comments. Comments are
+    /// started using `#` and continue until the end of the line.
+    ///
+    /// By default, this is disabled. It may be selectively enabled in the
+    /// regular expression by using the `x` flag regardless of this setting.
+    </span><span class="kw">pub fn </span>ignore_whitespace(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder {
+        <span class="self">self</span>.ast.ignore_whitespace(yes);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Enable or disable the case insensitive flag by default.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default this is disabled. It may alternatively be selectively</span>
-    <span class="doccomment">/// enabled in the regular expression itself via the `i` flag.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">case_insensitive</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span> {
-        <span class="self">self</span>.<span class="ident">hir</span>.<span class="ident">case_insensitive</span>(<span class="ident">yes</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Enable or disable the case insensitive flag by default.
+    ///
+    /// By default this is disabled. It may alternatively be selectively
+    /// enabled in the regular expression itself via the `i` flag.
+    </span><span class="kw">pub fn </span>case_insensitive(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder {
+        <span class="self">self</span>.hir.case_insensitive(yes);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Enable or disable the multi-line matching flag by default.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default this is disabled. It may alternatively be selectively</span>
-    <span class="doccomment">/// enabled in the regular expression itself via the `m` flag.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">multi_line</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span> {
-        <span class="self">self</span>.<span class="ident">hir</span>.<span class="ident">multi_line</span>(<span class="ident">yes</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Enable or disable the multi-line matching flag by default.
+    ///
+    /// By default this is disabled. It may alternatively be selectively
+    /// enabled in the regular expression itself via the `m` flag.
+    </span><span class="kw">pub fn </span>multi_line(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder {
+        <span class="self">self</span>.hir.multi_line(yes);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Enable or disable the &quot;dot matches any character&quot; flag by default.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default this is disabled. It may alternatively be selectively</span>
-    <span class="doccomment">/// enabled in the regular expression itself via the `s` flag.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dot_matches_new_line</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span> {
-        <span class="self">self</span>.<span class="ident">hir</span>.<span class="ident">dot_matches_new_line</span>(<span class="ident">yes</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Enable or disable the &quot;dot matches any character&quot; flag by default.
+    ///
+    /// By default this is disabled. It may alternatively be selectively
+    /// enabled in the regular expression itself via the `s` flag.
+    </span><span class="kw">pub fn </span>dot_matches_new_line(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder {
+        <span class="self">self</span>.hir.dot_matches_new_line(yes);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Enable or disable the &quot;swap greed&quot; flag by default.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default this is disabled. It may alternatively be selectively</span>
-    <span class="doccomment">/// enabled in the regular expression itself via the `U` flag.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">swap_greed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span> {
-        <span class="self">self</span>.<span class="ident">hir</span>.<span class="ident">swap_greed</span>(<span class="ident">yes</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Enable or disable the &quot;swap greed&quot; flag by default.
+    ///
+    /// By default this is disabled. It may alternatively be selectively
+    /// enabled in the regular expression itself via the `U` flag.
+    </span><span class="kw">pub fn </span>swap_greed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder {
+        <span class="self">self</span>.hir.swap_greed(yes);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Enable or disable the Unicode flag (`u`) by default.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default this is **enabled**. It may alternatively be selectively</span>
-    <span class="doccomment">/// disabled in the regular expression itself via the `u` flag.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that unless `allow_invalid_utf8` is enabled (it&#39;s disabled by</span>
-    <span class="doccomment">/// default), a regular expression will fail to parse if Unicode mode is</span>
-    <span class="doccomment">/// disabled and a sub-expression could possibly match invalid UTF-8.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unicode</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ParserBuilder</span> {
-        <span class="self">self</span>.<span class="ident">hir</span>.<span class="ident">unicode</span>(<span class="ident">yes</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Enable or disable the Unicode flag (`u`) by default.
+    ///
+    /// By default this is **enabled**. It may alternatively be selectively
+    /// disabled in the regular expression itself via the `u` flag.
+    ///
+    /// Note that unless `allow_invalid_utf8` is enabled (it&#39;s disabled by
+    /// default), a regular expression will fail to parse if Unicode mode is
+    /// disabled and a sub-expression could possibly match invalid UTF-8.
+    </span><span class="kw">pub fn </span>unicode(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) -&gt; <span class="kw-2">&amp;mut </span>ParserBuilder {
+        <span class="self">self</span>.hir.unicode(yes);
+        <span class="self">self
+    </span>}
 }
 
-<span class="doccomment">/// A convenience parser for regular expressions.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This parser takes as input a regular expression pattern string (the</span>
-<span class="doccomment">/// &quot;concrete syntax&quot;) and returns a high-level intermediate representation</span>
-<span class="doccomment">/// (the HIR) suitable for most types of analysis. In particular, this parser</span>
-<span class="doccomment">/// hides the intermediate state of producing an AST (the &quot;abstract syntax&quot;).</span>
-<span class="doccomment">/// The AST is itself far more complex than the HIR, so this parser serves as a</span>
-<span class="doccomment">/// convenience for never having to deal with it at all.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If callers have more fine grained use cases that need an AST, then please</span>
-<span class="doccomment">/// see the [`ast::parse`](ast/parse/index.html) module.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// A `Parser` can be configured in more detail via a</span>
-<span class="doccomment">/// [`ParserBuilder`](struct.ParserBuilder.html).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Parser</span> {
-    <span class="ident">ast</span>: <span class="ident">ast::parse::Parser</span>,
-    <span class="ident">hir</span>: <span class="ident">hir::translate::Translator</span>,
+<span class="doccomment">/// A convenience parser for regular expressions.
+///
+/// This parser takes as input a regular expression pattern string (the
+/// &quot;concrete syntax&quot;) and returns a high-level intermediate representation
+/// (the HIR) suitable for most types of analysis. In particular, this parser
+/// hides the intermediate state of producing an AST (the &quot;abstract syntax&quot;).
+/// The AST is itself far more complex than the HIR, so this parser serves as a
+/// convenience for never having to deal with it at all.
+///
+/// If callers have more fine grained use cases that need an AST, then please
+/// see the [`ast::parse`](ast/parse/index.html) module.
+///
+/// A `Parser` can be configured in more detail via a
+/// [`ParserBuilder`](struct.ParserBuilder.html).
+</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>Parser {
+    ast: ast::parse::Parser,
+    hir: hir::translate::Translator,
 }
 
-<span class="kw">impl</span> <span class="ident">Parser</span> {
-    <span class="doccomment">/// Create a new parser with a default configuration.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The parser can be run with `parse` method. The parse method returns</span>
-    <span class="doccomment">/// a high level intermediate representation of the given regular</span>
-    <span class="doccomment">/// expression.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// To set configuration options on the parser, use</span>
-    <span class="doccomment">/// [`ParserBuilder`](struct.ParserBuilder.html).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Parser</span> {
-        <span class="ident">ParserBuilder::new</span>().<span class="ident">build</span>()
+<span class="kw">impl </span>Parser {
+    <span class="doccomment">/// Create a new parser with a default configuration.
+    ///
+    /// The parser can be run with `parse` method. The parse method returns
+    /// a high level intermediate representation of the given regular
+    /// expression.
+    ///
+    /// To set configuration options on the parser, use
+    /// [`ParserBuilder`](struct.ParserBuilder.html).
+    </span><span class="kw">pub fn </span>new() -&gt; Parser {
+        ParserBuilder::new().build()
     }
 
-    <span class="doccomment">/// Parse the regular expression into a high level intermediate</span>
-    <span class="doccomment">/// representation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pattern</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">hir::Hir</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ast</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ast</span>.<span class="ident">parse</span>(<span class="ident">pattern</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">hir</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">hir</span>.<span class="ident">translate</span>(<span class="ident">pattern</span>, <span class="kw-2">&amp;</span><span class="ident">ast</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">hir</span>)
+    <span class="doccomment">/// Parse the regular expression into a high level intermediate
+    /// representation.
+    </span><span class="kw">pub fn </span>parse(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pattern: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;hir::Hir&gt; {
+        <span class="kw">let </span>ast = <span class="self">self</span>.ast.parse(pattern)<span class="question-mark">?</span>;
+        <span class="kw">let </span>hir = <span class="self">self</span>.hir.translate(pattern, <span class="kw-2">&amp;</span>ast)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(hir)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

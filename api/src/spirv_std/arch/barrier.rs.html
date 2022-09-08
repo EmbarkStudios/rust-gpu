@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/arch/barrier.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>barrier.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spirv_std/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/arch/barrier.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>barrier.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../spirv_std/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spirv_std/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -198,200 +192,199 @@
 <span id="192">192</span>
 <span id="193">193</span>
 <span id="194">194</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">core::arch::asm</span>;
+</pre><pre class="rust"><code><span class="attribute">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
+</span><span class="kw">use </span>core::arch::asm;
 
-<span class="doccomment">/// Wait for other invocations of this module to reach the current point</span>
-<span class="doccomment">/// of execution.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// All invocations of this module within Execution scope reach this point of</span>
-<span class="doccomment">/// execution before any invocation proceeds beyond it.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// When Execution is [`crate::memory::Scope::Workgroup`] or larger, behavior is</span>
-<span class="doccomment">/// undefined unless all invocations within Execution execute the same dynamic</span>
-<span class="doccomment">/// instance of this instruction. When Execution is Subgroup or Invocation, the</span>
-<span class="doccomment">/// behavior of this instruction in non-uniform control flow is defined by the</span>
-<span class="doccomment">/// client API.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If [`crate::memory::Semantics`] is not [`crate::memory::Semantics::NONE`],</span>
-<span class="doccomment">/// this instruction also serves as an [`memory_barrier`] function call, and</span>
-<span class="doccomment">/// also performs and adheres to the description and semantics of an</span>
-<span class="doccomment">/// [`memory_barrier`] function with the same `MEMORY` and `SEMANTICS` operands.</span>
-<span class="doccomment">/// This allows atomically specifying both a control barrier and a memory</span>
-<span class="doccomment">/// barrier (that is, without needing two instructions). If</span>
-<span class="doccomment">/// [`crate::memory::Semantics`] is [`crate::memory::Semantics::NONE`], `MEMORY`</span>
-<span class="doccomment">/// is ignored.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Before SPIRV-V version 1.3, it is only valid to use this instruction with</span>
-<span class="doccomment">/// `TessellationControl`, `GLCompute`, or `Kernel` execution models. There is</span>
-<span class="doccomment">/// no such restriction starting with version 1.3.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If used with the `TessellationControl` execution model, it also implicitly</span>
-<span class="doccomment">/// synchronizes the `output` storage class: Writes to `output` variables</span>
-<span class="doccomment">/// performed by any invocation executed prior to a [`control_barrier`] are</span>
-<span class="doccomment">/// visible to any other invocation proceeding beyond that [`control_barrier`].</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpControlBarrier&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">control_barrier</span><span class="op">&lt;</span>
-    <span class="kw">const</span> <span class="ident">EXECUTION</span>: <span class="ident">u32</span>, <span class="comment">// Scope</span>
-    <span class="kw">const</span> <span class="ident">MEMORY</span>: <span class="ident">u32</span>,    <span class="comment">// Scope</span>
-    <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span>, <span class="comment">// Semantics</span>
-<span class="op">&gt;</span>() {
-    <span class="macro">asm!</span> {
+<span class="doccomment">/// Wait for other invocations of this module to reach the current point
+/// of execution.
+///
+/// All invocations of this module within Execution scope reach this point of
+/// execution before any invocation proceeds beyond it.
+///
+/// When Execution is [`crate::memory::Scope::Workgroup`] or larger, behavior is
+/// undefined unless all invocations within Execution execute the same dynamic
+/// instance of this instruction. When Execution is Subgroup or Invocation, the
+/// behavior of this instruction in non-uniform control flow is defined by the
+/// client API.
+///
+/// If [`crate::memory::Semantics`] is not [`crate::memory::Semantics::NONE`],
+/// this instruction also serves as an [`memory_barrier`] function call, and
+/// also performs and adheres to the description and semantics of an
+/// [`memory_barrier`] function with the same `MEMORY` and `SEMANTICS` operands.
+/// This allows atomically specifying both a control barrier and a memory
+/// barrier (that is, without needing two instructions). If
+/// [`crate::memory::Semantics`] is [`crate::memory::Semantics::NONE`], `MEMORY`
+/// is ignored.
+///
+/// Before SPIRV-V version 1.3, it is only valid to use this instruction with
+/// `TessellationControl`, `GLCompute`, or `Kernel` execution models. There is
+/// no such restriction starting with version 1.3.
+///
+/// If used with the `TessellationControl` execution model, it also implicitly
+/// synchronizes the `output` storage class: Writes to `output` variables
+/// performed by any invocation executed prior to a [`control_barrier`] are
+/// visible to any other invocation proceeding beyond that [`control_barrier`].
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpControlBarrier&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>control_barrier&lt;
+    <span class="kw">const </span>EXECUTION: u32, <span class="comment">// Scope
+    </span><span class="kw">const </span>MEMORY: u32,    <span class="comment">// Scope
+    </span><span class="kw">const </span>SEMANTICS: u32, <span class="comment">// Semantics
+</span>&gt;() {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%execution = OpConstant %u32 {execution}&quot;</span>,
         <span class="string">&quot;%memory = OpConstant %u32 {memory}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;OpControlBarrier %execution %memory %semantics&quot;</span>,
-        <span class="ident">execution</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">EXECUTION</span>,
-        <span class="ident">memory</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">MEMORY</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
+        execution = <span class="kw">const </span>EXECUTION,
+        memory = <span class="kw">const </span>MEMORY,
+        semantics = <span class="kw">const </span>SEMANTICS,
     }
 }
 
-<span class="doccomment">/// Control the order that memory accesses are observed.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Ensures that memory accesses issued before this instruction are observed</span>
-<span class="doccomment">/// before memory accesses issued after this instruction. This control is</span>
-<span class="doccomment">/// ensured only for memory accesses issued by this invocation and observed by</span>
-<span class="doccomment">/// another invocation executing within `MEMORY` scope. If the `vulkan` memory</span>
-<span class="doccomment">/// model is declared, this ordering only applies to memory accesses that</span>
-<span class="doccomment">/// use the `NonPrivatePointer` memory operand or `NonPrivateTexel`</span>
-<span class="doccomment">/// image operand.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `SEMANTICS` declares what kind of memory is being controlled and what kind</span>
-<span class="doccomment">/// of control to apply.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// To execute both a memory barrier and a control barrier,</span>
-<span class="doccomment">/// see [`control_barrier`].</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpMemoryBarrier&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">memory_barrier</span><span class="op">&lt;</span>
-    <span class="kw">const</span> <span class="ident">MEMORY</span>: <span class="ident">u32</span>,    <span class="comment">// Scope</span>
-    <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span>, <span class="comment">// Semantics</span>
-<span class="op">&gt;</span>() {
-    <span class="macro">asm!</span> {
+<span class="doccomment">/// Control the order that memory accesses are observed.
+///
+/// Ensures that memory accesses issued before this instruction are observed
+/// before memory accesses issued after this instruction. This control is
+/// ensured only for memory accesses issued by this invocation and observed by
+/// another invocation executing within `MEMORY` scope. If the `vulkan` memory
+/// model is declared, this ordering only applies to memory accesses that
+/// use the `NonPrivatePointer` memory operand or `NonPrivateTexel`
+/// image operand.
+///
+/// `SEMANTICS` declares what kind of memory is being controlled and what kind
+/// of control to apply.
+///
+/// To execute both a memory barrier and a control barrier,
+/// see [`control_barrier`].
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[doc(alias = <span class="string">&quot;OpMemoryBarrier&quot;</span>)]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>memory_barrier&lt;
+    <span class="kw">const </span>MEMORY: u32,    <span class="comment">// Scope
+    </span><span class="kw">const </span>SEMANTICS: u32, <span class="comment">// Semantics
+</span>&gt;() {
+    <span class="macro">asm! </span>{
         <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
         <span class="string">&quot;%memory = OpConstant %u32 {memory}&quot;</span>,
         <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
         <span class="string">&quot;OpMemoryBarrier %memory %semantics&quot;</span>,
-        <span class="ident">memory</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">MEMORY</span>,
-        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
+        memory = <span class="kw">const </span>MEMORY,
+        semantics = <span class="kw">const </span>SEMANTICS,
     }
 }
 
-<span class="doccomment">/// Blocks execution of all threads in a group until all group shared accesses have been completed.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is an exact implementation of `GroupMemoryBarrier()`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrier&gt;</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">workgroup_memory_barrier</span>() {
-    <span class="ident">memory_barrier</span>::<span class="op">&lt;</span>
-        { <span class="ident"><span class="kw">crate</span>::memory::Scope::Workgroup</span> <span class="kw">as</span> <span class="ident">u32</span> },
+<span class="doccomment">/// Blocks execution of all threads in a group until all group shared accesses have been completed.
+///
+/// This is an exact implementation of `GroupMemoryBarrier()`.
+///
+/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrier&gt;
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>workgroup_memory_barrier() {
+    memory_barrier::&lt;
+        { <span class="kw">crate</span>::memory::Scope::Workgroup <span class="kw">as </span>u32 },
         {
-            <span class="ident"><span class="kw">crate</span>::memory::Semantics::WORKGROUP_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE</span>.<span class="ident">bits</span>()
+            <span class="kw">crate</span>::memory::Semantics::WORKGROUP_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE.bits()
         },
-    <span class="op">&gt;</span>();
+    &gt;();
 }
 
-<span class="doccomment">/// Blocks execution of all threads in a group until all group shared accesses have been completed and all threads in the group have reached this call.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is an exact implementation of `GroupMemoryBarrierWithGroupSync()`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrierwithgroupsync&gt;</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">workgroup_memory_barrier_with_group_sync</span>() {
-    <span class="ident">control_barrier</span>::<span class="op">&lt;</span>
-        { <span class="ident"><span class="kw">crate</span>::memory::Scope::Workgroup</span> <span class="kw">as</span> <span class="ident">u32</span> },
-        { <span class="ident"><span class="kw">crate</span>::memory::Scope::Workgroup</span> <span class="kw">as</span> <span class="ident">u32</span> },
+<span class="doccomment">/// Blocks execution of all threads in a group until all group shared accesses have been completed and all threads in the group have reached this call.
+///
+/// This is an exact implementation of `GroupMemoryBarrierWithGroupSync()`.
+///
+/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrierwithgroupsync&gt;
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>workgroup_memory_barrier_with_group_sync() {
+    control_barrier::&lt;
+        { <span class="kw">crate</span>::memory::Scope::Workgroup <span class="kw">as </span>u32 },
+        { <span class="kw">crate</span>::memory::Scope::Workgroup <span class="kw">as </span>u32 },
         {
-            <span class="ident"><span class="kw">crate</span>::memory::Semantics::WORKGROUP_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE</span>.<span class="ident">bits</span>()
+            <span class="kw">crate</span>::memory::Semantics::WORKGROUP_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE.bits()
         },
-    <span class="op">&gt;</span>();
+    &gt;();
 }
 
-<span class="doccomment">/// Blocks execution of all threads in a group until all device memory accesses have been completed.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is an exact implementation of `DeviceMemoryBarrier()`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrier&gt;</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">device_memory_barrier</span>() {
-    <span class="ident">memory_barrier</span>::<span class="op">&lt;</span>
-        { <span class="ident"><span class="kw">crate</span>::memory::Scope::Device</span> <span class="kw">as</span> <span class="ident">u32</span> },
+<span class="doccomment">/// Blocks execution of all threads in a group until all device memory accesses have been completed.
+///
+/// This is an exact implementation of `DeviceMemoryBarrier()`.
+///
+/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrier&gt;
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>device_memory_barrier() {
+    memory_barrier::&lt;
+        { <span class="kw">crate</span>::memory::Scope::Device <span class="kw">as </span>u32 },
         {
-            <span class="ident"><span class="kw">crate</span>::memory::Semantics::IMAGE_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::UNIFORM_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE</span>.<span class="ident">bits</span>()
+            <span class="kw">crate</span>::memory::Semantics::IMAGE_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::UNIFORM_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE.bits()
         },
-    <span class="op">&gt;</span>();
+    &gt;();
 }
 
-<span class="doccomment">/// Blocks execution of all threads in a group until all device memory accesses have been completed and all threads in the group have reached this call.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is an exact implementation of `DeviceMemoryBarrierWithGroupSync()`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrierwithgroupsync&gt;</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">device_memory_barrier_with_group_sync</span>() {
-    <span class="ident">control_barrier</span>::<span class="op">&lt;</span>
-        { <span class="ident"><span class="kw">crate</span>::memory::Scope::Workgroup</span> <span class="kw">as</span> <span class="ident">u32</span> },
-        { <span class="ident"><span class="kw">crate</span>::memory::Scope::Device</span> <span class="kw">as</span> <span class="ident">u32</span> },
+<span class="doccomment">/// Blocks execution of all threads in a group until all device memory accesses have been completed and all threads in the group have reached this call.
+///
+/// This is an exact implementation of `DeviceMemoryBarrierWithGroupSync()`.
+///
+/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrierwithgroupsync&gt;
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>device_memory_barrier_with_group_sync() {
+    control_barrier::&lt;
+        { <span class="kw">crate</span>::memory::Scope::Workgroup <span class="kw">as </span>u32 },
+        { <span class="kw">crate</span>::memory::Scope::Device <span class="kw">as </span>u32 },
         {
-            <span class="ident"><span class="kw">crate</span>::memory::Semantics::IMAGE_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::UNIFORM_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE</span>.<span class="ident">bits</span>()
+            <span class="kw">crate</span>::memory::Semantics::IMAGE_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::UNIFORM_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE.bits()
         },
-    <span class="op">&gt;</span>();
+    &gt;();
 }
 
-<span class="doccomment">/// Blocks execution of all threads in a group until all memory accesses have been completed.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is an exact implementation of `AllMemoryBarrier()`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrier&gt;</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">all_memory_barrier</span>() {
-    <span class="ident">memory_barrier</span>::<span class="op">&lt;</span>
-        { <span class="ident"><span class="kw">crate</span>::memory::Scope::Device</span> <span class="kw">as</span> <span class="ident">u32</span> },
+<span class="doccomment">/// Blocks execution of all threads in a group until all memory accesses have been completed.
+///
+/// This is an exact implementation of `AllMemoryBarrier()`.
+///
+/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrier&gt;
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>all_memory_barrier() {
+    memory_barrier::&lt;
+        { <span class="kw">crate</span>::memory::Scope::Device <span class="kw">as </span>u32 },
         {
-            <span class="ident"><span class="kw">crate</span>::memory::Semantics::WORKGROUP_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::IMAGE_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::UNIFORM_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE</span>.<span class="ident">bits</span>()
+            <span class="kw">crate</span>::memory::Semantics::WORKGROUP_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::IMAGE_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::UNIFORM_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE.bits()
         },
-    <span class="op">&gt;</span>();
+    &gt;();
 }
 
-<span class="doccomment">/// Blocks execution of all threads in a group until all memory accesses have been completed and all threads in the group have reached this call.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is an exact implementation of `AllMemoryBarrierWithGroupSync()`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrierwithgroupsync&gt;</span>
-<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">all_memory_barrier_with_group_sync</span>() {
-    <span class="ident">control_barrier</span>::<span class="op">&lt;</span>
-        { <span class="ident"><span class="kw">crate</span>::memory::Scope::Workgroup</span> <span class="kw">as</span> <span class="ident">u32</span> },
-        { <span class="ident"><span class="kw">crate</span>::memory::Scope::Device</span> <span class="kw">as</span> <span class="ident">u32</span> },
+<span class="doccomment">/// Blocks execution of all threads in a group until all memory accesses have been completed and all threads in the group have reached this call.
+///
+/// This is an exact implementation of `AllMemoryBarrierWithGroupSync()`.
+///
+/// From &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrierwithgroupsync&gt;
+</span><span class="attribute">#[spirv_std_macros::gpu_only]
+#[inline]
+</span><span class="kw">pub unsafe fn </span>all_memory_barrier_with_group_sync() {
+    control_barrier::&lt;
+        { <span class="kw">crate</span>::memory::Scope::Workgroup <span class="kw">as </span>u32 },
+        { <span class="kw">crate</span>::memory::Scope::Device <span class="kw">as </span>u32 },
         {
-            <span class="ident"><span class="kw">crate</span>::memory::Semantics::WORKGROUP_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::IMAGE_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::UNIFORM_MEMORY</span>.<span class="ident">bits</span>()
-                <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE</span>.<span class="ident">bits</span>()
+            <span class="kw">crate</span>::memory::Semantics::WORKGROUP_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::IMAGE_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::UNIFORM_MEMORY.bits()
+                | <span class="kw">crate</span>::memory::Semantics::ACQUIRE_RELEASE.bits()
         },
-    <span class="op">&gt;</span>();
+    &gt;();
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_std" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_std" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

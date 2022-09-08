@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-1.6.0/src/expand.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>expand.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../regex/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../regex/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../regex/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-1.6.0/src/expand.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>expand.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../regex/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../regex/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../regex/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -243,245 +237,244 @@
 <span id="237">237</span>
 <span id="238">238</span>
 <span id="239">239</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::str</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::str;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::find_byte::find_byte</span>;
+<span class="kw">use </span><span class="kw">crate</span>::find_byte::find_byte;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::re_bytes</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::re_unicode</span>;
+<span class="kw">use </span><span class="kw">crate</span>::re_bytes;
+<span class="kw">use </span><span class="kw">crate</span>::re_unicode;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand_str</span>(
-    <span class="ident">caps</span>: <span class="kw-2">&amp;</span><span class="ident">re_unicode::Captures</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    <span class="kw-2">mut</span> <span class="ident">replacement</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">dst</span>: <span class="kw-2">&amp;mut</span> <span class="ident">String</span>,
+<span class="kw">pub fn </span>expand_str(
+    caps: <span class="kw-2">&amp;</span>re_unicode::Captures&lt;<span class="lifetime">&#39;_</span>&gt;,
+    <span class="kw-2">mut </span>replacement: <span class="kw-2">&amp;</span>str,
+    dst: <span class="kw-2">&amp;mut </span>String,
 ) {
-    <span class="kw">while</span> <span class="op">!</span><span class="ident">replacement</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">match</span> <span class="ident">find_byte</span>(<span class="string">b&#39;$&#39;</span>, <span class="ident">replacement</span>.<span class="ident">as_bytes</span>()) {
-            <span class="prelude-val">None</span> =&gt; <span class="kw">break</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">i</span>) =&gt; {
-                <span class="ident">dst</span>.<span class="ident">push_str</span>(<span class="kw-2">&amp;</span><span class="ident">replacement</span>[..<span class="ident">i</span>]);
-                <span class="ident">replacement</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">replacement</span>[<span class="ident">i</span>..];
+    <span class="kw">while </span>!replacement.is_empty() {
+        <span class="kw">match </span>find_byte(<span class="string">b&#39;$&#39;</span>, replacement.as_bytes()) {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
+            <span class="prelude-val">Some</span>(i) =&gt; {
+                dst.push_str(<span class="kw-2">&amp;</span>replacement[..i]);
+                replacement = <span class="kw-2">&amp;</span>replacement[i..];
             }
         }
-        <span class="kw">if</span> <span class="ident">replacement</span>.<span class="ident">as_bytes</span>().<span class="ident">get</span>(<span class="number">1</span>).<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span> <span class="op">==</span> <span class="string">b&#39;$&#39;</span>) {
-            <span class="ident">dst</span>.<span class="ident">push_str</span>(<span class="string">&quot;$&quot;</span>);
-            <span class="ident">replacement</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">replacement</span>[<span class="number">2</span>..];
+        <span class="kw">if </span>replacement.as_bytes().get(<span class="number">1</span>).map_or(<span class="bool-val">false</span>, |<span class="kw-2">&amp;</span>b| b == <span class="string">b&#39;$&#39;</span>) {
+            dst.push_str(<span class="string">&quot;$&quot;</span>);
+            replacement = <span class="kw-2">&amp;</span>replacement[<span class="number">2</span>..];
             <span class="kw">continue</span>;
         }
-        <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">replacement</span>.<span class="ident">is_empty</span>());
-        <span class="kw">let</span> <span class="ident">cap_ref</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">find_cap_ref</span>(<span class="ident">replacement</span>.<span class="ident">as_bytes</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">cap_ref</span>) =&gt; <span class="ident">cap_ref</span>,
-            <span class="prelude-val">None</span> =&gt; {
-                <span class="ident">dst</span>.<span class="ident">push_str</span>(<span class="string">&quot;$&quot;</span>);
-                <span class="ident">replacement</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">replacement</span>[<span class="number">1</span>..];
+        <span class="macro">debug_assert!</span>(!replacement.is_empty());
+        <span class="kw">let </span>cap_ref = <span class="kw">match </span>find_cap_ref(replacement.as_bytes()) {
+            <span class="prelude-val">Some</span>(cap_ref) =&gt; cap_ref,
+            <span class="prelude-val">None </span>=&gt; {
+                dst.push_str(<span class="string">&quot;$&quot;</span>);
+                replacement = <span class="kw-2">&amp;</span>replacement[<span class="number">1</span>..];
                 <span class="kw">continue</span>;
             }
         };
-        <span class="ident">replacement</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">replacement</span>[<span class="ident">cap_ref</span>.<span class="ident">end</span>..];
-        <span class="kw">match</span> <span class="ident">cap_ref</span>.<span class="ident">cap</span> {
-            <span class="ident">Ref::Number</span>(<span class="ident">i</span>) =&gt; {
-                <span class="ident">dst</span>.<span class="ident">push_str</span>(<span class="ident">caps</span>.<span class="ident">get</span>(<span class="ident">i</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">as_str</span>()).<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>));
+        replacement = <span class="kw-2">&amp;</span>replacement[cap_ref.end..];
+        <span class="kw">match </span>cap_ref.cap {
+            Ref::Number(i) =&gt; {
+                dst.push_str(caps.get(i).map(|m| m.as_str()).unwrap_or(<span class="string">&quot;&quot;</span>));
             }
-            <span class="ident">Ref::Named</span>(<span class="ident">name</span>) =&gt; {
-                <span class="ident">dst</span>.<span class="ident">push_str</span>(
-                    <span class="ident">caps</span>.<span class="ident">name</span>(<span class="ident">name</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">as_str</span>()).<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>),
+            Ref::Named(name) =&gt; {
+                dst.push_str(
+                    caps.name(name).map(|m| m.as_str()).unwrap_or(<span class="string">&quot;&quot;</span>),
                 );
             }
         }
     }
-    <span class="ident">dst</span>.<span class="ident">push_str</span>(<span class="ident">replacement</span>);
+    dst.push_str(replacement);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand_bytes</span>(
-    <span class="ident">caps</span>: <span class="kw-2">&amp;</span><span class="ident">re_bytes::Captures</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    <span class="kw-2">mut</span> <span class="ident">replacement</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    <span class="ident">dst</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+<span class="kw">pub fn </span>expand_bytes(
+    caps: <span class="kw-2">&amp;</span>re_bytes::Captures&lt;<span class="lifetime">&#39;_</span>&gt;,
+    <span class="kw-2">mut </span>replacement: <span class="kw-2">&amp;</span>[u8],
+    dst: <span class="kw-2">&amp;mut </span>Vec&lt;u8&gt;,
 ) {
-    <span class="kw">while</span> <span class="op">!</span><span class="ident">replacement</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">match</span> <span class="ident">find_byte</span>(<span class="string">b&#39;$&#39;</span>, <span class="ident">replacement</span>) {
-            <span class="prelude-val">None</span> =&gt; <span class="kw">break</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">i</span>) =&gt; {
-                <span class="ident">dst</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">replacement</span>[..<span class="ident">i</span>]);
-                <span class="ident">replacement</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">replacement</span>[<span class="ident">i</span>..];
+    <span class="kw">while </span>!replacement.is_empty() {
+        <span class="kw">match </span>find_byte(<span class="string">b&#39;$&#39;</span>, replacement) {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
+            <span class="prelude-val">Some</span>(i) =&gt; {
+                dst.extend(<span class="kw-2">&amp;</span>replacement[..i]);
+                replacement = <span class="kw-2">&amp;</span>replacement[i..];
             }
         }
-        <span class="kw">if</span> <span class="ident">replacement</span>.<span class="ident">get</span>(<span class="number">1</span>).<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span> <span class="op">==</span> <span class="string">b&#39;$&#39;</span>) {
-            <span class="ident">dst</span>.<span class="ident">push</span>(<span class="string">b&#39;$&#39;</span>);
-            <span class="ident">replacement</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">replacement</span>[<span class="number">2</span>..];
+        <span class="kw">if </span>replacement.get(<span class="number">1</span>).map_or(<span class="bool-val">false</span>, |<span class="kw-2">&amp;</span>b| b == <span class="string">b&#39;$&#39;</span>) {
+            dst.push(<span class="string">b&#39;$&#39;</span>);
+            replacement = <span class="kw-2">&amp;</span>replacement[<span class="number">2</span>..];
             <span class="kw">continue</span>;
         }
-        <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">replacement</span>.<span class="ident">is_empty</span>());
-        <span class="kw">let</span> <span class="ident">cap_ref</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">find_cap_ref</span>(<span class="ident">replacement</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">cap_ref</span>) =&gt; <span class="ident">cap_ref</span>,
-            <span class="prelude-val">None</span> =&gt; {
-                <span class="ident">dst</span>.<span class="ident">push</span>(<span class="string">b&#39;$&#39;</span>);
-                <span class="ident">replacement</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">replacement</span>[<span class="number">1</span>..];
+        <span class="macro">debug_assert!</span>(!replacement.is_empty());
+        <span class="kw">let </span>cap_ref = <span class="kw">match </span>find_cap_ref(replacement) {
+            <span class="prelude-val">Some</span>(cap_ref) =&gt; cap_ref,
+            <span class="prelude-val">None </span>=&gt; {
+                dst.push(<span class="string">b&#39;$&#39;</span>);
+                replacement = <span class="kw-2">&amp;</span>replacement[<span class="number">1</span>..];
                 <span class="kw">continue</span>;
             }
         };
-        <span class="ident">replacement</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">replacement</span>[<span class="ident">cap_ref</span>.<span class="ident">end</span>..];
-        <span class="kw">match</span> <span class="ident">cap_ref</span>.<span class="ident">cap</span> {
-            <span class="ident">Ref::Number</span>(<span class="ident">i</span>) =&gt; {
-                <span class="ident">dst</span>.<span class="ident">extend</span>(<span class="ident">caps</span>.<span class="ident">get</span>(<span class="ident">i</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">as_bytes</span>()).<span class="ident">unwrap_or</span>(<span class="string">b&quot;&quot;</span>));
+        replacement = <span class="kw-2">&amp;</span>replacement[cap_ref.end..];
+        <span class="kw">match </span>cap_ref.cap {
+            Ref::Number(i) =&gt; {
+                dst.extend(caps.get(i).map(|m| m.as_bytes()).unwrap_or(<span class="string">b&quot;&quot;</span>));
             }
-            <span class="ident">Ref::Named</span>(<span class="ident">name</span>) =&gt; {
-                <span class="ident">dst</span>.<span class="ident">extend</span>(
-                    <span class="ident">caps</span>.<span class="ident">name</span>(<span class="ident">name</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">as_bytes</span>()).<span class="ident">unwrap_or</span>(<span class="string">b&quot;&quot;</span>),
+            Ref::Named(name) =&gt; {
+                dst.extend(
+                    caps.name(name).map(|m| m.as_bytes()).unwrap_or(<span class="string">b&quot;&quot;</span>),
                 );
             }
         }
     }
-    <span class="ident">dst</span>.<span class="ident">extend</span>(<span class="ident">replacement</span>);
+    dst.extend(replacement);
 }
 
-<span class="doccomment">/// `CaptureRef` represents a reference to a capture group inside some text.</span>
-<span class="doccomment">/// The reference is either a capture group name or a number.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It is also tagged with the position in the text following the</span>
-<span class="doccomment">/// capture reference.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">CaptureRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">cap</span>: <span class="ident">Ref</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    <span class="ident">end</span>: <span class="ident">usize</span>,
+<span class="doccomment">/// `CaptureRef` represents a reference to a capture group inside some text.
+/// The reference is either a capture group name or a number.
+///
+/// It is also tagged with the position in the text following the
+/// capture reference.
+</span><span class="attribute">#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+</span><span class="kw">struct </span>CaptureRef&lt;<span class="lifetime">&#39;a</span>&gt; {
+    cap: Ref&lt;<span class="lifetime">&#39;a</span>&gt;,
+    end: usize,
 }
 
-<span class="doccomment">/// A reference to a capture group in some text.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// e.g., `$2`, `$foo`, `${foo}`.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">enum</span> <span class="ident">Ref</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">Named</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>),
-    <span class="ident">Number</span>(<span class="ident">usize</span>),
+<span class="doccomment">/// A reference to a capture group in some text.
+///
+/// e.g., `$2`, `$foo`, `${foo}`.
+</span><span class="attribute">#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+</span><span class="kw">enum </span>Ref&lt;<span class="lifetime">&#39;a</span>&gt; {
+    Named(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
+    Number(usize),
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Ref</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) -&gt; <span class="ident">Ref</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="ident">Ref::Named</span>(<span class="ident">x</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Ref</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Ref</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
-        <span class="ident">Ref::Number</span>(<span class="ident">x</span>)
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt; <span class="kw">for </span>Ref&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>from(x: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; Ref&lt;<span class="lifetime">&#39;a</span>&gt; {
+        Ref::Named(x)
     }
 }
 
-<span class="doccomment">/// Parses a possible reference to a capture group name in the given text,</span>
-<span class="doccomment">/// starting at the beginning of `replacement`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If no such valid reference could be found, None is returned.</span>
-<span class="kw">fn</span> <span class="ident">find_cap_ref</span>(<span class="ident">replacement</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CaptureRef</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="ident">rep</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="ident">replacement</span>;
-    <span class="kw">if</span> <span class="ident">rep</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">rep</span>[<span class="number">0</span>] <span class="op">!</span><span class="op">=</span> <span class="string">b&#39;$&#39;</span> {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="kw">impl </span>From&lt;usize&gt; <span class="kw">for </span>Ref&lt;<span class="lifetime">&#39;static</span>&gt; {
+    <span class="kw">fn </span>from(x: usize) -&gt; Ref&lt;<span class="lifetime">&#39;static</span>&gt; {
+        Ref::Number(x)
     }
-    <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    <span class="kw">if</span> <span class="ident">rep</span>[<span class="ident">i</span>] <span class="op">==</span> <span class="string">b&#39;{&#39;</span> {
-        <span class="kw">return</span> <span class="ident">find_cap_ref_braced</span>(<span class="ident">rep</span>, <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>);
+}
+
+<span class="doccomment">/// Parses a possible reference to a capture group name in the given text,
+/// starting at the beginning of `replacement`.
+///
+/// If no such valid reference could be found, None is returned.
+</span><span class="kw">fn </span>find_cap_ref(replacement: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;CaptureRef&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
+    <span class="kw">let </span>rep: <span class="kw-2">&amp;</span>[u8] = replacement;
+    <span class="kw">if </span>rep.len() &lt;= <span class="number">1 </span>|| rep[<span class="number">0</span>] != <span class="string">b&#39;$&#39; </span>{
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cap_end</span> <span class="op">=</span> <span class="ident">i</span>;
-    <span class="kw">while</span> <span class="ident">rep</span>.<span class="ident">get</span>(<span class="ident">cap_end</span>).<span class="ident">copied</span>().<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="ident">is_valid_cap_letter</span>) {
-        <span class="ident">cap_end</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    i += <span class="number">1</span>;
+    <span class="kw">if </span>rep[i] == <span class="string">b&#39;{&#39; </span>{
+        <span class="kw">return </span>find_cap_ref_braced(rep, i + <span class="number">1</span>);
     }
-    <span class="kw">if</span> <span class="ident">cap_end</span> <span class="op">==</span> <span class="ident">i</span> {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>cap_end = i;
+    <span class="kw">while </span>rep.get(cap_end).copied().map_or(<span class="bool-val">false</span>, is_valid_cap_letter) {
+        cap_end += <span class="number">1</span>;
     }
-    <span class="comment">// We just verified that the range 0..cap_end is valid ASCII, so it must</span>
-    <span class="comment">// therefore be valid UTF-8. If we really cared, we could avoid this UTF-8</span>
-    <span class="comment">// check via an unchecked conversion or by parsing the number straight from</span>
-    <span class="comment">// &amp;[u8].</span>
-    <span class="kw">let</span> <span class="ident">cap</span> <span class="op">=</span>
-        <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">rep</span>[<span class="ident">i</span>..<span class="ident">cap_end</span>]).<span class="ident">expect</span>(<span class="string">&quot;valid UTF-8 capture name&quot;</span>);
-    <span class="prelude-val">Some</span>(<span class="ident">CaptureRef</span> {
-        <span class="ident">cap</span>: <span class="kw">match</span> <span class="ident">cap</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>() {
-            <span class="prelude-val">Ok</span>(<span class="ident">i</span>) =&gt; <span class="ident">Ref::Number</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">Ref::Named</span>(<span class="ident">cap</span>),
+    <span class="kw">if </span>cap_end == i {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
+    }
+    <span class="comment">// We just verified that the range 0..cap_end is valid ASCII, so it must
+    // therefore be valid UTF-8. If we really cared, we could avoid this UTF-8
+    // check via an unchecked conversion or by parsing the number straight from
+    // &amp;[u8].
+    </span><span class="kw">let </span>cap =
+        str::from_utf8(<span class="kw-2">&amp;</span>rep[i..cap_end]).expect(<span class="string">&quot;valid UTF-8 capture name&quot;</span>);
+    <span class="prelude-val">Some</span>(CaptureRef {
+        cap: <span class="kw">match </span>cap.parse::&lt;u32&gt;() {
+            <span class="prelude-val">Ok</span>(i) =&gt; Ref::Number(i <span class="kw">as </span>usize),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; Ref::Named(cap),
         },
-        <span class="ident">end</span>: <span class="ident">cap_end</span>,
+        end: cap_end,
     })
 }
 
-<span class="kw">fn</span> <span class="ident">find_cap_ref_braced</span>(<span class="ident">rep</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="kw-2">mut</span> <span class="ident">i</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CaptureRef</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">i</span>;
-    <span class="kw">while</span> <span class="ident">rep</span>.<span class="ident">get</span>(<span class="ident">i</span>).<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span> <span class="op">!</span><span class="op">=</span> <span class="string">b&#39;}&#39;</span>) {
-        <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+<span class="kw">fn </span>find_cap_ref_braced(rep: <span class="kw-2">&amp;</span>[u8], <span class="kw-2">mut </span>i: usize) -&gt; <span class="prelude-ty">Option</span>&lt;CaptureRef&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+    <span class="kw">let </span>start = i;
+    <span class="kw">while </span>rep.get(i).map_or(<span class="bool-val">false</span>, |<span class="kw-2">&amp;</span>b| b != <span class="string">b&#39;}&#39;</span>) {
+        i += <span class="number">1</span>;
     }
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">rep</span>.<span class="ident">get</span>(<span class="ident">i</span>).<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span> <span class="op">==</span> <span class="string">b&#39;}&#39;</span>) {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">if </span>!rep.get(i).map_or(<span class="bool-val">false</span>, |<span class="kw-2">&amp;</span>b| b == <span class="string">b&#39;}&#39;</span>) {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="comment">// When looking at braced names, we don&#39;t put any restrictions on the name,</span>
-    <span class="comment">// so it&#39;s possible it could be invalid UTF-8. But a capture group name</span>
-    <span class="comment">// can never be invalid UTF-8, so if we have invalid UTF-8, then we can</span>
-    <span class="comment">// safely return None.</span>
-    <span class="kw">let</span> <span class="ident">cap</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">rep</span>[<span class="ident">start</span>..<span class="ident">i</span>]) {
-        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
-        <span class="prelude-val">Ok</span>(<span class="ident">cap</span>) =&gt; <span class="ident">cap</span>,
+    <span class="comment">// When looking at braced names, we don&#39;t put any restrictions on the name,
+    // so it&#39;s possible it could be invalid UTF-8. But a capture group name
+    // can never be invalid UTF-8, so if we have invalid UTF-8, then we can
+    // safely return None.
+    </span><span class="kw">let </span>cap = <span class="kw">match </span>str::from_utf8(<span class="kw-2">&amp;</span>rep[start..i]) {
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        <span class="prelude-val">Ok</span>(cap) =&gt; cap,
     };
-    <span class="prelude-val">Some</span>(<span class="ident">CaptureRef</span> {
-        <span class="ident">cap</span>: <span class="kw">match</span> <span class="ident">cap</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>() {
-            <span class="prelude-val">Ok</span>(<span class="ident">i</span>) =&gt; <span class="ident">Ref::Number</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">Ref::Named</span>(<span class="ident">cap</span>),
+    <span class="prelude-val">Some</span>(CaptureRef {
+        cap: <span class="kw">match </span>cap.parse::&lt;u32&gt;() {
+            <span class="prelude-val">Ok</span>(i) =&gt; Ref::Number(i <span class="kw">as </span>usize),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; Ref::Named(cap),
         },
-        <span class="ident">end</span>: <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>,
+        end: i + <span class="number">1</span>,
     })
 }
 
-<span class="doccomment">/// Returns true if and only if the given byte is allowed in a capture name.</span>
-<span class="kw">fn</span> <span class="ident">is_valid_cap_letter</span>(<span class="ident">b</span>: <span class="ident">u8</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">match</span> <span class="ident">b</span> {
-        <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span> <span class="op">|</span> <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;z&#39;</span> <span class="op">|</span> <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;Z&#39;</span> <span class="op">|</span> <span class="string">b&#39;_&#39;</span> =&gt; <span class="bool-val">true</span>,
-        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+<span class="doccomment">/// Returns true if and only if the given byte is allowed in a capture name.
+</span><span class="kw">fn </span>is_valid_cap_letter(b: u8) -&gt; bool {
+    <span class="kw">match </span>b {
+        <span class="string">b&#39;0&#39;</span>..=<span class="string">b&#39;9&#39; </span>| <span class="string">b&#39;a&#39;</span>..=<span class="string">b&#39;z&#39; </span>| <span class="string">b&#39;A&#39;</span>..=<span class="string">b&#39;Z&#39; </span>| <span class="string">b&#39;_&#39; </span>=&gt; <span class="bool-val">true</span>,
+        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">find_cap_ref</span>, <span class="ident">CaptureRef</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::{find_cap_ref, CaptureRef};
 
-    <span class="macro">macro_rules!</span> <span class="ident">find</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">text</span>:<span class="ident">expr</span>) =&gt; {
-            <span class="attribute">#[<span class="ident">test</span>]</span>
-            <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>() {
-                <span class="macro">assert_eq!</span>(<span class="prelude-val">None</span>, <span class="ident">find_cap_ref</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">text</span>.<span class="ident">as_bytes</span>()));
+    <span class="macro">macro_rules! </span>find {
+        (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$text</span>:expr) =&gt; {
+            <span class="attribute">#[test]
+            </span><span class="kw">fn </span><span class="macro-nonterminal">$name</span>() {
+                <span class="macro">assert_eq!</span>(<span class="prelude-val">None</span>, find_cap_ref(<span class="macro-nonterminal">$text</span>.as_bytes()));
             }
         };
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">text</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">capref</span>:<span class="ident">expr</span>) =&gt; {
-            <span class="attribute">#[<span class="ident">test</span>]</span>
-            <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>() {
-                <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">capref</span>), <span class="ident">find_cap_ref</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">text</span>.<span class="ident">as_bytes</span>()));
+        (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$text</span>:expr, <span class="macro-nonterminal">$capref</span>:expr) =&gt; {
+            <span class="attribute">#[test]
+            </span><span class="kw">fn </span><span class="macro-nonterminal">$name</span>() {
+                <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="macro-nonterminal">$capref</span>), find_cap_ref(<span class="macro-nonterminal">$text</span>.as_bytes()));
             }
         };
     }
 
-    <span class="macro">macro_rules!</span> <span class="ident">c</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name_or_number</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pos</span>:<span class="ident">expr</span>) =&gt; {
-            <span class="ident">CaptureRef</span> { <span class="ident">cap</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name_or_number</span>.<span class="ident">into</span>(), <span class="ident">end</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pos</span> }
+    <span class="macro">macro_rules! </span>c {
+        (<span class="macro-nonterminal">$name_or_number</span>:expr, <span class="macro-nonterminal">$pos</span>:expr) =&gt; {
+            CaptureRef { cap: <span class="macro-nonterminal">$name_or_number</span>.into(), end: <span class="macro-nonterminal">$pos </span>}
         };
     }
 
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref1</span>, <span class="string">&quot;$foo&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;foo&quot;</span>, <span class="number">4</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref2</span>, <span class="string">&quot;${foo}&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;foo&quot;</span>, <span class="number">6</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref3</span>, <span class="string">&quot;$0&quot;</span>, <span class="macro">c!</span>(<span class="number">0</span>, <span class="number">2</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref4</span>, <span class="string">&quot;$5&quot;</span>, <span class="macro">c!</span>(<span class="number">5</span>, <span class="number">2</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref5</span>, <span class="string">&quot;$10&quot;</span>, <span class="macro">c!</span>(<span class="number">10</span>, <span class="number">3</span>));
-    <span class="comment">// See https://github.com/rust-lang/regex/pull/585</span>
-    <span class="comment">// for more on characters following numbers</span>
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref6</span>, <span class="string">&quot;$42a&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;42a&quot;</span>, <span class="number">4</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref7</span>, <span class="string">&quot;${42}a&quot;</span>, <span class="macro">c!</span>(<span class="number">42</span>, <span class="number">5</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref8</span>, <span class="string">&quot;${42&quot;</span>);
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref9</span>, <span class="string">&quot;${42 &quot;</span>);
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref10</span>, <span class="string">&quot; $0 &quot;</span>);
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref11</span>, <span class="string">&quot;$&quot;</span>);
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref12</span>, <span class="string">&quot; &quot;</span>);
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref13</span>, <span class="string">&quot;&quot;</span>);
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref14</span>, <span class="string">&quot;$1-$2&quot;</span>, <span class="macro">c!</span>(<span class="number">1</span>, <span class="number">2</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref15</span>, <span class="string">&quot;$1_$2&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;1_&quot;</span>, <span class="number">3</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref16</span>, <span class="string">&quot;$x-$y&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;x&quot;</span>, <span class="number">2</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref17</span>, <span class="string">&quot;$x_$y&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;x_&quot;</span>, <span class="number">3</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref18</span>, <span class="string">&quot;${#}&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;#&quot;</span>, <span class="number">4</span>));
-    <span class="macro">find!</span>(<span class="ident">find_cap_ref19</span>, <span class="string">&quot;${Z[}&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;Z[&quot;</span>, <span class="number">5</span>));
+    <span class="macro">find!</span>(find_cap_ref1, <span class="string">&quot;$foo&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;foo&quot;</span>, <span class="number">4</span>));
+    <span class="macro">find!</span>(find_cap_ref2, <span class="string">&quot;${foo}&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;foo&quot;</span>, <span class="number">6</span>));
+    <span class="macro">find!</span>(find_cap_ref3, <span class="string">&quot;$0&quot;</span>, <span class="macro">c!</span>(<span class="number">0</span>, <span class="number">2</span>));
+    <span class="macro">find!</span>(find_cap_ref4, <span class="string">&quot;$5&quot;</span>, <span class="macro">c!</span>(<span class="number">5</span>, <span class="number">2</span>));
+    <span class="macro">find!</span>(find_cap_ref5, <span class="string">&quot;$10&quot;</span>, <span class="macro">c!</span>(<span class="number">10</span>, <span class="number">3</span>));
+    <span class="comment">// See https://github.com/rust-lang/regex/pull/585
+    // for more on characters following numbers
+    </span><span class="macro">find!</span>(find_cap_ref6, <span class="string">&quot;$42a&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;42a&quot;</span>, <span class="number">4</span>));
+    <span class="macro">find!</span>(find_cap_ref7, <span class="string">&quot;${42}a&quot;</span>, <span class="macro">c!</span>(<span class="number">42</span>, <span class="number">5</span>));
+    <span class="macro">find!</span>(find_cap_ref8, <span class="string">&quot;${42&quot;</span>);
+    <span class="macro">find!</span>(find_cap_ref9, <span class="string">&quot;${42 &quot;</span>);
+    <span class="macro">find!</span>(find_cap_ref10, <span class="string">&quot; $0 &quot;</span>);
+    <span class="macro">find!</span>(find_cap_ref11, <span class="string">&quot;$&quot;</span>);
+    <span class="macro">find!</span>(find_cap_ref12, <span class="string">&quot; &quot;</span>);
+    <span class="macro">find!</span>(find_cap_ref13, <span class="string">&quot;&quot;</span>);
+    <span class="macro">find!</span>(find_cap_ref14, <span class="string">&quot;$1-$2&quot;</span>, <span class="macro">c!</span>(<span class="number">1</span>, <span class="number">2</span>));
+    <span class="macro">find!</span>(find_cap_ref15, <span class="string">&quot;$1_$2&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;1_&quot;</span>, <span class="number">3</span>));
+    <span class="macro">find!</span>(find_cap_ref16, <span class="string">&quot;$x-$y&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;x&quot;</span>, <span class="number">2</span>));
+    <span class="macro">find!</span>(find_cap_ref17, <span class="string">&quot;$x_$y&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;x_&quot;</span>, <span class="number">3</span>));
+    <span class="macro">find!</span>(find_cap_ref18, <span class="string">&quot;${#}&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;#&quot;</span>, <span class="number">4</span>));
+    <span class="macro">find!</span>(find_cap_ref19, <span class="string">&quot;${Z[}&quot;</span>, <span class="macro">c!</span>(<span class="string">&quot;Z[&quot;</span>, <span class="number">5</span>));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="regex" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="regex" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

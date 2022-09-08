@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.36/src/parse.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parse.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../proc_macro2/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../proc_macro2/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../proc_macro2/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.36/src/parse.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parse.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../proc_macro2/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../proc_macro2/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../proc_macro2/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -869,871 +863,870 @@
 <span id="863">863</span>
 <span id="864">864</span>
 <span id="865">865</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fallback</span>::{
-    <span class="ident">is_ident_continue</span>, <span class="ident">is_ident_start</span>, <span class="ident">Group</span>, <span class="ident">LexError</span>, <span class="ident">Literal</span>, <span class="ident">Span</span>, <span class="ident">TokenStream</span>,
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::fallback::{
+    is_ident_continue, is_ident_start, Group, LexError, Literal, Span, TokenStream,
 };
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Delimiter</span>, <span class="ident">Punct</span>, <span class="ident">Spacing</span>, <span class="ident">TokenTree</span>};
-<span class="kw">use</span> <span class="ident">std::char</span>;
-<span class="kw">use</span> <span class="ident">std::str</span>::{<span class="ident">Bytes</span>, <span class="ident">CharIndices</span>, <span class="ident">Chars</span>};
+<span class="kw">use crate</span>::{Delimiter, Punct, Spacing, TokenTree};
+<span class="kw">use </span>std::char;
+<span class="kw">use </span>std::str::{Bytes, CharIndices, Chars};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">rest</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">off</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Copy, Clone, Eq, PartialEq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">pub </span>rest: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    <span class="attribute">#[cfg(span_locations)]
+    </span><span class="kw">pub </span>off: u32,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">advance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">bytes</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">_front</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">split_at</span>(<span class="ident">bytes</span>);
-        <span class="ident">Cursor</span> {
-            <span class="ident">rest</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-            <span class="ident">off</span>: <span class="self">self</span>.<span class="ident">off</span> <span class="op">+</span> <span class="ident">_front</span>.<span class="ident">chars</span>().<span class="ident">count</span>() <span class="kw">as</span> <span class="ident">u32</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>advance(<span class="kw-2">&amp;</span><span class="self">self</span>, bytes: usize) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="kw">let </span>(_front, rest) = <span class="self">self</span>.rest.split_at(bytes);
+        Cursor {
+            rest,
+            <span class="attribute">#[cfg(span_locations)]
+            </span>off: <span class="self">self</span>.off + _front.chars().count() <span class="kw">as </span>u32,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">starts_with</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">starts_with</span>(<span class="ident">s</span>)
+    <span class="kw">fn </span>starts_with(<span class="kw-2">&amp;</span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>str) -&gt; bool {
+        <span class="self">self</span>.rest.starts_with(s)
     }
 
-    <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">is_empty</span>()
+    <span class="kw">fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.rest.is_empty()
     }
 
-    <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">len</span>()
+    <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.rest.len()
     }
 
-    <span class="kw">fn</span> <span class="ident">as_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>] {
-        <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">as_bytes</span>()
+    <span class="kw">fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8] {
+        <span class="self">self</span>.rest.as_bytes()
     }
 
-    <span class="kw">fn</span> <span class="ident">bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Bytes</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">bytes</span>()
+    <span class="kw">fn </span>bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Bytes&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="self">self</span>.rest.bytes()
     }
 
-    <span class="kw">fn</span> <span class="ident">chars</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Chars</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">chars</span>()
+    <span class="kw">fn </span>chars(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Chars&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="self">self</span>.rest.chars()
     }
 
-    <span class="kw">fn</span> <span class="ident">char_indices</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">CharIndices</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">char_indices</span>()
+    <span class="kw">fn </span>char_indices(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; CharIndices&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="self">self</span>.rest.char_indices()
     }
 
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tag</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">starts_with</span>(<span class="ident">tag</span>) {
-            <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">advance</span>(<span class="ident">tag</span>.<span class="ident">len</span>()))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+    <span class="kw">fn </span>parse(<span class="kw-2">&amp;</span><span class="self">self</span>, tag: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor&lt;<span class="lifetime">&#39;a</span>&gt;, Reject&gt; {
+        <span class="kw">if </span><span class="self">self</span>.starts_with(tag) {
+            <span class="prelude-val">Ok</span>(<span class="self">self</span>.advance(tag.len()))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(Reject)
         }
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Reject</span>;
-<span class="kw">type</span> <span class="ident">PResult</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">O</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">O</span>), <span class="ident">Reject</span><span class="op">&gt;</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Reject;
+<span class="kw">type </span>PResult&lt;<span class="lifetime">&#39;a</span>, O&gt; = <span class="prelude-ty">Result</span>&lt;(Cursor&lt;<span class="lifetime">&#39;a</span>&gt;, O), Reject&gt;;
 
-<span class="kw">fn</span> <span class="ident">skip_whitespace</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">Cursor</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">input</span>;
+<span class="kw">fn </span>skip_whitespace(input: Cursor) -&gt; Cursor {
+    <span class="kw">let </span><span class="kw-2">mut </span>s = input;
 
-    <span class="kw">while</span> <span class="op">!</span><span class="ident">s</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">let</span> <span class="ident">byte</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">as_bytes</span>()[<span class="number">0</span>];
-        <span class="kw">if</span> <span class="ident">byte</span> <span class="op">==</span> <span class="string">b&#39;/&#39;</span> {
-            <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;//&quot;</span>)
-                <span class="op">&amp;&amp;</span> (<span class="op">!</span><span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;///&quot;</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;////&quot;</span>))
-                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;//!&quot;</span>)
+    <span class="kw">while </span>!s.is_empty() {
+        <span class="kw">let </span>byte = s.as_bytes()[<span class="number">0</span>];
+        <span class="kw">if </span>byte == <span class="string">b&#39;/&#39; </span>{
+            <span class="kw">if </span>s.starts_with(<span class="string">&quot;//&quot;</span>)
+                &amp;&amp; (!s.starts_with(<span class="string">&quot;///&quot;</span>) || s.starts_with(<span class="string">&quot;////&quot;</span>))
+                &amp;&amp; !s.starts_with(<span class="string">&quot;//!&quot;</span>)
             {
-                <span class="kw">let</span> (<span class="ident">cursor</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">take_until_newline_or_eof</span>(<span class="ident">s</span>);
-                <span class="ident">s</span> <span class="op">=</span> <span class="ident">cursor</span>;
+                <span class="kw">let </span>(cursor, <span class="kw">_</span>) = take_until_newline_or_eof(s);
+                s = cursor;
                 <span class="kw">continue</span>;
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/**/&quot;</span>) {
-                <span class="ident">s</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">advance</span>(<span class="number">4</span>);
+            } <span class="kw">else if </span>s.starts_with(<span class="string">&quot;/**/&quot;</span>) {
+                s = s.advance(<span class="number">4</span>);
                 <span class="kw">continue</span>;
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/*&quot;</span>)
-                <span class="op">&amp;&amp;</span> (<span class="op">!</span><span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/**&quot;</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/***&quot;</span>))
-                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/*!&quot;</span>)
+            } <span class="kw">else if </span>s.starts_with(<span class="string">&quot;/*&quot;</span>)
+                &amp;&amp; (!s.starts_with(<span class="string">&quot;/**&quot;</span>) || s.starts_with(<span class="string">&quot;/***&quot;</span>))
+                &amp;&amp; !s.starts_with(<span class="string">&quot;/*!&quot;</span>)
             {
-                <span class="kw">match</span> <span class="ident">block_comment</span>(<span class="ident">s</span>) {
-                    <span class="prelude-val">Ok</span>((<span class="ident">rest</span>, <span class="kw">_</span>)) =&gt; {
-                        <span class="ident">s</span> <span class="op">=</span> <span class="ident">rest</span>;
+                <span class="kw">match </span>block_comment(s) {
+                    <span class="prelude-val">Ok</span>((rest, <span class="kw">_</span>)) =&gt; {
+                        s = rest;
                         <span class="kw">continue</span>;
                     }
-                    <span class="prelude-val">Err</span>(<span class="ident">Reject</span>) =&gt; <span class="kw">return</span> <span class="ident">s</span>,
+                    <span class="prelude-val">Err</span>(Reject) =&gt; <span class="kw">return </span>s,
                 }
             }
         }
-        <span class="kw">match</span> <span class="ident">byte</span> {
-            <span class="string">b&#39; &#39;</span> <span class="op">|</span> <span class="number">0x09</span>..<span class="op">=</span><span class="number">0x0d</span> =&gt; {
-                <span class="ident">s</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">advance</span>(<span class="number">1</span>);
+        <span class="kw">match </span>byte {
+            <span class="string">b&#39; &#39; </span>| <span class="number">0x09</span>..=<span class="number">0x0d </span>=&gt; {
+                s = s.advance(<span class="number">1</span>);
                 <span class="kw">continue</span>;
             }
-            <span class="ident">b</span> <span class="kw">if</span> <span class="ident">b</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0x7f</span> =&gt; {}
-            <span class="kw">_</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">ch</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">chars</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>();
-                <span class="kw">if</span> <span class="ident">is_whitespace</span>(<span class="ident">ch</span>) {
-                    <span class="ident">s</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">advance</span>(<span class="ident">ch</span>.<span class="ident">len_utf8</span>());
+            b <span class="kw">if </span>b &lt;= <span class="number">0x7f </span>=&gt; {}
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">let </span>ch = s.chars().next().unwrap();
+                <span class="kw">if </span>is_whitespace(ch) {
+                    s = s.advance(ch.len_utf8());
                     <span class="kw">continue</span>;
                 }
             }
         }
-        <span class="kw">return</span> <span class="ident">s</span>;
+        <span class="kw">return </span>s;
     }
-    <span class="ident">s</span>
+    s
 }
 
-<span class="kw">fn</span> <span class="ident">block_comment</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/*&quot;</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+<span class="kw">fn </span>block_comment(input: Cursor) -&gt; PResult&lt;<span class="kw-2">&amp;</span>str&gt; {
+    <span class="kw">if </span>!input.starts_with(<span class="string">&quot;/*&quot;</span>) {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">depth</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">as_bytes</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="ident">upper</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>depth = <span class="number">0</span>;
+    <span class="kw">let </span>bytes = input.as_bytes();
+    <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
+    <span class="kw">let </span>upper = bytes.len() - <span class="number">1</span>;
 
-    <span class="kw">while</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">upper</span> {
-        <span class="kw">if</span> <span class="ident">bytes</span>[<span class="ident">i</span>] <span class="op">==</span> <span class="string">b&#39;/&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">bytes</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>] <span class="op">==</span> <span class="string">b&#39;*&#39;</span> {
-            <span class="ident">depth</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>; <span class="comment">// eat &#39;*&#39;</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">bytes</span>[<span class="ident">i</span>] <span class="op">==</span> <span class="string">b&#39;*&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">bytes</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>] <span class="op">==</span> <span class="string">b&#39;/&#39;</span> {
-            <span class="ident">depth</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="kw">if</span> <span class="ident">depth</span> <span class="op">==</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>((<span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">2</span>), <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">rest</span>[..<span class="ident">i</span> <span class="op">+</span> <span class="number">2</span>]));
+    <span class="kw">while </span>i &lt; upper {
+        <span class="kw">if </span>bytes[i] == <span class="string">b&#39;/&#39; </span>&amp;&amp; bytes[i + <span class="number">1</span>] == <span class="string">b&#39;*&#39; </span>{
+            depth += <span class="number">1</span>;
+            i += <span class="number">1</span>; <span class="comment">// eat &#39;*&#39;
+        </span>} <span class="kw">else if </span>bytes[i] == <span class="string">b&#39;*&#39; </span>&amp;&amp; bytes[i + <span class="number">1</span>] == <span class="string">b&#39;/&#39; </span>{
+            depth -= <span class="number">1</span>;
+            <span class="kw">if </span>depth == <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Ok</span>((input.advance(i + <span class="number">2</span>), <span class="kw-2">&amp;</span>input.rest[..i + <span class="number">2</span>]));
             }
-            <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>; <span class="comment">// eat &#39;/&#39;</span>
-        }
-        <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            i += <span class="number">1</span>; <span class="comment">// eat &#39;/&#39;
+        </span>}
+        i += <span class="number">1</span>;
     }
 
-    <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+    <span class="prelude-val">Err</span>(Reject)
 }
 
-<span class="kw">fn</span> <span class="ident">is_whitespace</span>(<span class="ident">ch</span>: <span class="ident">char</span>) -&gt; <span class="ident">bool</span> {
-    <span class="comment">// Rust treats left-to-right mark and right-to-left mark as whitespace</span>
-    <span class="ident">ch</span>.<span class="ident">is_whitespace</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">ch</span> <span class="op">==</span> <span class="string">&#39;\u{200e}&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ch</span> <span class="op">==</span> <span class="string">&#39;\u{200f}&#39;</span>
-}
+<span class="kw">fn </span>is_whitespace(ch: char) -&gt; bool {
+    <span class="comment">// Rust treats left-to-right mark and right-to-left mark as whitespace
+    </span>ch.is_whitespace() || ch == <span class="string">&#39;\u{200e}&#39; </span>|| ch == <span class="string">&#39;\u{200f}&#39;
+</span>}
 
-<span class="kw">fn</span> <span class="ident">word_break</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">input</span>.<span class="ident">chars</span>().<span class="ident">next</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="kw">if</span> <span class="ident">is_ident_continue</span>(<span class="ident">ch</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Reject</span>),
-        <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">input</span>),
+<span class="kw">fn </span>word_break(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">match </span>input.chars().next() {
+        <span class="prelude-val">Some</span>(ch) <span class="kw">if </span>is_ident_continue(ch) =&gt; <span class="prelude-val">Err</span>(Reject),
+        <span class="prelude-val">Some</span>(<span class="kw">_</span>) | <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(input),
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">token_stream</span>(<span class="kw-2">mut</span> <span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span>, <span class="ident">LexError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trees</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>token_stream(<span class="kw-2">mut </span>input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, LexError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>trees = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>stack = Vec::new();
 
-    <span class="kw">loop</span> {
-        <span class="ident">input</span> <span class="op">=</span> <span class="ident">skip_whitespace</span>(<span class="ident">input</span>);
+    <span class="kw">loop </span>{
+        input = skip_whitespace(input);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>((<span class="ident">rest</span>, <span class="ident">tt</span>)) <span class="op">=</span> <span class="ident">doc_comment</span>(<span class="ident">input</span>) {
-            <span class="ident">trees</span>.<span class="ident">extend</span>(<span class="ident">tt</span>);
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">rest</span>;
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>((rest, tt)) = doc_comment(input) {
+            trees.extend(tt);
+            input = rest;
             <span class="kw">continue</span>;
         }
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-        <span class="kw">let</span> <span class="ident">lo</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">off</span>;
+        <span class="attribute">#[cfg(span_locations)]
+        </span><span class="kw">let </span>lo = input.off;
 
-        <span class="kw">let</span> <span class="ident">first</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>.<span class="ident">bytes</span>().<span class="ident">next</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">first</span>) =&gt; <span class="ident">first</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">stack</span>.<span class="ident">last</span>() {
-                <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">TokenStream::from</span>(<span class="ident">trees</span>)),
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-                <span class="prelude-val">Some</span>((<span class="ident">lo</span>, <span class="ident">_frame</span>)) =&gt; {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">LexError</span> {
-                        <span class="ident">span</span>: <span class="ident">Span</span> { <span class="ident">lo</span>: <span class="kw-2">*</span><span class="ident">lo</span>, <span class="ident">hi</span>: <span class="kw-2">*</span><span class="ident">lo</span> },
+        <span class="kw">let </span>first = <span class="kw">match </span>input.bytes().next() {
+            <span class="prelude-val">Some</span>(first) =&gt; first,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>stack.last() {
+                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(TokenStream::from(trees)),
+                <span class="attribute">#[cfg(span_locations)]
+                </span><span class="prelude-val">Some</span>((lo, _frame)) =&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(LexError {
+                        span: Span { lo: <span class="kw-2">*</span>lo, hi: <span class="kw-2">*</span>lo },
                     })
                 }
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">span_locations</span>))]</span>
-                <span class="prelude-val">Some</span>(<span class="ident">_frame</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">LexError</span> { <span class="ident">span</span>: <span class="ident">Span</span> {} }),
+                <span class="attribute">#[cfg(not(span_locations))]
+                </span><span class="prelude-val">Some</span>(_frame) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(LexError { span: Span {} }),
             },
         };
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">open_delimiter</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">first</span> {
-            <span class="string">b&#39;(&#39;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">Delimiter::Parenthesis</span>),
-            <span class="string">b&#39;[&#39;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">Delimiter::Bracket</span>),
-            <span class="string">b&#39;{&#39;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">Delimiter::Brace</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(open_delimiter) = <span class="kw">match </span>first {
+            <span class="string">b&#39;(&#39; </span>=&gt; <span class="prelude-val">Some</span>(Delimiter::Parenthesis),
+            <span class="string">b&#39;[&#39; </span>=&gt; <span class="prelude-val">Some</span>(Delimiter::Bracket),
+            <span class="string">b&#39;{&#39; </span>=&gt; <span class="prelude-val">Some</span>(Delimiter::Brace),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         } {
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="number">1</span>);
-            <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> (<span class="ident">open_delimiter</span>, <span class="ident">trees</span>);
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-            <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> (<span class="ident">lo</span>, <span class="ident">frame</span>);
-            <span class="ident">stack</span>.<span class="ident">push</span>(<span class="ident">frame</span>);
-            <span class="ident">trees</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">close_delimiter</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">first</span> {
-            <span class="string">b&#39;)&#39;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">Delimiter::Parenthesis</span>),
-            <span class="string">b&#39;]&#39;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">Delimiter::Bracket</span>),
-            <span class="string">b&#39;}&#39;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">Delimiter::Brace</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+            input = input.advance(<span class="number">1</span>);
+            <span class="kw">let </span>frame = (open_delimiter, trees);
+            <span class="attribute">#[cfg(span_locations)]
+            </span><span class="kw">let </span>frame = (lo, frame);
+            stack.push(frame);
+            trees = Vec::new();
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(close_delimiter) = <span class="kw">match </span>first {
+            <span class="string">b&#39;)&#39; </span>=&gt; <span class="prelude-val">Some</span>(Delimiter::Parenthesis),
+            <span class="string">b&#39;]&#39; </span>=&gt; <span class="prelude-val">Some</span>(Delimiter::Bracket),
+            <span class="string">b&#39;}&#39; </span>=&gt; <span class="prelude-val">Some</span>(Delimiter::Brace),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         } {
-            <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">stack</span>.<span class="ident">pop</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">frame</span>) =&gt; <span class="ident">frame</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">lex_error</span>(<span class="ident">input</span>)),
+            <span class="kw">let </span>frame = <span class="kw">match </span>stack.pop() {
+                <span class="prelude-val">Some</span>(frame) =&gt; frame,
+                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(lex_error(input)),
             };
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-            <span class="kw">let</span> (<span class="ident">lo</span>, <span class="ident">frame</span>) <span class="op">=</span> <span class="ident">frame</span>;
-            <span class="kw">let</span> (<span class="ident">open_delimiter</span>, <span class="ident">outer</span>) <span class="op">=</span> <span class="ident">frame</span>;
-            <span class="kw">if</span> <span class="ident">open_delimiter</span> <span class="op">!</span><span class="op">=</span> <span class="ident">close_delimiter</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">lex_error</span>(<span class="ident">input</span>));
+            <span class="attribute">#[cfg(span_locations)]
+            </span><span class="kw">let </span>(lo, frame) = frame;
+            <span class="kw">let </span>(open_delimiter, outer) = frame;
+            <span class="kw">if </span>open_delimiter != close_delimiter {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(lex_error(input));
             }
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="number">1</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">Group::new</span>(<span class="ident">open_delimiter</span>, <span class="ident">TokenStream::from</span>(<span class="ident">trees</span>));
-            <span class="ident">g</span>.<span class="ident">set_span</span>(<span class="ident">Span</span> {
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-                <span class="ident">lo</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-                <span class="ident">hi</span>: <span class="ident">input</span>.<span class="ident">off</span>,
+            input = input.advance(<span class="number">1</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>g = Group::new(open_delimiter, TokenStream::from(trees));
+            g.set_span(Span {
+                <span class="attribute">#[cfg(span_locations)]
+                </span>lo,
+                <span class="attribute">#[cfg(span_locations)]
+                </span>hi: input.off,
             });
-            <span class="ident">trees</span> <span class="op">=</span> <span class="ident">outer</span>;
-            <span class="ident">trees</span>.<span class="ident">push</span>(<span class="ident">TokenTree::Group</span>(<span class="ident"><span class="kw">crate</span>::Group::_new_stable</span>(<span class="ident">g</span>)));
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> (<span class="ident">rest</span>, <span class="kw-2">mut</span> <span class="ident">tt</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">leaf_token</span>(<span class="ident">input</span>) {
-                <span class="prelude-val">Ok</span>((<span class="ident">rest</span>, <span class="ident">tt</span>)) =&gt; (<span class="ident">rest</span>, <span class="ident">tt</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">Reject</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">lex_error</span>(<span class="ident">input</span>)),
+            trees = outer;
+            trees.push(TokenTree::Group(<span class="kw">crate</span>::Group::_new_stable(g)));
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>(rest, <span class="kw-2">mut </span>tt) = <span class="kw">match </span>leaf_token(input) {
+                <span class="prelude-val">Ok</span>((rest, tt)) =&gt; (rest, tt),
+                <span class="prelude-val">Err</span>(Reject) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(lex_error(input)),
             };
-            <span class="ident">tt</span>.<span class="ident">set_span</span>(<span class="ident"><span class="kw">crate</span>::Span::_new_stable</span>(<span class="ident">Span</span> {
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-                <span class="ident">lo</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-                <span class="ident">hi</span>: <span class="ident">rest</span>.<span class="ident">off</span>,
+            tt.set_span(<span class="kw">crate</span>::Span::_new_stable(Span {
+                <span class="attribute">#[cfg(span_locations)]
+                </span>lo,
+                <span class="attribute">#[cfg(span_locations)]
+                </span>hi: rest.off,
             }));
-            <span class="ident">trees</span>.<span class="ident">push</span>(<span class="ident">tt</span>);
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">rest</span>;
+            trees.push(tt);
+            input = rest;
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">lex_error</span>(<span class="ident">cursor</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">LexError</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">span_locations</span>))]</span>
-    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">cursor</span>;
-    <span class="ident">LexError</span> {
-        <span class="ident">span</span>: <span class="ident">Span</span> {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-            <span class="ident">lo</span>: <span class="ident">cursor</span>.<span class="ident">off</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-            <span class="ident">hi</span>: <span class="ident">cursor</span>.<span class="ident">off</span>,
+<span class="kw">fn </span>lex_error(cursor: Cursor) -&gt; LexError {
+    <span class="attribute">#[cfg(not(span_locations))]
+    </span><span class="kw">let _ </span>= cursor;
+    LexError {
+        span: Span {
+            <span class="attribute">#[cfg(span_locations)]
+            </span>lo: cursor.off,
+            <span class="attribute">#[cfg(span_locations)]
+            </span>hi: cursor.off,
         },
     }
 }
 
-<span class="kw">fn</span> <span class="ident">leaf_token</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span><span class="ident">TokenTree</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>((<span class="ident">input</span>, <span class="ident">l</span>)) <span class="op">=</span> <span class="ident">literal</span>(<span class="ident">input</span>) {
-        <span class="comment">// must be parsed before ident</span>
-        <span class="prelude-val">Ok</span>((<span class="ident">input</span>, <span class="ident">TokenTree::Literal</span>(<span class="ident"><span class="kw">crate</span>::Literal::_new_stable</span>(<span class="ident">l</span>))))
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>((<span class="ident">input</span>, <span class="ident">p</span>)) <span class="op">=</span> <span class="ident">punct</span>(<span class="ident">input</span>) {
-        <span class="prelude-val">Ok</span>((<span class="ident">input</span>, <span class="ident">TokenTree::Punct</span>(<span class="ident">p</span>)))
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>((<span class="ident">input</span>, <span class="ident">i</span>)) <span class="op">=</span> <span class="ident">ident</span>(<span class="ident">input</span>) {
-        <span class="prelude-val">Ok</span>((<span class="ident">input</span>, <span class="ident">TokenTree::Ident</span>(<span class="ident">i</span>)))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+<span class="kw">fn </span>leaf_token(input: Cursor) -&gt; PResult&lt;TokenTree&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>((input, l)) = literal(input) {
+        <span class="comment">// must be parsed before ident
+        </span><span class="prelude-val">Ok</span>((input, TokenTree::Literal(<span class="kw">crate</span>::Literal::_new_stable(l))))
+    } <span class="kw">else if let </span><span class="prelude-val">Ok</span>((input, p)) = punct(input) {
+        <span class="prelude-val">Ok</span>((input, TokenTree::Punct(p)))
+    } <span class="kw">else if let </span><span class="prelude-val">Ok</span>((input, i)) = ident(input) {
+        <span class="prelude-val">Ok</span>((input, TokenTree::Ident(i)))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(Reject)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">ident</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Ident</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> [<span class="string">&quot;r\&quot;&quot;</span>, <span class="string">&quot;r#\&quot;&quot;</span>, <span class="string">&quot;r##&quot;</span>, <span class="string">&quot;b\&quot;&quot;</span>, <span class="string">&quot;b\&#39;&quot;</span>, <span class="string">&quot;br\&quot;&quot;</span>, <span class="string">&quot;br#&quot;</span>]
-        .<span class="ident">iter</span>()
-        .<span class="ident">any</span>(<span class="op">|</span><span class="ident">prefix</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="ident">prefix</span>))
+<span class="kw">fn </span>ident(input: Cursor) -&gt; PResult&lt;<span class="kw">crate</span>::Ident&gt; {
+    <span class="kw">if </span>[<span class="string">&quot;r\&quot;&quot;</span>, <span class="string">&quot;r#\&quot;&quot;</span>, <span class="string">&quot;r##&quot;</span>, <span class="string">&quot;b\&quot;&quot;</span>, <span class="string">&quot;b\&#39;&quot;</span>, <span class="string">&quot;br\&quot;&quot;</span>, <span class="string">&quot;br#&quot;</span>]
+        .iter()
+        .any(|prefix| input.starts_with(prefix))
     {
-        <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">ident_any</span>(<span class="ident">input</span>)
+        <span class="prelude-val">Err</span>(Reject)
+    } <span class="kw">else </span>{
+        ident_any(input)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">ident_any</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Ident</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;r#&quot;</span>);
-    <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>((<span class="ident">raw</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>);
+<span class="kw">fn </span>ident_any(input: Cursor) -&gt; PResult&lt;<span class="kw">crate</span>::Ident&gt; {
+    <span class="kw">let </span>raw = input.starts_with(<span class="string">&quot;r#&quot;</span>);
+    <span class="kw">let </span>rest = input.advance((raw <span class="kw">as </span>usize) &lt;&lt; <span class="number">1</span>);
 
-    <span class="kw">let</span> (<span class="ident">rest</span>, <span class="ident">sym</span>) <span class="op">=</span> <span class="ident">ident_not_raw</span>(<span class="ident">rest</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>(rest, sym) = ident_not_raw(rest)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">raw</span> {
-        <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::Ident::new</span>(<span class="ident">sym</span>, <span class="ident"><span class="kw">crate</span>::Span::call_site</span>());
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>((<span class="ident">rest</span>, <span class="ident">ident</span>));
+    <span class="kw">if </span>!raw {
+        <span class="kw">let </span>ident = <span class="kw">crate</span>::Ident::new(sym, <span class="kw">crate</span>::Span::call_site());
+        <span class="kw">return </span><span class="prelude-val">Ok</span>((rest, ident));
     }
 
-    <span class="kw">if</span> <span class="ident">sym</span> <span class="op">==</span> <span class="string">&quot;_&quot;</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+    <span class="kw">if </span>sym == <span class="string">&quot;_&quot; </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
     }
 
-    <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::Ident::_new_raw</span>(<span class="ident">sym</span>, <span class="ident"><span class="kw">crate</span>::Span::call_site</span>());
-    <span class="prelude-val">Ok</span>((<span class="ident">rest</span>, <span class="ident">ident</span>))
+    <span class="kw">let </span>ident = <span class="kw">crate</span>::Ident::_new_raw(sym, <span class="kw">crate</span>::Span::call_site());
+    <span class="prelude-val">Ok</span>((rest, ident))
 }
 
-<span class="kw">fn</span> <span class="ident">ident_not_raw</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">char_indices</span>();
+<span class="kw">fn </span>ident_not_raw(input: Cursor) -&gt; PResult&lt;<span class="kw-2">&amp;</span>str&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>chars = input.char_indices();
 
-    <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-        <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">ch</span>)) <span class="kw">if</span> <span class="ident">is_ident_start</span>(<span class="ident">ch</span>) =&gt; {}
-        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>),
+    <span class="kw">match </span>chars.next() {
+        <span class="prelude-val">Some</span>((<span class="kw">_</span>, ch)) <span class="kw">if </span>is_ident_start(ch) =&gt; {}
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Reject),
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">len</span>();
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">ch</span>) <span class="kw">in</span> <span class="ident">chars</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_ident_continue</span>(<span class="ident">ch</span>) {
-            <span class="ident">end</span> <span class="op">=</span> <span class="ident">i</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>end = input.len();
+    <span class="kw">for </span>(i, ch) <span class="kw">in </span>chars {
+        <span class="kw">if </span>!is_ident_continue(ch) {
+            end = i;
             <span class="kw">break</span>;
         }
     }
 
-    <span class="prelude-val">Ok</span>((<span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">end</span>), <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">rest</span>[..<span class="ident">end</span>]))
+    <span class="prelude-val">Ok</span>((input.advance(end), <span class="kw-2">&amp;</span>input.rest[..end]))
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">literal</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span><span class="ident">Literal</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="ident">literal_nocapture</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">rest</span>.<span class="ident">len</span>();
-    <span class="prelude-val">Ok</span>((<span class="ident">rest</span>, <span class="ident">Literal::_new</span>(<span class="ident">input</span>.<span class="ident">rest</span>[..<span class="ident">end</span>].<span class="ident">to_string</span>())))
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>literal(input: Cursor) -&gt; PResult&lt;Literal&gt; {
+    <span class="kw">let </span>rest = literal_nocapture(input)<span class="question-mark">?</span>;
+    <span class="kw">let </span>end = input.len() - rest.len();
+    <span class="prelude-val">Ok</span>((rest, Literal::_new(input.rest[..end].to_string())))
 }
 
-<span class="kw">fn</span> <span class="ident">literal_nocapture</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span> <span class="ident">string</span>(<span class="ident">input</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">ok</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span> <span class="ident">byte_string</span>(<span class="ident">input</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">ok</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span> <span class="ident">byte</span>(<span class="ident">input</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">ok</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span> <span class="ident">character</span>(<span class="ident">input</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">ok</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span> <span class="ident">float</span>(<span class="ident">input</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">ok</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span> <span class="ident">int</span>(<span class="ident">input</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">ok</span>)
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+<span class="kw">fn </span>literal_nocapture(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(ok) = string(input) {
+        <span class="prelude-val">Ok</span>(ok)
+    } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(ok) = byte_string(input) {
+        <span class="prelude-val">Ok</span>(ok)
+    } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(ok) = byte(input) {
+        <span class="prelude-val">Ok</span>(ok)
+    } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(ok) = character(input) {
+        <span class="prelude-val">Ok</span>(ok)
+    } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(ok) = float(input) {
+        <span class="prelude-val">Ok</span>(ok)
+    } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(ok) = int(input) {
+        <span class="prelude-val">Ok</span>(ok)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(Reject)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">literal_suffix</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">Cursor</span> {
-    <span class="kw">match</span> <span class="ident">ident_not_raw</span>(<span class="ident">input</span>) {
-        <span class="prelude-val">Ok</span>((<span class="ident">input</span>, <span class="kw">_</span>)) =&gt; <span class="ident">input</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">Reject</span>) =&gt; <span class="ident">input</span>,
+<span class="kw">fn </span>literal_suffix(input: Cursor) -&gt; Cursor {
+    <span class="kw">match </span>ident_not_raw(input) {
+        <span class="prelude-val">Ok</span>((input, <span class="kw">_</span>)) =&gt; input,
+        <span class="prelude-val">Err</span>(Reject) =&gt; input,
     }
 }
 
-<span class="kw">fn</span> <span class="ident">string</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">input</span>) <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>(<span class="string">&quot;\&quot;&quot;</span>) {
-        <span class="ident">cooked_string</span>(<span class="ident">input</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">input</span>) <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>(<span class="string">&quot;r&quot;</span>) {
-        <span class="ident">raw_string</span>(<span class="ident">input</span>)
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+<span class="kw">fn </span>string(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(input) = input.parse(<span class="string">&quot;\&quot;&quot;</span>) {
+        cooked_string(input)
+    } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(input) = input.parse(<span class="string">&quot;r&quot;</span>) {
+        raw_string(input)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(Reject)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">cooked_string</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">char_indices</span>().<span class="ident">peekable</span>();
+<span class="kw">fn </span>cooked_string(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>chars = input.char_indices().peekable();
 
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">ch</span>)) <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-        <span class="kw">match</span> <span class="ident">ch</span> {
-            <span class="string">&#39;&quot;&#39;</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>);
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">literal_suffix</span>(<span class="ident">input</span>));
+    <span class="kw">while let </span><span class="prelude-val">Some</span>((i, ch)) = chars.next() {
+        <span class="kw">match </span>ch {
+            <span class="string">&#39;&quot;&#39; </span>=&gt; {
+                <span class="kw">let </span>input = input.advance(i + <span class="number">1</span>);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(literal_suffix(input));
             }
-            <span class="string">&#39;\r&#39;</span> =&gt; <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+            <span class="string">&#39;\r&#39; </span>=&gt; <span class="kw">match </span>chars.next() {
                 <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;\n&#39;</span>)) =&gt; {}
-                <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+                <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
             },
-            <span class="string">&#39;\\&#39;</span> =&gt; <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+            <span class="string">&#39;\\&#39; </span>=&gt; <span class="kw">match </span>chars.next() {
                 <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;x&#39;</span>)) =&gt; {
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">backslash_x_char</span>(<span class="kw-2">&amp;mut</span> <span class="ident">chars</span>) {
+                    <span class="kw">if </span>!backslash_x_char(<span class="kw-2">&amp;mut </span>chars) {
                         <span class="kw">break</span>;
                     }
                 }
-                <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;n&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;r&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;t&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;\\&#39;</span>))
-                <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;\&#39;&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;&quot;&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;0&#39;</span>)) =&gt; {}
+                <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;n&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;r&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;t&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;\\&#39;</span>))
+                | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;\&#39;&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;&quot;&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;0&#39;</span>)) =&gt; {}
                 <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;u&#39;</span>)) =&gt; {
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">backslash_u</span>(<span class="kw-2">&amp;mut</span> <span class="ident">chars</span>) {
+                    <span class="kw">if </span>!backslash_u(<span class="kw-2">&amp;mut </span>chars) {
                         <span class="kw">break</span>;
                     }
                 }
-                <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">ch</span> @ <span class="string">&#39;\n&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">ch</span> @ <span class="string">&#39;\r&#39;</span>)) =&gt; {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">ch</span>;
-                    <span class="kw">loop</span> {
-                        <span class="kw">if</span> <span class="ident">last</span> <span class="op">==</span> <span class="string">&#39;\r&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">map_or</span>(<span class="bool-val">true</span>, <span class="op">|</span>(<span class="kw">_</span>, <span class="ident">ch</span>)<span class="op">|</span> <span class="ident">ch</span> <span class="op">!</span><span class="op">=</span> <span class="string">&#39;\n&#39;</span>) {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+                <span class="prelude-val">Some</span>((<span class="kw">_</span>, ch @ <span class="string">&#39;\n&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, ch @ <span class="string">&#39;\r&#39;</span>)) =&gt; {
+                    <span class="kw">let </span><span class="kw-2">mut </span>last = ch;
+                    <span class="kw">loop </span>{
+                        <span class="kw">if </span>last == <span class="string">&#39;\r&#39; </span>&amp;&amp; chars.next().map_or(<span class="bool-val">true</span>, |(<span class="kw">_</span>, ch)| ch != <span class="string">&#39;\n&#39;</span>) {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
                         }
-                        <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">peek</span>() {
-                            <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">ch</span>)) <span class="kw">if</span> <span class="ident">ch</span>.<span class="ident">is_whitespace</span>() =&gt; {
-                                <span class="ident">last</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ch</span>;
-                                <span class="ident">chars</span>.<span class="ident">next</span>();
+                        <span class="kw">match </span>chars.peek() {
+                            <span class="prelude-val">Some</span>((<span class="kw">_</span>, ch)) <span class="kw">if </span>ch.is_whitespace() =&gt; {
+                                last = <span class="kw-2">*</span>ch;
+                                chars.next();
                             }
-                            <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+                            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
                         }
                     }
                 }
-                <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+                <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
             },
-            <span class="ident">_ch</span> =&gt; {}
+            _ch =&gt; {}
         }
     }
-    <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+    <span class="prelude-val">Err</span>(Reject)
 }
 
-<span class="kw">fn</span> <span class="ident">byte_string</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">input</span>) <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>(<span class="string">&quot;b\&quot;&quot;</span>) {
-        <span class="ident">cooked_byte_string</span>(<span class="ident">input</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">input</span>) <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>(<span class="string">&quot;br&quot;</span>) {
-        <span class="ident">raw_string</span>(<span class="ident">input</span>)
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+<span class="kw">fn </span>byte_string(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(input) = input.parse(<span class="string">&quot;b\&quot;&quot;</span>) {
+        cooked_byte_string(input)
+    } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(input) = input.parse(<span class="string">&quot;br&quot;</span>) {
+        raw_string(input)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(Reject)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">cooked_byte_string</span>(<span class="kw-2">mut</span> <span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">bytes</span>().<span class="ident">enumerate</span>();
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">offset</span>, <span class="ident">b</span>)) <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">next</span>() {
-        <span class="kw">match</span> <span class="ident">b</span> {
-            <span class="string">b&#39;&quot;&#39;</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">offset</span> <span class="op">+</span> <span class="number">1</span>);
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">literal_suffix</span>(<span class="ident">input</span>));
+<span class="kw">fn </span>cooked_byte_string(<span class="kw-2">mut </span>input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>bytes = input.bytes().enumerate();
+    <span class="kw">while let </span><span class="prelude-val">Some</span>((offset, b)) = bytes.next() {
+        <span class="kw">match </span>b {
+            <span class="string">b&#39;&quot;&#39; </span>=&gt; {
+                <span class="kw">let </span>input = input.advance(offset + <span class="number">1</span>);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(literal_suffix(input));
             }
-            <span class="string">b&#39;\r&#39;</span> =&gt; <span class="kw">match</span> <span class="ident">bytes</span>.<span class="ident">next</span>() {
+            <span class="string">b&#39;\r&#39; </span>=&gt; <span class="kw">match </span>bytes.next() {
                 <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;\n&#39;</span>)) =&gt; {}
-                <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+                <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
             },
-            <span class="string">b&#39;\\&#39;</span> =&gt; <span class="kw">match</span> <span class="ident">bytes</span>.<span class="ident">next</span>() {
+            <span class="string">b&#39;\\&#39; </span>=&gt; <span class="kw">match </span>bytes.next() {
                 <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;x&#39;</span>)) =&gt; {
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">backslash_x_byte</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>) {
+                    <span class="kw">if </span>!backslash_x_byte(<span class="kw-2">&amp;mut </span>bytes) {
                         <span class="kw">break</span>;
                     }
                 }
-                <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;n&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;r&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;t&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;\\&#39;</span>))
-                <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;0&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;\&#39;&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;&quot;&#39;</span>)) =&gt; {}
-                <span class="prelude-val">Some</span>((<span class="ident">newline</span>, <span class="ident">b</span> @ <span class="string">b&#39;\n&#39;</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="ident">newline</span>, <span class="ident">b</span> @ <span class="string">b&#39;\r&#39;</span>)) =&gt; {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">b</span> <span class="kw">as</span> <span class="ident">char</span>;
-                    <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">newline</span> <span class="op">+</span> <span class="number">1</span>);
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">rest</span>.<span class="ident">char_indices</span>();
-                    <span class="kw">loop</span> {
-                        <span class="kw">if</span> <span class="ident">last</span> <span class="op">==</span> <span class="string">&#39;\r&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">map_or</span>(<span class="bool-val">true</span>, <span class="op">|</span>(<span class="kw">_</span>, <span class="ident">ch</span>)<span class="op">|</span> <span class="ident">ch</span> <span class="op">!</span><span class="op">=</span> <span class="string">&#39;\n&#39;</span>) {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+                <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;n&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;r&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;t&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;\\&#39;</span>))
+                | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;0&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;\&#39;&#39;</span>)) | <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">b&#39;&quot;&#39;</span>)) =&gt; {}
+                <span class="prelude-val">Some</span>((newline, b @ <span class="string">b&#39;\n&#39;</span>)) | <span class="prelude-val">Some</span>((newline, b @ <span class="string">b&#39;\r&#39;</span>)) =&gt; {
+                    <span class="kw">let </span><span class="kw-2">mut </span>last = b <span class="kw">as </span>char;
+                    <span class="kw">let </span>rest = input.advance(newline + <span class="number">1</span>);
+                    <span class="kw">let </span><span class="kw-2">mut </span>chars = rest.char_indices();
+                    <span class="kw">loop </span>{
+                        <span class="kw">if </span>last == <span class="string">&#39;\r&#39; </span>&amp;&amp; chars.next().map_or(<span class="bool-val">true</span>, |(<span class="kw">_</span>, ch)| ch != <span class="string">&#39;\n&#39;</span>) {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
                         }
-                        <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-                            <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">ch</span>)) <span class="kw">if</span> <span class="ident">ch</span>.<span class="ident">is_whitespace</span>() =&gt; <span class="ident">last</span> <span class="op">=</span> <span class="ident">ch</span>,
-                            <span class="prelude-val">Some</span>((<span class="ident">offset</span>, <span class="kw">_</span>)) =&gt; {
-                                <span class="ident">input</span> <span class="op">=</span> <span class="ident">rest</span>.<span class="ident">advance</span>(<span class="ident">offset</span>);
-                                <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">bytes</span>().<span class="ident">enumerate</span>();
+                        <span class="kw">match </span>chars.next() {
+                            <span class="prelude-val">Some</span>((<span class="kw">_</span>, ch)) <span class="kw">if </span>ch.is_whitespace() =&gt; last = ch,
+                            <span class="prelude-val">Some</span>((offset, <span class="kw">_</span>)) =&gt; {
+                                input = rest.advance(offset);
+                                bytes = input.bytes().enumerate();
                                 <span class="kw">break</span>;
                             }
-                            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>),
+                            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Reject),
                         }
                     }
                 }
-                <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+                <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
             },
-            <span class="ident">b</span> <span class="kw">if</span> <span class="ident">b</span> <span class="op">&lt;</span> <span class="number">0x80</span> =&gt; {}
-            <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+            b <span class="kw">if </span>b &lt; <span class="number">0x80 </span>=&gt; {}
+            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
         }
     }
-    <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+    <span class="prelude-val">Err</span>(Reject)
 }
 
-<span class="kw">fn</span> <span class="ident">raw_string</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">char_indices</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">ch</span>) <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">chars</span> {
-        <span class="kw">match</span> <span class="ident">ch</span> {
-            <span class="string">&#39;&quot;&#39;</span> =&gt; {
-                <span class="ident">n</span> <span class="op">=</span> <span class="ident">i</span>;
+<span class="kw">fn </span>raw_string(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>chars = input.char_indices();
+    <span class="kw">let </span><span class="kw-2">mut </span>n = <span class="number">0</span>;
+    <span class="kw">for </span>(i, ch) <span class="kw">in </span><span class="kw-2">&amp;mut </span>chars {
+        <span class="kw">match </span>ch {
+            <span class="string">&#39;&quot;&#39; </span>=&gt; {
+                n = i;
                 <span class="kw">break</span>;
             }
-            <span class="string">&#39;#&#39;</span> =&gt; {}
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>),
+            <span class="string">&#39;#&#39; </span>=&gt; {}
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Reject),
         }
     }
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">ch</span>)) <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-        <span class="kw">match</span> <span class="ident">ch</span> {
-            <span class="string">&#39;&quot;&#39;</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">rest</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>..].<span class="ident">starts_with</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">rest</span>[..<span class="ident">n</span>]) =&gt; {
-                <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span> <span class="op">+</span> <span class="ident">n</span>);
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">literal_suffix</span>(<span class="ident">rest</span>));
+    <span class="kw">while let </span><span class="prelude-val">Some</span>((i, ch)) = chars.next() {
+        <span class="kw">match </span>ch {
+            <span class="string">&#39;&quot;&#39; </span><span class="kw">if </span>input.rest[i + <span class="number">1</span>..].starts_with(<span class="kw-2">&amp;</span>input.rest[..n]) =&gt; {
+                <span class="kw">let </span>rest = input.advance(i + <span class="number">1 </span>+ n);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(literal_suffix(rest));
             }
-            <span class="string">&#39;\r&#39;</span> =&gt; <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+            <span class="string">&#39;\r&#39; </span>=&gt; <span class="kw">match </span>chars.next() {
                 <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;\n&#39;</span>)) =&gt; {}
-                <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+                <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
             },
-            <span class="kw">_</span> =&gt; {}
+            <span class="kw">_ </span>=&gt; {}
         }
     }
-    <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+    <span class="prelude-val">Err</span>(Reject)
 }
 
-<span class="kw">fn</span> <span class="ident">byte</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>(<span class="string">&quot;b&#39;&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">bytes</span>().<span class="ident">enumerate</span>();
-    <span class="kw">let</span> <span class="ident">ok</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">bytes</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">b</span>)<span class="op">|</span> <span class="ident">b</span>) {
-        <span class="prelude-val">Some</span>(<span class="string">b&#39;\\&#39;</span>) =&gt; <span class="kw">match</span> <span class="ident">bytes</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">b</span>)<span class="op">|</span> <span class="ident">b</span>) {
-            <span class="prelude-val">Some</span>(<span class="string">b&#39;x&#39;</span>) =&gt; <span class="ident">backslash_x_byte</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>),
-            <span class="prelude-val">Some</span>(<span class="string">b&#39;n&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;r&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;t&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;\\&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;0&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;\&#39;&#39;</span>)
-            <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;&quot;&#39;</span>) =&gt; <span class="bool-val">true</span>,
-            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+<span class="kw">fn </span>byte(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">let </span>input = input.parse(<span class="string">&quot;b&#39;&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>bytes = input.bytes().enumerate();
+    <span class="kw">let </span>ok = <span class="kw">match </span>bytes.next().map(|(<span class="kw">_</span>, b)| b) {
+        <span class="prelude-val">Some</span>(<span class="string">b&#39;\\&#39;</span>) =&gt; <span class="kw">match </span>bytes.next().map(|(<span class="kw">_</span>, b)| b) {
+            <span class="prelude-val">Some</span>(<span class="string">b&#39;x&#39;</span>) =&gt; backslash_x_byte(<span class="kw-2">&amp;mut </span>bytes),
+            <span class="prelude-val">Some</span>(<span class="string">b&#39;n&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">b&#39;r&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">b&#39;t&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">b&#39;\\&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">b&#39;0&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">b&#39;\&#39;&#39;</span>)
+            | <span class="prelude-val">Some</span>(<span class="string">b&#39;&quot;&#39;</span>) =&gt; <span class="bool-val">true</span>,
+            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         },
-        <span class="ident">b</span> =&gt; <span class="ident">b</span>.<span class="ident">is_some</span>(),
+        b =&gt; b.is_some(),
     };
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">ok</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+    <span class="kw">if </span>!ok {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
     }
-    <span class="kw">let</span> (<span class="ident">offset</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="ident">Reject</span>)<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">chars</span>().<span class="ident">as_str</span>().<span class="ident">is_char_boundary</span>(<span class="ident">offset</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+    <span class="kw">let </span>(offset, <span class="kw">_</span>) = bytes.next().ok_or(Reject)<span class="question-mark">?</span>;
+    <span class="kw">if </span>!input.chars().as_str().is_char_boundary(offset) {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
     }
-    <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">offset</span>).<span class="ident">parse</span>(<span class="string">&quot;&#39;&quot;</span>)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(<span class="ident">literal_suffix</span>(<span class="ident">input</span>))
+    <span class="kw">let </span>input = input.advance(offset).parse(<span class="string">&quot;&#39;&quot;</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(literal_suffix(input))
 }
 
-<span class="kw">fn</span> <span class="ident">character</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>(<span class="string">&quot;&#39;&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">char_indices</span>();
-    <span class="kw">let</span> <span class="ident">ok</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">ch</span>)<span class="op">|</span> <span class="ident">ch</span>) {
-        <span class="prelude-val">Some</span>(<span class="string">&#39;\\&#39;</span>) =&gt; <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">ch</span>)<span class="op">|</span> <span class="ident">ch</span>) {
-            <span class="prelude-val">Some</span>(<span class="string">&#39;x&#39;</span>) =&gt; <span class="ident">backslash_x_char</span>(<span class="kw-2">&amp;mut</span> <span class="ident">chars</span>),
-            <span class="prelude-val">Some</span>(<span class="string">&#39;u&#39;</span>) =&gt; <span class="ident">backslash_u</span>(<span class="kw-2">&amp;mut</span> <span class="ident">chars</span>),
-            <span class="prelude-val">Some</span>(<span class="string">&#39;n&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">&#39;r&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">&#39;t&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">&#39;\\&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">&#39;\&#39;&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">&#39;&quot;&#39;</span>) =&gt; {
-                <span class="bool-val">true</span>
-            }
-            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+<span class="kw">fn </span>character(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">let </span>input = input.parse(<span class="string">&quot;&#39;&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>chars = input.char_indices();
+    <span class="kw">let </span>ok = <span class="kw">match </span>chars.next().map(|(<span class="kw">_</span>, ch)| ch) {
+        <span class="prelude-val">Some</span>(<span class="string">&#39;\\&#39;</span>) =&gt; <span class="kw">match </span>chars.next().map(|(<span class="kw">_</span>, ch)| ch) {
+            <span class="prelude-val">Some</span>(<span class="string">&#39;x&#39;</span>) =&gt; backslash_x_char(<span class="kw-2">&amp;mut </span>chars),
+            <span class="prelude-val">Some</span>(<span class="string">&#39;u&#39;</span>) =&gt; backslash_u(<span class="kw-2">&amp;mut </span>chars),
+            <span class="prelude-val">Some</span>(<span class="string">&#39;n&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">&#39;r&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">&#39;t&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">&#39;\\&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">&#39;\&#39;&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">&#39;&quot;&#39;</span>) =&gt; {
+                <span class="bool-val">true
+            </span>}
+            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         },
-        <span class="ident">ch</span> =&gt; <span class="ident">ch</span>.<span class="ident">is_some</span>(),
+        ch =&gt; ch.is_some(),
     };
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">ok</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+    <span class="kw">if </span>!ok {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
     }
-    <span class="kw">let</span> (<span class="ident">idx</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="ident">Reject</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">idx</span>).<span class="ident">parse</span>(<span class="string">&quot;&#39;&quot;</span>)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(<span class="ident">literal_suffix</span>(<span class="ident">input</span>))
+    <span class="kw">let </span>(idx, <span class="kw">_</span>) = chars.next().ok_or(Reject)<span class="question-mark">?</span>;
+    <span class="kw">let </span>input = input.advance(idx).parse(<span class="string">&quot;&#39;&quot;</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(literal_suffix(input))
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">next_ch</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">chars</span>:<span class="ident">ident</span> @ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pat</span>:<span class="ident">pat</span> $(<span class="op">|</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">pat</span>)<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">match</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">chars</span>.<span class="ident">next</span>() {
-            <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">ch</span>)) =&gt; <span class="kw">match</span> <span class="ident">ch</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pat</span> $(<span class="op">|</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>)<span class="op">*</span> =&gt; <span class="ident">ch</span>,
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
+<span class="macro">macro_rules! </span>next_ch {
+    (<span class="macro-nonterminal">$chars</span>:ident @ <span class="macro-nonterminal">$pat</span>:pat $(| <span class="macro-nonterminal">$rest</span>:pat)<span class="kw-2">*</span>) =&gt; {
+        <span class="kw">match </span><span class="macro-nonterminal">$chars</span>.next() {
+            <span class="prelude-val">Some</span>((<span class="kw">_</span>, ch)) =&gt; <span class="kw">match </span>ch {
+                <span class="macro-nonterminal">$pat </span>$(| <span class="macro-nonterminal">$rest</span>)* =&gt; ch,
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="bool-val">false</span>,
             },
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="bool-val">false</span>,
         }
     };
 }
 
-<span class="kw">fn</span> <span class="ident">backslash_x_char</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">chars</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>) -&gt; <span class="ident">bool</span>
-<span class="kw">where</span>
-    <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">usize</span>, <span class="ident">char</span>)<span class="op">&gt;</span>,
+<span class="kw">fn </span>backslash_x_char&lt;I&gt;(chars: <span class="kw-2">&amp;mut </span>I) -&gt; bool
+<span class="kw">where
+    </span>I: Iterator&lt;Item = (usize, char)&gt;,
 {
-    <span class="macro">next_ch!</span>(<span class="ident">chars</span> @ <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;7&#39;</span>);
-    <span class="macro">next_ch!</span>(<span class="ident">chars</span> @ <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> <span class="op">|</span> <span class="string">&#39;a&#39;</span>..<span class="op">=</span><span class="string">&#39;f&#39;</span> <span class="op">|</span> <span class="string">&#39;A&#39;</span>..<span class="op">=</span><span class="string">&#39;F&#39;</span>);
-    <span class="bool-val">true</span>
-}
+    <span class="macro">next_ch!</span>(chars @ <span class="string">&#39;0&#39;</span>..=<span class="string">&#39;7&#39;</span>);
+    <span class="macro">next_ch!</span>(chars @ <span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39; </span>| <span class="string">&#39;a&#39;</span>..=<span class="string">&#39;f&#39; </span>| <span class="string">&#39;A&#39;</span>..=<span class="string">&#39;F&#39;</span>);
+    <span class="bool-val">true
+</span>}
 
-<span class="kw">fn</span> <span class="ident">backslash_x_byte</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">chars</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>) -&gt; <span class="ident">bool</span>
-<span class="kw">where</span>
-    <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">usize</span>, <span class="ident">u8</span>)<span class="op">&gt;</span>,
+<span class="kw">fn </span>backslash_x_byte&lt;I&gt;(chars: <span class="kw-2">&amp;mut </span>I) -&gt; bool
+<span class="kw">where
+    </span>I: Iterator&lt;Item = (usize, u8)&gt;,
 {
-    <span class="macro">next_ch!</span>(<span class="ident">chars</span> @ <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span> <span class="op">|</span> <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;f&#39;</span> <span class="op">|</span> <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;F&#39;</span>);
-    <span class="macro">next_ch!</span>(<span class="ident">chars</span> @ <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span> <span class="op">|</span> <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;f&#39;</span> <span class="op">|</span> <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;F&#39;</span>);
-    <span class="bool-val">true</span>
-}
+    <span class="macro">next_ch!</span>(chars @ <span class="string">b&#39;0&#39;</span>..=<span class="string">b&#39;9&#39; </span>| <span class="string">b&#39;a&#39;</span>..=<span class="string">b&#39;f&#39; </span>| <span class="string">b&#39;A&#39;</span>..=<span class="string">b&#39;F&#39;</span>);
+    <span class="macro">next_ch!</span>(chars @ <span class="string">b&#39;0&#39;</span>..=<span class="string">b&#39;9&#39; </span>| <span class="string">b&#39;a&#39;</span>..=<span class="string">b&#39;f&#39; </span>| <span class="string">b&#39;A&#39;</span>..=<span class="string">b&#39;F&#39;</span>);
+    <span class="bool-val">true
+</span>}
 
-<span class="kw">fn</span> <span class="ident">backslash_u</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">chars</span>: <span class="kw-2">&amp;mut</span> <span class="ident">I</span>) -&gt; <span class="ident">bool</span>
-<span class="kw">where</span>
-    <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">usize</span>, <span class="ident">char</span>)<span class="op">&gt;</span>,
+<span class="kw">fn </span>backslash_u&lt;I&gt;(chars: <span class="kw-2">&amp;mut </span>I) -&gt; bool
+<span class="kw">where
+    </span>I: Iterator&lt;Item = (usize, char)&gt;,
 {
-    <span class="macro">next_ch!</span>(<span class="ident">chars</span> @ <span class="string">&#39;{&#39;</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">ch</span>) <span class="kw">in</span> <span class="ident">chars</span> {
-        <span class="kw">let</span> <span class="ident">digit</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ch</span> {
-            <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> =&gt; <span class="ident">ch</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="op">-</span> <span class="string">b&#39;0&#39;</span>,
-            <span class="string">&#39;a&#39;</span>..<span class="op">=</span><span class="string">&#39;f&#39;</span> =&gt; <span class="number">10</span> <span class="op">+</span> <span class="ident">ch</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>,
-            <span class="string">&#39;A&#39;</span>..<span class="op">=</span><span class="string">&#39;F&#39;</span> =&gt; <span class="number">10</span> <span class="op">+</span> <span class="ident">ch</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="op">-</span> <span class="string">b&#39;A&#39;</span>,
-            <span class="string">&#39;_&#39;</span> <span class="kw">if</span> <span class="ident">len</span> <span class="op">&gt;</span> <span class="number">0</span> =&gt; <span class="kw">continue</span>,
-            <span class="string">&#39;}&#39;</span> <span class="kw">if</span> <span class="ident">len</span> <span class="op">&gt;</span> <span class="number">0</span> =&gt; <span class="kw">return</span> <span class="ident">char::from_u32</span>(<span class="ident">value</span>).<span class="ident">is_some</span>(),
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
+    <span class="macro">next_ch!</span>(chars @ <span class="string">&#39;{&#39;</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>len = <span class="number">0</span>;
+    <span class="kw">for </span>(<span class="kw">_</span>, ch) <span class="kw">in </span>chars {
+        <span class="kw">let </span>digit = <span class="kw">match </span>ch {
+            <span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39; </span>=&gt; ch <span class="kw">as </span>u8 - <span class="string">b&#39;0&#39;</span>,
+            <span class="string">&#39;a&#39;</span>..=<span class="string">&#39;f&#39; </span>=&gt; <span class="number">10 </span>+ ch <span class="kw">as </span>u8 - <span class="string">b&#39;a&#39;</span>,
+            <span class="string">&#39;A&#39;</span>..=<span class="string">&#39;F&#39; </span>=&gt; <span class="number">10 </span>+ ch <span class="kw">as </span>u8 - <span class="string">b&#39;A&#39;</span>,
+            <span class="string">&#39;_&#39; </span><span class="kw">if </span>len &gt; <span class="number">0 </span>=&gt; <span class="kw">continue</span>,
+            <span class="string">&#39;}&#39; </span><span class="kw">if </span>len &gt; <span class="number">0 </span>=&gt; <span class="kw">return </span>char::from_u32(value).is_some(),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="bool-val">false</span>,
         };
-        <span class="kw">if</span> <span class="ident">len</span> <span class="op">==</span> <span class="number">6</span> {
-            <span class="kw">return</span> <span class="bool-val">false</span>;
+        <span class="kw">if </span>len == <span class="number">6 </span>{
+            <span class="kw">return </span><span class="bool-val">false</span>;
         }
-        <span class="ident">value</span> <span class="kw-2">*</span><span class="op">=</span> <span class="number">0x10</span>;
-        <span class="ident">value</span> <span class="op">+</span><span class="op">=</span> <span class="ident">u32::from</span>(<span class="ident">digit</span>);
-        <span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        value <span class="kw-2">*</span>= <span class="number">0x10</span>;
+        value += u32::from(digit);
+        len += <span class="number">1</span>;
     }
-    <span class="bool-val">false</span>
+    <span class="bool-val">false
+</span>}
+
+<span class="kw">fn </span>float(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>rest = float_digits(input)<span class="question-mark">?</span>;
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(ch) = rest.chars().next() {
+        <span class="kw">if </span>is_ident_start(ch) {
+            rest = ident_not_raw(rest)<span class="question-mark">?</span>.<span class="number">0</span>;
+        }
+    }
+    word_break(rest)
 }
 
-<span class="kw">fn</span> <span class="ident">float</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rest</span> <span class="op">=</span> <span class="ident">float_digits</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="op">=</span> <span class="ident">rest</span>.<span class="ident">chars</span>().<span class="ident">next</span>() {
-        <span class="kw">if</span> <span class="ident">is_ident_start</span>(<span class="ident">ch</span>) {
-            <span class="ident">rest</span> <span class="op">=</span> <span class="ident">ident_not_raw</span>(<span class="ident">rest</span>)<span class="question-mark">?</span>.<span class="number">0</span>;
-        }
-    }
-    <span class="ident">word_break</span>(<span class="ident">rest</span>)
-}
-
-<span class="kw">fn</span> <span class="ident">float_digits</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">chars</span>().<span class="ident">peekable</span>();
-    <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="kw">if</span> <span class="ident">ch</span> <span class="op">&gt;</span><span class="op">=</span> <span class="string">&#39;0&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">ch</span> <span class="op">&lt;</span><span class="op">=</span> <span class="string">&#39;9&#39;</span> =&gt; {}
-        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>),
+<span class="kw">fn </span>float_digits(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>chars = input.chars().peekable();
+    <span class="kw">match </span>chars.next() {
+        <span class="prelude-val">Some</span>(ch) <span class="kw">if </span>ch &gt;= <span class="string">&#39;0&#39; </span>&amp;&amp; ch &lt;= <span class="string">&#39;9&#39; </span>=&gt; {}
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Reject),
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len</span> <span class="op">=</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_dot</span> <span class="op">=</span> <span class="bool-val">false</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_exp</span> <span class="op">=</span> <span class="bool-val">false</span>;
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">ch</span>) <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">peek</span>() {
-        <span class="kw">match</span> <span class="ident">ch</span> {
-            <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> <span class="op">|</span> <span class="string">&#39;_&#39;</span> =&gt; {
-                <span class="ident">chars</span>.<span class="ident">next</span>();
-                <span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>len = <span class="number">1</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>has_dot = <span class="bool-val">false</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>has_exp = <span class="bool-val">false</span>;
+    <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ch) = chars.peek() {
+        <span class="kw">match </span>ch {
+            <span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39; </span>| <span class="string">&#39;_&#39; </span>=&gt; {
+                chars.next();
+                len += <span class="number">1</span>;
             }
-            <span class="string">&#39;.&#39;</span> =&gt; {
-                <span class="kw">if</span> <span class="ident">has_dot</span> {
+            <span class="string">&#39;.&#39; </span>=&gt; {
+                <span class="kw">if </span>has_dot {
                     <span class="kw">break</span>;
                 }
-                <span class="ident">chars</span>.<span class="ident">next</span>();
-                <span class="kw">if</span> <span class="ident">chars</span>
-                    .<span class="ident">peek</span>()
-                    .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">ch</span><span class="op">|</span> <span class="ident">ch</span> <span class="op">==</span> <span class="string">&#39;.&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_ident_start</span>(<span class="ident">ch</span>))
+                chars.next();
+                <span class="kw">if </span>chars
+                    .peek()
+                    .map_or(<span class="bool-val">false</span>, |<span class="kw-2">&amp;</span>ch| ch == <span class="string">&#39;.&#39; </span>|| is_ident_start(ch))
                 {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
                 }
-                <span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                <span class="ident">has_dot</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                len += <span class="number">1</span>;
+                has_dot = <span class="bool-val">true</span>;
             }
-            <span class="string">&#39;e&#39;</span> <span class="op">|</span> <span class="string">&#39;E&#39;</span> =&gt; {
-                <span class="ident">chars</span>.<span class="ident">next</span>();
-                <span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                <span class="ident">has_exp</span> <span class="op">=</span> <span class="bool-val">true</span>;
+            <span class="string">&#39;e&#39; </span>| <span class="string">&#39;E&#39; </span>=&gt; {
+                chars.next();
+                len += <span class="number">1</span>;
+                has_exp = <span class="bool-val">true</span>;
                 <span class="kw">break</span>;
             }
-            <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
         }
     }
 
-    <span class="kw">if</span> <span class="op">!</span>(<span class="ident">has_dot</span> <span class="op">|</span><span class="op">|</span> <span class="ident">has_exp</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+    <span class="kw">if </span>!(has_dot || has_exp) {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
     }
 
-    <span class="kw">if</span> <span class="ident">has_exp</span> {
-        <span class="kw">let</span> <span class="ident">token_before_exp</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">has_dot</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">len</span> <span class="op">-</span> <span class="number">1</span>))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+    <span class="kw">if </span>has_exp {
+        <span class="kw">let </span>token_before_exp = <span class="kw">if </span>has_dot {
+            <span class="prelude-val">Ok</span>(input.advance(len - <span class="number">1</span>))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(Reject)
         };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_sign</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_exp_value</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">ch</span>) <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">peek</span>() {
-            <span class="kw">match</span> <span class="ident">ch</span> {
-                <span class="string">&#39;+&#39;</span> <span class="op">|</span> <span class="string">&#39;-&#39;</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">has_exp_value</span> {
+        <span class="kw">let </span><span class="kw-2">mut </span>has_sign = <span class="bool-val">false</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>has_exp_value = <span class="bool-val">false</span>;
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ch) = chars.peek() {
+            <span class="kw">match </span>ch {
+                <span class="string">&#39;+&#39; </span>| <span class="string">&#39;-&#39; </span>=&gt; {
+                    <span class="kw">if </span>has_exp_value {
                         <span class="kw">break</span>;
                     }
-                    <span class="kw">if</span> <span class="ident">has_sign</span> {
-                        <span class="kw">return</span> <span class="ident">token_before_exp</span>;
+                    <span class="kw">if </span>has_sign {
+                        <span class="kw">return </span>token_before_exp;
                     }
-                    <span class="ident">chars</span>.<span class="ident">next</span>();
-                    <span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                    <span class="ident">has_sign</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                    chars.next();
+                    len += <span class="number">1</span>;
+                    has_sign = <span class="bool-val">true</span>;
                 }
-                <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> =&gt; {
-                    <span class="ident">chars</span>.<span class="ident">next</span>();
-                    <span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                    <span class="ident">has_exp_value</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                <span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39; </span>=&gt; {
+                    chars.next();
+                    len += <span class="number">1</span>;
+                    has_exp_value = <span class="bool-val">true</span>;
                 }
-                <span class="string">&#39;_&#39;</span> =&gt; {
-                    <span class="ident">chars</span>.<span class="ident">next</span>();
-                    <span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="string">&#39;_&#39; </span>=&gt; {
+                    chars.next();
+                    len += <span class="number">1</span>;
                 }
-                <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+                <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
             }
         }
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">has_exp_value</span> {
-            <span class="kw">return</span> <span class="ident">token_before_exp</span>;
+        <span class="kw">if </span>!has_exp_value {
+            <span class="kw">return </span>token_before_exp;
         }
     }
 
-    <span class="prelude-val">Ok</span>(<span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">len</span>))
+    <span class="prelude-val">Ok</span>(input.advance(len))
 }
 
-<span class="kw">fn</span> <span class="ident">int</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rest</span> <span class="op">=</span> <span class="ident">digits</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ch</span>) <span class="op">=</span> <span class="ident">rest</span>.<span class="ident">chars</span>().<span class="ident">next</span>() {
-        <span class="kw">if</span> <span class="ident">is_ident_start</span>(<span class="ident">ch</span>) {
-            <span class="ident">rest</span> <span class="op">=</span> <span class="ident">ident_not_raw</span>(<span class="ident">rest</span>)<span class="question-mark">?</span>.<span class="number">0</span>;
+<span class="kw">fn </span>int(input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>rest = digits(input)<span class="question-mark">?</span>;
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(ch) = rest.chars().next() {
+        <span class="kw">if </span>is_ident_start(ch) {
+            rest = ident_not_raw(rest)<span class="question-mark">?</span>.<span class="number">0</span>;
         }
     }
-    <span class="ident">word_break</span>(<span class="ident">rest</span>)
+    word_break(rest)
 }
 
-<span class="kw">fn</span> <span class="ident">digits</span>(<span class="kw-2">mut</span> <span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Reject</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;0x&quot;</span>) {
-        <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="number">2</span>);
-        <span class="number">16</span>
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;0o&quot;</span>) {
-        <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="number">2</span>);
-        <span class="number">8</span>
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;0b&quot;</span>) {
-        <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="number">2</span>);
-        <span class="number">2</span>
-    } <span class="kw">else</span> {
-        <span class="number">10</span>
-    };
+<span class="kw">fn </span>digits(<span class="kw-2">mut </span>input: Cursor) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor, Reject&gt; {
+    <span class="kw">let </span>base = <span class="kw">if </span>input.starts_with(<span class="string">&quot;0x&quot;</span>) {
+        input = input.advance(<span class="number">2</span>);
+        <span class="number">16
+    </span>} <span class="kw">else if </span>input.starts_with(<span class="string">&quot;0o&quot;</span>) {
+        input = input.advance(<span class="number">2</span>);
+        <span class="number">8
+    </span>} <span class="kw">else if </span>input.starts_with(<span class="string">&quot;0b&quot;</span>) {
+        input = input.advance(<span class="number">2</span>);
+        <span class="number">2
+    </span>} <span class="kw">else </span>{
+        <span class="number">10
+    </span>};
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">empty</span> <span class="op">=</span> <span class="bool-val">true</span>;
-    <span class="kw">for</span> <span class="ident">b</span> <span class="kw">in</span> <span class="ident">input</span>.<span class="ident">bytes</span>() {
-        <span class="kw">match</span> <span class="ident">b</span> {
-            <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">digit</span> <span class="op">=</span> (<span class="ident">b</span> <span class="op">-</span> <span class="string">b&#39;0&#39;</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-                <span class="kw">if</span> <span class="ident">digit</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">base</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>len = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>empty = <span class="bool-val">true</span>;
+    <span class="kw">for </span>b <span class="kw">in </span>input.bytes() {
+        <span class="kw">match </span>b {
+            <span class="string">b&#39;0&#39;</span>..=<span class="string">b&#39;9&#39; </span>=&gt; {
+                <span class="kw">let </span>digit = (b - <span class="string">b&#39;0&#39;</span>) <span class="kw">as </span>u64;
+                <span class="kw">if </span>digit &gt;= base {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
                 }
             }
-            <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;f&#39;</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">digit</span> <span class="op">=</span> <span class="number">10</span> <span class="op">+</span> (<span class="ident">b</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-                <span class="kw">if</span> <span class="ident">digit</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">base</span> {
+            <span class="string">b&#39;a&#39;</span>..=<span class="string">b&#39;f&#39; </span>=&gt; {
+                <span class="kw">let </span>digit = <span class="number">10 </span>+ (b - <span class="string">b&#39;a&#39;</span>) <span class="kw">as </span>u64;
+                <span class="kw">if </span>digit &gt;= base {
                     <span class="kw">break</span>;
                 }
             }
-            <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;F&#39;</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">digit</span> <span class="op">=</span> <span class="number">10</span> <span class="op">+</span> (<span class="ident">b</span> <span class="op">-</span> <span class="string">b&#39;A&#39;</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-                <span class="kw">if</span> <span class="ident">digit</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">base</span> {
+            <span class="string">b&#39;A&#39;</span>..=<span class="string">b&#39;F&#39; </span>=&gt; {
+                <span class="kw">let </span>digit = <span class="number">10 </span>+ (b - <span class="string">b&#39;A&#39;</span>) <span class="kw">as </span>u64;
+                <span class="kw">if </span>digit &gt;= base {
                     <span class="kw">break</span>;
                 }
             }
-            <span class="string">b&#39;_&#39;</span> =&gt; {
-                <span class="kw">if</span> <span class="ident">empty</span> <span class="op">&amp;&amp;</span> <span class="ident">base</span> <span class="op">==</span> <span class="number">10</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+            <span class="string">b&#39;_&#39; </span>=&gt; {
+                <span class="kw">if </span>empty &amp;&amp; base == <span class="number">10 </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
                 }
-                <span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                len += <span class="number">1</span>;
                 <span class="kw">continue</span>;
             }
-            <span class="kw">_</span> =&gt; <span class="kw">break</span>,
+            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
         };
-        <span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-        <span class="ident">empty</span> <span class="op">=</span> <span class="bool-val">false</span>;
+        len += <span class="number">1</span>;
+        empty = <span class="bool-val">false</span>;
     }
-    <span class="kw">if</span> <span class="ident">empty</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">len</span>))
+    <span class="kw">if </span>empty {
+        <span class="prelude-val">Err</span>(Reject)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Ok</span>(input.advance(len))
     }
 }
 
-<span class="kw">fn</span> <span class="ident">punct</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span><span class="ident">Punct</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> (<span class="ident">rest</span>, <span class="ident">ch</span>) <span class="op">=</span> <span class="ident">punct_char</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="ident">ch</span> <span class="op">==</span> <span class="string">&#39;\&#39;&#39;</span> {
-        <span class="kw">if</span> <span class="ident">ident_any</span>(<span class="ident">rest</span>)<span class="question-mark">?</span>.<span class="number">0</span>.<span class="ident">starts_with</span>(<span class="string">&quot;&#39;&quot;</span>) {
-            <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>((<span class="ident">rest</span>, <span class="ident">Punct::new</span>(<span class="string">&#39;\&#39;&#39;</span>, <span class="ident">Spacing::Joint</span>)))
+<span class="kw">fn </span>punct(input: Cursor) -&gt; PResult&lt;Punct&gt; {
+    <span class="kw">let </span>(rest, ch) = punct_char(input)<span class="question-mark">?</span>;
+    <span class="kw">if </span>ch == <span class="string">&#39;\&#39;&#39; </span>{
+        <span class="kw">if </span>ident_any(rest)<span class="question-mark">?</span>.<span class="number">0</span>.starts_with(<span class="string">&quot;&#39;&quot;</span>) {
+            <span class="prelude-val">Err</span>(Reject)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>((rest, Punct::new(<span class="string">&#39;\&#39;&#39;</span>, Spacing::Joint)))
         }
-    } <span class="kw">else</span> {
-        <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">punct_char</span>(<span class="ident">rest</span>) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="ident">Spacing::Joint</span>,
-            <span class="prelude-val">Err</span>(<span class="ident">Reject</span>) =&gt; <span class="ident">Spacing::Alone</span>,
+    } <span class="kw">else </span>{
+        <span class="kw">let </span>kind = <span class="kw">match </span>punct_char(rest) {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; Spacing::Joint,
+            <span class="prelude-val">Err</span>(Reject) =&gt; Spacing::Alone,
         };
-        <span class="prelude-val">Ok</span>((<span class="ident">rest</span>, <span class="ident">Punct::new</span>(<span class="ident">ch</span>, <span class="ident">kind</span>)))
+        <span class="prelude-val">Ok</span>((rest, Punct::new(ch, kind)))
     }
 }
 
-<span class="kw">fn</span> <span class="ident">punct_char</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;//&quot;</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/*&quot;</span>) {
-        <span class="comment">// Do not accept `/` of a comment as a punct.</span>
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+<span class="kw">fn </span>punct_char(input: Cursor) -&gt; PResult&lt;char&gt; {
+    <span class="kw">if </span>input.starts_with(<span class="string">&quot;//&quot;</span>) || input.starts_with(<span class="string">&quot;/*&quot;</span>) {
+        <span class="comment">// Do not accept `/` of a comment as a punct.
+        </span><span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">chars</span>();
-    <span class="kw">let</span> <span class="ident">first</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">ch</span>) =&gt; <span class="ident">ch</span>,
-        <span class="prelude-val">None</span> =&gt; {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>chars = input.chars();
+    <span class="kw">let </span>first = <span class="kw">match </span>chars.next() {
+        <span class="prelude-val">Some</span>(ch) =&gt; ch,
+        <span class="prelude-val">None </span>=&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
         }
     };
-    <span class="kw">let</span> <span class="ident">recognized</span> <span class="op">=</span> <span class="string">&quot;~!@#$%^&amp;*-=+|;:,&lt;.&gt;/?&#39;&quot;</span>;
-    <span class="kw">if</span> <span class="ident">recognized</span>.<span class="ident">contains</span>(<span class="ident">first</span>) {
-        <span class="prelude-val">Ok</span>((<span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">first</span>.<span class="ident">len_utf8</span>()), <span class="ident">first</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+    <span class="kw">let </span>recognized = <span class="string">&quot;~!@#$%^&amp;*-=+|;:,&lt;.&gt;/?&#39;&quot;</span>;
+    <span class="kw">if </span>recognized.contains(first) {
+        <span class="prelude-val">Ok</span>((input.advance(first.len_utf8()), first))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(Reject)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">doc_comment</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TokenTree</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-    <span class="kw">let</span> <span class="ident">lo</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">off</span>;
-    <span class="kw">let</span> (<span class="ident">rest</span>, (<span class="ident">comment</span>, <span class="ident">inner</span>)) <span class="op">=</span> <span class="ident">doc_comment_contents</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::Span::_new_stable</span>(<span class="ident">Span</span> {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-        <span class="ident">lo</span>,
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">span_locations</span>)]</span>
-        <span class="ident">hi</span>: <span class="ident">rest</span>.<span class="ident">off</span>,
+<span class="kw">fn </span>doc_comment(input: Cursor) -&gt; PResult&lt;Vec&lt;TokenTree&gt;&gt; {
+    <span class="attribute">#[cfg(span_locations)]
+    </span><span class="kw">let </span>lo = input.off;
+    <span class="kw">let </span>(rest, (comment, inner)) = doc_comment_contents(input)<span class="question-mark">?</span>;
+    <span class="kw">let </span>span = <span class="kw">crate</span>::Span::_new_stable(Span {
+        <span class="attribute">#[cfg(span_locations)]
+        </span>lo,
+        <span class="attribute">#[cfg(span_locations)]
+        </span>hi: rest.off,
     });
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">scan_for_bare_cr</span> <span class="op">=</span> <span class="ident">comment</span>;
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cr</span>) <span class="op">=</span> <span class="ident">scan_for_bare_cr</span>.<span class="ident">find</span>(<span class="string">&#39;\r&#39;</span>) {
-        <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">scan_for_bare_cr</span>[<span class="ident">cr</span> <span class="op">+</span> <span class="number">1</span>..];
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">rest</span>.<span class="ident">starts_with</span>(<span class="string">&#39;\n&#39;</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>scan_for_bare_cr = comment;
+    <span class="kw">while let </span><span class="prelude-val">Some</span>(cr) = scan_for_bare_cr.find(<span class="string">&#39;\r&#39;</span>) {
+        <span class="kw">let </span>rest = <span class="kw-2">&amp;</span>scan_for_bare_cr[cr + <span class="number">1</span>..];
+        <span class="kw">if </span>!rest.starts_with(<span class="string">&#39;\n&#39;</span>) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
         }
-        <span class="ident">scan_for_bare_cr</span> <span class="op">=</span> <span class="ident">rest</span>;
+        scan_for_bare_cr = rest;
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trees</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="ident">trees</span>.<span class="ident">push</span>(<span class="ident">TokenTree::Punct</span>(<span class="ident">Punct::new</span>(<span class="string">&#39;#&#39;</span>, <span class="ident">Spacing::Alone</span>)));
-    <span class="kw">if</span> <span class="ident">inner</span> {
-        <span class="ident">trees</span>.<span class="ident">push</span>(<span class="ident">Punct::new</span>(<span class="string">&#39;!&#39;</span>, <span class="ident">Spacing::Alone</span>).<span class="ident">into</span>());
+    <span class="kw">let </span><span class="kw-2">mut </span>trees = Vec::new();
+    trees.push(TokenTree::Punct(Punct::new(<span class="string">&#39;#&#39;</span>, Spacing::Alone)));
+    <span class="kw">if </span>inner {
+        trees.push(Punct::new(<span class="string">&#39;!&#39;</span>, Spacing::Alone).into());
     }
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stream</span> <span class="op">=</span> <span class="macro">vec!</span>[
-        <span class="ident">TokenTree::Ident</span>(<span class="ident"><span class="kw">crate</span>::Ident::new</span>(<span class="string">&quot;doc&quot;</span>, <span class="ident">span</span>)),
-        <span class="ident">TokenTree::Punct</span>(<span class="ident">Punct::new</span>(<span class="string">&#39;=&#39;</span>, <span class="ident">Spacing::Alone</span>)),
-        <span class="ident">TokenTree::Literal</span>(<span class="ident"><span class="kw">crate</span>::Literal::string</span>(<span class="ident">comment</span>)),
+    <span class="kw">let </span><span class="kw-2">mut </span>stream = <span class="macro">vec!</span>[
+        TokenTree::Ident(<span class="kw">crate</span>::Ident::new(<span class="string">&quot;doc&quot;</span>, span)),
+        TokenTree::Punct(Punct::new(<span class="string">&#39;=&#39;</span>, Spacing::Alone)),
+        TokenTree::Literal(<span class="kw">crate</span>::Literal::string(comment)),
     ];
-    <span class="kw">for</span> <span class="ident">tt</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">stream</span> {
-        <span class="ident">tt</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
+    <span class="kw">for </span>tt <span class="kw">in </span><span class="kw-2">&amp;mut </span>stream {
+        tt.set_span(span);
     }
-    <span class="kw">let</span> <span class="ident">group</span> <span class="op">=</span> <span class="ident">Group::new</span>(<span class="ident">Delimiter::Bracket</span>, <span class="ident">TokenStream::from</span>(<span class="ident">stream</span>));
-    <span class="ident">trees</span>.<span class="ident">push</span>(<span class="ident"><span class="kw">crate</span>::Group::_new_stable</span>(<span class="ident">group</span>).<span class="ident">into</span>());
-    <span class="kw">for</span> <span class="ident">tt</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">trees</span> {
-        <span class="ident">tt</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
+    <span class="kw">let </span>group = Group::new(Delimiter::Bracket, TokenStream::from(stream));
+    trees.push(<span class="kw">crate</span>::Group::_new_stable(group).into());
+    <span class="kw">for </span>tt <span class="kw">in </span><span class="kw-2">&amp;mut </span>trees {
+        tt.set_span(span);
     }
-    <span class="prelude-val">Ok</span>((<span class="ident">rest</span>, <span class="ident">trees</span>))
+    <span class="prelude-val">Ok</span>((rest, trees))
 }
 
-<span class="kw">fn</span> <span class="ident">doc_comment_contents</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; <span class="ident">PResult</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">bool</span>)<span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;//!&quot;</span>) {
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="number">3</span>);
-        <span class="kw">let</span> (<span class="ident">input</span>, <span class="ident">s</span>) <span class="op">=</span> <span class="ident">take_until_newline_or_eof</span>(<span class="ident">input</span>);
-        <span class="prelude-val">Ok</span>((<span class="ident">input</span>, (<span class="ident">s</span>, <span class="bool-val">true</span>)))
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/*!&quot;</span>) {
-        <span class="kw">let</span> (<span class="ident">input</span>, <span class="ident">s</span>) <span class="op">=</span> <span class="ident">block_comment</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">input</span>, (<span class="kw-2">&amp;</span><span class="ident">s</span>[<span class="number">3</span>..<span class="ident">s</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">2</span>], <span class="bool-val">true</span>)))
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;///&quot;</span>) {
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">advance</span>(<span class="number">3</span>);
-        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/&quot;</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Reject</span>);
+<span class="kw">fn </span>doc_comment_contents(input: Cursor) -&gt; PResult&lt;(<span class="kw-2">&amp;</span>str, bool)&gt; {
+    <span class="kw">if </span>input.starts_with(<span class="string">&quot;//!&quot;</span>) {
+        <span class="kw">let </span>input = input.advance(<span class="number">3</span>);
+        <span class="kw">let </span>(input, s) = take_until_newline_or_eof(input);
+        <span class="prelude-val">Ok</span>((input, (s, <span class="bool-val">true</span>)))
+    } <span class="kw">else if </span>input.starts_with(<span class="string">&quot;/*!&quot;</span>) {
+        <span class="kw">let </span>(input, s) = block_comment(input)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((input, (<span class="kw-2">&amp;</span>s[<span class="number">3</span>..s.len() - <span class="number">2</span>], <span class="bool-val">true</span>)))
+    } <span class="kw">else if </span>input.starts_with(<span class="string">&quot;///&quot;</span>) {
+        <span class="kw">let </span>input = input.advance(<span class="number">3</span>);
+        <span class="kw">if </span>input.starts_with(<span class="string">&quot;/&quot;</span>) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Reject);
         }
-        <span class="kw">let</span> (<span class="ident">input</span>, <span class="ident">s</span>) <span class="op">=</span> <span class="ident">take_until_newline_or_eof</span>(<span class="ident">input</span>);
-        <span class="prelude-val">Ok</span>((<span class="ident">input</span>, (<span class="ident">s</span>, <span class="bool-val">false</span>)))
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="string">&quot;/**&quot;</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">rest</span>[<span class="number">3</span>..].<span class="ident">starts_with</span>(<span class="string">&#39;*&#39;</span>) {
-        <span class="kw">let</span> (<span class="ident">input</span>, <span class="ident">s</span>) <span class="op">=</span> <span class="ident">block_comment</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">input</span>, (<span class="kw-2">&amp;</span><span class="ident">s</span>[<span class="number">3</span>..<span class="ident">s</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">2</span>], <span class="bool-val">false</span>)))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Reject</span>)
+        <span class="kw">let </span>(input, s) = take_until_newline_or_eof(input);
+        <span class="prelude-val">Ok</span>((input, (s, <span class="bool-val">false</span>)))
+    } <span class="kw">else if </span>input.starts_with(<span class="string">&quot;/**&quot;</span>) &amp;&amp; !input.rest[<span class="number">3</span>..].starts_with(<span class="string">&#39;*&#39;</span>) {
+        <span class="kw">let </span>(input, s) = block_comment(input)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((input, (<span class="kw-2">&amp;</span>s[<span class="number">3</span>..s.len() - <span class="number">2</span>], <span class="bool-val">false</span>)))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(Reject)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">take_until_newline_or_eof</span>(<span class="ident">input</span>: <span class="ident">Cursor</span>) -&gt; (<span class="ident">Cursor</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="kw">let</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">char_indices</span>();
+<span class="kw">fn </span>take_until_newline_or_eof(input: Cursor) -&gt; (Cursor, <span class="kw-2">&amp;</span>str) {
+    <span class="kw">let </span>chars = input.char_indices();
 
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">ch</span>) <span class="kw">in</span> <span class="ident">chars</span> {
-        <span class="kw">if</span> <span class="ident">ch</span> <span class="op">==</span> <span class="string">&#39;\n&#39;</span> {
-            <span class="kw">return</span> (<span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">i</span>), <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">rest</span>[..<span class="ident">i</span>]);
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ch</span> <span class="op">==</span> <span class="string">&#39;\r&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">input</span>.<span class="ident">rest</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>..].<span class="ident">starts_with</span>(<span class="string">&#39;\n&#39;</span>) {
-            <span class="kw">return</span> (<span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>), <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">rest</span>[..<span class="ident">i</span>]);
+    <span class="kw">for </span>(i, ch) <span class="kw">in </span>chars {
+        <span class="kw">if </span>ch == <span class="string">&#39;\n&#39; </span>{
+            <span class="kw">return </span>(input.advance(i), <span class="kw-2">&amp;</span>input.rest[..i]);
+        } <span class="kw">else if </span>ch == <span class="string">&#39;\r&#39; </span>&amp;&amp; input.rest[i + <span class="number">1</span>..].starts_with(<span class="string">&#39;\n&#39;</span>) {
+            <span class="kw">return </span>(input.advance(i + <span class="number">1</span>), <span class="kw-2">&amp;</span>input.rest[..i]);
         }
     }
 
-    (<span class="ident">input</span>.<span class="ident">advance</span>(<span class="ident">input</span>.<span class="ident">len</span>()), <span class="ident">input</span>.<span class="ident">rest</span>)
+    (input.advance(input.len()), input.rest)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="proc_macro2" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="proc_macro2" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

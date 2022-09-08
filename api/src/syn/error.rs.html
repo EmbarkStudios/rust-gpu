@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/error.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>error.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/error.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>error.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -416,418 +410,417 @@
 <span id="410">410</span>
 <span id="411">411</span>
 <span id="412">412</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::buffer::Cursor</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::thread::ThreadBound</span>;
-<span class="kw">use</span> <span class="ident">proc_macro2</span>::{
-    <span class="ident">Delimiter</span>, <span class="ident">Group</span>, <span class="ident">Ident</span>, <span class="ident">LexError</span>, <span class="ident">Literal</span>, <span class="ident">Punct</span>, <span class="ident">Spacing</span>, <span class="ident">Span</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenTree</span>,
+</pre><pre class="rust"><code><span class="attribute">#[cfg(feature = <span class="string">&quot;parsing&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::buffer::Cursor;
+<span class="kw">use </span><span class="kw">crate</span>::thread::ThreadBound;
+<span class="kw">use </span>proc_macro2::{
+    Delimiter, Group, Ident, LexError, Literal, Punct, Spacing, Span, TokenStream, TokenTree,
 };
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">quote::ToTokens</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Display</span>};
-<span class="kw">use</span> <span class="ident">std::iter::FromIterator</span>;
-<span class="kw">use</span> <span class="ident">std::slice</span>;
-<span class="kw">use</span> <span class="ident">std::vec</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;printing&quot;</span>)]
+</span><span class="kw">use </span>quote::ToTokens;
+<span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug, Display};
+<span class="kw">use </span>std::iter::FromIterator;
+<span class="kw">use </span>std::slice;
+<span class="kw">use </span>std::vec;
 
-<span class="doccomment">/// The result of a Syn parser.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="doccomment">/// The result of a Syn parser.
+</span><span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = std::result::Result&lt;T, Error&gt;;
 
-<span class="doccomment">/// Error returned when a Syn parser cannot parse the input tokens.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Error reporting in proc macros</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The correct way to report errors back to the compiler from a procedural</span>
-<span class="doccomment">/// macro is by emitting an appropriately spanned invocation of</span>
-<span class="doccomment">/// [`compile_error!`] in the generated code. This produces a better diagnostic</span>
-<span class="doccomment">/// message than simply panicking the macro.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`compile_error!`]: std::compile_error!</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// When parsing macro input, the [`parse_macro_input!`] macro handles the</span>
-<span class="doccomment">/// conversion to `compile_error!` automatically.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # extern crate proc_macro;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// use proc_macro::TokenStream;</span>
-<span class="doccomment">/// use syn::{parse_macro_input, AttributeArgs, ItemFn};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # const IGNORE: &amp;str = stringify! {</span>
-<span class="doccomment">/// #[proc_macro_attribute]</span>
-<span class="doccomment">/// # };</span>
-<span class="doccomment">/// pub fn my_attr(args: TokenStream, input: TokenStream) -&gt; TokenStream {</span>
-<span class="doccomment">///     let args = parse_macro_input!(args as AttributeArgs);</span>
-<span class="doccomment">///     let input = parse_macro_input!(input as ItemFn);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     /* ... */</span>
-<span class="doccomment">///     # TokenStream::new()</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// For errors that arise later than the initial parsing stage, the</span>
-<span class="doccomment">/// [`.to_compile_error()`] method can be used to perform an explicit conversion</span>
-<span class="doccomment">/// to `compile_error!`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`.to_compile_error()`]: Error::to_compile_error</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # extern crate proc_macro;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # use proc_macro::TokenStream;</span>
-<span class="doccomment">/// # use syn::{parse_macro_input, DeriveInput};</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # const IGNORE: &amp;str = stringify! {</span>
-<span class="doccomment">/// #[proc_macro_derive(MyDerive)]</span>
-<span class="doccomment">/// # };</span>
-<span class="doccomment">/// pub fn my_derive(input: TokenStream) -&gt; TokenStream {</span>
-<span class="doccomment">///     let input = parse_macro_input!(input as DeriveInput);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     // fn(DeriveInput) -&gt; syn::Result&lt;proc_macro2::TokenStream&gt;</span>
-<span class="doccomment">///     expand::my_derive(input)</span>
-<span class="doccomment">///         .unwrap_or_else(|err| err.to_compile_error())</span>
-<span class="doccomment">///         .into()</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # mod expand {</span>
-<span class="doccomment">/// #     use proc_macro2::TokenStream;</span>
-<span class="doccomment">/// #     use syn::{DeriveInput, Result};</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// #     pub fn my_derive(input: DeriveInput) -&gt; Result&lt;TokenStream&gt; {</span>
-<span class="doccomment">/// #         unimplemented!()</span>
-<span class="doccomment">/// #     }</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Error</span> {
-    <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ErrorMessage</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Error returned when a Syn parser cannot parse the input tokens.
+///
+/// # Error reporting in proc macros
+///
+/// The correct way to report errors back to the compiler from a procedural
+/// macro is by emitting an appropriately spanned invocation of
+/// [`compile_error!`] in the generated code. This produces a better diagnostic
+/// message than simply panicking the macro.
+///
+/// [`compile_error!`]: std::compile_error!
+///
+/// When parsing macro input, the [`parse_macro_input!`] macro handles the
+/// conversion to `compile_error!` automatically.
+///
+/// ```
+/// # extern crate proc_macro;
+/// #
+/// use proc_macro::TokenStream;
+/// use syn::{parse_macro_input, AttributeArgs, ItemFn};
+///
+/// # const IGNORE: &amp;str = stringify! {
+/// #[proc_macro_attribute]
+/// # };
+/// pub fn my_attr(args: TokenStream, input: TokenStream) -&gt; TokenStream {
+///     let args = parse_macro_input!(args as AttributeArgs);
+///     let input = parse_macro_input!(input as ItemFn);
+///
+///     /* ... */
+///     # TokenStream::new()
+/// }
+/// ```
+///
+/// For errors that arise later than the initial parsing stage, the
+/// [`.to_compile_error()`] method can be used to perform an explicit conversion
+/// to `compile_error!`.
+///
+/// [`.to_compile_error()`]: Error::to_compile_error
+///
+/// ```
+/// # extern crate proc_macro;
+/// #
+/// # use proc_macro::TokenStream;
+/// # use syn::{parse_macro_input, DeriveInput};
+/// #
+/// # const IGNORE: &amp;str = stringify! {
+/// #[proc_macro_derive(MyDerive)]
+/// # };
+/// pub fn my_derive(input: TokenStream) -&gt; TokenStream {
+///     let input = parse_macro_input!(input as DeriveInput);
+///
+///     // fn(DeriveInput) -&gt; syn::Result&lt;proc_macro2::TokenStream&gt;
+///     expand::my_derive(input)
+///         .unwrap_or_else(|err| err.to_compile_error())
+///         .into()
+/// }
+/// #
+/// # mod expand {
+/// #     use proc_macro2::TokenStream;
+/// #     use syn::{DeriveInput, Result};
+/// #
+/// #     pub fn my_derive(input: DeriveInput) -&gt; Result&lt;TokenStream&gt; {
+/// #         unimplemented!()
+/// #     }
+/// # }
+/// ```
+</span><span class="kw">pub struct </span>Error {
+    messages: Vec&lt;ErrorMessage&gt;,
 }
 
-<span class="kw">struct</span> <span class="ident">ErrorMessage</span> {
-    <span class="comment">// Span is implemented as an index into a thread-local interner to keep the</span>
-    <span class="comment">// size small. It is not safe to access from a different thread. We want</span>
-    <span class="comment">// errors to be Send and Sync to play nicely with the Failure crate, so pin</span>
-    <span class="comment">// the span we&#39;re given to its original thread and assume it is</span>
-    <span class="comment">// Span::call_site if accessed from any other thread.</span>
-    <span class="ident">start_span</span>: <span class="ident">ThreadBound</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span>,
-    <span class="ident">end_span</span>: <span class="ident">ThreadBound</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span>,
-    <span class="ident">message</span>: <span class="ident">String</span>,
+<span class="kw">struct </span>ErrorMessage {
+    <span class="comment">// Span is implemented as an index into a thread-local interner to keep the
+    // size small. It is not safe to access from a different thread. We want
+    // errors to be Send and Sync to play nicely with the Failure crate, so pin
+    // the span we&#39;re given to its original thread and assume it is
+    // Span::call_site if accessed from any other thread.
+    </span>start_span: ThreadBound&lt;Span&gt;,
+    end_span: ThreadBound&lt;Span&gt;,
+    message: String,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">struct</span> <span class="ident">_Test</span>
-<span class="kw">where</span>
-    <span class="ident">Error</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">struct </span>_Test
+<span class="kw">where
+    </span>Error: Send + Sync;
 
-<span class="kw">impl</span> <span class="ident">Error</span> {
-    <span class="doccomment">/// Usually the [`ParseStream::error`] method will be used instead, which</span>
-    <span class="doccomment">/// automatically uses the correct span from the current position of the</span>
-    <span class="doccomment">/// parse stream.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Use `Error::new` when the error needs to be triggered on some span other</span>
-    <span class="doccomment">/// than where the parse stream is currently positioned.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`ParseStream::error`]: crate::parse::ParseBuffer::error</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use syn::{Error, Ident, LitStr, Result, Token};</span>
-    <span class="doccomment">/// use syn::parse::ParseStream;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Parses input that looks like `name = &quot;string&quot;` where the key must be</span>
-    <span class="doccomment">/// // the identifier `name` and the value may be any string literal.</span>
-    <span class="doccomment">/// // Returns the string literal.</span>
-    <span class="doccomment">/// fn parse_name(input: ParseStream) -&gt; Result&lt;LitStr&gt; {</span>
-    <span class="doccomment">///     let name_token: Ident = input.parse()?;</span>
-    <span class="doccomment">///     if name_token != &quot;name&quot; {</span>
-    <span class="doccomment">///         // Trigger an error not on the current position of the stream,</span>
-    <span class="doccomment">///         // but on the position of the unexpected identifier.</span>
-    <span class="doccomment">///         return Err(Error::new(name_token.span(), &quot;expected `name`&quot;));</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///     input.parse::&lt;Token![=]&gt;()?;</span>
-    <span class="doccomment">///     let s: LitStr = input.parse()?;</span>
-    <span class="doccomment">///     Ok(s)</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">message</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Error</span> {
-            <span class="ident">messages</span>: <span class="macro">vec!</span>[<span class="ident">ErrorMessage</span> {
-                <span class="ident">start_span</span>: <span class="ident">ThreadBound::new</span>(<span class="ident">span</span>),
-                <span class="ident">end_span</span>: <span class="ident">ThreadBound::new</span>(<span class="ident">span</span>),
-                <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">to_string</span>(),
+<span class="kw">impl </span>Error {
+    <span class="doccomment">/// Usually the [`ParseStream::error`] method will be used instead, which
+    /// automatically uses the correct span from the current position of the
+    /// parse stream.
+    ///
+    /// Use `Error::new` when the error needs to be triggered on some span other
+    /// than where the parse stream is currently positioned.
+    ///
+    /// [`ParseStream::error`]: crate::parse::ParseBuffer::error
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use syn::{Error, Ident, LitStr, Result, Token};
+    /// use syn::parse::ParseStream;
+    ///
+    /// // Parses input that looks like `name = &quot;string&quot;` where the key must be
+    /// // the identifier `name` and the value may be any string literal.
+    /// // Returns the string literal.
+    /// fn parse_name(input: ParseStream) -&gt; Result&lt;LitStr&gt; {
+    ///     let name_token: Ident = input.parse()?;
+    ///     if name_token != &quot;name&quot; {
+    ///         // Trigger an error not on the current position of the stream,
+    ///         // but on the position of the unexpected identifier.
+    ///         return Err(Error::new(name_token.span(), &quot;expected `name`&quot;));
+    ///     }
+    ///     input.parse::&lt;Token![=]&gt;()?;
+    ///     let s: LitStr = input.parse()?;
+    ///     Ok(s)
+    /// }
+    /// ```
+    </span><span class="kw">pub fn </span>new&lt;T: Display&gt;(span: Span, message: T) -&gt; <span class="self">Self </span>{
+        Error {
+            messages: <span class="macro">vec!</span>[ErrorMessage {
+                start_span: ThreadBound::new(span),
+                end_span: ThreadBound::new(span),
+                message: message.to_string(),
             }],
         }
     }
 
-    <span class="doccomment">/// Creates an error with the specified message spanning the given syntax</span>
-    <span class="doccomment">/// tree node.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Unlike the `Error::new` constructor, this constructor takes an argument</span>
-    <span class="doccomment">/// `tokens` which is a syntax tree node. This allows the resulting `Error`</span>
-    <span class="doccomment">/// to attempt to span all tokens inside of `tokens`. While you would</span>
-    <span class="doccomment">/// typically be able to use the `Spanned` trait with the above `Error::new`</span>
-    <span class="doccomment">/// constructor, implementation limitations today mean that</span>
-    <span class="doccomment">/// `Error::new_spanned` may provide a higher-quality error message on</span>
-    <span class="doccomment">/// stable Rust.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// When in doubt it&#39;s recommended to stick to `Error::new` (or</span>
-    <span class="doccomment">/// `ParseStream::error`)!</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_spanned</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">ToTokens</span>, <span class="ident">U</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">tokens</span>: <span class="ident">T</span>, <span class="ident">message</span>: <span class="ident">U</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">tokens</span>.<span class="ident">into_token_stream</span>().<span class="ident">into_iter</span>();
-        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">map_or_else</span>(<span class="ident">Span::call_site</span>, <span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">t</span>.<span class="ident">span</span>());
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">last</span>().<span class="ident">map_or</span>(<span class="ident">start</span>, <span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">t</span>.<span class="ident">span</span>());
-        <span class="ident">Error</span> {
-            <span class="ident">messages</span>: <span class="macro">vec!</span>[<span class="ident">ErrorMessage</span> {
-                <span class="ident">start_span</span>: <span class="ident">ThreadBound::new</span>(<span class="ident">start</span>),
-                <span class="ident">end_span</span>: <span class="ident">ThreadBound::new</span>(<span class="ident">end</span>),
-                <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">to_string</span>(),
+    <span class="doccomment">/// Creates an error with the specified message spanning the given syntax
+    /// tree node.
+    ///
+    /// Unlike the `Error::new` constructor, this constructor takes an argument
+    /// `tokens` which is a syntax tree node. This allows the resulting `Error`
+    /// to attempt to span all tokens inside of `tokens`. While you would
+    /// typically be able to use the `Spanned` trait with the above `Error::new`
+    /// constructor, implementation limitations today mean that
+    /// `Error::new_spanned` may provide a higher-quality error message on
+    /// stable Rust.
+    ///
+    /// When in doubt it&#39;s recommended to stick to `Error::new` (or
+    /// `ParseStream::error`)!
+    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;printing&quot;</span>)]
+    </span><span class="kw">pub fn </span>new_spanned&lt;T: ToTokens, U: Display&gt;(tokens: T, message: U) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = tokens.into_token_stream().into_iter();
+        <span class="kw">let </span>start = iter.next().map_or_else(Span::call_site, |t| t.span());
+        <span class="kw">let </span>end = iter.last().map_or(start, |t| t.span());
+        Error {
+            messages: <span class="macro">vec!</span>[ErrorMessage {
+                start_span: ThreadBound::new(start),
+                end_span: ThreadBound::new(end),
+                message: message.to_string(),
             }],
         }
     }
 
-    <span class="doccomment">/// The source location of the error.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Spans are not thread-safe so this function returns `Span::call_site()`</span>
-    <span class="doccomment">/// if called from a different thread than the one on which the `Error` was</span>
-    <span class="doccomment">/// originally created.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Span</span> {
-        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">messages</span>[<span class="number">0</span>].<span class="ident">start_span</span>.<span class="ident">get</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">span</span>) =&gt; <span class="kw-2">*</span><span class="ident">span</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">Span::call_site</span>(),
+    <span class="doccomment">/// The source location of the error.
+    ///
+    /// Spans are not thread-safe so this function returns `Span::call_site()`
+    /// if called from a different thread than the one on which the `Error` was
+    /// originally created.
+    </span><span class="kw">pub fn </span>span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Span {
+        <span class="kw">let </span>start = <span class="kw">match </span><span class="self">self</span>.messages[<span class="number">0</span>].start_span.get() {
+            <span class="prelude-val">Some</span>(span) =&gt; <span class="kw-2">*</span>span,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Span::call_site(),
         };
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">messages</span>[<span class="number">0</span>].<span class="ident">end_span</span>.<span class="ident">get</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">span</span>) =&gt; <span class="kw-2">*</span><span class="ident">span</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">Span::call_site</span>(),
+        <span class="kw">let </span>end = <span class="kw">match </span><span class="self">self</span>.messages[<span class="number">0</span>].end_span.get() {
+            <span class="prelude-val">Some</span>(span) =&gt; <span class="kw-2">*</span>span,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Span::call_site(),
         };
-        <span class="ident">start</span>.<span class="ident">join</span>(<span class="ident">end</span>).<span class="ident">unwrap_or</span>(<span class="ident">start</span>)
+        start.join(end).unwrap_or(start)
     }
 
-    <span class="doccomment">/// Render the error as an invocation of [`compile_error!`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The [`parse_macro_input!`] macro provides a convenient way to invoke</span>
-    <span class="doccomment">/// this method correctly in a procedural macro.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`compile_error!`]: std::compile_error!</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_compile_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TokenStream</span> {
-        <span class="self">self</span>.<span class="ident">messages</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="ident">ErrorMessage::to_compile_error</span>)
-            .<span class="ident">collect</span>()
+    <span class="doccomment">/// Render the error as an invocation of [`compile_error!`].
+    ///
+    /// The [`parse_macro_input!`] macro provides a convenient way to invoke
+    /// this method correctly in a procedural macro.
+    ///
+    /// [`compile_error!`]: std::compile_error!
+    </span><span class="kw">pub fn </span>to_compile_error(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TokenStream {
+        <span class="self">self</span>.messages
+            .iter()
+            .map(ErrorMessage::to_compile_error)
+            .collect()
     }
 
-    <span class="doccomment">/// Render the error as an invocation of [`compile_error!`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`compile_error!`]: std::compile_error!</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # extern crate proc_macro;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// use proc_macro::TokenStream;</span>
-    <span class="doccomment">/// use syn::{parse_macro_input, DeriveInput, Error};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # const _: &amp;str = stringify! {</span>
-    <span class="doccomment">/// #[proc_macro_derive(MyTrait)]</span>
-    <span class="doccomment">/// # };</span>
-    <span class="doccomment">/// pub fn derive_my_trait(input: TokenStream) -&gt; TokenStream {</span>
-    <span class="doccomment">///     let input = parse_macro_input!(input as DeriveInput);</span>
-    <span class="doccomment">///     my_trait::expand(input)</span>
-    <span class="doccomment">///         .unwrap_or_else(Error::into_compile_error)</span>
-    <span class="doccomment">///         .into()</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// mod my_trait {</span>
-    <span class="doccomment">///     use proc_macro2::TokenStream;</span>
-    <span class="doccomment">///     use syn::{DeriveInput, Result};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///     pub(crate) fn expand(input: DeriveInput) -&gt; Result&lt;TokenStream&gt; {</span>
-    <span class="doccomment">///         /* ... */</span>
-    <span class="doccomment">///         # unimplemented!()</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_compile_error</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenStream</span> {
-        <span class="self">self</span>.<span class="ident">to_compile_error</span>()
+    <span class="doccomment">/// Render the error as an invocation of [`compile_error!`].
+    ///
+    /// [`compile_error!`]: std::compile_error!
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate proc_macro;
+    /// #
+    /// use proc_macro::TokenStream;
+    /// use syn::{parse_macro_input, DeriveInput, Error};
+    ///
+    /// # const _: &amp;str = stringify! {
+    /// #[proc_macro_derive(MyTrait)]
+    /// # };
+    /// pub fn derive_my_trait(input: TokenStream) -&gt; TokenStream {
+    ///     let input = parse_macro_input!(input as DeriveInput);
+    ///     my_trait::expand(input)
+    ///         .unwrap_or_else(Error::into_compile_error)
+    ///         .into()
+    /// }
+    ///
+    /// mod my_trait {
+    ///     use proc_macro2::TokenStream;
+    ///     use syn::{DeriveInput, Result};
+    ///
+    ///     pub(crate) fn expand(input: DeriveInput) -&gt; Result&lt;TokenStream&gt; {
+    ///         /* ... */
+    ///         # unimplemented!()
+    ///     }
+    /// }
+    /// ```
+    </span><span class="kw">pub fn </span>into_compile_error(<span class="self">self</span>) -&gt; TokenStream {
+        <span class="self">self</span>.to_compile_error()
     }
 
-    <span class="doccomment">/// Add another error message to self such that when `to_compile_error()` is</span>
-    <span class="doccomment">/// called, both errors will be emitted together.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">combine</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">another</span>: <span class="ident">Error</span>) {
-        <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">extend</span>(<span class="ident">another</span>.<span class="ident">messages</span>);
+    <span class="doccomment">/// Add another error message to self such that when `to_compile_error()` is
+    /// called, both errors will be emitted together.
+    </span><span class="kw">pub fn </span>combine(<span class="kw-2">&amp;mut </span><span class="self">self</span>, another: Error) {
+        <span class="self">self</span>.messages.extend(another.messages);
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ErrorMessage</span> {
-    <span class="kw">fn</span> <span class="ident">to_compile_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TokenStream</span> {
-        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">start_span</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">cloned</span>()
-            .<span class="ident">unwrap_or_else</span>(<span class="ident">Span::call_site</span>);
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">end_span</span>.<span class="ident">get</span>().<span class="ident">cloned</span>().<span class="ident">unwrap_or_else</span>(<span class="ident">Span::call_site</span>);
+<span class="kw">impl </span>ErrorMessage {
+    <span class="kw">fn </span>to_compile_error(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TokenStream {
+        <span class="kw">let </span>start = <span class="self">self
+            </span>.start_span
+            .get()
+            .cloned()
+            .unwrap_or_else(Span::call_site);
+        <span class="kw">let </span>end = <span class="self">self</span>.end_span.get().cloned().unwrap_or_else(Span::call_site);
 
-        <span class="comment">// compile_error!($message)</span>
-        <span class="ident">TokenStream::from_iter</span>(<span class="macro">vec!</span>[
-            <span class="ident">TokenTree::Ident</span>(<span class="ident">Ident::new</span>(<span class="string">&quot;compile_error&quot;</span>, <span class="ident">start</span>)),
-            <span class="ident">TokenTree::Punct</span>({
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">Punct::new</span>(<span class="string">&#39;!&#39;</span>, <span class="ident">Spacing::Alone</span>);
-                <span class="ident">punct</span>.<span class="ident">set_span</span>(<span class="ident">start</span>);
-                <span class="ident">punct</span>
+        <span class="comment">// compile_error!($message)
+        </span>TokenStream::from_iter(<span class="macro">vec!</span>[
+            TokenTree::Ident(Ident::new(<span class="string">&quot;compile_error&quot;</span>, start)),
+            TokenTree::Punct({
+                <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="string">&#39;!&#39;</span>, Spacing::Alone);
+                punct.set_span(start);
+                punct
             }),
-            <span class="ident">TokenTree::Group</span>({
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">group</span> <span class="op">=</span> <span class="ident">Group::new</span>(<span class="ident">Delimiter::Brace</span>, {
-                    <span class="ident">TokenStream::from_iter</span>(<span class="macro">vec!</span>[<span class="ident">TokenTree::Literal</span>({
-                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">Literal::string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">message</span>);
-                        <span class="ident">string</span>.<span class="ident">set_span</span>(<span class="ident">end</span>);
-                        <span class="ident">string</span>
+            TokenTree::Group({
+                <span class="kw">let </span><span class="kw-2">mut </span>group = Group::new(Delimiter::Brace, {
+                    TokenStream::from_iter(<span class="macro">vec!</span>[TokenTree::Literal({
+                        <span class="kw">let </span><span class="kw-2">mut </span>string = Literal::string(<span class="kw-2">&amp;</span><span class="self">self</span>.message);
+                        string.set_span(end);
+                        string
                     })])
                 });
-                <span class="ident">group</span>.<span class="ident">set_span</span>(<span class="ident">end</span>);
-                <span class="ident">group</span>
+                group.set_span(end);
+                group
             }),
         ])
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_at</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">scope</span>: <span class="ident">Span</span>, <span class="ident">cursor</span>: <span class="ident">Cursor</span>, <span class="ident">message</span>: <span class="ident">T</span>) -&gt; <span class="ident">Error</span> {
-    <span class="kw">if</span> <span class="ident">cursor</span>.<span class="ident">eof</span>() {
-        <span class="ident">Error::new</span>(<span class="ident">scope</span>, <span class="macro">format!</span>(<span class="string">&quot;unexpected end of input, {}&quot;</span>, <span class="ident">message</span>))
-    } <span class="kw">else</span> {
-        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::buffer::open_span_of_group</span>(<span class="ident">cursor</span>);
-        <span class="ident">Error::new</span>(<span class="ident">span</span>, <span class="ident">message</span>)
+<span class="attribute">#[cfg(feature = <span class="string">&quot;parsing&quot;</span>)]
+</span><span class="kw">pub fn </span>new_at&lt;T: Display&gt;(scope: Span, cursor: Cursor, message: T) -&gt; Error {
+    <span class="kw">if </span>cursor.eof() {
+        Error::new(scope, <span class="macro">format!</span>(<span class="string">&quot;unexpected end of input, {}&quot;</span>, message))
+    } <span class="kw">else </span>{
+        <span class="kw">let </span>span = <span class="kw">crate</span>::buffer::open_span_of_group(cursor);
+        Error::new(span, message)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>, <span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>)))]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new2</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">start</span>: <span class="ident">Span</span>, <span class="ident">end</span>: <span class="ident">Span</span>, <span class="ident">message</span>: <span class="ident">T</span>) -&gt; <span class="ident">Error</span> {
-    <span class="ident">Error</span> {
-        <span class="ident">messages</span>: <span class="macro">vec!</span>[<span class="ident">ErrorMessage</span> {
-            <span class="ident">start_span</span>: <span class="ident">ThreadBound::new</span>(<span class="ident">start</span>),
-            <span class="ident">end_span</span>: <span class="ident">ThreadBound::new</span>(<span class="ident">end</span>),
-            <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">to_string</span>(),
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;parsing&quot;</span>, any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>)))]
+</span><span class="kw">pub fn </span>new2&lt;T: Display&gt;(start: Span, end: Span, message: T) -&gt; Error {
+    Error {
+        messages: <span class="macro">vec!</span>[ErrorMessage {
+            start_span: ThreadBound::new(start),
+            end_span: ThreadBound::new(end),
+            message: message.to_string(),
         }],
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
-            <span class="ident">formatter</span>
-                .<span class="ident">debug_tuple</span>(<span class="string">&quot;Error&quot;</span>)
-                .<span class="ident">field</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">messages</span>[<span class="number">0</span>])
-                .<span class="ident">finish</span>()
-        } <span class="kw">else</span> {
-            <span class="ident">formatter</span>
-                .<span class="ident">debug_tuple</span>(<span class="string">&quot;Error&quot;</span>)
-                .<span class="ident">field</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">messages</span>)
-                .<span class="ident">finish</span>()
+<span class="kw">impl </span>Debug <span class="kw">for </span>Error {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        <span class="kw">if </span><span class="self">self</span>.messages.len() == <span class="number">1 </span>{
+            formatter
+                .debug_tuple(<span class="string">&quot;Error&quot;</span>)
+                .field(<span class="kw-2">&amp;</span><span class="self">self</span>.messages[<span class="number">0</span>])
+                .finish()
+        } <span class="kw">else </span>{
+            formatter
+                .debug_tuple(<span class="string">&quot;Error&quot;</span>)
+                .field(<span class="kw-2">&amp;</span><span class="self">self</span>.messages)
+                .finish()
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">ErrorMessage</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">Debug::fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">message</span>, <span class="ident">formatter</span>)
+<span class="kw">impl </span>Debug <span class="kw">for </span>ErrorMessage {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        Debug::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.message, formatter)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">formatter</span>.<span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">messages</span>[<span class="number">0</span>].<span class="ident">message</span>)
+<span class="kw">impl </span>Display <span class="kw">for </span>Error {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        formatter.write_str(<span class="kw-2">&amp;</span><span class="self">self</span>.messages[<span class="number">0</span>].message)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Error</span> {
-            <span class="ident">messages</span>: <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">clone</span>(),
+<span class="kw">impl </span>Clone <span class="kw">for </span>Error {
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        Error {
+            messages: <span class="self">self</span>.messages.clone(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">ErrorMessage</span> {
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">start_span</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">cloned</span>()
-            .<span class="ident">unwrap_or_else</span>(<span class="ident">Span::call_site</span>);
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">end_span</span>.<span class="ident">get</span>().<span class="ident">cloned</span>().<span class="ident">unwrap_or_else</span>(<span class="ident">Span::call_site</span>);
-        <span class="ident">ErrorMessage</span> {
-            <span class="ident">start_span</span>: <span class="ident">ThreadBound::new</span>(<span class="ident">start</span>),
-            <span class="ident">end_span</span>: <span class="ident">ThreadBound::new</span>(<span class="ident">end</span>),
-            <span class="ident">message</span>: <span class="self">self</span>.<span class="ident">message</span>.<span class="ident">clone</span>(),
+<span class="kw">impl </span>Clone <span class="kw">for </span>ErrorMessage {
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>start = <span class="self">self
+            </span>.start_span
+            .get()
+            .cloned()
+            .unwrap_or_else(Span::call_site);
+        <span class="kw">let </span>end = <span class="self">self</span>.end_span.get().cloned().unwrap_or_else(Span::call_site);
+        ErrorMessage {
+            start_span: ThreadBound::new(start),
+            end_span: ThreadBound::new(end),
+            message: <span class="self">self</span>.message.clone(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">std::error::Error</span> <span class="kw">for</span> <span class="ident">Error</span> {}
+<span class="kw">impl </span>std::error::Error <span class="kw">for </span>Error {}
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">LexError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">LexError</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Error::new</span>(<span class="ident">err</span>.<span class="ident">span</span>(), <span class="string">&quot;lex error&quot;</span>)
+<span class="kw">impl </span>From&lt;LexError&gt; <span class="kw">for </span>Error {
+    <span class="kw">fn </span>from(err: LexError) -&gt; <span class="self">Self </span>{
+        Error::new(err.span(), <span class="string">&quot;lex error&quot;</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">Error</span>;
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">IntoIter</span>;
+<span class="kw">impl </span>IntoIterator <span class="kw">for </span>Error {
+    <span class="kw">type </span>Item = Error;
+    <span class="kw">type </span>IntoIter = IntoIter;
 
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::IntoIter</span> {
-        <span class="ident">IntoIter</span> {
-            <span class="ident">messages</span>: <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">into_iter</span>(),
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        IntoIter {
+            messages: <span class="self">self</span>.messages.into_iter(),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntoIter</span> {
-    <span class="ident">messages</span>: <span class="ident">vec::IntoIter</span><span class="op">&lt;</span><span class="ident">ErrorMessage</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>IntoIter {
+    messages: vec::IntoIter&lt;ErrorMessage&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">IntoIter</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">Error</span>;
+<span class="kw">impl </span>Iterator <span class="kw">for </span>IntoIter {
+    <span class="kw">type </span>Item = Error;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">Error</span> {
-            <span class="ident">messages</span>: <span class="macro">vec!</span>[<span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">next</span>()<span class="question-mark">?</span>],
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="prelude-val">Some</span>(Error {
+            messages: <span class="macro">vec!</span>[<span class="self">self</span>.messages.next()<span class="question-mark">?</span>],
         })
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Error</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">Error</span>;
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Error {
+    <span class="kw">type </span>Item = Error;
+    <span class="kw">type </span>IntoIter = Iter&lt;<span class="lifetime">&#39;a</span>&gt;;
 
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::IntoIter</span> {
-        <span class="ident">Iter</span> {
-            <span class="ident">messages</span>: <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">iter</span>(),
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        Iter {
+            messages: <span class="self">self</span>.messages.iter(),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">messages</span>: <span class="ident">slice::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">ErrorMessage</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>Iter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    messages: slice::Iter&lt;<span class="lifetime">&#39;a</span>, ErrorMessage&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">Error</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Item = Error;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">Error</span> {
-            <span class="ident">messages</span>: <span class="macro">vec!</span>[<span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">next</span>()<span class="question-mark">?</span>.<span class="ident">clone</span>()],
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="prelude-val">Some</span>(Error {
+            messages: <span class="macro">vec!</span>[<span class="self">self</span>.messages.next()<span class="question-mark">?</span>.clone()],
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">extend</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">iter</span>: <span class="ident">T</span>) {
-        <span class="kw">for</span> <span class="ident">err</span> <span class="kw">in</span> <span class="ident">iter</span> {
-            <span class="self">self</span>.<span class="ident">combine</span>(<span class="ident">err</span>);
+<span class="kw">impl </span>Extend&lt;Error&gt; <span class="kw">for </span>Error {
+    <span class="kw">fn </span>extend&lt;T: IntoIterator&lt;Item = Error&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: T) {
+        <span class="kw">for </span>err <span class="kw">in </span>iter {
+            <span class="self">self</span>.combine(err);
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

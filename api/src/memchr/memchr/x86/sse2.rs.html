@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memchr/x86/sse2.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>sse2.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../memchr/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memchr/x86/sse2.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>sse2.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../memchr/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -795,797 +789,796 @@
 <span id="789">789</span>
 <span id="790">790</span>
 <span id="791">791</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">arch::x86_64</span>::<span class="kw-2">*</span>, <span class="ident">cmp</span>, <span class="ident">mem::size_of</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>core::{arch::x86_64::<span class="kw-2">*</span>, cmp, mem::size_of};
 
-<span class="kw">const</span> <span class="ident">VECTOR_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">__m128i</span><span class="op">&gt;</span>();
-<span class="kw">const</span> <span class="ident">VECTOR_ALIGN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">VECTOR_SIZE</span> <span class="op">-</span> <span class="number">1</span>;
+<span class="kw">const </span>VECTOR_SIZE: usize = size_of::&lt;__m128i&gt;();
+<span class="kw">const </span>VECTOR_ALIGN: usize = VECTOR_SIZE - <span class="number">1</span>;
 
-<span class="comment">// The number of bytes to loop at in one iteration of memchr/memrchr.</span>
-<span class="kw">const</span> <span class="ident">LOOP_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span> <span class="op">*</span> <span class="ident">VECTOR_SIZE</span>;
+<span class="comment">// The number of bytes to loop at in one iteration of memchr/memrchr.
+</span><span class="kw">const </span>LOOP_SIZE: usize = <span class="number">4 </span>* VECTOR_SIZE;
 
-<span class="comment">// The number of bytes to loop at in one iteration of memchr2/memrchr2 and</span>
-<span class="comment">// memchr3/memrchr3. There was no observable difference between 64 and 32 bytes</span>
-<span class="comment">// in benchmarks. memchr3 in particular only gets a very slight speed up from</span>
-<span class="comment">// the loop unrolling.</span>
-<span class="kw">const</span> <span class="ident">LOOP_SIZE2</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">VECTOR_SIZE</span>;
+<span class="comment">// The number of bytes to loop at in one iteration of memchr2/memrchr2 and
+// memchr3/memrchr3. There was no observable difference between 64 and 32 bytes
+// in benchmarks. memchr3 in particular only gets a very slight speed up from
+// the loop unrolling.
+</span><span class="kw">const </span>LOOP_SIZE2: usize = <span class="number">2 </span>* VECTOR_SIZE;
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">memchr</span>(<span class="ident">n1</span>: <span class="ident">u8</span>, <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="comment">// What follows is a fast SSE2-only algorithm to detect the position of</span>
-    <span class="comment">// `n1` in `haystack` if it exists. From what I know, this is the &quot;classic&quot;</span>
-    <span class="comment">// algorithm. I believe it can be found in places like glibc and Go&#39;s</span>
-    <span class="comment">// standard library. It appears to be well known and is elaborated on in</span>
-    <span class="comment">// more detail here: https://gms.tf/stdfind-and-memchr-optimizations.html</span>
-    <span class="comment">//</span>
-    <span class="comment">// While this routine is very long, the basic idea is actually very simple</span>
-    <span class="comment">// and can be expressed straight-forwardly in pseudo code:</span>
-    <span class="comment">//</span>
-    <span class="comment">//     needle = (n1 &lt;&lt; 15) | (n1 &lt;&lt; 14) | ... | (n1 &lt;&lt; 1) | n1</span>
-    <span class="comment">//     // Note: shift amount in bytes</span>
-    <span class="comment">//</span>
-    <span class="comment">//     while i &lt;= haystack.len() - 16:</span>
-    <span class="comment">//       // A 16 byte vector. Each byte in chunk corresponds to a byte in</span>
-    <span class="comment">//       // the haystack.</span>
-    <span class="comment">//       chunk = haystack[i:i+16]</span>
-    <span class="comment">//       // Compare bytes in needle with bytes in chunk. The result is a 16</span>
-    <span class="comment">//       // byte chunk where each byte is 0xFF if the corresponding bytes</span>
-    <span class="comment">//       // in needle and chunk were equal, or 0x00 otherwise.</span>
-    <span class="comment">//       eqs = cmpeq(needle, chunk)</span>
-    <span class="comment">//       // Return a 32 bit integer where the most significant 16 bits</span>
-    <span class="comment">//       // are always 0 and the lower 16 bits correspond to whether the</span>
-    <span class="comment">//       // most significant bit in the correspond byte in `eqs` is set.</span>
-    <span class="comment">//       // In other words, `mask as u16` has bit i set if and only if</span>
-    <span class="comment">//       // needle[i] == chunk[i].</span>
-    <span class="comment">//       mask = movemask(eqs)</span>
-    <span class="comment">//</span>
-    <span class="comment">//       // Mask is 0 if there is no match, and non-zero otherwise.</span>
-    <span class="comment">//       if mask != 0:</span>
-    <span class="comment">//         // trailing_zeros tells us the position of the least significant</span>
-    <span class="comment">//         // bit that is set.</span>
-    <span class="comment">//         return i + trailing_zeros(mask)</span>
-    <span class="comment">//</span>
-    <span class="comment">//     // haystack length may not be a multiple of 16, so search the rest.</span>
-    <span class="comment">//     while i &lt; haystack.len():</span>
-    <span class="comment">//       if haystack[i] == n1:</span>
-    <span class="comment">//         return i</span>
-    <span class="comment">//</span>
-    <span class="comment">//     // No match found.</span>
-    <span class="comment">//     return NULL</span>
-    <span class="comment">//</span>
-    <span class="comment">// In fact, we could loosely translate the above code to Rust line-for-line</span>
-    <span class="comment">// and it would be a pretty fast algorithm. But, we pull out all the stops</span>
-    <span class="comment">// to go as fast as possible:</span>
-    <span class="comment">//</span>
-    <span class="comment">// 1. We use aligned loads. That is, we do some finagling to make sure our</span>
-    <span class="comment">//    primary loop not only proceeds in increments of 16 bytes, but that</span>
-    <span class="comment">//    the address of haystack&#39;s pointer that we dereference is aligned to</span>
-    <span class="comment">//    16 bytes. 16 is a magic number here because it is the size of SSE2</span>
-    <span class="comment">//    128-bit vector. (For the AVX2 algorithm, 32 is the magic number.)</span>
-    <span class="comment">//    Therefore, to get aligned loads, our pointer&#39;s address must be evenly</span>
-    <span class="comment">//    divisible by 16.</span>
-    <span class="comment">// 2. Our primary loop proceeds 64 bytes at a time instead of 16. It&#39;s</span>
-    <span class="comment">//    kind of like loop unrolling, but we combine the equality comparisons</span>
-    <span class="comment">//    using a vector OR such that we only need to extract a single mask to</span>
-    <span class="comment">//    determine whether a match exists or not. If so, then we do some</span>
-    <span class="comment">//    book-keeping to determine the precise location but otherwise mush on.</span>
-    <span class="comment">// 3. We use our &quot;chunk&quot; comparison routine in as many places as possible,</span>
-    <span class="comment">//    even if it means using unaligned loads. In particular, if haystack</span>
-    <span class="comment">//    starts with an unaligned address, then we do an unaligned load to</span>
-    <span class="comment">//    search the first 16 bytes. We then start our primary loop at the</span>
-    <span class="comment">//    smallest subsequent aligned address, which will actually overlap with</span>
-    <span class="comment">//    previously searched bytes. But we&#39;re OK with that. We do a similar</span>
-    <span class="comment">//    dance at the end of our primary loop. Finally, to avoid a</span>
-    <span class="comment">//    byte-at-a-time loop at the end, we do a final 16 byte unaligned load</span>
-    <span class="comment">//    that may overlap with a previous load. This is OK because it converts</span>
-    <span class="comment">//    a loop into a small number of very fast vector instructions.</span>
-    <span class="comment">//</span>
-    <span class="comment">// The primary downside of this algorithm is that it&#39;s effectively</span>
-    <span class="comment">// completely unsafe. Therefore, we have to be super careful to avoid</span>
-    <span class="comment">// undefined behavior:</span>
-    <span class="comment">//</span>
-    <span class="comment">// 1. We use raw pointers everywhere. Not only does dereferencing a pointer</span>
-    <span class="comment">//    require the pointer to be valid, but we actually can&#39;t even store the</span>
-    <span class="comment">//    address of an invalid pointer (unless it&#39;s 1 past the end of</span>
-    <span class="comment">//    haystack) without sacrificing performance.</span>
-    <span class="comment">// 2. _mm_loadu_si128 is used when you don&#39;t care about alignment, and</span>
-    <span class="comment">//    _mm_load_si128 is used when you do care. You cannot use the latter</span>
-    <span class="comment">//    on unaligned pointers.</span>
-    <span class="comment">// 3. We make liberal use of debug_assert! to check assumptions.</span>
-    <span class="comment">// 4. We make a concerted effort to stick with pointers instead of indices.</span>
-    <span class="comment">//    Indices are nicer because there&#39;s less to worry about with them (see</span>
-    <span class="comment">//    above about pointer offsets), but I could not get the compiler to</span>
-    <span class="comment">//    produce as good of code as what the below produces. In any case,</span>
-    <span class="comment">//    pointers are what we really care about here, and alignment is</span>
-    <span class="comment">//    expressed a bit more naturally with them.</span>
-    <span class="comment">//</span>
-    <span class="comment">// In general, most of the algorithms in this crate have a similar</span>
-    <span class="comment">// structure to what you see below, so this comment applies fairly well to</span>
-    <span class="comment">// all of them.</span>
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">pub unsafe fn </span>memchr(n1: u8, haystack: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="comment">// What follows is a fast SSE2-only algorithm to detect the position of
+    // `n1` in `haystack` if it exists. From what I know, this is the &quot;classic&quot;
+    // algorithm. I believe it can be found in places like glibc and Go&#39;s
+    // standard library. It appears to be well known and is elaborated on in
+    // more detail here: https://gms.tf/stdfind-and-memchr-optimizations.html
+    //
+    // While this routine is very long, the basic idea is actually very simple
+    // and can be expressed straight-forwardly in pseudo code:
+    //
+    //     needle = (n1 &lt;&lt; 15) | (n1 &lt;&lt; 14) | ... | (n1 &lt;&lt; 1) | n1
+    //     // Note: shift amount in bytes
+    //
+    //     while i &lt;= haystack.len() - 16:
+    //       // A 16 byte vector. Each byte in chunk corresponds to a byte in
+    //       // the haystack.
+    //       chunk = haystack[i:i+16]
+    //       // Compare bytes in needle with bytes in chunk. The result is a 16
+    //       // byte chunk where each byte is 0xFF if the corresponding bytes
+    //       // in needle and chunk were equal, or 0x00 otherwise.
+    //       eqs = cmpeq(needle, chunk)
+    //       // Return a 32 bit integer where the most significant 16 bits
+    //       // are always 0 and the lower 16 bits correspond to whether the
+    //       // most significant bit in the correspond byte in `eqs` is set.
+    //       // In other words, `mask as u16` has bit i set if and only if
+    //       // needle[i] == chunk[i].
+    //       mask = movemask(eqs)
+    //
+    //       // Mask is 0 if there is no match, and non-zero otherwise.
+    //       if mask != 0:
+    //         // trailing_zeros tells us the position of the least significant
+    //         // bit that is set.
+    //         return i + trailing_zeros(mask)
+    //
+    //     // haystack length may not be a multiple of 16, so search the rest.
+    //     while i &lt; haystack.len():
+    //       if haystack[i] == n1:
+    //         return i
+    //
+    //     // No match found.
+    //     return NULL
+    //
+    // In fact, we could loosely translate the above code to Rust line-for-line
+    // and it would be a pretty fast algorithm. But, we pull out all the stops
+    // to go as fast as possible:
+    //
+    // 1. We use aligned loads. That is, we do some finagling to make sure our
+    //    primary loop not only proceeds in increments of 16 bytes, but that
+    //    the address of haystack&#39;s pointer that we dereference is aligned to
+    //    16 bytes. 16 is a magic number here because it is the size of SSE2
+    //    128-bit vector. (For the AVX2 algorithm, 32 is the magic number.)
+    //    Therefore, to get aligned loads, our pointer&#39;s address must be evenly
+    //    divisible by 16.
+    // 2. Our primary loop proceeds 64 bytes at a time instead of 16. It&#39;s
+    //    kind of like loop unrolling, but we combine the equality comparisons
+    //    using a vector OR such that we only need to extract a single mask to
+    //    determine whether a match exists or not. If so, then we do some
+    //    book-keeping to determine the precise location but otherwise mush on.
+    // 3. We use our &quot;chunk&quot; comparison routine in as many places as possible,
+    //    even if it means using unaligned loads. In particular, if haystack
+    //    starts with an unaligned address, then we do an unaligned load to
+    //    search the first 16 bytes. We then start our primary loop at the
+    //    smallest subsequent aligned address, which will actually overlap with
+    //    previously searched bytes. But we&#39;re OK with that. We do a similar
+    //    dance at the end of our primary loop. Finally, to avoid a
+    //    byte-at-a-time loop at the end, we do a final 16 byte unaligned load
+    //    that may overlap with a previous load. This is OK because it converts
+    //    a loop into a small number of very fast vector instructions.
+    //
+    // The primary downside of this algorithm is that it&#39;s effectively
+    // completely unsafe. Therefore, we have to be super careful to avoid
+    // undefined behavior:
+    //
+    // 1. We use raw pointers everywhere. Not only does dereferencing a pointer
+    //    require the pointer to be valid, but we actually can&#39;t even store the
+    //    address of an invalid pointer (unless it&#39;s 1 past the end of
+    //    haystack) without sacrificing performance.
+    // 2. _mm_loadu_si128 is used when you don&#39;t care about alignment, and
+    //    _mm_load_si128 is used when you do care. You cannot use the latter
+    //    on unaligned pointers.
+    // 3. We make liberal use of debug_assert! to check assumptions.
+    // 4. We make a concerted effort to stick with pointers instead of indices.
+    //    Indices are nicer because there&#39;s less to worry about with them (see
+    //    above about pointer offsets), but I could not get the compiler to
+    //    produce as good of code as what the below produces. In any case,
+    //    pointers are what we really care about here, and alignment is
+    //    expressed a bit more naturally with them.
+    //
+    // In general, most of the algorithms in this crate have a similar
+    // structure to what you see below, so this comment applies fairly well to
+    // all of them.
 
-    <span class="kw">let</span> <span class="ident">vn1</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n1</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">len</span>();
-    <span class="kw">let</span> <span class="ident">loop_size</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">LOOP_SIZE</span>, <span class="ident">len</span>);
-    <span class="kw">let</span> <span class="ident">start_ptr</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">as_ptr</span>();
-    <span class="kw">let</span> <span class="ident">end_ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">haystack</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>;
+    </span><span class="kw">let </span>vn1 = _mm_set1_epi8(n1 <span class="kw">as </span>i8);
+    <span class="kw">let </span>len = haystack.len();
+    <span class="kw">let </span>loop_size = cmp::min(LOOP_SIZE, len);
+    <span class="kw">let </span>start_ptr = haystack.as_ptr();
+    <span class="kw">let </span>end_ptr = start_ptr.add(haystack.len());
+    <span class="kw">let </span><span class="kw-2">mut </span>ptr = start_ptr;
 
-    <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span> {
-        <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&lt;</span> <span class="ident">end_ptr</span> {
-            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n1</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>));
+    <span class="kw">if </span>haystack.len() &lt; VECTOR_SIZE {
+        <span class="kw">while </span>ptr &lt; end_ptr {
+            <span class="kw">if </span><span class="kw-2">*</span>ptr == n1 {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(sub(ptr, start_ptr));
             }
-            <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="number">1</span>);
+            ptr = ptr.offset(<span class="number">1</span>);
         }
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">forward_search1</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = forward_search1(start_ptr, end_ptr, ptr, vn1) {
+        <span class="kw">return </span><span class="prelude-val">Some</span>(i);
     }
 
-    <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span> <span class="op">-</span> (<span class="ident">start_ptr</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&amp;</span> <span class="ident">VECTOR_ALIGN</span>));
-    <span class="macro">debug_assert!</span>(<span class="ident">ptr</span> <span class="op">&gt;</span> <span class="ident">start_ptr</span> <span class="op">&amp;&amp;</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_ptr</span>);
-    <span class="kw">while</span> <span class="ident">loop_size</span> <span class="op">==</span> <span class="ident">LOOP_SIZE</span> <span class="op">&amp;&amp;</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">loop_size</span>) {
-        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">VECTOR_SIZE</span>);
+    ptr = ptr.add(VECTOR_SIZE - (start_ptr <span class="kw">as </span>usize &amp; VECTOR_ALIGN));
+    <span class="macro">debug_assert!</span>(ptr &gt; start_ptr &amp;&amp; end_ptr.sub(VECTOR_SIZE) &gt;= start_ptr);
+    <span class="kw">while </span>loop_size == LOOP_SIZE &amp;&amp; ptr &lt;= end_ptr.sub(loop_size) {
+        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (ptr <span class="kw">as </span>usize) % VECTOR_SIZE);
 
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">eqa</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">eqc</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">c</span>);
-        <span class="kw">let</span> <span class="ident">eqd</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">d</span>);
-        <span class="kw">let</span> <span class="ident">or1</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa</span>, <span class="ident">eqb</span>);
-        <span class="kw">let</span> <span class="ident">or2</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqc</span>, <span class="ident">eqd</span>);
-        <span class="kw">let</span> <span class="ident">or3</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">or1</span>, <span class="ident">or2</span>);
-        <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">or3</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">at</span> <span class="op">=</span> <span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>);
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa</span>);
-            <span class="kw">if</span> <span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">forward_pos</span>(<span class="ident">mask</span>));
-            }
-
-            <span class="ident">at</span> <span class="op">+</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb</span>);
-            <span class="kw">if</span> <span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">forward_pos</span>(<span class="ident">mask</span>));
+        <span class="kw">let </span>a = _mm_load_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>b = _mm_load_si128(ptr.add(VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>c = _mm_load_si128(ptr.add(<span class="number">2 </span>* VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>d = _mm_load_si128(ptr.add(<span class="number">3 </span>* VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>eqa = _mm_cmpeq_epi8(vn1, a);
+        <span class="kw">let </span>eqb = _mm_cmpeq_epi8(vn1, b);
+        <span class="kw">let </span>eqc = _mm_cmpeq_epi8(vn1, c);
+        <span class="kw">let </span>eqd = _mm_cmpeq_epi8(vn1, d);
+        <span class="kw">let </span>or1 = _mm_or_si128(eqa, eqb);
+        <span class="kw">let </span>or2 = _mm_or_si128(eqc, eqd);
+        <span class="kw">let </span>or3 = _mm_or_si128(or1, or2);
+        <span class="kw">if </span>_mm_movemask_epi8(or3) != <span class="number">0 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>at = sub(ptr, start_ptr);
+            <span class="kw">let </span>mask = _mm_movemask_epi8(eqa);
+            <span class="kw">if </span>mask != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + forward_pos(mask));
             }
 
-            <span class="ident">at</span> <span class="op">+</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqc</span>);
-            <span class="kw">if</span> <span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">forward_pos</span>(<span class="ident">mask</span>));
+            at += VECTOR_SIZE;
+            <span class="kw">let </span>mask = _mm_movemask_epi8(eqb);
+            <span class="kw">if </span>mask != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + forward_pos(mask));
             }
 
-            <span class="ident">at</span> <span class="op">+</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqd</span>);
-            <span class="macro">debug_assert!</span>(<span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">forward_pos</span>(<span class="ident">mask</span>));
-        }
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">loop_size</span>);
-    }
-    <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>) {
-        <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>);
-
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">forward_search1</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
-        }
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>);
-    }
-    <span class="kw">if</span> <span class="ident">ptr</span> <span class="op">&lt;</span> <span class="ident">end_ptr</span> {
-        <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>) <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span>);
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span> <span class="op">-</span> <span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>));
-        <span class="macro">debug_assert_eq!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>), <span class="ident">VECTOR_SIZE</span>);
-
-        <span class="kw">return</span> <span class="ident">forward_search1</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>);
-    }
-    <span class="prelude-val">None</span>
-}
-
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">memchr2</span>(<span class="ident">n1</span>: <span class="ident">u8</span>, <span class="ident">n2</span>: <span class="ident">u8</span>, <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">vn1</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n1</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">vn2</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n2</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">len</span>();
-    <span class="kw">let</span> <span class="ident">loop_size</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">LOOP_SIZE2</span>, <span class="ident">len</span>);
-    <span class="kw">let</span> <span class="ident">start_ptr</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">as_ptr</span>();
-    <span class="kw">let</span> <span class="ident">end_ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">haystack</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>;
-
-    <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span> {
-        <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&lt;</span> <span class="ident">end_ptr</span> {
-            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n1</span> <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n2</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>));
-            }
-            <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="number">1</span>);
-        }
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
-    }
-
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">forward_search2</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
-    }
-
-    <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span> <span class="op">-</span> (<span class="ident">start_ptr</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&amp;</span> <span class="ident">VECTOR_ALIGN</span>));
-    <span class="macro">debug_assert!</span>(<span class="ident">ptr</span> <span class="op">&gt;</span> <span class="ident">start_ptr</span> <span class="op">&amp;&amp;</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_ptr</span>);
-    <span class="kw">while</span> <span class="ident">loop_size</span> <span class="op">==</span> <span class="ident">LOOP_SIZE2</span> <span class="op">&amp;&amp;</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">loop_size</span>) {
-        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">VECTOR_SIZE</span>);
-
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">eqa1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">eqa2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn2</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn2</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">or1</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa1</span>, <span class="ident">eqb1</span>);
-        <span class="kw">let</span> <span class="ident">or2</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa2</span>, <span class="ident">eqb2</span>);
-        <span class="kw">let</span> <span class="ident">or3</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">or1</span>, <span class="ident">or2</span>);
-        <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">or3</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">at</span> <span class="op">=</span> <span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>);
-            <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa1</span>);
-            <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa2</span>);
-            <span class="kw">if</span> <span class="ident">mask1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">forward_pos2</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>));
+            at += VECTOR_SIZE;
+            <span class="kw">let </span>mask = _mm_movemask_epi8(eqc);
+            <span class="kw">if </span>mask != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + forward_pos(mask));
             }
 
-            <span class="ident">at</span> <span class="op">+</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb1</span>);
-            <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb2</span>);
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">forward_pos2</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>));
+            at += VECTOR_SIZE;
+            <span class="kw">let </span>mask = _mm_movemask_epi8(eqd);
+            <span class="macro">debug_assert!</span>(mask != <span class="number">0</span>);
+            <span class="kw">return </span><span class="prelude-val">Some</span>(at + forward_pos(mask));
         }
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">loop_size</span>);
+        ptr = ptr.add(loop_size);
     }
-    <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">forward_search2</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+    <span class="kw">while </span>ptr &lt;= end_ptr.sub(VECTOR_SIZE) {
+        <span class="macro">debug_assert!</span>(sub(end_ptr, ptr) &gt;= VECTOR_SIZE);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = forward_search1(start_ptr, end_ptr, ptr, vn1) {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(i);
         }
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>);
+        ptr = ptr.add(VECTOR_SIZE);
     }
-    <span class="kw">if</span> <span class="ident">ptr</span> <span class="op">&lt;</span> <span class="ident">end_ptr</span> {
-        <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>) <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span>);
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span> <span class="op">-</span> <span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>));
-        <span class="macro">debug_assert_eq!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>), <span class="ident">VECTOR_SIZE</span>);
+    <span class="kw">if </span>ptr &lt; end_ptr {
+        <span class="macro">debug_assert!</span>(sub(end_ptr, ptr) &lt; VECTOR_SIZE);
+        ptr = ptr.sub(VECTOR_SIZE - sub(end_ptr, ptr));
+        <span class="macro">debug_assert_eq!</span>(sub(end_ptr, ptr), VECTOR_SIZE);
 
-        <span class="kw">return</span> <span class="ident">forward_search2</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>);
+        <span class="kw">return </span>forward_search1(start_ptr, end_ptr, ptr, vn1);
     }
-    <span class="prelude-val">None</span>
-}
+    <span class="prelude-val">None
+</span>}
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">memchr3</span>(
-    <span class="ident">n1</span>: <span class="ident">u8</span>,
-    <span class="ident">n2</span>: <span class="ident">u8</span>,
-    <span class="ident">n3</span>: <span class="ident">u8</span>,
-    <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">vn1</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n1</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">vn2</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n2</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">vn3</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n3</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">len</span>();
-    <span class="kw">let</span> <span class="ident">loop_size</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">LOOP_SIZE2</span>, <span class="ident">len</span>);
-    <span class="kw">let</span> <span class="ident">start_ptr</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">as_ptr</span>();
-    <span class="kw">let</span> <span class="ident">end_ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">haystack</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>;
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">pub unsafe fn </span>memchr2(n1: u8, n2: u8, haystack: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">let </span>vn1 = _mm_set1_epi8(n1 <span class="kw">as </span>i8);
+    <span class="kw">let </span>vn2 = _mm_set1_epi8(n2 <span class="kw">as </span>i8);
+    <span class="kw">let </span>len = haystack.len();
+    <span class="kw">let </span>loop_size = cmp::min(LOOP_SIZE2, len);
+    <span class="kw">let </span>start_ptr = haystack.as_ptr();
+    <span class="kw">let </span>end_ptr = start_ptr.add(haystack.len());
+    <span class="kw">let </span><span class="kw-2">mut </span>ptr = start_ptr;
 
-    <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span> {
-        <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&lt;</span> <span class="ident">end_ptr</span> {
-            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n1</span> <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n2</span> <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n3</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>));
+    <span class="kw">if </span>haystack.len() &lt; VECTOR_SIZE {
+        <span class="kw">while </span>ptr &lt; end_ptr {
+            <span class="kw">if </span><span class="kw-2">*</span>ptr == n1 || <span class="kw-2">*</span>ptr == n2 {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(sub(ptr, start_ptr));
             }
-            <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="number">1</span>);
+            ptr = ptr.offset(<span class="number">1</span>);
         }
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">forward_search3</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>, <span class="ident">vn3</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = forward_search2(start_ptr, end_ptr, ptr, vn1, vn2) {
+        <span class="kw">return </span><span class="prelude-val">Some</span>(i);
     }
 
-    <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span> <span class="op">-</span> (<span class="ident">start_ptr</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&amp;</span> <span class="ident">VECTOR_ALIGN</span>));
-    <span class="macro">debug_assert!</span>(<span class="ident">ptr</span> <span class="op">&gt;</span> <span class="ident">start_ptr</span> <span class="op">&amp;&amp;</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_ptr</span>);
-    <span class="kw">while</span> <span class="ident">loop_size</span> <span class="op">==</span> <span class="ident">LOOP_SIZE2</span> <span class="op">&amp;&amp;</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">loop_size</span>) {
-        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">VECTOR_SIZE</span>);
+    ptr = ptr.add(VECTOR_SIZE - (start_ptr <span class="kw">as </span>usize &amp; VECTOR_ALIGN));
+    <span class="macro">debug_assert!</span>(ptr &gt; start_ptr &amp;&amp; end_ptr.sub(VECTOR_SIZE) &gt;= start_ptr);
+    <span class="kw">while </span>loop_size == LOOP_SIZE2 &amp;&amp; ptr &lt;= end_ptr.sub(loop_size) {
+        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (ptr <span class="kw">as </span>usize) % VECTOR_SIZE);
 
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">eqa1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">eqa2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn2</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn2</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">eqa3</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn3</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb3</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn3</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">or1</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa1</span>, <span class="ident">eqb1</span>);
-        <span class="kw">let</span> <span class="ident">or2</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa2</span>, <span class="ident">eqb2</span>);
-        <span class="kw">let</span> <span class="ident">or3</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa3</span>, <span class="ident">eqb3</span>);
-        <span class="kw">let</span> <span class="ident">or4</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">or1</span>, <span class="ident">or2</span>);
-        <span class="kw">let</span> <span class="ident">or5</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">or3</span>, <span class="ident">or4</span>);
-        <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">or5</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">at</span> <span class="op">=</span> <span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>);
-            <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa1</span>);
-            <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa2</span>);
-            <span class="kw">let</span> <span class="ident">mask3</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa3</span>);
-            <span class="kw">if</span> <span class="ident">mask1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask3</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">forward_pos3</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>, <span class="ident">mask3</span>));
+        <span class="kw">let </span>a = _mm_load_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>b = _mm_load_si128(ptr.add(VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>eqa1 = _mm_cmpeq_epi8(vn1, a);
+        <span class="kw">let </span>eqb1 = _mm_cmpeq_epi8(vn1, b);
+        <span class="kw">let </span>eqa2 = _mm_cmpeq_epi8(vn2, a);
+        <span class="kw">let </span>eqb2 = _mm_cmpeq_epi8(vn2, b);
+        <span class="kw">let </span>or1 = _mm_or_si128(eqa1, eqb1);
+        <span class="kw">let </span>or2 = _mm_or_si128(eqa2, eqb2);
+        <span class="kw">let </span>or3 = _mm_or_si128(or1, or2);
+        <span class="kw">if </span>_mm_movemask_epi8(or3) != <span class="number">0 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>at = sub(ptr, start_ptr);
+            <span class="kw">let </span>mask1 = _mm_movemask_epi8(eqa1);
+            <span class="kw">let </span>mask2 = _mm_movemask_epi8(eqa2);
+            <span class="kw">if </span>mask1 != <span class="number">0 </span>|| mask2 != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + forward_pos2(mask1, mask2));
             }
 
-            <span class="ident">at</span> <span class="op">+</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb1</span>);
-            <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb2</span>);
-            <span class="kw">let</span> <span class="ident">mask3</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb3</span>);
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">forward_pos3</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>, <span class="ident">mask3</span>));
+            at += VECTOR_SIZE;
+            <span class="kw">let </span>mask1 = _mm_movemask_epi8(eqb1);
+            <span class="kw">let </span>mask2 = _mm_movemask_epi8(eqb2);
+            <span class="kw">return </span><span class="prelude-val">Some</span>(at + forward_pos2(mask1, mask2));
         }
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">loop_size</span>);
+        ptr = ptr.add(loop_size);
     }
-    <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span>
-            <span class="ident">forward_search3</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>, <span class="ident">vn3</span>)
+    <span class="kw">while </span>ptr &lt;= end_ptr.sub(VECTOR_SIZE) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = forward_search2(start_ptr, end_ptr, ptr, vn1, vn2) {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(i);
+        }
+        ptr = ptr.add(VECTOR_SIZE);
+    }
+    <span class="kw">if </span>ptr &lt; end_ptr {
+        <span class="macro">debug_assert!</span>(sub(end_ptr, ptr) &lt; VECTOR_SIZE);
+        ptr = ptr.sub(VECTOR_SIZE - sub(end_ptr, ptr));
+        <span class="macro">debug_assert_eq!</span>(sub(end_ptr, ptr), VECTOR_SIZE);
+
+        <span class="kw">return </span>forward_search2(start_ptr, end_ptr, ptr, vn1, vn2);
+    }
+    <span class="prelude-val">None
+</span>}
+
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">pub unsafe fn </span>memchr3(
+    n1: u8,
+    n2: u8,
+    n3: u8,
+    haystack: <span class="kw-2">&amp;</span>[u8],
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">let </span>vn1 = _mm_set1_epi8(n1 <span class="kw">as </span>i8);
+    <span class="kw">let </span>vn2 = _mm_set1_epi8(n2 <span class="kw">as </span>i8);
+    <span class="kw">let </span>vn3 = _mm_set1_epi8(n3 <span class="kw">as </span>i8);
+    <span class="kw">let </span>len = haystack.len();
+    <span class="kw">let </span>loop_size = cmp::min(LOOP_SIZE2, len);
+    <span class="kw">let </span>start_ptr = haystack.as_ptr();
+    <span class="kw">let </span>end_ptr = start_ptr.add(haystack.len());
+    <span class="kw">let </span><span class="kw-2">mut </span>ptr = start_ptr;
+
+    <span class="kw">if </span>haystack.len() &lt; VECTOR_SIZE {
+        <span class="kw">while </span>ptr &lt; end_ptr {
+            <span class="kw">if </span><span class="kw-2">*</span>ptr == n1 || <span class="kw-2">*</span>ptr == n2 || <span class="kw-2">*</span>ptr == n3 {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(sub(ptr, start_ptr));
+            }
+            ptr = ptr.offset(<span class="number">1</span>);
+        }
+        <span class="kw">return </span><span class="prelude-val">None</span>;
+    }
+
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = forward_search3(start_ptr, end_ptr, ptr, vn1, vn2, vn3) {
+        <span class="kw">return </span><span class="prelude-val">Some</span>(i);
+    }
+
+    ptr = ptr.add(VECTOR_SIZE - (start_ptr <span class="kw">as </span>usize &amp; VECTOR_ALIGN));
+    <span class="macro">debug_assert!</span>(ptr &gt; start_ptr &amp;&amp; end_ptr.sub(VECTOR_SIZE) &gt;= start_ptr);
+    <span class="kw">while </span>loop_size == LOOP_SIZE2 &amp;&amp; ptr &lt;= end_ptr.sub(loop_size) {
+        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (ptr <span class="kw">as </span>usize) % VECTOR_SIZE);
+
+        <span class="kw">let </span>a = _mm_load_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>b = _mm_load_si128(ptr.add(VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>eqa1 = _mm_cmpeq_epi8(vn1, a);
+        <span class="kw">let </span>eqb1 = _mm_cmpeq_epi8(vn1, b);
+        <span class="kw">let </span>eqa2 = _mm_cmpeq_epi8(vn2, a);
+        <span class="kw">let </span>eqb2 = _mm_cmpeq_epi8(vn2, b);
+        <span class="kw">let </span>eqa3 = _mm_cmpeq_epi8(vn3, a);
+        <span class="kw">let </span>eqb3 = _mm_cmpeq_epi8(vn3, b);
+        <span class="kw">let </span>or1 = _mm_or_si128(eqa1, eqb1);
+        <span class="kw">let </span>or2 = _mm_or_si128(eqa2, eqb2);
+        <span class="kw">let </span>or3 = _mm_or_si128(eqa3, eqb3);
+        <span class="kw">let </span>or4 = _mm_or_si128(or1, or2);
+        <span class="kw">let </span>or5 = _mm_or_si128(or3, or4);
+        <span class="kw">if </span>_mm_movemask_epi8(or5) != <span class="number">0 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>at = sub(ptr, start_ptr);
+            <span class="kw">let </span>mask1 = _mm_movemask_epi8(eqa1);
+            <span class="kw">let </span>mask2 = _mm_movemask_epi8(eqa2);
+            <span class="kw">let </span>mask3 = _mm_movemask_epi8(eqa3);
+            <span class="kw">if </span>mask1 != <span class="number">0 </span>|| mask2 != <span class="number">0 </span>|| mask3 != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + forward_pos3(mask1, mask2, mask3));
+            }
+
+            at += VECTOR_SIZE;
+            <span class="kw">let </span>mask1 = _mm_movemask_epi8(eqb1);
+            <span class="kw">let </span>mask2 = _mm_movemask_epi8(eqb2);
+            <span class="kw">let </span>mask3 = _mm_movemask_epi8(eqb3);
+            <span class="kw">return </span><span class="prelude-val">Some</span>(at + forward_pos3(mask1, mask2, mask3));
+        }
+        ptr = ptr.add(loop_size);
+    }
+    <span class="kw">while </span>ptr &lt;= end_ptr.sub(VECTOR_SIZE) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(i) =
+            forward_search3(start_ptr, end_ptr, ptr, vn1, vn2, vn3)
         {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+            <span class="kw">return </span><span class="prelude-val">Some</span>(i);
         }
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>);
+        ptr = ptr.add(VECTOR_SIZE);
     }
-    <span class="kw">if</span> <span class="ident">ptr</span> <span class="op">&lt;</span> <span class="ident">end_ptr</span> {
-        <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>) <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span>);
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span> <span class="op">-</span> <span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>));
-        <span class="macro">debug_assert_eq!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">ptr</span>), <span class="ident">VECTOR_SIZE</span>);
+    <span class="kw">if </span>ptr &lt; end_ptr {
+        <span class="macro">debug_assert!</span>(sub(end_ptr, ptr) &lt; VECTOR_SIZE);
+        ptr = ptr.sub(VECTOR_SIZE - sub(end_ptr, ptr));
+        <span class="macro">debug_assert_eq!</span>(sub(end_ptr, ptr), VECTOR_SIZE);
 
-        <span class="kw">return</span> <span class="ident">forward_search3</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>, <span class="ident">vn3</span>);
+        <span class="kw">return </span>forward_search3(start_ptr, end_ptr, ptr, vn1, vn2, vn3);
     }
-    <span class="prelude-val">None</span>
-}
+    <span class="prelude-val">None
+</span>}
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">memrchr</span>(<span class="ident">n1</span>: <span class="ident">u8</span>, <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">vn1</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n1</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">len</span>();
-    <span class="kw">let</span> <span class="ident">loop_size</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">LOOP_SIZE</span>, <span class="ident">len</span>);
-    <span class="kw">let</span> <span class="ident">start_ptr</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">as_ptr</span>();
-    <span class="kw">let</span> <span class="ident">end_ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">haystack</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">end_ptr</span>;
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">pub unsafe fn </span>memrchr(n1: u8, haystack: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">let </span>vn1 = _mm_set1_epi8(n1 <span class="kw">as </span>i8);
+    <span class="kw">let </span>len = haystack.len();
+    <span class="kw">let </span>loop_size = cmp::min(LOOP_SIZE, len);
+    <span class="kw">let </span>start_ptr = haystack.as_ptr();
+    <span class="kw">let </span>end_ptr = start_ptr.add(haystack.len());
+    <span class="kw">let </span><span class="kw-2">mut </span>ptr = end_ptr;
 
-    <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span> {
-        <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&gt;</span> <span class="ident">start_ptr</span> {
-            <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="op">-</span><span class="number">1</span>);
-            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n1</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>));
+    <span class="kw">if </span>haystack.len() &lt; VECTOR_SIZE {
+        <span class="kw">while </span>ptr &gt; start_ptr {
+            ptr = ptr.offset(-<span class="number">1</span>);
+            <span class="kw">if </span><span class="kw-2">*</span>ptr == n1 {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(sub(ptr, start_ptr));
             }
         }
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>);
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">reverse_search1</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+    ptr = ptr.sub(VECTOR_SIZE);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = reverse_search1(start_ptr, end_ptr, ptr, vn1) {
+        <span class="kw">return </span><span class="prelude-val">Some</span>(i);
     }
 
-    <span class="ident">ptr</span> <span class="op">=</span> (<span class="ident">end_ptr</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">VECTOR_ALIGN</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>;
-    <span class="macro">debug_assert!</span>(<span class="ident">start_ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ptr</span> <span class="op">&amp;&amp;</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>);
-    <span class="kw">while</span> <span class="ident">loop_size</span> <span class="op">==</span> <span class="ident">LOOP_SIZE</span> <span class="op">&amp;&amp;</span> <span class="ident">ptr</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">loop_size</span>) {
-        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">VECTOR_SIZE</span>);
+    ptr = (end_ptr <span class="kw">as </span>usize &amp; !VECTOR_ALIGN) <span class="kw">as </span><span class="kw-2">*const </span>u8;
+    <span class="macro">debug_assert!</span>(start_ptr &lt;= ptr &amp;&amp; ptr &lt;= end_ptr);
+    <span class="kw">while </span>loop_size == LOOP_SIZE &amp;&amp; ptr &gt;= start_ptr.add(loop_size) {
+        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (ptr <span class="kw">as </span>usize) % VECTOR_SIZE);
 
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">loop_size</span>);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">eqa</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">eqc</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">c</span>);
-        <span class="kw">let</span> <span class="ident">eqd</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">d</span>);
-        <span class="kw">let</span> <span class="ident">or1</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa</span>, <span class="ident">eqb</span>);
-        <span class="kw">let</span> <span class="ident">or2</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqc</span>, <span class="ident">eqd</span>);
-        <span class="kw">let</span> <span class="ident">or3</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">or1</span>, <span class="ident">or2</span>);
-        <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">or3</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">at</span> <span class="op">=</span> <span class="ident">sub</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="number">3</span> <span class="op">*</span> <span class="ident">VECTOR_SIZE</span>), <span class="ident">start_ptr</span>);
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqd</span>);
-            <span class="kw">if</span> <span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">reverse_pos</span>(<span class="ident">mask</span>));
+        ptr = ptr.sub(loop_size);
+        <span class="kw">let </span>a = _mm_load_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>b = _mm_load_si128(ptr.add(VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>c = _mm_load_si128(ptr.add(<span class="number">2 </span>* VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>d = _mm_load_si128(ptr.add(<span class="number">3 </span>* VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>eqa = _mm_cmpeq_epi8(vn1, a);
+        <span class="kw">let </span>eqb = _mm_cmpeq_epi8(vn1, b);
+        <span class="kw">let </span>eqc = _mm_cmpeq_epi8(vn1, c);
+        <span class="kw">let </span>eqd = _mm_cmpeq_epi8(vn1, d);
+        <span class="kw">let </span>or1 = _mm_or_si128(eqa, eqb);
+        <span class="kw">let </span>or2 = _mm_or_si128(eqc, eqd);
+        <span class="kw">let </span>or3 = _mm_or_si128(or1, or2);
+        <span class="kw">if </span>_mm_movemask_epi8(or3) != <span class="number">0 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>at = sub(ptr.add(<span class="number">3 </span>* VECTOR_SIZE), start_ptr);
+            <span class="kw">let </span>mask = _mm_movemask_epi8(eqd);
+            <span class="kw">if </span>mask != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + reverse_pos(mask));
             }
 
-            <span class="ident">at</span> <span class="op">-</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqc</span>);
-            <span class="kw">if</span> <span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">reverse_pos</span>(<span class="ident">mask</span>));
+            at -= VECTOR_SIZE;
+            <span class="kw">let </span>mask = _mm_movemask_epi8(eqc);
+            <span class="kw">if </span>mask != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + reverse_pos(mask));
             }
 
-            <span class="ident">at</span> <span class="op">-</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb</span>);
-            <span class="kw">if</span> <span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">reverse_pos</span>(<span class="ident">mask</span>));
+            at -= VECTOR_SIZE;
+            <span class="kw">let </span>mask = _mm_movemask_epi8(eqb);
+            <span class="kw">if </span>mask != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + reverse_pos(mask));
             }
 
-            <span class="ident">at</span> <span class="op">-</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa</span>);
-            <span class="macro">debug_assert!</span>(<span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">reverse_pos</span>(<span class="ident">mask</span>));
+            at -= VECTOR_SIZE;
+            <span class="kw">let </span>mask = _mm_movemask_epi8(eqa);
+            <span class="macro">debug_assert!</span>(mask != <span class="number">0</span>);
+            <span class="kw">return </span><span class="prelude-val">Some</span>(at + reverse_pos(mask));
         }
     }
-    <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>) {
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">reverse_search1</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+    <span class="kw">while </span>ptr &gt;= start_ptr.add(VECTOR_SIZE) {
+        ptr = ptr.sub(VECTOR_SIZE);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = reverse_search1(start_ptr, end_ptr, ptr, vn1) {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(i);
         }
     }
-    <span class="kw">if</span> <span class="ident">ptr</span> <span class="op">&gt;</span> <span class="ident">start_ptr</span> {
-        <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span>);
-        <span class="kw">return</span> <span class="ident">reverse_search1</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">start_ptr</span>, <span class="ident">vn1</span>);
+    <span class="kw">if </span>ptr &gt; start_ptr {
+        <span class="macro">debug_assert!</span>(sub(ptr, start_ptr) &lt; VECTOR_SIZE);
+        <span class="kw">return </span>reverse_search1(start_ptr, end_ptr, start_ptr, vn1);
     }
-    <span class="prelude-val">None</span>
-}
+    <span class="prelude-val">None
+</span>}
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">memrchr2</span>(<span class="ident">n1</span>: <span class="ident">u8</span>, <span class="ident">n2</span>: <span class="ident">u8</span>, <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">vn1</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n1</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">vn2</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n2</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">len</span>();
-    <span class="kw">let</span> <span class="ident">loop_size</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">LOOP_SIZE2</span>, <span class="ident">len</span>);
-    <span class="kw">let</span> <span class="ident">start_ptr</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">as_ptr</span>();
-    <span class="kw">let</span> <span class="ident">end_ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">haystack</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">end_ptr</span>;
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">pub unsafe fn </span>memrchr2(n1: u8, n2: u8, haystack: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">let </span>vn1 = _mm_set1_epi8(n1 <span class="kw">as </span>i8);
+    <span class="kw">let </span>vn2 = _mm_set1_epi8(n2 <span class="kw">as </span>i8);
+    <span class="kw">let </span>len = haystack.len();
+    <span class="kw">let </span>loop_size = cmp::min(LOOP_SIZE2, len);
+    <span class="kw">let </span>start_ptr = haystack.as_ptr();
+    <span class="kw">let </span>end_ptr = start_ptr.add(haystack.len());
+    <span class="kw">let </span><span class="kw-2">mut </span>ptr = end_ptr;
 
-    <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span> {
-        <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&gt;</span> <span class="ident">start_ptr</span> {
-            <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="op">-</span><span class="number">1</span>);
-            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n1</span> <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n2</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>));
+    <span class="kw">if </span>haystack.len() &lt; VECTOR_SIZE {
+        <span class="kw">while </span>ptr &gt; start_ptr {
+            ptr = ptr.offset(-<span class="number">1</span>);
+            <span class="kw">if </span><span class="kw-2">*</span>ptr == n1 || <span class="kw-2">*</span>ptr == n2 {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(sub(ptr, start_ptr));
             }
         }
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>);
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">reverse_search2</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+    ptr = ptr.sub(VECTOR_SIZE);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = reverse_search2(start_ptr, end_ptr, ptr, vn1, vn2) {
+        <span class="kw">return </span><span class="prelude-val">Some</span>(i);
     }
 
-    <span class="ident">ptr</span> <span class="op">=</span> (<span class="ident">end_ptr</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">VECTOR_ALIGN</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>;
-    <span class="macro">debug_assert!</span>(<span class="ident">start_ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ptr</span> <span class="op">&amp;&amp;</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>);
-    <span class="kw">while</span> <span class="ident">loop_size</span> <span class="op">==</span> <span class="ident">LOOP_SIZE2</span> <span class="op">&amp;&amp;</span> <span class="ident">ptr</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">loop_size</span>) {
-        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">VECTOR_SIZE</span>);
+    ptr = (end_ptr <span class="kw">as </span>usize &amp; !VECTOR_ALIGN) <span class="kw">as </span><span class="kw-2">*const </span>u8;
+    <span class="macro">debug_assert!</span>(start_ptr &lt;= ptr &amp;&amp; ptr &lt;= end_ptr);
+    <span class="kw">while </span>loop_size == LOOP_SIZE2 &amp;&amp; ptr &gt;= start_ptr.add(loop_size) {
+        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (ptr <span class="kw">as </span>usize) % VECTOR_SIZE);
 
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">loop_size</span>);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">eqa1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">eqa2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn2</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn2</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">or1</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa1</span>, <span class="ident">eqb1</span>);
-        <span class="kw">let</span> <span class="ident">or2</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa2</span>, <span class="ident">eqb2</span>);
-        <span class="kw">let</span> <span class="ident">or3</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">or1</span>, <span class="ident">or2</span>);
-        <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">or3</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">at</span> <span class="op">=</span> <span class="ident">sub</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>), <span class="ident">start_ptr</span>);
-            <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb1</span>);
-            <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb2</span>);
-            <span class="kw">if</span> <span class="ident">mask1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">reverse_pos2</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>));
+        ptr = ptr.sub(loop_size);
+        <span class="kw">let </span>a = _mm_load_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>b = _mm_load_si128(ptr.add(VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>eqa1 = _mm_cmpeq_epi8(vn1, a);
+        <span class="kw">let </span>eqb1 = _mm_cmpeq_epi8(vn1, b);
+        <span class="kw">let </span>eqa2 = _mm_cmpeq_epi8(vn2, a);
+        <span class="kw">let </span>eqb2 = _mm_cmpeq_epi8(vn2, b);
+        <span class="kw">let </span>or1 = _mm_or_si128(eqa1, eqb1);
+        <span class="kw">let </span>or2 = _mm_or_si128(eqa2, eqb2);
+        <span class="kw">let </span>or3 = _mm_or_si128(or1, or2);
+        <span class="kw">if </span>_mm_movemask_epi8(or3) != <span class="number">0 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>at = sub(ptr.add(VECTOR_SIZE), start_ptr);
+            <span class="kw">let </span>mask1 = _mm_movemask_epi8(eqb1);
+            <span class="kw">let </span>mask2 = _mm_movemask_epi8(eqb2);
+            <span class="kw">if </span>mask1 != <span class="number">0 </span>|| mask2 != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + reverse_pos2(mask1, mask2));
             }
 
-            <span class="ident">at</span> <span class="op">-</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa1</span>);
-            <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa2</span>);
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">reverse_pos2</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>));
+            at -= VECTOR_SIZE;
+            <span class="kw">let </span>mask1 = _mm_movemask_epi8(eqa1);
+            <span class="kw">let </span>mask2 = _mm_movemask_epi8(eqa2);
+            <span class="kw">return </span><span class="prelude-val">Some</span>(at + reverse_pos2(mask1, mask2));
         }
     }
-    <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>) {
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">reverse_search2</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+    <span class="kw">while </span>ptr &gt;= start_ptr.add(VECTOR_SIZE) {
+        ptr = ptr.sub(VECTOR_SIZE);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = reverse_search2(start_ptr, end_ptr, ptr, vn1, vn2) {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(i);
         }
     }
-    <span class="kw">if</span> <span class="ident">ptr</span> <span class="op">&gt;</span> <span class="ident">start_ptr</span> {
-        <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span>);
-        <span class="kw">return</span> <span class="ident">reverse_search2</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">start_ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>);
+    <span class="kw">if </span>ptr &gt; start_ptr {
+        <span class="macro">debug_assert!</span>(sub(ptr, start_ptr) &lt; VECTOR_SIZE);
+        <span class="kw">return </span>reverse_search2(start_ptr, end_ptr, start_ptr, vn1, vn2);
     }
-    <span class="prelude-val">None</span>
-}
+    <span class="prelude-val">None
+</span>}
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">memrchr3</span>(
-    <span class="ident">n1</span>: <span class="ident">u8</span>,
-    <span class="ident">n2</span>: <span class="ident">u8</span>,
-    <span class="ident">n3</span>: <span class="ident">u8</span>,
-    <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">vn1</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n1</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">vn2</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n2</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">vn3</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="ident">n3</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">len</span>();
-    <span class="kw">let</span> <span class="ident">loop_size</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">LOOP_SIZE2</span>, <span class="ident">len</span>);
-    <span class="kw">let</span> <span class="ident">start_ptr</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">as_ptr</span>();
-    <span class="kw">let</span> <span class="ident">end_ptr</span> <span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">haystack</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">end_ptr</span>;
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">pub unsafe fn </span>memrchr3(
+    n1: u8,
+    n2: u8,
+    n3: u8,
+    haystack: <span class="kw-2">&amp;</span>[u8],
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">let </span>vn1 = _mm_set1_epi8(n1 <span class="kw">as </span>i8);
+    <span class="kw">let </span>vn2 = _mm_set1_epi8(n2 <span class="kw">as </span>i8);
+    <span class="kw">let </span>vn3 = _mm_set1_epi8(n3 <span class="kw">as </span>i8);
+    <span class="kw">let </span>len = haystack.len();
+    <span class="kw">let </span>loop_size = cmp::min(LOOP_SIZE2, len);
+    <span class="kw">let </span>start_ptr = haystack.as_ptr();
+    <span class="kw">let </span>end_ptr = start_ptr.add(haystack.len());
+    <span class="kw">let </span><span class="kw-2">mut </span>ptr = end_ptr;
 
-    <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span> {
-        <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&gt;</span> <span class="ident">start_ptr</span> {
-            <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="op">-</span><span class="number">1</span>);
-            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n1</span> <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n2</span> <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">==</span> <span class="ident">n3</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>));
+    <span class="kw">if </span>haystack.len() &lt; VECTOR_SIZE {
+        <span class="kw">while </span>ptr &gt; start_ptr {
+            ptr = ptr.offset(-<span class="number">1</span>);
+            <span class="kw">if </span><span class="kw-2">*</span>ptr == n1 || <span class="kw-2">*</span>ptr == n2 || <span class="kw-2">*</span>ptr == n3 {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(sub(ptr, start_ptr));
             }
         }
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>);
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">reverse_search3</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>, <span class="ident">vn3</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+    ptr = ptr.sub(VECTOR_SIZE);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = reverse_search3(start_ptr, end_ptr, ptr, vn1, vn2, vn3) {
+        <span class="kw">return </span><span class="prelude-val">Some</span>(i);
     }
 
-    <span class="ident">ptr</span> <span class="op">=</span> (<span class="ident">end_ptr</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">VECTOR_ALIGN</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>;
-    <span class="macro">debug_assert!</span>(<span class="ident">start_ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ptr</span> <span class="op">&amp;&amp;</span> <span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>);
-    <span class="kw">while</span> <span class="ident">loop_size</span> <span class="op">==</span> <span class="ident">LOOP_SIZE2</span> <span class="op">&amp;&amp;</span> <span class="ident">ptr</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">loop_size</span>) {
-        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">VECTOR_SIZE</span>);
+    ptr = (end_ptr <span class="kw">as </span>usize &amp; !VECTOR_ALIGN) <span class="kw">as </span><span class="kw-2">*const </span>u8;
+    <span class="macro">debug_assert!</span>(start_ptr &lt;= ptr &amp;&amp; ptr &lt;= end_ptr);
+    <span class="kw">while </span>loop_size == LOOP_SIZE2 &amp;&amp; ptr &gt;= start_ptr.add(loop_size) {
+        <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, (ptr <span class="kw">as </span>usize) % VECTOR_SIZE);
 
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">loop_size</span>);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">_mm_load_si128</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-        <span class="kw">let</span> <span class="ident">eqa1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">eqa2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn2</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn2</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">eqa3</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn3</span>, <span class="ident">a</span>);
-        <span class="kw">let</span> <span class="ident">eqb3</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn3</span>, <span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">or1</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa1</span>, <span class="ident">eqb1</span>);
-        <span class="kw">let</span> <span class="ident">or2</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa2</span>, <span class="ident">eqb2</span>);
-        <span class="kw">let</span> <span class="ident">or3</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eqa3</span>, <span class="ident">eqb3</span>);
-        <span class="kw">let</span> <span class="ident">or4</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">or1</span>, <span class="ident">or2</span>);
-        <span class="kw">let</span> <span class="ident">or5</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">or3</span>, <span class="ident">or4</span>);
-        <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">or5</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">at</span> <span class="op">=</span> <span class="ident">sub</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>), <span class="ident">start_ptr</span>);
-            <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb1</span>);
-            <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb2</span>);
-            <span class="kw">let</span> <span class="ident">mask3</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqb3</span>);
-            <span class="kw">if</span> <span class="ident">mask1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask3</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">reverse_pos3</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>, <span class="ident">mask3</span>));
+        ptr = ptr.sub(loop_size);
+        <span class="kw">let </span>a = _mm_load_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>b = _mm_load_si128(ptr.add(VECTOR_SIZE) <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+        <span class="kw">let </span>eqa1 = _mm_cmpeq_epi8(vn1, a);
+        <span class="kw">let </span>eqb1 = _mm_cmpeq_epi8(vn1, b);
+        <span class="kw">let </span>eqa2 = _mm_cmpeq_epi8(vn2, a);
+        <span class="kw">let </span>eqb2 = _mm_cmpeq_epi8(vn2, b);
+        <span class="kw">let </span>eqa3 = _mm_cmpeq_epi8(vn3, a);
+        <span class="kw">let </span>eqb3 = _mm_cmpeq_epi8(vn3, b);
+        <span class="kw">let </span>or1 = _mm_or_si128(eqa1, eqb1);
+        <span class="kw">let </span>or2 = _mm_or_si128(eqa2, eqb2);
+        <span class="kw">let </span>or3 = _mm_or_si128(eqa3, eqb3);
+        <span class="kw">let </span>or4 = _mm_or_si128(or1, or2);
+        <span class="kw">let </span>or5 = _mm_or_si128(or3, or4);
+        <span class="kw">if </span>_mm_movemask_epi8(or5) != <span class="number">0 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>at = sub(ptr.add(VECTOR_SIZE), start_ptr);
+            <span class="kw">let </span>mask1 = _mm_movemask_epi8(eqb1);
+            <span class="kw">let </span>mask2 = _mm_movemask_epi8(eqb2);
+            <span class="kw">let </span>mask3 = _mm_movemask_epi8(eqb3);
+            <span class="kw">if </span>mask1 != <span class="number">0 </span>|| mask2 != <span class="number">0 </span>|| mask3 != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Some</span>(at + reverse_pos3(mask1, mask2, mask3));
             }
 
-            <span class="ident">at</span> <span class="op">-</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>;
-            <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa1</span>);
-            <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa2</span>);
-            <span class="kw">let</span> <span class="ident">mask3</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eqa3</span>);
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">at</span> <span class="op">+</span> <span class="ident">reverse_pos3</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>, <span class="ident">mask3</span>));
+            at -= VECTOR_SIZE;
+            <span class="kw">let </span>mask1 = _mm_movemask_epi8(eqa1);
+            <span class="kw">let </span>mask2 = _mm_movemask_epi8(eqa2);
+            <span class="kw">let </span>mask3 = _mm_movemask_epi8(eqa3);
+            <span class="kw">return </span><span class="prelude-val">Some</span>(at + reverse_pos3(mask1, mask2, mask3));
         }
     }
-    <span class="kw">while</span> <span class="ident">ptr</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_ptr</span>.<span class="ident">add</span>(<span class="ident">VECTOR_SIZE</span>) {
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span>
-            <span class="ident">reverse_search3</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>, <span class="ident">vn3</span>)
+    <span class="kw">while </span>ptr &gt;= start_ptr.add(VECTOR_SIZE) {
+        ptr = ptr.sub(VECTOR_SIZE);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(i) =
+            reverse_search3(start_ptr, end_ptr, ptr, vn1, vn2, vn3)
         {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
+            <span class="kw">return </span><span class="prelude-val">Some</span>(i);
         }
     }
-    <span class="kw">if</span> <span class="ident">ptr</span> <span class="op">&gt;</span> <span class="ident">start_ptr</span> {
-        <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">&lt;</span> <span class="ident">VECTOR_SIZE</span>);
-        <span class="kw">return</span> <span class="ident">reverse_search3</span>(<span class="ident">start_ptr</span>, <span class="ident">end_ptr</span>, <span class="ident">start_ptr</span>, <span class="ident">vn1</span>, <span class="ident">vn2</span>, <span class="ident">vn3</span>);
+    <span class="kw">if </span>ptr &gt; start_ptr {
+        <span class="macro">debug_assert!</span>(sub(ptr, start_ptr) &lt; VECTOR_SIZE);
+        <span class="kw">return </span>reverse_search3(start_ptr, end_ptr, start_ptr, vn1, vn2, vn3);
     }
-    <span class="prelude-val">None</span>
+    <span class="prelude-val">None
+</span>}
+
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">pub unsafe fn </span>forward_search1(
+    start_ptr: <span class="kw-2">*const </span>u8,
+    end_ptr: <span class="kw-2">*const </span>u8,
+    ptr: <span class="kw-2">*const </span>u8,
+    vn1: __m128i,
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="macro">debug_assert!</span>(sub(end_ptr, start_ptr) &gt;= VECTOR_SIZE);
+    <span class="macro">debug_assert!</span>(start_ptr &lt;= ptr);
+    <span class="macro">debug_assert!</span>(ptr &lt;= end_ptr.sub(VECTOR_SIZE));
+
+    <span class="kw">let </span>chunk = _mm_loadu_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+    <span class="kw">let </span>mask = _mm_movemask_epi8(_mm_cmpeq_epi8(chunk, vn1));
+    <span class="kw">if </span>mask != <span class="number">0 </span>{
+        <span class="prelude-val">Some</span>(sub(ptr, start_ptr) + forward_pos(mask))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">forward_search1</span>(
-    <span class="ident">start_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">end_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">vn1</span>: <span class="ident">__m128i</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">start_ptr</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">start_ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ptr</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>));
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">unsafe fn </span>forward_search2(
+    start_ptr: <span class="kw-2">*const </span>u8,
+    end_ptr: <span class="kw-2">*const </span>u8,
+    ptr: <span class="kw-2">*const </span>u8,
+    vn1: __m128i,
+    vn2: __m128i,
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="macro">debug_assert!</span>(sub(end_ptr, start_ptr) &gt;= VECTOR_SIZE);
+    <span class="macro">debug_assert!</span>(start_ptr &lt;= ptr);
+    <span class="macro">debug_assert!</span>(ptr &lt;= end_ptr.sub(VECTOR_SIZE));
 
-    <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-    <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn1</span>));
-    <span class="kw">if</span> <span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">+</span> <span class="ident">forward_pos</span>(<span class="ident">mask</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+    <span class="kw">let </span>chunk = _mm_loadu_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+    <span class="kw">let </span>eq1 = _mm_cmpeq_epi8(chunk, vn1);
+    <span class="kw">let </span>eq2 = _mm_cmpeq_epi8(chunk, vn2);
+    <span class="kw">if </span>_mm_movemask_epi8(_mm_or_si128(eq1, eq2)) != <span class="number">0 </span>{
+        <span class="kw">let </span>mask1 = _mm_movemask_epi8(eq1);
+        <span class="kw">let </span>mask2 = _mm_movemask_epi8(eq2);
+        <span class="prelude-val">Some</span>(sub(ptr, start_ptr) + forward_pos2(mask1, mask2))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">forward_search2</span>(
-    <span class="ident">start_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">end_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">vn1</span>: <span class="ident">__m128i</span>,
-    <span class="ident">vn2</span>: <span class="ident">__m128i</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">start_ptr</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">start_ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ptr</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>));
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">pub unsafe fn </span>forward_search3(
+    start_ptr: <span class="kw-2">*const </span>u8,
+    end_ptr: <span class="kw-2">*const </span>u8,
+    ptr: <span class="kw-2">*const </span>u8,
+    vn1: __m128i,
+    vn2: __m128i,
+    vn3: __m128i,
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="macro">debug_assert!</span>(sub(end_ptr, start_ptr) &gt;= VECTOR_SIZE);
+    <span class="macro">debug_assert!</span>(start_ptr &lt;= ptr);
+    <span class="macro">debug_assert!</span>(ptr &lt;= end_ptr.sub(VECTOR_SIZE));
 
-    <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-    <span class="kw">let</span> <span class="ident">eq1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn1</span>);
-    <span class="kw">let</span> <span class="ident">eq2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn2</span>);
-    <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">_mm_or_si128</span>(<span class="ident">eq1</span>, <span class="ident">eq2</span>)) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq1</span>);
-        <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq2</span>);
-        <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">+</span> <span class="ident">forward_pos2</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+    <span class="kw">let </span>chunk = _mm_loadu_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+    <span class="kw">let </span>eq1 = _mm_cmpeq_epi8(chunk, vn1);
+    <span class="kw">let </span>eq2 = _mm_cmpeq_epi8(chunk, vn2);
+    <span class="kw">let </span>eq3 = _mm_cmpeq_epi8(chunk, vn3);
+    <span class="kw">let </span>or = _mm_or_si128(eq1, eq2);
+    <span class="kw">if </span>_mm_movemask_epi8(_mm_or_si128(or, eq3)) != <span class="number">0 </span>{
+        <span class="kw">let </span>mask1 = _mm_movemask_epi8(eq1);
+        <span class="kw">let </span>mask2 = _mm_movemask_epi8(eq2);
+        <span class="kw">let </span>mask3 = _mm_movemask_epi8(eq3);
+        <span class="prelude-val">Some</span>(sub(ptr, start_ptr) + forward_pos3(mask1, mask2, mask3))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">forward_search3</span>(
-    <span class="ident">start_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">end_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">vn1</span>: <span class="ident">__m128i</span>,
-    <span class="ident">vn2</span>: <span class="ident">__m128i</span>,
-    <span class="ident">vn3</span>: <span class="ident">__m128i</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">start_ptr</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">start_ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ptr</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>));
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">unsafe fn </span>reverse_search1(
+    start_ptr: <span class="kw-2">*const </span>u8,
+    end_ptr: <span class="kw-2">*const </span>u8,
+    ptr: <span class="kw-2">*const </span>u8,
+    vn1: __m128i,
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="macro">debug_assert!</span>(sub(end_ptr, start_ptr) &gt;= VECTOR_SIZE);
+    <span class="macro">debug_assert!</span>(start_ptr &lt;= ptr);
+    <span class="macro">debug_assert!</span>(ptr &lt;= end_ptr.sub(VECTOR_SIZE));
 
-    <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-    <span class="kw">let</span> <span class="ident">eq1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn1</span>);
-    <span class="kw">let</span> <span class="ident">eq2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn2</span>);
-    <span class="kw">let</span> <span class="ident">eq3</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn3</span>);
-    <span class="kw">let</span> <span class="ident">or</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eq1</span>, <span class="ident">eq2</span>);
-    <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">_mm_or_si128</span>(<span class="ident">or</span>, <span class="ident">eq3</span>)) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq1</span>);
-        <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq2</span>);
-        <span class="kw">let</span> <span class="ident">mask3</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq3</span>);
-        <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">+</span> <span class="ident">forward_pos3</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>, <span class="ident">mask3</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+    <span class="kw">let </span>chunk = _mm_loadu_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+    <span class="kw">let </span>mask = _mm_movemask_epi8(_mm_cmpeq_epi8(vn1, chunk));
+    <span class="kw">if </span>mask != <span class="number">0 </span>{
+        <span class="prelude-val">Some</span>(sub(ptr, start_ptr) + reverse_pos(mask))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">reverse_search1</span>(
-    <span class="ident">start_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">end_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">vn1</span>: <span class="ident">__m128i</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">start_ptr</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">start_ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ptr</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>));
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">unsafe fn </span>reverse_search2(
+    start_ptr: <span class="kw-2">*const </span>u8,
+    end_ptr: <span class="kw-2">*const </span>u8,
+    ptr: <span class="kw-2">*const </span>u8,
+    vn1: __m128i,
+    vn2: __m128i,
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="macro">debug_assert!</span>(sub(end_ptr, start_ptr) &gt;= VECTOR_SIZE);
+    <span class="macro">debug_assert!</span>(start_ptr &lt;= ptr);
+    <span class="macro">debug_assert!</span>(ptr &lt;= end_ptr.sub(VECTOR_SIZE));
 
-    <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-    <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">vn1</span>, <span class="ident">chunk</span>));
-    <span class="kw">if</span> <span class="ident">mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">+</span> <span class="ident">reverse_pos</span>(<span class="ident">mask</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+    <span class="kw">let </span>chunk = _mm_loadu_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+    <span class="kw">let </span>eq1 = _mm_cmpeq_epi8(chunk, vn1);
+    <span class="kw">let </span>eq2 = _mm_cmpeq_epi8(chunk, vn2);
+    <span class="kw">if </span>_mm_movemask_epi8(_mm_or_si128(eq1, eq2)) != <span class="number">0 </span>{
+        <span class="kw">let </span>mask1 = _mm_movemask_epi8(eq1);
+        <span class="kw">let </span>mask2 = _mm_movemask_epi8(eq2);
+        <span class="prelude-val">Some</span>(sub(ptr, start_ptr) + reverse_pos2(mask1, mask2))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">reverse_search2</span>(
-    <span class="ident">start_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">end_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">vn1</span>: <span class="ident">__m128i</span>,
-    <span class="ident">vn2</span>: <span class="ident">__m128i</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">start_ptr</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">start_ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ptr</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>));
+<span class="attribute">#[target_feature(enable = <span class="string">&quot;sse2&quot;</span>)]
+</span><span class="kw">unsafe fn </span>reverse_search3(
+    start_ptr: <span class="kw-2">*const </span>u8,
+    end_ptr: <span class="kw-2">*const </span>u8,
+    ptr: <span class="kw-2">*const </span>u8,
+    vn1: __m128i,
+    vn2: __m128i,
+    vn3: __m128i,
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="macro">debug_assert!</span>(sub(end_ptr, start_ptr) &gt;= VECTOR_SIZE);
+    <span class="macro">debug_assert!</span>(start_ptr &lt;= ptr);
+    <span class="macro">debug_assert!</span>(ptr &lt;= end_ptr.sub(VECTOR_SIZE));
 
-    <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-    <span class="kw">let</span> <span class="ident">eq1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn1</span>);
-    <span class="kw">let</span> <span class="ident">eq2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn2</span>);
-    <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">_mm_or_si128</span>(<span class="ident">eq1</span>, <span class="ident">eq2</span>)) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq1</span>);
-        <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq2</span>);
-        <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">+</span> <span class="ident">reverse_pos2</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+    <span class="kw">let </span>chunk = _mm_loadu_si128(ptr <span class="kw">as </span><span class="kw-2">*const </span>__m128i);
+    <span class="kw">let </span>eq1 = _mm_cmpeq_epi8(chunk, vn1);
+    <span class="kw">let </span>eq2 = _mm_cmpeq_epi8(chunk, vn2);
+    <span class="kw">let </span>eq3 = _mm_cmpeq_epi8(chunk, vn3);
+    <span class="kw">let </span>or = _mm_or_si128(eq1, eq2);
+    <span class="kw">if </span>_mm_movemask_epi8(_mm_or_si128(or, eq3)) != <span class="number">0 </span>{
+        <span class="kw">let </span>mask1 = _mm_movemask_epi8(eq1);
+        <span class="kw">let </span>mask2 = _mm_movemask_epi8(eq2);
+        <span class="kw">let </span>mask3 = _mm_movemask_epi8(eq3);
+        <span class="prelude-val">Some</span>(sub(ptr, start_ptr) + reverse_pos3(mask1, mask2, mask3))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">reverse_search3</span>(
-    <span class="ident">start_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">end_ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">vn1</span>: <span class="ident">__m128i</span>,
-    <span class="ident">vn2</span>: <span class="ident">__m128i</span>,
-    <span class="ident">vn3</span>: <span class="ident">__m128i</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">sub</span>(<span class="ident">end_ptr</span>, <span class="ident">start_ptr</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">VECTOR_SIZE</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">start_ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ptr</span>);
-    <span class="macro">debug_assert!</span>(<span class="ident">ptr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">end_ptr</span>.<span class="ident">sub</span>(<span class="ident">VECTOR_SIZE</span>));
-
-    <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">__m128i</span>);
-    <span class="kw">let</span> <span class="ident">eq1</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn1</span>);
-    <span class="kw">let</span> <span class="ident">eq2</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn2</span>);
-    <span class="kw">let</span> <span class="ident">eq3</span> <span class="op">=</span> <span class="ident">_mm_cmpeq_epi8</span>(<span class="ident">chunk</span>, <span class="ident">vn3</span>);
-    <span class="kw">let</span> <span class="ident">or</span> <span class="op">=</span> <span class="ident">_mm_or_si128</span>(<span class="ident">eq1</span>, <span class="ident">eq2</span>);
-    <span class="kw">if</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">_mm_or_si128</span>(<span class="ident">or</span>, <span class="ident">eq3</span>)) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">mask1</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq1</span>);
-        <span class="kw">let</span> <span class="ident">mask2</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq2</span>);
-        <span class="kw">let</span> <span class="ident">mask3</span> <span class="op">=</span> <span class="ident">_mm_movemask_epi8</span>(<span class="ident">eq3</span>);
-        <span class="prelude-val">Some</span>(<span class="ident">sub</span>(<span class="ident">ptr</span>, <span class="ident">start_ptr</span>) <span class="op">+</span> <span class="ident">reverse_pos3</span>(<span class="ident">mask1</span>, <span class="ident">mask2</span>, <span class="ident">mask3</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+<span class="doccomment">/// Compute the position of the first matching byte from the given mask. The
+/// position returned is always in the range [0, 15].
+///
+/// The mask given is expected to be the result of _mm_movemask_epi8.
+</span><span class="kw">fn </span>forward_pos(mask: i32) -&gt; usize {
+    <span class="comment">// We are dealing with little endian here, where the most significant byte
+    // is at a higher address. That means the least significant bit that is set
+    // corresponds to the position of our first matching byte. That position
+    // corresponds to the number of zeros after the least significant bit.
+    </span>mask.trailing_zeros() <span class="kw">as </span>usize
 }
 
-<span class="doccomment">/// Compute the position of the first matching byte from the given mask. The</span>
-<span class="doccomment">/// position returned is always in the range [0, 15].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The mask given is expected to be the result of _mm_movemask_epi8.</span>
-<span class="kw">fn</span> <span class="ident">forward_pos</span>(<span class="ident">mask</span>: <span class="ident">i32</span>) -&gt; <span class="ident">usize</span> {
-    <span class="comment">// We are dealing with little endian here, where the most significant byte</span>
-    <span class="comment">// is at a higher address. That means the least significant bit that is set</span>
-    <span class="comment">// corresponds to the position of our first matching byte. That position</span>
-    <span class="comment">// corresponds to the number of zeros after the least significant bit.</span>
-    <span class="ident">mask</span>.<span class="ident">trailing_zeros</span>() <span class="kw">as</span> <span class="ident">usize</span>
+<span class="doccomment">/// Compute the position of the first matching byte from the given masks. The
+/// position returned is always in the range [0, 15]. Each mask corresponds to
+/// the equality comparison of a single byte.
+///
+/// The masks given are expected to be the result of _mm_movemask_epi8, where
+/// at least one of the masks is non-zero (i.e., indicates a match).
+</span><span class="kw">fn </span>forward_pos2(mask1: i32, mask2: i32) -&gt; usize {
+    <span class="macro">debug_assert!</span>(mask1 != <span class="number">0 </span>|| mask2 != <span class="number">0</span>);
+
+    forward_pos(mask1 | mask2)
 }
 
-<span class="doccomment">/// Compute the position of the first matching byte from the given masks. The</span>
-<span class="doccomment">/// position returned is always in the range [0, 15]. Each mask corresponds to</span>
-<span class="doccomment">/// the equality comparison of a single byte.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The masks given are expected to be the result of _mm_movemask_epi8, where</span>
-<span class="doccomment">/// at least one of the masks is non-zero (i.e., indicates a match).</span>
-<span class="kw">fn</span> <span class="ident">forward_pos2</span>(<span class="ident">mask1</span>: <span class="ident">i32</span>, <span class="ident">mask2</span>: <span class="ident">i32</span>) -&gt; <span class="ident">usize</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">mask1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
+<span class="doccomment">/// Compute the position of the first matching byte from the given masks. The
+/// position returned is always in the range [0, 15]. Each mask corresponds to
+/// the equality comparison of a single byte.
+///
+/// The masks given are expected to be the result of _mm_movemask_epi8, where
+/// at least one of the masks is non-zero (i.e., indicates a match).
+</span><span class="kw">fn </span>forward_pos3(mask1: i32, mask2: i32, mask3: i32) -&gt; usize {
+    <span class="macro">debug_assert!</span>(mask1 != <span class="number">0 </span>|| mask2 != <span class="number">0 </span>|| mask3 != <span class="number">0</span>);
 
-    <span class="ident">forward_pos</span>(<span class="ident">mask1</span> <span class="op">|</span> <span class="ident">mask2</span>)
+    forward_pos(mask1 | mask2 | mask3)
 }
 
-<span class="doccomment">/// Compute the position of the first matching byte from the given masks. The</span>
-<span class="doccomment">/// position returned is always in the range [0, 15]. Each mask corresponds to</span>
-<span class="doccomment">/// the equality comparison of a single byte.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The masks given are expected to be the result of _mm_movemask_epi8, where</span>
-<span class="doccomment">/// at least one of the masks is non-zero (i.e., indicates a match).</span>
-<span class="kw">fn</span> <span class="ident">forward_pos3</span>(<span class="ident">mask1</span>: <span class="ident">i32</span>, <span class="ident">mask2</span>: <span class="ident">i32</span>, <span class="ident">mask3</span>: <span class="ident">i32</span>) -&gt; <span class="ident">usize</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">mask1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask3</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
+<span class="doccomment">/// Compute the position of the last matching byte from the given mask. The
+/// position returned is always in the range [0, 15].
+///
+/// The mask given is expected to be the result of _mm_movemask_epi8.
+</span><span class="kw">fn </span>reverse_pos(mask: i32) -&gt; usize {
+    <span class="comment">// We are dealing with little endian here, where the most significant byte
+    // is at a higher address. That means the most significant bit that is set
+    // corresponds to the position of our last matching byte. The position from
+    // the end of the mask is therefore the number of leading zeros in a 16
+    // bit integer, and the position from the start of the mask is therefore
+    // 16 - (leading zeros) - 1.
+    </span>VECTOR_SIZE - (mask <span class="kw">as </span>u16).leading_zeros() <span class="kw">as </span>usize - <span class="number">1
+</span>}
 
-    <span class="ident">forward_pos</span>(<span class="ident">mask1</span> <span class="op">|</span> <span class="ident">mask2</span> <span class="op">|</span> <span class="ident">mask3</span>)
+<span class="doccomment">/// Compute the position of the last matching byte from the given masks. The
+/// position returned is always in the range [0, 15]. Each mask corresponds to
+/// the equality comparison of a single byte.
+///
+/// The masks given are expected to be the result of _mm_movemask_epi8, where
+/// at least one of the masks is non-zero (i.e., indicates a match).
+</span><span class="kw">fn </span>reverse_pos2(mask1: i32, mask2: i32) -&gt; usize {
+    <span class="macro">debug_assert!</span>(mask1 != <span class="number">0 </span>|| mask2 != <span class="number">0</span>);
+
+    reverse_pos(mask1 | mask2)
 }
 
-<span class="doccomment">/// Compute the position of the last matching byte from the given mask. The</span>
-<span class="doccomment">/// position returned is always in the range [0, 15].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The mask given is expected to be the result of _mm_movemask_epi8.</span>
-<span class="kw">fn</span> <span class="ident">reverse_pos</span>(<span class="ident">mask</span>: <span class="ident">i32</span>) -&gt; <span class="ident">usize</span> {
-    <span class="comment">// We are dealing with little endian here, where the most significant byte</span>
-    <span class="comment">// is at a higher address. That means the most significant bit that is set</span>
-    <span class="comment">// corresponds to the position of our last matching byte. The position from</span>
-    <span class="comment">// the end of the mask is therefore the number of leading zeros in a 16</span>
-    <span class="comment">// bit integer, and the position from the start of the mask is therefore</span>
-    <span class="comment">// 16 - (leading zeros) - 1.</span>
-    <span class="ident">VECTOR_SIZE</span> <span class="op">-</span> (<span class="ident">mask</span> <span class="kw">as</span> <span class="ident">u16</span>).<span class="ident">leading_zeros</span>() <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="number">1</span>
+<span class="doccomment">/// Compute the position of the last matching byte from the given masks. The
+/// position returned is always in the range [0, 15]. Each mask corresponds to
+/// the equality comparison of a single byte.
+///
+/// The masks given are expected to be the result of _mm_movemask_epi8, where
+/// at least one of the masks is non-zero (i.e., indicates a match).
+</span><span class="kw">fn </span>reverse_pos3(mask1: i32, mask2: i32, mask3: i32) -&gt; usize {
+    <span class="macro">debug_assert!</span>(mask1 != <span class="number">0 </span>|| mask2 != <span class="number">0 </span>|| mask3 != <span class="number">0</span>);
+
+    reverse_pos(mask1 | mask2 | mask3)
 }
 
-<span class="doccomment">/// Compute the position of the last matching byte from the given masks. The</span>
-<span class="doccomment">/// position returned is always in the range [0, 15]. Each mask corresponds to</span>
-<span class="doccomment">/// the equality comparison of a single byte.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The masks given are expected to be the result of _mm_movemask_epi8, where</span>
-<span class="doccomment">/// at least one of the masks is non-zero (i.e., indicates a match).</span>
-<span class="kw">fn</span> <span class="ident">reverse_pos2</span>(<span class="ident">mask1</span>: <span class="ident">i32</span>, <span class="ident">mask2</span>: <span class="ident">i32</span>) -&gt; <span class="ident">usize</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">mask1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
-
-    <span class="ident">reverse_pos</span>(<span class="ident">mask1</span> <span class="op">|</span> <span class="ident">mask2</span>)
-}
-
-<span class="doccomment">/// Compute the position of the last matching byte from the given masks. The</span>
-<span class="doccomment">/// position returned is always in the range [0, 15]. Each mask corresponds to</span>
-<span class="doccomment">/// the equality comparison of a single byte.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The masks given are expected to be the result of _mm_movemask_epi8, where</span>
-<span class="doccomment">/// at least one of the masks is non-zero (i.e., indicates a match).</span>
-<span class="kw">fn</span> <span class="ident">reverse_pos3</span>(<span class="ident">mask1</span>: <span class="ident">i32</span>, <span class="ident">mask2</span>: <span class="ident">i32</span>, <span class="ident">mask3</span>: <span class="ident">i32</span>) -&gt; <span class="ident">usize</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">mask1</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">mask3</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
-
-    <span class="ident">reverse_pos</span>(<span class="ident">mask1</span> <span class="op">|</span> <span class="ident">mask2</span> <span class="op">|</span> <span class="ident">mask3</span>)
-}
-
-<span class="doccomment">/// Subtract `b` from `a` and return the difference. `a` should be greater than</span>
-<span class="doccomment">/// or equal to `b`.</span>
-<span class="kw">fn</span> <span class="ident">sub</span>(<span class="ident">a</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">b</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="ident">usize</span> {
-    <span class="macro">debug_assert!</span>(<span class="ident">a</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">b</span>);
-    (<span class="ident">a</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">-</span> (<span class="ident">b</span> <span class="kw">as</span> <span class="ident">usize</span>)
+<span class="doccomment">/// Subtract `b` from `a` and return the difference. `a` should be greater than
+/// or equal to `b`.
+</span><span class="kw">fn </span>sub(a: <span class="kw-2">*const </span>u8, b: <span class="kw-2">*const </span>u8) -&gt; usize {
+    <span class="macro">debug_assert!</span>(a &gt;= b);
+    (a <span class="kw">as </span>usize) - (b <span class="kw">as </span>usize)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

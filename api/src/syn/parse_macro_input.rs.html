@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/parse_macro_input.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parse_macro_input.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/parse_macro_input.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parse_macro_input.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -183,185 +177,184 @@
 <span id="177">177</span>
 <span id="178">178</span>
 <span id="179">179</span>
-</pre><pre class="rust"><code><span class="doccomment">/// Parse the input TokenStream of a macro, triggering a compile error if the</span>
-<span class="doccomment">/// tokens fail to parse.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Refer to the [`parse` module] documentation for more details about parsing</span>
-<span class="doccomment">/// in Syn.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`parse` module]: crate::rustdoc_workaround::parse_module</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// &lt;br&gt;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Intended usage</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This macro must be called from a function that returns</span>
-<span class="doccomment">/// `proc_macro::TokenStream`. Usually this will be your proc macro entry point,</span>
-<span class="doccomment">/// the function that has the #\[proc_macro\] / #\[proc_macro_derive\] /</span>
-<span class="doccomment">/// #\[proc_macro_attribute\] attribute.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # extern crate proc_macro;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// use proc_macro::TokenStream;</span>
-<span class="doccomment">/// use syn::{parse_macro_input, Result};</span>
-<span class="doccomment">/// use syn::parse::{Parse, ParseStream};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// struct MyMacroInput {</span>
-<span class="doccomment">///     /* ... */</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// impl Parse for MyMacroInput {</span>
-<span class="doccomment">///     fn parse(input: ParseStream) -&gt; Result&lt;Self&gt; {</span>
-<span class="doccomment">///         /* ... */</span>
-<span class="doccomment">/// #       Ok(MyMacroInput {})</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # const IGNORE: &amp;str = stringify! {</span>
-<span class="doccomment">/// #[proc_macro]</span>
-<span class="doccomment">/// # };</span>
-<span class="doccomment">/// pub fn my_macro(tokens: TokenStream) -&gt; TokenStream {</span>
-<span class="doccomment">///     let input = parse_macro_input!(tokens as MyMacroInput);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     /* ... */</span>
-<span class="doccomment">/// #   &quot;&quot;.parse().unwrap()</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// &lt;br&gt;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Usage with Parser</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This macro can also be used with the [`Parser` trait] for types that have</span>
-<span class="doccomment">/// multiple ways that they can be parsed.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Parser` trait]: crate::rustdoc_workaround::parse_module::Parser</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # extern crate proc_macro;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # use proc_macro::TokenStream;</span>
-<span class="doccomment">/// # use syn::{parse_macro_input, Result};</span>
-<span class="doccomment">/// # use syn::parse::ParseStream;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # struct MyMacroInput {}</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// impl MyMacroInput {</span>
-<span class="doccomment">///     fn parse_alternate(input: ParseStream) -&gt; Result&lt;Self&gt; {</span>
-<span class="doccomment">///         /* ... */</span>
-<span class="doccomment">/// #       Ok(MyMacroInput {})</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # const IGNORE: &amp;str = stringify! {</span>
-<span class="doccomment">/// #[proc_macro]</span>
-<span class="doccomment">/// # };</span>
-<span class="doccomment">/// pub fn my_macro(tokens: TokenStream) -&gt; TokenStream {</span>
-<span class="doccomment">///     let input = parse_macro_input!(tokens with MyMacroInput::parse_alternate);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     /* ... */</span>
-<span class="doccomment">/// #   &quot;&quot;.parse().unwrap()</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// &lt;br&gt;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Expansion</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `parse_macro_input!($variable as $Type)` expands to something like:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```no_run</span>
-<span class="doccomment">/// # extern crate proc_macro;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # macro_rules! doc_test {</span>
-<span class="doccomment">/// #     ($variable:ident as $Type:ty) =&gt; {</span>
-<span class="doccomment">/// match syn::parse::&lt;$Type&gt;($variable) {</span>
-<span class="doccomment">///     Ok(syntax_tree) =&gt; syntax_tree,</span>
-<span class="doccomment">///     Err(err) =&gt; return proc_macro::TokenStream::from(err.to_compile_error()),</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// #     };</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # fn test(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {</span>
-<span class="doccomment">/// #     let _ = doc_test!(input as syn::Ident);</span>
-<span class="doccomment">/// #     proc_macro::TokenStream::new()</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;proc-macro&quot;</span>))))]</span>
-<span class="macro">macro_rules!</span> <span class="ident">parse_macro_input</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tokenstream</span>:<span class="ident">ident</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">match</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::parse_macro_input::parse</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tokenstream</span>) {
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::__private::Ok</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>,
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::__private::Err</span>(<span class="ident">err</span>) =&gt; {
-                <span class="kw">return</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::__private::TokenStream::from</span>(<span class="ident">err</span>.<span class="ident">to_compile_error</span>());
+</pre><pre class="rust"><code><span class="doccomment">/// Parse the input TokenStream of a macro, triggering a compile error if the
+/// tokens fail to parse.
+///
+/// Refer to the [`parse` module] documentation for more details about parsing
+/// in Syn.
+///
+/// [`parse` module]: crate::rustdoc_workaround::parse_module
+///
+/// &lt;br&gt;
+///
+/// # Intended usage
+///
+/// This macro must be called from a function that returns
+/// `proc_macro::TokenStream`. Usually this will be your proc macro entry point,
+/// the function that has the #\[proc_macro\] / #\[proc_macro_derive\] /
+/// #\[proc_macro_attribute\] attribute.
+///
+/// ```
+/// # extern crate proc_macro;
+/// #
+/// use proc_macro::TokenStream;
+/// use syn::{parse_macro_input, Result};
+/// use syn::parse::{Parse, ParseStream};
+///
+/// struct MyMacroInput {
+///     /* ... */
+/// }
+///
+/// impl Parse for MyMacroInput {
+///     fn parse(input: ParseStream) -&gt; Result&lt;Self&gt; {
+///         /* ... */
+/// #       Ok(MyMacroInput {})
+///     }
+/// }
+///
+/// # const IGNORE: &amp;str = stringify! {
+/// #[proc_macro]
+/// # };
+/// pub fn my_macro(tokens: TokenStream) -&gt; TokenStream {
+///     let input = parse_macro_input!(tokens as MyMacroInput);
+///
+///     /* ... */
+/// #   &quot;&quot;.parse().unwrap()
+/// }
+/// ```
+///
+/// &lt;br&gt;
+///
+/// # Usage with Parser
+///
+/// This macro can also be used with the [`Parser` trait] for types that have
+/// multiple ways that they can be parsed.
+///
+/// [`Parser` trait]: crate::rustdoc_workaround::parse_module::Parser
+///
+/// ```
+/// # extern crate proc_macro;
+/// #
+/// # use proc_macro::TokenStream;
+/// # use syn::{parse_macro_input, Result};
+/// # use syn::parse::ParseStream;
+/// #
+/// # struct MyMacroInput {}
+/// #
+/// impl MyMacroInput {
+///     fn parse_alternate(input: ParseStream) -&gt; Result&lt;Self&gt; {
+///         /* ... */
+/// #       Ok(MyMacroInput {})
+///     }
+/// }
+///
+/// # const IGNORE: &amp;str = stringify! {
+/// #[proc_macro]
+/// # };
+/// pub fn my_macro(tokens: TokenStream) -&gt; TokenStream {
+///     let input = parse_macro_input!(tokens with MyMacroInput::parse_alternate);
+///
+///     /* ... */
+/// #   &quot;&quot;.parse().unwrap()
+/// }
+/// ```
+///
+/// &lt;br&gt;
+///
+/// # Expansion
+///
+/// `parse_macro_input!($variable as $Type)` expands to something like:
+///
+/// ```no_run
+/// # extern crate proc_macro;
+/// #
+/// # macro_rules! doc_test {
+/// #     ($variable:ident as $Type:ty) =&gt; {
+/// match syn::parse::&lt;$Type&gt;($variable) {
+///     Ok(syntax_tree) =&gt; syntax_tree,
+///     Err(err) =&gt; return proc_macro::TokenStream::from(err.to_compile_error()),
+/// }
+/// #     };
+/// # }
+/// #
+/// # fn test(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
+/// #     let _ = doc_test!(input as syn::Ident);
+/// #     proc_macro::TokenStream::new()
+/// # }
+/// ```
+</span><span class="attribute">#[macro_export]
+#[cfg_attr(doc_cfg, doc(cfg(all(feature = <span class="string">&quot;parsing&quot;</span>, feature = <span class="string">&quot;proc-macro&quot;</span>))))]
+</span><span class="macro">macro_rules! </span>parse_macro_input {
+    (<span class="macro-nonterminal">$tokenstream</span>:ident <span class="kw">as </span><span class="macro-nonterminal">$ty</span>:ty) =&gt; {
+        <span class="kw">match </span><span class="macro-nonterminal">$crate::parse_macro_input::parse</span>::&lt;<span class="macro-nonterminal">$ty</span>&gt;(<span class="macro-nonterminal">$tokenstream</span>) {
+            <span class="macro-nonterminal">$crate::__private::Ok</span>(data) =&gt; data,
+            <span class="macro-nonterminal">$crate::__private::Err</span>(err) =&gt; {
+                <span class="kw">return </span><span class="macro-nonterminal">$crate::__private::TokenStream::from</span>(err.to_compile_error());
             }
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tokenstream</span>:<span class="ident">ident</span> <span class="ident">with</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">parser</span>:<span class="ident">path</span>) =&gt; {
-        <span class="kw">match</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::parse::Parser::parse</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">parser</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tokenstream</span>) {
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::__private::Ok</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>,
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::__private::Err</span>(<span class="ident">err</span>) =&gt; {
-                <span class="kw">return</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::__private::TokenStream::from</span>(<span class="ident">err</span>.<span class="ident">to_compile_error</span>());
+    (<span class="macro-nonterminal">$tokenstream</span>:ident with <span class="macro-nonterminal">$parser</span>:path) =&gt; {
+        <span class="kw">match </span><span class="macro-nonterminal">$crate::parse::Parser::parse</span>(<span class="macro-nonterminal">$parser</span>, <span class="macro-nonterminal">$tokenstream</span>) {
+            <span class="macro-nonterminal">$crate::__private::Ok</span>(data) =&gt; data,
+            <span class="macro-nonterminal">$crate::__private::Err</span>(err) =&gt; {
+                <span class="kw">return </span><span class="macro-nonterminal">$crate::__private::TokenStream::from</span>(err.to_compile_error());
             }
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tokenstream</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="macro-nonterminal">$</span><span class="macro">crate::parse_macro_input!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tokenstream</span> <span class="kw">as</span> <span class="kw">_</span>)
+    (<span class="macro-nonterminal">$tokenstream</span>:ident) =&gt; {
+        <span class="macro-nonterminal">$</span><span class="macro">crate::parse_macro_input!</span>(<span class="macro-nonterminal">$tokenstream </span><span class="kw">as _</span>)
     };
 }
 
-<span class="comment">////////////////////////////////////////////////////////////////////////////////</span>
-<span class="comment">// Can parse any type that implements Parse.</span>
+<span class="comment">////////////////////////////////////////////////////////////////////////////////
+// Can parse any type that implements Parse.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>, <span class="ident">Parser</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">proc_macro::TokenStream</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::parse::{Parse, ParseStream, Parser, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>proc_macro::TokenStream;
 
-<span class="comment">// Not public API.</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">ParseMacroInput</span><span class="op">&gt;</span>(<span class="ident">token_stream</span>: <span class="ident">TokenStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">T::parse</span>.<span class="ident">parse</span>(<span class="ident">token_stream</span>)
+<span class="comment">// Not public API.
+</span><span class="attribute">#[doc(hidden)]
+</span><span class="kw">pub fn </span>parse&lt;T: ParseMacroInput&gt;(token_stream: TokenStream) -&gt; <span class="prelude-ty">Result</span>&lt;T&gt; {
+    T::parse.parse(token_stream)
 }
 
-<span class="comment">// Not public API.</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ParseMacroInput</span>: <span class="ident">Sized</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
+<span class="comment">// Not public API.
+</span><span class="attribute">#[doc(hidden)]
+</span><span class="kw">pub trait </span>ParseMacroInput: Sized {
+    <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Parse</span><span class="op">&gt;</span> <span class="ident">ParseMacroInput</span> <span class="kw">for</span> <span class="ident">T</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Parse</span><span class="op">&gt;</span><span class="ident">::parse</span>(<span class="ident">input</span>)
+<span class="kw">impl</span>&lt;T: Parse&gt; ParseMacroInput <span class="kw">for </span>T {
+    <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        &lt;T <span class="kw">as </span>Parse&gt;::parse(input)
     }
 }
 
-<span class="comment">////////////////////////////////////////////////////////////////////////////////</span>
-<span class="comment">// Any other types that we want `parse_macro_input!` to be able to parse.</span>
+<span class="comment">////////////////////////////////////////////////////////////////////////////////
+// Any other types that we want `parse_macro_input!` to be able to parse.
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::AttributeArgs</span>;
+</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))]
+</span><span class="kw">use </span><span class="kw">crate</span>::AttributeArgs;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="kw">impl</span> <span class="ident">ParseMacroInput</span> <span class="kw">for</span> <span class="ident">AttributeArgs</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">metas</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))]
+</span><span class="kw">impl </span>ParseMacroInput <span class="kw">for </span>AttributeArgs {
+    <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>metas = Vec::new();
 
-        <span class="kw">loop</span> {
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">is_empty</span>() {
+        <span class="kw">loop </span>{
+            <span class="kw">if </span>input.is_empty() {
                 <span class="kw">break</span>;
             }
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-            <span class="ident">metas</span>.<span class="ident">push</span>(<span class="ident">value</span>);
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">is_empty</span>() {
+            <span class="kw">let </span>value = input.parse()<span class="question-mark">?</span>;
+            metas.push(value);
+            <span class="kw">if </span>input.is_empty() {
                 <span class="kw">break</span>;
             }
-            <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">Token!</span>[,]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            input.parse::&lt;<span class="macro">Token!</span>[,]&gt;()<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">metas</span>)
+        <span class="prelude-val">Ok</span>(metas)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

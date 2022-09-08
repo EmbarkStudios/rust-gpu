@@ -1,12 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/distributions/slice.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>slice.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container">
-                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rand/index.html">
-                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.8.4/src/distributions/slice.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>slice.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rand/index.html"><div class="logo-container">
+                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rand/index.html">
+                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -123,123 +117,122 @@
 <span id="115">115</span>
 <span id="116">116</span>
 <span id="117">117</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2021 Developers of the Rand project.</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
-<span class="comment">// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
-<span class="comment">// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your</span>
-<span class="comment">// option. This file may not be copied, modified, or distributed</span>
-<span class="comment">// except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2021 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license
+// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::distributions</span>::{<span class="ident">Distribution</span>, <span class="ident">Uniform</span>};
+</span><span class="kw">use </span><span class="kw">crate</span>::distributions::{Distribution, Uniform};
 
-<span class="doccomment">/// A distribution to sample items uniformly from a slice.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Slice::new`] constructs a distribution referencing a slice and uniformly</span>
-<span class="doccomment">/// samples references from the items in the slice. It may do extra work up</span>
-<span class="doccomment">/// front to make sampling of multiple values faster; if only one sample from</span>
-<span class="doccomment">/// the slice is required, [`SliceRandom::choose`] can be more efficient.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Steps are taken to avoid bias which might be present in naive</span>
-<span class="doccomment">/// implementations; for example `slice[rng.gen() % slice.len()]` samples from</span>
-<span class="doccomment">/// the slice, but may be more likely to select numbers in the low range than</span>
-<span class="doccomment">/// other values.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This distribution samples with replacement; each sample is independent.</span>
-<span class="doccomment">/// Sampling without replacement requires state to be retained, and therefore</span>
-<span class="doccomment">/// cannot be handled by a distribution; you should instead consider methods</span>
-<span class="doccomment">/// on [`SliceRandom`], such as [`SliceRandom::choose_multiple`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use rand::Rng;</span>
-<span class="doccomment">/// use rand::distributions::Slice;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let vowels = [&#39;a&#39;, &#39;e&#39;, &#39;i&#39;, &#39;o&#39;, &#39;u&#39;];</span>
-<span class="doccomment">/// let vowels_dist = Slice::new(&amp;vowels).unwrap();</span>
-<span class="doccomment">/// let rng = rand::thread_rng();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // build a string of 10 vowels</span>
-<span class="doccomment">/// let vowel_string: String = rng</span>
-<span class="doccomment">///     .sample_iter(&amp;vowels_dist)</span>
-<span class="doccomment">///     .take(10)</span>
-<span class="doccomment">///     .collect();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// println!(&quot;{}&quot;, vowel_string);</span>
-<span class="doccomment">/// assert_eq!(vowel_string.len(), 10);</span>
-<span class="doccomment">/// assert!(vowel_string.chars().all(|c| vowels.contains(&amp;c)));</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// For a single sample, [`SliceRandom::choose`][crate::seq::SliceRandom::choose]</span>
-<span class="doccomment">/// may be preferred:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use rand::seq::SliceRandom;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let vowels = [&#39;a&#39;, &#39;e&#39;, &#39;i&#39;, &#39;o&#39;, &#39;u&#39;];</span>
-<span class="doccomment">/// let mut rng = rand::thread_rng();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// println!(&quot;{}&quot;, vowels.choose(&amp;mut rng).unwrap())</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`SliceRandom`]: crate::seq::SliceRandom</span>
-<span class="doccomment">/// [`SliceRandom::choose`]: crate::seq::SliceRandom::choose</span>
-<span class="doccomment">/// [`SliceRandom::choose_multiple`]: crate::seq::SliceRandom::choose_multiple</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Slice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">slice</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>],
-    <span class="ident">range</span>: <span class="ident">Uniform</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A distribution to sample items uniformly from a slice.
+///
+/// [`Slice::new`] constructs a distribution referencing a slice and uniformly
+/// samples references from the items in the slice. It may do extra work up
+/// front to make sampling of multiple values faster; if only one sample from
+/// the slice is required, [`SliceRandom::choose`] can be more efficient.
+///
+/// Steps are taken to avoid bias which might be present in naive
+/// implementations; for example `slice[rng.gen() % slice.len()]` samples from
+/// the slice, but may be more likely to select numbers in the low range than
+/// other values.
+///
+/// This distribution samples with replacement; each sample is independent.
+/// Sampling without replacement requires state to be retained, and therefore
+/// cannot be handled by a distribution; you should instead consider methods
+/// on [`SliceRandom`], such as [`SliceRandom::choose_multiple`].
+///
+/// # Example
+///
+/// ```
+/// use rand::Rng;
+/// use rand::distributions::Slice;
+///
+/// let vowels = [&#39;a&#39;, &#39;e&#39;, &#39;i&#39;, &#39;o&#39;, &#39;u&#39;];
+/// let vowels_dist = Slice::new(&amp;vowels).unwrap();
+/// let rng = rand::thread_rng();
+///
+/// // build a string of 10 vowels
+/// let vowel_string: String = rng
+///     .sample_iter(&amp;vowels_dist)
+///     .take(10)
+///     .collect();
+///
+/// println!(&quot;{}&quot;, vowel_string);
+/// assert_eq!(vowel_string.len(), 10);
+/// assert!(vowel_string.chars().all(|c| vowels.contains(&amp;c)));
+/// ```
+///
+/// For a single sample, [`SliceRandom::choose`][crate::seq::SliceRandom::choose]
+/// may be preferred:
+///
+/// ```
+/// use rand::seq::SliceRandom;
+///
+/// let vowels = [&#39;a&#39;, &#39;e&#39;, &#39;i&#39;, &#39;o&#39;, &#39;u&#39;];
+/// let mut rng = rand::thread_rng();
+///
+/// println!(&quot;{}&quot;, vowels.choose(&amp;mut rng).unwrap())
+/// ```
+///
+/// [`SliceRandom`]: crate::seq::SliceRandom
+/// [`SliceRandom::choose`]: crate::seq::SliceRandom::choose
+/// [`SliceRandom::choose_multiple`]: crate::seq::SliceRandom::choose_multiple
+</span><span class="attribute">#[derive(Debug, Clone, Copy)]
+</span><span class="kw">pub struct </span>Slice&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+    slice: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[T],
+    range: Uniform&lt;usize&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Slice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a new `Slice` instance which samples uniformly from the slice.</span>
-    <span class="doccomment">/// Returns `Err` if the slice is empty.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">EmptySlice</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">slice</span>.<span class="ident">len</span>() {
-            <span class="number">0</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">EmptySlice</span>),
-            <span class="ident">len</span> =&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-                <span class="ident">slice</span>,
-                <span class="ident">range</span>: <span class="ident">Uniform::new</span>(<span class="number">0</span>, <span class="ident">len</span>),
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Slice&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+    <span class="doccomment">/// Create a new `Slice` instance which samples uniformly from the slice.
+    /// Returns `Err` if the slice is empty.
+    </span><span class="kw">pub fn </span>new(slice: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[T]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, EmptySlice&gt; {
+        <span class="kw">match </span>slice.len() {
+            <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(EmptySlice),
+            len =&gt; <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+                slice,
+                range: Uniform::new(<span class="number">0</span>, len),
             }),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Distribution</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Slice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident"><span class="kw">crate</span>::Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span> {
-        <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range</span>.<span class="ident">sample</span>(<span class="ident">rng</span>);
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Distribution&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; <span class="kw">for </span>Slice&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+    <span class="kw">fn </span>sample&lt;R: <span class="kw">crate</span>::Rng + <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T {
+        <span class="kw">let </span>idx = <span class="self">self</span>.range.sample(rng);
 
         <span class="macro">debug_assert!</span>(
-            <span class="ident">idx</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">slice</span>.<span class="ident">len</span>(),
+            idx &lt; <span class="self">self</span>.slice.len(),
             <span class="string">&quot;Uniform::new(0, {}) somehow returned {}&quot;</span>,
-            <span class="self">self</span>.<span class="ident">slice</span>.<span class="ident">len</span>(),
-            <span class="ident">idx</span>
+            <span class="self">self</span>.slice.len(),
+            idx
         );
 
-        <span class="comment">// Safety: at construction time, it was ensured that the slice was</span>
-        <span class="comment">// non-empty, and that the `Uniform` range produces values in range</span>
-        <span class="comment">// for the slice</span>
-        <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">slice</span>.<span class="ident">get_unchecked</span>(<span class="ident">idx</span>) }
+        <span class="comment">// Safety: at construction time, it was ensured that the slice was
+        // non-empty, and that the `Uniform` range produces values in range
+        // for the slice
+        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.slice.get_unchecked(idx) }
     }
 }
 
-<span class="doccomment">/// Error type indicating that a [`Slice`] distribution was improperly</span>
-<span class="doccomment">/// constructed with an empty slice.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EmptySlice</span>;
+<span class="doccomment">/// Error type indicating that a [`Slice`] distribution was improperly
+/// constructed with an empty slice.
+</span><span class="attribute">#[derive(Debug, Clone, Copy)]
+</span><span class="kw">pub struct </span>EmptySlice;
 
-<span class="kw">impl</span> <span class="ident">core::fmt::Display</span> <span class="kw">for</span> <span class="ident">EmptySlice</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">core::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">core::fmt::Result</span> {
+<span class="kw">impl </span>core::fmt::Display <span class="kw">for </span>EmptySlice {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; core::fmt::Result {
         <span class="macro">write!</span>(
-            <span class="ident">f</span>,
-            <span class="string">&quot;Tried to create a `distributions::Slice` with an empty slice&quot;</span>
-        )
+            f,
+            <span class="string">&quot;Tried to create a `distributions::Slice` with an empty slice&quot;
+        </span>)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">std::error::Error</span> <span class="kw">for</span> <span class="ident">EmptySlice</span> {}
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl </span>std::error::Error <span class="kw">for </span>EmptySlice {}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rand" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

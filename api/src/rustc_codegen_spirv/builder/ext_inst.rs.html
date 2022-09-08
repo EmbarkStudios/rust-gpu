@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/ext_inst.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ext_inst.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/ext_inst.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ext_inst.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -76,50 +70,50 @@
 <span id="70">70</span>
 <span id="71">71</span>
 <span id="72">72</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">GLOp</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rspirv</span>::{<span class="ident">dr::Operand</span>, <span class="ident">spirv::Capability</span>};
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
+<span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvValue, SpirvValueExt};
+<span class="kw">use </span>rspirv::spirv::{GLOp, Word};
+<span class="kw">use </span>rspirv::{dr::Operand, spirv::Capability};
 
-<span class="kw">const</span> <span class="ident">GLSL_STD_450</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;GLSL.std.450&quot;</span>;
+<span class="kw">const </span>GLSL_STD_450: <span class="kw-2">&amp;</span>str = <span class="string">&quot;GLSL.std.450&quot;</span>;
 
-<span class="doccomment">/// Manager for OpExtInst/OpExtImport instructions</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExtInst</span> {
-    <span class="ident">glsl</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">integer_functions_2_intel</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// Manager for OpExtInst/OpExtImport instructions
+</span><span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>ExtInst {
+    glsl: <span class="prelude-ty">Option</span>&lt;Word&gt;,
+    integer_functions_2_intel: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">ExtInst</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">import_glsl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bx</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) -&gt; <span class="ident">Word</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">glsl</span> {
-            <span class="ident">id</span>
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">bx</span>.<span class="ident">emit_global</span>().<span class="ident">ext_inst_import</span>(<span class="ident">GLSL_STD_450</span>);
-            <span class="self">self</span>.<span class="ident">glsl</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>);
-            <span class="ident">id</span>
+<span class="kw">impl </span>ExtInst {
+    <span class="kw">pub fn </span>import_glsl&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bx: <span class="kw-2">&amp;</span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt;) -&gt; Word {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.glsl {
+            id
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>id = bx.emit_global().ext_inst_import(GLSL_STD_450);
+            <span class="self">self</span>.glsl = <span class="prelude-val">Some</span>(id);
+            id
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">require_integer_functions_2_intel</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">bx</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="ident">to_zombie</span>: <span class="ident">Word</span>,
+    <span class="kw">pub fn </span>require_integer_functions_2_intel&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        bx: <span class="kw-2">&amp;</span>Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt;,
+        to_zombie: Word,
     ) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">integer_functions_2_intel</span> {
-            <span class="self">self</span>.<span class="ident">integer_functions_2_intel</span> <span class="op">=</span> <span class="bool-val">true</span>;
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">bx</span>
-                .<span class="ident">builder</span>
-                .<span class="ident">has_capability</span>(<span class="ident">Capability::IntegerFunctions2INTEL</span>)
+        <span class="kw">if </span>!<span class="self">self</span>.integer_functions_2_intel {
+            <span class="self">self</span>.integer_functions_2_intel = <span class="bool-val">true</span>;
+            <span class="kw">if </span>!bx
+                .builder
+                .has_capability(Capability::IntegerFunctions2INTEL)
             {
-                <span class="ident">bx</span>.<span class="ident">zombie</span>(<span class="ident">to_zombie</span>, <span class="string">&quot;capability IntegerFunctions2INTEL is required&quot;</span>);
+                bx.zombie(to_zombie, <span class="string">&quot;capability IntegerFunctions2INTEL is required&quot;</span>);
             }
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">bx</span>
-                .<span class="ident">builder</span>
-                .<span class="ident">has_extension</span>(<span class="ident">bx</span>.<span class="ident">sym</span>.<span class="ident">spv_intel_shader_integer_functions2</span>)
+            <span class="kw">if </span>!bx
+                .builder
+                .has_extension(bx.sym.spv_intel_shader_integer_functions2)
             {
-                <span class="ident">bx</span>.<span class="ident">zombie</span>(
-                    <span class="ident">to_zombie</span>,
+                bx.zombie(
+                    to_zombie,
                     <span class="string">&quot;extension SPV_INTEL_shader_integer_functions2 is required&quot;</span>,
                 );
             }
@@ -127,27 +121,26 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gl_op</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">op</span>: <span class="ident">GLOp</span>,
-        <span class="ident">result_type</span>: <span class="ident">Word</span>,
-        <span class="ident">args</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">SpirvValue</span>]<span class="op">&gt;</span>,
-    ) -&gt; <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">as_ref</span>();
-        <span class="kw">let</span> <span class="ident">glsl</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ext_inst</span>.<span class="ident">borrow_mut</span>().<span class="ident">import_glsl</span>(<span class="self">self</span>);
-        <span class="self">self</span>.<span class="ident">emit</span>()
-            .<span class="ident">ext_inst</span>(
-                <span class="ident">result_type</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; Builder&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">pub fn </span>gl_op(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        op: GLOp,
+        result_type: Word,
+        args: <span class="kw">impl </span>AsRef&lt;[SpirvValue]&gt;,
+    ) -&gt; SpirvValue {
+        <span class="kw">let </span>args = args.as_ref();
+        <span class="kw">let </span>glsl = <span class="self">self</span>.ext_inst.borrow_mut().import_glsl(<span class="self">self</span>);
+        <span class="self">self</span>.emit()
+            .ext_inst(
+                result_type,
                 <span class="prelude-val">None</span>,
-                <span class="ident">glsl</span>,
-                <span class="ident">op</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="ident">args</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">Operand::IdRef</span>(<span class="ident">a</span>.<span class="ident">def</span>(<span class="self">self</span>))),
+                glsl,
+                op <span class="kw">as </span>u32,
+                args.iter().map(|a| Operand::IdRef(a.def(<span class="self">self</span>))),
             )
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
+            .unwrap()
+            .with_type(result_type)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

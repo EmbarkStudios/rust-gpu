@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/spanned.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spanned.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/spanned.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spanned.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../syn/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -118,120 +112,119 @@
 <span id="112">112</span>
 <span id="113">113</span>
 <span id="114">114</span>
-</pre><pre class="rust"><code><span class="doccomment">//! A trait that can provide the `Span` of the complete contents of a syntax</span>
-<span class="doccomment">//! tree node.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! *This module is available only if Syn is built with both the `&quot;parsing&quot;` and</span>
-<span class="doccomment">//! `&quot;printing&quot;` features.*</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! &lt;br&gt;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Example</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Suppose in a procedural macro we have a [`Type`] that we want to assert</span>
-<span class="doccomment">//! implements the [`Sync`] trait. Maybe this is the type of one of the fields</span>
-<span class="doccomment">//! of a struct for which we are deriving a trait implementation, and we need to</span>
-<span class="doccomment">//! be able to pass a reference to one of those fields across threads.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [`Type`]: crate::Type</span>
-<span class="doccomment">//! [`Sync`]: std::marker::Sync</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! If the field type does *not* implement `Sync` as required, we want the</span>
-<span class="doccomment">//! compiler to report an error pointing out exactly which type it was.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The following macro code takes a variable `ty` of type `Type` and produces a</span>
-<span class="doccomment">//! static assertion that `Sync` is implemented for that type.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//! # extern crate proc_macro;</span>
-<span class="doccomment">//! #</span>
-<span class="doccomment">//! use proc_macro::TokenStream;</span>
-<span class="doccomment">//! use proc_macro2::Span;</span>
-<span class="doccomment">//! use quote::quote_spanned;</span>
-<span class="doccomment">//! use syn::Type;</span>
-<span class="doccomment">//! use syn::spanned::Spanned;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # const IGNORE_TOKENS: &amp;str = stringify! {</span>
-<span class="doccomment">//! #[proc_macro_derive(MyMacro)]</span>
-<span class="doccomment">//! # };</span>
-<span class="doccomment">//! pub fn my_macro(input: TokenStream) -&gt; TokenStream {</span>
-<span class="doccomment">//!     # let ty = get_a_type();</span>
-<span class="doccomment">//!     /* ... */</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     let assert_sync = quote_spanned! {ty.span()=&gt;</span>
-<span class="doccomment">//!         struct _AssertSync where #ty: Sync;</span>
-<span class="doccomment">//!     };</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     /* ... */</span>
-<span class="doccomment">//!     # input</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//! #</span>
-<span class="doccomment">//! # fn get_a_type() -&gt; Type {</span>
-<span class="doccomment">//! #     unimplemented!()</span>
-<span class="doccomment">//! # }</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! By inserting this `assert_sync` fragment into the output code generated by</span>
-<span class="doccomment">//! our macro, the user&#39;s code will fail to compile if `ty` does not implement</span>
-<span class="doccomment">//! `Sync`. The errors they would see look like the following.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```text</span>
-<span class="doccomment">//! error[E0277]: the trait bound `*const i32: std::marker::Sync` is not satisfied</span>
-<span class="doccomment">//!   --&gt; src/main.rs:10:21</span>
-<span class="doccomment">//!    |</span>
-<span class="doccomment">//! 10 |     bad_field: *const i32,</span>
-<span class="doccomment">//!    |                ^^^^^^^^^^ `*const i32` cannot be shared between threads safely</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! In this technique, using the `Type`&#39;s span for the error message makes the</span>
-<span class="doccomment">//! error appear in the correct place underlining the right type.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! &lt;br&gt;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Limitations</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The underlying [`proc_macro::Span::join`] method is nightly-only. When</span>
-<span class="doccomment">//! called from within a procedural macro in a nightly compiler, `Spanned` will</span>
-<span class="doccomment">//! use `join` to produce the intended span. When not using a nightly compiler,</span>
-<span class="doccomment">//! only the span of the *first token* of the syntax tree node is returned.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! In the common case of wanting to use the joined span as the span of a</span>
-<span class="doccomment">//! `syn::Error`, consider instead using [`syn::Error::new_spanned`] which is</span>
-<span class="doccomment">//! able to span the error correctly under the complete syntax tree node without</span>
-<span class="doccomment">//! needing the unstable `join`.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [`syn::Error::new_spanned`]: crate::Error::new_spanned</span>
+</pre><pre class="rust"><code><span class="doccomment">//! A trait that can provide the `Span` of the complete contents of a syntax
+//! tree node.
+//!
+//! *This module is available only if Syn is built with both the `&quot;parsing&quot;` and
+//! `&quot;printing&quot;` features.*
+//!
+//! &lt;br&gt;
+//!
+//! # Example
+//!
+//! Suppose in a procedural macro we have a [`Type`] that we want to assert
+//! implements the [`Sync`] trait. Maybe this is the type of one of the fields
+//! of a struct for which we are deriving a trait implementation, and we need to
+//! be able to pass a reference to one of those fields across threads.
+//!
+//! [`Type`]: crate::Type
+//! [`Sync`]: std::marker::Sync
+//!
+//! If the field type does *not* implement `Sync` as required, we want the
+//! compiler to report an error pointing out exactly which type it was.
+//!
+//! The following macro code takes a variable `ty` of type `Type` and produces a
+//! static assertion that `Sync` is implemented for that type.
+//!
+//! ```
+//! # extern crate proc_macro;
+//! #
+//! use proc_macro::TokenStream;
+//! use proc_macro2::Span;
+//! use quote::quote_spanned;
+//! use syn::Type;
+//! use syn::spanned::Spanned;
+//!
+//! # const IGNORE_TOKENS: &amp;str = stringify! {
+//! #[proc_macro_derive(MyMacro)]
+//! # };
+//! pub fn my_macro(input: TokenStream) -&gt; TokenStream {
+//!     # let ty = get_a_type();
+//!     /* ... */
+//!
+//!     let assert_sync = quote_spanned! {ty.span()=&gt;
+//!         struct _AssertSync where #ty: Sync;
+//!     };
+//!
+//!     /* ... */
+//!     # input
+//! }
+//! #
+//! # fn get_a_type() -&gt; Type {
+//! #     unimplemented!()
+//! # }
+//! ```
+//!
+//! By inserting this `assert_sync` fragment into the output code generated by
+//! our macro, the user&#39;s code will fail to compile if `ty` does not implement
+//! `Sync`. The errors they would see look like the following.
+//!
+//! ```text
+//! error[E0277]: the trait bound `*const i32: std::marker::Sync` is not satisfied
+//!   --&gt; src/main.rs:10:21
+//!    |
+//! 10 |     bad_field: *const i32,
+//!    |                ^^^^^^^^^^ `*const i32` cannot be shared between threads safely
+//! ```
+//!
+//! In this technique, using the `Type`&#39;s span for the error message makes the
+//! error appear in the correct place underlining the right type.
+//!
+//! &lt;br&gt;
+//!
+//! # Limitations
+//!
+//! The underlying [`proc_macro::Span::join`] method is nightly-only. When
+//! called from within a procedural macro in a nightly compiler, `Spanned` will
+//! use `join` to produce the intended span. When not using a nightly compiler,
+//! only the span of the *first token* of the syntax tree node is returned.
+//!
+//! In the common case of wanting to use the joined span as the span of a
+//! `syn::Error`, consider instead using [`syn::Error::new_spanned`] which is
+//! able to span the error correctly under the complete syntax tree node without
+//! needing the unstable `join`.
+//!
+//! [`syn::Error::new_spanned`]: crate::Error::new_spanned
 
-<span class="kw">use</span> <span class="ident">proc_macro2::Span</span>;
-<span class="kw">use</span> <span class="ident">quote::spanned::Spanned</span> <span class="kw">as</span> <span class="ident">ToTokens</span>;
+</span><span class="kw">use </span>proc_macro2::Span;
+<span class="kw">use </span>quote::spanned::Spanned <span class="kw">as </span>ToTokens;
 
-<span class="doccomment">/// A trait that can provide the `Span` of the complete contents of a syntax</span>
-<span class="doccomment">/// tree node.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This trait is automatically implemented for all types that implement</span>
-<span class="doccomment">/// [`ToTokens`] from the `quote` crate, as well as for `Span` itself.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`ToTokens`]: quote::ToTokens</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See the [module documentation] for an example.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [module documentation]: self</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// *This trait is available only if Syn is built with both the `&quot;parsing&quot;` and</span>
-<span class="doccomment">/// `&quot;printing&quot;` features.*</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Spanned</span> {
-    <span class="doccomment">/// Returns a `Span` covering the complete contents of this syntax tree</span>
-    <span class="doccomment">/// node, or [`Span::call_site()`] if this node is empty.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Span::call_site()`]: proc_macro2::Span::call_site</span>
-    <span class="kw">fn</span> <span class="ident">span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Span</span>;
+<span class="doccomment">/// A trait that can provide the `Span` of the complete contents of a syntax
+/// tree node.
+///
+/// This trait is automatically implemented for all types that implement
+/// [`ToTokens`] from the `quote` crate, as well as for `Span` itself.
+///
+/// [`ToTokens`]: quote::ToTokens
+///
+/// See the [module documentation] for an example.
+///
+/// [module documentation]: self
+///
+/// *This trait is available only if Syn is built with both the `&quot;parsing&quot;` and
+/// `&quot;printing&quot;` features.*
+</span><span class="kw">pub trait </span>Spanned {
+    <span class="doccomment">/// Returns a `Span` covering the complete contents of this syntax tree
+    /// node, or [`Span::call_site()`] if this node is empty.
+    ///
+    /// [`Span::call_site()`]: proc_macro2::Span::call_site
+    </span><span class="kw">fn </span>span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Span;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">ToTokens</span><span class="op">&gt;</span> <span class="ident">Spanned</span> <span class="kw">for</span> <span class="ident">T</span> {
-    <span class="kw">fn</span> <span class="ident">span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Span</span> {
-        <span class="self">self</span>.<span class="ident">__span</span>()
+<span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized + ToTokens&gt; Spanned <span class="kw">for </span>T {
+    <span class="kw">fn </span>span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Span {
+        <span class="self">self</span>.__span()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="syn" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

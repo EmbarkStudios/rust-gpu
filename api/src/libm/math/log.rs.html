@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/log.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>log.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/log.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>log.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -121,8 +115,8 @@
 <span id="115">115</span>
 <span id="116">116</span>
 <span id="117">117</span>
-</pre><pre class="rust"><code><span class="comment">/* origin: FreeBSD /usr/src/lib/msun/src/e_log.c */</span>
-<span class="comment">/*
+</pre><pre class="rust"><code><span class="comment">/* origin: FreeBSD /usr/src/lib/msun/src/e_log.c */
+/*
  * ====================================================
  * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
  *
@@ -131,8 +125,8 @@
  * software is freely granted, provided that this notice
  * is preserved.
  * ====================================================
- */</span>
-<span class="comment">/* log(x)
+ */
+/* log(x)
  * Return the logarithm of x
  *
  * Method :
@@ -181,63 +175,62 @@
  * constants. The decimal values may be used, provided that the
  * compiler will convert from decimal to binary accurately enough
  * to produce the hexadecimal values shown.
- */</span>
+ */
 
-<span class="kw">const</span> <span class="ident">LN2_HI</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">6.93147180369123816490e-01</span>; <span class="comment">/* 3fe62e42 fee00000 */</span>
-<span class="kw">const</span> <span class="ident">LN2_LO</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">1.90821492927058770002e-10</span>; <span class="comment">/* 3dea39ef 35793c76 */</span>
-<span class="kw">const</span> <span class="ident">LG1</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">6.666666666666735130e-01</span>; <span class="comment">/* 3FE55555 55555593 */</span>
-<span class="kw">const</span> <span class="ident">LG2</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">3.999999999940941908e-01</span>; <span class="comment">/* 3FD99999 9997FA04 */</span>
-<span class="kw">const</span> <span class="ident">LG3</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">2.857142874366239149e-01</span>; <span class="comment">/* 3FD24924 94229359 */</span>
-<span class="kw">const</span> <span class="ident">LG4</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">2.222219843214978396e-01</span>; <span class="comment">/* 3FCC71C5 1D8E78AF */</span>
-<span class="kw">const</span> <span class="ident">LG5</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">1.818357216161805012e-01</span>; <span class="comment">/* 3FC74664 96CB03DE */</span>
-<span class="kw">const</span> <span class="ident">LG6</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">1.531383769920937332e-01</span>; <span class="comment">/* 3FC39A09 D078C69F */</span>
-<span class="kw">const</span> <span class="ident">LG7</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">1.479819860511658591e-01</span>; <span class="comment">/* 3FC2F112 DF3E5244 */</span>
+</span><span class="kw">const </span>LN2_HI: f64 = <span class="number">6.93147180369123816490e-01</span>; <span class="comment">/* 3fe62e42 fee00000 */
+</span><span class="kw">const </span>LN2_LO: f64 = <span class="number">1.90821492927058770002e-10</span>; <span class="comment">/* 3dea39ef 35793c76 */
+</span><span class="kw">const </span>LG1: f64 = <span class="number">6.666666666666735130e-01</span>; <span class="comment">/* 3FE55555 55555593 */
+</span><span class="kw">const </span>LG2: f64 = <span class="number">3.999999999940941908e-01</span>; <span class="comment">/* 3FD99999 9997FA04 */
+</span><span class="kw">const </span>LG3: f64 = <span class="number">2.857142874366239149e-01</span>; <span class="comment">/* 3FD24924 94229359 */
+</span><span class="kw">const </span>LG4: f64 = <span class="number">2.222219843214978396e-01</span>; <span class="comment">/* 3FCC71C5 1D8E78AF */
+</span><span class="kw">const </span>LG5: f64 = <span class="number">1.818357216161805012e-01</span>; <span class="comment">/* 3FC74664 96CB03DE */
+</span><span class="kw">const </span>LG6: f64 = <span class="number">1.531383769920937332e-01</span>; <span class="comment">/* 3FC39A09 D078C69F */
+</span><span class="kw">const </span>LG7: f64 = <span class="number">1.479819860511658591e-01</span>; <span class="comment">/* 3FC2F112 DF3E5244 */
 
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
-    <span class="kw">let</span> <span class="ident">x1p54</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x4350000000000000</span>); <span class="comment">// 0x1p54 === 2 ^ 54</span>
+</span><span class="attribute">#[cfg_attr(all(test, assert_no_panic), no_panic::no_panic)]
+</span><span class="kw">pub fn </span>log(<span class="kw-2">mut </span>x: f64) -&gt; f64 {
+    <span class="kw">let </span>x1p54 = f64::from_bits(<span class="number">0x4350000000000000</span>); <span class="comment">// 0x1p54 === 2 ^ 54
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ui</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hx</span>: <span class="ident">u32</span> <span class="op">=</span> (<span class="ident">ui</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">k</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">0</span>;
+    </span><span class="kw">let </span><span class="kw-2">mut </span>ui = x.to_bits();
+    <span class="kw">let </span><span class="kw-2">mut </span>hx: u32 = (ui &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32;
+    <span class="kw">let </span><span class="kw-2">mut </span>k: i32 = <span class="number">0</span>;
 
-    <span class="kw">if</span> (<span class="ident">hx</span> <span class="op">&lt;</span> <span class="number">0x00100000</span>) <span class="op">|</span><span class="op">|</span> ((<span class="ident">hx</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) {
-        <span class="comment">/* x &lt; 2**-126  */</span>
-        <span class="kw">if</span> <span class="ident">ui</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="op">-</span><span class="number">1.</span> <span class="op">/</span> (<span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span>); <span class="comment">/* log(+-0)=-inf */</span>
-        }
-        <span class="kw">if</span> <span class="ident">hx</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> (<span class="ident">x</span> <span class="op">-</span> <span class="ident">x</span>) <span class="op">/</span> <span class="number">0.0</span>; <span class="comment">/* log(-#) = NaN */</span>
-        }
-        <span class="comment">/* subnormal number, scale x up */</span>
-        <span class="ident">k</span> <span class="op">-</span><span class="op">=</span> <span class="number">54</span>;
-        <span class="ident">x</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">x1p54</span>;
-        <span class="ident">ui</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
-        <span class="ident">hx</span> <span class="op">=</span> (<span class="ident">ui</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hx</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x7ff00000</span> {
-        <span class="kw">return</span> <span class="ident">x</span>;
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hx</span> <span class="op">==</span> <span class="number">0x3ff00000</span> <span class="op">&amp;&amp;</span> <span class="ident">ui</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="number">0.</span>;
+    <span class="kw">if </span>(hx &lt; <span class="number">0x00100000</span>) || ((hx &gt;&gt; <span class="number">31</span>) != <span class="number">0</span>) {
+        <span class="comment">/* x &lt; 2**-126  */
+        </span><span class="kw">if </span>ui &lt;&lt; <span class="number">1 </span>== <span class="number">0 </span>{
+            <span class="kw">return </span>-<span class="number">1. </span>/ (x * x); <span class="comment">/* log(+-0)=-inf */
+        </span>}
+        <span class="kw">if </span>hx &gt;&gt; <span class="number">31 </span>!= <span class="number">0 </span>{
+            <span class="kw">return </span>(x - x) / <span class="number">0.0</span>; <span class="comment">/* log(-#) = NaN */
+        </span>}
+        <span class="comment">/* subnormal number, scale x up */
+        </span>k -= <span class="number">54</span>;
+        x <span class="kw-2">*</span>= x1p54;
+        ui = x.to_bits();
+        hx = (ui &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32;
+    } <span class="kw">else if </span>hx &gt;= <span class="number">0x7ff00000 </span>{
+        <span class="kw">return </span>x;
+    } <span class="kw">else if </span>hx == <span class="number">0x3ff00000 </span>&amp;&amp; ui &lt;&lt; <span class="number">32 </span>== <span class="number">0 </span>{
+        <span class="kw">return </span><span class="number">0.</span>;
     }
 
-    <span class="comment">/* reduce x into [sqrt(2)/2, sqrt(2)] */</span>
-    <span class="ident">hx</span> <span class="op">+</span><span class="op">=</span> <span class="number">0x3ff00000</span> <span class="op">-</span> <span class="number">0x3fe6a09e</span>;
-    <span class="ident">k</span> <span class="op">+</span><span class="op">=</span> ((<span class="ident">hx</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">20</span>) <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">-</span> <span class="number">0x3ff</span>;
-    <span class="ident">hx</span> <span class="op">=</span> (<span class="ident">hx</span> <span class="op">&amp;</span> <span class="number">0x000fffff</span>) <span class="op">+</span> <span class="number">0x3fe6a09e</span>;
-    <span class="ident">ui</span> <span class="op">=</span> ((<span class="ident">hx</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>) <span class="op">|</span> (<span class="ident">ui</span> <span class="op">&amp;</span> <span class="number">0xffffffff</span>);
-    <span class="ident">x</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="ident">ui</span>);
+    <span class="comment">/* reduce x into [sqrt(2)/2, sqrt(2)] */
+    </span>hx += <span class="number">0x3ff00000 </span>- <span class="number">0x3fe6a09e</span>;
+    k += ((hx &gt;&gt; <span class="number">20</span>) <span class="kw">as </span>i32) - <span class="number">0x3ff</span>;
+    hx = (hx &amp; <span class="number">0x000fffff</span>) + <span class="number">0x3fe6a09e</span>;
+    ui = ((hx <span class="kw">as </span>u64) &lt;&lt; <span class="number">32</span>) | (ui &amp; <span class="number">0xffffffff</span>);
+    x = f64::from_bits(ui);
 
-    <span class="kw">let</span> <span class="ident">f</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">-</span> <span class="number">1.0</span>;
-    <span class="kw">let</span> <span class="ident">hfsq</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">0.5</span> <span class="op">*</span> <span class="ident">f</span> <span class="op">*</span> <span class="ident">f</span>;
-    <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f</span> <span class="op">/</span> (<span class="number">2.0</span> <span class="op">+</span> <span class="ident">f</span>);
-    <span class="kw">let</span> <span class="ident">z</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">s</span> <span class="op">*</span> <span class="ident">s</span>;
-    <span class="kw">let</span> <span class="ident">w</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">z</span>;
-    <span class="kw">let</span> <span class="ident">t1</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">w</span> <span class="op">*</span> (<span class="ident">LG2</span> <span class="op">+</span> <span class="ident">w</span> <span class="op">*</span> (<span class="ident">LG4</span> <span class="op">+</span> <span class="ident">w</span> <span class="op">*</span> <span class="ident">LG6</span>));
-    <span class="kw">let</span> <span class="ident">t2</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">LG1</span> <span class="op">+</span> <span class="ident">w</span> <span class="op">*</span> (<span class="ident">LG3</span> <span class="op">+</span> <span class="ident">w</span> <span class="op">*</span> (<span class="ident">LG5</span> <span class="op">+</span> <span class="ident">w</span> <span class="op">*</span> <span class="ident">LG7</span>)));
-    <span class="kw">let</span> <span class="ident">r</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">t2</span> <span class="op">+</span> <span class="ident">t1</span>;
-    <span class="kw">let</span> <span class="ident">dk</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">k</span> <span class="kw">as</span> <span class="ident">f64</span>;
-    <span class="ident">s</span> <span class="op">*</span> (<span class="ident">hfsq</span> <span class="op">+</span> <span class="ident">r</span>) <span class="op">+</span> <span class="ident">dk</span> <span class="op">*</span> <span class="ident">LN2_LO</span> <span class="op">-</span> <span class="ident">hfsq</span> <span class="op">+</span> <span class="ident">f</span> <span class="op">+</span> <span class="ident">dk</span> <span class="op">*</span> <span class="ident">LN2_HI</span>
+    <span class="kw">let </span>f: f64 = x - <span class="number">1.0</span>;
+    <span class="kw">let </span>hfsq: f64 = <span class="number">0.5 </span>* f * f;
+    <span class="kw">let </span>s: f64 = f / (<span class="number">2.0 </span>+ f);
+    <span class="kw">let </span>z: f64 = s * s;
+    <span class="kw">let </span>w: f64 = z * z;
+    <span class="kw">let </span>t1: f64 = w * (LG2 + w * (LG4 + w * LG6));
+    <span class="kw">let </span>t2: f64 = z * (LG1 + w * (LG3 + w * (LG5 + w * LG7)));
+    <span class="kw">let </span>r: f64 = t2 + t1;
+    <span class="kw">let </span>dk: f64 = k <span class="kw">as </span>f64;
+    s * (hfsq + r) + dk * LN2_LO - hfsq + f + dk * LN2_HI
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

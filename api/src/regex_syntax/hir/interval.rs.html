@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/hir/interval.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>interval.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/hir/interval.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>interval.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../regex_syntax/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -524,526 +518,525 @@
 <span id="518">518</span>
 <span id="519">519</span>
 <span id="520">520</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::char</span>;
-<span class="kw">use</span> <span class="ident">std::cmp</span>;
-<span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
-<span class="kw">use</span> <span class="ident">std::slice</span>;
-<span class="kw">use</span> <span class="ident">std::u8</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::char;
+<span class="kw">use </span>std::cmp;
+<span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::slice;
+<span class="kw">use </span>std::u8;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::unicode</span>;
+<span class="kw">use </span><span class="kw">crate</span>::unicode;
 
-<span class="comment">// This module contains an *internal* implementation of interval sets.</span>
-<span class="comment">//</span>
-<span class="comment">// The primary invariant that interval sets guards is canonical ordering. That</span>
-<span class="comment">// is, every interval set contains an ordered sequence of intervals where</span>
-<span class="comment">// no two intervals are overlapping or adjacent. While this invariant is</span>
-<span class="comment">// occasionally broken within the implementation, it should be impossible for</span>
-<span class="comment">// callers to observe it.</span>
-<span class="comment">//</span>
-<span class="comment">// Since case folding (as implemented below) breaks that invariant, we roll</span>
-<span class="comment">// that into this API even though it is a little out of place in an otherwise</span>
-<span class="comment">// generic interval set. (Hence the reason why the `unicode` module is imported</span>
-<span class="comment">// here.)</span>
-<span class="comment">//</span>
-<span class="comment">// Some of the implementation complexity here is a result of me wanting to</span>
-<span class="comment">// preserve the sequential representation without using additional memory.</span>
-<span class="comment">// In many cases, we do use linear extra memory, but it is at most 2x and it</span>
-<span class="comment">// is amortized. If we relaxed the memory requirements, this implementation</span>
-<span class="comment">// could become much simpler. The extra memory is honestly probably OK, but</span>
-<span class="comment">// character classes (especially of the Unicode variety) can become quite</span>
-<span class="comment">// large, and it would be nice to keep regex compilation snappy even in debug</span>
-<span class="comment">// builds. (In the past, I have been careless with this area of code and it has</span>
-<span class="comment">// caused slow regex compilations in debug mode, so this isn&#39;t entirely</span>
-<span class="comment">// unwarranted.)</span>
-<span class="comment">//</span>
-<span class="comment">// Tests on this are relegated to the public API of HIR in src/hir.rs.</span>
+<span class="comment">// This module contains an *internal* implementation of interval sets.
+//
+// The primary invariant that interval sets guards is canonical ordering. That
+// is, every interval set contains an ordered sequence of intervals where
+// no two intervals are overlapping or adjacent. While this invariant is
+// occasionally broken within the implementation, it should be impossible for
+// callers to observe it.
+//
+// Since case folding (as implemented below) breaks that invariant, we roll
+// that into this API even though it is a little out of place in an otherwise
+// generic interval set. (Hence the reason why the `unicode` module is imported
+// here.)
+//
+// Some of the implementation complexity here is a result of me wanting to
+// preserve the sequential representation without using additional memory.
+// In many cases, we do use linear extra memory, but it is at most 2x and it
+// is amortized. If we relaxed the memory requirements, this implementation
+// could become much simpler. The extra memory is honestly probably OK, but
+// character classes (especially of the Unicode variety) can become quite
+// large, and it would be nice to keep regex compilation snappy even in debug
+// builds. (In the past, I have been careless with this area of code and it has
+// caused slow regex compilations in debug mode, so this isn&#39;t entirely
+// unwarranted.)
+//
+// Tests on this are relegated to the public API of HIR in src/hir.rs.
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntervalSet</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
-    <span class="ident">ranges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
+</span><span class="attribute">#[derive(Clone, Debug, Eq, PartialEq)]
+</span><span class="kw">pub struct </span>IntervalSet&lt;I&gt; {
+    ranges: Vec&lt;I&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Interval</span><span class="op">&gt;</span> <span class="ident">IntervalSet</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a new set from a sequence of intervals. Each interval is</span>
-    <span class="doccomment">/// specified as a pair of bounds, where both bounds are inclusive.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The given ranges do not need to be in any specific order, and ranges</span>
-    <span class="doccomment">/// may overlap.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">I</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">intervals</span>: <span class="ident">T</span>) -&gt; <span class="ident">IntervalSet</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">set</span> <span class="op">=</span> <span class="ident">IntervalSet</span> { <span class="ident">ranges</span>: <span class="ident">intervals</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>() };
-        <span class="ident">set</span>.<span class="ident">canonicalize</span>();
-        <span class="ident">set</span>
+<span class="kw">impl</span>&lt;I: Interval&gt; IntervalSet&lt;I&gt; {
+    <span class="doccomment">/// Create a new set from a sequence of intervals. Each interval is
+    /// specified as a pair of bounds, where both bounds are inclusive.
+    ///
+    /// The given ranges do not need to be in any specific order, and ranges
+    /// may overlap.
+    </span><span class="kw">pub fn </span>new&lt;T: IntoIterator&lt;Item = I&gt;&gt;(intervals: T) -&gt; IntervalSet&lt;I&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>set = IntervalSet { ranges: intervals.into_iter().collect() };
+        set.canonicalize();
+        set
     }
 
-    <span class="doccomment">/// Add a new interval to this set.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">interval</span>: <span class="ident">I</span>) {
-        <span class="comment">// TODO: This could be faster. e.g., Push the interval such that</span>
-        <span class="comment">// it preserves canonicalization.</span>
-        <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">interval</span>);
-        <span class="self">self</span>.<span class="ident">canonicalize</span>();
+    <span class="doccomment">/// Add a new interval to this set.
+    </span><span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, interval: I) {
+        <span class="comment">// TODO: This could be faster. e.g., Push the interval such that
+        // it preserves canonicalization.
+        </span><span class="self">self</span>.ranges.push(interval);
+        <span class="self">self</span>.canonicalize();
     }
 
-    <span class="doccomment">/// Return an iterator over all intervals in this set.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The iterator yields intervals in ascending order.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">IntervalSetIter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">I</span><span class="op">&gt;</span> {
-        <span class="ident">IntervalSetIter</span>(<span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">iter</span>())
+    <span class="doccomment">/// Return an iterator over all intervals in this set.
+    ///
+    /// The iterator yields intervals in ascending order.
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; IntervalSetIter&lt;<span class="lifetime">&#39;_</span>, I&gt; {
+        IntervalSetIter(<span class="self">self</span>.ranges.iter())
     }
 
-    <span class="doccomment">/// Return an immutable slice of intervals in this set.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The sequence returned is in canonical ordering.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">intervals</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">I</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ranges</span>
+    <span class="doccomment">/// Return an immutable slice of intervals in this set.
+    ///
+    /// The sequence returned is in canonical ordering.
+    </span><span class="kw">pub fn </span>intervals(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[I] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.ranges
     }
 
-    <span class="doccomment">/// Expand this interval set such that it contains all case folded</span>
-    <span class="doccomment">/// characters. For example, if this class consists of the range `a-z`,</span>
-    <span class="doccomment">/// then applying case folding will result in the class containing both the</span>
-    <span class="doccomment">/// ranges `a-z` and `A-Z`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This returns an error if the necessary case mapping data is not</span>
-    <span class="doccomment">/// available.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">case_fold_simple</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">unicode::CaseFoldError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">len</span>();
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">len</span> {
-            <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">i</span>];
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">range</span>.<span class="ident">case_fold_simple</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">ranges</span>) {
-                <span class="self">self</span>.<span class="ident">canonicalize</span>();
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>);
+    <span class="doccomment">/// Expand this interval set such that it contains all case folded
+    /// characters. For example, if this class consists of the range `a-z`,
+    /// then applying case folding will result in the class containing both the
+    /// ranges `a-z` and `A-Z`.
+    ///
+    /// This returns an error if the necessary case mapping data is not
+    /// available.
+    </span><span class="kw">pub fn </span>case_fold_simple(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), unicode::CaseFoldError&gt; {
+        <span class="kw">let </span>len = <span class="self">self</span>.ranges.len();
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..len {
+            <span class="kw">let </span>range = <span class="self">self</span>.ranges[i];
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = range.case_fold_simple(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ranges) {
+                <span class="self">self</span>.canonicalize();
+                <span class="kw">return </span><span class="prelude-val">Err</span>(err);
             }
         }
-        <span class="self">self</span>.<span class="ident">canonicalize</span>();
+        <span class="self">self</span>.canonicalize();
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Union this set with the given set, in place.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">union</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">IntervalSet</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>) {
-        <span class="comment">// This could almost certainly be done more efficiently.</span>
-        <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">ranges</span>);
-        <span class="self">self</span>.<span class="ident">canonicalize</span>();
+    <span class="doccomment">/// Union this set with the given set, in place.
+    </span><span class="kw">pub fn </span>union(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>IntervalSet&lt;I&gt;) {
+        <span class="comment">// This could almost certainly be done more efficiently.
+        </span><span class="self">self</span>.ranges.extend(<span class="kw-2">&amp;</span>other.ranges);
+        <span class="self">self</span>.canonicalize();
     }
 
-    <span class="doccomment">/// Intersect this set with the given set, in place.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">intersect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">IntervalSet</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">is_empty</span>() {
+    <span class="doccomment">/// Intersect this set with the given set, in place.
+    </span><span class="kw">pub fn </span>intersect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>IntervalSet&lt;I&gt;) {
+        <span class="kw">if </span><span class="self">self</span>.ranges.is_empty() {
             <span class="kw">return</span>;
         }
-        <span class="kw">if</span> <span class="ident">other</span>.<span class="ident">ranges</span>.<span class="ident">is_empty</span>() {
-            <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">clear</span>();
+        <span class="kw">if </span>other.ranges.is_empty() {
+            <span class="self">self</span>.ranges.clear();
             <span class="kw">return</span>;
         }
 
-        <span class="comment">// There should be a way to do this in-place with constant memory,</span>
-        <span class="comment">// but I couldn&#39;t figure out a simple way to do it. So just append</span>
-        <span class="comment">// the intersection to the end of this range, and then drain it before</span>
-        <span class="comment">// we&#39;re done.</span>
-        <span class="kw">let</span> <span class="ident">drain_end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">len</span>();
+        <span class="comment">// There should be a way to do this in-place with constant memory,
+        // but I couldn&#39;t figure out a simple way to do it. So just append
+        // the intersection to the end of this range, and then drain it before
+        // we&#39;re done.
+        </span><span class="kw">let </span>drain_end = <span class="self">self</span>.ranges.len();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ita</span> <span class="op">=</span> <span class="number">0</span>..<span class="ident">drain_end</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">itb</span> <span class="op">=</span> <span class="number">0</span>..<span class="ident">other</span>.<span class="ident">ranges</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ita</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">itb</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>();
-        <span class="kw">loop</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ab</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">a</span>].<span class="ident">intersect</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">ranges</span>[<span class="ident">b</span>]) {
-                <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">ab</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>ita = <span class="number">0</span>..drain_end;
+        <span class="kw">let </span><span class="kw-2">mut </span>itb = <span class="number">0</span>..other.ranges.len();
+        <span class="kw">let </span><span class="kw-2">mut </span>a = ita.next().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>b = itb.next().unwrap();
+        <span class="kw">loop </span>{
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(ab) = <span class="self">self</span>.ranges[a].intersect(<span class="kw-2">&amp;</span>other.ranges[b]) {
+                <span class="self">self</span>.ranges.push(ab);
             }
-            <span class="kw">let</span> (<span class="ident">it</span>, <span class="ident">aorb</span>) <span class="op">=</span>
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">a</span>].<span class="ident">upper</span>() <span class="op">&lt;</span> <span class="ident">other</span>.<span class="ident">ranges</span>[<span class="ident">b</span>].<span class="ident">upper</span>() {
-                    (<span class="kw-2">&amp;mut</span> <span class="ident">ita</span>, <span class="kw-2">&amp;mut</span> <span class="ident">a</span>)
-                } <span class="kw">else</span> {
-                    (<span class="kw-2">&amp;mut</span> <span class="ident">itb</span>, <span class="kw-2">&amp;mut</span> <span class="ident">b</span>)
+            <span class="kw">let </span>(it, aorb) =
+                <span class="kw">if </span><span class="self">self</span>.ranges[a].upper() &lt; other.ranges[b].upper() {
+                    (<span class="kw-2">&amp;mut </span>ita, <span class="kw-2">&amp;mut </span>a)
+                } <span class="kw">else </span>{
+                    (<span class="kw-2">&amp;mut </span>itb, <span class="kw-2">&amp;mut </span>b)
                 };
-            <span class="kw">match</span> <span class="ident">it</span>.<span class="ident">next</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; <span class="kw-2">*</span><span class="ident">aorb</span> <span class="op">=</span> <span class="ident">v</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="kw">break</span>,
+            <span class="kw">match </span>it.next() {
+                <span class="prelude-val">Some</span>(v) =&gt; <span class="kw-2">*</span>aorb = v,
+                <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
             }
         }
-        <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">drain</span>(..<span class="ident">drain_end</span>);
+        <span class="self">self</span>.ranges.drain(..drain_end);
     }
 
-    <span class="doccomment">/// Subtract the given set from this set, in place.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">difference</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">IntervalSet</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">other</span>.<span class="ident">ranges</span>.<span class="ident">is_empty</span>() {
+    <span class="doccomment">/// Subtract the given set from this set, in place.
+    </span><span class="kw">pub fn </span>difference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>IntervalSet&lt;I&gt;) {
+        <span class="kw">if </span><span class="self">self</span>.ranges.is_empty() || other.ranges.is_empty() {
             <span class="kw">return</span>;
         }
 
-        <span class="comment">// This algorithm is (to me) surprisingly complex. A search of the</span>
-        <span class="comment">// interwebs indicate that this is a potentially interesting problem.</span>
-        <span class="comment">// Folks seem to suggest interval or segment trees, but I&#39;d like to</span>
-        <span class="comment">// avoid the overhead (both runtime and conceptual) of that.</span>
-        <span class="comment">//</span>
-        <span class="comment">// The following is basically my Shitty First Draft. Therefore, in</span>
-        <span class="comment">// order to grok it, you probably need to read each line carefully.</span>
-        <span class="comment">// Simplifications are most welcome!</span>
-        <span class="comment">//</span>
-        <span class="comment">// Remember, we can assume the canonical format invariant here, which</span>
-        <span class="comment">// says that all ranges are sorted, not overlapping and not adjacent in</span>
-        <span class="comment">// each class.</span>
-        <span class="kw">let</span> <span class="ident">drain_end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">a</span>, <span class="kw-2">mut</span> <span class="ident">b</span>) <span class="op">=</span> (<span class="number">0</span>, <span class="number">0</span>);
-        <span class="lifetime">&#39;LOOP</span>: <span class="kw">while</span> <span class="ident">a</span> <span class="op">&lt;</span> <span class="ident">drain_end</span> <span class="op">&amp;&amp;</span> <span class="ident">b</span> <span class="op">&lt;</span> <span class="ident">other</span>.<span class="ident">ranges</span>.<span class="ident">len</span>() {
-            <span class="comment">// Basically, the easy cases are when neither range overlaps with</span>
-            <span class="comment">// each other. If the `b` range is less than our current `a`</span>
-            <span class="comment">// range, then we can skip it and move on.</span>
-            <span class="kw">if</span> <span class="ident">other</span>.<span class="ident">ranges</span>[<span class="ident">b</span>].<span class="ident">upper</span>() <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">a</span>].<span class="ident">lower</span>() {
-                <span class="ident">b</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="comment">// This algorithm is (to me) surprisingly complex. A search of the
+        // interwebs indicate that this is a potentially interesting problem.
+        // Folks seem to suggest interval or segment trees, but I&#39;d like to
+        // avoid the overhead (both runtime and conceptual) of that.
+        //
+        // The following is basically my Shitty First Draft. Therefore, in
+        // order to grok it, you probably need to read each line carefully.
+        // Simplifications are most welcome!
+        //
+        // Remember, we can assume the canonical format invariant here, which
+        // says that all ranges are sorted, not overlapping and not adjacent in
+        // each class.
+        </span><span class="kw">let </span>drain_end = <span class="self">self</span>.ranges.len();
+        <span class="kw">let </span>(<span class="kw-2">mut </span>a, <span class="kw-2">mut </span>b) = (<span class="number">0</span>, <span class="number">0</span>);
+        <span class="lifetime">&#39;LOOP</span>: <span class="kw">while </span>a &lt; drain_end &amp;&amp; b &lt; other.ranges.len() {
+            <span class="comment">// Basically, the easy cases are when neither range overlaps with
+            // each other. If the `b` range is less than our current `a`
+            // range, then we can skip it and move on.
+            </span><span class="kw">if </span>other.ranges[b].upper() &lt; <span class="self">self</span>.ranges[a].lower() {
+                b += <span class="number">1</span>;
                 <span class="kw">continue</span>;
             }
-            <span class="comment">// ... similarly for the `a` range. If it&#39;s less than the smallest</span>
-            <span class="comment">// `b` range, then we can add it as-is.</span>
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">a</span>].<span class="ident">upper</span>() <span class="op">&lt;</span> <span class="ident">other</span>.<span class="ident">ranges</span>[<span class="ident">b</span>].<span class="ident">lower</span>() {
-                <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">a</span>];
-                <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">range</span>);
-                <span class="ident">a</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            <span class="comment">// ... similarly for the `a` range. If it&#39;s less than the smallest
+            // `b` range, then we can add it as-is.
+            </span><span class="kw">if </span><span class="self">self</span>.ranges[a].upper() &lt; other.ranges[b].lower() {
+                <span class="kw">let </span>range = <span class="self">self</span>.ranges[a];
+                <span class="self">self</span>.ranges.push(range);
+                a += <span class="number">1</span>;
                 <span class="kw">continue</span>;
             }
-            <span class="comment">// Otherwise, we have overlapping ranges.</span>
-            <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">a</span>].<span class="ident">is_intersection_empty</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">ranges</span>[<span class="ident">b</span>]));
+            <span class="comment">// Otherwise, we have overlapping ranges.
+            </span><span class="macro">assert!</span>(!<span class="self">self</span>.ranges[a].is_intersection_empty(<span class="kw-2">&amp;</span>other.ranges[b]));
 
-            <span class="comment">// This part is tricky and was non-obvious to me without looking</span>
-            <span class="comment">// at explicit examples (see the tests). The trickiness stems from</span>
-            <span class="comment">// two things: 1) subtracting a range from another range could</span>
-            <span class="comment">// yield two ranges and 2) after subtracting a range, it&#39;s possible</span>
-            <span class="comment">// that future ranges can have an impact. The loop below advances</span>
-            <span class="comment">// the `b` ranges until they can&#39;t possible impact the current</span>
-            <span class="comment">// range.</span>
-            <span class="comment">//</span>
-            <span class="comment">// For example, if our `a` range is `a-t` and our next three `b`</span>
-            <span class="comment">// ranges are `a-c`, `g-i`, `r-t` and `x-z`, then we need to apply</span>
-            <span class="comment">// subtraction three times before moving on to the next `a` range.</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">a</span>];
-            <span class="kw">while</span> <span class="ident">b</span> <span class="op">&lt;</span> <span class="ident">other</span>.<span class="ident">ranges</span>.<span class="ident">len</span>()
-                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">range</span>.<span class="ident">is_intersection_empty</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">ranges</span>[<span class="ident">b</span>])
+            <span class="comment">// This part is tricky and was non-obvious to me without looking
+            // at explicit examples (see the tests). The trickiness stems from
+            // two things: 1) subtracting a range from another range could
+            // yield two ranges and 2) after subtracting a range, it&#39;s possible
+            // that future ranges can have an impact. The loop below advances
+            // the `b` ranges until they can&#39;t possible impact the current
+            // range.
+            //
+            // For example, if our `a` range is `a-t` and our next three `b`
+            // ranges are `a-c`, `g-i`, `r-t` and `x-z`, then we need to apply
+            // subtraction three times before moving on to the next `a` range.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>range = <span class="self">self</span>.ranges[a];
+            <span class="kw">while </span>b &lt; other.ranges.len()
+                &amp;&amp; !range.is_intersection_empty(<span class="kw-2">&amp;</span>other.ranges[b])
             {
-                <span class="kw">let</span> <span class="ident">old_range</span> <span class="op">=</span> <span class="ident">range</span>;
-                <span class="ident">range</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">range</span>.<span class="ident">difference</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">ranges</span>[<span class="ident">b</span>]) {
+                <span class="kw">let </span>old_range = range;
+                range = <span class="kw">match </span>range.difference(<span class="kw-2">&amp;</span>other.ranges[b]) {
                     (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; {
-                        <span class="comment">// We lost the entire range, so move on to the next</span>
-                        <span class="comment">// without adding this one.</span>
-                        <span class="ident">a</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                        <span class="kw">continue</span> <span class="lifetime">&#39;LOOP</span>;
+                        <span class="comment">// We lost the entire range, so move on to the next
+                        // without adding this one.
+                        </span>a += <span class="number">1</span>;
+                        <span class="kw">continue </span><span class="lifetime">&#39;LOOP</span>;
                     }
-                    (<span class="prelude-val">Some</span>(<span class="ident">range1</span>), <span class="prelude-val">None</span>) <span class="op">|</span> (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">range1</span>)) =&gt; <span class="ident">range1</span>,
-                    (<span class="prelude-val">Some</span>(<span class="ident">range1</span>), <span class="prelude-val">Some</span>(<span class="ident">range2</span>)) =&gt; {
-                        <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">range1</span>);
-                        <span class="ident">range2</span>
+                    (<span class="prelude-val">Some</span>(range1), <span class="prelude-val">None</span>) | (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(range1)) =&gt; range1,
+                    (<span class="prelude-val">Some</span>(range1), <span class="prelude-val">Some</span>(range2)) =&gt; {
+                        <span class="self">self</span>.ranges.push(range1);
+                        range2
                     }
                 };
-                <span class="comment">// It&#39;s possible that the `b` range has more to contribute</span>
-                <span class="comment">// here. In particular, if it is greater than the original</span>
-                <span class="comment">// range, then it might impact the next `a` range *and* it</span>
-                <span class="comment">// has impacted the current `a` range as much as possible,</span>
-                <span class="comment">// so we can quit. We don&#39;t bump `b` so that the next `a`</span>
-                <span class="comment">// range can apply it.</span>
-                <span class="kw">if</span> <span class="ident">other</span>.<span class="ident">ranges</span>[<span class="ident">b</span>].<span class="ident">upper</span>() <span class="op">&gt;</span> <span class="ident">old_range</span>.<span class="ident">upper</span>() {
+                <span class="comment">// It&#39;s possible that the `b` range has more to contribute
+                // here. In particular, if it is greater than the original
+                // range, then it might impact the next `a` range *and* it
+                // has impacted the current `a` range as much as possible,
+                // so we can quit. We don&#39;t bump `b` so that the next `a`
+                // range can apply it.
+                </span><span class="kw">if </span>other.ranges[b].upper() &gt; old_range.upper() {
                     <span class="kw">break</span>;
                 }
-                <span class="comment">// Otherwise, the next `b` range might apply to the current</span>
-                <span class="comment">// `a` range.</span>
-                <span class="ident">b</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="comment">// Otherwise, the next `b` range might apply to the current
+                // `a` range.
+                </span>b += <span class="number">1</span>;
             }
-            <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">range</span>);
-            <span class="ident">a</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            <span class="self">self</span>.ranges.push(range);
+            a += <span class="number">1</span>;
         }
-        <span class="kw">while</span> <span class="ident">a</span> <span class="op">&lt;</span> <span class="ident">drain_end</span> {
-            <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">a</span>];
-            <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">range</span>);
-            <span class="ident">a</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">while </span>a &lt; drain_end {
+            <span class="kw">let </span>range = <span class="self">self</span>.ranges[a];
+            <span class="self">self</span>.ranges.push(range);
+            a += <span class="number">1</span>;
         }
-        <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">drain</span>(..<span class="ident">drain_end</span>);
+        <span class="self">self</span>.ranges.drain(..drain_end);
     }
 
-    <span class="doccomment">/// Compute the symmetric difference of the two sets, in place.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This computes the symmetric difference of two interval sets. This</span>
-    <span class="doccomment">/// removes all elements in this set that are also in the given set,</span>
-    <span class="doccomment">/// but also adds all elements from the given set that aren&#39;t in this</span>
-    <span class="doccomment">/// set. That is, the set will contain all elements in either set,</span>
-    <span class="doccomment">/// but will not contain any elements that are in both sets.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symmetric_difference</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">IntervalSet</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>) {
-        <span class="comment">// TODO(burntsushi): Fix this so that it amortizes allocation.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">intersection</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>();
-        <span class="ident">intersection</span>.<span class="ident">intersect</span>(<span class="ident">other</span>);
-        <span class="self">self</span>.<span class="ident">union</span>(<span class="ident">other</span>);
-        <span class="self">self</span>.<span class="ident">difference</span>(<span class="kw-2">&amp;</span><span class="ident">intersection</span>);
+    <span class="doccomment">/// Compute the symmetric difference of the two sets, in place.
+    ///
+    /// This computes the symmetric difference of two interval sets. This
+    /// removes all elements in this set that are also in the given set,
+    /// but also adds all elements from the given set that aren&#39;t in this
+    /// set. That is, the set will contain all elements in either set,
+    /// but will not contain any elements that are in both sets.
+    </span><span class="kw">pub fn </span>symmetric_difference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>IntervalSet&lt;I&gt;) {
+        <span class="comment">// TODO(burntsushi): Fix this so that it amortizes allocation.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>intersection = <span class="self">self</span>.clone();
+        intersection.intersect(other);
+        <span class="self">self</span>.union(other);
+        <span class="self">self</span>.difference(<span class="kw-2">&amp;</span>intersection);
     }
 
-    <span class="doccomment">/// Negate this interval set.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// For all `x` where `x` is any element, if `x` was in this set, then it</span>
-    <span class="doccomment">/// will not be in this set after negation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">negate</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">let</span> (<span class="ident">min</span>, <span class="ident">max</span>) <span class="op">=</span> (<span class="ident">I::Bound::min_value</span>(), <span class="ident">I::Bound::max_value</span>());
-            <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">I::create</span>(<span class="ident">min</span>, <span class="ident">max</span>));
+    <span class="doccomment">/// Negate this interval set.
+    ///
+    /// For all `x` where `x` is any element, if `x` was in this set, then it
+    /// will not be in this set after negation.
+    </span><span class="kw">pub fn </span>negate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.ranges.is_empty() {
+            <span class="kw">let </span>(min, max) = (I::Bound::min_value(), I::Bound::max_value());
+            <span class="self">self</span>.ranges.push(I::create(min, max));
             <span class="kw">return</span>;
         }
 
-        <span class="comment">// There should be a way to do this in-place with constant memory,</span>
-        <span class="comment">// but I couldn&#39;t figure out a simple way to do it. So just append</span>
-        <span class="comment">// the negation to the end of this range, and then drain it before</span>
-        <span class="comment">// we&#39;re done.</span>
-        <span class="kw">let</span> <span class="ident">drain_end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">len</span>();
+        <span class="comment">// There should be a way to do this in-place with constant memory,
+        // but I couldn&#39;t figure out a simple way to do it. So just append
+        // the negation to the end of this range, and then drain it before
+        // we&#39;re done.
+        </span><span class="kw">let </span>drain_end = <span class="self">self</span>.ranges.len();
 
-        <span class="comment">// We do checked arithmetic below because of the canonical ordering</span>
-        <span class="comment">// invariant.</span>
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="number">0</span>].<span class="ident">lower</span>() <span class="op">&gt;</span> <span class="ident">I::Bound::min_value</span>() {
-            <span class="kw">let</span> <span class="ident">upper</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="number">0</span>].<span class="ident">lower</span>().<span class="ident">decrement</span>();
-            <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">I::create</span>(<span class="ident">I::Bound::min_value</span>(), <span class="ident">upper</span>));
+        <span class="comment">// We do checked arithmetic below because of the canonical ordering
+        // invariant.
+        </span><span class="kw">if </span><span class="self">self</span>.ranges[<span class="number">0</span>].lower() &gt; I::Bound::min_value() {
+            <span class="kw">let </span>upper = <span class="self">self</span>.ranges[<span class="number">0</span>].lower().decrement();
+            <span class="self">self</span>.ranges.push(I::create(I::Bound::min_value(), upper));
         }
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">1</span>..<span class="ident">drain_end</span> {
-            <span class="kw">let</span> <span class="ident">lower</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">upper</span>().<span class="ident">increment</span>();
-            <span class="kw">let</span> <span class="ident">upper</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">i</span>].<span class="ident">lower</span>().<span class="ident">decrement</span>();
-            <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">I::create</span>(<span class="ident">lower</span>, <span class="ident">upper</span>));
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..drain_end {
+            <span class="kw">let </span>lower = <span class="self">self</span>.ranges[i - <span class="number">1</span>].upper().increment();
+            <span class="kw">let </span>upper = <span class="self">self</span>.ranges[i].lower().decrement();
+            <span class="self">self</span>.ranges.push(I::create(lower, upper));
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">drain_end</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">upper</span>() <span class="op">&lt;</span> <span class="ident">I::Bound::max_value</span>() {
-            <span class="kw">let</span> <span class="ident">lower</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">drain_end</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">upper</span>().<span class="ident">increment</span>();
-            <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">I::create</span>(<span class="ident">lower</span>, <span class="ident">I::Bound::max_value</span>()));
+        <span class="kw">if </span><span class="self">self</span>.ranges[drain_end - <span class="number">1</span>].upper() &lt; I::Bound::max_value() {
+            <span class="kw">let </span>lower = <span class="self">self</span>.ranges[drain_end - <span class="number">1</span>].upper().increment();
+            <span class="self">self</span>.ranges.push(I::create(lower, I::Bound::max_value()));
         }
-        <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">drain</span>(..<span class="ident">drain_end</span>);
+        <span class="self">self</span>.ranges.drain(..drain_end);
     }
 
-    <span class="doccomment">/// Converts this set into a canonical ordering.</span>
-    <span class="kw">fn</span> <span class="ident">canonicalize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_canonical</span>() {
+    <span class="doccomment">/// Converts this set into a canonical ordering.
+    </span><span class="kw">fn </span>canonicalize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.is_canonical() {
             <span class="kw">return</span>;
         }
-        <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">sort</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">is_empty</span>());
+        <span class="self">self</span>.ranges.sort();
+        <span class="macro">assert!</span>(!<span class="self">self</span>.ranges.is_empty());
 
-        <span class="comment">// Is there a way to do this in-place with constant memory? I couldn&#39;t</span>
-        <span class="comment">// figure out a way to do it. So just append the canonicalization to</span>
-        <span class="comment">// the end of this range, and then drain it before we&#39;re done.</span>
-        <span class="kw">let</span> <span class="ident">drain_end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">len</span>();
-        <span class="kw">for</span> <span class="ident">oldi</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">drain_end</span> {
-            <span class="comment">// If we&#39;ve added at least one new range, then check if we can</span>
-            <span class="comment">// merge this range in the previously added range.</span>
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">drain_end</span> {
-                <span class="kw">let</span> (<span class="ident">last</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">split_last_mut</span>().<span class="ident">unwrap</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">union</span>) <span class="op">=</span> <span class="ident">last</span>.<span class="ident">union</span>(<span class="kw-2">&amp;</span><span class="ident">rest</span>[<span class="ident">oldi</span>]) {
-                    <span class="kw-2">*</span><span class="ident">last</span> <span class="op">=</span> <span class="ident">union</span>;
+        <span class="comment">// Is there a way to do this in-place with constant memory? I couldn&#39;t
+        // figure out a way to do it. So just append the canonicalization to
+        // the end of this range, and then drain it before we&#39;re done.
+        </span><span class="kw">let </span>drain_end = <span class="self">self</span>.ranges.len();
+        <span class="kw">for </span>oldi <span class="kw">in </span><span class="number">0</span>..drain_end {
+            <span class="comment">// If we&#39;ve added at least one new range, then check if we can
+            // merge this range in the previously added range.
+            </span><span class="kw">if </span><span class="self">self</span>.ranges.len() &gt; drain_end {
+                <span class="kw">let </span>(last, rest) = <span class="self">self</span>.ranges.split_last_mut().unwrap();
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(union) = last.union(<span class="kw-2">&amp;</span>rest[oldi]) {
+                    <span class="kw-2">*</span>last = union;
                     <span class="kw">continue</span>;
                 }
             }
-            <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ranges</span>[<span class="ident">oldi</span>];
-            <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">push</span>(<span class="ident">range</span>);
+            <span class="kw">let </span>range = <span class="self">self</span>.ranges[oldi];
+            <span class="self">self</span>.ranges.push(range);
         }
-        <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">drain</span>(..<span class="ident">drain_end</span>);
+        <span class="self">self</span>.ranges.drain(..drain_end);
     }
 
-    <span class="doccomment">/// Returns true if and only if this class is in a canonical ordering.</span>
-    <span class="kw">fn</span> <span class="ident">is_canonical</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">for</span> <span class="ident">pair</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">ranges</span>.<span class="ident">windows</span>(<span class="number">2</span>) {
-            <span class="kw">if</span> <span class="ident">pair</span>[<span class="number">0</span>] <span class="op">&gt;</span><span class="op">=</span> <span class="ident">pair</span>[<span class="number">1</span>] {
-                <span class="kw">return</span> <span class="bool-val">false</span>;
+    <span class="doccomment">/// Returns true if and only if this class is in a canonical ordering.
+    </span><span class="kw">fn </span>is_canonical(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">for </span>pair <span class="kw">in </span><span class="self">self</span>.ranges.windows(<span class="number">2</span>) {
+            <span class="kw">if </span>pair[<span class="number">0</span>] &gt;= pair[<span class="number">1</span>] {
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
-            <span class="kw">if</span> <span class="ident">pair</span>[<span class="number">0</span>].<span class="ident">is_contiguous</span>(<span class="kw-2">&amp;</span><span class="ident">pair</span>[<span class="number">1</span>]) {
-                <span class="kw">return</span> <span class="bool-val">false</span>;
+            <span class="kw">if </span>pair[<span class="number">0</span>].is_contiguous(<span class="kw-2">&amp;</span>pair[<span class="number">1</span>]) {
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
         }
-        <span class="bool-val">true</span>
+        <span class="bool-val">true
+    </span>}
+}
+
+<span class="doccomment">/// An iterator over intervals.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>IntervalSetIter&lt;<span class="lifetime">&#39;a</span>, I&gt;(slice::Iter&lt;<span class="lifetime">&#39;a</span>, I&gt;);
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, I&gt; Iterator <span class="kw">for </span>IntervalSetIter&lt;<span class="lifetime">&#39;a</span>, I&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>I;
+
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>I&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.next()
     }
 }
 
-<span class="doccomment">/// An iterator over intervals.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntervalSetIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">slice::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span><span class="op">&gt;</span>);
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">IntervalSetIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">I</span>;
-
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">I</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">next</span>()
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Interval</span>:
-    <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Default</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">PartialOrd</span> <span class="op">+</span> <span class="ident">Ord</span>
+<span class="kw">pub trait </span>Interval:
+    Clone + Copy + Debug + Default + Eq + PartialEq + PartialOrd + Ord
 {
-    <span class="kw">type</span> <span class="ident">Bound</span>: <span class="ident">Bound</span>;
+    <span class="kw">type </span>Bound: Bound;
 
-    <span class="kw">fn</span> <span class="ident">lower</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Bound</span>;
-    <span class="kw">fn</span> <span class="ident">upper</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Bound</span>;
-    <span class="kw">fn</span> <span class="ident">set_lower</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bound</span>: <span class="ident"><span class="self">Self</span>::Bound</span>);
-    <span class="kw">fn</span> <span class="ident">set_upper</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bound</span>: <span class="ident"><span class="self">Self</span>::Bound</span>);
-    <span class="kw">fn</span> <span class="ident">case_fold_simple</span>(
+    <span class="kw">fn </span>lower(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Bound;
+    <span class="kw">fn </span>upper(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Bound;
+    <span class="kw">fn </span>set_lower(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: <span class="self">Self</span>::Bound);
+    <span class="kw">fn </span>set_upper(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: <span class="self">Self</span>::Bound);
+    <span class="kw">fn </span>case_fold_simple(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">intervals</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">unicode::CaseFoldError</span><span class="op">&gt;</span>;
+        intervals: <span class="kw-2">&amp;mut </span>Vec&lt;<span class="self">Self</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), unicode::CaseFoldError&gt;;
 
-    <span class="doccomment">/// Create a new interval.</span>
-    <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">lower</span>: <span class="ident"><span class="self">Self</span>::Bound</span>, <span class="ident">upper</span>: <span class="ident"><span class="self">Self</span>::Bound</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">int</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::default</span>();
-        <span class="kw">if</span> <span class="ident">lower</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">upper</span> {
-            <span class="ident">int</span>.<span class="ident">set_lower</span>(<span class="ident">lower</span>);
-            <span class="ident">int</span>.<span class="ident">set_upper</span>(<span class="ident">upper</span>);
-        } <span class="kw">else</span> {
-            <span class="ident">int</span>.<span class="ident">set_lower</span>(<span class="ident">upper</span>);
-            <span class="ident">int</span>.<span class="ident">set_upper</span>(<span class="ident">lower</span>);
+    <span class="doccomment">/// Create a new interval.
+    </span><span class="kw">fn </span>create(lower: <span class="self">Self</span>::Bound, upper: <span class="self">Self</span>::Bound) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>int = <span class="self">Self</span>::default();
+        <span class="kw">if </span>lower &lt;= upper {
+            int.set_lower(lower);
+            int.set_upper(upper);
+        } <span class="kw">else </span>{
+            int.set_lower(upper);
+            int.set_upper(lower);
         }
-        <span class="ident">int</span>
+        int
     }
 
-    <span class="doccomment">/// Union the given overlapping range into this range.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the two ranges aren&#39;t contiguous, then this returns `None`.</span>
-    <span class="kw">fn</span> <span class="ident">union</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">is_contiguous</span>(<span class="ident">other</span>) {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="doccomment">/// Union the given overlapping range into this range.
+    ///
+    /// If the two ranges aren&#39;t contiguous, then this returns `None`.
+    </span><span class="kw">fn </span>union(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">if </span>!<span class="self">self</span>.is_contiguous(other) {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="kw">let</span> <span class="ident">lower</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="self">self</span>.<span class="ident">lower</span>(), <span class="ident">other</span>.<span class="ident">lower</span>());
-        <span class="kw">let</span> <span class="ident">upper</span> <span class="op">=</span> <span class="ident">cmp::max</span>(<span class="self">self</span>.<span class="ident">upper</span>(), <span class="ident">other</span>.<span class="ident">upper</span>());
-        <span class="prelude-val">Some</span>(<span class="ident"><span class="self">Self</span>::create</span>(<span class="ident">lower</span>, <span class="ident">upper</span>))
+        <span class="kw">let </span>lower = cmp::min(<span class="self">self</span>.lower(), other.lower());
+        <span class="kw">let </span>upper = cmp::max(<span class="self">self</span>.upper(), other.upper());
+        <span class="prelude-val">Some</span>(<span class="self">Self</span>::create(lower, upper))
     }
 
-    <span class="doccomment">/// Intersect this range with the given range and return the result.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the intersection is empty, then this returns `None`.</span>
-    <span class="kw">fn</span> <span class="ident">intersect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">lower</span> <span class="op">=</span> <span class="ident">cmp::max</span>(<span class="self">self</span>.<span class="ident">lower</span>(), <span class="ident">other</span>.<span class="ident">lower</span>());
-        <span class="kw">let</span> <span class="ident">upper</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="self">self</span>.<span class="ident">upper</span>(), <span class="ident">other</span>.<span class="ident">upper</span>());
-        <span class="kw">if</span> <span class="ident">lower</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">upper</span> {
-            <span class="prelude-val">Some</span>(<span class="ident"><span class="self">Self</span>::create</span>(<span class="ident">lower</span>, <span class="ident">upper</span>))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+    <span class="doccomment">/// Intersect this range with the given range and return the result.
+    ///
+    /// If the intersection is empty, then this returns `None`.
+    </span><span class="kw">fn </span>intersect(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>lower = cmp::max(<span class="self">self</span>.lower(), other.lower());
+        <span class="kw">let </span>upper = cmp::min(<span class="self">self</span>.upper(), other.upper());
+        <span class="kw">if </span>lower &lt;= upper {
+            <span class="prelude-val">Some</span>(<span class="self">Self</span>::create(lower, upper))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 
-    <span class="doccomment">/// Subtract the given range from this range and return the resulting</span>
-    <span class="doccomment">/// ranges.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If subtraction would result in an empty range, then no ranges are</span>
-    <span class="doccomment">/// returned.</span>
-    <span class="kw">fn</span> <span class="ident">difference</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_subset</span>(<span class="ident">other</span>) {
-            <span class="kw">return</span> (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
+    <span class="doccomment">/// Subtract the given range from this range and return the resulting
+    /// ranges.
+    ///
+    /// If subtraction would result in an empty range, then no ranges are
+    /// returned.
+    </span><span class="kw">fn </span>difference(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; (<span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;) {
+        <span class="kw">if </span><span class="self">self</span>.is_subset(other) {
+            <span class="kw">return </span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_intersection_empty</span>(<span class="ident">other</span>) {
-            <span class="kw">return</span> (<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">clone</span>()), <span class="prelude-val">None</span>);
+        <span class="kw">if </span><span class="self">self</span>.is_intersection_empty(other) {
+            <span class="kw">return </span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.clone()), <span class="prelude-val">None</span>);
         }
-        <span class="kw">let</span> <span class="ident">add_lower</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">lower</span>() <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">lower</span>();
-        <span class="kw">let</span> <span class="ident">add_upper</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">upper</span>() <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">upper</span>();
-        <span class="comment">// We know this because !self.is_subset(other) and the ranges have</span>
-        <span class="comment">// a non-empty intersection.</span>
-        <span class="macro">assert!</span>(<span class="ident">add_lower</span> <span class="op">|</span><span class="op">|</span> <span class="ident">add_upper</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
-        <span class="kw">if</span> <span class="ident">add_lower</span> {
-            <span class="kw">let</span> <span class="ident">upper</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">lower</span>().<span class="ident">decrement</span>();
-            <span class="ident">ret</span>.<span class="number">0</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident"><span class="self">Self</span>::create</span>(<span class="self">self</span>.<span class="ident">lower</span>(), <span class="ident">upper</span>));
+        <span class="kw">let </span>add_lower = other.lower() &gt; <span class="self">self</span>.lower();
+        <span class="kw">let </span>add_upper = other.upper() &lt; <span class="self">self</span>.upper();
+        <span class="comment">// We know this because !self.is_subset(other) and the ranges have
+        // a non-empty intersection.
+        </span><span class="macro">assert!</span>(add_lower || add_upper);
+        <span class="kw">let </span><span class="kw-2">mut </span>ret = (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
+        <span class="kw">if </span>add_lower {
+            <span class="kw">let </span>upper = other.lower().decrement();
+            ret.<span class="number">0 </span>= <span class="prelude-val">Some</span>(<span class="self">Self</span>::create(<span class="self">self</span>.lower(), upper));
         }
-        <span class="kw">if</span> <span class="ident">add_upper</span> {
-            <span class="kw">let</span> <span class="ident">lower</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">upper</span>().<span class="ident">increment</span>();
-            <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::create</span>(<span class="ident">lower</span>, <span class="self">self</span>.<span class="ident">upper</span>());
-            <span class="kw">if</span> <span class="ident">ret</span>.<span class="number">0</span>.<span class="ident">is_none</span>() {
-                <span class="ident">ret</span>.<span class="number">0</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">range</span>);
-            } <span class="kw">else</span> {
-                <span class="ident">ret</span>.<span class="number">1</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">range</span>);
+        <span class="kw">if </span>add_upper {
+            <span class="kw">let </span>lower = other.upper().increment();
+            <span class="kw">let </span>range = <span class="self">Self</span>::create(lower, <span class="self">self</span>.upper());
+            <span class="kw">if </span>ret.<span class="number">0</span>.is_none() {
+                ret.<span class="number">0 </span>= <span class="prelude-val">Some</span>(range);
+            } <span class="kw">else </span>{
+                ret.<span class="number">1 </span>= <span class="prelude-val">Some</span>(range);
             }
         }
-        <span class="ident">ret</span>
+        ret
     }
 
-    <span class="doccomment">/// Compute the symmetric difference the given range from this range. This</span>
-    <span class="doccomment">/// returns the union of the two ranges minus its intersection.</span>
-    <span class="kw">fn</span> <span class="ident">symmetric_difference</span>(
+    <span class="doccomment">/// Compute the symmetric difference the given range from this range. This
+    /// returns the union of the two ranges minus its intersection.
+    </span><span class="kw">fn </span>symmetric_difference(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>,
-    ) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">union</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">union</span>(<span class="ident">other</span>) {
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> (<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">clone</span>()), <span class="prelude-val">Some</span>(<span class="ident">other</span>.<span class="ident">clone</span>())),
-            <span class="prelude-val">Some</span>(<span class="ident">union</span>) =&gt; <span class="ident">union</span>,
+        other: <span class="kw-2">&amp;</span><span class="self">Self</span>,
+    ) -&gt; (<span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;) {
+        <span class="kw">let </span>union = <span class="kw">match </span><span class="self">self</span>.union(other) {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.clone()), <span class="prelude-val">Some</span>(other.clone())),
+            <span class="prelude-val">Some</span>(union) =&gt; union,
         };
-        <span class="kw">let</span> <span class="ident">intersection</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">intersect</span>(<span class="ident">other</span>) {
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> (<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">clone</span>()), <span class="prelude-val">Some</span>(<span class="ident">other</span>.<span class="ident">clone</span>())),
-            <span class="prelude-val">Some</span>(<span class="ident">intersection</span>) =&gt; <span class="ident">intersection</span>,
+        <span class="kw">let </span>intersection = <span class="kw">match </span><span class="self">self</span>.intersect(other) {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.clone()), <span class="prelude-val">Some</span>(other.clone())),
+            <span class="prelude-val">Some</span>(intersection) =&gt; intersection,
         };
-        <span class="ident">union</span>.<span class="ident">difference</span>(<span class="kw-2">&amp;</span><span class="ident">intersection</span>)
+        union.difference(<span class="kw-2">&amp;</span>intersection)
     }
 
-    <span class="doccomment">/// Returns true if and only if the two ranges are contiguous. Two ranges</span>
-    <span class="doccomment">/// are contiguous if and only if the ranges are either overlapping or</span>
-    <span class="doccomment">/// adjacent.</span>
-    <span class="kw">fn</span> <span class="ident">is_contiguous</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">lower1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lower</span>().<span class="ident">as_u32</span>();
-        <span class="kw">let</span> <span class="ident">upper1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">upper</span>().<span class="ident">as_u32</span>();
-        <span class="kw">let</span> <span class="ident">lower2</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">lower</span>().<span class="ident">as_u32</span>();
-        <span class="kw">let</span> <span class="ident">upper2</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">upper</span>().<span class="ident">as_u32</span>();
-        <span class="ident">cmp::max</span>(<span class="ident">lower1</span>, <span class="ident">lower2</span>) <span class="op">&lt;</span><span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">upper1</span>, <span class="ident">upper2</span>).<span class="ident">saturating_add</span>(<span class="number">1</span>)
+    <span class="doccomment">/// Returns true if and only if the two ranges are contiguous. Two ranges
+    /// are contiguous if and only if the ranges are either overlapping or
+    /// adjacent.
+    </span><span class="kw">fn </span>is_contiguous(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="kw">let </span>lower1 = <span class="self">self</span>.lower().as_u32();
+        <span class="kw">let </span>upper1 = <span class="self">self</span>.upper().as_u32();
+        <span class="kw">let </span>lower2 = other.lower().as_u32();
+        <span class="kw">let </span>upper2 = other.upper().as_u32();
+        cmp::max(lower1, lower2) &lt;= cmp::min(upper1, upper2).saturating_add(<span class="number">1</span>)
     }
 
-    <span class="doccomment">/// Returns true if and only if the intersection of this range and the</span>
-    <span class="doccomment">/// other range is empty.</span>
-    <span class="kw">fn</span> <span class="ident">is_intersection_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> (<span class="ident">lower1</span>, <span class="ident">upper1</span>) <span class="op">=</span> (<span class="self">self</span>.<span class="ident">lower</span>(), <span class="self">self</span>.<span class="ident">upper</span>());
-        <span class="kw">let</span> (<span class="ident">lower2</span>, <span class="ident">upper2</span>) <span class="op">=</span> (<span class="ident">other</span>.<span class="ident">lower</span>(), <span class="ident">other</span>.<span class="ident">upper</span>());
-        <span class="ident">cmp::max</span>(<span class="ident">lower1</span>, <span class="ident">lower2</span>) <span class="op">&gt;</span> <span class="ident">cmp::min</span>(<span class="ident">upper1</span>, <span class="ident">upper2</span>)
+    <span class="doccomment">/// Returns true if and only if the intersection of this range and the
+    /// other range is empty.
+    </span><span class="kw">fn </span>is_intersection_empty(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="kw">let </span>(lower1, upper1) = (<span class="self">self</span>.lower(), <span class="self">self</span>.upper());
+        <span class="kw">let </span>(lower2, upper2) = (other.lower(), other.upper());
+        cmp::max(lower1, lower2) &gt; cmp::min(upper1, upper2)
     }
 
-    <span class="doccomment">/// Returns true if and only if this range is a subset of the other range.</span>
-    <span class="kw">fn</span> <span class="ident">is_subset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> (<span class="ident">lower1</span>, <span class="ident">upper1</span>) <span class="op">=</span> (<span class="self">self</span>.<span class="ident">lower</span>(), <span class="self">self</span>.<span class="ident">upper</span>());
-        <span class="kw">let</span> (<span class="ident">lower2</span>, <span class="ident">upper2</span>) <span class="op">=</span> (<span class="ident">other</span>.<span class="ident">lower</span>(), <span class="ident">other</span>.<span class="ident">upper</span>());
-        (<span class="ident">lower2</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">lower1</span> <span class="op">&amp;&amp;</span> <span class="ident">lower1</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">upper2</span>)
-            <span class="op">&amp;&amp;</span> (<span class="ident">lower2</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">upper1</span> <span class="op">&amp;&amp;</span> <span class="ident">upper1</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">upper2</span>)
+    <span class="doccomment">/// Returns true if and only if this range is a subset of the other range.
+    </span><span class="kw">fn </span>is_subset(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="kw">let </span>(lower1, upper1) = (<span class="self">self</span>.lower(), <span class="self">self</span>.upper());
+        <span class="kw">let </span>(lower2, upper2) = (other.lower(), other.upper());
+        (lower2 &lt;= lower1 &amp;&amp; lower1 &lt;= upper2)
+            &amp;&amp; (lower2 &lt;= upper1 &amp;&amp; upper1 &lt;= upper2)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Bound</span>:
-    <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">PartialOrd</span> <span class="op">+</span> <span class="ident">Ord</span>
+<span class="kw">pub trait </span>Bound:
+    Copy + Clone + Debug + Eq + PartialEq + PartialOrd + Ord
 {
-    <span class="kw">fn</span> <span class="ident">min_value</span>() -&gt; <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">max_value</span>() -&gt; <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">as_u32</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span>;
-    <span class="kw">fn</span> <span class="ident">increment</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">decrement</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span>;
+    <span class="kw">fn </span>min_value() -&gt; <span class="self">Self</span>;
+    <span class="kw">fn </span>max_value() -&gt; <span class="self">Self</span>;
+    <span class="kw">fn </span>as_u32(<span class="self">self</span>) -&gt; u32;
+    <span class="kw">fn </span>increment(<span class="self">self</span>) -&gt; <span class="self">Self</span>;
+    <span class="kw">fn </span>decrement(<span class="self">self</span>) -&gt; <span class="self">Self</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">Bound</span> <span class="kw">for</span> <span class="ident">u8</span> {
-    <span class="kw">fn</span> <span class="ident">min_value</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">u8::MIN</span>
+<span class="kw">impl </span>Bound <span class="kw">for </span>u8 {
+    <span class="kw">fn </span>min_value() -&gt; <span class="self">Self </span>{
+        u8::MIN
     }
-    <span class="kw">fn</span> <span class="ident">max_value</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">u8::MAX</span>
+    <span class="kw">fn </span>max_value() -&gt; <span class="self">Self </span>{
+        u8::MAX
     }
-    <span class="kw">fn</span> <span class="ident">as_u32</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="self">self</span> <span class="kw">as</span> <span class="ident">u32</span>
+    <span class="kw">fn </span>as_u32(<span class="self">self</span>) -&gt; u32 {
+        <span class="self">self </span><span class="kw">as </span>u32
     }
-    <span class="kw">fn</span> <span class="ident">increment</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">checked_add</span>(<span class="number">1</span>).<span class="ident">unwrap</span>()
+    <span class="kw">fn </span>increment(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.checked_add(<span class="number">1</span>).unwrap()
     }
-    <span class="kw">fn</span> <span class="ident">decrement</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">checked_sub</span>(<span class="number">1</span>).<span class="ident">unwrap</span>()
+    <span class="kw">fn </span>decrement(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.checked_sub(<span class="number">1</span>).unwrap()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Bound</span> <span class="kw">for</span> <span class="ident">char</span> {
-    <span class="kw">fn</span> <span class="ident">min_value</span>() -&gt; <span class="self">Self</span> {
-        <span class="string">&#39;\x00&#39;</span>
-    }
-    <span class="kw">fn</span> <span class="ident">max_value</span>() -&gt; <span class="self">Self</span> {
-        <span class="string">&#39;\u{10FFFF}&#39;</span>
-    }
-    <span class="kw">fn</span> <span class="ident">as_u32</span>(<span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="self">self</span> <span class="kw">as</span> <span class="ident">u32</span>
+<span class="kw">impl </span>Bound <span class="kw">for </span>char {
+    <span class="kw">fn </span>min_value() -&gt; <span class="self">Self </span>{
+        <span class="string">&#39;\x00&#39;
+    </span>}
+    <span class="kw">fn </span>max_value() -&gt; <span class="self">Self </span>{
+        <span class="string">&#39;\u{10FFFF}&#39;
+    </span>}
+    <span class="kw">fn </span>as_u32(<span class="self">self</span>) -&gt; u32 {
+        <span class="self">self </span><span class="kw">as </span>u32
     }
 
-    <span class="kw">fn</span> <span class="ident">increment</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="string">&#39;\u{D7FF}&#39;</span> =&gt; <span class="string">&#39;\u{E000}&#39;</span>,
-            <span class="ident">c</span> =&gt; <span class="ident">char::from_u32</span>((<span class="ident">c</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">checked_add</span>(<span class="number">1</span>).<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>(),
+    <span class="kw">fn </span>increment(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="string">&#39;\u{D7FF}&#39; </span>=&gt; <span class="string">&#39;\u{E000}&#39;</span>,
+            c =&gt; char::from_u32((c <span class="kw">as </span>u32).checked_add(<span class="number">1</span>).unwrap()).unwrap(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">decrement</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="string">&#39;\u{E000}&#39;</span> =&gt; <span class="string">&#39;\u{D7FF}&#39;</span>,
-            <span class="ident">c</span> =&gt; <span class="ident">char::from_u32</span>((<span class="ident">c</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">checked_sub</span>(<span class="number">1</span>).<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>(),
+    <span class="kw">fn </span>decrement(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="string">&#39;\u{E000}&#39; </span>=&gt; <span class="string">&#39;\u{D7FF}&#39;</span>,
+            c =&gt; char::from_u32((c <span class="kw">as </span>u32).checked_sub(<span class="number">1</span>).unwrap()).unwrap(),
         }
     }
 }
 
-<span class="comment">// Tests for interval sets are written in src/hir.rs against the public API.</span>
-</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+<span class="comment">// Tests for interval sets are written in src/hir.rs against the public API.
+</span></code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

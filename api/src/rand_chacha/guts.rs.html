@@ -1,12 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand_chacha-0.3.1/src/guts.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>guts.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rand_chacha/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../rand_chacha/index.html"><div class="logo-container">
-                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rand_chacha/index.html">
-                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rand_chacha-0.3.1/src/guts.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>guts.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rand_chacha/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../rand_chacha/index.html"><div class="logo-container">
+                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rand_chacha/index.html">
+                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -279,279 +273,278 @@
 <span id="271">271</span>
 <span id="272">272</span>
 <span id="273">273</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2019 The CryptoCorrosion Contributors</span>
-<span class="comment">// Copyright 2020 Developers of the Rand project.</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
-<span class="comment">// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
-<span class="comment">// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your</span>
-<span class="comment">// option. This file may not be copied, modified, or distributed</span>
-<span class="comment">// except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2019 The CryptoCorrosion Contributors
+// Copyright 2020 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license
+// &lt;LICENSE-MIT or https://opensource.org/licenses/MIT&gt;, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-<span class="doccomment">//! The ChaCha random number generator.</span>
+</span><span class="doccomment">//! The ChaCha random number generator.
 
-<span class="kw">use</span> <span class="ident">ppv_lite86</span>::{<span class="ident">dispatch</span>, <span class="ident">dispatch_light128</span>};
+</span><span class="kw">use </span>ppv_lite86::{dispatch, dispatch_light128};
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ppv_lite86::Machine</span>;
-<span class="kw">use</span> <span class="ident">ppv_lite86</span>::{<span class="ident">vec128_storage</span>, <span class="ident">ArithOps</span>, <span class="ident">BitOps32</span>, <span class="ident">LaneWords4</span>, <span class="ident">MultiLane</span>, <span class="ident">StoreBytes</span>, <span class="ident">Vec4</span>};
+<span class="kw">pub use </span>ppv_lite86::Machine;
+<span class="kw">use </span>ppv_lite86::{vec128_storage, ArithOps, BitOps32, LaneWords4, MultiLane, StoreBytes, Vec4};
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">BLOCK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">64</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">BLOCK64</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">BLOCK</span> <span class="kw">as</span> <span class="ident">u64</span>;
-<span class="kw">const</span> <span class="ident">LOG2_BUFBLOCKS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">const</span> <span class="ident">BUFBLOCKS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">LOG2_BUFBLOCKS</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">BUFSZ64</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">BLOCK64</span> <span class="op">*</span> <span class="ident">BUFBLOCKS</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">BUFSZ</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">BUFSZ64</span> <span class="kw">as</span> <span class="ident">usize</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>BLOCK: usize = <span class="number">64</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>BLOCK64: u64 = BLOCK <span class="kw">as </span>u64;
+<span class="kw">const </span>LOG2_BUFBLOCKS: u64 = <span class="number">2</span>;
+<span class="kw">const </span>BUFBLOCKS: u64 = <span class="number">1 </span>&lt;&lt; LOG2_BUFBLOCKS;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>BUFSZ64: u64 = BLOCK64 * BUFBLOCKS;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>BUFSZ: usize = BUFSZ64 <span class="kw">as </span>usize;
 
-<span class="kw">const</span> <span class="ident">STREAM_PARAM_NONCE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">const</span> <span class="ident">STREAM_PARAM_BLOCK</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="kw">const </span>STREAM_PARAM_NONCE: u32 = <span class="number">1</span>;
+<span class="kw">const </span>STREAM_PARAM_BLOCK: u32 = <span class="number">0</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ChaCha</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">b</span>: <span class="ident">vec128_storage</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">c</span>: <span class="ident">vec128_storage</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">d</span>: <span class="ident">vec128_storage</span>,
+<span class="attribute">#[derive(Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>ChaCha {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) b: vec128_storage,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) c: vec128_storage,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) d: vec128_storage,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">a</span>: <span class="ident">V</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">b</span>: <span class="ident">V</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">c</span>: <span class="ident">V</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">d</span>: <span class="ident">V</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>State&lt;V&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) a: V,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) b: V,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) c: V,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) d: V,
 }
 
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">round</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">ArithOps</span> <span class="op">+</span> <span class="ident">BitOps32</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">State</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>) -&gt; <span class="ident">State</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">x</span>.<span class="ident">a</span> <span class="op">+</span><span class="op">=</span> <span class="ident">x</span>.<span class="ident">b</span>;
-    <span class="ident">x</span>.<span class="ident">d</span> <span class="op">=</span> (<span class="ident">x</span>.<span class="ident">d</span> <span class="op">^</span> <span class="ident">x</span>.<span class="ident">a</span>).<span class="ident">rotate_each_word_right16</span>();
-    <span class="ident">x</span>.<span class="ident">c</span> <span class="op">+</span><span class="op">=</span> <span class="ident">x</span>.<span class="ident">d</span>;
-    <span class="ident">x</span>.<span class="ident">b</span> <span class="op">=</span> (<span class="ident">x</span>.<span class="ident">b</span> <span class="op">^</span> <span class="ident">x</span>.<span class="ident">c</span>).<span class="ident">rotate_each_word_right20</span>();
-    <span class="ident">x</span>.<span class="ident">a</span> <span class="op">+</span><span class="op">=</span> <span class="ident">x</span>.<span class="ident">b</span>;
-    <span class="ident">x</span>.<span class="ident">d</span> <span class="op">=</span> (<span class="ident">x</span>.<span class="ident">d</span> <span class="op">^</span> <span class="ident">x</span>.<span class="ident">a</span>).<span class="ident">rotate_each_word_right24</span>();
-    <span class="ident">x</span>.<span class="ident">c</span> <span class="op">+</span><span class="op">=</span> <span class="ident">x</span>.<span class="ident">d</span>;
-    <span class="ident">x</span>.<span class="ident">b</span> <span class="op">=</span> (<span class="ident">x</span>.<span class="ident">b</span> <span class="op">^</span> <span class="ident">x</span>.<span class="ident">c</span>).<span class="ident">rotate_each_word_right25</span>();
-    <span class="ident">x</span>
+<span class="attribute">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>round&lt;V: ArithOps + BitOps32&gt;(<span class="kw-2">mut </span>x: State&lt;V&gt;) -&gt; State&lt;V&gt; {
+    x.a += x.b;
+    x.d = (x.d ^ x.a).rotate_each_word_right16();
+    x.c += x.d;
+    x.b = (x.b ^ x.c).rotate_each_word_right20();
+    x.a += x.b;
+    x.d = (x.d ^ x.a).rotate_each_word_right24();
+    x.c += x.d;
+    x.b = (x.b ^ x.c).rotate_each_word_right25();
+    x
 }
 
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">diagonalize</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">LaneWords4</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">State</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>) -&gt; <span class="ident">State</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">x</span>.<span class="ident">b</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">b</span>.<span class="ident">shuffle_lane_words3012</span>();
-    <span class="ident">x</span>.<span class="ident">c</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">c</span>.<span class="ident">shuffle_lane_words2301</span>();
-    <span class="ident">x</span>.<span class="ident">d</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">d</span>.<span class="ident">shuffle_lane_words1230</span>();
-    <span class="ident">x</span>
+<span class="attribute">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>diagonalize&lt;V: LaneWords4&gt;(<span class="kw-2">mut </span>x: State&lt;V&gt;) -&gt; State&lt;V&gt; {
+    x.b = x.b.shuffle_lane_words3012();
+    x.c = x.c.shuffle_lane_words2301();
+    x.d = x.d.shuffle_lane_words1230();
+    x
 }
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">undiagonalize</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">LaneWords4</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">State</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>) -&gt; <span class="ident">State</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">x</span>.<span class="ident">b</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">b</span>.<span class="ident">shuffle_lane_words1230</span>();
-    <span class="ident">x</span>.<span class="ident">c</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">c</span>.<span class="ident">shuffle_lane_words2301</span>();
-    <span class="ident">x</span>.<span class="ident">d</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">d</span>.<span class="ident">shuffle_lane_words3012</span>();
-    <span class="ident">x</span>
-}
-
-<span class="kw">impl</span> <span class="ident">ChaCha</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">nonce</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="self">Self</span> {
-        <span class="ident">init_chacha</span>(<span class="ident">key</span>, <span class="ident">nonce</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">pos64</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">Machine</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">m</span>: <span class="ident">M</span>) -&gt; <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">d</span>: <span class="ident">M::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="self">self</span>.<span class="ident">d</span>);
-        ((<span class="ident">d</span>.<span class="ident">extract</span>(<span class="number">1</span>) <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>) <span class="op">|</span> <span class="ident">d</span>.<span class="ident">extract</span>(<span class="number">0</span>) <span class="kw">as</span> <span class="ident">u64</span>
-    }
-
-    <span class="doccomment">/// Produce 4 blocks of output, advancing the state</span>
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">refill4</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">drounds</span>: <span class="ident">u32</span>, <span class="ident">out</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>; <span class="ident">BUFSZ</span>]) {
-        <span class="ident">refill_wide</span>(<span class="self">self</span>, <span class="ident">drounds</span>, <span class="ident">out</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_block_pos</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u64</span>) {
-        <span class="ident">set_stream_param</span>(<span class="self">self</span>, <span class="ident">STREAM_PARAM_BLOCK</span>, <span class="ident">value</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_pos</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="ident">get_stream_param</span>(<span class="self">self</span>, <span class="ident">STREAM_PARAM_BLOCK</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_nonce</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u64</span>) {
-        <span class="ident">set_stream_param</span>(<span class="self">self</span>, <span class="ident">STREAM_PARAM_NONCE</span>, <span class="ident">value</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_nonce</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="ident">get_stream_param</span>(<span class="self">self</span>, <span class="ident">STREAM_PARAM_NONCE</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_seed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">u8</span>; <span class="number">32</span>] {
-        <span class="ident">get_seed</span>(<span class="self">self</span>)
-    }
+<span class="attribute">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>undiagonalize&lt;V: LaneWords4&gt;(<span class="kw-2">mut </span>x: State&lt;V&gt;) -&gt; State&lt;V&gt; {
+    x.b = x.b.shuffle_lane_words1230();
+    x.c = x.c.shuffle_lane_words2301();
+    x.d = x.d.shuffle_lane_words3012();
+    x
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::many_single_char_names</span>)]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">fn</span> <span class="ident">refill_wide_impl</span><span class="op">&lt;</span><span class="ident">Mach</span>: <span class="ident">Machine</span><span class="op">&gt;</span>(
-    <span class="ident">m</span>: <span class="ident">Mach</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ChaCha</span>, <span class="ident">drounds</span>: <span class="ident">u32</span>, <span class="ident">out</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>; <span class="ident">BUFSZ</span>],
+<span class="kw">impl </span>ChaCha {
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>new(key: <span class="kw-2">&amp;</span>[u8; <span class="number">32</span>], nonce: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="self">Self </span>{
+        init_chacha(key, nonce)
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">fn </span>pos64&lt;M: Machine&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, m: M) -&gt; u64 {
+        <span class="kw">let </span>d: M::u32x4 = m.unpack(<span class="self">self</span>.d);
+        ((d.extract(<span class="number">1</span>) <span class="kw">as </span>u64) &lt;&lt; <span class="number">32</span>) | d.extract(<span class="number">0</span>) <span class="kw">as </span>u64
+    }
+
+    <span class="doccomment">/// Produce 4 blocks of output, advancing the state
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>refill4(<span class="kw-2">&amp;mut </span><span class="self">self</span>, drounds: u32, out: <span class="kw-2">&amp;mut </span>[u8; BUFSZ]) {
+        refill_wide(<span class="self">self</span>, drounds, out)
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>set_block_pos(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: u64) {
+        set_stream_param(<span class="self">self</span>, STREAM_PARAM_BLOCK, value)
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>get_block_pos(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        get_stream_param(<span class="self">self</span>, STREAM_PARAM_BLOCK)
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>set_nonce(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: u64) {
+        set_stream_param(<span class="self">self</span>, STREAM_PARAM_NONCE, value)
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>get_nonce(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        get_stream_param(<span class="self">self</span>, STREAM_PARAM_NONCE)
+    }
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>get_seed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
+        get_seed(<span class="self">self</span>)
+    }
+}
+
+<span class="attribute">#[allow(clippy::many_single_char_names)]
+#[inline(always)]
+</span><span class="kw">fn </span>refill_wide_impl&lt;Mach: Machine&gt;(
+    m: Mach, state: <span class="kw-2">&amp;mut </span>ChaCha, drounds: u32, out: <span class="kw-2">&amp;mut </span>[u8; BUFSZ],
 ) {
-    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">vec</span>([<span class="number">0x6170_7865</span>, <span class="number">0x3320_646e</span>, <span class="number">0x7962_2d32</span>, <span class="number">0x6b20_6574</span>]);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">pos64</span>(<span class="ident">m</span>);
-    <span class="kw">let</span> <span class="ident">d0</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">d</span>);
-    <span class="ident">pos</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">wrapping_add</span>(<span class="number">1</span>);
-    <span class="kw">let</span> <span class="ident">d1</span> <span class="op">=</span> <span class="ident">d0</span>.<span class="ident">insert</span>((<span class="ident">pos</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">1</span>).<span class="ident">insert</span>(<span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">0</span>);
-    <span class="ident">pos</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">wrapping_add</span>(<span class="number">1</span>);
-    <span class="kw">let</span> <span class="ident">d2</span> <span class="op">=</span> <span class="ident">d0</span>.<span class="ident">insert</span>((<span class="ident">pos</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">1</span>).<span class="ident">insert</span>(<span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">0</span>);
-    <span class="ident">pos</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">wrapping_add</span>(<span class="number">1</span>);
-    <span class="kw">let</span> <span class="ident">d3</span> <span class="op">=</span> <span class="ident">d0</span>.<span class="ident">insert</span>((<span class="ident">pos</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">1</span>).<span class="ident">insert</span>(<span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">0</span>);
+    <span class="kw">let </span>k = m.vec([<span class="number">0x6170_7865</span>, <span class="number">0x3320_646e</span>, <span class="number">0x7962_2d32</span>, <span class="number">0x6b20_6574</span>]);
+    <span class="kw">let </span><span class="kw-2">mut </span>pos = state.pos64(m);
+    <span class="kw">let </span>d0: Mach::u32x4 = m.unpack(state.d);
+    pos = pos.wrapping_add(<span class="number">1</span>);
+    <span class="kw">let </span>d1 = d0.insert((pos &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32, <span class="number">1</span>).insert(pos <span class="kw">as </span>u32, <span class="number">0</span>);
+    pos = pos.wrapping_add(<span class="number">1</span>);
+    <span class="kw">let </span>d2 = d0.insert((pos &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32, <span class="number">1</span>).insert(pos <span class="kw">as </span>u32, <span class="number">0</span>);
+    pos = pos.wrapping_add(<span class="number">1</span>);
+    <span class="kw">let </span>d3 = d0.insert((pos &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32, <span class="number">1</span>).insert(pos <span class="kw">as </span>u32, <span class="number">0</span>);
 
-    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">b</span>);
-    <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">c</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">State</span> {
-        <span class="ident">a</span>: <span class="ident">Mach::u32x4x4::from_lanes</span>([<span class="ident">k</span>, <span class="ident">k</span>, <span class="ident">k</span>, <span class="ident">k</span>]),
-        <span class="ident">b</span>: <span class="ident">Mach::u32x4x4::from_lanes</span>([<span class="ident">b</span>, <span class="ident">b</span>, <span class="ident">b</span>, <span class="ident">b</span>]),
-        <span class="ident">c</span>: <span class="ident">Mach::u32x4x4::from_lanes</span>([<span class="ident">c</span>, <span class="ident">c</span>, <span class="ident">c</span>, <span class="ident">c</span>]),
-        <span class="ident">d</span>: <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">Mach::u32x4x4::from_lanes</span>([<span class="ident">d0</span>, <span class="ident">d1</span>, <span class="ident">d2</span>, <span class="ident">d3</span>]).<span class="ident">into</span>()),
+    <span class="kw">let </span>b = m.unpack(state.b);
+    <span class="kw">let </span>c = m.unpack(state.c);
+    <span class="kw">let </span><span class="kw-2">mut </span>x = State {
+        a: Mach::u32x4x4::from_lanes([k, k, k, k]),
+        b: Mach::u32x4x4::from_lanes([b, b, b, b]),
+        c: Mach::u32x4x4::from_lanes([c, c, c, c]),
+        d: m.unpack(Mach::u32x4x4::from_lanes([d0, d1, d2, d3]).into()),
     };
-    <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">drounds</span> {
-        <span class="ident">x</span> <span class="op">=</span> <span class="ident">round</span>(<span class="ident">x</span>);
-        <span class="ident">x</span> <span class="op">=</span> <span class="ident">undiagonalize</span>(<span class="ident">round</span>(<span class="ident">diagonalize</span>(<span class="ident">x</span>)));
+    <span class="kw">for _ in </span><span class="number">0</span>..drounds {
+        x = round(x);
+        x = undiagonalize(round(diagonalize(x)));
     }
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">pos64</span>(<span class="ident">m</span>);
-    <span class="kw">let</span> <span class="ident">d0</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">d</span>);
-    <span class="ident">pos</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">wrapping_add</span>(<span class="number">1</span>);
-    <span class="kw">let</span> <span class="ident">d1</span> <span class="op">=</span> <span class="ident">d0</span>.<span class="ident">insert</span>((<span class="ident">pos</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">1</span>).<span class="ident">insert</span>(<span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">0</span>);
-    <span class="ident">pos</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">wrapping_add</span>(<span class="number">1</span>);
-    <span class="kw">let</span> <span class="ident">d2</span> <span class="op">=</span> <span class="ident">d0</span>.<span class="ident">insert</span>((<span class="ident">pos</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">1</span>).<span class="ident">insert</span>(<span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">0</span>);
-    <span class="ident">pos</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">wrapping_add</span>(<span class="number">1</span>);
-    <span class="kw">let</span> <span class="ident">d3</span> <span class="op">=</span> <span class="ident">d0</span>.<span class="ident">insert</span>((<span class="ident">pos</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">1</span>).<span class="ident">insert</span>(<span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">0</span>);
-    <span class="ident">pos</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">wrapping_add</span>(<span class="number">1</span>);
-    <span class="kw">let</span> <span class="ident">d4</span> <span class="op">=</span> <span class="ident">d0</span>.<span class="ident">insert</span>((<span class="ident">pos</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">1</span>).<span class="ident">insert</span>(<span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="number">0</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>pos = state.pos64(m);
+    <span class="kw">let </span>d0: Mach::u32x4 = m.unpack(state.d);
+    pos = pos.wrapping_add(<span class="number">1</span>);
+    <span class="kw">let </span>d1 = d0.insert((pos &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32, <span class="number">1</span>).insert(pos <span class="kw">as </span>u32, <span class="number">0</span>);
+    pos = pos.wrapping_add(<span class="number">1</span>);
+    <span class="kw">let </span>d2 = d0.insert((pos &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32, <span class="number">1</span>).insert(pos <span class="kw">as </span>u32, <span class="number">0</span>);
+    pos = pos.wrapping_add(<span class="number">1</span>);
+    <span class="kw">let </span>d3 = d0.insert((pos &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32, <span class="number">1</span>).insert(pos <span class="kw">as </span>u32, <span class="number">0</span>);
+    pos = pos.wrapping_add(<span class="number">1</span>);
+    <span class="kw">let </span>d4 = d0.insert((pos &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32, <span class="number">1</span>).insert(pos <span class="kw">as </span>u32, <span class="number">0</span>);
 
-    <span class="kw">let</span> (<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>) <span class="op">=</span> (
-        <span class="ident">x</span>.<span class="ident">a</span>.<span class="ident">to_lanes</span>(),
-        <span class="ident">x</span>.<span class="ident">b</span>.<span class="ident">to_lanes</span>(),
-        <span class="ident">x</span>.<span class="ident">c</span>.<span class="ident">to_lanes</span>(),
-        <span class="ident">x</span>.<span class="ident">d</span>.<span class="ident">to_lanes</span>(),
+    <span class="kw">let </span>(a, b, c, d) = (
+        x.a.to_lanes(),
+        x.b.to_lanes(),
+        x.c.to_lanes(),
+        x.d.to_lanes(),
     );
-    <span class="kw">let</span> <span class="ident">sb</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">b</span>);
-    <span class="kw">let</span> <span class="ident">sc</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">c</span>);
-    <span class="kw">let</span> <span class="ident">sd</span> <span class="op">=</span> [<span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">d</span>), <span class="ident">d1</span>, <span class="ident">d2</span>, <span class="ident">d3</span>];
-    <span class="ident">state</span>.<span class="ident">d</span> <span class="op">=</span> <span class="ident">d4</span>.<span class="ident">into</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">words</span> <span class="op">=</span> <span class="ident">out</span>.<span class="ident">chunks_exact_mut</span>(<span class="number">16</span>);
-    <span class="kw">for</span> ((((<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>), <span class="kw-2">&amp;</span><span class="ident">c</span>), <span class="kw-2">&amp;</span><span class="ident">d</span>), <span class="kw-2">&amp;</span><span class="ident">sd</span>) <span class="kw">in</span> <span class="ident">a</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>).<span class="ident">zip</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>).<span class="ident">zip</span>(<span class="kw-2">&amp;</span><span class="ident">d</span>).<span class="ident">zip</span>(<span class="kw-2">&amp;</span><span class="ident">sd</span>) {
-        (<span class="ident">a</span> <span class="op">+</span> <span class="ident">k</span>).<span class="ident">write_le</span>(<span class="ident">words</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
-        (<span class="ident">b</span> <span class="op">+</span> <span class="ident">sb</span>).<span class="ident">write_le</span>(<span class="ident">words</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
-        (<span class="ident">c</span> <span class="op">+</span> <span class="ident">sc</span>).<span class="ident">write_le</span>(<span class="ident">words</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
-        (<span class="ident">d</span> <span class="op">+</span> <span class="ident">sd</span>).<span class="ident">write_le</span>(<span class="ident">words</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
+    <span class="kw">let </span>sb = m.unpack(state.b);
+    <span class="kw">let </span>sc = m.unpack(state.c);
+    <span class="kw">let </span>sd = [m.unpack(state.d), d1, d2, d3];
+    state.d = d4.into();
+    <span class="kw">let </span><span class="kw-2">mut </span>words = out.chunks_exact_mut(<span class="number">16</span>);
+    <span class="kw">for </span>((((<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b), <span class="kw-2">&amp;</span>c), <span class="kw-2">&amp;</span>d), <span class="kw-2">&amp;</span>sd) <span class="kw">in </span>a.iter().zip(<span class="kw-2">&amp;</span>b).zip(<span class="kw-2">&amp;</span>c).zip(<span class="kw-2">&amp;</span>d).zip(<span class="kw-2">&amp;</span>sd) {
+        (a + k).write_le(words.next().unwrap());
+        (b + sb).write_le(words.next().unwrap());
+        (c + sc).write_le(words.next().unwrap());
+        (d + sd).write_le(words.next().unwrap());
     }
 }
 
-<span class="macro">dispatch!</span>(<span class="ident">m</span>, <span class="ident">Mach</span>, {
-    <span class="kw">fn</span> <span class="ident">refill_wide</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ChaCha</span>, <span class="ident">drounds</span>: <span class="ident">u32</span>, <span class="ident">out</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>; <span class="ident">BUFSZ</span>]) {
-        <span class="ident">refill_wide_impl</span>(<span class="ident">m</span>, <span class="ident">state</span>, <span class="ident">drounds</span>, <span class="ident">out</span>);
+<span class="macro">dispatch!</span>(m, Mach, {
+    <span class="kw">fn </span>refill_wide(state: <span class="kw-2">&amp;mut </span>ChaCha, drounds: u32, out: <span class="kw-2">&amp;mut </span>[u8; BUFSZ]) {
+        refill_wide_impl(m, state, drounds, out);
     }
 });
 
-<span class="comment">// Single-block, rounds-only; shared by try_apply_keystream for tails shorter than BUFSZ</span>
-<span class="comment">// and XChaCha&#39;s setup step.</span>
-<span class="macro">dispatch!</span>(<span class="ident">m</span>, <span class="ident">Mach</span>, {
-    <span class="kw">fn</span> <span class="ident">refill_narrow_rounds</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ChaCha</span>, <span class="ident">drounds</span>: <span class="ident">u32</span>) -&gt; <span class="ident">State</span><span class="op">&lt;</span><span class="ident">vec128_storage</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">k</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">vec</span>([<span class="number">0x6170_7865</span>, <span class="number">0x3320_646e</span>, <span class="number">0x7962_2d32</span>, <span class="number">0x6b20_6574</span>]);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">State</span> {
-            <span class="ident">a</span>: <span class="ident">k</span>,
-            <span class="ident">b</span>: <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">b</span>),
-            <span class="ident">c</span>: <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">c</span>),
-            <span class="ident">d</span>: <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">d</span>),
+<span class="comment">// Single-block, rounds-only; shared by try_apply_keystream for tails shorter than BUFSZ
+// and XChaCha&#39;s setup step.
+</span><span class="macro">dispatch!</span>(m, Mach, {
+    <span class="kw">fn </span>refill_narrow_rounds(state: <span class="kw-2">&amp;mut </span>ChaCha, drounds: u32) -&gt; State&lt;vec128_storage&gt; {
+        <span class="kw">let </span>k: Mach::u32x4 = m.vec([<span class="number">0x6170_7865</span>, <span class="number">0x3320_646e</span>, <span class="number">0x7962_2d32</span>, <span class="number">0x6b20_6574</span>]);
+        <span class="kw">let </span><span class="kw-2">mut </span>x = State {
+            a: k,
+            b: m.unpack(state.b),
+            c: m.unpack(state.c),
+            d: m.unpack(state.d),
         };
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">drounds</span> {
-            <span class="ident">x</span> <span class="op">=</span> <span class="ident">round</span>(<span class="ident">x</span>);
-            <span class="ident">x</span> <span class="op">=</span> <span class="ident">undiagonalize</span>(<span class="ident">round</span>(<span class="ident">diagonalize</span>(<span class="ident">x</span>)));
+        <span class="kw">for _ in </span><span class="number">0</span>..drounds {
+            x = round(x);
+            x = undiagonalize(round(diagonalize(x)));
         }
-        <span class="ident">State</span> {
-            <span class="ident">a</span>: <span class="ident">x</span>.<span class="ident">a</span>.<span class="ident">into</span>(),
-            <span class="ident">b</span>: <span class="ident">x</span>.<span class="ident">b</span>.<span class="ident">into</span>(),
-            <span class="ident">c</span>: <span class="ident">x</span>.<span class="ident">c</span>.<span class="ident">into</span>(),
-            <span class="ident">d</span>: <span class="ident">x</span>.<span class="ident">d</span>.<span class="ident">into</span>(),
+        State {
+            a: x.a.into(),
+            b: x.b.into(),
+            c: x.c.into(),
+            d: x.d.into(),
         }
     }
 });
 
-<span class="macro">dispatch_light128!</span>(<span class="ident">m</span>, <span class="ident">Mach</span>, {
-    <span class="kw">fn</span> <span class="ident">set_stream_param</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ChaCha</span>, <span class="ident">param</span>: <span class="ident">u32</span>, <span class="ident">value</span>: <span class="ident">u64</span>) {
-        <span class="kw">let</span> <span class="ident">d</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">d</span>);
-        <span class="ident">state</span>.<span class="ident">d</span> <span class="op">=</span> <span class="ident">d</span>
-            .<span class="ident">insert</span>((<span class="ident">value</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>, (<span class="ident">param</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>) <span class="op">|</span> <span class="number">1</span>)
-            .<span class="ident">insert</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">param</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>)
-            .<span class="ident">into</span>();
+<span class="macro">dispatch_light128!</span>(m, Mach, {
+    <span class="kw">fn </span>set_stream_param(state: <span class="kw-2">&amp;mut </span>ChaCha, param: u32, value: u64) {
+        <span class="kw">let </span>d: Mach::u32x4 = m.unpack(state.d);
+        state.d = d
+            .insert((value &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32, (param &lt;&lt; <span class="number">1</span>) | <span class="number">1</span>)
+            .insert(value <span class="kw">as </span>u32, param &lt;&lt; <span class="number">1</span>)
+            .into();
     }
 });
 
-<span class="macro">dispatch_light128!</span>(<span class="ident">m</span>, <span class="ident">Mach</span>, {
-    <span class="kw">fn</span> <span class="ident">get_stream_param</span>(<span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">ChaCha</span>, <span class="ident">param</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">d</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">d</span>);
-        ((<span class="ident">d</span>.<span class="ident">extract</span>((<span class="ident">param</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>) <span class="op">|</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>) <span class="op">|</span> <span class="ident">d</span>.<span class="ident">extract</span>(<span class="ident">param</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u64</span>
+<span class="macro">dispatch_light128!</span>(m, Mach, {
+    <span class="kw">fn </span>get_stream_param(state: <span class="kw-2">&amp;</span>ChaCha, param: u32) -&gt; u64 {
+        <span class="kw">let </span>d: Mach::u32x4 = m.unpack(state.d);
+        ((d.extract((param &lt;&lt; <span class="number">1</span>) | <span class="number">1</span>) <span class="kw">as </span>u64) &lt;&lt; <span class="number">32</span>) | d.extract(param &lt;&lt; <span class="number">1</span>) <span class="kw">as </span>u64
     }
 });
 
-<span class="macro">dispatch_light128!</span>(<span class="ident">m</span>, <span class="ident">Mach</span>, {
-    <span class="kw">fn</span> <span class="ident">get_seed</span>(<span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">ChaCha</span>) -&gt; [<span class="ident">u8</span>; <span class="number">32</span>] {
-        <span class="kw">let</span> <span class="ident">b</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">b</span>);
-        <span class="kw">let</span> <span class="ident">c</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">unpack</span>(<span class="ident">state</span>.<span class="ident">c</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">32</span>];
-        <span class="ident">b</span>.<span class="ident">write_le</span>(<span class="kw-2">&amp;mut</span> <span class="ident">key</span>[..<span class="number">16</span>]);
-        <span class="ident">c</span>.<span class="ident">write_le</span>(<span class="kw-2">&amp;mut</span> <span class="ident">key</span>[<span class="number">16</span>..]);
-        <span class="ident">key</span>
+<span class="macro">dispatch_light128!</span>(m, Mach, {
+    <span class="kw">fn </span>get_seed(state: <span class="kw-2">&amp;</span>ChaCha) -&gt; [u8; <span class="number">32</span>] {
+        <span class="kw">let </span>b: Mach::u32x4 = m.unpack(state.b);
+        <span class="kw">let </span>c: Mach::u32x4 = m.unpack(state.c);
+        <span class="kw">let </span><span class="kw-2">mut </span>key = [<span class="number">0u8</span>; <span class="number">32</span>];
+        b.write_le(<span class="kw-2">&amp;mut </span>key[..<span class="number">16</span>]);
+        c.write_le(<span class="kw-2">&amp;mut </span>key[<span class="number">16</span>..]);
+        key
     }
 });
 
-<span class="kw">fn</span> <span class="ident">read_u32le</span>(<span class="ident">xs</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">u32</span> {
-    <span class="macro">assert_eq!</span>(<span class="ident">xs</span>.<span class="ident">len</span>(), <span class="number">4</span>);
-    <span class="ident">u32::from</span>(<span class="ident">xs</span>[<span class="number">0</span>]) <span class="op">|</span> (<span class="ident">u32::from</span>(<span class="ident">xs</span>[<span class="number">1</span>]) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>) <span class="op">|</span> (<span class="ident">u32::from</span>(<span class="ident">xs</span>[<span class="number">2</span>]) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>) <span class="op">|</span> (<span class="ident">u32::from</span>(<span class="ident">xs</span>[<span class="number">3</span>]) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">24</span>)
+<span class="kw">fn </span>read_u32le(xs: <span class="kw-2">&amp;</span>[u8]) -&gt; u32 {
+    <span class="macro">assert_eq!</span>(xs.len(), <span class="number">4</span>);
+    u32::from(xs[<span class="number">0</span>]) | (u32::from(xs[<span class="number">1</span>]) &lt;&lt; <span class="number">8</span>) | (u32::from(xs[<span class="number">2</span>]) &lt;&lt; <span class="number">16</span>) | (u32::from(xs[<span class="number">3</span>]) &lt;&lt; <span class="number">24</span>)
 }
 
-<span class="macro">dispatch_light128!</span>(<span class="ident">m</span>, <span class="ident">Mach</span>, {
-    <span class="kw">fn</span> <span class="ident">init_chacha</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">nonce</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">ChaCha</span> {
-        <span class="kw">let</span> <span class="ident">ctr_nonce</span> <span class="op">=</span> [
+<span class="macro">dispatch_light128!</span>(m, Mach, {
+    <span class="kw">fn </span>init_chacha(key: <span class="kw-2">&amp;</span>[u8; <span class="number">32</span>], nonce: <span class="kw-2">&amp;</span>[u8]) -&gt; ChaCha {
+        <span class="kw">let </span>ctr_nonce = [
             <span class="number">0</span>,
-            <span class="kw">if</span> <span class="ident">nonce</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">12</span> {
-                <span class="ident">read_u32le</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>[<span class="number">0</span>..<span class="number">4</span>])
-            } <span class="kw">else</span> {
-                <span class="number">0</span>
-            },
-            <span class="ident">read_u32le</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>[<span class="ident">nonce</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">8</span>..<span class="ident">nonce</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">4</span>]),
-            <span class="ident">read_u32le</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>[<span class="ident">nonce</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">4</span>..]),
+            <span class="kw">if </span>nonce.len() == <span class="number">12 </span>{
+                read_u32le(<span class="kw-2">&amp;</span>nonce[<span class="number">0</span>..<span class="number">4</span>])
+            } <span class="kw">else </span>{
+                <span class="number">0
+            </span>},
+            read_u32le(<span class="kw-2">&amp;</span>nonce[nonce.len() - <span class="number">8</span>..nonce.len() - <span class="number">4</span>]),
+            read_u32le(<span class="kw-2">&amp;</span>nonce[nonce.len() - <span class="number">4</span>..]),
         ];
-        <span class="kw">let</span> <span class="ident">key0</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">read_le</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>[..<span class="number">16</span>]);
-        <span class="kw">let</span> <span class="ident">key1</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">read_le</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>[<span class="number">16</span>..]);
-        <span class="ident">ChaCha</span> {
-            <span class="ident">b</span>: <span class="ident">key0</span>.<span class="ident">into</span>(),
-            <span class="ident">c</span>: <span class="ident">key1</span>.<span class="ident">into</span>(),
-            <span class="ident">d</span>: <span class="ident">ctr_nonce</span>.<span class="ident">into</span>(),
+        <span class="kw">let </span>key0: Mach::u32x4 = m.read_le(<span class="kw-2">&amp;</span>key[..<span class="number">16</span>]);
+        <span class="kw">let </span>key1: Mach::u32x4 = m.read_le(<span class="kw-2">&amp;</span>key[<span class="number">16</span>..]);
+        ChaCha {
+            b: key0.into(),
+            c: key1.into(),
+            d: ctr_nonce.into(),
         }
     }
 });
 
-<span class="macro">dispatch_light128!</span>(<span class="ident">m</span>, <span class="ident">Mach</span>, {
-    <span class="kw">fn</span> <span class="ident">init_chacha_x</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">nonce</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">24</span>], <span class="ident">rounds</span>: <span class="ident">u32</span>) -&gt; <span class="ident">ChaCha</span> {
-        <span class="kw">let</span> <span class="ident">key0</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">read_le</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>[..<span class="number">16</span>]);
-        <span class="kw">let</span> <span class="ident">key1</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">read_le</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>[<span class="number">16</span>..]);
-        <span class="kw">let</span> <span class="ident">nonce0</span>: <span class="ident">Mach::u32x4</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">read_le</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>[..<span class="number">16</span>]);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">ChaCha</span> {
-            <span class="ident">b</span>: <span class="ident">key0</span>.<span class="ident">into</span>(),
-            <span class="ident">c</span>: <span class="ident">key1</span>.<span class="ident">into</span>(),
-            <span class="ident">d</span>: <span class="ident">nonce0</span>.<span class="ident">into</span>(),
+<span class="macro">dispatch_light128!</span>(m, Mach, {
+    <span class="kw">fn </span>init_chacha_x(key: <span class="kw-2">&amp;</span>[u8; <span class="number">32</span>], nonce: <span class="kw-2">&amp;</span>[u8; <span class="number">24</span>], rounds: u32) -&gt; ChaCha {
+        <span class="kw">let </span>key0: Mach::u32x4 = m.read_le(<span class="kw-2">&amp;</span>key[..<span class="number">16</span>]);
+        <span class="kw">let </span>key1: Mach::u32x4 = m.read_le(<span class="kw-2">&amp;</span>key[<span class="number">16</span>..]);
+        <span class="kw">let </span>nonce0: Mach::u32x4 = m.read_le(<span class="kw-2">&amp;</span>nonce[..<span class="number">16</span>]);
+        <span class="kw">let </span><span class="kw-2">mut </span>state = ChaCha {
+            b: key0.into(),
+            c: key1.into(),
+            d: nonce0.into(),
         };
-        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">refill_narrow_rounds</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>, <span class="ident">rounds</span>);
-        <span class="kw">let</span> <span class="ident">ctr_nonce1</span> <span class="op">=</span> [<span class="number">0</span>, <span class="number">0</span>, <span class="ident">read_u32le</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>[<span class="number">16</span>..<span class="number">20</span>]), <span class="ident">read_u32le</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>[<span class="number">20</span>..<span class="number">24</span>])];
-        <span class="ident">state</span>.<span class="ident">b</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">a</span>;
-        <span class="ident">state</span>.<span class="ident">c</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">d</span>;
-        <span class="ident">state</span>.<span class="ident">d</span> <span class="op">=</span> <span class="ident">ctr_nonce1</span>.<span class="ident">into</span>();
-        <span class="ident">state</span>
+        <span class="kw">let </span>x = refill_narrow_rounds(<span class="kw-2">&amp;mut </span>state, rounds);
+        <span class="kw">let </span>ctr_nonce1 = [<span class="number">0</span>, <span class="number">0</span>, read_u32le(<span class="kw-2">&amp;</span>nonce[<span class="number">16</span>..<span class="number">20</span>]), read_u32le(<span class="kw-2">&amp;</span>nonce[<span class="number">20</span>..<span class="number">24</span>])];
+        state.b = x.a;
+        state.c = x.d;
+        state.d = ctr_nonce1.into();
+        state
     }
 });
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rand_chacha" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rand_chacha" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

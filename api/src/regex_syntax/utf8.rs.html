@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/utf8.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>utf8.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../regex_syntax/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/regex-syntax-0.6.27/src/utf8.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>utf8.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../regex_syntax/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../regex_syntax/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -671,513 +665,512 @@ Russ Cox got it from Ken Thompson&#39;s `grep` (no source, folk lore?).
 I also got the idea from
 [Lucene](https://github.com/apache/lucene-solr/blob/ae93f4e7ac6a3908046391de35d4f50a0d3c59ca/lucene/core/src/java/org/apache/lucene/util/automaton/UTF32ToUTF8.java),
 which uses it for executing automata on their term index.
-*/</span>
+*/
 
-<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">missing_docs</span>)]</span>
+</span><span class="attribute">#![deny(missing_docs)]
 
-<span class="kw">use</span> <span class="ident">std::char</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std::iter::FusedIterator</span>;
-<span class="kw">use</span> <span class="ident">std::slice</span>;
+</span><span class="kw">use </span>std::char;
+<span class="kw">use </span>std::fmt;
+<span class="kw">use </span>std::iter::FusedIterator;
+<span class="kw">use </span>std::slice;
 
-<span class="kw">const</span> <span class="ident">MAX_UTF8_BYTES</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="kw">const </span>MAX_UTF8_BYTES: usize = <span class="number">4</span>;
 
-<span class="doccomment">/// Utf8Sequence represents a sequence of byte ranges.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// To match a Utf8Sequence, a candidate byte sequence must match each</span>
-<span class="doccomment">/// successive range.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// For example, if there are two ranges, `[C2-DF][80-BF]`, then the byte</span>
-<span class="doccomment">/// sequence `\xDD\x61` would not match because `0x61 &lt; 0x80`.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Utf8Sequence</span> {
-    <span class="doccomment">/// One byte range.</span>
-    <span class="ident">One</span>(<span class="ident">Utf8Range</span>),
-    <span class="doccomment">/// Two successive byte ranges.</span>
-    <span class="ident">Two</span>([<span class="ident">Utf8Range</span>; <span class="number">2</span>]),
-    <span class="doccomment">/// Three successive byte ranges.</span>
-    <span class="ident">Three</span>([<span class="ident">Utf8Range</span>; <span class="number">3</span>]),
-    <span class="doccomment">/// Four successive byte ranges.</span>
-    <span class="ident">Four</span>([<span class="ident">Utf8Range</span>; <span class="number">4</span>]),
+<span class="doccomment">/// Utf8Sequence represents a sequence of byte ranges.
+///
+/// To match a Utf8Sequence, a candidate byte sequence must match each
+/// successive range.
+///
+/// For example, if there are two ranges, `[C2-DF][80-BF]`, then the byte
+/// sequence `\xDD\x61` would not match because `0x61 &lt; 0x80`.
+</span><span class="attribute">#[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
+</span><span class="kw">pub enum </span>Utf8Sequence {
+    <span class="doccomment">/// One byte range.
+    </span>One(Utf8Range),
+    <span class="doccomment">/// Two successive byte ranges.
+    </span>Two([Utf8Range; <span class="number">2</span>]),
+    <span class="doccomment">/// Three successive byte ranges.
+    </span>Three([Utf8Range; <span class="number">3</span>]),
+    <span class="doccomment">/// Four successive byte ranges.
+    </span>Four([Utf8Range; <span class="number">4</span>]),
 }
 
-<span class="kw">impl</span> <span class="ident">Utf8Sequence</span> {
-    <span class="doccomment">/// Creates a new UTF-8 sequence from the encoded bytes of a scalar value</span>
-    <span class="doccomment">/// range.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This assumes that `start` and `end` have the same length.</span>
-    <span class="kw">fn</span> <span class="ident">from_encoded_range</span>(<span class="ident">start</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">end</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="self">Self</span> {
-        <span class="macro">assert_eq!</span>(<span class="ident">start</span>.<span class="ident">len</span>(), <span class="ident">end</span>.<span class="ident">len</span>());
-        <span class="kw">match</span> <span class="ident">start</span>.<span class="ident">len</span>() {
-            <span class="number">2</span> =&gt; <span class="ident">Utf8Sequence::Two</span>([
-                <span class="ident">Utf8Range::new</span>(<span class="ident">start</span>[<span class="number">0</span>], <span class="ident">end</span>[<span class="number">0</span>]),
-                <span class="ident">Utf8Range::new</span>(<span class="ident">start</span>[<span class="number">1</span>], <span class="ident">end</span>[<span class="number">1</span>]),
+<span class="kw">impl </span>Utf8Sequence {
+    <span class="doccomment">/// Creates a new UTF-8 sequence from the encoded bytes of a scalar value
+    /// range.
+    ///
+    /// This assumes that `start` and `end` have the same length.
+    </span><span class="kw">fn </span>from_encoded_range(start: <span class="kw-2">&amp;</span>[u8], end: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert_eq!</span>(start.len(), end.len());
+        <span class="kw">match </span>start.len() {
+            <span class="number">2 </span>=&gt; Utf8Sequence::Two([
+                Utf8Range::new(start[<span class="number">0</span>], end[<span class="number">0</span>]),
+                Utf8Range::new(start[<span class="number">1</span>], end[<span class="number">1</span>]),
             ]),
-            <span class="number">3</span> =&gt; <span class="ident">Utf8Sequence::Three</span>([
-                <span class="ident">Utf8Range::new</span>(<span class="ident">start</span>[<span class="number">0</span>], <span class="ident">end</span>[<span class="number">0</span>]),
-                <span class="ident">Utf8Range::new</span>(<span class="ident">start</span>[<span class="number">1</span>], <span class="ident">end</span>[<span class="number">1</span>]),
-                <span class="ident">Utf8Range::new</span>(<span class="ident">start</span>[<span class="number">2</span>], <span class="ident">end</span>[<span class="number">2</span>]),
+            <span class="number">3 </span>=&gt; Utf8Sequence::Three([
+                Utf8Range::new(start[<span class="number">0</span>], end[<span class="number">0</span>]),
+                Utf8Range::new(start[<span class="number">1</span>], end[<span class="number">1</span>]),
+                Utf8Range::new(start[<span class="number">2</span>], end[<span class="number">2</span>]),
             ]),
-            <span class="number">4</span> =&gt; <span class="ident">Utf8Sequence::Four</span>([
-                <span class="ident">Utf8Range::new</span>(<span class="ident">start</span>[<span class="number">0</span>], <span class="ident">end</span>[<span class="number">0</span>]),
-                <span class="ident">Utf8Range::new</span>(<span class="ident">start</span>[<span class="number">1</span>], <span class="ident">end</span>[<span class="number">1</span>]),
-                <span class="ident">Utf8Range::new</span>(<span class="ident">start</span>[<span class="number">2</span>], <span class="ident">end</span>[<span class="number">2</span>]),
-                <span class="ident">Utf8Range::new</span>(<span class="ident">start</span>[<span class="number">3</span>], <span class="ident">end</span>[<span class="number">3</span>]),
+            <span class="number">4 </span>=&gt; Utf8Sequence::Four([
+                Utf8Range::new(start[<span class="number">0</span>], end[<span class="number">0</span>]),
+                Utf8Range::new(start[<span class="number">1</span>], end[<span class="number">1</span>]),
+                Utf8Range::new(start[<span class="number">2</span>], end[<span class="number">2</span>]),
+                Utf8Range::new(start[<span class="number">3</span>], end[<span class="number">3</span>]),
             ]),
-            <span class="ident">n</span> =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;invalid encoded length: {}&quot;</span>, <span class="ident">n</span>),
+            n =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;invalid encoded length: {}&quot;</span>, n),
         }
     }
 
-    <span class="doccomment">/// Returns the underlying sequence of byte ranges as a slice.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">Utf8Range</span>] {
-        <span class="kw">use</span> <span class="ident"><span class="self">self</span>::Utf8Sequence</span>::<span class="kw-2">*</span>;
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">One</span>(<span class="kw-2">ref</span> <span class="ident">r</span>) =&gt; <span class="ident">slice::from_ref</span>(<span class="ident">r</span>),
-            <span class="ident">Two</span>(<span class="kw-2">ref</span> <span class="ident">r</span>) =&gt; <span class="kw-2">&amp;</span><span class="ident">r</span>[..],
-            <span class="ident">Three</span>(<span class="kw-2">ref</span> <span class="ident">r</span>) =&gt; <span class="kw-2">&amp;</span><span class="ident">r</span>[..],
-            <span class="ident">Four</span>(<span class="kw-2">ref</span> <span class="ident">r</span>) =&gt; <span class="kw-2">&amp;</span><span class="ident">r</span>[..],
+    <span class="doccomment">/// Returns the underlying sequence of byte ranges as a slice.
+    </span><span class="kw">pub fn </span>as_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[Utf8Range] {
+        <span class="kw">use </span><span class="self">self</span>::Utf8Sequence::<span class="kw-2">*</span>;
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            One(<span class="kw-2">ref </span>r) =&gt; slice::from_ref(r),
+            Two(<span class="kw-2">ref </span>r) =&gt; <span class="kw-2">&amp;</span>r[..],
+            Three(<span class="kw-2">ref </span>r) =&gt; <span class="kw-2">&amp;</span>r[..],
+            Four(<span class="kw-2">ref </span>r) =&gt; <span class="kw-2">&amp;</span>r[..],
         }
     }
 
-    <span class="doccomment">/// Returns the number of byte ranges in this sequence.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The length is guaranteed to be in the closed interval `[1, 4]`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">as_slice</span>().<span class="ident">len</span>()
+    <span class="doccomment">/// Returns the number of byte ranges in this sequence.
+    ///
+    /// The length is guaranteed to be in the closed interval `[1, 4]`.
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.as_slice().len()
     }
 
-    <span class="doccomment">/// Reverses the ranges in this sequence.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// For example, if this corresponds to the following sequence:</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// [D0-D3][80-BF]</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Then after reversal, it will be</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// [80-BF][D0-D3]</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is useful when one is constructing a UTF-8 automaton to match</span>
-    <span class="doccomment">/// character classes in reverse.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reverse</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">Utf8Sequence::One</span>(<span class="kw">_</span>) =&gt; {}
-            <span class="ident">Utf8Sequence::Two</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">x</span>) =&gt; <span class="ident">x</span>.<span class="ident">reverse</span>(),
-            <span class="ident">Utf8Sequence::Three</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">x</span>) =&gt; <span class="ident">x</span>.<span class="ident">reverse</span>(),
-            <span class="ident">Utf8Sequence::Four</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">x</span>) =&gt; <span class="ident">x</span>.<span class="ident">reverse</span>(),
+    <span class="doccomment">/// Reverses the ranges in this sequence.
+    ///
+    /// For example, if this corresponds to the following sequence:
+    ///
+    /// ```text
+    /// [D0-D3][80-BF]
+    /// ```
+    ///
+    /// Then after reversal, it will be
+    ///
+    /// ```text
+    /// [80-BF][D0-D3]
+    /// ```
+    ///
+    /// This is useful when one is constructing a UTF-8 automaton to match
+    /// character classes in reverse.
+    </span><span class="kw">pub fn </span>reverse(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            Utf8Sequence::One(<span class="kw">_</span>) =&gt; {}
+            Utf8Sequence::Two(<span class="kw-2">ref mut </span>x) =&gt; x.reverse(),
+            Utf8Sequence::Three(<span class="kw-2">ref mut </span>x) =&gt; x.reverse(),
+            Utf8Sequence::Four(<span class="kw-2">ref mut </span>x) =&gt; x.reverse(),
         }
     }
 
-    <span class="doccomment">/// Returns true if and only if a prefix of `bytes` matches this sequence</span>
-    <span class="doccomment">/// of byte ranges.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">matches</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="bool-val">false</span>;
+    <span class="doccomment">/// Returns true if and only if a prefix of `bytes` matches this sequence
+    /// of byte ranges.
+    </span><span class="kw">pub fn </span>matches(<span class="kw-2">&amp;</span><span class="self">self</span>, bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; bool {
+        <span class="kw">if </span>bytes.len() &lt; <span class="self">self</span>.len() {
+            <span class="kw">return </span><span class="bool-val">false</span>;
         }
-        <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="ident">r</span>) <span class="kw">in</span> <span class="ident">bytes</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="self">self</span>) {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">r</span>.<span class="ident">matches</span>(<span class="ident">b</span>) {
-                <span class="kw">return</span> <span class="bool-val">false</span>;
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>b, r) <span class="kw">in </span>bytes.iter().zip(<span class="self">self</span>) {
+            <span class="kw">if </span>!r.matches(b) {
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
         }
-        <span class="bool-val">true</span>
+        <span class="bool-val">true
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Utf8Sequence {
+    <span class="kw">type </span>IntoIter = slice::Iter&lt;<span class="lifetime">&#39;a</span>, Utf8Range&gt;;
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Utf8Range;
+
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        <span class="self">self</span>.as_slice().iter()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Utf8Sequence</span> {
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">slice::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Utf8Range</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Utf8Range</span>;
-
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::IntoIter</span> {
-        <span class="self">self</span>.<span class="ident">as_slice</span>().<span class="ident">iter</span>()
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Utf8Sequence</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">use</span> <span class="ident"><span class="self">self</span>::Utf8Sequence</span>::<span class="kw-2">*</span>;
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">One</span>(<span class="kw-2">ref</span> <span class="ident">r</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{:?}&quot;</span>, <span class="ident">r</span>),
-            <span class="ident">Two</span>(<span class="kw-2">ref</span> <span class="ident">r</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{:?}{:?}&quot;</span>, <span class="ident">r</span>[<span class="number">0</span>], <span class="ident">r</span>[<span class="number">1</span>]),
-            <span class="ident">Three</span>(<span class="kw-2">ref</span> <span class="ident">r</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{:?}{:?}{:?}&quot;</span>, <span class="ident">r</span>[<span class="number">0</span>], <span class="ident">r</span>[<span class="number">1</span>], <span class="ident">r</span>[<span class="number">2</span>]),
-            <span class="ident">Four</span>(<span class="kw-2">ref</span> <span class="ident">r</span>) =&gt; {
-                <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{:?}{:?}{:?}{:?}&quot;</span>, <span class="ident">r</span>[<span class="number">0</span>], <span class="ident">r</span>[<span class="number">1</span>], <span class="ident">r</span>[<span class="number">2</span>], <span class="ident">r</span>[<span class="number">3</span>])
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Utf8Sequence {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">use </span><span class="self">self</span>::Utf8Sequence::<span class="kw-2">*</span>;
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            One(<span class="kw-2">ref </span>r) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{:?}&quot;</span>, r),
+            Two(<span class="kw-2">ref </span>r) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{:?}{:?}&quot;</span>, r[<span class="number">0</span>], r[<span class="number">1</span>]),
+            Three(<span class="kw-2">ref </span>r) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{:?}{:?}{:?}&quot;</span>, r[<span class="number">0</span>], r[<span class="number">1</span>], r[<span class="number">2</span>]),
+            Four(<span class="kw-2">ref </span>r) =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">&quot;{:?}{:?}{:?}{:?}&quot;</span>, r[<span class="number">0</span>], r[<span class="number">1</span>], r[<span class="number">2</span>], r[<span class="number">3</span>])
             }
         }
     }
 }
 
-<span class="doccomment">/// A single inclusive range of UTF-8 bytes.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Utf8Range</span> {
-    <span class="doccomment">/// Start of byte range (inclusive).</span>
-    <span class="kw">pub</span> <span class="ident">start</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// End of byte range (inclusive).</span>
-    <span class="kw">pub</span> <span class="ident">end</span>: <span class="ident">u8</span>,
+<span class="doccomment">/// A single inclusive range of UTF-8 bytes.
+</span><span class="attribute">#[derive(Clone, Copy, Eq, PartialEq, PartialOrd, Ord)]
+</span><span class="kw">pub struct </span>Utf8Range {
+    <span class="doccomment">/// Start of byte range (inclusive).
+    </span><span class="kw">pub </span>start: u8,
+    <span class="doccomment">/// End of byte range (inclusive).
+    </span><span class="kw">pub </span>end: u8,
 }
 
-<span class="kw">impl</span> <span class="ident">Utf8Range</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">start</span>: <span class="ident">u8</span>, <span class="ident">end</span>: <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Utf8Range</span> { <span class="ident">start</span>, <span class="ident">end</span> }
+<span class="kw">impl </span>Utf8Range {
+    <span class="kw">fn </span>new(start: u8, end: u8) -&gt; <span class="self">Self </span>{
+        Utf8Range { start, end }
     }
 
-    <span class="doccomment">/// Returns true if and only if the given byte is in this range.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">matches</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">b</span>: <span class="ident">u8</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">start</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">b</span> <span class="op">&amp;&amp;</span> <span class="ident">b</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">end</span>
+    <span class="doccomment">/// Returns true if and only if the given byte is in this range.
+    </span><span class="kw">pub fn </span>matches(<span class="kw-2">&amp;</span><span class="self">self</span>, b: u8) -&gt; bool {
+        <span class="self">self</span>.start &lt;= b &amp;&amp; b &lt;= <span class="self">self</span>.end
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Utf8Range</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">start</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">end</span> {
-            <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;[{:X}]&quot;</span>, <span class="self">self</span>.<span class="ident">start</span>)
-        } <span class="kw">else</span> {
-            <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;[{:X}-{:X}]&quot;</span>, <span class="self">self</span>.<span class="ident">start</span>, <span class="self">self</span>.<span class="ident">end</span>)
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Utf8Range {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">if </span><span class="self">self</span>.start == <span class="self">self</span>.end {
+            <span class="macro">write!</span>(f, <span class="string">&quot;[{:X}]&quot;</span>, <span class="self">self</span>.start)
+        } <span class="kw">else </span>{
+            <span class="macro">write!</span>(f, <span class="string">&quot;[{:X}-{:X}]&quot;</span>, <span class="self">self</span>.start, <span class="self">self</span>.end)
         }
     }
 }
 
-<span class="doccomment">/// An iterator over ranges of matching UTF-8 byte sequences.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The iteration represents an alternation of comprehensive byte sequences</span>
-<span class="doccomment">/// that match precisely the set of UTF-8 encoded scalar values.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// A byte sequence corresponds to one of the scalar values in the range given</span>
-<span class="doccomment">/// if and only if it completely matches exactly one of the sequences of byte</span>
-<span class="doccomment">/// ranges produced by this iterator.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Each sequence of byte ranges matches a unique set of bytes. That is, no two</span>
-<span class="doccomment">/// sequences will match the same bytes.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This shows how to match an arbitrary byte sequence against a range of</span>
-<span class="doccomment">/// scalar values.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```rust</span>
-<span class="doccomment">/// use regex_syntax::utf8::{Utf8Sequences, Utf8Sequence};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// fn matches(seqs: &amp;[Utf8Sequence], bytes: &amp;[u8]) -&gt; bool {</span>
-<span class="doccomment">///     for range in seqs {</span>
-<span class="doccomment">///         if range.matches(bytes) {</span>
-<span class="doccomment">///             return true;</span>
-<span class="doccomment">///         }</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">///     false</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Test the basic multilingual plane.</span>
-<span class="doccomment">/// let seqs: Vec&lt;_&gt; = Utf8Sequences::new(&#39;\u{0}&#39;, &#39;\u{FFFF}&#39;).collect();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // UTF-8 encoding of &#39;a&#39;.</span>
-<span class="doccomment">/// assert!(matches(&amp;seqs, &amp;[0x61]));</span>
-<span class="doccomment">/// // UTF-8 encoding of &#39;☃&#39; (`\u{2603}`).</span>
-<span class="doccomment">/// assert!(matches(&amp;seqs, &amp;[0xE2, 0x98, 0x83]));</span>
-<span class="doccomment">/// // UTF-8 encoding of `\u{10348}` (outside the BMP).</span>
-<span class="doccomment">/// assert!(!matches(&amp;seqs, &amp;[0xF0, 0x90, 0x8D, 0x88]));</span>
-<span class="doccomment">/// // Tries to match against a UTF-8 encoding of a surrogate codepoint,</span>
-<span class="doccomment">/// // which is invalid UTF-8, and therefore fails, despite the fact that</span>
-<span class="doccomment">/// // the corresponding codepoint (0xD800) falls in the range given.</span>
-<span class="doccomment">/// assert!(!matches(&amp;seqs, &amp;[0xED, 0xA0, 0x80]));</span>
-<span class="doccomment">/// // And fails against plain old invalid UTF-8.</span>
-<span class="doccomment">/// assert!(!matches(&amp;seqs, &amp;[0xFF, 0xFF]));</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If this example seems circuitous, that&#39;s because it is! It&#39;s meant to be</span>
-<span class="doccomment">/// illustrative. In practice, you could just try to decode your byte sequence</span>
-<span class="doccomment">/// and compare it with the scalar value range directly. However, this is not</span>
-<span class="doccomment">/// always possible (for example, in a byte based automaton).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Utf8Sequences</span> {
-    <span class="ident">range_stack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ScalarRange</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An iterator over ranges of matching UTF-8 byte sequences.
+///
+/// The iteration represents an alternation of comprehensive byte sequences
+/// that match precisely the set of UTF-8 encoded scalar values.
+///
+/// A byte sequence corresponds to one of the scalar values in the range given
+/// if and only if it completely matches exactly one of the sequences of byte
+/// ranges produced by this iterator.
+///
+/// Each sequence of byte ranges matches a unique set of bytes. That is, no two
+/// sequences will match the same bytes.
+///
+/// # Example
+///
+/// This shows how to match an arbitrary byte sequence against a range of
+/// scalar values.
+///
+/// ```rust
+/// use regex_syntax::utf8::{Utf8Sequences, Utf8Sequence};
+///
+/// fn matches(seqs: &amp;[Utf8Sequence], bytes: &amp;[u8]) -&gt; bool {
+///     for range in seqs {
+///         if range.matches(bytes) {
+///             return true;
+///         }
+///     }
+///     false
+/// }
+///
+/// // Test the basic multilingual plane.
+/// let seqs: Vec&lt;_&gt; = Utf8Sequences::new(&#39;\u{0}&#39;, &#39;\u{FFFF}&#39;).collect();
+///
+/// // UTF-8 encoding of &#39;a&#39;.
+/// assert!(matches(&amp;seqs, &amp;[0x61]));
+/// // UTF-8 encoding of &#39;☃&#39; (`\u{2603}`).
+/// assert!(matches(&amp;seqs, &amp;[0xE2, 0x98, 0x83]));
+/// // UTF-8 encoding of `\u{10348}` (outside the BMP).
+/// assert!(!matches(&amp;seqs, &amp;[0xF0, 0x90, 0x8D, 0x88]));
+/// // Tries to match against a UTF-8 encoding of a surrogate codepoint,
+/// // which is invalid UTF-8, and therefore fails, despite the fact that
+/// // the corresponding codepoint (0xD800) falls in the range given.
+/// assert!(!matches(&amp;seqs, &amp;[0xED, 0xA0, 0x80]));
+/// // And fails against plain old invalid UTF-8.
+/// assert!(!matches(&amp;seqs, &amp;[0xFF, 0xFF]));
+/// ```
+///
+/// If this example seems circuitous, that&#39;s because it is! It&#39;s meant to be
+/// illustrative. In practice, you could just try to decode your byte sequence
+/// and compare it with the scalar value range directly. However, this is not
+/// always possible (for example, in a byte based automaton).
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Utf8Sequences {
+    range_stack: Vec&lt;ScalarRange&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Utf8Sequences</span> {
-    <span class="doccomment">/// Create a new iterator over UTF-8 byte ranges for the scalar value range</span>
-    <span class="doccomment">/// given.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">start</span>: <span class="ident">char</span>, <span class="ident">end</span>: <span class="ident">char</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="ident">Utf8Sequences</span> { <span class="ident">range_stack</span>: <span class="macro">vec!</span>[] };
-        <span class="ident">it</span>.<span class="ident">push</span>(<span class="ident">start</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">end</span> <span class="kw">as</span> <span class="ident">u32</span>);
-        <span class="ident">it</span>
+<span class="kw">impl </span>Utf8Sequences {
+    <span class="doccomment">/// Create a new iterator over UTF-8 byte ranges for the scalar value range
+    /// given.
+    </span><span class="kw">pub fn </span>new(start: char, end: char) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>it = Utf8Sequences { range_stack: <span class="macro">vec!</span>[] };
+        it.push(start <span class="kw">as </span>u32, end <span class="kw">as </span>u32);
+        it
     }
 
-    <span class="doccomment">/// reset resets the scalar value range.</span>
-    <span class="doccomment">/// Any existing state is cleared, but resources may be reused.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// N.B. Benchmarks say that this method is dubious.</span>
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">start</span>: <span class="ident">char</span>, <span class="ident">end</span>: <span class="ident">char</span>) {
-        <span class="self">self</span>.<span class="ident">range_stack</span>.<span class="ident">clear</span>();
-        <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">start</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">end</span> <span class="kw">as</span> <span class="ident">u32</span>);
+    <span class="doccomment">/// reset resets the scalar value range.
+    /// Any existing state is cleared, but resources may be reused.
+    ///
+    /// N.B. Benchmarks say that this method is dubious.
+    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="kw">pub fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start: char, end: char) {
+        <span class="self">self</span>.range_stack.clear();
+        <span class="self">self</span>.push(start <span class="kw">as </span>u32, end <span class="kw">as </span>u32);
     }
 
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">start</span>: <span class="ident">u32</span>, <span class="ident">end</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">range_stack</span>.<span class="ident">push</span>(<span class="ident">ScalarRange</span> { <span class="ident">start</span>, <span class="ident">end</span> });
-    }
-}
-
-<span class="kw">struct</span> <span class="ident">ScalarRange</span> {
-    <span class="ident">start</span>: <span class="ident">u32</span>,
-    <span class="ident">end</span>: <span class="ident">u32</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">ScalarRange</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;ScalarRange({:X}, {:X})&quot;</span>, <span class="self">self</span>.<span class="ident">start</span>, <span class="self">self</span>.<span class="ident">end</span>)
+    <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start: u32, end: u32) {
+        <span class="self">self</span>.range_stack.push(ScalarRange { start, end });
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">Utf8Sequences</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">Utf8Sequence</span>;
+<span class="kw">struct </span>ScalarRange {
+    start: u32,
+    end: u32,
+}
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="lifetime">&#39;TOP</span>: <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">r</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_stack</span>.<span class="ident">pop</span>() {
-            <span class="lifetime">&#39;INNER</span>: <span class="kw">loop</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">r1</span>, <span class="ident">r2</span>)) <span class="op">=</span> <span class="ident">r</span>.<span class="ident">split</span>() {
-                    <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">r2</span>.<span class="ident">start</span>, <span class="ident">r2</span>.<span class="ident">end</span>);
-                    <span class="ident">r</span>.<span class="ident">start</span> <span class="op">=</span> <span class="ident">r1</span>.<span class="ident">start</span>;
-                    <span class="ident">r</span>.<span class="ident">end</span> <span class="op">=</span> <span class="ident">r1</span>.<span class="ident">end</span>;
-                    <span class="kw">continue</span> <span class="lifetime">&#39;INNER</span>;
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>ScalarRange {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;ScalarRange({:X}, {:X})&quot;</span>, <span class="self">self</span>.start, <span class="self">self</span>.end)
+    }
+}
+
+<span class="kw">impl </span>Iterator <span class="kw">for </span>Utf8Sequences {
+    <span class="kw">type </span>Item = Utf8Sequence;
+
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="lifetime">&#39;TOP</span>: <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>r) = <span class="self">self</span>.range_stack.pop() {
+            <span class="lifetime">&#39;INNER</span>: <span class="kw">loop </span>{
+                <span class="kw">if let </span><span class="prelude-val">Some</span>((r1, r2)) = r.split() {
+                    <span class="self">self</span>.push(r2.start, r2.end);
+                    r.start = r1.start;
+                    r.end = r1.end;
+                    <span class="kw">continue </span><span class="lifetime">&#39;INNER</span>;
                 }
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">r</span>.<span class="ident">is_valid</span>() {
-                    <span class="kw">continue</span> <span class="lifetime">&#39;TOP</span>;
+                <span class="kw">if </span>!r.is_valid() {
+                    <span class="kw">continue </span><span class="lifetime">&#39;TOP</span>;
                 }
-                <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">1</span>..<span class="ident">MAX_UTF8_BYTES</span> {
-                    <span class="kw">let</span> <span class="ident">max</span> <span class="op">=</span> <span class="ident">max_scalar_value</span>(<span class="ident">i</span>);
-                    <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">start</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">max</span> <span class="op">&amp;&amp;</span> <span class="ident">max</span> <span class="op">&lt;</span> <span class="ident">r</span>.<span class="ident">end</span> {
-                        <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">max</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">r</span>.<span class="ident">end</span>);
-                        <span class="ident">r</span>.<span class="ident">end</span> <span class="op">=</span> <span class="ident">max</span>;
-                        <span class="kw">continue</span> <span class="lifetime">&#39;INNER</span>;
+                <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..MAX_UTF8_BYTES {
+                    <span class="kw">let </span>max = max_scalar_value(i);
+                    <span class="kw">if </span>r.start &lt;= max &amp;&amp; max &lt; r.end {
+                        <span class="self">self</span>.push(max + <span class="number">1</span>, r.end);
+                        r.end = max;
+                        <span class="kw">continue </span><span class="lifetime">&#39;INNER</span>;
                     }
                 }
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ascii_range</span>) <span class="op">=</span> <span class="ident">r</span>.<span class="ident">as_ascii</span>() {
-                    <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">Utf8Sequence::One</span>(<span class="ident">ascii_range</span>));
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(ascii_range) = r.as_ascii() {
+                    <span class="kw">return </span><span class="prelude-val">Some</span>(Utf8Sequence::One(ascii_range));
                 }
-                <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">1</span>..<span class="ident">MAX_UTF8_BYTES</span> {
-                    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">6</span> <span class="op">*</span> <span class="ident">i</span>)) <span class="op">-</span> <span class="number">1</span>;
-                    <span class="kw">if</span> (<span class="ident">r</span>.<span class="ident">start</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">m</span>) <span class="op">!</span><span class="op">=</span> (<span class="ident">r</span>.<span class="ident">end</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">m</span>) {
-                        <span class="kw">if</span> (<span class="ident">r</span>.<span class="ident">start</span> <span class="op">&amp;</span> <span class="ident">m</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                            <span class="self">self</span>.<span class="ident">push</span>((<span class="ident">r</span>.<span class="ident">start</span> <span class="op">|</span> <span class="ident">m</span>) <span class="op">+</span> <span class="number">1</span>, <span class="ident">r</span>.<span class="ident">end</span>);
-                            <span class="ident">r</span>.<span class="ident">end</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">start</span> <span class="op">|</span> <span class="ident">m</span>;
-                            <span class="kw">continue</span> <span class="lifetime">&#39;INNER</span>;
+                <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..MAX_UTF8_BYTES {
+                    <span class="kw">let </span>m = (<span class="number">1 </span>&lt;&lt; (<span class="number">6 </span>* i)) - <span class="number">1</span>;
+                    <span class="kw">if </span>(r.start &amp; !m) != (r.end &amp; !m) {
+                        <span class="kw">if </span>(r.start &amp; m) != <span class="number">0 </span>{
+                            <span class="self">self</span>.push((r.start | m) + <span class="number">1</span>, r.end);
+                            r.end = r.start | m;
+                            <span class="kw">continue </span><span class="lifetime">&#39;INNER</span>;
                         }
-                        <span class="kw">if</span> (<span class="ident">r</span>.<span class="ident">end</span> <span class="op">&amp;</span> <span class="ident">m</span>) <span class="op">!</span><span class="op">=</span> <span class="ident">m</span> {
-                            <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">r</span>.<span class="ident">end</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">m</span>, <span class="ident">r</span>.<span class="ident">end</span>);
-                            <span class="ident">r</span>.<span class="ident">end</span> <span class="op">=</span> (<span class="ident">r</span>.<span class="ident">end</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">m</span>) <span class="op">-</span> <span class="number">1</span>;
-                            <span class="kw">continue</span> <span class="lifetime">&#39;INNER</span>;
+                        <span class="kw">if </span>(r.end &amp; m) != m {
+                            <span class="self">self</span>.push(r.end &amp; !m, r.end);
+                            r.end = (r.end &amp; !m) - <span class="number">1</span>;
+                            <span class="kw">continue </span><span class="lifetime">&#39;INNER</span>;
                         }
                     }
                 }
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">start</span> <span class="op">=</span> [<span class="number">0</span>; <span class="ident">MAX_UTF8_BYTES</span>];
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">end</span> <span class="op">=</span> [<span class="number">0</span>; <span class="ident">MAX_UTF8_BYTES</span>];
-                <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">start</span>, <span class="kw-2">&amp;mut</span> <span class="ident">end</span>);
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">Utf8Sequence::from_encoded_range</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">start</span>[<span class="number">0</span>..<span class="ident">n</span>],
-                    <span class="kw-2">&amp;</span><span class="ident">end</span>[<span class="number">0</span>..<span class="ident">n</span>],
+                <span class="kw">let </span><span class="kw-2">mut </span>start = [<span class="number">0</span>; MAX_UTF8_BYTES];
+                <span class="kw">let </span><span class="kw-2">mut </span>end = [<span class="number">0</span>; MAX_UTF8_BYTES];
+                <span class="kw">let </span>n = r.encode(<span class="kw-2">&amp;mut </span>start, <span class="kw-2">&amp;mut </span>end);
+                <span class="kw">return </span><span class="prelude-val">Some</span>(Utf8Sequence::from_encoded_range(
+                    <span class="kw-2">&amp;</span>start[<span class="number">0</span>..n],
+                    <span class="kw-2">&amp;</span>end[<span class="number">0</span>..n],
                 ));
             }
         }
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">impl</span> <span class="ident">FusedIterator</span> <span class="kw">for</span> <span class="ident">Utf8Sequences</span> {}
+<span class="kw">impl </span>FusedIterator <span class="kw">for </span>Utf8Sequences {}
 
-<span class="kw">impl</span> <span class="ident">ScalarRange</span> {
-    <span class="doccomment">/// split splits this range if it overlaps with a surrogate codepoint.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Either or both ranges may be invalid.</span>
-    <span class="kw">fn</span> <span class="ident">split</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">ScalarRange</span>, <span class="ident">ScalarRange</span>)<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">start</span> <span class="op">&lt;</span> <span class="number">0xE000</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">end</span> <span class="op">&gt;</span> <span class="number">0xD7FF</span> {
+<span class="kw">impl </span>ScalarRange {
+    <span class="doccomment">/// split splits this range if it overlaps with a surrogate codepoint.
+    ///
+    /// Either or both ranges may be invalid.
+    </span><span class="kw">fn </span>split(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(ScalarRange, ScalarRange)&gt; {
+        <span class="kw">if </span><span class="self">self</span>.start &lt; <span class="number">0xE000 </span>&amp;&amp; <span class="self">self</span>.end &gt; <span class="number">0xD7FF </span>{
             <span class="prelude-val">Some</span>((
-                <span class="ident">ScalarRange</span> { <span class="ident">start</span>: <span class="self">self</span>.<span class="ident">start</span>, <span class="ident">end</span>: <span class="number">0xD7FF</span> },
-                <span class="ident">ScalarRange</span> { <span class="ident">start</span>: <span class="number">0xE000</span>, <span class="ident">end</span>: <span class="self">self</span>.<span class="ident">end</span> },
+                ScalarRange { start: <span class="self">self</span>.start, end: <span class="number">0xD7FF </span>},
+                ScalarRange { start: <span class="number">0xE000</span>, end: <span class="self">self</span>.end },
             ))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 
-    <span class="doccomment">/// is_valid returns true if and only if start &lt;= end.</span>
-    <span class="kw">fn</span> <span class="ident">is_valid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">start</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">end</span>
+    <span class="doccomment">/// is_valid returns true if and only if start &lt;= end.
+    </span><span class="kw">fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.start &lt;= <span class="self">self</span>.end
     }
 
-    <span class="doccomment">/// as_ascii returns this range as a Utf8Range if and only if all scalar</span>
-    <span class="doccomment">/// values in this range can be encoded as a single byte.</span>
-    <span class="kw">fn</span> <span class="ident">as_ascii</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Utf8Range</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_ascii</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">Utf8Range::new</span>(<span class="self">self</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="ident">u8</span>, <span class="self">self</span>.<span class="ident">end</span> <span class="kw">as</span> <span class="ident">u8</span>))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+    <span class="doccomment">/// as_ascii returns this range as a Utf8Range if and only if all scalar
+    /// values in this range can be encoded as a single byte.
+    </span><span class="kw">fn </span>as_ascii(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Utf8Range&gt; {
+        <span class="kw">if </span><span class="self">self</span>.is_ascii() {
+            <span class="prelude-val">Some</span>(Utf8Range::new(<span class="self">self</span>.start <span class="kw">as </span>u8, <span class="self">self</span>.end <span class="kw">as </span>u8))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 
-    <span class="doccomment">/// is_ascii returns true if the range is ASCII only (i.e., takes a single</span>
-    <span class="doccomment">/// byte to encode any scalar value).</span>
-    <span class="kw">fn</span> <span class="ident">is_ascii</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">is_valid</span>() <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">end</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0x7f</span>
-    }
+    <span class="doccomment">/// is_ascii returns true if the range is ASCII only (i.e., takes a single
+    /// byte to encode any scalar value).
+    </span><span class="kw">fn </span>is_ascii(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.is_valid() &amp;&amp; <span class="self">self</span>.end &lt;= <span class="number">0x7f
+    </span>}
 
-    <span class="doccomment">/// encode writes the UTF-8 encoding of the start and end of this range</span>
-    <span class="doccomment">/// to the corresponding destination slices, and returns the number of</span>
-    <span class="doccomment">/// bytes written.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The slices should have room for at least `MAX_UTF8_BYTES`.</span>
-    <span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">start</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>], <span class="ident">end</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">cs</span> <span class="op">=</span> <span class="ident">char::from_u32</span>(<span class="self">self</span>.<span class="ident">start</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">ce</span> <span class="op">=</span> <span class="ident">char::from_u32</span>(<span class="self">self</span>.<span class="ident">end</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">encode_utf8</span>(<span class="ident">start</span>);
-        <span class="kw">let</span> <span class="ident">se</span> <span class="op">=</span> <span class="ident">ce</span>.<span class="ident">encode_utf8</span>(<span class="ident">end</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">ss</span>.<span class="ident">len</span>(), <span class="ident">se</span>.<span class="ident">len</span>());
-        <span class="ident">ss</span>.<span class="ident">len</span>()
-    }
-}
-
-<span class="kw">fn</span> <span class="ident">max_scalar_value</span>(<span class="ident">nbytes</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">match</span> <span class="ident">nbytes</span> {
-        <span class="number">1</span> =&gt; <span class="number">0x007F</span>,
-        <span class="number">2</span> =&gt; <span class="number">0x07FF</span>,
-        <span class="number">3</span> =&gt; <span class="number">0xFFFF</span>,
-        <span class="number">4</span> =&gt; <span class="number">0x0010_FFFF</span>,
-        <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;invalid UTF-8 byte sequence size&quot;</span>),
+    <span class="doccomment">/// encode writes the UTF-8 encoding of the start and end of this range
+    /// to the corresponding destination slices, and returns the number of
+    /// bytes written.
+    ///
+    /// The slices should have room for at least `MAX_UTF8_BYTES`.
+    </span><span class="kw">fn </span>encode(<span class="kw-2">&amp;</span><span class="self">self</span>, start: <span class="kw-2">&amp;mut </span>[u8], end: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
+        <span class="kw">let </span>cs = char::from_u32(<span class="self">self</span>.start).unwrap();
+        <span class="kw">let </span>ce = char::from_u32(<span class="self">self</span>.end).unwrap();
+        <span class="kw">let </span>ss = cs.encode_utf8(start);
+        <span class="kw">let </span>se = ce.encode_utf8(end);
+        <span class="macro">assert_eq!</span>(ss.len(), se.len());
+        ss.len()
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std::char</span>;
+<span class="kw">fn </span>max_scalar_value(nbytes: usize) -&gt; u32 {
+    <span class="kw">match </span>nbytes {
+        <span class="number">1 </span>=&gt; <span class="number">0x007F</span>,
+        <span class="number">2 </span>=&gt; <span class="number">0x07FF</span>,
+        <span class="number">3 </span>=&gt; <span class="number">0xFFFF</span>,
+        <span class="number">4 </span>=&gt; <span class="number">0x0010_FFFF</span>,
+        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;invalid UTF-8 byte sequence size&quot;</span>),
+    }
+}
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utf8</span>::{<span class="ident">Utf8Range</span>, <span class="ident">Utf8Sequences</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::char;
 
-    <span class="kw">fn</span> <span class="ident">rutf8</span>(<span class="ident">s</span>: <span class="ident">u8</span>, <span class="ident">e</span>: <span class="ident">u8</span>) -&gt; <span class="ident">Utf8Range</span> {
-        <span class="ident">Utf8Range::new</span>(<span class="ident">s</span>, <span class="ident">e</span>)
+    <span class="kw">use </span><span class="kw">crate</span>::utf8::{Utf8Range, Utf8Sequences};
+
+    <span class="kw">fn </span>rutf8(s: u8, e: u8) -&gt; Utf8Range {
+        Utf8Range::new(s, e)
     }
 
-    <span class="kw">fn</span> <span class="ident">never_accepts_surrogate_codepoints</span>(<span class="ident">start</span>: <span class="ident">char</span>, <span class="ident">end</span>: <span class="ident">char</span>) {
-        <span class="kw">for</span> <span class="ident">cp</span> <span class="kw">in</span> <span class="number">0xD800</span>..<span class="number">0xE000</span> {
-            <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">encode_surrogate</span>(<span class="ident">cp</span>);
-            <span class="kw">for</span> <span class="ident">r</span> <span class="kw">in</span> <span class="ident">Utf8Sequences::new</span>(<span class="ident">start</span>, <span class="ident">end</span>) {
-                <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">matches</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>) {
+    <span class="kw">fn </span>never_accepts_surrogate_codepoints(start: char, end: char) {
+        <span class="kw">for </span>cp <span class="kw">in </span><span class="number">0xD800</span>..<span class="number">0xE000 </span>{
+            <span class="kw">let </span>buf = encode_surrogate(cp);
+            <span class="kw">for </span>r <span class="kw">in </span>Utf8Sequences::new(start, end) {
+                <span class="kw">if </span>r.matches(<span class="kw-2">&amp;</span>buf) {
                     <span class="macro">panic!</span>(
                         <span class="string">&quot;Sequence ({:X}, {:X}) contains range {:?}, \
                          which matches surrogate code point {:X} \
                          with encoded bytes {:?}&quot;</span>,
-                        <span class="ident">start</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">end</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">r</span>, <span class="ident">cp</span>, <span class="ident">buf</span>,
+                        start <span class="kw">as </span>u32, end <span class="kw">as </span>u32, r, cp, buf,
                     );
                 }
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">codepoints_no_surrogates</span>() {
-        <span class="ident">never_accepts_surrogate_codepoints</span>(<span class="string">&#39;\u{0}&#39;</span>, <span class="string">&#39;\u{FFFF}&#39;</span>);
-        <span class="ident">never_accepts_surrogate_codepoints</span>(<span class="string">&#39;\u{0}&#39;</span>, <span class="string">&#39;\u{10FFFF}&#39;</span>);
-        <span class="ident">never_accepts_surrogate_codepoints</span>(<span class="string">&#39;\u{0}&#39;</span>, <span class="string">&#39;\u{10FFFE}&#39;</span>);
-        <span class="ident">never_accepts_surrogate_codepoints</span>(<span class="string">&#39;\u{80}&#39;</span>, <span class="string">&#39;\u{10FFFF}&#39;</span>);
-        <span class="ident">never_accepts_surrogate_codepoints</span>(<span class="string">&#39;\u{D7FF}&#39;</span>, <span class="string">&#39;\u{E000}&#39;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>codepoints_no_surrogates() {
+        never_accepts_surrogate_codepoints(<span class="string">&#39;\u{0}&#39;</span>, <span class="string">&#39;\u{FFFF}&#39;</span>);
+        never_accepts_surrogate_codepoints(<span class="string">&#39;\u{0}&#39;</span>, <span class="string">&#39;\u{10FFFF}&#39;</span>);
+        never_accepts_surrogate_codepoints(<span class="string">&#39;\u{0}&#39;</span>, <span class="string">&#39;\u{10FFFE}&#39;</span>);
+        never_accepts_surrogate_codepoints(<span class="string">&#39;\u{80}&#39;</span>, <span class="string">&#39;\u{10FFFF}&#39;</span>);
+        never_accepts_surrogate_codepoints(<span class="string">&#39;\u{D7FF}&#39;</span>, <span class="string">&#39;\u{E000}&#39;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">single_codepoint_one_sequence</span>() {
-        <span class="comment">// Tests that every range of scalar values that contains a single</span>
-        <span class="comment">// scalar value is recognized by one sequence of byte ranges.</span>
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0x0</span>..<span class="op">=</span><span class="number">0x0010_FFFF</span> {
-            <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">char::from_u32</span>(<span class="ident">i</span>) {
-                <span class="prelude-val">None</span> =&gt; <span class="kw">continue</span>,
-                <span class="prelude-val">Some</span>(<span class="ident">c</span>) =&gt; <span class="ident">c</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>single_codepoint_one_sequence() {
+        <span class="comment">// Tests that every range of scalar values that contains a single
+        // scalar value is recognized by one sequence of byte ranges.
+        </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0x0</span>..=<span class="number">0x0010_FFFF </span>{
+            <span class="kw">let </span>c = <span class="kw">match </span>char::from_u32(i) {
+                <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
+                <span class="prelude-val">Some</span>(c) =&gt; c,
             };
-            <span class="kw">let</span> <span class="ident">seqs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Utf8Sequences::new</span>(<span class="ident">c</span>, <span class="ident">c</span>).<span class="ident">collect</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">seqs</span>.<span class="ident">len</span>(), <span class="number">1</span>);
+            <span class="kw">let </span>seqs: Vec&lt;<span class="kw">_</span>&gt; = Utf8Sequences::new(c, c).collect();
+            <span class="macro">assert_eq!</span>(seqs.len(), <span class="number">1</span>);
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">bmp</span>() {
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utf8::Utf8Sequence</span>::<span class="kw-2">*</span>;
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>bmp() {
+        <span class="kw">use </span><span class="kw">crate</span>::utf8::Utf8Sequence::<span class="kw-2">*</span>;
 
-        <span class="kw">let</span> <span class="ident">seqs</span> <span class="op">=</span> <span class="ident">Utf8Sequences::new</span>(<span class="string">&#39;\u{0}&#39;</span>, <span class="string">&#39;\u{FFFF}&#39;</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="kw">let </span>seqs = Utf8Sequences::new(<span class="string">&#39;\u{0}&#39;</span>, <span class="string">&#39;\u{FFFF}&#39;</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">seqs</span>,
+            seqs,
             <span class="macro">vec!</span>[
-                <span class="ident">One</span>(<span class="ident">rutf8</span>(<span class="number">0x0</span>, <span class="number">0x7F</span>)),
-                <span class="ident">Two</span>([<span class="ident">rutf8</span>(<span class="number">0xC2</span>, <span class="number">0xDF</span>), <span class="ident">rutf8</span>(<span class="number">0x80</span>, <span class="number">0xBF</span>)]),
-                <span class="ident">Three</span>([
-                    <span class="ident">rutf8</span>(<span class="number">0xE0</span>, <span class="number">0xE0</span>),
-                    <span class="ident">rutf8</span>(<span class="number">0xA0</span>, <span class="number">0xBF</span>),
-                    <span class="ident">rutf8</span>(<span class="number">0x80</span>, <span class="number">0xBF</span>)
+                One(rutf8(<span class="number">0x0</span>, <span class="number">0x7F</span>)),
+                Two([rutf8(<span class="number">0xC2</span>, <span class="number">0xDF</span>), rutf8(<span class="number">0x80</span>, <span class="number">0xBF</span>)]),
+                Three([
+                    rutf8(<span class="number">0xE0</span>, <span class="number">0xE0</span>),
+                    rutf8(<span class="number">0xA0</span>, <span class="number">0xBF</span>),
+                    rutf8(<span class="number">0x80</span>, <span class="number">0xBF</span>)
                 ]),
-                <span class="ident">Three</span>([
-                    <span class="ident">rutf8</span>(<span class="number">0xE1</span>, <span class="number">0xEC</span>),
-                    <span class="ident">rutf8</span>(<span class="number">0x80</span>, <span class="number">0xBF</span>),
-                    <span class="ident">rutf8</span>(<span class="number">0x80</span>, <span class="number">0xBF</span>)
+                Three([
+                    rutf8(<span class="number">0xE1</span>, <span class="number">0xEC</span>),
+                    rutf8(<span class="number">0x80</span>, <span class="number">0xBF</span>),
+                    rutf8(<span class="number">0x80</span>, <span class="number">0xBF</span>)
                 ]),
-                <span class="ident">Three</span>([
-                    <span class="ident">rutf8</span>(<span class="number">0xED</span>, <span class="number">0xED</span>),
-                    <span class="ident">rutf8</span>(<span class="number">0x80</span>, <span class="number">0x9F</span>),
-                    <span class="ident">rutf8</span>(<span class="number">0x80</span>, <span class="number">0xBF</span>)
+                Three([
+                    rutf8(<span class="number">0xED</span>, <span class="number">0xED</span>),
+                    rutf8(<span class="number">0x80</span>, <span class="number">0x9F</span>),
+                    rutf8(<span class="number">0x80</span>, <span class="number">0xBF</span>)
                 ]),
-                <span class="ident">Three</span>([
-                    <span class="ident">rutf8</span>(<span class="number">0xEE</span>, <span class="number">0xEF</span>),
-                    <span class="ident">rutf8</span>(<span class="number">0x80</span>, <span class="number">0xBF</span>),
-                    <span class="ident">rutf8</span>(<span class="number">0x80</span>, <span class="number">0xBF</span>)
+                Three([
+                    rutf8(<span class="number">0xEE</span>, <span class="number">0xEF</span>),
+                    rutf8(<span class="number">0x80</span>, <span class="number">0xBF</span>),
+                    rutf8(<span class="number">0x80</span>, <span class="number">0xBF</span>)
                 ]),
             ]
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">reverse</span>() {
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utf8::Utf8Sequence</span>::<span class="kw-2">*</span>;
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>reverse() {
+        <span class="kw">use </span><span class="kw">crate</span>::utf8::Utf8Sequence::<span class="kw-2">*</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">One</span>(<span class="ident">rutf8</span>(<span class="number">0xA</span>, <span class="number">0xB</span>));
-        <span class="ident">s</span>.<span class="ident">reverse</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>.<span class="ident">as_slice</span>(), <span class="kw-2">&amp;</span>[<span class="ident">rutf8</span>(<span class="number">0xA</span>, <span class="number">0xB</span>)]);
+        <span class="kw">let </span><span class="kw-2">mut </span>s = One(rutf8(<span class="number">0xA</span>, <span class="number">0xB</span>));
+        s.reverse();
+        <span class="macro">assert_eq!</span>(s.as_slice(), <span class="kw-2">&amp;</span>[rutf8(<span class="number">0xA</span>, <span class="number">0xB</span>)]);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">Two</span>([<span class="ident">rutf8</span>(<span class="number">0xA</span>, <span class="number">0xB</span>), <span class="ident">rutf8</span>(<span class="number">0xB</span>, <span class="number">0xC</span>)]);
-        <span class="ident">s</span>.<span class="ident">reverse</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>.<span class="ident">as_slice</span>(), <span class="kw-2">&amp;</span>[<span class="ident">rutf8</span>(<span class="number">0xB</span>, <span class="number">0xC</span>), <span class="ident">rutf8</span>(<span class="number">0xA</span>, <span class="number">0xB</span>)]);
+        <span class="kw">let </span><span class="kw-2">mut </span>s = Two([rutf8(<span class="number">0xA</span>, <span class="number">0xB</span>), rutf8(<span class="number">0xB</span>, <span class="number">0xC</span>)]);
+        s.reverse();
+        <span class="macro">assert_eq!</span>(s.as_slice(), <span class="kw-2">&amp;</span>[rutf8(<span class="number">0xB</span>, <span class="number">0xC</span>), rutf8(<span class="number">0xA</span>, <span class="number">0xB</span>)]);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">Three</span>([<span class="ident">rutf8</span>(<span class="number">0xA</span>, <span class="number">0xB</span>), <span class="ident">rutf8</span>(<span class="number">0xB</span>, <span class="number">0xC</span>), <span class="ident">rutf8</span>(<span class="number">0xC</span>, <span class="number">0xD</span>)]);
-        <span class="ident">s</span>.<span class="ident">reverse</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>s = Three([rutf8(<span class="number">0xA</span>, <span class="number">0xB</span>), rutf8(<span class="number">0xB</span>, <span class="number">0xC</span>), rutf8(<span class="number">0xC</span>, <span class="number">0xD</span>)]);
+        s.reverse();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">s</span>.<span class="ident">as_slice</span>(),
-            <span class="kw-2">&amp;</span>[<span class="ident">rutf8</span>(<span class="number">0xC</span>, <span class="number">0xD</span>), <span class="ident">rutf8</span>(<span class="number">0xB</span>, <span class="number">0xC</span>), <span class="ident">rutf8</span>(<span class="number">0xA</span>, <span class="number">0xB</span>)]
+            s.as_slice(),
+            <span class="kw-2">&amp;</span>[rutf8(<span class="number">0xC</span>, <span class="number">0xD</span>), rutf8(<span class="number">0xB</span>, <span class="number">0xC</span>), rutf8(<span class="number">0xA</span>, <span class="number">0xB</span>)]
         );
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">Four</span>([
-            <span class="ident">rutf8</span>(<span class="number">0xA</span>, <span class="number">0xB</span>),
-            <span class="ident">rutf8</span>(<span class="number">0xB</span>, <span class="number">0xC</span>),
-            <span class="ident">rutf8</span>(<span class="number">0xC</span>, <span class="number">0xD</span>),
-            <span class="ident">rutf8</span>(<span class="number">0xD</span>, <span class="number">0xE</span>),
+        <span class="kw">let </span><span class="kw-2">mut </span>s = Four([
+            rutf8(<span class="number">0xA</span>, <span class="number">0xB</span>),
+            rutf8(<span class="number">0xB</span>, <span class="number">0xC</span>),
+            rutf8(<span class="number">0xC</span>, <span class="number">0xD</span>),
+            rutf8(<span class="number">0xD</span>, <span class="number">0xE</span>),
         ]);
-        <span class="ident">s</span>.<span class="ident">reverse</span>();
+        s.reverse();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">s</span>.<span class="ident">as_slice</span>(),
+            s.as_slice(),
             <span class="kw-2">&amp;</span>[
-                <span class="ident">rutf8</span>(<span class="number">0xD</span>, <span class="number">0xE</span>),
-                <span class="ident">rutf8</span>(<span class="number">0xC</span>, <span class="number">0xD</span>),
-                <span class="ident">rutf8</span>(<span class="number">0xB</span>, <span class="number">0xC</span>),
-                <span class="ident">rutf8</span>(<span class="number">0xA</span>, <span class="number">0xB</span>)
+                rutf8(<span class="number">0xD</span>, <span class="number">0xE</span>),
+                rutf8(<span class="number">0xC</span>, <span class="number">0xD</span>),
+                rutf8(<span class="number">0xB</span>, <span class="number">0xC</span>),
+                rutf8(<span class="number">0xA</span>, <span class="number">0xB</span>)
             ]
         );
     }
 
-    <span class="kw">fn</span> <span class="ident">encode_surrogate</span>(<span class="ident">cp</span>: <span class="ident">u32</span>) -&gt; [<span class="ident">u8</span>; <span class="number">3</span>] {
-        <span class="kw">const</span> <span class="ident">TAG_CONT</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0b1000_0000</span>;
-        <span class="kw">const</span> <span class="ident">TAG_THREE_B</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0b1110_0000</span>;
+    <span class="kw">fn </span>encode_surrogate(cp: u32) -&gt; [u8; <span class="number">3</span>] {
+        <span class="kw">const </span>TAG_CONT: u8 = <span class="number">0b1000_0000</span>;
+        <span class="kw">const </span>TAG_THREE_B: u8 = <span class="number">0b1110_0000</span>;
 
-        <span class="macro">assert!</span>(<span class="number">0xD800</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">cp</span> <span class="op">&amp;&amp;</span> <span class="ident">cp</span> <span class="op">&lt;</span> <span class="number">0xE000</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dst</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">3</span>];
-        <span class="ident">dst</span>[<span class="number">0</span>] <span class="op">=</span> (<span class="ident">cp</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">12</span> <span class="op">&amp;</span> <span class="number">0x0F</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="op">|</span> <span class="ident">TAG_THREE_B</span>;
-        <span class="ident">dst</span>[<span class="number">1</span>] <span class="op">=</span> (<span class="ident">cp</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">6</span> <span class="op">&amp;</span> <span class="number">0x3F</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="op">|</span> <span class="ident">TAG_CONT</span>;
-        <span class="ident">dst</span>[<span class="number">2</span>] <span class="op">=</span> (<span class="ident">cp</span> <span class="op">&amp;</span> <span class="number">0x3F</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="op">|</span> <span class="ident">TAG_CONT</span>;
-        <span class="ident">dst</span>
+        <span class="macro">assert!</span>(<span class="number">0xD800 </span>&lt;= cp &amp;&amp; cp &lt; <span class="number">0xE000</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>dst = [<span class="number">0</span>; <span class="number">3</span>];
+        dst[<span class="number">0</span>] = (cp &gt;&gt; <span class="number">12 </span>&amp; <span class="number">0x0F</span>) <span class="kw">as </span>u8 | TAG_THREE_B;
+        dst[<span class="number">1</span>] = (cp &gt;&gt; <span class="number">6 </span>&amp; <span class="number">0x3F</span>) <span class="kw">as </span>u8 | TAG_CONT;
+        dst[<span class="number">2</span>] = (cp &amp; <span class="number">0x3F</span>) <span class="kw">as </span>u8 | TAG_CONT;
+        dst
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="regex_syntax" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

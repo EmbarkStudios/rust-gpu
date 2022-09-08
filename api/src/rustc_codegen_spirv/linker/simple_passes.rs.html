@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/simple_passes.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>simple_passes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/simple_passes.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>simple_passes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -267,269 +261,268 @@
 <span id="261">261</span>
 <span id="262">262</span>
 <span id="263">263</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">get_name</span>, <span class="ident">get_names</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Block</span>, <span class="ident">Function</span>, <span class="ident">Module</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">ExecutionModel</span>, <span class="ident">Op</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures::fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
-<span class="kw">use</span> <span class="ident">rustc_session::Session</span>;
-<span class="kw">use</span> <span class="ident">std::iter::once</span>;
-<span class="kw">use</span> <span class="ident">std::mem::take</span>;
+</pre><pre class="rust"><code><span class="kw">use super</span>::{get_name, get_names, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>rspirv::dr::{Block, Function, Module};
+<span class="kw">use </span>rspirv::spirv::{ExecutionModel, Op, Word};
+<span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
+<span class="kw">use </span>rustc_session::Session;
+<span class="kw">use </span>std::iter::once;
+<span class="kw">use </span>std::mem::take;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">shift_ids</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>, <span class="ident">add</span>: <span class="ident">u32</span>) {
-    <span class="ident">module</span>.<span class="ident">all_inst_iter_mut</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">result_id</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
-            <span class="kw-2">*</span><span class="ident">result_id</span> <span class="op">+</span><span class="op">=</span> <span class="ident">add</span>;
+<span class="kw">pub fn </span>shift_ids(module: <span class="kw-2">&amp;mut </span>Module, add: u32) {
+    module.all_inst_iter_mut().for_each(|inst| {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>result_id) = <span class="kw-2">&amp;mut </span>inst.result_id {
+            <span class="kw-2">*</span>result_id += add;
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">result_type</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">inst</span>.<span class="ident">result_type</span> {
-            <span class="kw-2">*</span><span class="ident">result_type</span> <span class="op">+</span><span class="op">=</span> <span class="ident">add</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>result_type) = <span class="kw-2">&amp;mut </span>inst.result_type {
+            <span class="kw-2">*</span>result_type += add;
         }
 
-        <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">iter_mut</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">w</span>) <span class="op">=</span> <span class="ident">op</span>.<span class="ident">id_ref_any_mut</span>() {
-                <span class="kw-2">*</span><span class="ident">w</span> <span class="op">+</span><span class="op">=</span> <span class="ident">add</span>;
+        inst.operands.iter_mut().for_each(|op| {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(w) = op.id_ref_any_mut() {
+                <span class="kw-2">*</span>w += add;
             }
         });
     });
 }
 
-<span class="doccomment">/// spir-v requires basic blocks to be ordered so that if A dominates B, A appears before B (except</span>
-<span class="doccomment">/// in the case of backedges). Reverse post-order is a good ordering that satisfies this condition</span>
-<span class="doccomment">/// (with an &quot;already visited set&quot; that blocks going deeper, which solves both the fact that it&#39;s a</span>
-<span class="doccomment">/// DAG, not a tree, as well as backedges).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">block_ordering_pass</span>(<span class="ident">func</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Function</span>) {
-    <span class="kw">if</span> <span class="ident">func</span>.<span class="ident">blocks</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
+<span class="doccomment">/// spir-v requires basic blocks to be ordered so that if A dominates B, A appears before B (except
+/// in the case of backedges). Reverse post-order is a good ordering that satisfies this condition
+/// (with an &quot;already visited set&quot; that blocks going deeper, which solves both the fact that it&#39;s a
+/// DAG, not a tree, as well as backedges).
+</span><span class="kw">pub fn </span>block_ordering_pass(func: <span class="kw-2">&amp;mut </span>Function) {
+    <span class="kw">if </span>func.blocks.len() &lt; <span class="number">2 </span>{
         <span class="kw">return</span>;
     }
-    <span class="kw">fn</span> <span class="ident">visit_postorder</span>(
-        <span class="ident">func</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>,
-        <span class="ident">visited</span>: <span class="kw-2">&amp;mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-        <span class="ident">postorder</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-        <span class="ident">current</span>: <span class="ident">Word</span>,
+    <span class="kw">fn </span>visit_postorder(
+        func: <span class="kw-2">&amp;</span>Function,
+        visited: <span class="kw-2">&amp;mut </span>FxHashSet&lt;Word&gt;,
+        postorder: <span class="kw-2">&amp;mut </span>Vec&lt;Word&gt;,
+        current: Word,
     ) {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">visited</span>.<span class="ident">insert</span>(<span class="ident">current</span>) {
+        <span class="kw">if </span>!visited.insert(current) {
             <span class="kw">return</span>;
         }
-        <span class="kw">let</span> <span class="ident">current_block</span> <span class="op">=</span> <span class="ident">func</span>
-            .<span class="ident">blocks</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>() <span class="op">==</span> <span class="ident">current</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">current_block</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="comment">// HACK(eddyb) treat `OpSelectionMerge` as an edge, in case it points</span>
-        <span class="comment">// to an otherwise-unreachable block.</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">before_last_idx</span>) <span class="op">=</span> <span class="ident">current_block</span>.<span class="ident">instructions</span>.<span class="ident">len</span>().<span class="ident">checked_sub</span>(<span class="number">2</span>) {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">before_last</span>) <span class="op">=</span> <span class="ident">current_block</span>.<span class="ident">instructions</span>.<span class="ident">get</span>(<span class="ident">before_last_idx</span>) {
-                <span class="kw">if</span> <span class="ident">before_last</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::SelectionMerge</span> {
-                    <span class="ident">edges</span>.<span class="ident">push</span>(<span class="ident">before_last</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>());
+        <span class="kw">let </span>current_block = func
+            .blocks
+            .iter()
+            .find(|b| b.label_id().unwrap() == current)
+            .unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>edges = outgoing_edges(current_block).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="comment">// HACK(eddyb) treat `OpSelectionMerge` as an edge, in case it points
+        // to an otherwise-unreachable block.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(before_last_idx) = current_block.instructions.len().checked_sub(<span class="number">2</span>) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(before_last) = current_block.instructions.get(before_last_idx) {
+                <span class="kw">if </span>before_last.class.opcode == Op::SelectionMerge {
+                    edges.push(before_last.operands[<span class="number">0</span>].unwrap_id_ref());
                 }
             }
         }
-        <span class="comment">// Reverse the order, so reverse-postorder keeps things tidy</span>
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">outgoing</span> <span class="kw">in</span> <span class="ident">edges</span>.<span class="ident">iter</span>().<span class="ident">rev</span>() {
-            <span class="ident">visit_postorder</span>(<span class="ident">func</span>, <span class="ident">visited</span>, <span class="ident">postorder</span>, <span class="ident">outgoing</span>);
+        <span class="comment">// Reverse the order, so reverse-postorder keeps things tidy
+        </span><span class="kw">for </span><span class="kw-2">&amp;</span>outgoing <span class="kw">in </span>edges.iter().rev() {
+            visit_postorder(func, visited, postorder, outgoing);
         }
-        <span class="ident">postorder</span>.<span class="ident">push</span>(<span class="ident">current</span>);
+        postorder.push(current);
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visited</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">postorder</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>visited = FxHashSet::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>postorder = Vec::new();
 
-    <span class="kw">let</span> <span class="ident">entry_label</span> <span class="op">=</span> <span class="ident">func</span>.<span class="ident">blocks</span>[<span class="number">0</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
-    <span class="ident">visit_postorder</span>(<span class="ident">func</span>, <span class="kw-2">&amp;mut</span> <span class="ident">visited</span>, <span class="kw-2">&amp;mut</span> <span class="ident">postorder</span>, <span class="ident">entry_label</span>);
+    <span class="kw">let </span>entry_label = func.blocks[<span class="number">0</span>].label_id().unwrap();
+    visit_postorder(func, <span class="kw-2">&amp;mut </span>visited, <span class="kw-2">&amp;mut </span>postorder, entry_label);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old_blocks</span> <span class="op">=</span> <span class="ident">take</span>(<span class="kw-2">&amp;mut</span> <span class="ident">func</span>.<span class="ident">blocks</span>);
-    <span class="comment">// Order blocks according to reverse postorder</span>
-    <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">block</span> <span class="kw">in</span> <span class="ident">postorder</span>.<span class="ident">iter</span>().<span class="ident">rev</span>() {
-        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">old_blocks</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">position</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>() <span class="op">==</span> <span class="ident">block</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="ident">func</span>.<span class="ident">blocks</span>.<span class="ident">push</span>(<span class="ident">old_blocks</span>.<span class="ident">remove</span>(<span class="ident">index</span>));
+    <span class="kw">let </span><span class="kw-2">mut </span>old_blocks = take(<span class="kw-2">&amp;mut </span>func.blocks);
+    <span class="comment">// Order blocks according to reverse postorder
+    </span><span class="kw">for </span><span class="kw-2">&amp;</span>block <span class="kw">in </span>postorder.iter().rev() {
+        <span class="kw">let </span>index = old_blocks
+            .iter()
+            .position(|b| b.label_id().unwrap() == block)
+            .unwrap();
+        func.blocks.push(old_blocks.remove(index));
     }
-    <span class="comment">// Note: if old_blocks isn&#39;t empty here, that means there were unreachable blocks that were deleted.</span>
-    <span class="macro">assert_eq!</span>(<span class="ident">func</span>.<span class="ident">blocks</span>[<span class="number">0</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>(), <span class="ident">entry_label</span>);
+    <span class="comment">// Note: if old_blocks isn&#39;t empty here, that means there were unreachable blocks that were deleted.
+    </span><span class="macro">assert_eq!</span>(func.blocks[<span class="number">0</span>].label_id().unwrap(), entry_label);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">Block</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Word</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-    <span class="kw">let</span> <span class="ident">terminator</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>();
-    <span class="comment">// https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#Termination</span>
-    <span class="kw">let</span> <span class="ident">operand_indices</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">terminator</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-        <span class="ident">Op::Branch</span> =&gt; (<span class="number">0</span>..<span class="number">1</span>).<span class="ident">step_by</span>(<span class="number">1</span>),
-        <span class="ident">Op::BranchConditional</span> =&gt; (<span class="number">1</span>..<span class="number">3</span>).<span class="ident">step_by</span>(<span class="number">1</span>),
-        <span class="ident">Op::Switch</span> =&gt; (<span class="number">1</span>..<span class="ident">terminator</span>.<span class="ident">operands</span>.<span class="ident">len</span>()).<span class="ident">step_by</span>(<span class="number">2</span>),
-        <span class="ident">Op::Return</span>
-        <span class="op">|</span> <span class="ident">Op::ReturnValue</span>
-        <span class="op">|</span> <span class="ident">Op::Kill</span>
-        <span class="op">|</span> <span class="ident">Op::Unreachable</span>
-        <span class="op">|</span> <span class="ident">Op::IgnoreIntersectionKHR</span>
-        <span class="op">|</span> <span class="ident">Op::TerminateRayKHR</span> =&gt; (<span class="number">0</span>..<span class="number">0</span>).<span class="ident">step_by</span>(<span class="number">1</span>),
-        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid block terminator: {:?}&quot;</span>, <span class="ident">terminator</span>),
+<span class="kw">pub fn </span>outgoing_edges(block: <span class="kw-2">&amp;</span>Block) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Word&gt; + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">let </span>terminator = block.instructions.last().unwrap();
+    <span class="comment">// https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#Termination
+    </span><span class="kw">let </span>operand_indices = <span class="kw">match </span>terminator.class.opcode {
+        Op::Branch =&gt; (<span class="number">0</span>..<span class="number">1</span>).step_by(<span class="number">1</span>),
+        Op::BranchConditional =&gt; (<span class="number">1</span>..<span class="number">3</span>).step_by(<span class="number">1</span>),
+        Op::Switch =&gt; (<span class="number">1</span>..terminator.operands.len()).step_by(<span class="number">2</span>),
+        Op::Return
+        | Op::ReturnValue
+        | Op::Kill
+        | Op::Unreachable
+        | Op::IgnoreIntersectionKHR
+        | Op::TerminateRayKHR =&gt; (<span class="number">0</span>..<span class="number">0</span>).step_by(<span class="number">1</span>),
+        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid block terminator: {:?}&quot;</span>, terminator),
     };
-    <span class="ident">operand_indices</span>.<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">terminator</span>.<span class="ident">operands</span>[<span class="ident">i</span>].<span class="ident">unwrap_id_ref</span>())
+    operand_indices.map(<span class="kw">move </span>|i| terminator.operands[i].unwrap_id_ref())
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compact_ids</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remap</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
+<span class="kw">pub fn </span>compact_ids(module: <span class="kw-2">&amp;mut </span>Module) -&gt; u32 {
+    <span class="kw">let </span><span class="kw-2">mut </span>remap = FxHashMap::default();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">insert</span> <span class="op">=</span> <span class="op">|</span><span class="ident">current_id</span>: <span class="ident">u32</span><span class="op">|</span> -&gt; <span class="ident">u32</span> {
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">remap</span>.<span class="ident">len</span>();
-        <span class="kw-2">*</span><span class="ident">remap</span>.<span class="ident">entry</span>(<span class="ident">current_id</span>).<span class="ident">or_insert_with</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">len</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="number">1</span>)
+    <span class="kw">let </span><span class="kw-2">mut </span>insert = |current_id: u32| -&gt; u32 {
+        <span class="kw">let </span>len = remap.len();
+        <span class="kw-2">*</span>remap.entry(current_id).or_insert_with(|| len <span class="kw">as </span>u32 + <span class="number">1</span>)
     };
 
-    <span class="ident">module</span>.<span class="ident">all_inst_iter_mut</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">result_id</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
-            <span class="kw-2">*</span><span class="ident">result_id</span> <span class="op">=</span> <span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">result_id</span>);
+    module.all_inst_iter_mut().for_each(|inst| {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>result_id) = <span class="kw-2">&amp;mut </span>inst.result_id {
+            <span class="kw-2">*</span>result_id = insert(<span class="kw-2">*</span>result_id);
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">result_type</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">inst</span>.<span class="ident">result_type</span> {
-            <span class="kw-2">*</span><span class="ident">result_type</span> <span class="op">=</span> <span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">result_type</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>result_type) = <span class="kw-2">&amp;mut </span>inst.result_type {
+            <span class="kw-2">*</span>result_type = insert(<span class="kw-2">*</span>result_type);
         }
 
-        <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">iter_mut</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">w</span>) <span class="op">=</span> <span class="ident">op</span>.<span class="ident">id_ref_any_mut</span>() {
-                <span class="kw-2">*</span><span class="ident">w</span> <span class="op">=</span> <span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">w</span>);
+        inst.operands.iter_mut().for_each(|op| {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(w) = op.id_ref_any_mut() {
+                <span class="kw-2">*</span>w = insert(<span class="kw-2">*</span>w);
             }
         });
     });
 
-    <span class="ident">remap</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="number">1</span>
+    remap.len() <span class="kw">as </span>u32 + <span class="number">1
+</span>}
+
+<span class="kw">pub fn </span>sort_globals(module: <span class="kw-2">&amp;mut </span>Module) {
+    <span class="comment">// Function declarations come before definitions. TODO: Figure out if it&#39;s even possible to
+    // have a function declaration without a body in a fully linked module?
+    </span>module.functions.sort_by_key(|f| !f.blocks.is_empty());
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sort_globals</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) {
-    <span class="comment">// Function declarations come before definitions. TODO: Figure out if it&#39;s even possible to</span>
-    <span class="comment">// have a function declaration without a body in a fully linked module?</span>
-    <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">sort_by_key</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="op">!</span><span class="ident">f</span>.<span class="ident">blocks</span>.<span class="ident">is_empty</span>());
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">name_variables_pass</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) {
-    <span class="kw">let</span> <span class="ident">variables</span> <span class="op">=</span> <span class="ident">module</span>
-        .<span class="ident">types_global_values</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::Variable</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>())
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="ident">module</span>
-        .<span class="ident">debug_names</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">variables</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>()));
-    <span class="ident">module</span>
-        .<span class="ident">types_global_values</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Line</span>);
-    <span class="kw">for</span> <span class="ident">func</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">module</span>.<span class="ident">functions</span> {
-        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">func</span>.<span class="ident">blocks</span> {
-            <span class="ident">block</span>
-                .<span class="ident">instructions</span>
-                .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Line</span>);
+<span class="kw">pub fn </span>name_variables_pass(module: <span class="kw-2">&amp;mut </span>Module) {
+    <span class="kw">let </span>variables = module
+        .types_global_values
+        .iter()
+        .filter(|inst| inst.class.opcode == Op::Variable)
+        .map(|inst| inst.result_id.unwrap())
+        .collect::&lt;FxHashSet&lt;Word&gt;&gt;();
+    module
+        .debug_names
+        .retain(|inst| variables.contains(<span class="kw-2">&amp;</span>inst.operands[<span class="number">0</span>].unwrap_id_ref()));
+    module
+        .types_global_values
+        .retain(|inst| inst.class.opcode != Op::Line);
+    <span class="kw">for </span>func <span class="kw">in </span><span class="kw-2">&amp;mut </span>module.functions {
+        <span class="kw">for </span>block <span class="kw">in </span><span class="kw-2">&amp;mut </span>func.blocks {
+            block
+                .instructions
+                .retain(|inst| inst.class.opcode != Op::Line);
         }
     }
 }
 
-<span class="comment">// Some instructions are only valid in fragment shaders. Check them.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_fragment_insts</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visited</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="bool-val">false</span>; <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">len</span>()];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">names</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">let</span> <span class="ident">func_id_to_idx</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">module</span>
-        .<span class="ident">functions</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">enumerate</span>()
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">func</span>)<span class="op">|</span> (<span class="ident">func</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>(), <span class="ident">index</span>))
-        .<span class="ident">collect</span>();
-    <span class="kw">let</span> <span class="ident">entries</span> <span class="op">=</span> <span class="ident">module</span>
-        .<span class="ident">entry_points</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_execution_model</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">ExecutionModel::Fragment</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">func_id_to_idx</span>[<span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>()]);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any_err</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">for</span> <span class="ident">entry</span> <span class="kw">in</span> <span class="ident">entries</span> {
-        <span class="kw">let</span> <span class="ident">entry_had_err</span> <span class="op">=</span> <span class="ident">visit</span>(
-            <span class="ident">sess</span>,
-            <span class="ident">module</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">visited</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">stack</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">names</span>,
-            <span class="ident">entry</span>,
-            <span class="kw-2">&amp;</span><span class="ident">func_id_to_idx</span>,
+<span class="comment">// Some instructions are only valid in fragment shaders. Check them.
+</span><span class="kw">pub fn </span>check_fragment_insts(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;</span>Module) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>visited = <span class="macro">vec!</span>[<span class="bool-val">false</span>; module.functions.len()];
+    <span class="kw">let </span><span class="kw-2">mut </span>stack = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>names = <span class="prelude-val">None</span>;
+    <span class="kw">let </span>func_id_to_idx: FxHashMap&lt;Word, usize&gt; = module
+        .functions
+        .iter()
+        .enumerate()
+        .map(|(index, func)| (func.def_id().unwrap(), index))
+        .collect();
+    <span class="kw">let </span>entries = module
+        .entry_points
+        .iter()
+        .filter(|i| i.operands[<span class="number">0</span>].unwrap_execution_model() != ExecutionModel::Fragment)
+        .map(|i| func_id_to_idx[<span class="kw-2">&amp;</span>i.operands[<span class="number">1</span>].unwrap_id_ref()]);
+    <span class="kw">let </span><span class="kw-2">mut </span>any_err = <span class="prelude-val">None</span>;
+    <span class="kw">for </span>entry <span class="kw">in </span>entries {
+        <span class="kw">let </span>entry_had_err = visit(
+            sess,
+            module,
+            <span class="kw-2">&amp;mut </span>visited,
+            <span class="kw-2">&amp;mut </span>stack,
+            <span class="kw-2">&amp;mut </span>names,
+            entry,
+            <span class="kw-2">&amp;</span>func_id_to_idx,
         )
-        .<span class="ident">err</span>();
-        <span class="ident">any_err</span> <span class="op">=</span> <span class="ident">any_err</span>.<span class="ident">or</span>(<span class="ident">entry_had_err</span>);
+        .err();
+        any_err = any_err.or(entry_had_err);
     }
-    <span class="kw">return</span> <span class="kw">match</span> <span class="ident">any_err</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">err</span>),
-        <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(()),
+    <span class="kw">return match </span>any_err {
+        <span class="prelude-val">Some</span>(err) =&gt; <span class="prelude-val">Err</span>(err),
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(()),
     };
 
-    <span class="kw">fn</span> <span class="ident">visit</span><span class="op">&lt;</span><span class="lifetime">&#39;m</span><span class="op">&gt;</span>(
-        <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
-        <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;m</span> <span class="ident">Module</span>,
-        <span class="ident">visited</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
-        <span class="ident">stack</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-        <span class="ident">names</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;m</span> <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">index</span>: <span class="ident">usize</span>,
-        <span class="ident">func_id_to_idx</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">usize</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">visited</span>[<span class="ident">index</span>] {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+    <span class="kw">fn </span>visit&lt;<span class="lifetime">&#39;m</span>&gt;(
+        sess: <span class="kw-2">&amp;</span>Session,
+        module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;m </span>Module,
+        visited: <span class="kw-2">&amp;mut </span>Vec&lt;bool&gt;,
+        stack: <span class="kw-2">&amp;mut </span>Vec&lt;Word&gt;,
+        names: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;FxHashMap&lt;Word, <span class="kw-2">&amp;</span><span class="lifetime">&#39;m </span>str&gt;&gt;,
+        index: usize,
+        func_id_to_idx: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, usize&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if </span>visited[index] {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
-        <span class="ident">visited</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="bool-val">true</span>;
-        <span class="ident">stack</span>.<span class="ident">push</span>(<span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">index</span>].<span class="ident">def_id</span>().<span class="ident">unwrap</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any_err</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">functions</span>[<span class="ident">index</span>].<span class="ident">all_inst_iter</span>() {
-            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">==</span> <span class="ident">Op::FunctionCall</span> {
-                <span class="kw">let</span> <span class="ident">callee</span> <span class="op">=</span> <span class="ident">func_id_to_idx</span>[<span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>()];
-                <span class="kw">let</span> <span class="ident">callee_had_err</span> <span class="op">=</span>
-                    <span class="ident">visit</span>(<span class="ident">sess</span>, <span class="ident">module</span>, <span class="ident">visited</span>, <span class="ident">stack</span>, <span class="ident">names</span>, <span class="ident">callee</span>, <span class="ident">func_id_to_idx</span>).<span class="ident">err</span>();
-                <span class="ident">any_err</span> <span class="op">=</span> <span class="ident">any_err</span>.<span class="ident">or</span>(<span class="ident">callee_had_err</span>);
+        visited[index] = <span class="bool-val">true</span>;
+        stack.push(module.functions[index].def_id().unwrap());
+        <span class="kw">let </span><span class="kw-2">mut </span>any_err = <span class="prelude-val">None</span>;
+        <span class="kw">for </span>inst <span class="kw">in </span>module.functions[index].all_inst_iter() {
+            <span class="kw">if </span>inst.class.opcode == Op::FunctionCall {
+                <span class="kw">let </span>callee = func_id_to_idx[<span class="kw-2">&amp;</span>inst.operands[<span class="number">0</span>].unwrap_id_ref()];
+                <span class="kw">let </span>callee_had_err =
+                    visit(sess, module, visited, stack, names, callee, func_id_to_idx).err();
+                any_err = any_err.or(callee_had_err);
             }
-            <span class="kw">if</span> <span class="macro">matches!</span>(
-                <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span>,
-                <span class="ident">Op::ImageSampleImplicitLod</span>
-                    <span class="op">|</span> <span class="ident">Op::ImageSampleDrefImplicitLod</span>
-                    <span class="op">|</span> <span class="ident">Op::ImageSampleProjImplicitLod</span>
-                    <span class="op">|</span> <span class="ident">Op::ImageSampleProjDrefImplicitLod</span>
-                    <span class="op">|</span> <span class="ident">Op::ImageQueryLod</span>
-                    <span class="op">|</span> <span class="ident">Op::ImageSparseSampleImplicitLod</span>
-                    <span class="op">|</span> <span class="ident">Op::ImageSparseSampleDrefImplicitLod</span>
-                    <span class="op">|</span> <span class="ident">Op::DPdx</span>
-                    <span class="op">|</span> <span class="ident">Op::DPdy</span>
-                    <span class="op">|</span> <span class="ident">Op::Fwidth</span>
-                    <span class="op">|</span> <span class="ident">Op::DPdxFine</span>
-                    <span class="op">|</span> <span class="ident">Op::DPdyFine</span>
-                    <span class="op">|</span> <span class="ident">Op::FwidthFine</span>
-                    <span class="op">|</span> <span class="ident">Op::DPdxCoarse</span>
-                    <span class="op">|</span> <span class="ident">Op::DPdyCoarse</span>
-                    <span class="op">|</span> <span class="ident">Op::FwidthCoarse</span>
-                    <span class="op">|</span> <span class="ident">Op::Kill</span>
+            <span class="kw">if </span><span class="macro">matches!</span>(
+                inst.class.opcode,
+                Op::ImageSampleImplicitLod
+                    | Op::ImageSampleDrefImplicitLod
+                    | Op::ImageSampleProjImplicitLod
+                    | Op::ImageSampleProjDrefImplicitLod
+                    | Op::ImageQueryLod
+                    | Op::ImageSparseSampleImplicitLod
+                    | Op::ImageSparseSampleDrefImplicitLod
+                    | Op::DPdx
+                    | Op::DPdy
+                    | Op::Fwidth
+                    | Op::DPdxFine
+                    | Op::DPdyFine
+                    | Op::FwidthFine
+                    | Op::DPdxCoarse
+                    | Op::DPdyCoarse
+                    | Op::FwidthCoarse
+                    | Op::Kill
             ) {
-                <span class="comment">// These instructions are (usually) in system functions - if we get an error, allow</span>
-                <span class="comment">// the system function to be visited again from elsewhere to emit another error</span>
-                <span class="comment">// from another callsite.</span>
-                <span class="ident">visited</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="bool-val">false</span>;
+                <span class="comment">// These instructions are (usually) in system functions - if we get an error, allow
+                // the system function to be visited again from elsewhere to emit another error
+                // from another callsite.
+                </span>visited[index] = <span class="bool-val">false</span>;
 
-                <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="ident">names</span>.<span class="ident">get_or_insert_with</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">get_names</span>(<span class="ident">module</span>));
-                <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">iter</span>().<span class="ident">rev</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> <span class="ident">get_name</span>(<span class="ident">names</span>, <span class="ident">s</span>).<span class="ident">into_owned</span>());
-                <span class="kw">let</span> <span class="ident">note</span> <span class="op">=</span> <span class="ident">once</span>(<span class="string">&quot;Stack:&quot;</span>.<span class="ident">to_string</span>())
-                    .<span class="ident">chain</span>(<span class="ident">stack</span>)
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                    .<span class="ident">join</span>(<span class="string">&quot;\n&quot;</span>);
-                <span class="ident">any_err</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
-                    <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                <span class="kw">let </span>names = names.get_or_insert_with(|| get_names(module));
+                <span class="kw">let </span>stack = stack.iter().rev().map(|<span class="kw-2">&amp;</span>s| get_name(names, s).into_owned());
+                <span class="kw">let </span>note = once(<span class="string">&quot;Stack:&quot;</span>.to_string())
+                    .chain(stack)
+                    .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+                    .join(<span class="string">&quot;\n&quot;</span>);
+                any_err = <span class="prelude-val">Some</span>(
+                    sess.struct_err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;{} cannot be used outside a fragment shader&quot;</span>,
-                        <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opname</span>
+                        inst.class.opname
                     ))
-                    .<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="ident">note</span>)
-                    .<span class="ident">emit</span>(),
+                    .note(<span class="kw-2">&amp;</span>note)
+                    .emit(),
                 );
             }
         }
-        <span class="ident">stack</span>.<span class="ident">pop</span>();
+        stack.pop();
 
-        <span class="kw">match</span> <span class="ident">any_err</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">err</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(()),
+        <span class="kw">match </span>any_err {
+            <span class="prelude-val">Some</span>(err) =&gt; <span class="prelude-val">Err</span>(err),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(()),
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

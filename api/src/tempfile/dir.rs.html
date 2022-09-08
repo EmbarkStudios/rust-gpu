@@ -1,12 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/tempfile-3.2.0/src/dir.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>dir.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../tempfile/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../tempfile/index.html"><div class="logo-container">
-                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../tempfile/index.html">
-                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/tempfile-3.2.0/src/dir.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>dir.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../tempfile/index.html"><div class="logo-container"><img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../tempfile/index.html"><div class="logo-container">
+                    <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../tempfile/index.html">
+                        <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -412,412 +406,411 @@
 <span id="404">404</span>
 <span id="405">405</span>
 <span id="406">406</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2015 The Rust Project Developers. See the COPYRIGHT</span>
-<span class="comment">// file at the top-level directory of this distribution and at</span>
-<span class="comment">// http://rust-lang.org/COPYRIGHT.</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
-<span class="comment">// http://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
-<span class="comment">// &lt;LICENSE-MIT or http://opensource.org/licenses/MIT&gt;, at your</span>
-<span class="comment">// option. This file may not be copied, modified, or distributed</span>
-<span class="comment">// except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2015 The Rust Project Developers. See the COPYRIGHT
+// file at the top-level directory of this distribution and at
+// http://rust-lang.org/COPYRIGHT.
+//
+// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license
+// &lt;LICENSE-MIT or http://opensource.org/licenses/MIT&gt;, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-<span class="kw">use</span> <span class="ident">remove_dir_all::remove_dir_all</span>;
-<span class="kw">use</span> <span class="ident">std::path</span>::{<span class="self">self</span>, <span class="ident">Path</span>, <span class="ident">PathBuf</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">fs</span>, <span class="ident">io</span>};
+</span><span class="kw">use </span>remove_dir_all::remove_dir_all;
+<span class="kw">use </span>std::path::{<span class="self">self</span>, Path, PathBuf};
+<span class="kw">use </span>std::{fmt, fs, io};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error::IoResultExt</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Builder</span>;
+<span class="kw">use </span><span class="kw">crate</span>::error::IoResultExt;
+<span class="kw">use </span><span class="kw">crate</span>::Builder;
 
-<span class="doccomment">/// Create a new temporary directory.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The `tempdir` function creates a directory in the file system</span>
-<span class="doccomment">/// and returns a [`TempDir`].</span>
-<span class="doccomment">/// The directory will be automatically deleted when the `TempDir`s</span>
-<span class="doccomment">/// destructor is run.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Resource Leaking</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See [the resource leaking][resource-leaking] docs on `TempDir`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Errors</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If the directory can not be created, `Err` is returned.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use tempfile::tempdir;</span>
-<span class="doccomment">/// use std::fs::File;</span>
-<span class="doccomment">/// use std::io::{self, Write};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # fn main() {</span>
-<span class="doccomment">/// #     if let Err(_) = run() {</span>
-<span class="doccomment">/// #         ::std::process::exit(1);</span>
-<span class="doccomment">/// #     }</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// # fn run() -&gt; Result&lt;(), io::Error&gt; {</span>
-<span class="doccomment">/// // Create a directory inside of `std::env::temp_dir()`</span>
-<span class="doccomment">/// let dir = tempdir()?;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let file_path = dir.path().join(&quot;my-temporary-note.txt&quot;);</span>
-<span class="doccomment">/// let mut file = File::create(file_path)?;</span>
-<span class="doccomment">/// writeln!(file, &quot;Brian was here. Briefly.&quot;)?;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // `tmp_dir` goes out of scope, the directory as well as</span>
-<span class="doccomment">/// // `tmp_file` will be deleted here.</span>
-<span class="doccomment">/// drop(file);</span>
-<span class="doccomment">/// dir.close()?;</span>
-<span class="doccomment">/// # Ok(())</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`TempDir`]: struct.TempDir.html</span>
-<span class="doccomment">/// [resource-leaking]: struct.TempDir.html#resource-leaking</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tempdir</span>() -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">TempDir</span><span class="op">&gt;</span> {
-    <span class="ident">TempDir::new</span>()
+<span class="doccomment">/// Create a new temporary directory.
+///
+/// The `tempdir` function creates a directory in the file system
+/// and returns a [`TempDir`].
+/// The directory will be automatically deleted when the `TempDir`s
+/// destructor is run.
+///
+/// # Resource Leaking
+///
+/// See [the resource leaking][resource-leaking] docs on `TempDir`.
+///
+/// # Errors
+///
+/// If the directory can not be created, `Err` is returned.
+///
+/// # Examples
+///
+/// ```
+/// use tempfile::tempdir;
+/// use std::fs::File;
+/// use std::io::{self, Write};
+///
+/// # fn main() {
+/// #     if let Err(_) = run() {
+/// #         ::std::process::exit(1);
+/// #     }
+/// # }
+/// # fn run() -&gt; Result&lt;(), io::Error&gt; {
+/// // Create a directory inside of `std::env::temp_dir()`
+/// let dir = tempdir()?;
+///
+/// let file_path = dir.path().join(&quot;my-temporary-note.txt&quot;);
+/// let mut file = File::create(file_path)?;
+/// writeln!(file, &quot;Brian was here. Briefly.&quot;)?;
+///
+/// // `tmp_dir` goes out of scope, the directory as well as
+/// // `tmp_file` will be deleted here.
+/// drop(file);
+/// dir.close()?;
+/// # Ok(())
+/// # }
+/// ```
+///
+/// [`TempDir`]: struct.TempDir.html
+/// [resource-leaking]: struct.TempDir.html#resource-leaking
+</span><span class="kw">pub fn </span>tempdir() -&gt; io::Result&lt;TempDir&gt; {
+    TempDir::new()
 }
 
-<span class="doccomment">/// Create a new temporary directory.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The `tempdir` function creates a directory in the file system</span>
-<span class="doccomment">/// and returns a [`TempDir`].</span>
-<span class="doccomment">/// The directory will be automatically deleted when the `TempDir`s</span>
-<span class="doccomment">/// destructor is run.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Resource Leaking</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See [the resource leaking][resource-leaking] docs on `TempDir`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Errors</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If the directory can not be created, `Err` is returned.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use tempfile::tempdir;</span>
-<span class="doccomment">/// use std::fs::File;</span>
-<span class="doccomment">/// use std::io::{self, Write};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # fn main() {</span>
-<span class="doccomment">/// #     if let Err(_) = run() {</span>
-<span class="doccomment">/// #         ::std::process::exit(1);</span>
-<span class="doccomment">/// #     }</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// # fn run() -&gt; Result&lt;(), io::Error&gt; {</span>
-<span class="doccomment">/// // Create a directory inside of `std::env::temp_dir()`,</span>
-<span class="doccomment">/// let dir = tempdir()?;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let file_path = dir.path().join(&quot;my-temporary-note.txt&quot;);</span>
-<span class="doccomment">/// let mut file = File::create(file_path)?;</span>
-<span class="doccomment">/// writeln!(file, &quot;Brian was here. Briefly.&quot;)?;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // `tmp_dir` goes out of scope, the directory as well as</span>
-<span class="doccomment">/// // `tmp_file` will be deleted here.</span>
-<span class="doccomment">/// drop(file);</span>
-<span class="doccomment">/// dir.close()?;</span>
-<span class="doccomment">/// # Ok(())</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`TempDir`]: struct.TempDir.html</span>
-<span class="doccomment">/// [resource-leaking]: struct.TempDir.html#resource-leaking</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tempdir_in</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">dir</span>: <span class="ident">P</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">TempDir</span><span class="op">&gt;</span> {
-    <span class="ident">TempDir::new_in</span>(<span class="ident">dir</span>)
+<span class="doccomment">/// Create a new temporary directory.
+///
+/// The `tempdir` function creates a directory in the file system
+/// and returns a [`TempDir`].
+/// The directory will be automatically deleted when the `TempDir`s
+/// destructor is run.
+///
+/// # Resource Leaking
+///
+/// See [the resource leaking][resource-leaking] docs on `TempDir`.
+///
+/// # Errors
+///
+/// If the directory can not be created, `Err` is returned.
+///
+/// # Examples
+///
+/// ```
+/// use tempfile::tempdir;
+/// use std::fs::File;
+/// use std::io::{self, Write};
+///
+/// # fn main() {
+/// #     if let Err(_) = run() {
+/// #         ::std::process::exit(1);
+/// #     }
+/// # }
+/// # fn run() -&gt; Result&lt;(), io::Error&gt; {
+/// // Create a directory inside of `std::env::temp_dir()`,
+/// let dir = tempdir()?;
+///
+/// let file_path = dir.path().join(&quot;my-temporary-note.txt&quot;);
+/// let mut file = File::create(file_path)?;
+/// writeln!(file, &quot;Brian was here. Briefly.&quot;)?;
+///
+/// // `tmp_dir` goes out of scope, the directory as well as
+/// // `tmp_file` will be deleted here.
+/// drop(file);
+/// dir.close()?;
+/// # Ok(())
+/// # }
+/// ```
+///
+/// [`TempDir`]: struct.TempDir.html
+/// [resource-leaking]: struct.TempDir.html#resource-leaking
+</span><span class="kw">pub fn </span>tempdir_in&lt;P: AsRef&lt;Path&gt;&gt;(dir: P) -&gt; io::Result&lt;TempDir&gt; {
+    TempDir::new_in(dir)
 }
 
-<span class="doccomment">/// A directory in the filesystem that is automatically deleted when</span>
-<span class="doccomment">/// it goes out of scope.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The [`TempDir`] type creates a directory on the file system that</span>
-<span class="doccomment">/// is deleted once it goes out of scope. At construction, the</span>
-<span class="doccomment">/// `TempDir` creates a new directory with a randomly generated name.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The default constructor, [`TempDir::new()`], creates directories in</span>
-<span class="doccomment">/// the location returned by [`std::env::temp_dir()`], but `TempDir`</span>
-<span class="doccomment">/// can be configured to manage a temporary directory in any location</span>
-<span class="doccomment">/// by constructing with a [`Builder`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// After creating a `TempDir`, work with the file system by doing</span>
-<span class="doccomment">/// standard [`std::fs`] file system operations on its [`Path`],</span>
-<span class="doccomment">/// which can be retrieved with [`TempDir::path()`]. Once the `TempDir`</span>
-<span class="doccomment">/// value is dropped, the directory at the path will be deleted, along</span>
-<span class="doccomment">/// with any files and directories it contains. It is your responsibility</span>
-<span class="doccomment">/// to ensure that no further file system operations are attempted</span>
-<span class="doccomment">/// inside the temporary directory once it has been deleted.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Resource Leaking</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Various platform-specific conditions may cause `TempDir` to fail</span>
-<span class="doccomment">/// to delete the underlying directory. It&#39;s important to ensure that</span>
-<span class="doccomment">/// handles (like [`File`] and [`ReadDir`]) to files inside the</span>
-<span class="doccomment">/// directory are dropped before the `TempDir` goes out of scope. The</span>
-<span class="doccomment">/// `TempDir` destructor will silently ignore any errors in deleting</span>
-<span class="doccomment">/// the directory; to instead handle errors call [`TempDir::close()`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that if the program exits before the `TempDir` destructor is</span>
-<span class="doccomment">/// run, such as via [`std::process::exit()`], by segfaulting, or by</span>
-<span class="doccomment">/// receiving a signal like `SIGINT`, then the temporary directory</span>
-<span class="doccomment">/// will not be deleted.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Create a temporary directory with a generated name:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use std::fs::File;</span>
-<span class="doccomment">/// use std::io::Write;</span>
-<span class="doccomment">/// use tempfile::TempDir;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # use std::io;</span>
-<span class="doccomment">/// # fn run() -&gt; Result&lt;(), io::Error&gt; {</span>
-<span class="doccomment">/// // Create a directory inside of `std::env::temp_dir()`</span>
-<span class="doccomment">/// let tmp_dir = TempDir::new()?;</span>
-<span class="doccomment">/// # Ok(())</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Create a temporary directory with a prefix in its name:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use std::fs::File;</span>
-<span class="doccomment">/// use std::io::Write;</span>
-<span class="doccomment">/// use tempfile::Builder;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # use std::io;</span>
-<span class="doccomment">/// # fn run() -&gt; Result&lt;(), io::Error&gt; {</span>
-<span class="doccomment">/// // Create a directory inside of `std::env::temp_dir()`,</span>
-<span class="doccomment">/// // whose name will begin with &#39;example&#39;.</span>
-<span class="doccomment">/// let tmp_dir = Builder::new().prefix(&quot;example&quot;).tempdir()?;</span>
-<span class="doccomment">/// # Ok(())</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`File`]: http://doc.rust-lang.org/std/fs/struct.File.html</span>
-<span class="doccomment">/// [`Path`]: http://doc.rust-lang.org/std/path/struct.Path.html</span>
-<span class="doccomment">/// [`ReadDir`]: http://doc.rust-lang.org/std/fs/struct.ReadDir.html</span>
-<span class="doccomment">/// [`Builder`]: struct.Builder.html</span>
-<span class="doccomment">/// [`TempDir::close()`]: struct.TempDir.html#method.close</span>
-<span class="doccomment">/// [`TempDir::new()`]: struct.TempDir.html#method.new</span>
-<span class="doccomment">/// [`TempDir::path()`]: struct.TempDir.html#method.path</span>
-<span class="doccomment">/// [`TempDir`]: struct.TempDir.html</span>
-<span class="doccomment">/// [`std::env::temp_dir()`]: https://doc.rust-lang.org/std/env/fn.temp_dir.html</span>
-<span class="doccomment">/// [`std::fs`]: http://doc.rust-lang.org/std/fs/index.html</span>
-<span class="doccomment">/// [`std::process::exit()`]: http://doc.rust-lang.org/std/process/fn.exit.html</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TempDir</span> {
-    <span class="ident">path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A directory in the filesystem that is automatically deleted when
+/// it goes out of scope.
+///
+/// The [`TempDir`] type creates a directory on the file system that
+/// is deleted once it goes out of scope. At construction, the
+/// `TempDir` creates a new directory with a randomly generated name.
+///
+/// The default constructor, [`TempDir::new()`], creates directories in
+/// the location returned by [`std::env::temp_dir()`], but `TempDir`
+/// can be configured to manage a temporary directory in any location
+/// by constructing with a [`Builder`].
+///
+/// After creating a `TempDir`, work with the file system by doing
+/// standard [`std::fs`] file system operations on its [`Path`],
+/// which can be retrieved with [`TempDir::path()`]. Once the `TempDir`
+/// value is dropped, the directory at the path will be deleted, along
+/// with any files and directories it contains. It is your responsibility
+/// to ensure that no further file system operations are attempted
+/// inside the temporary directory once it has been deleted.
+///
+/// # Resource Leaking
+///
+/// Various platform-specific conditions may cause `TempDir` to fail
+/// to delete the underlying directory. It&#39;s important to ensure that
+/// handles (like [`File`] and [`ReadDir`]) to files inside the
+/// directory are dropped before the `TempDir` goes out of scope. The
+/// `TempDir` destructor will silently ignore any errors in deleting
+/// the directory; to instead handle errors call [`TempDir::close()`].
+///
+/// Note that if the program exits before the `TempDir` destructor is
+/// run, such as via [`std::process::exit()`], by segfaulting, or by
+/// receiving a signal like `SIGINT`, then the temporary directory
+/// will not be deleted.
+///
+/// # Examples
+///
+/// Create a temporary directory with a generated name:
+///
+/// ```
+/// use std::fs::File;
+/// use std::io::Write;
+/// use tempfile::TempDir;
+///
+/// # use std::io;
+/// # fn run() -&gt; Result&lt;(), io::Error&gt; {
+/// // Create a directory inside of `std::env::temp_dir()`
+/// let tmp_dir = TempDir::new()?;
+/// # Ok(())
+/// # }
+/// ```
+///
+/// Create a temporary directory with a prefix in its name:
+///
+/// ```
+/// use std::fs::File;
+/// use std::io::Write;
+/// use tempfile::Builder;
+///
+/// # use std::io;
+/// # fn run() -&gt; Result&lt;(), io::Error&gt; {
+/// // Create a directory inside of `std::env::temp_dir()`,
+/// // whose name will begin with &#39;example&#39;.
+/// let tmp_dir = Builder::new().prefix(&quot;example&quot;).tempdir()?;
+/// # Ok(())
+/// # }
+/// ```
+///
+/// [`File`]: http://doc.rust-lang.org/std/fs/struct.File.html
+/// [`Path`]: http://doc.rust-lang.org/std/path/struct.Path.html
+/// [`ReadDir`]: http://doc.rust-lang.org/std/fs/struct.ReadDir.html
+/// [`Builder`]: struct.Builder.html
+/// [`TempDir::close()`]: struct.TempDir.html#method.close
+/// [`TempDir::new()`]: struct.TempDir.html#method.new
+/// [`TempDir::path()`]: struct.TempDir.html#method.path
+/// [`TempDir`]: struct.TempDir.html
+/// [`std::env::temp_dir()`]: https://doc.rust-lang.org/std/env/fn.temp_dir.html
+/// [`std::fs`]: http://doc.rust-lang.org/std/fs/index.html
+/// [`std::process::exit()`]: http://doc.rust-lang.org/std/process/fn.exit.html
+</span><span class="kw">pub struct </span>TempDir {
+    path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">TempDir</span> {
-    <span class="doccomment">/// Attempts to make a temporary directory inside of `env::temp_dir()`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See [`Builder`] for more configuration.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The directory and everything inside it will be automatically deleted</span>
-    <span class="doccomment">/// once the returned `TempDir` is destroyed.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the directory can not be created, `Err` is returned.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use std::fs::File;</span>
-    <span class="doccomment">/// use std::io::Write;</span>
-    <span class="doccomment">/// use tempfile::TempDir;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # use std::io;</span>
-    <span class="doccomment">/// # fn run() -&gt; Result&lt;(), io::Error&gt; {</span>
-    <span class="doccomment">/// // Create a directory inside of `std::env::temp_dir()`</span>
-    <span class="doccomment">/// let tmp_dir = TempDir::new()?;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let file_path = tmp_dir.path().join(&quot;my-temporary-note.txt&quot;);</span>
-    <span class="doccomment">/// let mut tmp_file = File::create(file_path)?;</span>
-    <span class="doccomment">/// writeln!(tmp_file, &quot;Brian was here. Briefly.&quot;)?;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // `tmp_dir` goes out of scope, the directory as well as</span>
-    <span class="doccomment">/// // `tmp_file` will be deleted here.</span>
-    <span class="doccomment">/// # Ok(())</span>
-    <span class="doccomment">/// # }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Builder`]: struct.Builder.html</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">TempDir</span><span class="op">&gt;</span> {
-        <span class="ident">Builder::new</span>().<span class="ident">tempdir</span>()
+<span class="kw">impl </span>TempDir {
+    <span class="doccomment">/// Attempts to make a temporary directory inside of `env::temp_dir()`.
+    ///
+    /// See [`Builder`] for more configuration.
+    ///
+    /// The directory and everything inside it will be automatically deleted
+    /// once the returned `TempDir` is destroyed.
+    ///
+    /// # Errors
+    ///
+    /// If the directory can not be created, `Err` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::fs::File;
+    /// use std::io::Write;
+    /// use tempfile::TempDir;
+    ///
+    /// # use std::io;
+    /// # fn run() -&gt; Result&lt;(), io::Error&gt; {
+    /// // Create a directory inside of `std::env::temp_dir()`
+    /// let tmp_dir = TempDir::new()?;
+    ///
+    /// let file_path = tmp_dir.path().join(&quot;my-temporary-note.txt&quot;);
+    /// let mut tmp_file = File::create(file_path)?;
+    /// writeln!(tmp_file, &quot;Brian was here. Briefly.&quot;)?;
+    ///
+    /// // `tmp_dir` goes out of scope, the directory as well as
+    /// // `tmp_file` will be deleted here.
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// [`Builder`]: struct.Builder.html
+    </span><span class="kw">pub fn </span>new() -&gt; io::Result&lt;TempDir&gt; {
+        Builder::new().tempdir()
     }
 
-    <span class="doccomment">/// Attempts to make a temporary directory inside of `dir`.</span>
-    <span class="doccomment">/// The directory and everything inside it will be automatically</span>
-    <span class="doccomment">/// deleted once the returned `TempDir` is destroyed.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the directory can not be created, `Err` is returned.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use std::fs::{self, File};</span>
-    <span class="doccomment">/// use std::io::Write;</span>
-    <span class="doccomment">/// use tempfile::TempDir;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # use std::io;</span>
-    <span class="doccomment">/// # fn run() -&gt; Result&lt;(), io::Error&gt; {</span>
-    <span class="doccomment">/// // Create a directory inside of the current directory</span>
-    <span class="doccomment">/// let tmp_dir = TempDir::new_in(&quot;.&quot;)?;</span>
-    <span class="doccomment">/// let file_path = tmp_dir.path().join(&quot;my-temporary-note.txt&quot;);</span>
-    <span class="doccomment">/// let mut tmp_file = File::create(file_path)?;</span>
-    <span class="doccomment">/// writeln!(tmp_file, &quot;Brian was here. Briefly.&quot;)?;</span>
-    <span class="doccomment">/// # Ok(())</span>
-    <span class="doccomment">/// # }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_in</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">dir</span>: <span class="ident">P</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">TempDir</span><span class="op">&gt;</span> {
-        <span class="ident">Builder::new</span>().<span class="ident">tempdir_in</span>(<span class="ident">dir</span>)
+    <span class="doccomment">/// Attempts to make a temporary directory inside of `dir`.
+    /// The directory and everything inside it will be automatically
+    /// deleted once the returned `TempDir` is destroyed.
+    ///
+    /// # Errors
+    ///
+    /// If the directory can not be created, `Err` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::fs::{self, File};
+    /// use std::io::Write;
+    /// use tempfile::TempDir;
+    ///
+    /// # use std::io;
+    /// # fn run() -&gt; Result&lt;(), io::Error&gt; {
+    /// // Create a directory inside of the current directory
+    /// let tmp_dir = TempDir::new_in(&quot;.&quot;)?;
+    /// let file_path = tmp_dir.path().join(&quot;my-temporary-note.txt&quot;);
+    /// let mut tmp_file = File::create(file_path)?;
+    /// writeln!(tmp_file, &quot;Brian was here. Briefly.&quot;)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    </span><span class="kw">pub fn </span>new_in&lt;P: AsRef&lt;Path&gt;&gt;(dir: P) -&gt; io::Result&lt;TempDir&gt; {
+        Builder::new().tempdir_in(dir)
     }
 
-    <span class="doccomment">/// Accesses the [`Path`] to the temporary directory.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Path`]: http://doc.rust-lang.org/std/path/struct.Path.html</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use tempfile::TempDir;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # use std::io;</span>
-    <span class="doccomment">/// # fn run() -&gt; Result&lt;(), io::Error&gt; {</span>
-    <span class="doccomment">/// let tmp_path;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// {</span>
-    <span class="doccomment">///    let tmp_dir = TempDir::new()?;</span>
-    <span class="doccomment">///    tmp_path = tmp_dir.path().to_owned();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///    // Check that the temp directory actually exists.</span>
-    <span class="doccomment">///    assert!(tmp_path.exists());</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///    // End of `tmp_dir` scope, directory will be deleted</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Temp directory should be deleted by now</span>
-    <span class="doccomment">/// assert_eq!(tmp_path.exists(), false);</span>
-    <span class="doccomment">/// # Ok(())</span>
-    <span class="doccomment">/// # }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">path::Path</span> {
-        <span class="self">self</span>.<span class="ident">path</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
+    <span class="doccomment">/// Accesses the [`Path`] to the temporary directory.
+    ///
+    /// [`Path`]: http://doc.rust-lang.org/std/path/struct.Path.html
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tempfile::TempDir;
+    ///
+    /// # use std::io;
+    /// # fn run() -&gt; Result&lt;(), io::Error&gt; {
+    /// let tmp_path;
+    ///
+    /// {
+    ///    let tmp_dir = TempDir::new()?;
+    ///    tmp_path = tmp_dir.path().to_owned();
+    ///
+    ///    // Check that the temp directory actually exists.
+    ///    assert!(tmp_path.exists());
+    ///
+    ///    // End of `tmp_dir` scope, directory will be deleted
+    /// }
+    ///
+    /// // Temp directory should be deleted by now
+    /// assert_eq!(tmp_path.exists(), false);
+    /// # Ok(())
+    /// # }
+    /// ```
+    </span><span class="kw">pub fn </span>path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>path::Path {
+        <span class="self">self</span>.path.as_ref().unwrap()
     }
 
-    <span class="doccomment">/// Persist the temporary directory to disk, returning the [`PathBuf`] where it is located.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This consumes the [`TempDir`] without deleting directory on the filesystem, meaning that</span>
-    <span class="doccomment">/// the directory will no longer be automatically deleted.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`TempDir`]: struct.TempDir.html</span>
-    <span class="doccomment">/// [`PathBuf`]: http://doc.rust-lang.org/std/path/struct.PathBuf.html</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use std::fs;</span>
-    <span class="doccomment">/// use tempfile::TempDir;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # use std::io;</span>
-    <span class="doccomment">/// # fn run() -&gt; Result&lt;(), io::Error&gt; {</span>
-    <span class="doccomment">/// let tmp_dir = TempDir::new()?;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Persist the temporary directory to disk,</span>
-    <span class="doccomment">/// // getting the path where it is.</span>
-    <span class="doccomment">/// let tmp_path = tmp_dir.into_path();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Delete the temporary directory ourselves.</span>
-    <span class="doccomment">/// fs::remove_dir_all(tmp_path)?;</span>
-    <span class="doccomment">/// # Ok(())</span>
-    <span class="doccomment">/// # }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_path</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">PathBuf</span> {
-        <span class="self">self</span>.<span class="ident">path</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>()
+    <span class="doccomment">/// Persist the temporary directory to disk, returning the [`PathBuf`] where it is located.
+    ///
+    /// This consumes the [`TempDir`] without deleting directory on the filesystem, meaning that
+    /// the directory will no longer be automatically deleted.
+    ///
+    /// [`TempDir`]: struct.TempDir.html
+    /// [`PathBuf`]: http://doc.rust-lang.org/std/path/struct.PathBuf.html
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::fs;
+    /// use tempfile::TempDir;
+    ///
+    /// # use std::io;
+    /// # fn run() -&gt; Result&lt;(), io::Error&gt; {
+    /// let tmp_dir = TempDir::new()?;
+    ///
+    /// // Persist the temporary directory to disk,
+    /// // getting the path where it is.
+    /// let tmp_path = tmp_dir.into_path();
+    ///
+    /// // Delete the temporary directory ourselves.
+    /// fs::remove_dir_all(tmp_path)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    </span><span class="kw">pub fn </span>into_path(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; PathBuf {
+        <span class="self">self</span>.path.take().unwrap()
     }
 
-    <span class="doccomment">/// Closes and removes the temporary directory, returning a `Result`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Although `TempDir` removes the directory on drop, in the destructor</span>
-    <span class="doccomment">/// any errors are ignored. To detect errors cleaning up the temporary</span>
-    <span class="doccomment">/// directory, call `close` instead.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function may return a variety of [`std::io::Error`]s that result from deleting</span>
-    <span class="doccomment">/// the files and directories contained with the temporary directory,</span>
-    <span class="doccomment">/// as well as from deleting the temporary directory itself. These errors</span>
-    <span class="doccomment">/// may be platform specific.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`std::io::Error`]: http://doc.rust-lang.org/std/io/struct.Error.html</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use std::fs::File;</span>
-    <span class="doccomment">/// use std::io::Write;</span>
-    <span class="doccomment">/// use tempfile::TempDir;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # use std::io;</span>
-    <span class="doccomment">/// # fn run() -&gt; Result&lt;(), io::Error&gt; {</span>
-    <span class="doccomment">/// // Create a directory inside of `std::env::temp_dir()`.</span>
-    <span class="doccomment">/// let tmp_dir = TempDir::new()?;</span>
-    <span class="doccomment">/// let file_path = tmp_dir.path().join(&quot;my-temporary-note.txt&quot;);</span>
-    <span class="doccomment">/// let mut tmp_file = File::create(file_path)?;</span>
-    <span class="doccomment">/// writeln!(tmp_file, &quot;Brian was here. Briefly.&quot;)?;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // By closing the `TempDir` explicitly we can check that it has</span>
-    <span class="doccomment">/// // been deleted successfully. If we don&#39;t close it explicitly,</span>
-    <span class="doccomment">/// // the directory will still be deleted when `tmp_dir` goes out</span>
-    <span class="doccomment">/// // of scope, but we won&#39;t know whether deleting the directory</span>
-    <span class="doccomment">/// // succeeded.</span>
-    <span class="doccomment">/// drop(tmp_file);</span>
-    <span class="doccomment">/// tmp_dir.close()?;</span>
-    <span class="doccomment">/// # Ok(())</span>
-    <span class="doccomment">/// # }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">remove_dir_all</span>(<span class="self">self</span>.<span class="ident">path</span>()).<span class="ident">with_err_path</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">path</span>());
+    <span class="doccomment">/// Closes and removes the temporary directory, returning a `Result`.
+    ///
+    /// Although `TempDir` removes the directory on drop, in the destructor
+    /// any errors are ignored. To detect errors cleaning up the temporary
+    /// directory, call `close` instead.
+    ///
+    /// # Errors
+    ///
+    /// This function may return a variety of [`std::io::Error`]s that result from deleting
+    /// the files and directories contained with the temporary directory,
+    /// as well as from deleting the temporary directory itself. These errors
+    /// may be platform specific.
+    ///
+    /// [`std::io::Error`]: http://doc.rust-lang.org/std/io/struct.Error.html
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::fs::File;
+    /// use std::io::Write;
+    /// use tempfile::TempDir;
+    ///
+    /// # use std::io;
+    /// # fn run() -&gt; Result&lt;(), io::Error&gt; {
+    /// // Create a directory inside of `std::env::temp_dir()`.
+    /// let tmp_dir = TempDir::new()?;
+    /// let file_path = tmp_dir.path().join(&quot;my-temporary-note.txt&quot;);
+    /// let mut tmp_file = File::create(file_path)?;
+    /// writeln!(tmp_file, &quot;Brian was here. Briefly.&quot;)?;
+    ///
+    /// // By closing the `TempDir` explicitly we can check that it has
+    /// // been deleted successfully. If we don&#39;t close it explicitly,
+    /// // the directory will still be deleted when `tmp_dir` goes out
+    /// // of scope, but we won&#39;t know whether deleting the directory
+    /// // succeeded.
+    /// drop(tmp_file);
+    /// tmp_dir.close()?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    </span><span class="kw">pub fn </span>close(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; io::Result&lt;()&gt; {
+        <span class="kw">let </span>result = remove_dir_all(<span class="self">self</span>.path()).with_err_path(|| <span class="self">self</span>.path());
 
-        <span class="comment">// Prevent the Drop impl from removing the dir a second time.</span>
-        <span class="self">self</span>.<span class="ident">path</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="comment">// Prevent the Drop impl from removing the dir a second time.
+        </span><span class="self">self</span>.path = <span class="prelude-val">None</span>;
 
-        <span class="ident">result</span>
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TempDir</span> {
-    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Path</span> {
-        <span class="self">self</span>.<span class="ident">path</span>()
+        result
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">TempDir</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;TempDir&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">path</span>())
-            .<span class="ident">finish</span>()
+<span class="kw">impl </span>AsRef&lt;Path&gt; <span class="kw">for </span>TempDir {
+    <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Path {
+        <span class="self">self</span>.path()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">TempDir</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="comment">// Path is `None` if `close()` or `into_path()` has been called.</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">p</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">path</span> {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">remove_dir_all</span>(<span class="ident">p</span>);
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>TempDir {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;TempDir&quot;</span>)
+            .field(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.path())
+            .finish()
+    }
+}
+
+<span class="kw">impl </span>Drop <span class="kw">for </span>TempDir {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// Path is `None` if `close()` or `into_path()` has been called.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>p) = <span class="self">self</span>.path {
+            <span class="kw">let _ </span>= remove_dir_all(p);
         }
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">path</span>: <span class="ident">PathBuf</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">TempDir</span><span class="op">&gt;</span> {
-    <span class="ident">fs::create_dir</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)
-        .<span class="ident">with_err_path</span>(<span class="op">|</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">path</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TempDir</span> { <span class="ident">path</span>: <span class="prelude-val">Some</span>(<span class="ident">path</span>) })
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create(path: PathBuf) -&gt; io::Result&lt;TempDir&gt; {
+    fs::create_dir(<span class="kw-2">&amp;</span>path)
+        .with_err_path(|| <span class="kw-2">&amp;</span>path)
+        .map(|<span class="kw">_</span>| TempDir { path: <span class="prelude-val">Some</span>(path) })
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="tempfile" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="tempfile" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

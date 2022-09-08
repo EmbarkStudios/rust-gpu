@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirv-tools-0.8.0/src/val/tool.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tool.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spirv_tools/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirv-tools-0.8.0/src/val/tool.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tool.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spirv_tools/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -93,95 +87,94 @@
 <span id="87">87</span>
 <span id="88">88</span>
 <span id="89">89</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::process::Command</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::process::Command;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ToolValidator</span> {
-    <span class="ident">target_env</span>: <span class="ident"><span class="kw">crate</span>::TargetEnv</span>,
+<span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>ToolValidator {
+    target_env: <span class="kw">crate</span>::TargetEnv,
 }
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Validator</span>;
+<span class="kw">use </span><span class="kw">super</span>::Validator;
 
-<span class="kw">impl</span> <span class="ident">Validator</span> <span class="kw">for</span> <span class="ident">ToolValidator</span> {
-    <span class="kw">fn</span> <span class="ident">with_env</span>(<span class="ident">target_env</span>: <span class="ident"><span class="kw">crate</span>::TargetEnv</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">target_env</span> }
+<span class="kw">impl </span>Validator <span class="kw">for </span>ToolValidator {
+    <span class="kw">fn </span>with_env(target_env: <span class="kw">crate</span>::TargetEnv) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ target_env }
     }
 
-    <span class="kw">fn</span> <span class="ident">validate</span>(
+    <span class="kw">fn </span>validate(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>,
-        <span class="ident">options</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::ValidatorOptions</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="kw">crate</span>::error::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="string">&quot;spirv-val&quot;</span>);
+        binary: <span class="kw">impl </span>AsRef&lt;[u32]&gt;,
+        options: <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::ValidatorOptions&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::error::Error&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd = Command::new(<span class="string">&quot;spirv-val&quot;</span>);
 
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--target-env&quot;</span>).<span class="ident">arg</span>(<span class="self">self</span>.<span class="ident">target_env</span>.<span class="ident">to_string</span>());
+        cmd.arg(<span class="string">&quot;--target-env&quot;</span>).arg(<span class="self">self</span>.target_env.to_string());
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">opts</span>) <span class="op">=</span> <span class="ident">options</span> {
-            <span class="comment">// We reuse add options when we run the validator before optimizing,</span>
-            <span class="comment">// however the optimizer does not recognize limits, so we split them</span>
-            <span class="comment">// out into a separate function</span>
-            <span class="ident">add_limits</span>(<span class="kw-2">&amp;mut</span> <span class="ident">cmd</span>, <span class="kw-2">&amp;</span><span class="ident">opts</span>.<span class="ident">max_limits</span>);
-            <span class="ident">add_options</span>(<span class="kw-2">&amp;mut</span> <span class="ident">cmd</span>, <span class="ident">opts</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(opts) = options {
+            <span class="comment">// We reuse add options when we run the validator before optimizing,
+            // however the optimizer does not recognize limits, so we split them
+            // out into a separate function
+            </span>add_limits(<span class="kw-2">&amp;mut </span>cmd, <span class="kw-2">&amp;</span>opts.max_limits);
+            add_options(<span class="kw-2">&amp;mut </span>cmd, opts);
         }
 
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::binary::from_binary</span>(<span class="ident">binary</span>.<span class="ident">as_ref</span>());
+        <span class="kw">let </span>input = <span class="kw">crate</span>::binary::from_binary(binary.as_ref());
 
-        <span class="ident"><span class="kw">crate</span>::cmd::exec</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="ident">input</span>), <span class="ident"><span class="kw">crate</span>::cmd::Output::Ignore</span>)<span class="question-mark">?</span>;
+        <span class="kw">crate</span>::cmd::exec(cmd, <span class="prelude-val">Some</span>(input), <span class="kw">crate</span>::cmd::Output::Ignore)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_options</span>(<span class="ident">cmd</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Command</span>, <span class="ident">opts</span>: <span class="ident"><span class="kw">super</span>::ValidatorOptions</span>) {
-    <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">relax_logical_pointer</span> {
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--relax-logical-pointer&quot;</span>);
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add_options(cmd: <span class="kw-2">&amp;mut </span>Command, opts: <span class="kw">super</span>::ValidatorOptions) {
+    <span class="kw">if </span>opts.relax_logical_pointer {
+        cmd.arg(<span class="string">&quot;--relax-logical-pointer&quot;</span>);
     }
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>) <span class="op">=</span> <span class="ident">opts</span>.<span class="ident">relax_block_layout</span> {
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--relax-block-layout&quot;</span>);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="bool-val">true</span>) = opts.relax_block_layout {
+        cmd.arg(<span class="string">&quot;--relax-block-layout&quot;</span>);
     }
 
-    <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">uniform_buffer_standard_layout</span> {
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--uniform-buffer-standard-layout&quot;</span>);
+    <span class="kw">if </span>opts.uniform_buffer_standard_layout {
+        cmd.arg(<span class="string">&quot;--uniform-buffer-standard-layout&quot;</span>);
     }
 
-    <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">scalar_block_layout</span> {
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--scalar-block-layout&quot;</span>);
+    <span class="kw">if </span>opts.scalar_block_layout {
+        cmd.arg(<span class="string">&quot;--scalar-block-layout&quot;</span>);
     }
 
-    <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">skip_block_layout</span> {
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--skip-block-layout&quot;</span>);
+    <span class="kw">if </span>opts.skip_block_layout {
+        cmd.arg(<span class="string">&quot;--skip-block-layout&quot;</span>);
     }
 
-    <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">relax_struct_store</span> {
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--relax-struct-store&quot;</span>);
+    <span class="kw">if </span>opts.relax_struct_store {
+        cmd.arg(<span class="string">&quot;--relax-struct-store&quot;</span>);
     }
 
-    <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">before_legalization</span> {
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--before-hlsl-legalization&quot;</span>);
+    <span class="kw">if </span>opts.before_legalization {
+        cmd.arg(<span class="string">&quot;--before-hlsl-legalization&quot;</span>);
     }
 }
 
-<span class="kw">fn</span> <span class="ident">add_limits</span>(<span class="ident">cmd</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Command</span>, <span class="ident">limits</span>: <span class="kw-2">&amp;</span>[(<span class="ident">spirv_tools_sys::val::ValidatorLimits</span>, <span class="ident">u32</span>)]) {
-    <span class="kw">use</span> <span class="ident">spirv_tools_sys::val::ValidatorLimits</span>;
+<span class="kw">fn </span>add_limits(cmd: <span class="kw-2">&amp;mut </span>Command, limits: <span class="kw-2">&amp;</span>[(spirv_tools_sys::val::ValidatorLimits, u32)]) {
+    <span class="kw">use </span>spirv_tools_sys::val::ValidatorLimits;
 
-    <span class="kw">for</span> (<span class="ident">limit</span>, <span class="ident">val</span>) <span class="kw">in</span> <span class="ident">limits</span> {
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="macro">format!</span>(
+    <span class="kw">for </span>(limit, val) <span class="kw">in </span>limits {
+        cmd.arg(<span class="macro">format!</span>(
             <span class="string">&quot;--max-{}={}&quot;</span>,
-            <span class="kw">match</span> <span class="ident">limit</span> {
-                <span class="ident">ValidatorLimits::StructMembers</span> =&gt; <span class="string">&quot;struct-members&quot;</span>,
-                <span class="ident">ValidatorLimits::StructDepth</span> =&gt; <span class="string">&quot;struct-depth&quot;</span>,
-                <span class="ident">ValidatorLimits::LocalVariables</span> =&gt; <span class="string">&quot;local-variables&quot;</span>,
-                <span class="ident">ValidatorLimits::GlobalVariables</span> =&gt; <span class="string">&quot;global-variables&quot;</span>,
-                <span class="ident">ValidatorLimits::SwitchBranches</span> =&gt; <span class="string">&quot;switch-branches&quot;</span>,
-                <span class="ident">ValidatorLimits::FunctionArgs</span> =&gt; <span class="string">&quot;function-args&quot;</span>,
-                <span class="ident">ValidatorLimits::ControlFlowNestingDepth</span> =&gt; <span class="string">&quot;control-flow-nesting-depth&quot;</span>,
-                <span class="ident">ValidatorLimits::AccessChainIndexes</span> =&gt; <span class="string">&quot;access-chain-indexes&quot;</span>,
-                <span class="ident">ValidatorLimits::IdBound</span> =&gt; <span class="string">&quot;id-bound&quot;</span>,
+            <span class="kw">match </span>limit {
+                ValidatorLimits::StructMembers =&gt; <span class="string">&quot;struct-members&quot;</span>,
+                ValidatorLimits::StructDepth =&gt; <span class="string">&quot;struct-depth&quot;</span>,
+                ValidatorLimits::LocalVariables =&gt; <span class="string">&quot;local-variables&quot;</span>,
+                ValidatorLimits::GlobalVariables =&gt; <span class="string">&quot;global-variables&quot;</span>,
+                ValidatorLimits::SwitchBranches =&gt; <span class="string">&quot;switch-branches&quot;</span>,
+                ValidatorLimits::FunctionArgs =&gt; <span class="string">&quot;function-args&quot;</span>,
+                ValidatorLimits::ControlFlowNestingDepth =&gt; <span class="string">&quot;control-flow-nesting-depth&quot;</span>,
+                ValidatorLimits::AccessChainIndexes =&gt; <span class="string">&quot;access-chain-indexes&quot;</span>,
+                ValidatorLimits::IdBound =&gt; <span class="string">&quot;id-bound&quot;</span>,
             },
-            <span class="ident">val</span>
+            val
         ));
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_tools" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_tools" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

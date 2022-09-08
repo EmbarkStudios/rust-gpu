@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_json-1.0.73/src/map.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>map.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../serde_json/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../serde_json/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../serde_json/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_json-1.0.73/src/map.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>map.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../serde_json/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../serde_json/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../serde_json/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -931,933 +925,932 @@
 <span id="925">925</span>
 <span id="926">926</span>
 <span id="927">927</span>
-</pre><pre class="rust"><code><span class="doccomment">//! A map of String to serde_json::Value.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! By default the map is backed by a [`BTreeMap`]. Enable the `preserve_order`</span>
-<span class="doccomment">//! feature of serde_json to use [`IndexMap`] instead.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [`BTreeMap`]: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html</span>
-<span class="doccomment">//! [`IndexMap`]: https://docs.rs/indexmap/*/indexmap/map/struct.IndexMap.html</span>
+</pre><pre class="rust"><code><span class="doccomment">//! A map of String to serde_json::Value.
+//!
+//! By default the map is backed by a [`BTreeMap`]. Enable the `preserve_order`
+//! feature of serde_json to use [`IndexMap`] instead.
+//!
+//! [`BTreeMap`]: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html
+//! [`IndexMap`]: https://docs.rs/indexmap/*/indexmap/map/struct.IndexMap.html
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::lib::borrow::Borrow</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::lib::iter::FromIterator</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::lib</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::value::Value</span>;
-<span class="kw">use</span> <span class="ident">serde::de</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::lib::borrow::Borrow;
+<span class="kw">use </span><span class="kw">crate</span>::lib::iter::FromIterator;
+<span class="kw">use </span><span class="kw">crate</span>::lib::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::value::Value;
+<span class="kw">use </span>serde::de;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">indexmap</span>::{<span class="self">self</span>, <span class="ident">IndexMap</span>};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">use </span>indexmap::{<span class="self">self</span>, IndexMap};
 
-<span class="doccomment">/// Represents a JSON key/value type.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">map</span>: <span class="ident">MapImpl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Represents a JSON key/value type.
+</span><span class="kw">pub struct </span>Map&lt;K, V&gt; {
+    map: MapImpl&lt;K, V&gt;,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">MapImpl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">MapImpl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">IndexMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+</span><span class="kw">type </span>MapImpl&lt;K, V&gt; = BTreeMap&lt;K, V&gt;;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">type </span>MapImpl&lt;K, V&gt; = IndexMap&lt;K, V&gt;;
 
-<span class="kw">impl</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Makes a new empty Map.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">Map</span> {
-            <span class="ident">map</span>: <span class="ident">MapImpl::new</span>(),
+<span class="kw">impl </span>Map&lt;String, Value&gt; {
+    <span class="doccomment">/// Makes a new empty Map.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        Map {
+            map: MapImpl::new(),
         }
     }
 
-    <span class="doccomment">/// Makes a new empty Map with the given initial capacity.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_capacity</span>(<span class="ident">capacity</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Map</span> {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-            <span class="ident">map</span>: {
-                <span class="comment">// does not support with_capacity</span>
-                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">capacity</span>;
-                <span class="ident">BTreeMap::new</span>()
+    <span class="doccomment">/// Makes a new empty Map with the given initial capacity.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>with_capacity(capacity: usize) -&gt; <span class="self">Self </span>{
+        Map {
+            <span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+            </span>map: {
+                <span class="comment">// does not support with_capacity
+                </span><span class="kw">let _ </span>= capacity;
+                BTreeMap::new()
             },
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-            <span class="ident">map</span>: <span class="ident">IndexMap::with_capacity</span>(<span class="ident">capacity</span>),
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+            </span>map: IndexMap::with_capacity(capacity),
         }
     }
 
-    <span class="doccomment">/// Clears the map, removing all values.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">clear</span>();
+    <span class="doccomment">/// Clears the map, removing all values.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.map.clear();
     }
 
-    <span class="doccomment">/// Returns a reference to the value corresponding to the key.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The key may be any borrowed form of the map&#39;s key type, but the ordering</span>
-    <span class="doccomment">/// on the borrowed form *must* match the ordering on the key type.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Value</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">String</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
-        <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="doccomment">/// Returns a reference to the value corresponding to the key.
+    ///
+    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// on the borrowed form *must* match the ordering on the key type.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>get&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Value&gt;
+    <span class="kw">where
+        </span>String: Borrow&lt;Q&gt;,
+        Q: <span class="question-mark">?</span>Sized + Ord + Eq + Hash,
     {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">get</span>(<span class="ident">key</span>)
+        <span class="self">self</span>.map.get(key)
     }
 
-    <span class="doccomment">/// Returns true if the map contains a value for the specified key.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The key may be any borrowed form of the map&#39;s key type, but the ordering</span>
-    <span class="doccomment">/// on the borrowed form *must* match the ordering on the key type.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains_key</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="ident">bool</span>
-    <span class="kw">where</span>
-        <span class="ident">String</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
-        <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="doccomment">/// Returns true if the map contains a value for the specified key.
+    ///
+    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// on the borrowed form *must* match the ordering on the key type.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>contains_key&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; bool
+    <span class="kw">where
+        </span>String: Borrow&lt;Q&gt;,
+        Q: <span class="question-mark">?</span>Sized + Ord + Eq + Hash,
     {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">contains_key</span>(<span class="ident">key</span>)
+        <span class="self">self</span>.map.contains_key(key)
     }
 
-    <span class="doccomment">/// Returns a mutable reference to the value corresponding to the key.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The key may be any borrowed form of the map&#39;s key type, but the ordering</span>
-    <span class="doccomment">/// on the borrowed form *must* match the ordering on the key type.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mut</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">Value</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">String</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
-        <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="doccomment">/// Returns a mutable reference to the value corresponding to the key.
+    ///
+    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// on the borrowed form *must* match the ordering on the key type.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>get_mut&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Value&gt;
+    <span class="kw">where
+        </span>String: Borrow&lt;Q&gt;,
+        Q: <span class="question-mark">?</span>Sized + Ord + Eq + Hash,
     {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">get_mut</span>(<span class="ident">key</span>)
+        <span class="self">self</span>.map.get_mut(key)
     }
 
-    <span class="doccomment">/// Returns the key-value pair matching the given key.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The key may be any borrowed form of the map&#39;s key type, but the ordering</span>
-    <span class="doccomment">/// on the borrowed form *must* match the ordering on the key type.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>, <span class="ident">not</span>(<span class="ident">no_btreemap_get_key_value</span>)))]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_key_value</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">String</span>, <span class="kw-2">&amp;</span><span class="ident">Value</span>)<span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">String</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
-        <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="doccomment">/// Returns the key-value pair matching the given key.
+    ///
+    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// on the borrowed form *must* match the ordering on the key type.
+    </span><span class="attribute">#[inline]
+    #[cfg(any(feature = <span class="string">&quot;preserve_order&quot;</span>, not(no_btreemap_get_key_value)))]
+    </span><span class="kw">pub fn </span>get_key_value&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>String, <span class="kw-2">&amp;</span>Value)&gt;
+    <span class="kw">where
+        </span>String: Borrow&lt;Q&gt;,
+        Q: <span class="question-mark">?</span>Sized + Ord + Eq + Hash,
     {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">get_key_value</span>(<span class="ident">key</span>)
+        <span class="self">self</span>.map.get_key_value(key)
     }
 
-    <span class="doccomment">/// Inserts a key-value pair into the map.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the map did not have this key present, `None` is returned.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the map did have this key present, the value is updated, and the old</span>
-    <span class="doccomment">/// value is returned.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">k</span>: <span class="ident">String</span>, <span class="ident">v</span>: <span class="ident">Value</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">k</span>, <span class="ident">v</span>)
+    <span class="doccomment">/// Inserts a key-value pair into the map.
+    ///
+    /// If the map did not have this key present, `None` is returned.
+    ///
+    /// If the map did have this key present, the value is updated, and the old
+    /// value is returned.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, k: String, v: Value) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt; {
+        <span class="self">self</span>.map.insert(k, v)
     }
 
-    <span class="doccomment">/// Removes a key from the map, returning the value at the key if the key</span>
-    <span class="doccomment">/// was previously in the map.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The key may be any borrowed form of the map&#39;s key type, but the ordering</span>
-    <span class="doccomment">/// on the borrowed form *must* match the ordering on the key type.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">String</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
-        <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="doccomment">/// Removes a key from the map, returning the value at the key if the key
+    /// was previously in the map.
+    ///
+    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// on the borrowed form *must* match the ordering on the key type.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>remove&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt;
+    <span class="kw">where
+        </span>String: Borrow&lt;Q&gt;,
+        Q: <span class="question-mark">?</span>Sized + Ord + Eq + Hash,
     {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-        <span class="kw">return</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">swap_remove</span>(<span class="ident">key</span>);
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-        <span class="kw">return</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">remove</span>(<span class="ident">key</span>);
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+        </span><span class="kw">return </span><span class="self">self</span>.map.swap_remove(key);
+        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+        </span><span class="kw">return </span><span class="self">self</span>.map.remove(key);
     }
 
-    <span class="doccomment">/// Removes a key from the map, returning the stored key and value if the</span>
-    <span class="doccomment">/// key was previously in the map.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The key may be any borrowed form of the map&#39;s key type, but the ordering</span>
-    <span class="doccomment">/// on the borrowed form *must* match the ordering on the key type.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_entry</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">Value</span>)<span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">String</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
-        <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="doccomment">/// Removes a key from the map, returning the stored key and value if the
+    /// key was previously in the map.
+    ///
+    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// on the borrowed form *must* match the ordering on the key type.
+    </span><span class="kw">pub fn </span>remove_entry&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;(String, Value)&gt;
+    <span class="kw">where
+        </span>String: Borrow&lt;Q&gt;,
+        Q: <span class="question-mark">?</span>Sized + Ord + Eq + Hash,
     {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>, <span class="ident">not</span>(<span class="ident">no_btreemap_remove_entry</span>)))]</span>
-        <span class="kw">return</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">remove_entry</span>(<span class="ident">key</span>);
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-            <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>),
-            <span class="ident">no_btreemap_remove_entry</span>,
-            <span class="ident">not</span>(<span class="ident">no_btreemap_get_key_value</span>),
-        ))]</span>
-        {
-            <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">_value</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">get_key_value</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">clone</span>();
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">remove</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
-            <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">value</span>))
+        <span class="attribute">#[cfg(any(feature = <span class="string">&quot;preserve_order&quot;</span>, not(no_btreemap_remove_entry)))]
+        </span><span class="kw">return </span><span class="self">self</span>.map.remove_entry(key);
+        <span class="attribute">#[cfg(all(
+            not(feature = <span class="string">&quot;preserve_order&quot;</span>),
+            no_btreemap_remove_entry,
+            not(no_btreemap_get_key_value),
+        ))]
+        </span>{
+            <span class="kw">let </span>(key, _value) = <span class="self">self</span>.map.get_key_value(key)<span class="question-mark">?</span>;
+            <span class="kw">let </span>key = key.clone();
+            <span class="kw">let </span>value = <span class="self">self</span>.map.remove::&lt;String&gt;(<span class="kw-2">&amp;</span>key)<span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>((key, value))
         }
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-            <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>),
-            <span class="ident">no_btreemap_remove_entry</span>,
-            <span class="ident">no_btreemap_get_key_value</span>,
-        ))]</span>
-        {
-            <span class="kw">struct</span> <span class="ident">Key</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Q</span>);
+        <span class="attribute">#[cfg(all(
+            not(feature = <span class="string">&quot;preserve_order&quot;</span>),
+            no_btreemap_remove_entry,
+            no_btreemap_get_key_value,
+        ))]
+        </span>{
+            <span class="kw">struct </span>Key&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Q);
 
-            <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">RangeBounds</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Key</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Q</span><span class="op">&gt;</span> {
-                <span class="kw">fn</span> <span class="ident">start_bound</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Bound</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Q</span><span class="op">&gt;</span> {
-                    <span class="ident">Bound::Included</span>(<span class="self">self</span>.<span class="number">0</span>)
+            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized&gt; RangeBounds&lt;Q&gt; <span class="kw">for </span>Key&lt;<span class="lifetime">&#39;a</span>, Q&gt; {
+                <span class="kw">fn </span>start_bound(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Bound&lt;<span class="kw-2">&amp;</span>Q&gt; {
+                    Bound::Included(<span class="self">self</span>.<span class="number">0</span>)
                 }
-                <span class="kw">fn</span> <span class="ident">end_bound</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Bound</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Q</span><span class="op">&gt;</span> {
-                    <span class="ident">Bound::Included</span>(<span class="self">self</span>.<span class="number">0</span>)
+                <span class="kw">fn </span>end_bound(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Bound&lt;<span class="kw-2">&amp;</span>Q&gt; {
+                    Bound::Included(<span class="self">self</span>.<span class="number">0</span>)
                 }
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">range</span>(<span class="ident">Key</span>(<span class="ident">key</span>));
-            <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">_value</span>) <span class="op">=</span> <span class="ident">range</span>.<span class="ident">next</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">clone</span>();
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">remove</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
-            <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">value</span>))
+            <span class="kw">let </span><span class="kw-2">mut </span>range = <span class="self">self</span>.map.range(Key(key));
+            <span class="kw">let </span>(key, _value) = range.next()<span class="question-mark">?</span>;
+            <span class="kw">let </span>key = key.clone();
+            <span class="kw">let </span>value = <span class="self">self</span>.map.remove::&lt;String&gt;(<span class="kw-2">&amp;</span>key)<span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>((key, value))
         }
     }
 
-    <span class="doccomment">/// Moves all elements from other into Self, leaving other empty.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;mut</span> <span class="self">Self</span>) {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-        <span class="kw">for</span> (<span class="ident">k</span>, <span class="ident">v</span>) <span class="kw">in</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">other</span>.<span class="ident">map</span>, <span class="ident">MapImpl::default</span>()) {
-            <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">k</span>, <span class="ident">v</span>);
+    <span class="doccomment">/// Moves all elements from other into Self, leaving other empty.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>append(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;mut </span><span class="self">Self</span>) {
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+        </span><span class="kw">for </span>(k, v) <span class="kw">in </span>mem::replace(<span class="kw-2">&amp;mut </span>other.map, MapImpl::default()) {
+            <span class="self">self</span>.map.insert(k, v);
         }
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">other</span>.<span class="ident">map</span>);
+        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+        </span><span class="self">self</span>.map.append(<span class="kw-2">&amp;mut </span>other.map);
     }
 
-    <span class="doccomment">/// Gets the given key&#39;s corresponding entry in the map for in-place</span>
-    <span class="doccomment">/// manipulation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">entry</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">S</span>) -&gt; <span class="ident">Entry</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Gets the given key&#39;s corresponding entry in the map for in-place
+    /// manipulation.
+    </span><span class="kw">pub fn </span>entry&lt;S&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: S) -&gt; Entry
+    <span class="kw">where
+        </span>S: Into&lt;String&gt;,
     {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::lib::btree_map::Entry</span> <span class="kw">as</span> <span class="ident">EntryImpl</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-        <span class="kw">use</span> <span class="ident">indexmap::map::Entry</span> <span class="kw">as</span> <span class="ident">EntryImpl</span>;
+        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+        </span><span class="kw">use </span><span class="kw">crate</span>::lib::btree_map::Entry <span class="kw">as </span>EntryImpl;
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+        </span><span class="kw">use </span>indexmap::map::Entry <span class="kw">as </span>EntryImpl;
 
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">entry</span>(<span class="ident">key</span>.<span class="ident">into</span>()) {
-            <span class="ident">EntryImpl::Vacant</span>(<span class="ident">vacant</span>) =&gt; <span class="ident">Entry::Vacant</span>(<span class="ident">VacantEntry</span> { <span class="ident">vacant</span> }),
-            <span class="ident">EntryImpl::Occupied</span>(<span class="ident">occupied</span>) =&gt; <span class="ident">Entry::Occupied</span>(<span class="ident">OccupiedEntry</span> { <span class="ident">occupied</span> }),
+        <span class="kw">match </span><span class="self">self</span>.map.entry(key.into()) {
+            EntryImpl::Vacant(vacant) =&gt; Entry::Vacant(VacantEntry { vacant }),
+            EntryImpl::Occupied(occupied) =&gt; Entry::Occupied(OccupiedEntry { occupied }),
         }
     }
 
-    <span class="doccomment">/// Returns the number of elements in the map.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">len</span>()
+    <span class="doccomment">/// Returns the number of elements in the map.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.map.len()
     }
 
-    <span class="doccomment">/// Returns true if the map contains no elements.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">is_empty</span>()
+    <span class="doccomment">/// Returns true if the map contains no elements.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.map.is_empty()
     }
 
-    <span class="doccomment">/// Gets an iterator over the entries of the map.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Iter</span> {
-        <span class="ident">Iter</span> {
-            <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">iter</span>(),
+    <span class="doccomment">/// Gets an iterator over the entries of the map.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter {
+        Iter {
+            iter: <span class="self">self</span>.map.iter(),
         }
     }
 
-    <span class="doccomment">/// Gets a mutable iterator over the entries of the map.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">IterMut</span> {
-        <span class="ident">IterMut</span> {
-            <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">iter_mut</span>(),
+    <span class="doccomment">/// Gets a mutable iterator over the entries of the map.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>iter_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; IterMut {
+        IterMut {
+            iter: <span class="self">self</span>.map.iter_mut(),
         }
     }
 
-    <span class="doccomment">/// Gets an iterator over the keys of the map.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Keys</span> {
-        <span class="ident">Keys</span> {
-            <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">keys</span>(),
+    <span class="doccomment">/// Gets an iterator over the keys of the map.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>keys(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Keys {
+        Keys {
+            iter: <span class="self">self</span>.map.keys(),
         }
     }
 
-    <span class="doccomment">/// Gets an iterator over the values of the map.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">values</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Values</span> {
-        <span class="ident">Values</span> {
-            <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">values</span>(),
+    <span class="doccomment">/// Gets an iterator over the values of the map.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>values(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Values {
+        Values {
+            iter: <span class="self">self</span>.map.values(),
         }
     }
 
-    <span class="doccomment">/// Gets an iterator over mutable values of the map.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">values_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">ValuesMut</span> {
-        <span class="ident">ValuesMut</span> {
-            <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">values_mut</span>(),
+    <span class="doccomment">/// Gets an iterator over mutable values of the map.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>values_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ValuesMut {
+        ValuesMut {
+            iter: <span class="self">self</span>.map.values_mut(),
         }
     }
 
-    <span class="doccomment">/// Retains only the elements specified by the predicate.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// In other words, remove all pairs `(k, v)` such that `f(&amp;k, &amp;mut v)`</span>
-    <span class="doccomment">/// returns `false`.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">no_btreemap_retain</span>))]</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">retain</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>)
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">String</span>, <span class="kw-2">&amp;mut</span> <span class="ident">Value</span>) -&gt; <span class="ident">bool</span>,
+    <span class="doccomment">/// Retains only the elements specified by the predicate.
+    ///
+    /// In other words, remove all pairs `(k, v)` such that `f(&amp;k, &amp;mut v)`
+    /// returns `false`.
+    </span><span class="attribute">#[cfg(not(no_btreemap_retain))]
+    #[inline]
+    </span><span class="kw">pub fn </span>retain&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F)
+    <span class="kw">where
+        </span>F: FnMut(<span class="kw-2">&amp;</span>String, <span class="kw-2">&amp;mut </span>Value) -&gt; bool,
     {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">retain</span>(<span class="ident">f</span>);
+        <span class="self">self</span>.map.retain(f);
     }
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::derivable_impls</span>)]</span> <span class="comment">// clippy bug: https://github.com/rust-lang/rust-clippy/issues/7655</span>
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">Map</span> {
-            <span class="ident">map</span>: <span class="ident">MapImpl::new</span>(),
+<span class="attribute">#[allow(clippy::derivable_impls)] </span><span class="comment">// clippy bug: https://github.com/rust-lang/rust-clippy/issues/7655
+</span><span class="kw">impl </span>Default <span class="kw">for </span>Map&lt;String, Value&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        Map {
+            map: MapImpl::new(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Map</span> {
-            <span class="ident">map</span>: <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">clone</span>(),
+<span class="kw">impl </span>Clone <span class="kw">for </span>Map&lt;String, Value&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        Map {
+            map: <span class="self">self</span>.map.clone(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">map</span>)
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>Map&lt;String, Value&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="self">self</span>.map.eq(<span class="kw-2">&amp;</span>other.map)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {}
+<span class="kw">impl </span>Eq <span class="kw">for </span>Map&lt;String, Value&gt; {}
 
-<span class="doccomment">/// Access an element of this map. Panics if the given key is not present in the</span>
-<span class="doccomment">/// map.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use serde_json::Value;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # let val = &amp;Value::String(&quot;&quot;.to_owned());</span>
-<span class="doccomment">/// # let _ =</span>
-<span class="doccomment">/// match *val {</span>
-<span class="doccomment">///     Value::String(ref s) =&gt; Some(s.as_str()),</span>
-<span class="doccomment">///     Value::Array(ref arr) =&gt; arr[0].as_str(),</span>
-<span class="doccomment">///     Value::Object(ref map) =&gt; map[&quot;type&quot;].as_str(),</span>
-<span class="doccomment">///     _ =&gt; None,</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// # ;</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Q</span><span class="op">&gt;</span> <span class="ident">ops::Index</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Q</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">String</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
-    <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="doccomment">/// Access an element of this map. Panics if the given key is not present in the
+/// map.
+///
+/// ```
+/// # use serde_json::Value;
+/// #
+/// # let val = &amp;Value::String(&quot;&quot;.to_owned());
+/// # let _ =
+/// match *val {
+///     Value::String(ref s) =&gt; Some(s.as_str()),
+///     Value::Array(ref arr) =&gt; arr[0].as_str(),
+///     Value::Object(ref map) =&gt; map[&quot;type&quot;].as_str(),
+///     _ =&gt; None,
+/// }
+/// # ;
+/// ```
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Q&gt; ops::Index&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Q&gt; <span class="kw">for </span>Map&lt;String, Value&gt;
+<span class="kw">where
+    </span>String: Borrow&lt;Q&gt;,
+    Q: <span class="question-mark">?</span>Sized + Ord + Eq + Hash,
 {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Value</span>;
+    <span class="kw">type </span>Output = Value;
 
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">index</span>(<span class="ident">index</span>)
+    <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: <span class="kw-2">&amp;</span>Q) -&gt; <span class="kw-2">&amp;</span>Value {
+        <span class="self">self</span>.map.index(index)
     }
 }
 
-<span class="doccomment">/// Mutably access an element of this map. Panics if the given key is not</span>
-<span class="doccomment">/// present in the map.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use serde_json::json;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # let mut map = serde_json::Map::new();</span>
-<span class="doccomment">/// # map.insert(&quot;key&quot;.to_owned(), serde_json::Value::Null);</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// map[&quot;key&quot;] = json!(&quot;value&quot;);</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Q</span><span class="op">&gt;</span> <span class="ident">ops::IndexMut</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Q</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">String</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
-    <span class="ident">Q</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="doccomment">/// Mutably access an element of this map. Panics if the given key is not
+/// present in the map.
+///
+/// ```
+/// # use serde_json::json;
+/// #
+/// # let mut map = serde_json::Map::new();
+/// # map.insert(&quot;key&quot;.to_owned(), serde_json::Value::Null);
+/// #
+/// map[&quot;key&quot;] = json!(&quot;value&quot;);
+/// ```
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Q&gt; ops::IndexMut&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Q&gt; <span class="kw">for </span>Map&lt;String, Value&gt;
+<span class="kw">where
+    </span>String: Borrow&lt;Q&gt;,
+    Q: <span class="question-mark">?</span>Sized + Ord + Eq + Hash,
 {
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">get_mut</span>(<span class="ident">index</span>).<span class="ident">expect</span>(<span class="string">&quot;no entry found for key&quot;</span>)
+    <span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: <span class="kw-2">&amp;</span>Q) -&gt; <span class="kw-2">&amp;mut </span>Value {
+        <span class="self">self</span>.map.get_mut(index).expect(<span class="string">&quot;no entry found for key&quot;</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">fmt::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">fmt</span>(<span class="ident">formatter</span>)
+<span class="kw">impl </span>Debug <span class="kw">for </span>Map&lt;String, Value&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; <span class="prelude-ty">Result</span>&lt;(), fmt::Error&gt; {
+        <span class="self">self</span>.map.fmt(formatter)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">impl</span> <span class="ident">serde::ser::Serialize</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::ser::Serializer</span>,
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl </span>serde::ser::Serialize <span class="kw">for </span>Map&lt;String, Value&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::ser::Serializer,
     {
-        <span class="kw">use</span> <span class="ident">serde::ser::SerializeMap</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="macro">tri!</span>(<span class="ident">serializer</span>.<span class="ident">serialize_map</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">len</span>())));
-        <span class="kw">for</span> (<span class="ident">k</span>, <span class="ident">v</span>) <span class="kw">in</span> <span class="self">self</span> {
-            <span class="macro">tri!</span>(<span class="ident">map</span>.<span class="ident">serialize_entry</span>(<span class="ident">k</span>, <span class="ident">v</span>));
+        <span class="kw">use </span>serde::ser::SerializeMap;
+        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">tri!</span>(serializer.serialize_map(<span class="prelude-val">Some</span>(<span class="self">self</span>.len())));
+        <span class="kw">for </span>(k, v) <span class="kw">in </span><span class="self">self </span>{
+            <span class="macro">tri!</span>(map.serialize_entry(k, v));
         }
-        <span class="ident">map</span>.<span class="ident">end</span>()
+        map.end()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">de::Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">de::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; de::Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Map&lt;String, Value&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+    <span class="kw">where
+        </span>D: de::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">struct</span> <span class="ident">Visitor</span>;
+        <span class="kw">struct </span>Visitor;
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">de::Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Visitor</span> {
-            <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Visitor {
+            <span class="kw">type </span>Value = Map&lt;String, Value&gt;;
 
-            <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-                <span class="ident">formatter</span>.<span class="ident">write_str</span>(<span class="string">&quot;a map&quot;</span>)
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+                formatter.write_str(<span class="string">&quot;a map&quot;</span>)
             }
 
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">visit_unit</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">E</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">E</span>: <span class="ident">de::Error</span>,
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>visit_unit&lt;E&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+            <span class="kw">where
+                </span>E: de::Error,
             {
-                <span class="prelude-val">Ok</span>(<span class="ident">Map::new</span>())
+                <span class="prelude-val">Ok</span>(Map::new())
             }
 
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>))]</span>
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">visit_map</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">visitor</span>: <span class="ident">V</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">V::Error</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">V</span>: <span class="ident">de::MapAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+            <span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+            #[inline]
+            </span><span class="kw">fn </span>visit_map&lt;V&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, V::Error&gt;
+            <span class="kw">where
+                </span>V: de::MapAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">values</span> <span class="op">=</span> <span class="ident">Map::new</span>();
+                <span class="kw">let </span><span class="kw-2">mut </span>values = Map::new();
 
-                <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">value</span>)) <span class="op">=</span> <span class="macro">tri!</span>(<span class="ident">visitor</span>.<span class="ident">next_entry</span>()) {
-                    <span class="ident">values</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">value</span>);
+                <span class="kw">while let </span><span class="prelude-val">Some</span>((key, value)) = <span class="macro">tri!</span>(visitor.next_entry()) {
+                    values.insert(key, value);
                 }
 
-                <span class="prelude-val">Ok</span>(<span class="ident">values</span>)
+                <span class="prelude-val">Ok</span>(values)
             }
         }
 
-        <span class="ident">deserializer</span>.<span class="ident">deserialize_map</span>(<span class="ident">Visitor</span>)
+        deserializer.deserialize_map(Visitor)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">FromIterator</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">Value</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from_iter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">String</span>, <span class="ident">Value</span>)<span class="op">&gt;</span>,
+<span class="kw">impl </span>FromIterator&lt;(String, Value)&gt; <span class="kw">for </span>Map&lt;String, Value&gt; {
+    <span class="kw">fn </span>from_iter&lt;T&gt;(iter: T) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>T: IntoIterator&lt;Item = (String, Value)&gt;,
     {
-        <span class="ident">Map</span> {
-            <span class="ident">map</span>: <span class="ident">FromIterator::from_iter</span>(<span class="ident">iter</span>),
+        Map {
+            map: FromIterator::from_iter(iter),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Extend</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">Value</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">extend</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">iter</span>: <span class="ident">T</span>)
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">String</span>, <span class="ident">Value</span>)<span class="op">&gt;</span>,
+<span class="kw">impl </span>Extend&lt;(String, Value)&gt; <span class="kw">for </span>Map&lt;String, Value&gt; {
+    <span class="kw">fn </span>extend&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: T)
+    <span class="kw">where
+        </span>T: IntoIterator&lt;Item = (String, Value)&gt;,
     {
-        <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">extend</span>(<span class="ident">iter</span>);
+        <span class="self">self</span>.map.extend(iter);
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">delegate_iterator</span> {
-    ((<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">generics</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">item</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">impl</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">generics</span>)<span class="op">*</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">generics</span>)<span class="op">*</span> {
-            <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">item</span>;
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()
+<span class="macro">macro_rules! </span>delegate_iterator {
+    ((<span class="macro-nonterminal">$name</span>:ident $(<span class="macro-nonterminal">$generics</span>:tt)<span class="kw-2">*</span>) =&gt; <span class="macro-nonterminal">$item</span>:ty) =&gt; {
+        <span class="kw">impl </span>$(<span class="macro-nonterminal">$generics</span>)* Iterator <span class="kw">for </span><span class="macro-nonterminal">$name </span>$(<span class="macro-nonterminal">$generics</span>)* {
+            <span class="kw">type </span>Item = <span class="macro-nonterminal">$item</span>;
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+                <span class="self">self</span>.iter.next()
             }
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">size_hint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-                <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">size_hint</span>()
-            }
-        }
-
-        <span class="kw">impl</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">generics</span>)<span class="op">*</span> <span class="ident">DoubleEndedIterator</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">generics</span>)<span class="op">*</span> {
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">next_back</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next_back</span>()
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>size_hint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;usize&gt;) {
+                <span class="self">self</span>.iter.size_hint()
             }
         }
 
-        <span class="kw">impl</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">generics</span>)<span class="op">*</span> <span class="ident">ExactSizeIterator</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">generics</span>)<span class="op">*</span> {
-            <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-                <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">len</span>()
+        <span class="kw">impl </span>$(<span class="macro-nonterminal">$generics</span>)* DoubleEndedIterator <span class="kw">for </span><span class="macro-nonterminal">$name </span>$(<span class="macro-nonterminal">$generics</span>)* {
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+                <span class="self">self</span>.iter.next_back()
             }
         }
 
-        <span class="kw">impl</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">generics</span>)<span class="op">*</span> <span class="ident">FusedIterator</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">generics</span>)<span class="op">*</span> {}
+        <span class="kw">impl </span>$(<span class="macro-nonterminal">$generics</span>)* ExactSizeIterator <span class="kw">for </span><span class="macro-nonterminal">$name </span>$(<span class="macro-nonterminal">$generics</span>)* {
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+                <span class="self">self</span>.iter.len()
+            }
+        }
+
+        <span class="kw">impl </span>$(<span class="macro-nonterminal">$generics</span>)* FusedIterator <span class="kw">for </span><span class="macro-nonterminal">$name </span>$(<span class="macro-nonterminal">$generics</span>)* {}
     }
 }
 
-<span class="comment">//////////////////////////////////////////////////////////////////////////////</span>
+<span class="comment">//////////////////////////////////////////////////////////////////////////////
 
-<span class="doccomment">/// A view into a single entry in a map, which may either be vacant or occupied.</span>
-<span class="doccomment">/// This enum is constructed from the [`entry`] method on [`Map`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`entry`]: struct.Map.html#method.entry</span>
-<span class="doccomment">/// [`Map`]: struct.Map.html</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Entry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// A vacant Entry.</span>
-    <span class="ident">Vacant</span>(<span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// An occupied Entry.</span>
-    <span class="ident">Occupied</span>(<span class="ident">OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+</span><span class="doccomment">/// A view into a single entry in a map, which may either be vacant or occupied.
+/// This enum is constructed from the [`entry`] method on [`Map`].
+///
+/// [`entry`]: struct.Map.html#method.entry
+/// [`Map`]: struct.Map.html
+</span><span class="kw">pub enum </span>Entry&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// A vacant Entry.
+    </span>Vacant(VacantEntry&lt;<span class="lifetime">&#39;a</span>&gt;),
+    <span class="doccomment">/// An occupied Entry.
+    </span>Occupied(OccupiedEntry&lt;<span class="lifetime">&#39;a</span>&gt;),
 }
 
-<span class="doccomment">/// A vacant Entry. It is part of the [`Entry`] enum.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Entry`]: enum.Entry.html</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">vacant</span>: <span class="ident">VacantEntryImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A vacant Entry. It is part of the [`Entry`] enum.
+///
+/// [`Entry`]: enum.Entry.html
+</span><span class="kw">pub struct </span>VacantEntry&lt;<span class="lifetime">&#39;a</span>&gt; {
+    vacant: VacantEntryImpl&lt;<span class="lifetime">&#39;a</span>&gt;,
 }
 
-<span class="doccomment">/// An occupied Entry. It is part of the [`Entry`] enum.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Entry`]: enum.Entry.html</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">occupied</span>: <span class="ident">OccupiedEntryImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An occupied Entry. It is part of the [`Entry`] enum.
+///
+/// [`Entry`]: enum.Entry.html
+</span><span class="kw">pub struct </span>OccupiedEntry&lt;<span class="lifetime">&#39;a</span>&gt; {
+    occupied: OccupiedEntryImpl&lt;<span class="lifetime">&#39;a</span>&gt;,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">VacantEntryImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">btree_map::VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">VacantEntryImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">indexmap::map::VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+</span><span class="kw">type </span>VacantEntryImpl&lt;<span class="lifetime">&#39;a</span>&gt; = btree_map::VacantEntry&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">type </span>VacantEntryImpl&lt;<span class="lifetime">&#39;a</span>&gt; = indexmap::map::VacantEntry&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">OccupiedEntryImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">btree_map::OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">OccupiedEntryImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">indexmap::map::OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+</span><span class="kw">type </span>OccupiedEntryImpl&lt;<span class="lifetime">&#39;a</span>&gt; = btree_map::OccupiedEntry&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">type </span>OccupiedEntryImpl&lt;<span class="lifetime">&#39;a</span>&gt; = indexmap::map::OccupiedEntry&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Entry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns a reference to this entry&#39;s key.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// assert_eq!(map.entry(&quot;serde&quot;).key(), &amp;&quot;serde&quot;);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">String</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">Entry::Vacant</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) =&gt; <span class="ident">e</span>.<span class="ident">key</span>(),
-            <span class="ident">Entry::Occupied</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) =&gt; <span class="ident">e</span>.<span class="ident">key</span>(),
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Entry&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Returns a reference to this entry&#39;s key.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut map = serde_json::Map::new();
+    /// assert_eq!(map.entry(&quot;serde&quot;).key(), &amp;&quot;serde&quot;);
+    /// ```
+    </span><span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>String {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            Entry::Vacant(<span class="kw-2">ref </span>e) =&gt; e.key(),
+            Entry::Occupied(<span class="kw-2">ref </span>e) =&gt; e.key(),
         }
     }
 
-    <span class="doccomment">/// Ensures a value is in the entry by inserting the default if empty, and</span>
-    <span class="doccomment">/// returns a mutable reference to the value in the entry.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// map.entry(&quot;serde&quot;).or_insert(json!(12));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(map[&quot;serde&quot;], 12);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">or_insert</span>(<span class="self">self</span>, <span class="ident">default</span>: <span class="ident">Value</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Value</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">default</span>),
-            <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">into_mut</span>(),
+    <span class="doccomment">/// Ensures a value is in the entry by inserting the default if empty, and
+    /// returns a mutable reference to the value in the entry.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// let mut map = serde_json::Map::new();
+    /// map.entry(&quot;serde&quot;).or_insert(json!(12));
+    ///
+    /// assert_eq!(map[&quot;serde&quot;], 12);
+    /// ```
+    </span><span class="kw">pub fn </span>or_insert(<span class="self">self</span>, default: Value) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Value {
+        <span class="kw">match </span><span class="self">self </span>{
+            Entry::Vacant(entry) =&gt; entry.insert(default),
+            Entry::Occupied(entry) =&gt; entry.into_mut(),
         }
     }
 
-    <span class="doccomment">/// Ensures a value is in the entry by inserting the result of the default</span>
-    <span class="doccomment">/// function if empty, and returns a mutable reference to the value in the</span>
-    <span class="doccomment">/// entry.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// map.entry(&quot;serde&quot;).or_insert_with(|| json!(&quot;hoho&quot;));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(map[&quot;serde&quot;], &quot;hoho&quot;.to_owned());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">or_insert_with</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">default</span>: <span class="ident">F</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Value</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnOnce</span>() -&gt; <span class="ident">Value</span>,
+    <span class="doccomment">/// Ensures a value is in the entry by inserting the result of the default
+    /// function if empty, and returns a mutable reference to the value in the
+    /// entry.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// let mut map = serde_json::Map::new();
+    /// map.entry(&quot;serde&quot;).or_insert_with(|| json!(&quot;hoho&quot;));
+    ///
+    /// assert_eq!(map[&quot;serde&quot;], &quot;hoho&quot;.to_owned());
+    /// ```
+    </span><span class="kw">pub fn </span>or_insert_with&lt;F&gt;(<span class="self">self</span>, default: F) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Value
+    <span class="kw">where
+        </span>F: FnOnce() -&gt; Value,
     {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">default</span>()),
-            <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>.<span class="ident">into_mut</span>(),
+        <span class="kw">match </span><span class="self">self </span>{
+            Entry::Vacant(entry) =&gt; entry.insert(default()),
+            Entry::Occupied(entry) =&gt; entry.into_mut(),
         }
     }
 
-    <span class="doccomment">/// Provides in-place mutable access to an occupied entry before any</span>
-    <span class="doccomment">/// potential inserts into the map.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// map.entry(&quot;serde&quot;)</span>
-    <span class="doccomment">///     .and_modify(|e| *e = json!(&quot;rust&quot;))</span>
-    <span class="doccomment">///     .or_insert(json!(&quot;cpp&quot;));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(map[&quot;serde&quot;], &quot;cpp&quot;);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// map.entry(&quot;serde&quot;)</span>
-    <span class="doccomment">///     .and_modify(|e| *e = json!(&quot;rust&quot;))</span>
-    <span class="doccomment">///     .or_insert(json!(&quot;cpp&quot;));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(map[&quot;serde&quot;], &quot;rust&quot;);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">and_modify</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;mut</span> <span class="ident">Value</span>),
+    <span class="doccomment">/// Provides in-place mutable access to an occupied entry before any
+    /// potential inserts into the map.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// let mut map = serde_json::Map::new();
+    /// map.entry(&quot;serde&quot;)
+    ///     .and_modify(|e| *e = json!(&quot;rust&quot;))
+    ///     .or_insert(json!(&quot;cpp&quot;));
+    ///
+    /// assert_eq!(map[&quot;serde&quot;], &quot;cpp&quot;);
+    ///
+    /// map.entry(&quot;serde&quot;)
+    ///     .and_modify(|e| *e = json!(&quot;rust&quot;))
+    ///     .or_insert(json!(&quot;cpp&quot;));
+    ///
+    /// assert_eq!(map[&quot;serde&quot;], &quot;rust&quot;);
+    /// ```
+    </span><span class="kw">pub fn </span>and_modify&lt;F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>F: FnOnce(<span class="kw-2">&amp;mut </span>Value),
     {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry::Occupied</span>(<span class="kw-2">mut</span> <span class="ident">entry</span>) =&gt; {
-                <span class="ident">f</span>(<span class="ident">entry</span>.<span class="ident">get_mut</span>());
-                <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>)
+        <span class="kw">match </span><span class="self">self </span>{
+            Entry::Occupied(<span class="kw-2">mut </span>entry) =&gt; {
+                f(entry.get_mut());
+                Entry::Occupied(entry)
             }
-            <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>),
+            Entry::Vacant(entry) =&gt; Entry::Vacant(entry),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Gets a reference to the key that would be used when inserting a value</span>
-    <span class="doccomment">/// through the VacantEntry.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use serde_json::map::Entry;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// match map.entry(&quot;serde&quot;) {</span>
-    <span class="doccomment">///     Entry::Vacant(vacant) =&gt; {</span>
-    <span class="doccomment">///         assert_eq!(vacant.key(), &amp;&quot;serde&quot;);</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///     Entry::Occupied(_) =&gt; unimplemented!(),</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">vacant</span>.<span class="ident">key</span>()
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; VacantEntry&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Gets a reference to the key that would be used when inserting a value
+    /// through the VacantEntry.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    ///
+    /// match map.entry(&quot;serde&quot;) {
+    ///     Entry::Vacant(vacant) =&gt; {
+    ///         assert_eq!(vacant.key(), &amp;&quot;serde&quot;);
+    ///     }
+    ///     Entry::Occupied(_) =&gt; unimplemented!(),
+    /// }
+    /// ```
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>String {
+        <span class="self">self</span>.vacant.key()
     }
 
-    <span class="doccomment">/// Sets the value of the entry with the VacantEntry&#39;s key, and returns a</span>
-    <span class="doccomment">/// mutable reference to it.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// use serde_json::map::Entry;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// match map.entry(&quot;serde&quot;) {</span>
-    <span class="doccomment">///     Entry::Vacant(vacant) =&gt; {</span>
-    <span class="doccomment">///         vacant.insert(json!(&quot;hoho&quot;));</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///     Entry::Occupied(_) =&gt; unimplemented!(),</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">vacant</span>.<span class="ident">insert</span>(<span class="ident">value</span>)
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Gets a reference to the key in the entry.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// use serde_json::map::Entry;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// map.insert(&quot;serde&quot;.to_owned(), json!(12));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// match map.entry(&quot;serde&quot;) {</span>
-    <span class="doccomment">///     Entry::Occupied(occupied) =&gt; {</span>
-    <span class="doccomment">///         assert_eq!(occupied.key(), &amp;&quot;serde&quot;);</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///     Entry::Vacant(_) =&gt; unimplemented!(),</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">key</span>()
-    }
-
-    <span class="doccomment">/// Gets a reference to the value in the entry.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// use serde_json::map::Entry;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// map.insert(&quot;serde&quot;.to_owned(), json!(12));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// match map.entry(&quot;serde&quot;) {</span>
-    <span class="doccomment">///     Entry::Occupied(occupied) =&gt; {</span>
-    <span class="doccomment">///         assert_eq!(occupied.get(), 12);</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///     Entry::Vacant(_) =&gt; unimplemented!(),</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">get</span>()
-    }
-
-    <span class="doccomment">/// Gets a mutable reference to the value in the entry.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// use serde_json::map::Entry;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// map.insert(&quot;serde&quot;.to_owned(), json!([1, 2, 3]));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// match map.entry(&quot;serde&quot;) {</span>
-    <span class="doccomment">///     Entry::Occupied(mut occupied) =&gt; {</span>
-    <span class="doccomment">///         occupied.get_mut().as_array_mut().unwrap().push(json!(4));</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///     Entry::Vacant(_) =&gt; unimplemented!(),</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(map[&quot;serde&quot;].as_array().unwrap().len(), 4);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">get_mut</span>()
-    }
-
-    <span class="doccomment">/// Converts the entry into a mutable reference to its value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// use serde_json::map::Entry;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// map.insert(&quot;serde&quot;.to_owned(), json!([1, 2, 3]));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// match map.entry(&quot;serde&quot;) {</span>
-    <span class="doccomment">///     Entry::Occupied(mut occupied) =&gt; {</span>
-    <span class="doccomment">///         occupied.into_mut().as_array_mut().unwrap().push(json!(4));</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///     Entry::Vacant(_) =&gt; unimplemented!(),</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(map[&quot;serde&quot;].as_array().unwrap().len(), 4);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_mut</span>(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">into_mut</span>()
-    }
-
-    <span class="doccomment">/// Sets the value of the entry with the `OccupiedEntry`&#39;s key, and returns</span>
-    <span class="doccomment">/// the entry&#39;s old value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// use serde_json::map::Entry;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// map.insert(&quot;serde&quot;.to_owned(), json!(12));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// match map.entry(&quot;serde&quot;) {</span>
-    <span class="doccomment">///     Entry::Occupied(mut occupied) =&gt; {</span>
-    <span class="doccomment">///         assert_eq!(occupied.insert(json!(13)), 12);</span>
-    <span class="doccomment">///         assert_eq!(occupied.get(), 13);</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///     Entry::Vacant(_) =&gt; unimplemented!(),</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>) -&gt; <span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">insert</span>(<span class="ident">value</span>)
-    }
-
-    <span class="doccomment">/// Takes the value of the entry out of the map, and returns it.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use serde_json::json;</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// use serde_json::map::Entry;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut map = serde_json::Map::new();</span>
-    <span class="doccomment">/// map.insert(&quot;serde&quot;.to_owned(), json!(12));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// match map.entry(&quot;serde&quot;) {</span>
-    <span class="doccomment">///     Entry::Occupied(occupied) =&gt; {</span>
-    <span class="doccomment">///         assert_eq!(occupied.remove(), 12);</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///     Entry::Vacant(_) =&gt; unimplemented!(),</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="self">self</span>) -&gt; <span class="ident">Value</span> {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-        <span class="kw">return</span> <span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">swap_remove</span>();
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-        <span class="kw">return</span> <span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">remove</span>();
+    <span class="doccomment">/// Sets the value of the entry with the VacantEntry&#39;s key, and returns a
+    /// mutable reference to it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    ///
+    /// match map.entry(&quot;serde&quot;) {
+    ///     Entry::Vacant(vacant) =&gt; {
+    ///         vacant.insert(json!(&quot;hoho&quot;));
+    ///     }
+    ///     Entry::Occupied(_) =&gt; unimplemented!(),
+    /// }
+    /// ```
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>insert(<span class="self">self</span>, value: Value) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Value {
+        <span class="self">self</span>.vacant.insert(value)
     }
 }
 
-<span class="comment">//////////////////////////////////////////////////////////////////////////////</span>
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; OccupiedEntry&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Gets a reference to the key in the entry.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert(&quot;serde&quot;.to_owned(), json!(12));
+    ///
+    /// match map.entry(&quot;serde&quot;) {
+    ///     Entry::Occupied(occupied) =&gt; {
+    ///         assert_eq!(occupied.key(), &amp;&quot;serde&quot;);
+    ///     }
+    ///     Entry::Vacant(_) =&gt; unimplemented!(),
+    /// }
+    /// ```
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>String {
+        <span class="self">self</span>.occupied.key()
+    }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">String</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Value</span>);
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::IntoIter</span> {
-        <span class="ident">Iter</span> {
-            <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">iter</span>(),
+    <span class="doccomment">/// Gets a reference to the value in the entry.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert(&quot;serde&quot;.to_owned(), json!(12));
+    ///
+    /// match map.entry(&quot;serde&quot;) {
+    ///     Entry::Occupied(occupied) =&gt; {
+    ///         assert_eq!(occupied.get(), 12);
+    ///     }
+    ///     Entry::Vacant(_) =&gt; unimplemented!(),
+    /// }
+    /// ```
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Value {
+        <span class="self">self</span>.occupied.get()
+    }
+
+    <span class="doccomment">/// Gets a mutable reference to the value in the entry.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert(&quot;serde&quot;.to_owned(), json!([1, 2, 3]));
+    ///
+    /// match map.entry(&quot;serde&quot;) {
+    ///     Entry::Occupied(mut occupied) =&gt; {
+    ///         occupied.get_mut().as_array_mut().unwrap().push(json!(4));
+    ///     }
+    ///     Entry::Vacant(_) =&gt; unimplemented!(),
+    /// }
+    ///
+    /// assert_eq!(map[&quot;serde&quot;].as_array().unwrap().len(), 4);
+    /// ```
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Value {
+        <span class="self">self</span>.occupied.get_mut()
+    }
+
+    <span class="doccomment">/// Converts the entry into a mutable reference to its value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert(&quot;serde&quot;.to_owned(), json!([1, 2, 3]));
+    ///
+    /// match map.entry(&quot;serde&quot;) {
+    ///     Entry::Occupied(mut occupied) =&gt; {
+    ///         occupied.into_mut().as_array_mut().unwrap().push(json!(4));
+    ///     }
+    ///     Entry::Vacant(_) =&gt; unimplemented!(),
+    /// }
+    ///
+    /// assert_eq!(map[&quot;serde&quot;].as_array().unwrap().len(), 4);
+    /// ```
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>into_mut(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Value {
+        <span class="self">self</span>.occupied.into_mut()
+    }
+
+    <span class="doccomment">/// Sets the value of the entry with the `OccupiedEntry`&#39;s key, and returns
+    /// the entry&#39;s old value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert(&quot;serde&quot;.to_owned(), json!(12));
+    ///
+    /// match map.entry(&quot;serde&quot;) {
+    ///     Entry::Occupied(mut occupied) =&gt; {
+    ///         assert_eq!(occupied.insert(json!(13)), 12);
+    ///         assert_eq!(occupied.get(), 13);
+    ///     }
+    ///     Entry::Vacant(_) =&gt; unimplemented!(),
+    /// }
+    /// ```
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: Value) -&gt; Value {
+        <span class="self">self</span>.occupied.insert(value)
+    }
+
+    <span class="doccomment">/// Takes the value of the entry out of the map, and returns it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert(&quot;serde&quot;.to_owned(), json!(12));
+    ///
+    /// match map.entry(&quot;serde&quot;) {
+    ///     Entry::Occupied(occupied) =&gt; {
+    ///         assert_eq!(occupied.remove(), 12);
+    ///     }
+    ///     Entry::Vacant(_) =&gt; unimplemented!(),
+    /// }
+    /// ```
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>remove(<span class="self">self</span>) -&gt; Value {
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+        </span><span class="kw">return </span><span class="self">self</span>.occupied.swap_remove();
+        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+        </span><span class="kw">return </span><span class="self">self</span>.occupied.remove();
+    }
+}
+
+<span class="comment">//////////////////////////////////////////////////////////////////////////////
+
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Map&lt;String, Value&gt; {
+    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Value);
+    <span class="kw">type </span>IntoIter = Iter&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        Iter {
+            iter: <span class="self">self</span>.map.iter(),
         }
     }
 }
 
-<span class="doccomment">/// An iterator over a serde_json::Map&#39;s entries.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">iter</span>: <span class="ident">IterImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An iterator over a serde_json::Map&#39;s entries.
+</span><span class="kw">pub struct </span>Iter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    iter: IterImpl&lt;<span class="lifetime">&#39;a</span>&gt;,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">IterImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">btree_map::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">IterImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">indexmap::map::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+</span><span class="kw">type </span>IterImpl&lt;<span class="lifetime">&#39;a</span>&gt; = btree_map::Iter&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">type </span>IterImpl&lt;<span class="lifetime">&#39;a</span>&gt; = indexmap::map::Iter&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
 
-<span class="macro">delegate_iterator!</span>((<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) =&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">String</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Value</span>));
+<span class="macro">delegate_iterator!</span>((Iter&lt;<span class="lifetime">&#39;a</span>&gt;) =&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Value));
 
-<span class="comment">//////////////////////////////////////////////////////////////////////////////</span>
+<span class="comment">//////////////////////////////////////////////////////////////////////////////
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">String</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Value</span>);
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::IntoIter</span> {
-        <span class="ident">IterMut</span> {
-            <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">iter_mut</span>(),
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Map&lt;String, Value&gt; {
+    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Value);
+    <span class="kw">type </span>IntoIter = IterMut&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        IterMut {
+            iter: <span class="self">self</span>.map.iter_mut(),
         }
     }
 }
 
-<span class="doccomment">/// A mutable iterator over a serde_json::Map&#39;s entries.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">iter</span>: <span class="ident">IterMutImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A mutable iterator over a serde_json::Map&#39;s entries.
+</span><span class="kw">pub struct </span>IterMut&lt;<span class="lifetime">&#39;a</span>&gt; {
+    iter: IterMutImpl&lt;<span class="lifetime">&#39;a</span>&gt;,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">IterMutImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">btree_map::IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">IterMutImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">indexmap::map::IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+</span><span class="kw">type </span>IterMutImpl&lt;<span class="lifetime">&#39;a</span>&gt; = btree_map::IterMut&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">type </span>IterMutImpl&lt;<span class="lifetime">&#39;a</span>&gt; = indexmap::map::IterMut&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
 
-<span class="macro">delegate_iterator!</span>((<span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) =&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">String</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Value</span>));
+<span class="macro">delegate_iterator!</span>((IterMut&lt;<span class="lifetime">&#39;a</span>&gt;) =&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Value));
 
-<span class="comment">//////////////////////////////////////////////////////////////////////////////</span>
+<span class="comment">//////////////////////////////////////////////////////////////////////////////
 
-<span class="kw">impl</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> (<span class="ident">String</span>, <span class="ident">Value</span>);
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">IntoIter</span>;
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::IntoIter</span> {
-        <span class="ident">IntoIter</span> {
-            <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">into_iter</span>(),
+</span><span class="kw">impl </span>IntoIterator <span class="kw">for </span>Map&lt;String, Value&gt; {
+    <span class="kw">type </span>Item = (String, Value);
+    <span class="kw">type </span>IntoIter = IntoIter;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        IntoIter {
+            iter: <span class="self">self</span>.map.into_iter(),
         }
     }
 }
 
-<span class="doccomment">/// An owning iterator over a serde_json::Map&#39;s entries.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntoIter</span> {
-    <span class="ident">iter</span>: <span class="ident">IntoIterImpl</span>,
+<span class="doccomment">/// An owning iterator over a serde_json::Map&#39;s entries.
+</span><span class="kw">pub struct </span>IntoIter {
+    iter: IntoIterImpl,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">IntoIterImpl</span> <span class="op">=</span> <span class="ident">btree_map::IntoIter</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">IntoIterImpl</span> <span class="op">=</span> <span class="ident">indexmap::map::IntoIter</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+</span><span class="kw">type </span>IntoIterImpl = btree_map::IntoIter&lt;String, Value&gt;;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">type </span>IntoIterImpl = indexmap::map::IntoIter&lt;String, Value&gt;;
 
-<span class="macro">delegate_iterator!</span>((<span class="ident">IntoIter</span>) =&gt; (<span class="ident">String</span>, <span class="ident">Value</span>));
+<span class="macro">delegate_iterator!</span>((IntoIter) =&gt; (String, Value));
 
-<span class="comment">//////////////////////////////////////////////////////////////////////////////</span>
+<span class="comment">//////////////////////////////////////////////////////////////////////////////
 
-<span class="doccomment">/// An iterator over a serde_json::Map&#39;s keys.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Keys</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">iter</span>: <span class="ident">KeysImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+</span><span class="doccomment">/// An iterator over a serde_json::Map&#39;s keys.
+</span><span class="kw">pub struct </span>Keys&lt;<span class="lifetime">&#39;a</span>&gt; {
+    iter: KeysImpl&lt;<span class="lifetime">&#39;a</span>&gt;,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">KeysImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">btree_map::Keys</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">KeysImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">indexmap::map::Keys</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+</span><span class="kw">type </span>KeysImpl&lt;<span class="lifetime">&#39;a</span>&gt; = btree_map::Keys&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">type </span>KeysImpl&lt;<span class="lifetime">&#39;a</span>&gt; = indexmap::map::Keys&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
 
-<span class="macro">delegate_iterator!</span>((<span class="ident">Keys</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">String</span>);
+<span class="macro">delegate_iterator!</span>((Keys&lt;<span class="lifetime">&#39;a</span>&gt;) =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String);
 
-<span class="comment">//////////////////////////////////////////////////////////////////////////////</span>
+<span class="comment">//////////////////////////////////////////////////////////////////////////////
 
-<span class="doccomment">/// An iterator over a serde_json::Map&#39;s values.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Values</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">iter</span>: <span class="ident">ValuesImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+</span><span class="doccomment">/// An iterator over a serde_json::Map&#39;s values.
+</span><span class="kw">pub struct </span>Values&lt;<span class="lifetime">&#39;a</span>&gt; {
+    iter: ValuesImpl&lt;<span class="lifetime">&#39;a</span>&gt;,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">ValuesImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">btree_map::Values</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">ValuesImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">indexmap::map::Values</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+</span><span class="kw">type </span>ValuesImpl&lt;<span class="lifetime">&#39;a</span>&gt; = btree_map::Values&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">type </span>ValuesImpl&lt;<span class="lifetime">&#39;a</span>&gt; = indexmap::map::Values&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
 
-<span class="macro">delegate_iterator!</span>((<span class="ident">Values</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Value</span>);
+<span class="macro">delegate_iterator!</span>((Values&lt;<span class="lifetime">&#39;a</span>&gt;) =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Value);
 
-<span class="comment">//////////////////////////////////////////////////////////////////////////////</span>
+<span class="comment">//////////////////////////////////////////////////////////////////////////////
 
-<span class="doccomment">/// A mutable iterator over a serde_json::Map&#39;s values.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ValuesMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">iter</span>: <span class="ident">ValuesMutImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+</span><span class="doccomment">/// A mutable iterator over a serde_json::Map&#39;s values.
+</span><span class="kw">pub struct </span>ValuesMut&lt;<span class="lifetime">&#39;a</span>&gt; {
+    iter: ValuesMutImpl&lt;<span class="lifetime">&#39;a</span>&gt;,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">ValuesMutImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">btree_map::ValuesMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;preserve_order&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">ValuesMutImpl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">indexmap::map::ValuesMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;preserve_order&quot;</span>))]
+</span><span class="kw">type </span>ValuesMutImpl&lt;<span class="lifetime">&#39;a</span>&gt; = btree_map::ValuesMut&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;preserve_order&quot;</span>)]
+</span><span class="kw">type </span>ValuesMutImpl&lt;<span class="lifetime">&#39;a</span>&gt; = indexmap::map::ValuesMut&lt;<span class="lifetime">&#39;a</span>, String, Value&gt;;
 
-<span class="macro">delegate_iterator!</span>((<span class="ident">ValuesMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Value</span>);
+<span class="macro">delegate_iterator!</span>((ValuesMut&lt;<span class="lifetime">&#39;a</span>&gt;) =&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Value);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

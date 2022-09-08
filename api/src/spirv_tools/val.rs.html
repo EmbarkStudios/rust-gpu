@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirv-tools-0.8.0/src/val.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>val.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_tools/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirv-tools-0.8.0/src/val.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>val.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spirv_tools/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -100,102 +94,101 @@
 <span id="94">94</span>
 <span id="95">95</span>
 <span id="96">96</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-compiled-tools&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">compiled</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-installed-tools&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tool</span>;
+</pre><pre class="rust"><code><span class="attribute">#[cfg(feature = <span class="string">&quot;use-compiled-tools&quot;</span>)]
+</span><span class="kw">pub mod </span>compiled;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;use-installed-tools&quot;</span>)]
+</span><span class="kw">pub mod </span>tool;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">spirv_tools_sys::val::ValidatorLimits</span>;
+<span class="kw">pub use </span>spirv_tools_sys::val::ValidatorLimits;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ValidatorOptions</span> {
-    <span class="doccomment">/// Record whether or not the validator should relax the rules on types for</span>
-    <span class="doccomment">/// stores to structs.  When relaxed, it will allow a type mismatch as long as</span>
-    <span class="doccomment">/// the types are structs with the same layout.  Two structs have the same layout</span>
-    <span class="doccomment">/// if</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// 1) the members of the structs are either the same type or are structs with</span>
-    <span class="doccomment">/// same layout, and</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// 2) the decorations that affect the memory layout are identical for both</span>
-    <span class="doccomment">/// types.  Other decorations are not relevant.</span>
-    <span class="kw">pub</span> <span class="ident">relax_struct_store</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Records whether or not the validator should relax the rules on pointer usage</span>
-    <span class="doccomment">/// in logical addressing mode.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// When relaxed, it will allow the following usage cases of pointers:</span>
-    <span class="doccomment">/// 1) OpVariable allocating an object whose type is a pointer type</span>
-    <span class="doccomment">/// 2) OpReturnValue returning a pointer value</span>
-    <span class="kw">pub</span> <span class="ident">relax_logical_pointer</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Records whether or not the validator should relax the rules because it is</span>
-    <span class="doccomment">/// expected that the optimizations will make the code legal.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// When relaxed, it will allow the following:</span>
-    <span class="doccomment">/// 1) It will allow relaxed logical pointers.  Setting this option will also</span>
-    <span class="doccomment">///    set that option.</span>
-    <span class="doccomment">/// 2) Pointers that are pass as parameters to function calls do not have to</span>
-    <span class="doccomment">///    match the storage class of the formal parameter.</span>
-    <span class="doccomment">/// 3) Pointers that are actaul parameters on function calls do not have to point</span>
-    <span class="doccomment">///    to the same type pointed as the formal parameter.  The types just need to</span>
-    <span class="doccomment">///    logically match.</span>
-    <span class="kw">pub</span> <span class="ident">before_legalization</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Records whether the validator should use &quot;relaxed&quot; block layout rules.</span>
-    <span class="doccomment">/// Relaxed layout rules are described by Vulkan extension</span>
-    <span class="doccomment">/// VK_KHR_relaxed_block_layout, and they affect uniform blocks, storage blocks,</span>
-    <span class="doccomment">/// and push constants.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is enabled by default when targeting Vulkan 1.1 or later.</span>
-    <span class="doccomment">/// Relaxed layout is more permissive than the default rules in Vulkan 1.0.</span>
-    <span class="kw">pub</span> <span class="ident">relax_block_layout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Records whether the validator should use standard block layout rules for</span>
-    <span class="doccomment">/// uniform blocks.</span>
-    <span class="kw">pub</span> <span class="ident">uniform_buffer_standard_layout</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Records whether the validator should use &quot;scalar&quot; block layout rules.</span>
-    <span class="doccomment">/// Scalar layout rules are more permissive than relaxed block layout.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See Vulkan extnesion VK_EXT_scalar_block_layout.  The scalar alignment is</span>
-    <span class="doccomment">/// defined as follows:</span>
-    <span class="doccomment">/// - scalar alignment of a scalar is the scalar size</span>
-    <span class="doccomment">/// - scalar alignment of a vector is the scalar alignment of its component</span>
-    <span class="doccomment">/// - scalar alignment of a matrix is the scalar alignment of its component</span>
-    <span class="doccomment">/// - scalar alignment of an array is the scalar alignment of its element</span>
-    <span class="doccomment">/// - scalar alignment of a struct is the max scalar alignment among its</span>
-    <span class="doccomment">///   members</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// For a struct in Uniform, StorageClass, or PushConstant:</span>
-    <span class="doccomment">/// - a member Offset must be a multiple of the member&#39;s scalar alignment</span>
-    <span class="doccomment">/// - ArrayStride or MatrixStride must be a multiple of the array or matrix</span>
-    <span class="doccomment">///   scalar alignment</span>
-    <span class="kw">pub</span> <span class="ident">scalar_block_layout</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Records whether or not the validator should skip validating standard</span>
-    <span class="doccomment">/// uniform/storage block layout.</span>
-    <span class="kw">pub</span> <span class="ident">skip_block_layout</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Applies a maximum to one or more Universal limits</span>
-    <span class="kw">pub</span> <span class="ident">max_limits</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">ValidatorLimits</span>, <span class="ident">u32</span>)<span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default, Clone)]
+</span><span class="kw">pub struct </span>ValidatorOptions {
+    <span class="doccomment">/// Record whether or not the validator should relax the rules on types for
+    /// stores to structs.  When relaxed, it will allow a type mismatch as long as
+    /// the types are structs with the same layout.  Two structs have the same layout
+    /// if
+    ///
+    /// 1) the members of the structs are either the same type or are structs with
+    /// same layout, and
+    ///
+    /// 2) the decorations that affect the memory layout are identical for both
+    /// types.  Other decorations are not relevant.
+    </span><span class="kw">pub </span>relax_struct_store: bool,
+    <span class="doccomment">/// Records whether or not the validator should relax the rules on pointer usage
+    /// in logical addressing mode.
+    ///
+    /// When relaxed, it will allow the following usage cases of pointers:
+    /// 1) OpVariable allocating an object whose type is a pointer type
+    /// 2) OpReturnValue returning a pointer value
+    </span><span class="kw">pub </span>relax_logical_pointer: bool,
+    <span class="doccomment">/// Records whether or not the validator should relax the rules because it is
+    /// expected that the optimizations will make the code legal.
+    ///
+    /// When relaxed, it will allow the following:
+    /// 1) It will allow relaxed logical pointers.  Setting this option will also
+    ///    set that option.
+    /// 2) Pointers that are pass as parameters to function calls do not have to
+    ///    match the storage class of the formal parameter.
+    /// 3) Pointers that are actaul parameters on function calls do not have to point
+    ///    to the same type pointed as the formal parameter.  The types just need to
+    ///    logically match.
+    </span><span class="kw">pub </span>before_legalization: bool,
+    <span class="doccomment">/// Records whether the validator should use &quot;relaxed&quot; block layout rules.
+    /// Relaxed layout rules are described by Vulkan extension
+    /// VK_KHR_relaxed_block_layout, and they affect uniform blocks, storage blocks,
+    /// and push constants.
+    ///
+    /// This is enabled by default when targeting Vulkan 1.1 or later.
+    /// Relaxed layout is more permissive than the default rules in Vulkan 1.0.
+    </span><span class="kw">pub </span>relax_block_layout: <span class="prelude-ty">Option</span>&lt;bool&gt;,
+    <span class="doccomment">/// Records whether the validator should use standard block layout rules for
+    /// uniform blocks.
+    </span><span class="kw">pub </span>uniform_buffer_standard_layout: bool,
+    <span class="doccomment">/// Records whether the validator should use &quot;scalar&quot; block layout rules.
+    /// Scalar layout rules are more permissive than relaxed block layout.
+    ///
+    /// See Vulkan extnesion VK_EXT_scalar_block_layout.  The scalar alignment is
+    /// defined as follows:
+    /// - scalar alignment of a scalar is the scalar size
+    /// - scalar alignment of a vector is the scalar alignment of its component
+    /// - scalar alignment of a matrix is the scalar alignment of its component
+    /// - scalar alignment of an array is the scalar alignment of its element
+    /// - scalar alignment of a struct is the max scalar alignment among its
+    ///   members
+    ///
+    /// For a struct in Uniform, StorageClass, or PushConstant:
+    /// - a member Offset must be a multiple of the member&#39;s scalar alignment
+    /// - ArrayStride or MatrixStride must be a multiple of the array or matrix
+    ///   scalar alignment
+    </span><span class="kw">pub </span>scalar_block_layout: bool,
+    <span class="doccomment">/// Records whether or not the validator should skip validating standard
+    /// uniform/storage block layout.
+    </span><span class="kw">pub </span>skip_block_layout: bool,
+    <span class="doccomment">/// Applies a maximum to one or more Universal limits
+    </span><span class="kw">pub </span>max_limits: Vec&lt;(ValidatorLimits, u32)&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Validator</span>: <span class="ident">Default</span> {
-    <span class="kw">fn</span> <span class="ident">with_env</span>(<span class="ident">target_env</span>: <span class="ident"><span class="kw">crate</span>::TargetEnv</span>) -&gt; <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">validate</span>(
+<span class="kw">pub trait </span>Validator: Default {
+    <span class="kw">fn </span>with_env(target_env: <span class="kw">crate</span>::TargetEnv) -&gt; <span class="self">Self</span>;
+    <span class="kw">fn </span>validate(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">binary</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>,
-        <span class="ident">options</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorOptions</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="kw">crate</span>::error::Error</span><span class="op">&gt;</span>;
+        binary: <span class="kw">impl </span>AsRef&lt;[u32]&gt;,
+        options: <span class="prelude-ty">Option</span>&lt;ValidatorOptions&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::error::Error&gt;;
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">te</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::TargetEnv</span><span class="op">&gt;</span>) -&gt; <span class="kw">impl</span> <span class="ident">Validator</span> {
-    <span class="kw">let</span> <span class="ident">target_env</span> <span class="op">=</span> <span class="ident">te</span>.<span class="ident">unwrap_or_default</span>();
+<span class="kw">pub fn </span>create(te: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::TargetEnv&gt;) -&gt; <span class="kw">impl </span>Validator {
+    <span class="kw">let </span>target_env = te.unwrap_or_default();
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-compiled-tools&quot;</span>)]</span>
-    {
-        <span class="ident">compiled::CompiledValidator::with_env</span>(<span class="ident">target_env</span>)
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;use-compiled-tools&quot;</span>)]
+    </span>{
+        compiled::CompiledValidator::with_env(target_env)
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-installed-tools&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-compiled-tools&quot;</span>)))]</span>
-    {
-        <span class="ident">tool::ToolValidator::with_env</span>(<span class="ident">target_env</span>)
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;use-installed-tools&quot;</span>, not(feature = <span class="string">&quot;use-compiled-tools&quot;</span>)))]
+    </span>{
+        tool::ToolValidator::with_env(target_env)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_tools" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_tools" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

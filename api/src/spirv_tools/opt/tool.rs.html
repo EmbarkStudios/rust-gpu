@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirv-tools-0.8.0/src/opt/tool.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tool.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spirv_tools/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirv-tools-0.8.0/src/opt/tool.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tool.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../spirv_tools/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spirv_tools/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -190,192 +184,191 @@
 <span id="184">184</span>
 <span id="185">185</span>
 <span id="186">186</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ToolOptimizer</span> {
-    <span class="ident">target_env</span>: <span class="ident"><span class="kw">crate</span>::TargetEnv</span>,
-    <span class="ident">passes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Passes</span><span class="op">&gt;</span>,
-    <span class="ident">use_perf_passes</span>: <span class="ident">bool</span>,
-    <span class="ident">use_size_passes</span>: <span class="ident">bool</span>,
-    <span class="comment">//use_vulkan_to_webgpu: bool,</span>
-    <span class="comment">//use_webgpu_to_vulkan: bool,</span>
-    <span class="ident">legalize_hlsl</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>ToolOptimizer {
+    target_env: <span class="kw">crate</span>::TargetEnv,
+    passes: Vec&lt;<span class="kw">super</span>::Passes&gt;,
+    use_perf_passes: bool,
+    use_size_passes: bool,
+    <span class="comment">//use_vulkan_to_webgpu: bool,
+    //use_webgpu_to_vulkan: bool,
+    </span>legalize_hlsl: bool,
 }
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Optimizer</span>;
+<span class="kw">use </span><span class="kw">super</span>::Optimizer;
 
-<span class="kw">impl</span> <span class="ident">Optimizer</span> <span class="kw">for</span> <span class="ident">ToolOptimizer</span> {
-    <span class="kw">fn</span> <span class="ident">with_env</span>(<span class="ident">target_env</span>: <span class="ident"><span class="kw">crate</span>::TargetEnv</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">target_env</span>,
-            ..<span class="ident">Default::default</span>()
+<span class="kw">impl </span>Optimizer <span class="kw">for </span>ToolOptimizer {
+    <span class="kw">fn </span>with_env(target_env: <span class="kw">crate</span>::TargetEnv) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            target_env,
+            ..Default::default()
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">optimize</span><span class="op">&lt;</span><span class="ident">MC</span>: <span class="ident">error::MessageCallback</span><span class="op">&gt;</span>(
+    <span class="kw">fn </span>optimize&lt;MC: error::MessageCallback&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">input</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>,
-        <span class="ident">msg_callback</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MC</span>,
-        <span class="ident">options</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Options</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::binary::Binary</span>, <span class="ident"><span class="kw">crate</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">std::process::Command::new</span>(<span class="string">&quot;spirv-opt&quot;</span>);
+        input: <span class="kw">impl </span>AsRef&lt;[u32]&gt;,
+        msg_callback: <span class="kw-2">&amp;mut </span>MC,
+        options: <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::Options&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::binary::Binary, <span class="kw">crate</span>::Error&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd = std::process::Command::new(<span class="string">&quot;spirv-opt&quot;</span>);
 
-        <span class="comment">// Note here that we don&#39;t do cmd.arg(&quot;--target-env&quot;).arg(self.target_env.to_string());</span>
-        <span class="comment">// like with the other tools, because opt is &quot;special&quot; and will fail to parse</span>
-        <span class="comment">// command line options correctly if we don&#39;t give join them with the =</span>
-        <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="macro">format!</span>(<span class="string">&quot;--target-env={}&quot;</span>, <span class="self">self</span>.<span class="ident">target_env</span>));
+        <span class="comment">// Note here that we don&#39;t do cmd.arg(&quot;--target-env&quot;).arg(self.target_env.to_string());
+        // like with the other tools, because opt is &quot;special&quot; and will fail to parse
+        // command line options correctly if we don&#39;t give join them with the =
+        </span>cmd.arg(<span class="macro">format!</span>(<span class="string">&quot;--target-env={}&quot;</span>, <span class="self">self</span>.target_env));
 
-        <span class="ident">cmd</span>.<span class="ident">args</span>(
-            <span class="self">self</span>.<span class="ident">passes</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">pass_to_string</span>(<span class="kw-2">*</span><span class="ident">p</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;--{}&quot;</span>, <span class="ident">s</span>))),
+        cmd.args(
+            <span class="self">self</span>.passes
+                .iter()
+                .filter_map(|p| pass_to_string(<span class="kw-2">*</span>p).map(|s| <span class="macro">format!</span>(<span class="string">&quot;--{}&quot;</span>, s))),
         );
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">use_perf_passes</span> {
-            <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;-O&quot;</span>);
+        <span class="kw">if </span><span class="self">self</span>.use_perf_passes {
+            cmd.arg(<span class="string">&quot;-O&quot;</span>);
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">use_size_passes</span> {
-            <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;-Os&quot;</span>);
+        <span class="kw">if </span><span class="self">self</span>.use_size_passes {
+            cmd.arg(<span class="string">&quot;-Os&quot;</span>);
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">legalize_hlsl</span> {
-            <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--legalize-hlsl&quot;</span>);
+        <span class="kw">if </span><span class="self">self</span>.legalize_hlsl {
+            cmd.arg(<span class="string">&quot;--legalize-hlsl&quot;</span>);
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">opts</span>) <span class="op">=</span> <span class="ident">options</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">max_id_bound</span>) <span class="op">=</span> <span class="ident">opts</span>.<span class="ident">max_id_bound</span> {
-                <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="macro">format!</span>(<span class="string">&quot;--max-id-bound={}&quot;</span>, <span class="ident">max_id_bound</span>));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(opts) = options {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(max_id_bound) = opts.max_id_bound {
+                cmd.arg(<span class="macro">format!</span>(<span class="string">&quot;--max-id-bound={}&quot;</span>, max_id_bound));
             }
 
-            <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">preserve_bindings</span> {
-                <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--preserve-bindings&quot;</span>);
+            <span class="kw">if </span>opts.preserve_bindings {
+                cmd.arg(<span class="string">&quot;--preserve-bindings&quot;</span>);
             }
 
-            <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">preserve_spec_constants</span> {
-                <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--preserve-spec-constants&quot;</span>);
+            <span class="kw">if </span>opts.preserve_spec_constants {
+                cmd.arg(<span class="string">&quot;--preserve-spec-constants&quot;</span>);
             }
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">vopts</span>) <span class="op">=</span> <span class="ident">opts</span>.<span class="ident">validator_options</span> {
-                <span class="ident"><span class="kw">crate</span>::val::tool::add_options</span>(<span class="kw-2">&amp;mut</span> <span class="ident">cmd</span>, <span class="ident">vopts</span>);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(vopts) = opts.validator_options {
+                <span class="kw">crate</span>::val::tool::add_options(<span class="kw-2">&amp;mut </span>cmd, vopts);
             }
         }
 
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::binary::from_binary</span>(<span class="ident">input</span>.<span class="ident">as_ref</span>());
+        <span class="kw">let </span>input = <span class="kw">crate</span>::binary::from_binary(input.as_ref());
 
-        <span class="kw">let</span> <span class="ident">cmd_output</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::cmd::exec</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="ident">input</span>), <span class="ident"><span class="kw">crate</span>::cmd::Output::Retrieve</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_output = <span class="kw">crate</span>::cmd::exec(cmd, <span class="prelude-val">Some</span>(input), <span class="kw">crate</span>::cmd::Output::Retrieve)<span class="question-mark">?</span>;
 
-        <span class="kw">for</span> <span class="ident">msg</span> <span class="kw">in</span> <span class="ident">cmd_output</span>.<span class="ident">messages</span> {
-            <span class="ident">msg_callback</span>.<span class="ident">on_message</span>(<span class="ident">msg</span>);
+        <span class="kw">for </span>msg <span class="kw">in </span>cmd_output.messages {
+            msg_callback.on_message(msg);
         }
 
-        <span class="ident"><span class="kw">crate</span>::binary::Binary::try_from</span>(<span class="ident">cmd_output</span>.<span class="ident">binary</span>)
+        <span class="kw">crate</span>::binary::Binary::try_from(cmd_output.binary)
     }
 
-    <span class="doccomment">/// Register a single pass with the the optimizer.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">register_pass</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pass</span>: <span class="ident"><span class="kw">super</span>::Passes</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">passes</span>.<span class="ident">push</span>(<span class="ident">pass</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Register a single pass with the the optimizer.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>register_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pass: <span class="kw">super</span>::Passes) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.passes.push(pass);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Registers passes that attempt to improve performance of generated code.</span>
-    <span class="doccomment">/// This sequence of passes is subject to constant review and will change</span>
-    <span class="doccomment">/// from time to time.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">register_performance_passes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">use_perf_passes</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Registers passes that attempt to improve performance of generated code.
+    /// This sequence of passes is subject to constant review and will change
+    /// from time to time.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>register_performance_passes(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.use_perf_passes = <span class="bool-val">true</span>;
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Registers passes that attempt to improve the size of generated code.</span>
-    <span class="doccomment">/// This sequence of passes is subject to constant review and will change</span>
-    <span class="doccomment">/// from time to time.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">register_size_passes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">use_size_passes</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Registers passes that attempt to improve the size of generated code.
+    /// This sequence of passes is subject to constant review and will change
+    /// from time to time.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>register_size_passes(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.use_size_passes = <span class="bool-val">true</span>;
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Registers passes that attempt to legalize the generated code.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note: this recipe is specially designed for legalizing SPIR-V. It should be</span>
-    <span class="doccomment">/// used by compilers after translating HLSL source code literally. It should</span>
-    <span class="doccomment">/// *not* be used by general workloads for performance or size improvement.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This sequence of passes is subject to constant review and will change</span>
-    <span class="doccomment">/// from time to time.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">register_hlsl_legalization_passes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">legalize_hlsl</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Registers passes that attempt to legalize the generated code.
+    ///
+    /// Note: this recipe is specially designed for legalizing SPIR-V. It should be
+    /// used by compilers after translating HLSL source code literally. It should
+    /// *not* be used by general workloads for performance or size improvement.
+    ///
+    /// This sequence of passes is subject to constant review and will change
+    /// from time to time.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>register_hlsl_legalization_passes(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.legalize_hlsl = <span class="bool-val">true</span>;
+        <span class="self">self
+    </span>}
 }
 
-<span class="kw">fn</span> <span class="ident">pass_to_string</span>(<span class="ident">pass</span>: <span class="ident"><span class="kw">super</span>::Passes</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::enum_glob_use</span>)]</span>
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Passes</span>::<span class="kw-2">*</span>;
+<span class="kw">fn </span>pass_to_string(pass: <span class="kw">super</span>::Passes) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt; {
+    <span class="attribute">#[allow(clippy::enum_glob_use)]
+    </span><span class="kw">use </span><span class="kw">super</span>::Passes::<span class="kw-2">*</span>;
 
-    <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">pass</span> {
-        <span class="ident">AggressiveDCE</span> =&gt; <span class="string">&quot;eliminate-dead-code-aggressive&quot;</span>,
-        <span class="ident">AmdExtToKhr</span> =&gt; <span class="string">&quot;amd-ext-to-khr&quot;</span>,
-        <span class="ident">BlockMerge</span> =&gt; <span class="string">&quot;merge-blocks&quot;</span>,
-        <span class="ident">CFGCleanup</span> =&gt; <span class="string">&quot;cfg-cleanup&quot;</span>,
-        <span class="ident">CodeSinking</span> =&gt; <span class="string">&quot;code-sink&quot;</span>,
-        <span class="ident">CombineAccessChains</span> =&gt; <span class="string">&quot;combine-access-chains&quot;</span>,
-        <span class="ident">CompactIds</span> =&gt; <span class="string">&quot;compact-ids&quot;</span>,
-        <span class="ident">ConditionalConstantPropagation</span> =&gt; <span class="string">&quot;ccp&quot;</span>,
-        <span class="ident">ConvertRelaxedToHalf</span> =&gt; <span class="string">&quot;convert-relaxed-to-half&quot;</span>,
-        <span class="ident">CopyPropagateArrays</span> =&gt; <span class="string">&quot;copy-propagate-arrays&quot;</span>,
-        <span class="ident">DeadBranchElim</span> =&gt; <span class="string">&quot;eliminate-dead-branches&quot;</span>,
-        <span class="ident">DeadInsertElim</span> =&gt; <span class="string">&quot;eliminate-dead-inserts&quot;</span>,
-        <span class="ident">DeadVariableElimination</span> =&gt; <span class="string">&quot;eliminate-dead-variables&quot;</span>,
-        <span class="ident">DescriptorScalarReplacement</span> =&gt; <span class="string">&quot;descriptor-scalar-replacement&quot;</span>,
-        <span class="ident">EliminateDeadConstant</span> =&gt; <span class="string">&quot;eliminate-dead-const&quot;</span>,
-        <span class="ident">EliminateDeadFunctions</span> =&gt; <span class="string">&quot;eliminate-dead-functions&quot;</span>,
-        <span class="ident">EliminateDeadMembers</span> =&gt; <span class="string">&quot;eliminate-dead-members&quot;</span>,
-        <span class="ident">FixStorageClass</span> =&gt; <span class="string">&quot;fix-storage-class&quot;</span>,
-        <span class="ident">FlattenDecoration</span> =&gt; <span class="string">&quot;flatten-decorations&quot;</span>,
-        <span class="ident">FoldSpecConstantOpAndComposite</span> =&gt; <span class="string">&quot;fold-spec-const-op-composite&quot;</span>,
-        <span class="ident">FreezeSpecConstantValue</span> =&gt; <span class="string">&quot;freeze-spec-const&quot;</span>,
-        <span class="ident">GraphicsRobustAccess</span> =&gt; <span class="string">&quot;graphics-robust-access&quot;</span>,
-        <span class="ident">IfConversion</span> =&gt; <span class="string">&quot;if-conversion&quot;</span>,
-        <span class="ident">InlineExhaustive</span> =&gt; <span class="string">&quot;inline-entry-points-exhaustive&quot;</span>,
-        <span class="ident">InlineOpaque</span> =&gt; <span class="string">&quot;inline-entry-points-opaque&quot;</span>,
-        <span class="ident">InsertExtractElim</span> =&gt; <span class="string">&quot;eliminate-insert-extract&quot;</span>,
-        <span class="comment">// This is only part of the --legalize-hlsl meta pass</span>
-        <span class="ident">InterpolateFixup</span> <span class="op">|</span> <span class="ident">Null</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
-        <span class="ident">LocalAccessChainConvert</span> =&gt; <span class="string">&quot;convert-local-access-chains&quot;</span>,
-        <span class="ident">LocalMultiStoreElim</span> =&gt; <span class="string">&quot;eliminate-local-multi-store&quot;</span>,
-        <span class="ident">LocalRedundancyElimination</span> =&gt; <span class="string">&quot;local-redundancy-elimination&quot;</span>,
-        <span class="ident">LocalSingleBlockLoadStoreElim</span> =&gt; <span class="string">&quot;eliminate-local-single-block&quot;</span>,
-        <span class="ident">LocalSingleStoreElim</span> =&gt; <span class="string">&quot;eliminate-local-single-store&quot;</span>,
-        <span class="ident">LoopInvariantCodeMotion</span> =&gt; <span class="string">&quot;loop-invariant-code-motion&quot;</span>,
-        <span class="ident">LoopPeeling</span> =&gt; <span class="string">&quot;loop-peeling&quot;</span>,
-        <span class="ident">LoopUnswitch</span> =&gt; <span class="string">&quot;loop-unswitch&quot;</span>,
-        <span class="ident">MergeReturn</span> =&gt; <span class="string">&quot;merge-return&quot;</span>,
-        <span class="ident">PrivateToLocal</span> =&gt; <span class="string">&quot;private-to-local&quot;</span>,
-        <span class="ident">PropagateLineInfo</span> =&gt; <span class="string">&quot;propagate-line-info&quot;</span>,
-        <span class="ident">ReduceLoadSize</span> =&gt; <span class="string">&quot;reduce-load-size&quot;</span>,
-        <span class="ident">RedundancyElimination</span> =&gt; <span class="string">&quot;redundancy-elimination&quot;</span>,
-        <span class="ident">RedundantLineInfoElim</span> =&gt; <span class="string">&quot;eliminate-redundant-line-info&quot;</span>,
-        <span class="ident">RemoveUnusedInterfaceVariables</span> =&gt; <span class="string">&quot;remove-unused-interface-variables&quot;</span>,
-        <span class="ident">RelaxFloatOps</span> =&gt; <span class="string">&quot;relax-float-ops&quot;</span>,
-        <span class="ident">RemoveDuplicates</span> =&gt; <span class="string">&quot;remove-duplicates&quot;</span>,
-        <span class="ident">ReplaceInvalidOpcode</span> =&gt; <span class="string">&quot;replace-invalid-opcode&quot;</span>,
-        <span class="ident">Simplification</span> =&gt; <span class="string">&quot;simplify-instructions&quot;</span>,
-        <span class="ident">SSARewrite</span> =&gt; <span class="string">&quot;ssa-rewrite&quot;</span>,
-        <span class="ident">StrengthReduction</span> =&gt; <span class="string">&quot;strength-reduction&quot;</span>,
-        <span class="ident">StripDebugInfo</span> =&gt; <span class="string">&quot;strip-debug&quot;</span>,
-        <span class="ident">StripNonSemanticInfo</span> =&gt; <span class="string">&quot;strip-nonsemantic&quot;</span>,
-        <span class="ident">UnifyConstant</span> =&gt; <span class="string">&quot;unify-const&quot;</span>,
-        <span class="ident">UpgradeMemoryModel</span> =&gt; <span class="string">&quot;upgrade-memory-model&quot;</span>,
-        <span class="ident">VectorDCE</span> =&gt; <span class="string">&quot;vector-dce&quot;</span>,
-        <span class="ident">Workaround1209</span> =&gt; <span class="string">&quot;workaround-1209&quot;</span>,
-        <span class="ident">WrapOpKill</span> =&gt; <span class="string">&quot;wrap-opkill&quot;</span>,
+    <span class="prelude-val">Some</span>(<span class="kw">match </span>pass {
+        AggressiveDCE =&gt; <span class="string">&quot;eliminate-dead-code-aggressive&quot;</span>,
+        AmdExtToKhr =&gt; <span class="string">&quot;amd-ext-to-khr&quot;</span>,
+        BlockMerge =&gt; <span class="string">&quot;merge-blocks&quot;</span>,
+        CFGCleanup =&gt; <span class="string">&quot;cfg-cleanup&quot;</span>,
+        CodeSinking =&gt; <span class="string">&quot;code-sink&quot;</span>,
+        CombineAccessChains =&gt; <span class="string">&quot;combine-access-chains&quot;</span>,
+        CompactIds =&gt; <span class="string">&quot;compact-ids&quot;</span>,
+        ConditionalConstantPropagation =&gt; <span class="string">&quot;ccp&quot;</span>,
+        ConvertRelaxedToHalf =&gt; <span class="string">&quot;convert-relaxed-to-half&quot;</span>,
+        CopyPropagateArrays =&gt; <span class="string">&quot;copy-propagate-arrays&quot;</span>,
+        DeadBranchElim =&gt; <span class="string">&quot;eliminate-dead-branches&quot;</span>,
+        DeadInsertElim =&gt; <span class="string">&quot;eliminate-dead-inserts&quot;</span>,
+        DeadVariableElimination =&gt; <span class="string">&quot;eliminate-dead-variables&quot;</span>,
+        DescriptorScalarReplacement =&gt; <span class="string">&quot;descriptor-scalar-replacement&quot;</span>,
+        EliminateDeadConstant =&gt; <span class="string">&quot;eliminate-dead-const&quot;</span>,
+        EliminateDeadFunctions =&gt; <span class="string">&quot;eliminate-dead-functions&quot;</span>,
+        EliminateDeadMembers =&gt; <span class="string">&quot;eliminate-dead-members&quot;</span>,
+        FixStorageClass =&gt; <span class="string">&quot;fix-storage-class&quot;</span>,
+        FlattenDecoration =&gt; <span class="string">&quot;flatten-decorations&quot;</span>,
+        FoldSpecConstantOpAndComposite =&gt; <span class="string">&quot;fold-spec-const-op-composite&quot;</span>,
+        FreezeSpecConstantValue =&gt; <span class="string">&quot;freeze-spec-const&quot;</span>,
+        GraphicsRobustAccess =&gt; <span class="string">&quot;graphics-robust-access&quot;</span>,
+        IfConversion =&gt; <span class="string">&quot;if-conversion&quot;</span>,
+        InlineExhaustive =&gt; <span class="string">&quot;inline-entry-points-exhaustive&quot;</span>,
+        InlineOpaque =&gt; <span class="string">&quot;inline-entry-points-opaque&quot;</span>,
+        InsertExtractElim =&gt; <span class="string">&quot;eliminate-insert-extract&quot;</span>,
+        <span class="comment">// This is only part of the --legalize-hlsl meta pass
+        </span>InterpolateFixup | Null =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        LocalAccessChainConvert =&gt; <span class="string">&quot;convert-local-access-chains&quot;</span>,
+        LocalMultiStoreElim =&gt; <span class="string">&quot;eliminate-local-multi-store&quot;</span>,
+        LocalRedundancyElimination =&gt; <span class="string">&quot;local-redundancy-elimination&quot;</span>,
+        LocalSingleBlockLoadStoreElim =&gt; <span class="string">&quot;eliminate-local-single-block&quot;</span>,
+        LocalSingleStoreElim =&gt; <span class="string">&quot;eliminate-local-single-store&quot;</span>,
+        LoopInvariantCodeMotion =&gt; <span class="string">&quot;loop-invariant-code-motion&quot;</span>,
+        LoopPeeling =&gt; <span class="string">&quot;loop-peeling&quot;</span>,
+        LoopUnswitch =&gt; <span class="string">&quot;loop-unswitch&quot;</span>,
+        MergeReturn =&gt; <span class="string">&quot;merge-return&quot;</span>,
+        PrivateToLocal =&gt; <span class="string">&quot;private-to-local&quot;</span>,
+        PropagateLineInfo =&gt; <span class="string">&quot;propagate-line-info&quot;</span>,
+        ReduceLoadSize =&gt; <span class="string">&quot;reduce-load-size&quot;</span>,
+        RedundancyElimination =&gt; <span class="string">&quot;redundancy-elimination&quot;</span>,
+        RedundantLineInfoElim =&gt; <span class="string">&quot;eliminate-redundant-line-info&quot;</span>,
+        RemoveUnusedInterfaceVariables =&gt; <span class="string">&quot;remove-unused-interface-variables&quot;</span>,
+        RelaxFloatOps =&gt; <span class="string">&quot;relax-float-ops&quot;</span>,
+        RemoveDuplicates =&gt; <span class="string">&quot;remove-duplicates&quot;</span>,
+        ReplaceInvalidOpcode =&gt; <span class="string">&quot;replace-invalid-opcode&quot;</span>,
+        Simplification =&gt; <span class="string">&quot;simplify-instructions&quot;</span>,
+        SSARewrite =&gt; <span class="string">&quot;ssa-rewrite&quot;</span>,
+        StrengthReduction =&gt; <span class="string">&quot;strength-reduction&quot;</span>,
+        StripDebugInfo =&gt; <span class="string">&quot;strip-debug&quot;</span>,
+        StripNonSemanticInfo =&gt; <span class="string">&quot;strip-nonsemantic&quot;</span>,
+        UnifyConstant =&gt; <span class="string">&quot;unify-const&quot;</span>,
+        UpgradeMemoryModel =&gt; <span class="string">&quot;upgrade-memory-model&quot;</span>,
+        VectorDCE =&gt; <span class="string">&quot;vector-dce&quot;</span>,
+        Workaround1209 =&gt; <span class="string">&quot;workaround-1209&quot;</span>,
+        WrapOpKill =&gt; <span class="string">&quot;wrap-opkill&quot;</span>,
     })
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_tools" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_tools" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

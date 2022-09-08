@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/jn.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>jn.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/jn.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>jn.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../libm/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../libm/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -347,8 +341,8 @@
 <span id="341">341</span>
 <span id="342">342</span>
 <span id="343">343</span>
-</pre><pre class="rust"><code><span class="comment">/* origin: FreeBSD /usr/src/lib/msun/src/e_jn.c */</span>
-<span class="comment">/*
+</pre><pre class="rust"><code><span class="comment">/* origin: FreeBSD /usr/src/lib/msun/src/e_jn.c */
+/*
  * ====================================================
  * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
  *
@@ -357,8 +351,8 @@
  * software is freely granted, provided that this notice
  * is preserved.
  * ====================================================
- */</span>
-<span class="comment">/*
+ */
+/*
  * jn(n, x), yn(n, x)
  * floating point Bessel&#39;s function of the 1st and 2nd kind
  * of order n
@@ -381,61 +375,61 @@
  *      yn(n,x) is similar in all respects, except
  *      that forward recursion is used for all
  *      values of n&gt;1.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">cos</span>, <span class="ident">fabs</span>, <span class="ident">get_high_word</span>, <span class="ident">get_low_word</span>, <span class="ident">j0</span>, <span class="ident">j1</span>, <span class="ident">log</span>, <span class="ident">sin</span>, <span class="ident">sqrt</span>, <span class="ident">y0</span>, <span class="ident">y1</span>};
+</span><span class="kw">use super</span>::{cos, fabs, get_high_word, get_low_word, j0, j1, log, sin, sqrt, y0, y1};
 
-<span class="kw">const</span> <span class="ident">INVSQRTPI</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="number">5.64189583547756279280e-01</span>; <span class="comment">/* 0x3FE20DD7, 0x50429B6D */</span>
+<span class="kw">const </span>INVSQRTPI: f64 = <span class="number">5.64189583547756279280e-01</span>; <span class="comment">/* 0x3FE20DD7, 0x50429B6D */
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">jn</span>(<span class="ident">n</span>: <span class="ident">i32</span>, <span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ix</span>: <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">lx</span>: <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">nm1</span>: <span class="ident">i32</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span>: <span class="ident">i32</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sign</span>: <span class="ident">bool</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span>: <span class="ident">f64</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span>: <span class="ident">f64</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">temp</span>: <span class="ident">f64</span>;
+</span><span class="kw">pub fn </span>jn(n: i32, <span class="kw-2">mut </span>x: f64) -&gt; f64 {
+    <span class="kw">let </span><span class="kw-2">mut </span>ix: u32;
+    <span class="kw">let </span>lx: u32;
+    <span class="kw">let </span>nm1: i32;
+    <span class="kw">let </span><span class="kw-2">mut </span>i: i32;
+    <span class="kw">let </span><span class="kw-2">mut </span>sign: bool;
+    <span class="kw">let </span><span class="kw-2">mut </span>a: f64;
+    <span class="kw">let </span><span class="kw-2">mut </span>b: f64;
+    <span class="kw">let </span><span class="kw-2">mut </span>temp: f64;
 
-    <span class="ident">ix</span> <span class="op">=</span> <span class="ident">get_high_word</span>(<span class="ident">x</span>);
-    <span class="ident">lx</span> <span class="op">=</span> <span class="ident">get_low_word</span>(<span class="ident">x</span>);
-    <span class="ident">sign</span> <span class="op">=</span> (<span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-    <span class="ident">ix</span> <span class="op">&amp;=</span> <span class="number">0x7fffffff</span>;
+    ix = get_high_word(x);
+    lx = get_low_word(x);
+    sign = (ix &gt;&gt; <span class="number">31</span>) != <span class="number">0</span>;
+    ix &amp;= <span class="number">0x7fffffff</span>;
 
-    <span class="comment">// -lx == !lx + 1</span>
-    <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">|</span> (<span class="ident">lx</span> <span class="op">|</span> ((<span class="op">!</span><span class="ident">lx</span>).<span class="ident">wrapping_add</span>(<span class="number">1</span>))) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">&gt;</span> <span class="number">0x7ff00000</span> {
-        <span class="comment">/* nan */</span>
-        <span class="kw">return</span> <span class="ident">x</span>;
+    <span class="comment">// -lx == !lx + 1
+    </span><span class="kw">if </span>(ix | (lx | ((!lx).wrapping_add(<span class="number">1</span>))) &gt;&gt; <span class="number">31</span>) &gt; <span class="number">0x7ff00000 </span>{
+        <span class="comment">/* nan */
+        </span><span class="kw">return </span>x;
     }
 
     <span class="comment">/* J(-n,x) = (-1)^n * J(n, x), J(n, -x) = (-1)^n * J(n, x)
      * Thus, J(-n,x) = J(n,-x)
-     */</span>
-    <span class="comment">/* nm1 = |n|-1 is used instead of |n| to handle n==INT_MIN */</span>
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="ident">j0</span>(<span class="ident">x</span>);
+     */
+    /* nm1 = |n|-1 is used instead of |n| to handle n==INT_MIN */
+    </span><span class="kw">if </span>n == <span class="number">0 </span>{
+        <span class="kw">return </span>j0(x);
     }
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;</span> <span class="number">0</span> {
-        <span class="ident">nm1</span> <span class="op">=</span> <span class="op">-</span>(<span class="ident">n</span> <span class="op">+</span> <span class="number">1</span>);
-        <span class="ident">x</span> <span class="op">=</span> <span class="op">-</span><span class="ident">x</span>;
-        <span class="ident">sign</span> <span class="op">=</span> <span class="op">!</span><span class="ident">sign</span>;
-    } <span class="kw">else</span> {
-        <span class="ident">nm1</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>;
+    <span class="kw">if </span>n &lt; <span class="number">0 </span>{
+        nm1 = -(n + <span class="number">1</span>);
+        x = -x;
+        sign = !sign;
+    } <span class="kw">else </span>{
+        nm1 = n - <span class="number">1</span>;
     }
-    <span class="kw">if</span> <span class="ident">nm1</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="ident">j1</span>(<span class="ident">x</span>);
+    <span class="kw">if </span>nm1 == <span class="number">0 </span>{
+        <span class="kw">return </span>j1(x);
     }
 
-    <span class="ident">sign</span> <span class="op">&amp;=</span> (<span class="ident">n</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>; <span class="comment">/* even n: 0, odd n: signbit(x) */</span>
-    <span class="ident">x</span> <span class="op">=</span> <span class="ident">fabs</span>(<span class="ident">x</span>);
-    <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">|</span> <span class="ident">lx</span>) <span class="op">==</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x7ff00000</span> {
-        <span class="comment">/* if x is 0 or inf */</span>
-        <span class="ident">b</span> <span class="op">=</span> <span class="number">0.0</span>;
-    } <span class="kw">else</span> <span class="kw">if</span> (<span class="ident">nm1</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">&lt;</span> <span class="ident">x</span> {
-        <span class="comment">/* Safe to use J(n+1,x)=2n/x *J(n,x)-J(n-1,x) */</span>
-        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x52d00000</span> {
-            <span class="comment">/* x &gt; 2**302 */</span>
-            <span class="comment">/* (x &gt;&gt; n**2)
+    sign &amp;= (n &amp; <span class="number">1</span>) != <span class="number">0</span>; <span class="comment">/* even n: 0, odd n: signbit(x) */
+    </span>x = fabs(x);
+    <span class="kw">if </span>(ix | lx) == <span class="number">0 </span>|| ix == <span class="number">0x7ff00000 </span>{
+        <span class="comment">/* if x is 0 or inf */
+        </span>b = <span class="number">0.0</span>;
+    } <span class="kw">else if </span>(nm1 <span class="kw">as </span>f64) &lt; x {
+        <span class="comment">/* Safe to use J(n+1,x)=2n/x *J(n,x)-J(n-1,x) */
+        </span><span class="kw">if </span>ix &gt;= <span class="number">0x52d00000 </span>{
+            <span class="comment">/* x &gt; 2**302 */
+            /* (x &gt;&gt; n**2)
              *      Jn(x) = cos(x-(2n+1)*pi/4)*sqrt(2/x*pi)
              *      Yn(x) = sin(x-(2n+1)*pi/4)*sqrt(2/x*pi)
              *      Let s=sin(x), c=cos(x),
@@ -447,49 +441,49 @@
              *             1    -s-c            -c+s
              *             2    -s+c            -c-s
              *             3     s+c             c-s
-             */</span>
-            <span class="ident">temp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">nm1</span> <span class="op">&amp;</span> <span class="number">3</span> {
-                <span class="number">0</span> =&gt; <span class="op">-</span><span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">sin</span>(<span class="ident">x</span>),
-                <span class="number">1</span> =&gt; <span class="op">-</span><span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">sin</span>(<span class="ident">x</span>),
-                <span class="number">2</span> =&gt; <span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">sin</span>(<span class="ident">x</span>),
-                <span class="number">3</span> <span class="op">|</span> <span class="kw">_</span> =&gt; <span class="ident">cos</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">sin</span>(<span class="ident">x</span>),
+             */
+            </span>temp = <span class="kw">match </span>nm1 &amp; <span class="number">3 </span>{
+                <span class="number">0 </span>=&gt; -cos(x) + sin(x),
+                <span class="number">1 </span>=&gt; -cos(x) - sin(x),
+                <span class="number">2 </span>=&gt; cos(x) - sin(x),
+                <span class="number">3 </span>| <span class="kw">_ </span>=&gt; cos(x) + sin(x),
             };
-            <span class="ident">b</span> <span class="op">=</span> <span class="ident">INVSQRTPI</span> <span class="op">*</span> <span class="ident">temp</span> <span class="op">/</span> <span class="ident">sqrt</span>(<span class="ident">x</span>);
-        } <span class="kw">else</span> {
-            <span class="ident">a</span> <span class="op">=</span> <span class="ident">j0</span>(<span class="ident">x</span>);
-            <span class="ident">b</span> <span class="op">=</span> <span class="ident">j1</span>(<span class="ident">x</span>);
-            <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">while</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">nm1</span> {
-                <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                <span class="ident">temp</span> <span class="op">=</span> <span class="ident">b</span>;
-                <span class="ident">b</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">*</span> (<span class="number">2.0</span> <span class="op">*</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> <span class="ident">x</span>) <span class="op">-</span> <span class="ident">a</span>; <span class="comment">/* avoid underflow */</span>
-                <span class="ident">a</span> <span class="op">=</span> <span class="ident">temp</span>;
+            b = INVSQRTPI * temp / sqrt(x);
+        } <span class="kw">else </span>{
+            a = j0(x);
+            b = j1(x);
+            i = <span class="number">0</span>;
+            <span class="kw">while </span>i &lt; nm1 {
+                i += <span class="number">1</span>;
+                temp = b;
+                b = b * (<span class="number">2.0 </span>* (i <span class="kw">as </span>f64) / x) - a; <span class="comment">/* avoid underflow */
+                </span>a = temp;
             }
         }
-    } <span class="kw">else</span> {
-        <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&lt;</span> <span class="number">0x3e100000</span> {
-            <span class="comment">/* x &lt; 2**-29 */</span>
-            <span class="comment">/* x is tiny, return the first Taylor expansion of J(n,x)
+    } <span class="kw">else </span>{
+        <span class="kw">if </span>ix &lt; <span class="number">0x3e100000 </span>{
+            <span class="comment">/* x &lt; 2**-29 */
+            /* x is tiny, return the first Taylor expansion of J(n,x)
              * J(n,x) = 1/n!*(x/2)^n  - ...
-             */</span>
-            <span class="kw">if</span> <span class="ident">nm1</span> <span class="op">&gt;</span> <span class="number">32</span> {
-                <span class="comment">/* underflow */</span>
-                <span class="ident">b</span> <span class="op">=</span> <span class="number">0.0</span>;
-            } <span class="kw">else</span> {
-                <span class="ident">temp</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">*</span> <span class="number">0.5</span>;
-                <span class="ident">b</span> <span class="op">=</span> <span class="ident">temp</span>;
-                <span class="ident">a</span> <span class="op">=</span> <span class="number">1.0</span>;
-                <span class="ident">i</span> <span class="op">=</span> <span class="number">2</span>;
-                <span class="kw">while</span> <span class="ident">i</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">nm1</span> <span class="op">+</span> <span class="number">1</span> {
-                    <span class="ident">a</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">f64</span>; <span class="comment">/* a = n! */</span>
-                    <span class="ident">b</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">temp</span>; <span class="comment">/* b = (x/2)^n */</span>
-                    <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+             */
+            </span><span class="kw">if </span>nm1 &gt; <span class="number">32 </span>{
+                <span class="comment">/* underflow */
+                </span>b = <span class="number">0.0</span>;
+            } <span class="kw">else </span>{
+                temp = x * <span class="number">0.5</span>;
+                b = temp;
+                a = <span class="number">1.0</span>;
+                i = <span class="number">2</span>;
+                <span class="kw">while </span>i &lt;= nm1 + <span class="number">1 </span>{
+                    a <span class="kw-2">*</span>= i <span class="kw">as </span>f64; <span class="comment">/* a = n! */
+                    </span>b <span class="kw-2">*</span>= temp; <span class="comment">/* b = (x/2)^n */
+                    </span>i += <span class="number">1</span>;
                 }
-                <span class="ident">b</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">/</span> <span class="ident">a</span>;
+                b = b / a;
             }
-        } <span class="kw">else</span> {
-            <span class="comment">/* use backward recurrence */</span>
-            <span class="comment">/*                      x      x^2      x^2
+        } <span class="kw">else </span>{
+            <span class="comment">/* use backward recurrence */
+            /*                      x      x^2      x^2
              *  J(n,x)/J(n-1,x) =  ----   ------   ------   .....
              *                      2n  - 2(n+1) - 2(n+2)
              *
@@ -515,41 +509,41 @@
              * When Q(k) &gt; 1e4      good for single
              * When Q(k) &gt; 1e9      good for double
              * When Q(k) &gt; 1e17     good for quadruple
-             */</span>
-            <span class="comment">/* determine k */</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span>: <span class="ident">f64</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">q0</span>: <span class="ident">f64</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">q1</span>: <span class="ident">f64</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span>: <span class="ident">f64</span>;
-            <span class="kw">let</span> <span class="ident">h</span>: <span class="ident">f64</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">z</span>: <span class="ident">f64</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span>: <span class="ident">f64</span>;
-            <span class="kw">let</span> <span class="ident">nf</span>: <span class="ident">f64</span>;
+             */
+            /* determine k */
+            </span><span class="kw">let </span><span class="kw-2">mut </span>t: f64;
+            <span class="kw">let </span><span class="kw-2">mut </span>q0: f64;
+            <span class="kw">let </span><span class="kw-2">mut </span>q1: f64;
+            <span class="kw">let </span><span class="kw-2">mut </span>w: f64;
+            <span class="kw">let </span>h: f64;
+            <span class="kw">let </span><span class="kw-2">mut </span>z: f64;
+            <span class="kw">let </span><span class="kw-2">mut </span>tmp: f64;
+            <span class="kw">let </span>nf: f64;
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">k</span>: <span class="ident">i32</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>k: i32;
 
-            <span class="ident">nf</span> <span class="op">=</span> (<span class="ident">nm1</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">+</span> <span class="number">1.0</span>;
-            <span class="ident">w</span> <span class="op">=</span> <span class="number">2.0</span> <span class="op">*</span> <span class="ident">nf</span> <span class="op">/</span> <span class="ident">x</span>;
-            <span class="ident">h</span> <span class="op">=</span> <span class="number">2.0</span> <span class="op">/</span> <span class="ident">x</span>;
-            <span class="ident">z</span> <span class="op">=</span> <span class="ident">w</span> <span class="op">+</span> <span class="ident">h</span>;
-            <span class="ident">q0</span> <span class="op">=</span> <span class="ident">w</span>;
-            <span class="ident">q1</span> <span class="op">=</span> <span class="ident">w</span> <span class="op">*</span> <span class="ident">z</span> <span class="op">-</span> <span class="number">1.0</span>;
-            <span class="ident">k</span> <span class="op">=</span> <span class="number">1</span>;
-            <span class="kw">while</span> <span class="ident">q1</span> <span class="op">&lt;</span> <span class="number">1.0e9</span> {
-                <span class="ident">k</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                <span class="ident">z</span> <span class="op">+</span><span class="op">=</span> <span class="ident">h</span>;
-                <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">q1</span> <span class="op">-</span> <span class="ident">q0</span>;
-                <span class="ident">q0</span> <span class="op">=</span> <span class="ident">q1</span>;
-                <span class="ident">q1</span> <span class="op">=</span> <span class="ident">tmp</span>;
+            nf = (nm1 <span class="kw">as </span>f64) + <span class="number">1.0</span>;
+            w = <span class="number">2.0 </span>* nf / x;
+            h = <span class="number">2.0 </span>/ x;
+            z = w + h;
+            q0 = w;
+            q1 = w * z - <span class="number">1.0</span>;
+            k = <span class="number">1</span>;
+            <span class="kw">while </span>q1 &lt; <span class="number">1.0e9 </span>{
+                k += <span class="number">1</span>;
+                z += h;
+                tmp = z * q1 - q0;
+                q0 = q1;
+                q1 = tmp;
             }
-            <span class="ident">t</span> <span class="op">=</span> <span class="number">0.0</span>;
-            <span class="ident">i</span> <span class="op">=</span> <span class="ident">k</span>;
-            <span class="kw">while</span> <span class="ident">i</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">t</span> <span class="op">=</span> <span class="number">1.0</span> <span class="op">/</span> (<span class="number">2.0</span> <span class="op">*</span> ((<span class="ident">i</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">+</span> <span class="ident">nf</span>) <span class="op">/</span> <span class="ident">x</span> <span class="op">-</span> <span class="ident">t</span>);
-                <span class="ident">i</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
+            t = <span class="number">0.0</span>;
+            i = k;
+            <span class="kw">while </span>i &gt;= <span class="number">0 </span>{
+                t = <span class="number">1.0 </span>/ (<span class="number">2.0 </span>* ((i <span class="kw">as </span>f64) + nf) / x - t);
+                i -= <span class="number">1</span>;
             }
-            <span class="ident">a</span> <span class="op">=</span> <span class="ident">t</span>;
-            <span class="ident">b</span> <span class="op">=</span> <span class="number">1.0</span>;
+            a = t;
+            b = <span class="number">1.0</span>;
             <span class="comment">/*  estimate log((2/x)^n*n!) = n*log(2/x)+n*ln(n)
              *  Hence, if n*(log(2n/x)) &gt; ...
              *  single 8.8722839355e+01
@@ -557,99 +551,99 @@
              *  long double 1.1356523406294143949491931077970765006170e+04
              *  then recurrent value may overflow and the result is
              *  likely underflow to zero
-             */</span>
-            <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">nf</span> <span class="op">*</span> <span class="ident">log</span>(<span class="ident">fabs</span>(<span class="ident">w</span>));
-            <span class="kw">if</span> <span class="ident">tmp</span> <span class="op">&lt;</span> <span class="number">7.09782712893383973096e+02</span> {
-                <span class="ident">i</span> <span class="op">=</span> <span class="ident">nm1</span>;
-                <span class="kw">while</span> <span class="ident">i</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                    <span class="ident">temp</span> <span class="op">=</span> <span class="ident">b</span>;
-                    <span class="ident">b</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">*</span> (<span class="number">2.0</span> <span class="op">*</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">f64</span>)) <span class="op">/</span> <span class="ident">x</span> <span class="op">-</span> <span class="ident">a</span>;
-                    <span class="ident">a</span> <span class="op">=</span> <span class="ident">temp</span>;
-                    <span class="ident">i</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
+             */
+            </span>tmp = nf * log(fabs(w));
+            <span class="kw">if </span>tmp &lt; <span class="number">7.09782712893383973096e+02 </span>{
+                i = nm1;
+                <span class="kw">while </span>i &gt; <span class="number">0 </span>{
+                    temp = b;
+                    b = b * (<span class="number">2.0 </span>* (i <span class="kw">as </span>f64)) / x - a;
+                    a = temp;
+                    i -= <span class="number">1</span>;
                 }
-            } <span class="kw">else</span> {
-                <span class="ident">i</span> <span class="op">=</span> <span class="ident">nm1</span>;
-                <span class="kw">while</span> <span class="ident">i</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                    <span class="ident">temp</span> <span class="op">=</span> <span class="ident">b</span>;
-                    <span class="ident">b</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">*</span> (<span class="number">2.0</span> <span class="op">*</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">f64</span>)) <span class="op">/</span> <span class="ident">x</span> <span class="op">-</span> <span class="ident">a</span>;
-                    <span class="ident">a</span> <span class="op">=</span> <span class="ident">temp</span>;
-                    <span class="comment">/* scale b to avoid spurious overflow */</span>
-                    <span class="kw">let</span> <span class="ident">x1p500</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x5f30000000000000</span>); <span class="comment">// 0x1p500 == 2^500</span>
-                    <span class="kw">if</span> <span class="ident">b</span> <span class="op">&gt;</span> <span class="ident">x1p500</span> {
-                        <span class="ident">a</span> <span class="op">/</span><span class="op">=</span> <span class="ident">b</span>;
-                        <span class="ident">t</span> <span class="op">/</span><span class="op">=</span> <span class="ident">b</span>;
-                        <span class="ident">b</span> <span class="op">=</span> <span class="number">1.0</span>;
+            } <span class="kw">else </span>{
+                i = nm1;
+                <span class="kw">while </span>i &gt; <span class="number">0 </span>{
+                    temp = b;
+                    b = b * (<span class="number">2.0 </span>* (i <span class="kw">as </span>f64)) / x - a;
+                    a = temp;
+                    <span class="comment">/* scale b to avoid spurious overflow */
+                    </span><span class="kw">let </span>x1p500 = f64::from_bits(<span class="number">0x5f30000000000000</span>); <span class="comment">// 0x1p500 == 2^500
+                    </span><span class="kw">if </span>b &gt; x1p500 {
+                        a /= b;
+                        t /= b;
+                        b = <span class="number">1.0</span>;
                     }
-                    <span class="ident">i</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
+                    i -= <span class="number">1</span>;
                 }
             }
-            <span class="ident">z</span> <span class="op">=</span> <span class="ident">j0</span>(<span class="ident">x</span>);
-            <span class="ident">w</span> <span class="op">=</span> <span class="ident">j1</span>(<span class="ident">x</span>);
-            <span class="kw">if</span> <span class="ident">fabs</span>(<span class="ident">z</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">fabs</span>(<span class="ident">w</span>) {
-                <span class="ident">b</span> <span class="op">=</span> <span class="ident">t</span> <span class="op">*</span> <span class="ident">z</span> <span class="op">/</span> <span class="ident">b</span>;
-            } <span class="kw">else</span> {
-                <span class="ident">b</span> <span class="op">=</span> <span class="ident">t</span> <span class="op">*</span> <span class="ident">w</span> <span class="op">/</span> <span class="ident">a</span>;
+            z = j0(x);
+            w = j1(x);
+            <span class="kw">if </span>fabs(z) &gt;= fabs(w) {
+                b = t * z / b;
+            } <span class="kw">else </span>{
+                b = t * w / a;
             }
         }
     }
 
-    <span class="kw">if</span> <span class="ident">sign</span> {
-        <span class="op">-</span><span class="ident">b</span>
-    } <span class="kw">else</span> {
-        <span class="ident">b</span>
+    <span class="kw">if </span>sign {
+        -b
+    } <span class="kw">else </span>{
+        b
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">yn</span>(<span class="ident">n</span>: <span class="ident">i32</span>, <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="ident">f64</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ix</span>: <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">lx</span>: <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ib</span>: <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">nm1</span>: <span class="ident">i32</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sign</span>: <span class="ident">bool</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span>: <span class="ident">i32</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span>: <span class="ident">f64</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span>: <span class="ident">f64</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">temp</span>: <span class="ident">f64</span>;
+<span class="kw">pub fn </span>yn(n: i32, x: f64) -&gt; f64 {
+    <span class="kw">let </span><span class="kw-2">mut </span>ix: u32;
+    <span class="kw">let </span>lx: u32;
+    <span class="kw">let </span><span class="kw-2">mut </span>ib: u32;
+    <span class="kw">let </span>nm1: i32;
+    <span class="kw">let </span><span class="kw-2">mut </span>sign: bool;
+    <span class="kw">let </span><span class="kw-2">mut </span>i: i32;
+    <span class="kw">let </span><span class="kw-2">mut </span>a: f64;
+    <span class="kw">let </span><span class="kw-2">mut </span>b: f64;
+    <span class="kw">let </span><span class="kw-2">mut </span>temp: f64;
 
-    <span class="ident">ix</span> <span class="op">=</span> <span class="ident">get_high_word</span>(<span class="ident">x</span>);
-    <span class="ident">lx</span> <span class="op">=</span> <span class="ident">get_low_word</span>(<span class="ident">x</span>);
-    <span class="ident">sign</span> <span class="op">=</span> (<span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-    <span class="ident">ix</span> <span class="op">&amp;=</span> <span class="number">0x7fffffff</span>;
+    ix = get_high_word(x);
+    lx = get_low_word(x);
+    sign = (ix &gt;&gt; <span class="number">31</span>) != <span class="number">0</span>;
+    ix &amp;= <span class="number">0x7fffffff</span>;
 
-    <span class="comment">// -lx == !lx + 1</span>
-    <span class="kw">if</span> (<span class="ident">ix</span> <span class="op">|</span> (<span class="ident">lx</span> <span class="op">|</span> ((<span class="op">!</span><span class="ident">lx</span>).<span class="ident">wrapping_add</span>(<span class="number">1</span>))) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">31</span>) <span class="op">&gt;</span> <span class="number">0x7ff00000</span> {
-        <span class="comment">/* nan */</span>
-        <span class="kw">return</span> <span class="ident">x</span>;
+    <span class="comment">// -lx == !lx + 1
+    </span><span class="kw">if </span>(ix | (lx | ((!lx).wrapping_add(<span class="number">1</span>))) &gt;&gt; <span class="number">31</span>) &gt; <span class="number">0x7ff00000 </span>{
+        <span class="comment">/* nan */
+        </span><span class="kw">return </span>x;
     }
-    <span class="kw">if</span> <span class="ident">sign</span> <span class="op">&amp;&amp;</span> (<span class="ident">ix</span> <span class="op">|</span> <span class="ident">lx</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="comment">/* x &lt; 0 */</span>
-        <span class="kw">return</span> <span class="number">0.0</span> <span class="op">/</span> <span class="number">0.0</span>;
+    <span class="kw">if </span>sign &amp;&amp; (ix | lx) != <span class="number">0 </span>{
+        <span class="comment">/* x &lt; 0 */
+        </span><span class="kw">return </span><span class="number">0.0 </span>/ <span class="number">0.0</span>;
     }
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">==</span> <span class="number">0x7ff00000</span> {
-        <span class="kw">return</span> <span class="number">0.0</span>;
+    <span class="kw">if </span>ix == <span class="number">0x7ff00000 </span>{
+        <span class="kw">return </span><span class="number">0.0</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="ident">y0</span>(<span class="ident">x</span>);
+    <span class="kw">if </span>n == <span class="number">0 </span>{
+        <span class="kw">return </span>y0(x);
     }
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;</span> <span class="number">0</span> {
-        <span class="ident">nm1</span> <span class="op">=</span> <span class="op">-</span>(<span class="ident">n</span> <span class="op">+</span> <span class="number">1</span>);
-        <span class="ident">sign</span> <span class="op">=</span> (<span class="ident">n</span> <span class="op">&amp;</span> <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-    } <span class="kw">else</span> {
-        <span class="ident">nm1</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>;
-        <span class="ident">sign</span> <span class="op">=</span> <span class="bool-val">false</span>;
+    <span class="kw">if </span>n &lt; <span class="number">0 </span>{
+        nm1 = -(n + <span class="number">1</span>);
+        sign = (n &amp; <span class="number">1</span>) != <span class="number">0</span>;
+    } <span class="kw">else </span>{
+        nm1 = n - <span class="number">1</span>;
+        sign = <span class="bool-val">false</span>;
     }
-    <span class="kw">if</span> <span class="ident">nm1</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">if</span> <span class="ident">sign</span> {
-            <span class="kw">return</span> <span class="op">-</span><span class="ident">y1</span>(<span class="ident">x</span>);
-        } <span class="kw">else</span> {
-            <span class="kw">return</span> <span class="ident">y1</span>(<span class="ident">x</span>);
+    <span class="kw">if </span>nm1 == <span class="number">0 </span>{
+        <span class="kw">if </span>sign {
+            <span class="kw">return </span>-y1(x);
+        } <span class="kw">else </span>{
+            <span class="kw">return </span>y1(x);
         }
     }
 
-    <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x52d00000</span> {
-        <span class="comment">/* x &gt; 2**302 */</span>
-        <span class="comment">/* (x &gt;&gt; n**2)
+    <span class="kw">if </span>ix &gt;= <span class="number">0x52d00000 </span>{
+        <span class="comment">/* x &gt; 2**302 */
+        /* (x &gt;&gt; n**2)
          *      Jn(x) = cos(x-(2n+1)*pi/4)*sqrt(2/x*pi)
          *      Yn(x) = sin(x-(2n+1)*pi/4)*sqrt(2/x*pi)
          *      Let s=sin(x), c=cos(x),
@@ -661,35 +655,34 @@
          *             1    -s-c            -c+s
          *             2    -s+c            -c-s
          *             3     s+c             c-s
-         */</span>
-        <span class="ident">temp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">nm1</span> <span class="op">&amp;</span> <span class="number">3</span> {
-            <span class="number">0</span> =&gt; <span class="op">-</span><span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">cos</span>(<span class="ident">x</span>),
-            <span class="number">1</span> =&gt; <span class="op">-</span><span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">cos</span>(<span class="ident">x</span>),
-            <span class="number">2</span> =&gt; <span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">+</span> <span class="ident">cos</span>(<span class="ident">x</span>),
-            <span class="number">3</span> <span class="op">|</span> <span class="kw">_</span> =&gt; <span class="ident">sin</span>(<span class="ident">x</span>) <span class="op">-</span> <span class="ident">cos</span>(<span class="ident">x</span>),
+         */
+        </span>temp = <span class="kw">match </span>nm1 &amp; <span class="number">3 </span>{
+            <span class="number">0 </span>=&gt; -sin(x) - cos(x),
+            <span class="number">1 </span>=&gt; -sin(x) + cos(x),
+            <span class="number">2 </span>=&gt; sin(x) + cos(x),
+            <span class="number">3 </span>| <span class="kw">_ </span>=&gt; sin(x) - cos(x),
         };
-        <span class="ident">b</span> <span class="op">=</span> <span class="ident">INVSQRTPI</span> <span class="op">*</span> <span class="ident">temp</span> <span class="op">/</span> <span class="ident">sqrt</span>(<span class="ident">x</span>);
-    } <span class="kw">else</span> {
-        <span class="ident">a</span> <span class="op">=</span> <span class="ident">y0</span>(<span class="ident">x</span>);
-        <span class="ident">b</span> <span class="op">=</span> <span class="ident">y1</span>(<span class="ident">x</span>);
-        <span class="comment">/* quit if b is -inf */</span>
-        <span class="ident">ib</span> <span class="op">=</span> <span class="ident">get_high_word</span>(<span class="ident">b</span>);
-        <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">while</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">nm1</span> <span class="op">&amp;&amp;</span> <span class="ident">ib</span> <span class="op">!</span><span class="op">=</span> <span class="number">0xfff00000</span> {
-            <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="ident">temp</span> <span class="op">=</span> <span class="ident">b</span>;
-            <span class="ident">b</span> <span class="op">=</span> (<span class="number">2.0</span> <span class="op">*</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> <span class="ident">x</span>) <span class="op">*</span> <span class="ident">b</span> <span class="op">-</span> <span class="ident">a</span>;
-            <span class="ident">ib</span> <span class="op">=</span> <span class="ident">get_high_word</span>(<span class="ident">b</span>);
-            <span class="ident">a</span> <span class="op">=</span> <span class="ident">temp</span>;
+        b = INVSQRTPI * temp / sqrt(x);
+    } <span class="kw">else </span>{
+        a = y0(x);
+        b = y1(x);
+        <span class="comment">/* quit if b is -inf */
+        </span>ib = get_high_word(b);
+        i = <span class="number">0</span>;
+        <span class="kw">while </span>i &lt; nm1 &amp;&amp; ib != <span class="number">0xfff00000 </span>{
+            i += <span class="number">1</span>;
+            temp = b;
+            b = (<span class="number">2.0 </span>* (i <span class="kw">as </span>f64) / x) * b - a;
+            ib = get_high_word(b);
+            a = temp;
         }
     }
 
-    <span class="kw">if</span> <span class="ident">sign</span> {
-        <span class="op">-</span><span class="ident">b</span>
-    } <span class="kw">else</span> {
-        <span class="ident">b</span>
+    <span class="kw">if </span>sign {
+        -b
+    } <span class="kw">else </span>{
+        b
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

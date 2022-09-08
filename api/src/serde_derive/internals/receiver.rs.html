@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_derive-1.0.132/src/internals/receiver.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>receiver.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../serde_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../serde_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../serde_derive/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_derive-1.0.132/src/internals/receiver.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>receiver.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../serde_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../serde_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../serde_derive/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -291,293 +285,292 @@
 <span id="285">285</span>
 <span id="286">286</span>
 <span id="287">287</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">internals::respan::respan</span>;
-<span class="kw">use</span> <span class="ident">proc_macro2::Span</span>;
-<span class="kw">use</span> <span class="ident">quote::ToTokens</span>;
-<span class="kw">use</span> <span class="ident">std::mem</span>;
-<span class="kw">use</span> <span class="ident">syn::punctuated::Punctuated</span>;
-<span class="kw">use</span> <span class="ident">syn</span>::{
-    <span class="ident">parse_quote</span>, <span class="ident">Data</span>, <span class="ident">DeriveInput</span>, <span class="ident">Expr</span>, <span class="ident">ExprPath</span>, <span class="ident">GenericArgument</span>, <span class="ident">GenericParam</span>, <span class="ident">Generics</span>, <span class="ident">Macro</span>,
-    <span class="ident">Path</span>, <span class="ident">PathArguments</span>, <span class="ident">QSelf</span>, <span class="ident">ReturnType</span>, <span class="ident">Type</span>, <span class="ident">TypeParamBound</span>, <span class="ident">TypePath</span>, <span class="ident">WherePredicate</span>,
+</pre><pre class="rust"><code><span class="kw">use </span>internals::respan::respan;
+<span class="kw">use </span>proc_macro2::Span;
+<span class="kw">use </span>quote::ToTokens;
+<span class="kw">use </span>std::mem;
+<span class="kw">use </span>syn::punctuated::Punctuated;
+<span class="kw">use </span>syn::{
+    parse_quote, Data, DeriveInput, Expr, ExprPath, GenericArgument, GenericParam, Generics, Macro,
+    Path, PathArguments, QSelf, ReturnType, Type, TypeParamBound, TypePath, WherePredicate,
 };
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">replace_receiver</span>(<span class="ident">input</span>: <span class="kw-2">&amp;mut</span> <span class="ident">DeriveInput</span>) {
-    <span class="kw">let</span> <span class="ident">self_ty</span> <span class="op">=</span> {
-        <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">ident</span>;
-        <span class="kw">let</span> <span class="ident">ty_generics</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">generics</span>.<span class="ident">split_for_impl</span>().<span class="number">1</span>;
-        <span class="macro">parse_quote!</span>(#<span class="ident">ident</span> #<span class="ident">ty_generics</span>)
+<span class="kw">pub fn </span>replace_receiver(input: <span class="kw-2">&amp;mut </span>DeriveInput) {
+    <span class="kw">let </span>self_ty = {
+        <span class="kw">let </span>ident = <span class="kw-2">&amp;</span>input.ident;
+        <span class="kw">let </span>ty_generics = input.generics.split_for_impl().<span class="number">1</span>;
+        <span class="macro">parse_quote!</span>(#ident #ty_generics)
     };
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visitor</span> <span class="op">=</span> <span class="ident">ReplaceReceiver</span>(<span class="kw-2">&amp;</span><span class="ident">self_ty</span>);
-    <span class="ident">visitor</span>.<span class="ident">visit_generics_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">input</span>.<span class="ident">generics</span>);
-    <span class="ident">visitor</span>.<span class="ident">visit_data_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">input</span>.<span class="ident">data</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>visitor = ReplaceReceiver(<span class="kw-2">&amp;</span>self_ty);
+    visitor.visit_generics_mut(<span class="kw-2">&amp;mut </span>input.generics);
+    visitor.visit_data_mut(<span class="kw-2">&amp;mut </span>input.data);
 }
 
-<span class="kw">struct</span> <span class="ident">ReplaceReceiver</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TypePath</span>);
+<span class="kw">struct </span>ReplaceReceiver&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TypePath);
 
-<span class="kw">impl</span> <span class="ident">ReplaceReceiver</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">self_ty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>) -&gt; <span class="ident">TypePath</span> {
-        <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">to_token_stream</span>();
-        <span class="kw">let</span> <span class="ident">respanned</span> <span class="op">=</span> <span class="ident">respan</span>(<span class="ident">tokens</span>, <span class="ident">span</span>);
-        <span class="ident">syn::parse2</span>(<span class="ident">respanned</span>).<span class="ident">unwrap</span>()
+<span class="kw">impl </span>ReplaceReceiver&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">fn </span>self_ty(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span) -&gt; TypePath {
+        <span class="kw">let </span>tokens = <span class="self">self</span>.<span class="number">0</span>.to_token_stream();
+        <span class="kw">let </span>respanned = respan(tokens, span);
+        syn::parse2(respanned).unwrap()
     }
 
-    <span class="kw">fn</span> <span class="ident">self_to_qself</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">qself</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">QSelf</span><span class="op">&gt;</span>, <span class="ident">path</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Path</span>) {
-        <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">leading_colon</span>.<span class="ident">is_some</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">path</span>.<span class="ident">segments</span>[<span class="number">0</span>].<span class="ident">ident</span> <span class="op">!</span><span class="op">=</span> <span class="string">&quot;Self&quot;</span> {
+    <span class="kw">fn </span>self_to_qself(<span class="kw-2">&amp;</span><span class="self">self</span>, qself: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;QSelf&gt;, path: <span class="kw-2">&amp;mut </span>Path) {
+        <span class="kw">if </span>path.leading_colon.is_some() || path.segments[<span class="number">0</span>].ident != <span class="string">&quot;Self&quot; </span>{
             <span class="kw">return</span>;
         }
 
-        <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
-            <span class="self">self</span>.<span class="ident">self_to_expr_path</span>(<span class="ident">path</span>);
+        <span class="kw">if </span>path.segments.len() == <span class="number">1 </span>{
+            <span class="self">self</span>.self_to_expr_path(path);
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">segments</span>[<span class="number">0</span>].<span class="ident">ident</span>.<span class="ident">span</span>();
-        <span class="kw-2">*</span><span class="ident">qself</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">QSelf</span> {
-            <span class="ident">lt_token</span>: <span class="macro">Token!</span>[<span class="op">&lt;</span>](<span class="ident">span</span>),
-            <span class="ident">ty</span>: <span class="ident">Box::new</span>(<span class="ident">Type::Path</span>(<span class="self">self</span>.<span class="ident">self_ty</span>(<span class="ident">span</span>))),
-            <span class="ident">position</span>: <span class="number">0</span>,
-            <span class="ident">as_token</span>: <span class="prelude-val">None</span>,
-            <span class="ident">gt_token</span>: <span class="macro">Token!</span>[<span class="op">&gt;</span>](<span class="ident">span</span>),
+        <span class="kw">let </span>span = path.segments[<span class="number">0</span>].ident.span();
+        <span class="kw-2">*</span>qself = <span class="prelude-val">Some</span>(QSelf {
+            lt_token: <span class="macro">Token!</span>[&lt;](span),
+            ty: Box::new(Type::Path(<span class="self">self</span>.self_ty(span))),
+            position: <span class="number">0</span>,
+            as_token: <span class="prelude-val">None</span>,
+            gt_token: <span class="macro">Token!</span>[&gt;](span),
         });
 
-        <span class="ident">path</span>.<span class="ident">leading_colon</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">pairs</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>().<span class="ident">punct</span>().<span class="ident">unwrap</span>());
+        path.leading_colon = <span class="prelude-val">Some</span>(<span class="kw-2">**</span>path.segments.pairs().next().unwrap().punct().unwrap());
 
-        <span class="kw">let</span> <span class="ident">segments</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">path</span>.<span class="ident">segments</span>, <span class="ident">Punctuated::new</span>());
-        <span class="ident">path</span>.<span class="ident">segments</span> <span class="op">=</span> <span class="ident">segments</span>.<span class="ident">into_pairs</span>().<span class="ident">skip</span>(<span class="number">1</span>).<span class="ident">collect</span>();
+        <span class="kw">let </span>segments = mem::replace(<span class="kw-2">&amp;mut </span>path.segments, Punctuated::new());
+        path.segments = segments.into_pairs().skip(<span class="number">1</span>).collect();
     }
 
-    <span class="kw">fn</span> <span class="ident">self_to_expr_path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Path</span>) {
-        <span class="kw">let</span> <span class="ident">self_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">self_ty</span>(<span class="ident">path</span>.<span class="ident">segments</span>[<span class="number">0</span>].<span class="ident">ident</span>.<span class="ident">span</span>());
-        <span class="kw">let</span> <span class="ident">variant</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="ident">path</span>, <span class="ident">self_ty</span>.<span class="ident">path</span>);
-        <span class="kw">for</span> <span class="ident">segment</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">path</span>.<span class="ident">segments</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">PathArguments::AngleBracketed</span>(<span class="ident">bracketed</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">segment</span>.<span class="ident">arguments</span> {
-                <span class="kw">if</span> <span class="ident">bracketed</span>.<span class="ident">colon2_token</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">bracketed</span>.<span class="ident">args</span>.<span class="ident">is_empty</span>() {
-                    <span class="ident">bracketed</span>.<span class="ident">colon2_token</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="op">&lt;</span><span class="macro">Token!</span>[::]<span class="op">&gt;</span><span class="ident">::default</span>());
+    <span class="kw">fn </span>self_to_expr_path(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;mut </span>Path) {
+        <span class="kw">let </span>self_ty = <span class="self">self</span>.self_ty(path.segments[<span class="number">0</span>].ident.span());
+        <span class="kw">let </span>variant = mem::replace(path, self_ty.path);
+        <span class="kw">for </span>segment <span class="kw">in </span><span class="kw-2">&amp;mut </span>path.segments {
+            <span class="kw">if let </span>PathArguments::AngleBracketed(bracketed) = <span class="kw-2">&amp;mut </span>segment.arguments {
+                <span class="kw">if </span>bracketed.colon2_token.is_none() &amp;&amp; !bracketed.args.is_empty() {
+                    bracketed.colon2_token = <span class="prelude-val">Some</span>(&lt;<span class="macro">Token!</span>[::]&gt;::default());
                 }
             }
         }
-        <span class="kw">if</span> <span class="ident">variant</span>.<span class="ident">segments</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
-            <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">push_punct</span>(<span class="op">&lt;</span><span class="macro">Token!</span>[::]<span class="op">&gt;</span><span class="ident">::default</span>());
-            <span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">extend</span>(<span class="ident">variant</span>.<span class="ident">segments</span>.<span class="ident">into_pairs</span>().<span class="ident">skip</span>(<span class="number">1</span>));
+        <span class="kw">if </span>variant.segments.len() &gt; <span class="number">1 </span>{
+            path.segments.push_punct(&lt;<span class="macro">Token!</span>[::]&gt;::default());
+            path.segments.extend(variant.segments.into_pairs().skip(<span class="number">1</span>));
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ReplaceReceiver</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="comment">// `Self` -&gt; `Receiver`</span>
-    <span class="kw">fn</span> <span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Type</span>) {
-        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Type::Path</span>(<span class="ident">node</span>) <span class="op">=</span> <span class="ident">ty</span> {
-            <span class="kw">if</span> <span class="ident">node</span>.<span class="ident">qself</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">node</span>.<span class="ident">path</span>.<span class="ident">is_ident</span>(<span class="string">&quot;Self&quot;</span>) {
-                <span class="ident">node</span>.<span class="ident">path</span>.<span class="ident">segments</span>[<span class="number">0</span>].<span class="ident">ident</span>.<span class="ident">span</span>()
-            } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">visit_type_path_mut</span>(<span class="ident">node</span>);
+<span class="kw">impl </span>ReplaceReceiver&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="comment">// `Self` -&gt; `Receiver`
+    </span><span class="kw">fn </span>visit_type_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: <span class="kw-2">&amp;mut </span>Type) {
+        <span class="kw">let </span>span = <span class="kw">if let </span>Type::Path(node) = ty {
+            <span class="kw">if </span>node.qself.is_none() &amp;&amp; node.path.is_ident(<span class="string">&quot;Self&quot;</span>) {
+                node.path.segments[<span class="number">0</span>].ident.span()
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.visit_type_path_mut(node);
                 <span class="kw">return</span>;
             }
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">visit_type_mut_impl</span>(<span class="ident">ty</span>);
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.visit_type_mut_impl(ty);
             <span class="kw">return</span>;
         };
-        <span class="kw-2">*</span><span class="ident">ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">self_ty</span>(<span class="ident">span</span>).<span class="ident">into</span>();
+        <span class="kw-2">*</span>ty = <span class="self">self</span>.self_ty(span).into();
     }
 
-    <span class="comment">// `Self::Assoc` -&gt; `&lt;Receiver&gt;::Assoc`</span>
-    <span class="kw">fn</span> <span class="ident">visit_type_path_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TypePath</span>) {
-        <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">qself</span>.<span class="ident">is_none</span>() {
-            <span class="self">self</span>.<span class="ident">self_to_qself</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">qself</span>, <span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">path</span>);
+    <span class="comment">// `Self::Assoc` -&gt; `&lt;Receiver&gt;::Assoc`
+    </span><span class="kw">fn </span>visit_type_path_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: <span class="kw-2">&amp;mut </span>TypePath) {
+        <span class="kw">if </span>ty.qself.is_none() {
+            <span class="self">self</span>.self_to_qself(<span class="kw-2">&amp;mut </span>ty.qself, <span class="kw-2">&amp;mut </span>ty.path);
         }
-        <span class="self">self</span>.<span class="ident">visit_type_path_mut_impl</span>(<span class="ident">ty</span>);
+        <span class="self">self</span>.visit_type_path_mut_impl(ty);
     }
 
-    <span class="comment">// `Self::method` -&gt; `&lt;Receiver&gt;::method`</span>
-    <span class="kw">fn</span> <span class="ident">visit_expr_path_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">expr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ExprPath</span>) {
-        <span class="kw">if</span> <span class="ident">expr</span>.<span class="ident">qself</span>.<span class="ident">is_none</span>() {
-            <span class="self">self</span>.<span class="ident">self_to_qself</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">qself</span>, <span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">path</span>);
+    <span class="comment">// `Self::method` -&gt; `&lt;Receiver&gt;::method`
+    </span><span class="kw">fn </span>visit_expr_path_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: <span class="kw-2">&amp;mut </span>ExprPath) {
+        <span class="kw">if </span>expr.qself.is_none() {
+            <span class="self">self</span>.self_to_qself(<span class="kw-2">&amp;mut </span>expr.qself, <span class="kw-2">&amp;mut </span>expr.path);
         }
-        <span class="self">self</span>.<span class="ident">visit_expr_path_mut_impl</span>(<span class="ident">expr</span>);
+        <span class="self">self</span>.visit_expr_path_mut_impl(expr);
     }
 
-    <span class="comment">// Everything below is simply traversing the syntax tree.</span>
+    <span class="comment">// Everything below is simply traversing the syntax tree.
 
-    <span class="kw">fn</span> <span class="ident">visit_type_mut_impl</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Type</span>) {
-        <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">Type::Array</span>(<span class="ident">ty</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">elem</span>);
-                <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">len</span>);
+    </span><span class="kw">fn </span>visit_type_mut_impl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: <span class="kw-2">&amp;mut </span>Type) {
+        <span class="kw">match </span>ty {
+            Type::Array(ty) =&gt; {
+                <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>ty.elem);
+                <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>ty.len);
             }
-            <span class="ident">Type::BareFn</span>(<span class="ident">ty</span>) =&gt; {
-                <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">inputs</span> {
-                    <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">arg</span>.<span class="ident">ty</span>);
+            Type::BareFn(ty) =&gt; {
+                <span class="kw">for </span>arg <span class="kw">in </span><span class="kw-2">&amp;mut </span>ty.inputs {
+                    <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>arg.ty);
                 }
-                <span class="self">self</span>.<span class="ident">visit_return_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">output</span>);
+                <span class="self">self</span>.visit_return_type_mut(<span class="kw-2">&amp;mut </span>ty.output);
             }
-            <span class="ident">Type::Group</span>(<span class="ident">ty</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">elem</span>),
-            <span class="ident">Type::ImplTrait</span>(<span class="ident">ty</span>) =&gt; {
-                <span class="kw">for</span> <span class="ident">bound</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">bounds</span> {
-                    <span class="self">self</span>.<span class="ident">visit_type_param_bound_mut</span>(<span class="ident">bound</span>);
-                }
-            }
-            <span class="ident">Type::Macro</span>(<span class="ident">ty</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_macro_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">mac</span>),
-            <span class="ident">Type::Paren</span>(<span class="ident">ty</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">elem</span>),
-            <span class="ident">Type::Path</span>(<span class="ident">ty</span>) =&gt; {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">qself</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">qself</span> {
-                    <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">qself</span>.<span class="ident">ty</span>);
-                }
-                <span class="self">self</span>.<span class="ident">visit_path_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">path</span>);
-            }
-            <span class="ident">Type::Ptr</span>(<span class="ident">ty</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">elem</span>),
-            <span class="ident">Type::Reference</span>(<span class="ident">ty</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">elem</span>),
-            <span class="ident">Type::Slice</span>(<span class="ident">ty</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">elem</span>),
-            <span class="ident">Type::TraitObject</span>(<span class="ident">ty</span>) =&gt; {
-                <span class="kw">for</span> <span class="ident">bound</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">bounds</span> {
-                    <span class="self">self</span>.<span class="ident">visit_type_param_bound_mut</span>(<span class="ident">bound</span>);
+            Type::Group(ty) =&gt; <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>ty.elem),
+            Type::ImplTrait(ty) =&gt; {
+                <span class="kw">for </span>bound <span class="kw">in </span><span class="kw-2">&amp;mut </span>ty.bounds {
+                    <span class="self">self</span>.visit_type_param_bound_mut(bound);
                 }
             }
-            <span class="ident">Type::Tuple</span>(<span class="ident">ty</span>) =&gt; {
-                <span class="kw">for</span> <span class="ident">elem</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">elems</span> {
-                    <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="ident">elem</span>);
+            Type::Macro(ty) =&gt; <span class="self">self</span>.visit_macro_mut(<span class="kw-2">&amp;mut </span>ty.mac),
+            Type::Paren(ty) =&gt; <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>ty.elem),
+            Type::Path(ty) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(qself) = <span class="kw-2">&amp;mut </span>ty.qself {
+                    <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>qself.ty);
+                }
+                <span class="self">self</span>.visit_path_mut(<span class="kw-2">&amp;mut </span>ty.path);
+            }
+            Type::Ptr(ty) =&gt; <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>ty.elem),
+            Type::Reference(ty) =&gt; <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>ty.elem),
+            Type::Slice(ty) =&gt; <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>ty.elem),
+            Type::TraitObject(ty) =&gt; {
+                <span class="kw">for </span>bound <span class="kw">in </span><span class="kw-2">&amp;mut </span>ty.bounds {
+                    <span class="self">self</span>.visit_type_param_bound_mut(bound);
+                }
+            }
+            Type::Tuple(ty) =&gt; {
+                <span class="kw">for </span>elem <span class="kw">in </span><span class="kw-2">&amp;mut </span>ty.elems {
+                    <span class="self">self</span>.visit_type_mut(elem);
                 }
             }
 
-            <span class="ident">Type::Infer</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Type::Never</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Type::Verbatim</span>(<span class="kw">_</span>) =&gt; {}
+            Type::Infer(<span class="kw">_</span>) | Type::Never(<span class="kw">_</span>) | Type::Verbatim(<span class="kw">_</span>) =&gt; {}
 
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-            <span class="ident">Type::__TestExhaustive</span>(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
-            <span class="kw">_</span> =&gt; {}
+            <span class="attribute">#[cfg(test)]
+            </span>Type::__TestExhaustive(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
+            <span class="attribute">#[cfg(not(test))]
+            </span><span class="kw">_ </span>=&gt; {}
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_type_path_mut_impl</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TypePath</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">qself</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">qself</span> {
-            <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">qself</span>.<span class="ident">ty</span>);
+    <span class="kw">fn </span>visit_type_path_mut_impl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: <span class="kw-2">&amp;mut </span>TypePath) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(qself) = <span class="kw-2">&amp;mut </span>ty.qself {
+            <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>qself.ty);
         }
-        <span class="self">self</span>.<span class="ident">visit_path_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ty</span>.<span class="ident">path</span>);
+        <span class="self">self</span>.visit_path_mut(<span class="kw-2">&amp;mut </span>ty.path);
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_expr_path_mut_impl</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">expr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ExprPath</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">qself</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">qself</span> {
-            <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">qself</span>.<span class="ident">ty</span>);
+    <span class="kw">fn </span>visit_expr_path_mut_impl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: <span class="kw-2">&amp;mut </span>ExprPath) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(qself) = <span class="kw-2">&amp;mut </span>expr.qself {
+            <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>qself.ty);
         }
-        <span class="self">self</span>.<span class="ident">visit_path_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">path</span>);
+        <span class="self">self</span>.visit_path_mut(<span class="kw-2">&amp;mut </span>expr.path);
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_path_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Path</span>) {
-        <span class="kw">for</span> <span class="ident">segment</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">path</span>.<span class="ident">segments</span> {
-            <span class="self">self</span>.<span class="ident">visit_path_arguments_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">segment</span>.<span class="ident">arguments</span>);
+    <span class="kw">fn </span>visit_path_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: <span class="kw-2">&amp;mut </span>Path) {
+        <span class="kw">for </span>segment <span class="kw">in </span><span class="kw-2">&amp;mut </span>path.segments {
+            <span class="self">self</span>.visit_path_arguments_mut(<span class="kw-2">&amp;mut </span>segment.arguments);
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_path_arguments_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">arguments</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PathArguments</span>) {
-        <span class="kw">match</span> <span class="ident">arguments</span> {
-            <span class="ident">PathArguments::None</span> =&gt; {}
-            <span class="ident">PathArguments::AngleBracketed</span>(<span class="ident">arguments</span>) =&gt; {
-                <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">arguments</span>.<span class="ident">args</span> {
-                    <span class="kw">match</span> <span class="ident">arg</span> {
-                        <span class="ident">GenericArgument::Type</span>(<span class="ident">arg</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="ident">arg</span>),
-                        <span class="ident">GenericArgument::Binding</span>(<span class="ident">arg</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">arg</span>.<span class="ident">ty</span>),
-                        <span class="ident">GenericArgument::Lifetime</span>(<span class="kw">_</span>)
-                        <span class="op">|</span> <span class="ident">GenericArgument::Constraint</span>(<span class="kw">_</span>)
-                        <span class="op">|</span> <span class="ident">GenericArgument::Const</span>(<span class="kw">_</span>) =&gt; {}
+    <span class="kw">fn </span>visit_path_arguments_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, arguments: <span class="kw-2">&amp;mut </span>PathArguments) {
+        <span class="kw">match </span>arguments {
+            PathArguments::None =&gt; {}
+            PathArguments::AngleBracketed(arguments) =&gt; {
+                <span class="kw">for </span>arg <span class="kw">in </span><span class="kw-2">&amp;mut </span>arguments.args {
+                    <span class="kw">match </span>arg {
+                        GenericArgument::Type(arg) =&gt; <span class="self">self</span>.visit_type_mut(arg),
+                        GenericArgument::Binding(arg) =&gt; <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>arg.ty),
+                        GenericArgument::Lifetime(<span class="kw">_</span>)
+                        | GenericArgument::Constraint(<span class="kw">_</span>)
+                        | GenericArgument::Const(<span class="kw">_</span>) =&gt; {}
                     }
                 }
             }
-            <span class="ident">PathArguments::Parenthesized</span>(<span class="ident">arguments</span>) =&gt; {
-                <span class="kw">for</span> <span class="ident">argument</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">arguments</span>.<span class="ident">inputs</span> {
-                    <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="ident">argument</span>);
+            PathArguments::Parenthesized(arguments) =&gt; {
+                <span class="kw">for </span>argument <span class="kw">in </span><span class="kw-2">&amp;mut </span>arguments.inputs {
+                    <span class="self">self</span>.visit_type_mut(argument);
                 }
-                <span class="self">self</span>.<span class="ident">visit_return_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">arguments</span>.<span class="ident">output</span>);
+                <span class="self">self</span>.visit_return_type_mut(<span class="kw-2">&amp;mut </span>arguments.output);
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_return_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">return_type</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ReturnType</span>) {
-        <span class="kw">match</span> <span class="ident">return_type</span> {
-            <span class="ident">ReturnType::Default</span> =&gt; {}
-            <span class="ident">ReturnType::Type</span>(<span class="kw">_</span>, <span class="ident">output</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="ident">output</span>),
+    <span class="kw">fn </span>visit_return_type_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, return_type: <span class="kw-2">&amp;mut </span>ReturnType) {
+        <span class="kw">match </span>return_type {
+            ReturnType::Default =&gt; {}
+            ReturnType::Type(<span class="kw">_</span>, output) =&gt; <span class="self">self</span>.visit_type_mut(output),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_type_param_bound_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bound</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TypeParamBound</span>) {
-        <span class="kw">match</span> <span class="ident">bound</span> {
-            <span class="ident">TypeParamBound::Trait</span>(<span class="ident">bound</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_path_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bound</span>.<span class="ident">path</span>),
-            <span class="ident">TypeParamBound::Lifetime</span>(<span class="kw">_</span>) =&gt; {}
+    <span class="kw">fn </span>visit_type_param_bound_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: <span class="kw-2">&amp;mut </span>TypeParamBound) {
+        <span class="kw">match </span>bound {
+            TypeParamBound::Trait(bound) =&gt; <span class="self">self</span>.visit_path_mut(<span class="kw-2">&amp;mut </span>bound.path),
+            TypeParamBound::Lifetime(<span class="kw">_</span>) =&gt; {}
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_generics_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">generics</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Generics</span>) {
-        <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">generics</span>.<span class="ident">params</span> {
-            <span class="kw">match</span> <span class="ident">param</span> {
-                <span class="ident">GenericParam::Type</span>(<span class="ident">param</span>) =&gt; {
-                    <span class="kw">for</span> <span class="ident">bound</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">param</span>.<span class="ident">bounds</span> {
-                        <span class="self">self</span>.<span class="ident">visit_type_param_bound_mut</span>(<span class="ident">bound</span>);
+    <span class="kw">fn </span>visit_generics_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, generics: <span class="kw-2">&amp;mut </span>Generics) {
+        <span class="kw">for </span>param <span class="kw">in </span><span class="kw-2">&amp;mut </span>generics.params {
+            <span class="kw">match </span>param {
+                GenericParam::Type(param) =&gt; {
+                    <span class="kw">for </span>bound <span class="kw">in </span><span class="kw-2">&amp;mut </span>param.bounds {
+                        <span class="self">self</span>.visit_type_param_bound_mut(bound);
                     }
                 }
-                <span class="ident">GenericParam::Lifetime</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">GenericParam::Const</span>(<span class="kw">_</span>) =&gt; {}
+                GenericParam::Lifetime(<span class="kw">_</span>) | GenericParam::Const(<span class="kw">_</span>) =&gt; {}
             }
         }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">where_clause</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">generics</span>.<span class="ident">where_clause</span> {
-            <span class="kw">for</span> <span class="ident">predicate</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">where_clause</span>.<span class="ident">predicates</span> {
-                <span class="kw">match</span> <span class="ident">predicate</span> {
-                    <span class="ident">WherePredicate::Type</span>(<span class="ident">predicate</span>) =&gt; {
-                        <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">predicate</span>.<span class="ident">bounded_ty</span>);
-                        <span class="kw">for</span> <span class="ident">bound</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">predicate</span>.<span class="ident">bounds</span> {
-                            <span class="self">self</span>.<span class="ident">visit_type_param_bound_mut</span>(<span class="ident">bound</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(where_clause) = <span class="kw-2">&amp;mut </span>generics.where_clause {
+            <span class="kw">for </span>predicate <span class="kw">in </span><span class="kw-2">&amp;mut </span>where_clause.predicates {
+                <span class="kw">match </span>predicate {
+                    WherePredicate::Type(predicate) =&gt; {
+                        <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>predicate.bounded_ty);
+                        <span class="kw">for </span>bound <span class="kw">in </span><span class="kw-2">&amp;mut </span>predicate.bounds {
+                            <span class="self">self</span>.visit_type_param_bound_mut(bound);
                         }
                     }
-                    <span class="ident">WherePredicate::Lifetime</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">WherePredicate::Eq</span>(<span class="kw">_</span>) =&gt; {}
+                    WherePredicate::Lifetime(<span class="kw">_</span>) | WherePredicate::Eq(<span class="kw">_</span>) =&gt; {}
                 }
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_data_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">data</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Data</span>) {
-        <span class="kw">match</span> <span class="ident">data</span> {
-            <span class="ident">Data::Struct</span>(<span class="ident">data</span>) =&gt; {
-                <span class="kw">for</span> <span class="ident">field</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">data</span>.<span class="ident">fields</span> {
-                    <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">field</span>.<span class="ident">ty</span>);
+    <span class="kw">fn </span>visit_data_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;mut </span>Data) {
+        <span class="kw">match </span>data {
+            Data::Struct(data) =&gt; {
+                <span class="kw">for </span>field <span class="kw">in </span><span class="kw-2">&amp;mut </span>data.fields {
+                    <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>field.ty);
                 }
             }
-            <span class="ident">Data::Enum</span>(<span class="ident">data</span>) =&gt; {
-                <span class="kw">for</span> <span class="ident">variant</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">data</span>.<span class="ident">variants</span> {
-                    <span class="kw">for</span> <span class="ident">field</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">variant</span>.<span class="ident">fields</span> {
-                        <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">field</span>.<span class="ident">ty</span>);
+            Data::Enum(data) =&gt; {
+                <span class="kw">for </span>variant <span class="kw">in </span><span class="kw-2">&amp;mut </span>data.variants {
+                    <span class="kw">for </span>field <span class="kw">in </span><span class="kw-2">&amp;mut </span>variant.fields {
+                        <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>field.ty);
                     }
                 }
             }
-            <span class="ident">Data::Union</span>(<span class="kw">_</span>) =&gt; {}
+            Data::Union(<span class="kw">_</span>) =&gt; {}
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">expr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Expr</span>) {
-        <span class="kw">match</span> <span class="ident">expr</span> {
-            <span class="ident">Expr::Binary</span>(<span class="ident">expr</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">left</span>);
-                <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">right</span>);
+    <span class="kw">fn </span>visit_expr_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: <span class="kw-2">&amp;mut </span>Expr) {
+        <span class="kw">match </span>expr {
+            Expr::Binary(expr) =&gt; {
+                <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>expr.left);
+                <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>expr.right);
             }
-            <span class="ident">Expr::Call</span>(<span class="ident">expr</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">func</span>);
-                <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">args</span> {
-                    <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="ident">arg</span>);
+            Expr::Call(expr) =&gt; {
+                <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>expr.func);
+                <span class="kw">for </span>arg <span class="kw">in </span><span class="kw-2">&amp;mut </span>expr.args {
+                    <span class="self">self</span>.visit_expr_mut(arg);
                 }
             }
-            <span class="ident">Expr::Cast</span>(<span class="ident">expr</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">expr</span>);
-                <span class="self">self</span>.<span class="ident">visit_type_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">ty</span>);
+            Expr::Cast(expr) =&gt; {
+                <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>expr.expr);
+                <span class="self">self</span>.visit_type_mut(<span class="kw-2">&amp;mut </span>expr.ty);
             }
-            <span class="ident">Expr::Field</span>(<span class="ident">expr</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">base</span>),
-            <span class="ident">Expr::Index</span>(<span class="ident">expr</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">expr</span>);
-                <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">index</span>);
+            Expr::Field(expr) =&gt; <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>expr.base),
+            Expr::Index(expr) =&gt; {
+                <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>expr.expr);
+                <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>expr.index);
             }
-            <span class="ident">Expr::Paren</span>(<span class="ident">expr</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">expr</span>),
-            <span class="ident">Expr::Path</span>(<span class="ident">expr</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_expr_path_mut</span>(<span class="ident">expr</span>),
-            <span class="ident">Expr::Unary</span>(<span class="ident">expr</span>) =&gt; <span class="self">self</span>.<span class="ident">visit_expr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">expr</span>.<span class="ident">expr</span>),
-            <span class="kw">_</span> =&gt; {}
+            Expr::Paren(expr) =&gt; <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>expr.expr),
+            Expr::Path(expr) =&gt; <span class="self">self</span>.visit_expr_path_mut(expr),
+            Expr::Unary(expr) =&gt; <span class="self">self</span>.visit_expr_mut(<span class="kw-2">&amp;mut </span>expr.expr),
+            <span class="kw">_ </span>=&gt; {}
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_macro_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_mac</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Macro</span>) {}
+    <span class="kw">fn </span>visit_macro_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _mac: <span class="kw-2">&amp;mut </span>Macro) {}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde_derive" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde_derive" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

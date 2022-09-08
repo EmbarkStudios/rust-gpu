@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/rabinkarp.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rabinkarp.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memchr-2.4.1/src/memmem/rabinkarp.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rabinkarp.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../memchr/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../memchr/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -268,208 +262,207 @@ http://www-igm.univ-mlv.fr/~lecroq/string/node5.html
 
 Finally, aho-corasick uses Rabin-Karp for multiple pattern match in some cases:
 https://github.com/BurntSushi/aho-corasick/blob/3852632f10587db0ff72ef29e88d58bf305a0946/src/packed/rabinkarp.rs
-*/</span>
+*/
 
-<span class="doccomment">/// Whether RK is believed to be very fast for the given needle/haystack.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_fast</span>(<span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">_needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">bool</span> {
-    <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">16</span>
+</span><span class="doccomment">/// Whether RK is believed to be very fast for the given needle/haystack.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_fast(haystack: <span class="kw-2">&amp;</span>[u8], _needle: <span class="kw-2">&amp;</span>[u8]) -&gt; bool {
+    haystack.len() &lt; <span class="number">16
+</span>}
+
+<span class="doccomment">/// Search for the first occurrence of needle in haystack using Rabin-Karp.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>find(haystack: <span class="kw-2">&amp;</span>[u8], needle: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    find_with(<span class="kw-2">&amp;</span>NeedleHash::forward(needle), haystack, needle)
 }
 
-<span class="doccomment">/// Search for the first occurrence of needle in haystack using Rabin-Karp.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">find</span>(<span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="ident">find_with</span>(<span class="kw-2">&amp;</span><span class="ident">NeedleHash::forward</span>(<span class="ident">needle</span>), <span class="ident">haystack</span>, <span class="ident">needle</span>)
-}
-
-<span class="doccomment">/// Search for the first occurrence of needle in haystack using Rabin-Karp with</span>
-<span class="doccomment">/// a pre-computed needle hash.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">find_with</span>(
-    <span class="ident">nhash</span>: <span class="kw-2">&amp;</span><span class="ident">NeedleHash</span>,
-    <span class="kw-2">mut</span> <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">needle</span>.<span class="ident">len</span>() {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="doccomment">/// Search for the first occurrence of needle in haystack using Rabin-Karp with
+/// a pre-computed needle hash.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>find_with(
+    nhash: <span class="kw-2">&amp;</span>NeedleHash,
+    <span class="kw-2">mut </span>haystack: <span class="kw-2">&amp;</span>[u8],
+    needle: <span class="kw-2">&amp;</span>[u8],
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">if </span>haystack.len() &lt; needle.len() {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">Hash::from_bytes_fwd</span>(<span class="kw-2">&amp;</span><span class="ident">haystack</span>[..<span class="ident">needle</span>.<span class="ident">len</span>()]);
-    <span class="comment">// N.B. I&#39;ve experimented with unrolling this loop, but couldn&#39;t realize</span>
-    <span class="comment">// any obvious gains.</span>
-    <span class="kw">loop</span> {
-        <span class="kw">if</span> <span class="ident">nhash</span>.<span class="ident">eq</span>(<span class="ident">hash</span>) <span class="op">&amp;&amp;</span> <span class="ident">is_prefix</span>(<span class="ident">haystack</span>, <span class="ident">needle</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">haystack</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="ident">start</span>);
+    <span class="kw">let </span>start = haystack.as_ptr() <span class="kw">as </span>usize;
+    <span class="kw">let </span><span class="kw-2">mut </span>hash = Hash::from_bytes_fwd(<span class="kw-2">&amp;</span>haystack[..needle.len()]);
+    <span class="comment">// N.B. I&#39;ve experimented with unrolling this loop, but couldn&#39;t realize
+    // any obvious gains.
+    </span><span class="kw">loop </span>{
+        <span class="kw">if </span>nhash.eq(hash) &amp;&amp; is_prefix(haystack, needle) {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(haystack.as_ptr() <span class="kw">as </span>usize - start);
         }
-        <span class="kw">if</span> <span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">if </span>needle.len() &gt;= haystack.len() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="ident">hash</span>.<span class="ident">roll</span>(<span class="kw-2">&amp;</span><span class="ident">nhash</span>, <span class="ident">haystack</span>[<span class="number">0</span>], <span class="ident">haystack</span>[<span class="ident">needle</span>.<span class="ident">len</span>()]);
-        <span class="ident">haystack</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">haystack</span>[<span class="number">1</span>..];
+        hash.roll(<span class="kw-2">&amp;</span>nhash, haystack[<span class="number">0</span>], haystack[needle.len()]);
+        haystack = <span class="kw-2">&amp;</span>haystack[<span class="number">1</span>..];
     }
 }
 
-<span class="doccomment">/// Search for the last occurrence of needle in haystack using Rabin-Karp.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">rfind</span>(<span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="ident">rfind_with</span>(<span class="kw-2">&amp;</span><span class="ident">NeedleHash::reverse</span>(<span class="ident">needle</span>), <span class="ident">haystack</span>, <span class="ident">needle</span>)
+<span class="doccomment">/// Search for the last occurrence of needle in haystack using Rabin-Karp.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>rfind(haystack: <span class="kw-2">&amp;</span>[u8], needle: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    rfind_with(<span class="kw-2">&amp;</span>NeedleHash::reverse(needle), haystack, needle)
 }
 
-<span class="doccomment">/// Search for the last occurrence of needle in haystack using Rabin-Karp with</span>
-<span class="doccomment">/// a pre-computed needle hash.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">rfind_with</span>(
-    <span class="ident">nhash</span>: <span class="kw-2">&amp;</span><span class="ident">NeedleHash</span>,
-    <span class="kw-2">mut</span> <span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">needle</span>.<span class="ident">len</span>() {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="doccomment">/// Search for the last occurrence of needle in haystack using Rabin-Karp with
+/// a pre-computed needle hash.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>rfind_with(
+    nhash: <span class="kw-2">&amp;</span>NeedleHash,
+    <span class="kw-2">mut </span>haystack: <span class="kw-2">&amp;</span>[u8],
+    needle: <span class="kw-2">&amp;</span>[u8],
+) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">if </span>haystack.len() &lt; needle.len() {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span>
-        <span class="ident">Hash::from_bytes_rev</span>(<span class="kw-2">&amp;</span><span class="ident">haystack</span>[<span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">needle</span>.<span class="ident">len</span>()..]);
-    <span class="kw">loop</span> {
-        <span class="kw">if</span> <span class="ident">nhash</span>.<span class="ident">eq</span>(<span class="ident">hash</span>) <span class="op">&amp;&amp;</span> <span class="ident">is_suffix</span>(<span class="ident">haystack</span>, <span class="ident">needle</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">needle</span>.<span class="ident">len</span>());
+    <span class="kw">let </span><span class="kw-2">mut </span>hash =
+        Hash::from_bytes_rev(<span class="kw-2">&amp;</span>haystack[haystack.len() - needle.len()..]);
+    <span class="kw">loop </span>{
+        <span class="kw">if </span>nhash.eq(hash) &amp;&amp; is_suffix(haystack, needle) {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(haystack.len() - needle.len());
         }
-        <span class="kw">if</span> <span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">haystack</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">if </span>needle.len() &gt;= haystack.len() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="ident">hash</span>.<span class="ident">roll</span>(
-            <span class="kw-2">&amp;</span><span class="ident">nhash</span>,
-            <span class="ident">haystack</span>[<span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>],
-            <span class="ident">haystack</span>[<span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>],
+        hash.roll(
+            <span class="kw-2">&amp;</span>nhash,
+            haystack[haystack.len() - <span class="number">1</span>],
+            haystack[haystack.len() - needle.len() - <span class="number">1</span>],
         );
-        <span class="ident">haystack</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">haystack</span>[..<span class="ident">haystack</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>];
+        haystack = <span class="kw-2">&amp;</span>haystack[..haystack.len() - <span class="number">1</span>];
     }
 }
 
-<span class="doccomment">/// A hash derived from a needle.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">NeedleHash</span> {
-    <span class="doccomment">/// The actual hash.</span>
-    <span class="ident">hash</span>: <span class="ident">Hash</span>,
-    <span class="doccomment">/// The factor needed to multiply a byte by in order to subtract it from</span>
-    <span class="doccomment">/// the hash. It is defined to be 2^(n-1) (using wrapping exponentiation),</span>
-    <span class="doccomment">/// where n is the length of the needle. This is how we &quot;remove&quot; a byte</span>
-    <span class="doccomment">/// from the hash once the hash window rolls past it.</span>
-    <span class="ident">hash_2pow</span>: <span class="ident">u32</span>,
+<span class="doccomment">/// A hash derived from a needle.
+</span><span class="attribute">#[derive(Clone, Copy, Debug, Default)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>NeedleHash {
+    <span class="doccomment">/// The actual hash.
+    </span>hash: Hash,
+    <span class="doccomment">/// The factor needed to multiply a byte by in order to subtract it from
+    /// the hash. It is defined to be 2^(n-1) (using wrapping exponentiation),
+    /// where n is the length of the needle. This is how we &quot;remove&quot; a byte
+    /// from the hash once the hash window rolls past it.
+    </span>hash_2pow: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">NeedleHash</span> {
-    <span class="doccomment">/// Create a new Rabin-Karp hash for the given needle for use in forward</span>
-    <span class="doccomment">/// searching.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">forward</span>(<span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">NeedleHash</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nh</span> <span class="op">=</span> <span class="ident">NeedleHash</span> { <span class="ident">hash</span>: <span class="ident">Hash::new</span>(), <span class="ident">hash_2pow</span>: <span class="number">1</span> };
-        <span class="kw">if</span> <span class="ident">needle</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="ident">nh</span>;
+<span class="kw">impl </span>NeedleHash {
+    <span class="doccomment">/// Create a new Rabin-Karp hash for the given needle for use in forward
+    /// searching.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>forward(needle: <span class="kw-2">&amp;</span>[u8]) -&gt; NeedleHash {
+        <span class="kw">let </span><span class="kw-2">mut </span>nh = NeedleHash { hash: Hash::new(), hash_2pow: <span class="number">1 </span>};
+        <span class="kw">if </span>needle.is_empty() {
+            <span class="kw">return </span>nh;
         }
-        <span class="ident">nh</span>.<span class="ident">hash</span>.<span class="ident">add</span>(<span class="ident">needle</span>[<span class="number">0</span>]);
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">b</span> <span class="kw">in</span> <span class="ident">needle</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
-            <span class="ident">nh</span>.<span class="ident">hash</span>.<span class="ident">add</span>(<span class="ident">b</span>);
-            <span class="ident">nh</span>.<span class="ident">hash_2pow</span> <span class="op">=</span> <span class="ident">nh</span>.<span class="ident">hash_2pow</span>.<span class="ident">wrapping_shl</span>(<span class="number">1</span>);
+        nh.hash.add(needle[<span class="number">0</span>]);
+        <span class="kw">for </span><span class="kw-2">&amp;</span>b <span class="kw">in </span>needle.iter().skip(<span class="number">1</span>) {
+            nh.hash.add(b);
+            nh.hash_2pow = nh.hash_2pow.wrapping_shl(<span class="number">1</span>);
         }
-        <span class="ident">nh</span>
+        nh
     }
 
-    <span class="doccomment">/// Create a new Rabin-Karp hash for the given needle for use in reverse</span>
-    <span class="doccomment">/// searching.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">reverse</span>(<span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">NeedleHash</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nh</span> <span class="op">=</span> <span class="ident">NeedleHash</span> { <span class="ident">hash</span>: <span class="ident">Hash::new</span>(), <span class="ident">hash_2pow</span>: <span class="number">1</span> };
-        <span class="kw">if</span> <span class="ident">needle</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="ident">nh</span>;
+    <span class="doccomment">/// Create a new Rabin-Karp hash for the given needle for use in reverse
+    /// searching.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>reverse(needle: <span class="kw-2">&amp;</span>[u8]) -&gt; NeedleHash {
+        <span class="kw">let </span><span class="kw-2">mut </span>nh = NeedleHash { hash: Hash::new(), hash_2pow: <span class="number">1 </span>};
+        <span class="kw">if </span>needle.is_empty() {
+            <span class="kw">return </span>nh;
         }
-        <span class="ident">nh</span>.<span class="ident">hash</span>.<span class="ident">add</span>(<span class="ident">needle</span>[<span class="ident">needle</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>]);
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">b</span> <span class="kw">in</span> <span class="ident">needle</span>.<span class="ident">iter</span>().<span class="ident">rev</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
-            <span class="ident">nh</span>.<span class="ident">hash</span>.<span class="ident">add</span>(<span class="ident">b</span>);
-            <span class="ident">nh</span>.<span class="ident">hash_2pow</span> <span class="op">=</span> <span class="ident">nh</span>.<span class="ident">hash_2pow</span>.<span class="ident">wrapping_shl</span>(<span class="number">1</span>);
+        nh.hash.add(needle[needle.len() - <span class="number">1</span>]);
+        <span class="kw">for </span><span class="kw-2">&amp;</span>b <span class="kw">in </span>needle.iter().rev().skip(<span class="number">1</span>) {
+            nh.hash.add(b);
+            nh.hash_2pow = nh.hash_2pow.wrapping_shl(<span class="number">1</span>);
         }
-        <span class="ident">nh</span>
+        nh
     }
 
-    <span class="doccomment">/// Return true if the hashes are equivalent.</span>
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">Hash</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">hash</span> <span class="op">==</span> <span class="ident">hash</span>
+    <span class="doccomment">/// Return true if the hashes are equivalent.
+    </span><span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; bool {
+        <span class="self">self</span>.hash == hash
     }
 }
 
-<span class="doccomment">/// A Rabin-Karp hash. This might represent the hash of a needle, or the hash</span>
-<span class="doccomment">/// of a rolling window in the haystack.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Hash</span>(<span class="ident">u32</span>);
+<span class="doccomment">/// A Rabin-Karp hash. This might represent the hash of a needle, or the hash
+/// of a rolling window in the haystack.
+</span><span class="attribute">#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Hash(u32);
 
-<span class="kw">impl</span> <span class="ident">Hash</span> {
-    <span class="doccomment">/// Create a new hash that represents the empty string.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Hash</span> {
-        <span class="ident">Hash</span>(<span class="number">0</span>)
+<span class="kw">impl </span>Hash {
+    <span class="doccomment">/// Create a new hash that represents the empty string.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; Hash {
+        Hash(<span class="number">0</span>)
     }
 
-    <span class="doccomment">/// Create a new hash from the bytes given for use in forward searches.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_bytes_fwd</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">Hash</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">Hash::new</span>();
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">b</span> <span class="kw">in</span> <span class="ident">bytes</span> {
-            <span class="ident">hash</span>.<span class="ident">add</span>(<span class="ident">b</span>);
+    <span class="doccomment">/// Create a new hash from the bytes given for use in forward searches.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_bytes_fwd(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; Hash {
+        <span class="kw">let </span><span class="kw-2">mut </span>hash = Hash::new();
+        <span class="kw">for </span><span class="kw-2">&amp;</span>b <span class="kw">in </span>bytes {
+            hash.add(b);
         }
-        <span class="ident">hash</span>
+        hash
     }
 
-    <span class="doccomment">/// Create a new hash from the bytes given for use in reverse searches.</span>
-    <span class="kw">fn</span> <span class="ident">from_bytes_rev</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">Hash</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">Hash::new</span>();
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">b</span> <span class="kw">in</span> <span class="ident">bytes</span>.<span class="ident">iter</span>().<span class="ident">rev</span>() {
-            <span class="ident">hash</span>.<span class="ident">add</span>(<span class="ident">b</span>);
+    <span class="doccomment">/// Create a new hash from the bytes given for use in reverse searches.
+    </span><span class="kw">fn </span>from_bytes_rev(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; Hash {
+        <span class="kw">let </span><span class="kw-2">mut </span>hash = Hash::new();
+        <span class="kw">for </span><span class="kw-2">&amp;</span>b <span class="kw">in </span>bytes.iter().rev() {
+            hash.add(b);
         }
-        <span class="ident">hash</span>
+        hash
     }
 
-    <span class="doccomment">/// Add &#39;new&#39; and remove &#39;old&#39; from this hash. The given needle hash should</span>
-    <span class="doccomment">/// correspond to the hash computed for the needle being searched for.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is meant to be used when the rolling window of the haystack is</span>
-    <span class="doccomment">/// advanced.</span>
-    <span class="kw">fn</span> <span class="ident">roll</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">nhash</span>: <span class="kw-2">&amp;</span><span class="ident">NeedleHash</span>, <span class="ident">old</span>: <span class="ident">u8</span>, <span class="ident">new</span>: <span class="ident">u8</span>) {
-        <span class="self">self</span>.<span class="ident">del</span>(<span class="ident">nhash</span>, <span class="ident">old</span>);
-        <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">new</span>);
+    <span class="doccomment">/// Add &#39;new&#39; and remove &#39;old&#39; from this hash. The given needle hash should
+    /// correspond to the hash computed for the needle being searched for.
+    ///
+    /// This is meant to be used when the rolling window of the haystack is
+    /// advanced.
+    </span><span class="kw">fn </span>roll(<span class="kw-2">&amp;mut </span><span class="self">self</span>, nhash: <span class="kw-2">&amp;</span>NeedleHash, old: u8, new: u8) {
+        <span class="self">self</span>.del(nhash, old);
+        <span class="self">self</span>.add(new);
     }
 
-    <span class="doccomment">/// Add a byte to this hash.</span>
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">byte</span>: <span class="ident">u8</span>) {
-        <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">wrapping_shl</span>(<span class="number">1</span>).<span class="ident">wrapping_add</span>(<span class="ident">byte</span> <span class="kw">as</span> <span class="ident">u32</span>);
+    <span class="doccomment">/// Add a byte to this hash.
+    </span><span class="kw">fn </span>add(<span class="kw-2">&amp;mut </span><span class="self">self</span>, byte: u8) {
+        <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.wrapping_shl(<span class="number">1</span>).wrapping_add(byte <span class="kw">as </span>u32);
     }
 
-    <span class="doccomment">/// Remove a byte from this hash. The given needle hash should correspond</span>
-    <span class="doccomment">/// to the hash computed for the needle being searched for.</span>
-    <span class="kw">fn</span> <span class="ident">del</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">nhash</span>: <span class="kw-2">&amp;</span><span class="ident">NeedleHash</span>, <span class="ident">byte</span>: <span class="ident">u8</span>) {
-        <span class="kw">let</span> <span class="ident">factor</span> <span class="op">=</span> <span class="ident">nhash</span>.<span class="ident">hash_2pow</span>;
-        <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">wrapping_sub</span>((<span class="ident">byte</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">wrapping_mul</span>(<span class="ident">factor</span>));
+    <span class="doccomment">/// Remove a byte from this hash. The given needle hash should correspond
+    /// to the hash computed for the needle being searched for.
+    </span><span class="kw">fn </span>del(<span class="kw-2">&amp;mut </span><span class="self">self</span>, nhash: <span class="kw-2">&amp;</span>NeedleHash, byte: u8) {
+        <span class="kw">let </span>factor = nhash.hash_2pow;
+        <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.wrapping_sub((byte <span class="kw">as </span>u32).wrapping_mul(factor));
     }
 }
 
-<span class="doccomment">/// Returns true if the given needle is a prefix of the given haystack.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// We forcefully don&#39;t inline the is_prefix call and hint at the compiler that</span>
-<span class="doccomment">/// it is unlikely to be called. This causes the inner rabinkarp loop above</span>
-<span class="doccomment">/// to be a bit tighter and leads to some performance improvement. See the</span>
-<span class="doccomment">/// memmem/krate/prebuilt/sliceslice-words/words benchmark.</span>
-<span class="attribute">#[<span class="ident">cold</span>]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">never</span>)]</span>
-<span class="kw">fn</span> <span class="ident">is_prefix</span>(<span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">bool</span> {
-    <span class="ident"><span class="kw">crate</span>::memmem::util::is_prefix</span>(<span class="ident">haystack</span>, <span class="ident">needle</span>)
+<span class="doccomment">/// Returns true if the given needle is a prefix of the given haystack.
+///
+/// We forcefully don&#39;t inline the is_prefix call and hint at the compiler that
+/// it is unlikely to be called. This causes the inner rabinkarp loop above
+/// to be a bit tighter and leads to some performance improvement. See the
+/// memmem/krate/prebuilt/sliceslice-words/words benchmark.
+</span><span class="attribute">#[cold]
+#[inline(never)]
+</span><span class="kw">fn </span>is_prefix(haystack: <span class="kw-2">&amp;</span>[u8], needle: <span class="kw-2">&amp;</span>[u8]) -&gt; bool {
+    <span class="kw">crate</span>::memmem::util::is_prefix(haystack, needle)
 }
 
-<span class="doccomment">/// Returns true if the given needle is a suffix of the given haystack.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See is_prefix for why this is forcefully not inlined.</span>
-<span class="attribute">#[<span class="ident">cold</span>]</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">never</span>)]</span>
-<span class="kw">fn</span> <span class="ident">is_suffix</span>(<span class="ident">haystack</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">needle</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">bool</span> {
-    <span class="ident"><span class="kw">crate</span>::memmem::util::is_suffix</span>(<span class="ident">haystack</span>, <span class="ident">needle</span>)
+<span class="doccomment">/// Returns true if the given needle is a suffix of the given haystack.
+///
+/// See is_prefix for why this is forcefully not inlined.
+</span><span class="attribute">#[cold]
+#[inline(never)]
+</span><span class="kw">fn </span>is_suffix(haystack: <span class="kw-2">&amp;</span>[u8], needle: <span class="kw-2">&amp;</span>[u8]) -&gt; bool {
+    <span class="kw">crate</span>::memmem::util::is_suffix(haystack, needle)
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">simpletests</span> {
-    <span class="macro">define_memmem_simple_tests!</span>(<span class="ident"><span class="kw">super</span>::find</span>, <span class="ident"><span class="kw">super</span>::rfind</span>);
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>simpletests {
+    <span class="macro">define_memmem_simple_tests!</span>(<span class="kw">super</span>::find, <span class="kw">super</span>::rfind);
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
-<span class="kw">mod</span> <span class="ident">proptests</span> {
-    <span class="macro">define_memmem_quickcheck_tests!</span>(<span class="ident"><span class="kw">super</span>::find</span>, <span class="ident"><span class="kw">super</span>::rfind</span>);
+<span class="attribute">#[cfg(all(test, feature = <span class="string">&quot;std&quot;</span>, not(miri)))]
+</span><span class="kw">mod </span>proptests {
+    <span class="macro">define_memmem_quickcheck_tests!</span>(<span class="kw">super</span>::find, <span class="kw">super</span>::rfind);
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="memchr" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

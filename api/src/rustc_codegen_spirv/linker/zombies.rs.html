@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/zombies.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>zombies.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/zombies.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>zombies.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../rustc_codegen_spirv/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -215,217 +209,216 @@
 <span id="209">209</span>
 <span id="210">210</span>
 <span id="211">211</span>
-</pre><pre class="rust"><code><span class="doccomment">//! See documentation on `CodegenCx::zombie` for a description of the zombie system.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">get_name</span>, <span class="ident">get_names</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::decorations</span>::{<span class="ident">CustomDecoration</span>, <span class="ident">ZombieDecoration</span>};
-<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Instruction</span>, <span class="ident">Module</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv::Word</span>;
-<span class="kw">use</span> <span class="ident">rustc_data_structures::fx::FxHashMap</span>;
-<span class="kw">use</span> <span class="ident">rustc_session::Session</span>;
-<span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
-<span class="kw">use</span> <span class="ident">std::env</span>;
-<span class="kw">use</span> <span class="ident">std::iter::once</span>;
+</span><span class="kw">use super</span>::{get_name, get_names};
+<span class="kw">use </span><span class="kw">crate</span>::decorations::{CustomDecoration, ZombieDecoration};
+<span class="kw">use </span>rspirv::dr::{Instruction, Module};
+<span class="kw">use </span>rspirv::spirv::Word;
+<span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
+<span class="kw">use </span>rustc_session::Session;
+<span class="kw">use </span>rustc_span::{Span, DUMMY_SP};
+<span class="kw">use </span>std::env;
+<span class="kw">use </span>std::iter::once;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">reason</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
-    <span class="ident">span</span>: <span class="ident">Span</span>,
-    <span class="ident">stack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">struct </span>ZombieInfo&lt;<span class="lifetime">&#39;a</span>&gt; {
+    reason: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    span: Span,
+    stack: Vec&lt;Word&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">reason</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>, <span class="ident">span</span>: <span class="ident">Span</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">reason</span>,
-            <span class="ident">span</span>,
-            <span class="ident">stack</span>: <span class="ident">Vec::new</span>(),
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ZombieInfo&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>new(reason: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, span: Span) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            reason,
+            span,
+            stack: Vec::new(),
         }
     }
-    <span class="kw">fn</span> <span class="ident">push_stack</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">word</span>: <span class="ident">Word</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">reason</span>: <span class="self">self</span>.<span class="ident">reason</span>,
-            <span class="ident">span</span>: <span class="self">self</span>.<span class="ident">span</span>,
-            <span class="ident">stack</span>: <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">chain</span>(<span class="ident">once</span>(<span class="ident">word</span>)).<span class="ident">collect</span>(),
+    <span class="kw">fn </span>push_stack(<span class="kw-2">&amp;</span><span class="self">self</span>, word: Word) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            reason: <span class="self">self</span>.reason,
+            span: <span class="self">self</span>.span,
+            stack: <span class="self">self</span>.stack.iter().cloned().chain(once(word)).collect(),
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">contains_zombie</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-    <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>,
-    <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_type</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_type</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>) <span class="op">=</span> <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">result_type</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>);
+<span class="kw">fn </span>contains_zombie&lt;<span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;a</span>&gt;(
+    inst: <span class="kw-2">&amp;</span>Instruction,
+    zombie: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h </span>FxHashMap&lt;Word, ZombieInfo&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;h </span>ZombieInfo&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(result_type) = inst.result_type {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(reason) = zombie.get(<span class="kw-2">&amp;</span>result_type) {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(reason);
         }
     }
-    <span class="ident">inst</span>.<span class="ident">operands</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">find_map</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">id_ref_any</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">w</span>)))
+    inst.operands
+        .iter()
+        .find_map(|op| op.id_ref_any().and_then(|w| zombie.get(<span class="kw-2">&amp;</span>w)))
 }
 
-<span class="kw">fn</span> <span class="ident">is_zombie</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-    <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>,
-    <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
-        <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">result_id</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">contains_zombie</span>(<span class="ident">inst</span>, <span class="ident">zombie</span>)
+<span class="kw">fn </span>is_zombie&lt;<span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;a</span>&gt;(
+    inst: <span class="kw-2">&amp;</span>Instruction,
+    zombie: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h </span>FxHashMap&lt;Word, ZombieInfo&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;h </span>ZombieInfo&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(result_id) = inst.result_id {
+        zombie.get(<span class="kw-2">&amp;</span>result_id)
+    } <span class="kw">else </span>{
+        contains_zombie(inst, zombie)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">is_or_contains_zombie</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-    <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>,
-    <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">result_zombie</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">result_id</span><span class="op">|</span> <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">result_id</span>));
-    <span class="ident">result_zombie</span>.<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">contains_zombie</span>(<span class="ident">inst</span>, <span class="ident">zombie</span>))
+<span class="kw">fn </span>is_or_contains_zombie&lt;<span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;a</span>&gt;(
+    inst: <span class="kw-2">&amp;</span>Instruction,
+    zombie: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h </span>FxHashMap&lt;Word, ZombieInfo&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;h </span>ZombieInfo&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    <span class="kw">let </span>result_zombie = inst.result_id.and_then(|result_id| zombie.get(<span class="kw-2">&amp;</span>result_id));
+    result_zombie.or_else(|| contains_zombie(inst, zombie))
 }
 
-<span class="kw">fn</span> <span class="ident">spread_zombie</span>(<span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>, <span class="ident">zombie</span>: <span class="kw-2">&amp;mut</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any</span> <span class="op">=</span> <span class="bool-val">false</span>;
-    <span class="comment">// globals are easy</span>
-    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">global_inst_iter</span>() {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>) <span class="op">=</span> <span class="ident">contains_zombie</span>(<span class="ident">inst</span>, <span class="ident">zombie</span>) {
-                <span class="kw">if</span> <span class="ident">zombie</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">result_id</span>) {
+<span class="kw">fn </span>spread_zombie(module: <span class="kw-2">&amp;mut </span>Module, zombie: <span class="kw-2">&amp;mut </span>FxHashMap&lt;Word, ZombieInfo&lt;<span class="lifetime">&#39;_</span>&gt;&gt;) -&gt; bool {
+    <span class="kw">let </span><span class="kw-2">mut </span>any = <span class="bool-val">false</span>;
+    <span class="comment">// globals are easy
+    </span><span class="kw">for </span>inst <span class="kw">in </span>module.global_inst_iter() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(result_id) = inst.result_id {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(reason) = contains_zombie(inst, zombie) {
+                <span class="kw">if </span>zombie.contains_key(<span class="kw-2">&amp;</span>result_id) {
                     <span class="kw">continue</span>;
                 }
-                <span class="kw">let</span> <span class="ident">reason</span> <span class="op">=</span> <span class="ident">reason</span>.<span class="ident">clone</span>();
-                <span class="ident">zombie</span>.<span class="ident">insert</span>(<span class="ident">result_id</span>, <span class="ident">reason</span>);
-                <span class="ident">any</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                <span class="kw">let </span>reason = reason.clone();
+                zombie.insert(result_id, reason);
+                any = <span class="bool-val">true</span>;
             }
         }
     }
-    <span class="comment">// No need to zombie defs within a function: If any def within a function is zombied, then the</span>
-    <span class="comment">// whole function is zombied. But, we don&#39;t have to mark the defs within a function as zombie,</span>
-    <span class="comment">// because the defs can&#39;t escape the function.</span>
-    <span class="kw">for</span> <span class="ident">func</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">functions</span> {
-        <span class="kw">let</span> <span class="ident">func_id</span> <span class="op">=</span> <span class="ident">func</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>();
-        <span class="comment">// Can&#39;t use zombie.entry() here, due to using the map in contains_zombie</span>
-        <span class="kw">if</span> <span class="ident">zombie</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">func_id</span>) {
-            <span class="comment">// Func is already zombie, no need to scan it again.</span>
-            <span class="kw">continue</span>;
+    <span class="comment">// No need to zombie defs within a function: If any def within a function is zombied, then the
+    // whole function is zombied. But, we don&#39;t have to mark the defs within a function as zombie,
+    // because the defs can&#39;t escape the function.
+    </span><span class="kw">for </span>func <span class="kw">in </span><span class="kw-2">&amp;</span>module.functions {
+        <span class="kw">let </span>func_id = func.def_id().unwrap();
+        <span class="comment">// Can&#39;t use zombie.entry() here, due to using the map in contains_zombie
+        </span><span class="kw">if </span>zombie.contains_key(<span class="kw-2">&amp;</span>func_id) {
+            <span class="comment">// Func is already zombie, no need to scan it again.
+            </span><span class="kw">continue</span>;
         }
-        <span class="kw">let</span> <span class="ident">func_is_zombie</span> <span class="op">=</span> <span class="ident">func</span>
-            .<span class="ident">all_inst_iter</span>()
-            .<span class="ident">find_map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_or_contains_zombie</span>(<span class="ident">inst</span>, <span class="ident">zombie</span>));
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>) <span class="op">=</span> <span class="ident">func_is_zombie</span> {
-            <span class="kw">let</span> <span class="ident">pushed_reason</span> <span class="op">=</span> <span class="ident">reason</span>.<span class="ident">push_stack</span>(<span class="ident">func_id</span>);
-            <span class="ident">zombie</span>.<span class="ident">insert</span>(<span class="ident">func_id</span>, <span class="ident">pushed_reason</span>);
-            <span class="ident">any</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        }
-    }
-    <span class="ident">any</span>
-}
-
-<span class="comment">// If an entry point references a zombie&#39;d value, then the entry point would normally get removed.</span>
-<span class="comment">// That&#39;s an absolutely horrible experience to debug, though, so instead, create a nice error</span>
-<span class="comment">// message containing the stack trace of how the entry point got to the zombie value.</span>
-<span class="kw">fn</span> <span class="ident">report_error_zombies</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>, <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">names</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">for</span> <span class="ident">root</span> <span class="kw">in</span> <span class="ident"><span class="kw">super</span>::dce::collect_roots</span>(<span class="ident">module</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>) <span class="op">=</span> <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>) {
-            <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="ident">names</span>.<span class="ident">get_or_insert_with</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">get_names</span>(<span class="ident">module</span>));
-            <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">reason</span>
-                .<span class="ident">stack</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> <span class="ident">get_name</span>(<span class="ident">names</span>, <span class="ident">s</span>).<span class="ident">into_owned</span>());
-            <span class="kw">let</span> <span class="ident">stack_note</span> <span class="op">=</span> <span class="ident">once</span>(<span class="string">&quot;Stack:&quot;</span>.<span class="ident">to_string</span>())
-                .<span class="ident">chain</span>(<span class="ident">stack</span>)
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                .<span class="ident">join</span>(<span class="string">&quot;\n&quot;</span>);
-            <span class="ident">sess</span>.<span class="ident">struct_span_err</span>(<span class="ident">reason</span>.<span class="ident">span</span>, <span class="ident">reason</span>.<span class="ident">reason</span>)
-                .<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="ident">stack_note</span>)
-                .<span class="ident">emit</span>();
+        <span class="kw">let </span>func_is_zombie = func
+            .all_inst_iter()
+            .find_map(|inst| is_or_contains_zombie(inst, zombie));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(reason) = func_is_zombie {
+            <span class="kw">let </span>pushed_reason = reason.push_stack(func_id);
+            zombie.insert(func_id, pushed_reason);
+            any = <span class="bool-val">true</span>;
         }
     }
+    any
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_zombies</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Module</span>) {
-    <span class="kw">let</span> <span class="ident">zombies_owned</span> <span class="op">=</span> <span class="ident">ZombieDecoration::decode_all</span>(<span class="ident">module</span>)
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="ident">zombie</span>)<span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">ZombieDecoration</span> { <span class="ident">reason</span>, <span class="ident">span</span> } <span class="op">=</span> <span class="ident">zombie</span>.<span class="ident">deserialize</span>();
-            <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="ident">span</span>
-                .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">span</span><span class="op">|</span> <span class="ident">span</span>.<span class="ident">to_rustc</span>(<span class="ident">sess</span>.<span class="ident">source_map</span>()))
-                .<span class="ident">unwrap_or</span>(<span class="ident">DUMMY_SP</span>);
-            (<span class="ident">id</span>, (<span class="ident">reason</span>, <span class="ident">span</span>))
+<span class="comment">// If an entry point references a zombie&#39;d value, then the entry point would normally get removed.
+// That&#39;s an absolutely horrible experience to debug, though, so instead, create a nice error
+// message containing the stack trace of how the entry point got to the zombie value.
+</span><span class="kw">fn </span>report_error_zombies(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;</span>Module, zombie: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, ZombieInfo&lt;<span class="lifetime">&#39;_</span>&gt;&gt;) {
+    <span class="kw">let </span><span class="kw-2">mut </span>names = <span class="prelude-val">None</span>;
+    <span class="kw">for </span>root <span class="kw">in </span><span class="kw">super</span>::dce::collect_roots(module) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(reason) = zombie.get(<span class="kw-2">&amp;</span>root) {
+            <span class="kw">let </span>names = names.get_or_insert_with(|| get_names(module));
+            <span class="kw">let </span>stack = reason
+                .stack
+                .iter()
+                .map(|<span class="kw-2">&amp;</span>s| get_name(names, s).into_owned());
+            <span class="kw">let </span>stack_note = once(<span class="string">&quot;Stack:&quot;</span>.to_string())
+                .chain(stack)
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+                .join(<span class="string">&quot;\n&quot;</span>);
+            sess.struct_span_err(reason.span, reason.reason)
+                .note(<span class="kw-2">&amp;</span>stack_note)
+                .emit();
+        }
+    }
+}
+
+<span class="kw">pub fn </span>remove_zombies(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;mut </span>Module) {
+    <span class="kw">let </span>zombies_owned = ZombieDecoration::decode_all(module)
+        .map(|(id, zombie)| {
+            <span class="kw">let </span>ZombieDecoration { reason, span } = zombie.deserialize();
+            <span class="kw">let </span>span = span
+                .and_then(|span| span.to_rustc(sess.source_map()))
+                .unwrap_or(DUMMY_SP);
+            (id, (reason, span))
         })
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zombies</span> <span class="op">=</span> <span class="ident">zombies_owned</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">id</span>, (<span class="ident">reason</span>, <span class="ident">span</span>))<span class="op">|</span> (<span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">ZombieInfo::new</span>(<span class="ident">reason</span>, <span class="kw-2">*</span><span class="ident">span</span>)))
-        .<span class="ident">collect</span>();
-    <span class="ident">ZombieDecoration::remove_all</span>(<span class="ident">module</span>);
-    <span class="comment">// Note: This is O(n^2).</span>
-    <span class="kw">while</span> <span class="ident">spread_zombie</span>(<span class="ident">module</span>, <span class="kw-2">&amp;mut</span> <span class="ident">zombies</span>) {}
+        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+    <span class="kw">let </span><span class="kw-2">mut </span>zombies = zombies_owned
+        .iter()
+        .map(|(id, (reason, span))| (<span class="kw-2">*</span>id, ZombieInfo::new(reason, <span class="kw-2">*</span>span)))
+        .collect();
+    ZombieDecoration::remove_all(module);
+    <span class="comment">// Note: This is O(n^2).
+    </span><span class="kw">while </span>spread_zombie(module, <span class="kw-2">&amp;mut </span>zombies) {}
 
-    <span class="ident">report_error_zombies</span>(<span class="ident">sess</span>, <span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>);
+    report_error_zombies(sess, module, <span class="kw-2">&amp;</span>zombies);
 
-    <span class="kw">if</span> <span class="ident">env::var</span>(<span class="string">&quot;PRINT_ALL_ZOMBIE&quot;</span>).<span class="ident">is_ok</span>() {
-        <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">zomb</span>, <span class="ident">reason</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">zombies</span> {
-            <span class="kw">let</span> <span class="ident">orig</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">zombies_owned</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span>(<span class="ident">z</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">z</span> <span class="op">==</span> <span class="ident">zomb</span>) {
-                <span class="string">&quot;original&quot;</span>
-            } <span class="kw">else</span> {
-                <span class="string">&quot;infected&quot;</span>
-            };
-            <span class="macro">println!</span>(<span class="string">&quot;zombie&#39;d {} because {} ({})&quot;</span>, <span class="ident">zomb</span>, <span class="ident">reason</span>.<span class="ident">reason</span>, <span class="ident">orig</span>);
+    <span class="kw">if </span>env::var(<span class="string">&quot;PRINT_ALL_ZOMBIE&quot;</span>).is_ok() {
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>zomb, reason) <span class="kw">in </span><span class="kw-2">&amp;</span>zombies {
+            <span class="kw">let </span>orig = <span class="kw">if </span>zombies_owned.iter().any(|<span class="kw-2">&amp;</span>(z, <span class="kw">_</span>)| z == zomb) {
+                <span class="string">&quot;original&quot;
+            </span>} <span class="kw">else </span>{
+                <span class="string">&quot;infected&quot;
+            </span>};
+            <span class="macro">println!</span>(<span class="string">&quot;zombie&#39;d {} because {} ({})&quot;</span>, zomb, reason.reason, orig);
         }
     }
 
-    <span class="kw">if</span> <span class="ident">env::var</span>(<span class="string">&quot;PRINT_ZOMBIE&quot;</span>).<span class="ident">is_ok</span>() {
-        <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="ident">get_names</span>(<span class="ident">module</span>);
-        <span class="kw">for</span> <span class="ident">f</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">functions</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>) <span class="op">=</span> <span class="ident">is_zombie</span>(<span class="ident">f</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="ident">zombies</span>) {
-                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">get_name</span>(<span class="kw-2">&amp;</span><span class="ident">names</span>, <span class="ident">f</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>());
-                <span class="macro">println!</span>(<span class="string">&quot;Function removed {:?} because {:?}&quot;</span>, <span class="ident">name</span>, <span class="ident">reason</span>.<span class="ident">reason</span>);
+    <span class="kw">if </span>env::var(<span class="string">&quot;PRINT_ZOMBIE&quot;</span>).is_ok() {
+        <span class="kw">let </span>names = get_names(module);
+        <span class="kw">for </span>f <span class="kw">in </span><span class="kw-2">&amp;</span>module.functions {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(reason) = is_zombie(f.def.as_ref().unwrap(), <span class="kw-2">&amp;</span>zombies) {
+                <span class="kw">let </span>name = get_name(<span class="kw-2">&amp;</span>names, f.def_id().unwrap());
+                <span class="macro">println!</span>(<span class="string">&quot;Function removed {:?} because {:?}&quot;</span>, name, reason.reason);
             }
         }
     }
 
-    <span class="ident">module</span>
-        .<span class="ident">capabilities</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="ident">module</span>
-        .<span class="ident">extensions</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="ident">module</span>
-        .<span class="ident">ext_inst_imports</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="kw">if</span> <span class="ident">module</span>
-        .<span class="ident">memory_model</span>
-        .<span class="ident">as_ref</span>()
-        .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_some</span>())
+    module
+        .capabilities
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    module
+        .extensions
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    module
+        .ext_inst_imports
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    <span class="kw">if </span>module
+        .memory_model
+        .as_ref()
+        .map_or(<span class="bool-val">false</span>, |inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_some())
     {
-        <span class="ident">module</span>.<span class="ident">memory_model</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        module.memory_model = <span class="prelude-val">None</span>;
     }
-    <span class="ident">module</span>
-        .<span class="ident">entry_points</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="ident">module</span>
-        .<span class="ident">execution_modes</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="ident">module</span>
-        .<span class="ident">debug_string_source</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="ident">module</span>
-        .<span class="ident">debug_names</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="ident">module</span>
-        .<span class="ident">debug_module_processed</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="ident">module</span>
-        .<span class="ident">annotations</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="ident">module</span>
-        .<span class="ident">types_global_values</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
-    <span class="ident">module</span>
-        .<span class="ident">functions</span>
-        .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">is_zombie</span>(<span class="ident">f</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="ident">zombies</span>).<span class="ident">is_none</span>());
+    module
+        .entry_points
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    module
+        .execution_modes
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    module
+        .debug_string_source
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    module
+        .debug_names
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    module
+        .debug_module_processed
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    module
+        .annotations
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    module
+        .types_global_values
+        .retain(|inst| is_zombie(inst, <span class="kw-2">&amp;</span>zombies).is_none());
+    module
+        .functions
+        .retain(|f| is_zombie(f.def.as_ref().unwrap(), <span class="kw-2">&amp;</span>zombies).is_none());
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

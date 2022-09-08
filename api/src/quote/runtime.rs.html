@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.14/src/runtime.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>runtime.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../quote/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../quote/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../quote/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.14/src/runtime.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>runtime.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../quote/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../quote/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../quote/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -474,476 +468,475 @@
 <span id="468">468</span>
 <span id="469">469</span>
 <span id="470">470</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">IdentFragment</span>, <span class="ident">ToTokens</span>, <span class="ident">TokenStreamExt</span>};
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std::iter</span>;
-<span class="kw">use</span> <span class="ident">std::ops::BitOr</span>;
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{IdentFragment, ToTokens, TokenStreamExt};
+<span class="kw">use </span>std::fmt;
+<span class="kw">use </span>std::iter;
+<span class="kw">use </span>std::ops::BitOr;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>proc_macro2::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HasIterator</span>; <span class="comment">// True</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ThereIsNoIteratorInRepetition</span>; <span class="comment">// False</span>
+<span class="kw">pub struct </span>HasIterator; <span class="comment">// True
+</span><span class="kw">pub struct </span>ThereIsNoIteratorInRepetition; <span class="comment">// False
 
-<span class="kw">impl</span> <span class="ident">BitOr</span><span class="op">&lt;</span><span class="ident">ThereIsNoIteratorInRepetition</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ThereIsNoIteratorInRepetition</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">ThereIsNoIteratorInRepetition</span>;
-    <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="ident">ThereIsNoIteratorInRepetition</span>) -&gt; <span class="ident">ThereIsNoIteratorInRepetition</span> {
-        <span class="ident">ThereIsNoIteratorInRepetition</span>
+</span><span class="kw">impl </span>BitOr&lt;ThereIsNoIteratorInRepetition&gt; <span class="kw">for </span>ThereIsNoIteratorInRepetition {
+    <span class="kw">type </span>Output = ThereIsNoIteratorInRepetition;
+    <span class="kw">fn </span>bitor(<span class="self">self</span>, _rhs: ThereIsNoIteratorInRepetition) -&gt; ThereIsNoIteratorInRepetition {
+        ThereIsNoIteratorInRepetition
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BitOr</span><span class="op">&lt;</span><span class="ident">ThereIsNoIteratorInRepetition</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">HasIterator</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">HasIterator</span>;
-    <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="ident">ThereIsNoIteratorInRepetition</span>) -&gt; <span class="ident">HasIterator</span> {
-        <span class="ident">HasIterator</span>
+<span class="kw">impl </span>BitOr&lt;ThereIsNoIteratorInRepetition&gt; <span class="kw">for </span>HasIterator {
+    <span class="kw">type </span>Output = HasIterator;
+    <span class="kw">fn </span>bitor(<span class="self">self</span>, _rhs: ThereIsNoIteratorInRepetition) -&gt; HasIterator {
+        HasIterator
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BitOr</span><span class="op">&lt;</span><span class="ident">HasIterator</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ThereIsNoIteratorInRepetition</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">HasIterator</span>;
-    <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="ident">HasIterator</span>) -&gt; <span class="ident">HasIterator</span> {
-        <span class="ident">HasIterator</span>
+<span class="kw">impl </span>BitOr&lt;HasIterator&gt; <span class="kw">for </span>ThereIsNoIteratorInRepetition {
+    <span class="kw">type </span>Output = HasIterator;
+    <span class="kw">fn </span>bitor(<span class="self">self</span>, _rhs: HasIterator) -&gt; HasIterator {
+        HasIterator
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BitOr</span><span class="op">&lt;</span><span class="ident">HasIterator</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">HasIterator</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">HasIterator</span>;
-    <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="ident">HasIterator</span>) -&gt; <span class="ident">HasIterator</span> {
-        <span class="ident">HasIterator</span>
+<span class="kw">impl </span>BitOr&lt;HasIterator&gt; <span class="kw">for </span>HasIterator {
+    <span class="kw">type </span>Output = HasIterator;
+    <span class="kw">fn </span>bitor(<span class="self">self</span>, _rhs: HasIterator) -&gt; HasIterator {
+        HasIterator
     }
 }
 
-<span class="doccomment">/// Extension traits used by the implementation of `quote!`. These are defined</span>
-<span class="doccomment">/// in separate traits, rather than as a single trait due to ambiguity issues.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// These traits expose a `quote_into_iter` method which should allow calling</span>
-<span class="doccomment">/// whichever impl happens to be applicable. Calling that method repeatedly on</span>
-<span class="doccomment">/// the returned value should be idempotent.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ext</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::RepInterp</span>;
-    <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">HasIterator</span> <span class="kw">as</span> <span class="ident">HasIter</span>, <span class="ident">ThereIsNoIteratorInRepetition</span> <span class="kw">as</span> <span class="ident">DoesNotHaveIter</span>};
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ToTokens</span>;
-    <span class="kw">use</span> <span class="ident">std::collections::btree_set</span>::{<span class="self">self</span>, <span class="ident">BTreeSet</span>};
-    <span class="kw">use</span> <span class="ident">std::slice</span>;
+<span class="doccomment">/// Extension traits used by the implementation of `quote!`. These are defined
+/// in separate traits, rather than as a single trait due to ambiguity issues.
+///
+/// These traits expose a `quote_into_iter` method which should allow calling
+/// whichever impl happens to be applicable. Calling that method repeatedly on
+/// the returned value should be idempotent.
+</span><span class="kw">pub mod </span>ext {
+    <span class="kw">use </span><span class="kw">super</span>::RepInterp;
+    <span class="kw">use super</span>::{HasIterator <span class="kw">as </span>HasIter, ThereIsNoIteratorInRepetition <span class="kw">as </span>DoesNotHaveIter};
+    <span class="kw">use </span><span class="kw">crate</span>::ToTokens;
+    <span class="kw">use </span>std::collections::btree_set::{<span class="self">self</span>, BTreeSet};
+    <span class="kw">use </span>std::slice;
 
-    <span class="doccomment">/// Extension trait providing the `quote_into_iter` method on iterators.</span>
-    <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RepIteratorExt</span>: <span class="ident">Iterator</span> <span class="op">+</span> <span class="ident">Sized</span> {
-        <span class="kw">fn</span> <span class="ident">quote_into_iter</span>(<span class="self">self</span>) -&gt; (<span class="self">Self</span>, <span class="ident">HasIter</span>) {
-            (<span class="self">self</span>, <span class="ident">HasIter</span>)
+    <span class="doccomment">/// Extension trait providing the `quote_into_iter` method on iterators.
+    </span><span class="kw">pub trait </span>RepIteratorExt: Iterator + Sized {
+        <span class="kw">fn </span>quote_into_iter(<span class="self">self</span>) -&gt; (<span class="self">Self</span>, HasIter) {
+            (<span class="self">self</span>, HasIter)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Iterator</span><span class="op">&gt;</span> <span class="ident">RepIteratorExt</span> <span class="kw">for</span> <span class="ident">T</span> {}
+    <span class="kw">impl</span>&lt;T: Iterator&gt; RepIteratorExt <span class="kw">for </span>T {}
 
-    <span class="doccomment">/// Extension trait providing the `quote_into_iter` method for</span>
-    <span class="doccomment">/// non-iterable types. These types interpolate the same value in each</span>
-    <span class="doccomment">/// iteration of the repetition.</span>
-    <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RepToTokensExt</span> {
-        <span class="doccomment">/// Pretend to be an iterator for the purposes of `quote_into_iter`.</span>
-        <span class="doccomment">/// This allows repeated calls to `quote_into_iter` to continue</span>
-        <span class="doccomment">/// correctly returning DoesNotHaveIter.</span>
-        <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Extension trait providing the `quote_into_iter` method for
+    /// non-iterable types. These types interpolate the same value in each
+    /// iteration of the repetition.
+    </span><span class="kw">pub trait </span>RepToTokensExt {
+        <span class="doccomment">/// Pretend to be an iterator for the purposes of `quote_into_iter`.
+        /// This allows repeated calls to `quote_into_iter` to continue
+        /// correctly returning DoesNotHaveIter.
+        </span><span class="kw">fn </span>next(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>&gt; {
             <span class="prelude-val">Some</span>(<span class="self">self</span>)
         }
 
-        <span class="kw">fn</span> <span class="ident">quote_into_iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="self">Self</span>, <span class="ident">DoesNotHaveIter</span>) {
-            (<span class="self">self</span>, <span class="ident">DoesNotHaveIter</span>)
+        <span class="kw">fn </span>quote_into_iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="self">Self</span>, DoesNotHaveIter) {
+            (<span class="self">self</span>, DoesNotHaveIter)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">ToTokens</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">RepToTokensExt</span> <span class="kw">for</span> <span class="ident">T</span> {}
+    <span class="kw">impl</span>&lt;T: ToTokens + <span class="question-mark">?</span>Sized&gt; RepToTokensExt <span class="kw">for </span>T {}
 
-    <span class="doccomment">/// Extension trait providing the `quote_into_iter` method for types that</span>
-    <span class="doccomment">/// can be referenced as an iterator.</span>
-    <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span> {
-        <span class="kw">type</span> <span class="ident">Iter</span>: <span class="ident">Iterator</span>;
+    <span class="doccomment">/// Extension trait providing the `quote_into_iter` method for types that
+    /// can be referenced as an iterator.
+    </span><span class="kw">pub trait </span>RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; {
+        <span class="kw">type </span>Iter: Iterator;
 
-        <span class="kw">fn</span> <span class="ident">quote_into_iter</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q</span> <span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Iter</span>, <span class="ident">HasIter</span>);
+        <span class="kw">fn </span>quote_into_iter(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q </span><span class="self">self</span>) -&gt; (<span class="self">Self</span>::Iter, HasIter);
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span>, <span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span> {
-        <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">T::Iter</span>;
+    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;q</span>, <span class="lifetime">&#39;a</span>, T: RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; + <span class="question-mark">?</span>Sized&gt; RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T {
+        <span class="kw">type </span>Iter = T::Iter;
 
-        <span class="kw">fn</span> <span class="ident">quote_into_iter</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q</span> <span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Iter</span>, <span class="ident">HasIter</span>) {
-            <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">RepAsIteratorExt</span><span class="op">&gt;</span><span class="ident">::quote_into_iter</span>(<span class="kw-2">*</span><span class="self">self</span>)
+        <span class="kw">fn </span>quote_into_iter(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q </span><span class="self">self</span>) -&gt; (<span class="self">Self</span>::Iter, HasIter) {
+            &lt;T <span class="kw">as </span>RepAsIteratorExt&gt;::quote_into_iter(<span class="kw-2">*</span><span class="self">self</span>)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span>, <span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">T</span> {
-        <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">T::Iter</span>;
+    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;q</span>, <span class="lifetime">&#39;a</span>, T: RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; + <span class="question-mark">?</span>Sized&gt; RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T {
+        <span class="kw">type </span>Iter = T::Iter;
 
-        <span class="kw">fn</span> <span class="ident">quote_into_iter</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q</span> <span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Iter</span>, <span class="ident">HasIter</span>) {
-            <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">RepAsIteratorExt</span><span class="op">&gt;</span><span class="ident">::quote_into_iter</span>(<span class="kw-2">*</span><span class="self">self</span>)
+        <span class="kw">fn </span>quote_into_iter(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q </span><span class="self">self</span>) -&gt; (<span class="self">Self</span>::Iter, HasIter) {
+            &lt;T <span class="kw">as </span>RepAsIteratorExt&gt;::quote_into_iter(<span class="kw-2">*</span><span class="self">self</span>)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span>, <span class="ident">T</span>: <span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="kw">for</span> [<span class="ident">T</span>] {
-        <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">slice::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span>, <span class="ident">T</span><span class="op">&gt;</span>;
+    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;q</span>, T: <span class="lifetime">&#39;q</span>&gt; RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; <span class="kw">for </span>[T] {
+        <span class="kw">type </span>Iter = slice::Iter&lt;<span class="lifetime">&#39;q</span>, T&gt;;
 
-        <span class="kw">fn</span> <span class="ident">quote_into_iter</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q</span> <span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Iter</span>, <span class="ident">HasIter</span>) {
-            (<span class="self">self</span>.<span class="ident">iter</span>(), <span class="ident">HasIter</span>)
+        <span class="kw">fn </span>quote_into_iter(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q </span><span class="self">self</span>) -&gt; (<span class="self">Self</span>::Iter, HasIter) {
+            (<span class="self">self</span>.iter(), HasIter)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span>, <span class="ident">T</span>: <span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">slice::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span>, <span class="ident">T</span><span class="op">&gt;</span>;
+    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;q</span>, T: <span class="lifetime">&#39;q</span>&gt; RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; <span class="kw">for </span>Vec&lt;T&gt; {
+        <span class="kw">type </span>Iter = slice::Iter&lt;<span class="lifetime">&#39;q</span>, T&gt;;
 
-        <span class="kw">fn</span> <span class="ident">quote_into_iter</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q</span> <span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Iter</span>, <span class="ident">HasIter</span>) {
-            (<span class="self">self</span>.<span class="ident">iter</span>(), <span class="ident">HasIter</span>)
+        <span class="kw">fn </span>quote_into_iter(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q </span><span class="self">self</span>) -&gt; (<span class="self">Self</span>::Iter, HasIter) {
+            (<span class="self">self</span>.iter(), HasIter)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span>, <span class="ident">T</span>: <span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">btree_set::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span>, <span class="ident">T</span><span class="op">&gt;</span>;
+    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;q</span>, T: <span class="lifetime">&#39;q</span>&gt; RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; <span class="kw">for </span>BTreeSet&lt;T&gt; {
+        <span class="kw">type </span>Iter = btree_set::Iter&lt;<span class="lifetime">&#39;q</span>, T&gt;;
 
-        <span class="kw">fn</span> <span class="ident">quote_into_iter</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q</span> <span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Iter</span>, <span class="ident">HasIter</span>) {
-            (<span class="self">self</span>.<span class="ident">iter</span>(), <span class="ident">HasIter</span>)
+        <span class="kw">fn </span>quote_into_iter(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q </span><span class="self">self</span>) -&gt; (<span class="self">Self</span>::Iter, HasIter) {
+            (<span class="self">self</span>.iter(), HasIter)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span>, <span class="ident">T</span>: <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">RepAsIteratorExt</span><span class="op">&lt;</span><span class="lifetime">&#39;q</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RepInterp</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">T::Iter</span>;
+    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;q</span>, T: RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt;&gt; RepAsIteratorExt&lt;<span class="lifetime">&#39;q</span>&gt; <span class="kw">for </span>RepInterp&lt;T&gt; {
+        <span class="kw">type </span>Iter = T::Iter;
 
-        <span class="kw">fn</span> <span class="ident">quote_into_iter</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q</span> <span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Iter</span>, <span class="ident">HasIter</span>) {
-            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">quote_into_iter</span>()
+        <span class="kw">fn </span>quote_into_iter(<span class="kw-2">&amp;</span><span class="lifetime">&#39;q </span><span class="self">self</span>) -&gt; (<span class="self">Self</span>::Iter, HasIter) {
+            <span class="self">self</span>.<span class="number">0</span>.quote_into_iter()
         }
     }
 }
 
-<span class="comment">// Helper type used within interpolations to allow for repeated binding names.</span>
-<span class="comment">// Implements the relevant traits, and exports a dummy `next()` method.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RepInterp</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">T</span>);
+<span class="comment">// Helper type used within interpolations to allow for repeated binding names.
+// Implements the relevant traits, and exports a dummy `next()` method.
+</span><span class="attribute">#[derive(Copy, Clone)]
+</span><span class="kw">pub struct </span>RepInterp&lt;T&gt;(<span class="kw">pub </span>T);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">RepInterp</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="comment">// This method is intended to look like `Iterator::next`, and is called when</span>
-    <span class="comment">// a name is bound multiple times, as the previous binding will shadow the</span>
-    <span class="comment">// original `Iterator` object. This allows us to avoid advancing the</span>
-    <span class="comment">// iterator multiple times per iteration.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+<span class="kw">impl</span>&lt;T&gt; RepInterp&lt;T&gt; {
+    <span class="comment">// This method is intended to look like `Iterator::next`, and is called when
+    // a name is bound multiple times, as the previous binding will shadow the
+    // original `Iterator` object. This allows us to avoid advancing the
+    // iterator multiple times per iteration.
+    </span><span class="kw">pub fn </span>next(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
         <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Iterator</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">RepInterp</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">T::Item</span>;
+<span class="kw">impl</span>&lt;T: Iterator&gt; Iterator <span class="kw">for </span>RepInterp&lt;T&gt; {
+    <span class="kw">type </span>Item = T::Item;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">next</span>()
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.next()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">ToTokens</span><span class="op">&gt;</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">RepInterp</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">to_tokens</span>(<span class="ident">tokens</span>);
+<span class="kw">impl</span>&lt;T: ToTokens&gt; ToTokens <span class="kw">for </span>RepInterp&lt;T&gt; {
+    <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+        <span class="self">self</span>.<span class="number">0</span>.to_tokens(tokens);
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_group</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">delimiter</span>: <span class="ident">Delimiter</span>, <span class="ident">inner</span>: <span class="ident">TokenStream</span>) {
-    <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Group::new</span>(<span class="ident">delimiter</span>, <span class="ident">inner</span>));
+<span class="kw">pub fn </span>push_group(tokens: <span class="kw-2">&amp;mut </span>TokenStream, delimiter: Delimiter, inner: TokenStream) {
+    tokens.append(Group::new(delimiter, inner));
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_group_spanned</span>(
-    <span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>,
-    <span class="ident">span</span>: <span class="ident">Span</span>,
-    <span class="ident">delimiter</span>: <span class="ident">Delimiter</span>,
-    <span class="ident">inner</span>: <span class="ident">TokenStream</span>,
+<span class="kw">pub fn </span>push_group_spanned(
+    tokens: <span class="kw-2">&amp;mut </span>TokenStream,
+    span: Span,
+    delimiter: Delimiter,
+    inner: TokenStream,
 ) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">Group::new</span>(<span class="ident">delimiter</span>, <span class="ident">inner</span>);
-    <span class="ident">g</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
-    <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">g</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>g = Group::new(delimiter, inner);
+    g.set_span(span);
+    tokens.append(g);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">TokenStream</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">parse</span>().<span class="ident">expect</span>(<span class="string">&quot;invalid token stream&quot;</span>);
-    <span class="ident">tokens</span>.<span class="ident">extend</span>(<span class="ident">iter::once</span>(<span class="ident">s</span>));
+<span class="kw">pub fn </span>parse(tokens: <span class="kw-2">&amp;mut </span>TokenStream, s: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">let </span>s: TokenStream = s.parse().expect(<span class="string">&quot;invalid token stream&quot;</span>);
+    tokens.extend(iter::once(s));
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_spanned</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">TokenStream</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">parse</span>().<span class="ident">expect</span>(<span class="string">&quot;invalid token stream&quot;</span>);
-    <span class="ident">tokens</span>.<span class="ident">extend</span>(<span class="ident">s</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">respan_token_tree</span>(<span class="ident">t</span>, <span class="ident">span</span>)));
+<span class="kw">pub fn </span>parse_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span, s: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">let </span>s: TokenStream = s.parse().expect(<span class="string">&quot;invalid token stream&quot;</span>);
+    tokens.extend(s.into_iter().map(|t| respan_token_tree(t, span)));
 }
 
-<span class="comment">// Token tree with every span replaced by the given one.</span>
-<span class="kw">fn</span> <span class="ident">respan_token_tree</span>(<span class="kw-2">mut</span> <span class="ident">token</span>: <span class="ident">TokenTree</span>, <span class="ident">span</span>: <span class="ident">Span</span>) -&gt; <span class="ident">TokenTree</span> {
-    <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="ident">token</span> {
-        <span class="ident">TokenTree::Group</span>(<span class="ident">g</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">g</span>
-                .<span class="ident">stream</span>()
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">token</span><span class="op">|</span> <span class="ident">respan_token_tree</span>(<span class="ident">token</span>, <span class="ident">span</span>))
-                .<span class="ident">collect</span>();
-            <span class="kw-2">*</span><span class="ident">g</span> <span class="op">=</span> <span class="ident">Group::new</span>(<span class="ident">g</span>.<span class="ident">delimiter</span>(), <span class="ident">stream</span>);
-            <span class="ident">g</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
+<span class="comment">// Token tree with every span replaced by the given one.
+</span><span class="kw">fn </span>respan_token_tree(<span class="kw-2">mut </span>token: TokenTree, span: Span) -&gt; TokenTree {
+    <span class="kw">match </span><span class="kw-2">&amp;mut </span>token {
+        TokenTree::Group(g) =&gt; {
+            <span class="kw">let </span>stream = g
+                .stream()
+                .into_iter()
+                .map(|token| respan_token_tree(token, span))
+                .collect();
+            <span class="kw-2">*</span>g = Group::new(g.delimiter(), stream);
+            g.set_span(span);
         }
-        <span class="ident">other</span> =&gt; <span class="ident">other</span>.<span class="ident">set_span</span>(<span class="ident">span</span>),
+        other =&gt; other.set_span(span),
     }
-    <span class="ident">token</span>
+    token
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_ident</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="comment">// Optimization over `mk_ident`, as `s` is guaranteed to be a valid ident.</span>
-    <span class="comment">//</span>
-    <span class="comment">// FIXME: When `Ident::new_raw` becomes stable, this method should be</span>
-    <span class="comment">// updated to call it when available.</span>
-    <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;r#&quot;</span>) {
-        <span class="ident">parse</span>(<span class="ident">tokens</span>, <span class="ident">s</span>);
-    } <span class="kw">else</span> {
-        <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Ident::new</span>(<span class="ident">s</span>, <span class="ident">Span::call_site</span>()));
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_ident_spanned</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="comment">// Optimization over `mk_ident`, as `s` is guaranteed to be a valid ident.</span>
-    <span class="comment">//</span>
-    <span class="comment">// FIXME: When `Ident::new_raw` becomes stable, this method should be</span>
-    <span class="comment">// updated to call it when available.</span>
-    <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&quot;r#&quot;</span>) {
-        <span class="ident">parse_spanned</span>(<span class="ident">tokens</span>, <span class="ident">span</span>, <span class="ident">s</span>);
-    } <span class="kw">else</span> {
-        <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Ident::new</span>(<span class="ident">s</span>, <span class="ident">span</span>));
+<span class="kw">pub fn </span>push_ident(tokens: <span class="kw-2">&amp;mut </span>TokenStream, s: <span class="kw-2">&amp;</span>str) {
+    <span class="comment">// Optimization over `mk_ident`, as `s` is guaranteed to be a valid ident.
+    //
+    // FIXME: When `Ident::new_raw` becomes stable, this method should be
+    // updated to call it when available.
+    </span><span class="kw">if </span>s.starts_with(<span class="string">&quot;r#&quot;</span>) {
+        parse(tokens, s);
+    } <span class="kw">else </span>{
+        tokens.append(Ident::new(s, Span::call_site()));
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_lifetime</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">lifetime</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="kw">struct</span> <span class="ident">Lifetime</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
-        <span class="ident">state</span>: <span class="ident">u8</span>,
+<span class="kw">pub fn </span>push_ident_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span, s: <span class="kw-2">&amp;</span>str) {
+    <span class="comment">// Optimization over `mk_ident`, as `s` is guaranteed to be a valid ident.
+    //
+    // FIXME: When `Ident::new_raw` becomes stable, this method should be
+    // updated to call it when available.
+    </span><span class="kw">if </span>s.starts_with(<span class="string">&quot;r#&quot;</span>) {
+        parse_spanned(tokens, span, s);
+    } <span class="kw">else </span>{
+        tokens.append(Ident::new(s, span));
+    }
+}
+
+<span class="kw">pub fn </span>push_lifetime(tokens: <span class="kw-2">&amp;mut </span>TokenStream, lifetime: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">struct </span>Lifetime&lt;<span class="lifetime">&#39;a</span>&gt; {
+        name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        state: u8,
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">Lifetime</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">TokenTree</span>;
+    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>Lifetime&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="kw">type </span>Item = TokenTree;
 
-        <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">state</span> {
-                <span class="number">0</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="number">1</span>;
-                    <span class="prelude-val">Some</span>(<span class="ident">TokenTree::Punct</span>(<span class="ident">Punct::new</span>(<span class="string">&#39;\&#39;&#39;</span>, <span class="ident">Spacing::Joint</span>)))
+        <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+            <span class="kw">match </span><span class="self">self</span>.state {
+                <span class="number">0 </span>=&gt; {
+                    <span class="self">self</span>.state = <span class="number">1</span>;
+                    <span class="prelude-val">Some</span>(TokenTree::Punct(Punct::new(<span class="string">&#39;\&#39;&#39;</span>, Spacing::Joint)))
                 }
-                <span class="number">1</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="number">2</span>;
-                    <span class="prelude-val">Some</span>(<span class="ident">TokenTree::Ident</span>(<span class="ident">Ident::new</span>(<span class="self">self</span>.<span class="ident">name</span>, <span class="ident">Span::call_site</span>())))
+                <span class="number">1 </span>=&gt; {
+                    <span class="self">self</span>.state = <span class="number">2</span>;
+                    <span class="prelude-val">Some</span>(TokenTree::Ident(Ident::new(<span class="self">self</span>.name, Span::call_site())))
                 }
-                <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             }
         }
     }
 
-    <span class="ident">tokens</span>.<span class="ident">extend</span>(<span class="ident">Lifetime</span> {
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">lifetime</span>[<span class="number">1</span>..],
-        <span class="ident">state</span>: <span class="number">0</span>,
+    tokens.extend(Lifetime {
+        name: <span class="kw-2">&amp;</span>lifetime[<span class="number">1</span>..],
+        state: <span class="number">0</span>,
     });
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_lifetime_spanned</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">lifetime</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="kw">struct</span> <span class="ident">Lifetime</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
-        <span class="ident">span</span>: <span class="ident">Span</span>,
-        <span class="ident">state</span>: <span class="ident">u8</span>,
+<span class="kw">pub fn </span>push_lifetime_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span, lifetime: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">struct </span>Lifetime&lt;<span class="lifetime">&#39;a</span>&gt; {
+        name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        span: Span,
+        state: u8,
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">Lifetime</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">TokenTree</span>;
+    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>Lifetime&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="kw">type </span>Item = TokenTree;
 
-        <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">state</span> {
-                <span class="number">0</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="number">1</span>;
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">apostrophe</span> <span class="op">=</span> <span class="ident">Punct::new</span>(<span class="string">&#39;\&#39;&#39;</span>, <span class="ident">Spacing::Joint</span>);
-                    <span class="ident">apostrophe</span>.<span class="ident">set_span</span>(<span class="self">self</span>.<span class="ident">span</span>);
-                    <span class="prelude-val">Some</span>(<span class="ident">TokenTree::Punct</span>(<span class="ident">apostrophe</span>))
+        <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+            <span class="kw">match </span><span class="self">self</span>.state {
+                <span class="number">0 </span>=&gt; {
+                    <span class="self">self</span>.state = <span class="number">1</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>apostrophe = Punct::new(<span class="string">&#39;\&#39;&#39;</span>, Spacing::Joint);
+                    apostrophe.set_span(<span class="self">self</span>.span);
+                    <span class="prelude-val">Some</span>(TokenTree::Punct(apostrophe))
                 }
-                <span class="number">1</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="number">2</span>;
-                    <span class="prelude-val">Some</span>(<span class="ident">TokenTree::Ident</span>(<span class="ident">Ident::new</span>(<span class="self">self</span>.<span class="ident">name</span>, <span class="self">self</span>.<span class="ident">span</span>)))
+                <span class="number">1 </span>=&gt; {
+                    <span class="self">self</span>.state = <span class="number">2</span>;
+                    <span class="prelude-val">Some</span>(TokenTree::Ident(Ident::new(<span class="self">self</span>.name, <span class="self">self</span>.span)))
                 }
-                <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             }
         }
     }
 
-    <span class="ident">tokens</span>.<span class="ident">extend</span>(<span class="ident">Lifetime</span> {
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">lifetime</span>[<span class="number">1</span>..],
-        <span class="ident">span</span>,
-        <span class="ident">state</span>: <span class="number">0</span>,
+    tokens.extend(Lifetime {
+        name: <span class="kw-2">&amp;</span>lifetime[<span class="number">1</span>..],
+        span,
+        state: <span class="number">0</span>,
     });
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">push_punct</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">spanned</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">char1</span>:<span class="ident">tt</span>) =&gt; {
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char1</span>, <span class="ident">Spacing::Alone</span>));
+<span class="macro">macro_rules! </span>push_punct {
+    (<span class="macro-nonterminal">$name</span>:ident <span class="macro-nonterminal">$spanned</span>:ident <span class="macro-nonterminal">$char1</span>:tt) =&gt; {
+        <span class="kw">pub fn </span><span class="macro-nonterminal">$name</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            tokens.append(Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Alone));
         }
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">spanned</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">span</span>: <span class="ident">Span</span>) {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char1</span>, <span class="ident">Spacing::Alone</span>);
-            <span class="ident">punct</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">punct</span>);
-        }
-    };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">spanned</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">char1</span>:<span class="ident">tt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">char2</span>:<span class="ident">tt</span>) =&gt; {
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char1</span>, <span class="ident">Spacing::Joint</span>));
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char2</span>, <span class="ident">Spacing::Alone</span>));
-        }
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">spanned</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">span</span>: <span class="ident">Span</span>) {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char1</span>, <span class="ident">Spacing::Joint</span>);
-            <span class="ident">punct</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">punct</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char2</span>, <span class="ident">Spacing::Alone</span>);
-            <span class="ident">punct</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">punct</span>);
+        <span class="kw">pub fn </span><span class="macro-nonterminal">$spanned</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
+            <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Alone);
+            punct.set_span(span);
+            tokens.append(punct);
         }
     };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">spanned</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">char1</span>:<span class="ident">tt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">char2</span>:<span class="ident">tt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">char3</span>:<span class="ident">tt</span>) =&gt; {
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char1</span>, <span class="ident">Spacing::Joint</span>));
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char2</span>, <span class="ident">Spacing::Joint</span>));
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char3</span>, <span class="ident">Spacing::Alone</span>));
+    (<span class="macro-nonterminal">$name</span>:ident <span class="macro-nonterminal">$spanned</span>:ident <span class="macro-nonterminal">$char1</span>:tt <span class="macro-nonterminal">$char2</span>:tt) =&gt; {
+        <span class="kw">pub fn </span><span class="macro-nonterminal">$name</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            tokens.append(Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Joint));
+            tokens.append(Punct::new(<span class="macro-nonterminal">$char2</span>, Spacing::Alone));
         }
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">spanned</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">span</span>: <span class="ident">Span</span>) {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char1</span>, <span class="ident">Spacing::Joint</span>);
-            <span class="ident">punct</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">punct</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char2</span>, <span class="ident">Spacing::Joint</span>);
-            <span class="ident">punct</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">punct</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">Punct::new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">char3</span>, <span class="ident">Spacing::Alone</span>);
-            <span class="ident">punct</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
-            <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">punct</span>);
+        <span class="kw">pub fn </span><span class="macro-nonterminal">$spanned</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
+            <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Joint);
+            punct.set_span(span);
+            tokens.append(punct);
+            <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="macro-nonterminal">$char2</span>, Spacing::Alone);
+            punct.set_span(span);
+            tokens.append(punct);
+        }
+    };
+    (<span class="macro-nonterminal">$name</span>:ident <span class="macro-nonterminal">$spanned</span>:ident <span class="macro-nonterminal">$char1</span>:tt <span class="macro-nonterminal">$char2</span>:tt <span class="macro-nonterminal">$char3</span>:tt) =&gt; {
+        <span class="kw">pub fn </span><span class="macro-nonterminal">$name</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+            tokens.append(Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Joint));
+            tokens.append(Punct::new(<span class="macro-nonterminal">$char2</span>, Spacing::Joint));
+            tokens.append(Punct::new(<span class="macro-nonterminal">$char3</span>, Spacing::Alone));
+        }
+        <span class="kw">pub fn </span><span class="macro-nonterminal">$spanned</span>(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
+            <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="macro-nonterminal">$char1</span>, Spacing::Joint);
+            punct.set_span(span);
+            tokens.append(punct);
+            <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="macro-nonterminal">$char2</span>, Spacing::Joint);
+            punct.set_span(span);
+            tokens.append(punct);
+            <span class="kw">let </span><span class="kw-2">mut </span>punct = Punct::new(<span class="macro-nonterminal">$char3</span>, Spacing::Alone);
+            punct.set_span(span);
+            tokens.append(punct);
         }
     };
 }
 
-<span class="macro">push_punct!</span>(<span class="ident">push_add</span> <span class="ident">push_add_spanned</span> <span class="string">&#39;+&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_add_eq</span> <span class="ident">push_add_eq_spanned</span> <span class="string">&#39;+&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_and</span> <span class="ident">push_and_spanned</span> <span class="string">&#39;&amp;&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_and_and</span> <span class="ident">push_and_and_spanned</span> <span class="string">&#39;&amp;&#39;</span> <span class="string">&#39;&amp;&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_and_eq</span> <span class="ident">push_and_eq_spanned</span> <span class="string">&#39;&amp;&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_at</span> <span class="ident">push_at_spanned</span> <span class="string">&#39;@&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_bang</span> <span class="ident">push_bang_spanned</span> <span class="string">&#39;!&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_caret</span> <span class="ident">push_caret_spanned</span> <span class="string">&#39;^&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_caret_eq</span> <span class="ident">push_caret_eq_spanned</span> <span class="string">&#39;^&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_colon</span> <span class="ident">push_colon_spanned</span> <span class="string">&#39;:&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_colon2</span> <span class="ident">push_colon2_spanned</span> <span class="string">&#39;:&#39;</span> <span class="string">&#39;:&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_comma</span> <span class="ident">push_comma_spanned</span> <span class="string">&#39;,&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_div</span> <span class="ident">push_div_spanned</span> <span class="string">&#39;/&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_div_eq</span> <span class="ident">push_div_eq_spanned</span> <span class="string">&#39;/&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_dot</span> <span class="ident">push_dot_spanned</span> <span class="string">&#39;.&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_dot2</span> <span class="ident">push_dot2_spanned</span> <span class="string">&#39;.&#39;</span> <span class="string">&#39;.&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_dot3</span> <span class="ident">push_dot3_spanned</span> <span class="string">&#39;.&#39;</span> <span class="string">&#39;.&#39;</span> <span class="string">&#39;.&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_dot_dot_eq</span> <span class="ident">push_dot_dot_eq_spanned</span> <span class="string">&#39;.&#39;</span> <span class="string">&#39;.&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_eq</span> <span class="ident">push_eq_spanned</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_eq_eq</span> <span class="ident">push_eq_eq_spanned</span> <span class="string">&#39;=&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_ge</span> <span class="ident">push_ge_spanned</span> <span class="string">&#39;&gt;&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_gt</span> <span class="ident">push_gt_spanned</span> <span class="string">&#39;&gt;&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_le</span> <span class="ident">push_le_spanned</span> <span class="string">&#39;&lt;&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_lt</span> <span class="ident">push_lt_spanned</span> <span class="string">&#39;&lt;&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_mul_eq</span> <span class="ident">push_mul_eq_spanned</span> <span class="string">&#39;*&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_ne</span> <span class="ident">push_ne_spanned</span> <span class="string">&#39;!&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_or</span> <span class="ident">push_or_spanned</span> <span class="string">&#39;|&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_or_eq</span> <span class="ident">push_or_eq_spanned</span> <span class="string">&#39;|&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_or_or</span> <span class="ident">push_or_or_spanned</span> <span class="string">&#39;|&#39;</span> <span class="string">&#39;|&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_pound</span> <span class="ident">push_pound_spanned</span> <span class="string">&#39;#&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_question</span> <span class="ident">push_question_spanned</span> <span class="string">&#39;?&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_rarrow</span> <span class="ident">push_rarrow_spanned</span> <span class="string">&#39;-&#39;</span> <span class="string">&#39;&gt;&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_larrow</span> <span class="ident">push_larrow_spanned</span> <span class="string">&#39;&lt;&#39;</span> <span class="string">&#39;-&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_rem</span> <span class="ident">push_rem_spanned</span> <span class="string">&#39;%&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_rem_eq</span> <span class="ident">push_rem_eq_spanned</span> <span class="string">&#39;%&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_fat_arrow</span> <span class="ident">push_fat_arrow_spanned</span> <span class="string">&#39;=&#39;</span> <span class="string">&#39;&gt;&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_semi</span> <span class="ident">push_semi_spanned</span> <span class="string">&#39;;&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_shl</span> <span class="ident">push_shl_spanned</span> <span class="string">&#39;&lt;&#39;</span> <span class="string">&#39;&lt;&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_shl_eq</span> <span class="ident">push_shl_eq_spanned</span> <span class="string">&#39;&lt;&#39;</span> <span class="string">&#39;&lt;&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_shr</span> <span class="ident">push_shr_spanned</span> <span class="string">&#39;&gt;&#39;</span> <span class="string">&#39;&gt;&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_shr_eq</span> <span class="ident">push_shr_eq_spanned</span> <span class="string">&#39;&gt;&#39;</span> <span class="string">&#39;&gt;&#39;</span> <span class="string">&#39;=&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_star</span> <span class="ident">push_star_spanned</span> <span class="string">&#39;*&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_sub</span> <span class="ident">push_sub_spanned</span> <span class="string">&#39;-&#39;</span>);
-<span class="macro">push_punct!</span>(<span class="ident">push_sub_eq</span> <span class="ident">push_sub_eq_spanned</span> <span class="string">&#39;-&#39;</span> <span class="string">&#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_add push_add_spanned <span class="string">&#39;+&#39;</span>);
+<span class="macro">push_punct!</span>(push_add_eq push_add_eq_spanned <span class="string">&#39;+&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_and push_and_spanned <span class="string">&#39;&amp;&#39;</span>);
+<span class="macro">push_punct!</span>(push_and_and push_and_and_spanned <span class="string">&#39;&amp;&#39; &#39;&amp;&#39;</span>);
+<span class="macro">push_punct!</span>(push_and_eq push_and_eq_spanned <span class="string">&#39;&amp;&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_at push_at_spanned <span class="string">&#39;@&#39;</span>);
+<span class="macro">push_punct!</span>(push_bang push_bang_spanned <span class="string">&#39;!&#39;</span>);
+<span class="macro">push_punct!</span>(push_caret push_caret_spanned <span class="string">&#39;^&#39;</span>);
+<span class="macro">push_punct!</span>(push_caret_eq push_caret_eq_spanned <span class="string">&#39;^&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_colon push_colon_spanned <span class="string">&#39;:&#39;</span>);
+<span class="macro">push_punct!</span>(push_colon2 push_colon2_spanned <span class="string">&#39;:&#39; &#39;:&#39;</span>);
+<span class="macro">push_punct!</span>(push_comma push_comma_spanned <span class="string">&#39;,&#39;</span>);
+<span class="macro">push_punct!</span>(push_div push_div_spanned <span class="string">&#39;/&#39;</span>);
+<span class="macro">push_punct!</span>(push_div_eq push_div_eq_spanned <span class="string">&#39;/&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_dot push_dot_spanned <span class="string">&#39;.&#39;</span>);
+<span class="macro">push_punct!</span>(push_dot2 push_dot2_spanned <span class="string">&#39;.&#39; &#39;.&#39;</span>);
+<span class="macro">push_punct!</span>(push_dot3 push_dot3_spanned <span class="string">&#39;.&#39; &#39;.&#39; &#39;.&#39;</span>);
+<span class="macro">push_punct!</span>(push_dot_dot_eq push_dot_dot_eq_spanned <span class="string">&#39;.&#39; &#39;.&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_eq push_eq_spanned <span class="string">&#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_eq_eq push_eq_eq_spanned <span class="string">&#39;=&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_ge push_ge_spanned <span class="string">&#39;&gt;&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_gt push_gt_spanned <span class="string">&#39;&gt;&#39;</span>);
+<span class="macro">push_punct!</span>(push_le push_le_spanned <span class="string">&#39;&lt;&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_lt push_lt_spanned <span class="string">&#39;&lt;&#39;</span>);
+<span class="macro">push_punct!</span>(push_mul_eq push_mul_eq_spanned <span class="string">&#39;*&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_ne push_ne_spanned <span class="string">&#39;!&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_or push_or_spanned <span class="string">&#39;|&#39;</span>);
+<span class="macro">push_punct!</span>(push_or_eq push_or_eq_spanned <span class="string">&#39;|&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_or_or push_or_or_spanned <span class="string">&#39;|&#39; &#39;|&#39;</span>);
+<span class="macro">push_punct!</span>(push_pound push_pound_spanned <span class="string">&#39;#&#39;</span>);
+<span class="macro">push_punct!</span>(push_question push_question_spanned <span class="string">&#39;?&#39;</span>);
+<span class="macro">push_punct!</span>(push_rarrow push_rarrow_spanned <span class="string">&#39;-&#39; &#39;&gt;&#39;</span>);
+<span class="macro">push_punct!</span>(push_larrow push_larrow_spanned <span class="string">&#39;&lt;&#39; &#39;-&#39;</span>);
+<span class="macro">push_punct!</span>(push_rem push_rem_spanned <span class="string">&#39;%&#39;</span>);
+<span class="macro">push_punct!</span>(push_rem_eq push_rem_eq_spanned <span class="string">&#39;%&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_fat_arrow push_fat_arrow_spanned <span class="string">&#39;=&#39; &#39;&gt;&#39;</span>);
+<span class="macro">push_punct!</span>(push_semi push_semi_spanned <span class="string">&#39;;&#39;</span>);
+<span class="macro">push_punct!</span>(push_shl push_shl_spanned <span class="string">&#39;&lt;&#39; &#39;&lt;&#39;</span>);
+<span class="macro">push_punct!</span>(push_shl_eq push_shl_eq_spanned <span class="string">&#39;&lt;&#39; &#39;&lt;&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_shr push_shr_spanned <span class="string">&#39;&gt;&#39; &#39;&gt;&#39;</span>);
+<span class="macro">push_punct!</span>(push_shr_eq push_shr_eq_spanned <span class="string">&#39;&gt;&#39; &#39;&gt;&#39; &#39;=&#39;</span>);
+<span class="macro">push_punct!</span>(push_star push_star_spanned <span class="string">&#39;*&#39;</span>);
+<span class="macro">push_punct!</span>(push_sub push_sub_spanned <span class="string">&#39;-&#39;</span>);
+<span class="macro">push_punct!</span>(push_sub_eq push_sub_eq_spanned <span class="string">&#39;-&#39; &#39;=&#39;</span>);
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_underscore</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>) {
-    <span class="ident">push_underscore_spanned</span>(<span class="ident">tokens</span>, <span class="ident">Span::call_site</span>());
+<span class="kw">pub fn </span>push_underscore(tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
+    push_underscore_spanned(tokens, Span::call_site());
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_underscore_spanned</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TokenStream</span>, <span class="ident">span</span>: <span class="ident">Span</span>) {
-    <span class="ident">tokens</span>.<span class="ident">append</span>(<span class="ident">Ident::new</span>(<span class="string">&quot;_&quot;</span>, <span class="ident">span</span>));
+<span class="kw">pub fn </span>push_underscore_spanned(tokens: <span class="kw-2">&amp;mut </span>TokenStream, span: Span) {
+    tokens.append(Ident::new(<span class="string">&quot;_&quot;</span>, span));
 }
 
-<span class="comment">// Helper method for constructing identifiers from the `format_ident!` macro,</span>
-<span class="comment">// handling `r#` prefixes.</span>
-<span class="comment">//</span>
-<span class="comment">// Directly parsing the input string may produce a valid identifier,</span>
-<span class="comment">// although the input string was invalid, due to ignored characters such as</span>
-<span class="comment">// whitespace and comments. Instead, we always create a non-raw identifier</span>
-<span class="comment">// to validate that the string is OK, and only parse again if needed.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mk_ident</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">span</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span>) -&gt; <span class="ident">Ident</span> {
-    <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="ident">span</span>.<span class="ident">unwrap_or_else</span>(<span class="ident">Span::call_site</span>);
+<span class="comment">// Helper method for constructing identifiers from the `format_ident!` macro,
+// handling `r#` prefixes.
+//
+// Directly parsing the input string may produce a valid identifier,
+// although the input string was invalid, due to ignored characters such as
+// whitespace and comments. Instead, we always create a non-raw identifier
+// to validate that the string is OK, and only parse again if needed.
+</span><span class="kw">pub fn </span>mk_ident(id: <span class="kw-2">&amp;</span>str, span: <span class="prelude-ty">Option</span>&lt;Span&gt;) -&gt; Ident {
+    <span class="kw">let </span>span = span.unwrap_or_else(Span::call_site);
 
-    <span class="kw">let</span> <span class="ident">is_raw</span> <span class="op">=</span> <span class="ident">id</span>.<span class="ident">starts_with</span>(<span class="string">&quot;r#&quot;</span>);
-    <span class="kw">let</span> <span class="ident">unraw</span> <span class="op">=</span> <span class="ident">Ident::new</span>(<span class="kw">if</span> <span class="ident">is_raw</span> { <span class="kw-2">&amp;</span><span class="ident">id</span>[<span class="number">2</span>..] } <span class="kw">else</span> { <span class="ident">id</span> }, <span class="ident">span</span>);
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">is_raw</span> {
-        <span class="kw">return</span> <span class="ident">unraw</span>;
+    <span class="kw">let </span>is_raw = id.starts_with(<span class="string">&quot;r#&quot;</span>);
+    <span class="kw">let </span>unraw = Ident::new(<span class="kw">if </span>is_raw { <span class="kw-2">&amp;</span>id[<span class="number">2</span>..] } <span class="kw">else </span>{ id }, span);
+    <span class="kw">if </span>!is_raw {
+        <span class="kw">return </span>unraw;
     }
 
-    <span class="comment">// At this point, the identifier is raw, and the unraw-ed version of it was</span>
-    <span class="comment">// successfully converted into an identifier. Try to produce a valid raw</span>
-    <span class="comment">// identifier by running the `TokenStream` parser, and unwrapping the first</span>
-    <span class="comment">// token as an `Ident`.</span>
-    <span class="comment">//</span>
-    <span class="comment">// FIXME: When `Ident::new_raw` becomes stable, this method should be</span>
-    <span class="comment">// updated to call it when available.</span>
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ts</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">ts</span>.<span class="ident">into_iter</span>();
-        <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">TokenTree::Ident</span>(<span class="kw-2">mut</span> <span class="ident">id</span>)), <span class="prelude-val">None</span>) <span class="op">=</span> (<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="ident">iter</span>.<span class="ident">next</span>()) {
-            <span class="ident">id</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
-            <span class="kw">return</span> <span class="ident">id</span>;
+    <span class="comment">// At this point, the identifier is raw, and the unraw-ed version of it was
+    // successfully converted into an identifier. Try to produce a valid raw
+    // identifier by running the `TokenStream` parser, and unwrapping the first
+    // token as an `Ident`.
+    //
+    // FIXME: When `Ident::new_raw` becomes stable, this method should be
+    // updated to call it when available.
+    </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(ts) = id.parse::&lt;TokenStream&gt;() {
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = ts.into_iter();
+        <span class="kw">if let </span>(<span class="prelude-val">Some</span>(TokenTree::Ident(<span class="kw-2">mut </span>id)), <span class="prelude-val">None</span>) = (iter.next(), iter.next()) {
+            id.set_span(span);
+            <span class="kw">return </span>id;
         }
     }
 
-    <span class="macro">panic!</span>(<span class="string">&quot;not allowed as a raw identifier: `{}`&quot;</span>, <span class="ident">id</span>);
+    <span class="macro">panic!</span>(<span class="string">&quot;not allowed as a raw identifier: `{}`&quot;</span>, id);
 }
 
-<span class="comment">// Adapts from `IdentFragment` to `fmt::Display` for use by the `format_ident!`</span>
-<span class="comment">// macro, and exposes span information from these fragments.</span>
-<span class="comment">//</span>
-<span class="comment">// This struct also has forwarding implementations of the formatting traits</span>
-<span class="comment">// `Octal`, `LowerHex`, `UpperHex`, and `Binary` to allow for their use within</span>
-<span class="comment">// `format_ident!`.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IdentFragmentAdapter</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IdentFragment</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">T</span>);
+<span class="comment">// Adapts from `IdentFragment` to `fmt::Display` for use by the `format_ident!`
+// macro, and exposes span information from these fragments.
+//
+// This struct also has forwarding implementations of the formatting traits
+// `Octal`, `LowerHex`, `UpperHex`, and `Binary` to allow for their use within
+// `format_ident!`.
+</span><span class="attribute">#[derive(Copy, Clone)]
+</span><span class="kw">pub struct </span>IdentFragmentAdapter&lt;T: IdentFragment&gt;(<span class="kw">pub </span>T);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IdentFragment</span><span class="op">&gt;</span> <span class="ident">IdentFragmentAdapter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">span</span>()
+<span class="kw">impl</span>&lt;T: IdentFragment&gt; IdentFragmentAdapter&lt;T&gt; {
+    <span class="kw">pub fn </span>span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Span&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.span()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IdentFragment</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">IdentFragmentAdapter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">IdentFragment::fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="ident">f</span>)
+<span class="kw">impl</span>&lt;T: IdentFragment&gt; fmt::Display <span class="kw">for </span>IdentFragmentAdapter&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        IdentFragment::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IdentFragment</span> <span class="op">+</span> <span class="ident">fmt::Octal</span><span class="op">&gt;</span> <span class="ident">fmt::Octal</span> <span class="kw">for</span> <span class="ident">IdentFragmentAdapter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">fmt::Octal::fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="ident">f</span>)
+<span class="kw">impl</span>&lt;T: IdentFragment + fmt::Octal&gt; fmt::Octal <span class="kw">for </span>IdentFragmentAdapter&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        fmt::Octal::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IdentFragment</span> <span class="op">+</span> <span class="ident">fmt::LowerHex</span><span class="op">&gt;</span> <span class="ident">fmt::LowerHex</span> <span class="kw">for</span> <span class="ident">IdentFragmentAdapter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">fmt::LowerHex::fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="ident">f</span>)
+<span class="kw">impl</span>&lt;T: IdentFragment + fmt::LowerHex&gt; fmt::LowerHex <span class="kw">for </span>IdentFragmentAdapter&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        fmt::LowerHex::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IdentFragment</span> <span class="op">+</span> <span class="ident">fmt::UpperHex</span><span class="op">&gt;</span> <span class="ident">fmt::UpperHex</span> <span class="kw">for</span> <span class="ident">IdentFragmentAdapter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">fmt::UpperHex::fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="ident">f</span>)
+<span class="kw">impl</span>&lt;T: IdentFragment + fmt::UpperHex&gt; fmt::UpperHex <span class="kw">for </span>IdentFragmentAdapter&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        fmt::UpperHex::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IdentFragment</span> <span class="op">+</span> <span class="ident">fmt::Binary</span><span class="op">&gt;</span> <span class="ident">fmt::Binary</span> <span class="kw">for</span> <span class="ident">IdentFragmentAdapter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">fmt::Binary::fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="ident">f</span>)
+<span class="kw">impl</span>&lt;T: IdentFragment + fmt::Binary&gt; fmt::Binary <span class="kw">for </span>IdentFragmentAdapter&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        fmt::Binary::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="quote" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="quote" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>
