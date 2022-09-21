@@ -456,12 +456,16 @@ impl<'tcx> CodegenCx<'tcx> {
                 // only uses the input alloc_id in the case that the scalar is uninitilized
                 // as part of the error output
                 // tldr, the pointer here is only needed for the offset
-                let scalar = alloc
-                    .inner()
-                    .read_scalar(self, alloc_range(*offset, size), primitive.is_ptr())
-                    .unwrap();
-                let value = self.scalar_to_backend(scalar, self.primitive_to_scalar(primitive), ty);
-
+                let value = match alloc.inner().read_scalar(
+                    self,
+                    alloc_range(*offset, size),
+                    primitive.is_ptr(),
+                ) {
+                    Ok(scalar) => {
+                        self.scalar_to_backend(scalar, self.primitive_to_scalar(primitive), ty)
+                    }
+                    _ => self.undef(ty),
+                };
                 *offset += size;
                 value
             }
