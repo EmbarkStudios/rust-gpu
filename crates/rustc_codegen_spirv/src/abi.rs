@@ -305,14 +305,14 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
         let return_type = match self.ret.mode {
             PassMode::Ignore => SpirvType::Void.def(span, cx),
             PassMode::Direct(_) | PassMode::Pair(..) => self.ret.layout.spirv_type(span, cx),
-            PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
+            PassMode::Cast(_, _) | PassMode::Indirect { .. } => span_bug!(
                 span,
                 "query hooks should've made this `PassMode` impossible: {:#?}",
                 self.ret
             ),
         };
 
-        for arg in &self.args {
+        for arg in self.args.iter() {
             let arg_type = match arg.mode {
                 PassMode::Ignore => continue,
                 PassMode::Direct(_) => arg.layout.spirv_type(span, cx),
@@ -321,7 +321,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
                     argument_types.push(scalar_pair_element_backend_type(cx, span, arg.layout, 1));
                     continue;
                 }
-                PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
+                PassMode::Cast(_, _) | PassMode::Indirect { .. } => span_bug!(
                     span,
                     "query hooks should've made this `PassMode` impossible: {:#?}",
                     arg
