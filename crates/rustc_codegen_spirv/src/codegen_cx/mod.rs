@@ -67,9 +67,9 @@ pub struct CodegenCx<'tcx> {
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
     pub panic_fn_id: Cell<Option<Word>>,
     /// Intrinsic for loading a <T> from a &[u32]. The PassMode is the mode of the <T>.
-    pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, PassMode>>,
+    pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
     /// Intrinsic for storing a <T> into a &[u32]. The PassMode is the mode of the <T>.
-    pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, PassMode>>,
+    pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
     /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
     pub panic_bounds_check_fn_id: Cell<Option<Word>>,
 

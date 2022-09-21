@@ -170,7 +170,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         &mut self,
         result_type: Word,
         args: &[SpirvValue],
-        pass_mode: PassMode,
+        pass_mode: &PassMode,
     ) -> SpirvValue {
         match pass_mode {
             PassMode::Ignore => {
@@ -181,7 +181,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             }
             // PassMode::Pair is identical to PassMode::Direct - it's returned as a struct
             PassMode::Direct(_) | PassMode::Pair(_, _) => (),
-            PassMode::Cast(_) => {
+            PassMode::Cast(_, _) => {
                 self.fatal("PassMode::Cast not supported in codegen_buffer_load_intrinsic")
             }
             PassMode::Indirect { .. } => {
@@ -342,14 +342,14 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     /// Note: DOES NOT do bounds checking! Bounds checking is expected to be done in the caller.
-    pub fn codegen_buffer_store_intrinsic(&mut self, args: &[SpirvValue], pass_mode: PassMode) {
+    pub fn codegen_buffer_store_intrinsic(&mut self, args: &[SpirvValue], pass_mode: &PassMode) {
         // Signature: fn store<T>(array: &[u32], index: u32, value: T);
         let is_pair = match pass_mode {
             // haha shrug
             PassMode::Ignore => return,
             PassMode::Direct(_) => false,
             PassMode::Pair(_, _) => true,
-            PassMode::Cast(_) => {
+            PassMode::Cast(_, _) => {
                 self.fatal("PassMode::Cast not supported in codegen_buffer_store_intrinsic")
             }
             PassMode::Indirect { .. } => {
