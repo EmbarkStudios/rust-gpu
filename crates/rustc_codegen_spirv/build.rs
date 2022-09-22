@@ -1,59 +1,75 @@
 //! This custom build script merely checks whether we're compiling with the appropriate Rust toolchain
 
-#[allow(unused_imports)]
-use colored::*;
-use std::process::Command;
+#![allow(clippy::string_add)]
 
-/// The required toolchain version for this package. Update accordingly.
-#[cfg(not(feature = "skip-toolchain-check"))]
-const REQUIRED_TOOLCHAIN: &str = "nightly-2022-08-29";
+use std::error::Error;
+use std::process::{Command, ExitCode};
 
-/// The required toolchain commit hash for this package. Update accordingly.
-#[cfg(not(feature = "skip-toolchain-check"))]
-const REQUIRED_COMMIT_HASH: &str = "ce36e88256f09078519f8bc6b21e4dc88f88f523";
+/// Current `rust-toolchain` file
+/// Unfortunately, directly including the actual workspace `rust-toolchain` doesn't work together with
+/// `cargo publish`. We need to figure out a way to do this properly, but let's hardcode it for now :/
+//const REQUIRED_RUST_TOOLCHAIN: &str = include_str!("../../rust-toolchain");
+const REQUIRED_RUST_TOOLCHAIN: &str = r#"[toolchain]
+channel = "nightly-2022-08-29"
+components = ["rust-src", "rustc-dev", "llvm-tools-preview"]
+# commit_hash = ce36e88256f09078519f8bc6b21e4dc88f88f523"#;
 
-#[cfg(not(feature = "skip-toolchain-check"))]
-fn get_rustc_commit_hash() -> Option<String> {
-    let rustc = std::env::var("RUSTC").unwrap_or(String::from("rustc"));
-    Command::new(rustc)
-        .arg("-vV")
-        .output()
-        .ok()
-        .and_then(|output| String::from_utf8(output.stdout).ok())
-        .map(|s| {
-            for l in s.lines() {
-                match l.strip_prefix("commit-hash: ") {
-                    Some(hash) => {
-                        return Some(hash.to_string());
-                    }
-                    _ => {}
-                }
-            }
-            None
-        })
-        .unwrap_or(None)
+fn get_rustc_commit_hash() -> Result<String, Box<dyn Error>> {
+    let rustc = std::env::var("RUSTC").unwrap_or_else(|_| String::from("rustc"));
+    String::from_utf8(Command::new(rustc).arg("-vV").output()?.stdout)?
+        .lines()
+        .find_map(|l| l.strip_prefix("commit-hash: "))
+        .map(|s| s.to_string())
+        .ok_or_else(|| Box::<dyn Error>::from("`commit-hash` not found in `rustc -vV` output"))
 }
-#[cfg(not(feature = "skip-toolchain-check"))]
-fn check_toolchain_version() {
-    std::env::set_var("CLICOLOR_FORCE", "1"); // make sure our coloring gets through to cargo
 
-    let current_hash = get_rustc_commit_hash().unwrap_or(String::from("<unknown>"));
-    if current_hash != REQUIRED_COMMIT_HASH {
-        eprintln!(
-            "{}: {} (found {}). Make sure you specify {} in your project's {} file",
-            "error".bright_red(),
-            "Wrong toolchain detected".bold(),
-            current_hash.bright_cyan(),
-            format!("channel=\"{}\"", REQUIRED_TOOLCHAIN).bright_cyan(),
-            "rust_toolchain".bright_cyan()
-        );
-        std::process::exit(1);
+fn get_required_commit_hash() -> Result<String, Box<dyn Error>> {
+    REQUIRED_RUST_TOOLCHAIN
+        .lines()
+        .find_map(|l| l.strip_prefix("# commit_hash = "))
+        .map(|s| s.to_string())
+        .ok_or_else(|| Box::<dyn Error>::from("`commit_hash` not found in `rust-toolchain`"))
+}
+
+fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
+    if !cfg!(feature = "skip-toolchain-check") {
+        // gets the commit hash from current rustc
+
+        let current_hash = get_rustc_commit_hash()?;
+        let required_hash = get_required_commit_hash()?;
+        if current_hash != required_hash {
+            let stripped_toolchain = REQUIRED_RUST_TOOLCHAIN
+                .lines()
+                .filter(|l| !l.trim().is_empty() && !l.starts_with("# "))
+                .map(|l| l.to_string())
+                .reduce(|a, b| a + "\n" + &b)
+                .unwrap_or_default();
+
+            return Err(Box::<dyn Error>::from(format!(
+                r#"
+error: wrong toolchain detected (found commit hash `{current_hash}`, expected `{required_hash}`).
+Make sure your `rust_toolchain` file contains the following:
+-------------
+{stripped_toolchain}
+-------------"#
+            )));
+        }
     }
+
+    Ok(())
 }
 
-#[cfg(feature = "skip-toolchain-check")]
-fn check_toolchain_version() {}
-
-fn main() {
-    check_toolchain_version();
+fn main() -> ExitCode {
+    if let Err(e) = check_toolchain_version() {
+        eprintln!(
+            "{}",
+            std::env::vars()
+                .map(|v| v.0 + "=" + &v.1)
+                .reduce(|a, b| a + "\n" + &b)
+                .unwrap_or_default()
+        );
+        eprint!("{}", e);
+        return ExitCode::FAILURE;
+    }
+    ExitCode::SUCCESS
 }
