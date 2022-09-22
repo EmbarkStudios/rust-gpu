@@ -60,16 +60,11 @@ Make sure your `rust_toolchain` file contains the following:
 }
 
 fn main() -> ExitCode {
-    if let Err(e) = check_toolchain_version() {
-        eprintln!(
-            "{}",
-            std::env::vars()
-                .map(|v| v.0 + "=" + &v.1)
-                .reduce(|a, b| a + "\n" + &b)
-                .unwrap_or_default()
-        );
-        eprint!("{}", e);
-        return ExitCode::FAILURE;
+    match check_toolchain_version() {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprint!("{}", e);
+            ExitCode::FAILURE
+        }
     }
-    ExitCode::SUCCESS
 }
