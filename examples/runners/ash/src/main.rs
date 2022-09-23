@@ -204,10 +204,10 @@ pub fn compile_shaders() -> Vec<SpvFile> {
             .unwrap()
             .module
             .unwrap_single()
-            .to_path_buf();
+            .clone();
     let sky_shader = SpvFile {
         name: "sky_shader".to_string(),
-        data: read_spv(&mut File::open(sky_shader_path).unwrap()).unwrap(),
+        data: read_spv(&mut File::open(&sky_shader_path).unwrap()).unwrap(),
     };
     vec![sky_shader]
 }

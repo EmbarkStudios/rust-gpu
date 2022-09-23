@@ -1,17 +1,15 @@
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use nanoserde::{DeJson, SerJson};
+use std::collections::HashMap;
 use std::fmt::Write;
-use std::path::{Path, PathBuf};
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(untagged)]
+#[derive(Debug, DeJson, SerJson)]
 pub enum ModuleResult {
-    SingleModule(PathBuf),
-    MultiModule(BTreeMap<String, PathBuf>),
+    SingleModule(String),
+    MultiModule(HashMap<String, String>),
 }
 
 impl ModuleResult {
-    pub fn unwrap_single(&self) -> &Path {
+    pub fn unwrap_single(&self) -> &String {
         match self {
             ModuleResult::SingleModule(result) => result,
             ModuleResult::MultiModule(_) => {
@@ -20,7 +18,7 @@ impl ModuleResult {
         }
     }
 
-    pub fn unwrap_multi(&self) -> &BTreeMap<String, PathBuf> {
+    pub fn unwrap_multi(&self) -> &HashMap<String, String> {
         match self {
             ModuleResult::MultiModule(result) => result,
             ModuleResult::SingleModule(_) => {
@@ -30,7 +28,7 @@ impl ModuleResult {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, DeJson, SerJson)]
 pub struct CompileResult {
     pub module: ModuleResult,
     pub entry_points: Vec<String>,
@@ -48,7 +46,7 @@ impl CompileResult {
 #[derive(Default)]
 struct Trie<'a> {
     present: bool,
-    children: BTreeMap<&'a str, Trie<'a>>,
+    children: HashMap<&'a str, Trie<'a>>,
 }
 
 impl<'a> Trie<'a> {

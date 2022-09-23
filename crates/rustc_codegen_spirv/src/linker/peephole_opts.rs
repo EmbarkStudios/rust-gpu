@@ -400,7 +400,7 @@ fn process_instruction(
 }
 
 /// Fuse a sequence of scalar operations into a single vector operation. For example:
-/// ```
+/// ```ignore
 /// %x_0 = OpCompositeExtract %x 0
 /// %x_1 = OpCompositeExtract %x 1
 /// %y_0 = OpCompositeExtract %y 0
@@ -410,7 +410,7 @@ fn process_instruction(
 /// %r = OpCompositeConstruct %r_0 %r_1
 /// ```
 /// into
-/// ```
+/// ```ignore
 /// %r = OpAdd %x %y
 /// ```
 /// (We don't remove the intermediate instructions, however, in case they're used elsewhere - we

@@ -27,7 +27,7 @@
 //!   "generic" parameters to every (indirect) mention of any pointer type in
 //!   the group, using an additional parameter remapping, for which `Generic`:
 //!   * requires this extra documentation:
-//!     ```
+//!     ```ignore
 //!     /// The one exception are `OpTypePointer`s involved in recursive data types
 //!     /// (i.e. they were declared by `OpTypeForwardPointer`s, and their pointees are
 //!     /// `OpTypeStruct`s that have the same pointer type as a leaf).
@@ -36,7 +36,7 @@
 //!     /// a mapping (`expand_params`) indicates how to create the flattened list.
 //!     ```
 //!   * and this extra field:
-//!     ```
+//!     ```ignore
 //!     /// For every entry in the regular flattened list of parameters expected by
 //!     /// operands, this contains the parameter index (i.e. `0..self.param_count`)
 //!     /// to use for that parameter.

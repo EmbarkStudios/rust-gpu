@@ -1,6 +1,7 @@
 use crate::codegen_cx::{CodegenArgs, ModuleOutputType, SpirvMetadata};
 use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use ar::{Archive, GnuBuilder, Header};
+use nanoserde::SerJson;
 use rspirv::binary::Assemble;
 use rustc_ast::CRATE_NODE_ID;
 use rustc_codegen_spirv_types::{CompileResult, ModuleResult};
@@ -20,7 +21,7 @@ use rustc_session::Session;
 use std::env;
 use std::ffi::CString;
 use std::fs::File;
-use std::io::{BufWriter, Read};
+use std::io::Read;
 use std::iter;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -153,7 +154,8 @@ fn link_exe(
             module_filename.push("module");
             post_link_single_module(sess, &cg_args, spv_binary.assemble(), &module_filename);
             cg_args.do_disassemble(&spv_binary);
-            let module_result = ModuleResult::SingleModule(module_filename);
+            let module_result =
+                ModuleResult::SingleModule(module_filename.to_string_lossy().to_string());
             CompileResult {
                 module: module_result,
                 entry_points: entry_points(&spv_binary),
@@ -172,7 +174,7 @@ fn link_exe(
                         spv_binary.assemble(),
                         &module_filename,
                     );
-                    (name, module_filename)
+                    (name, module_filename.to_string_lossy().to_string())
                 })
                 .collect();
             let module_result = ModuleResult::MultiModule(map);
@@ -183,8 +185,7 @@ fn link_exe(
         }
     };
 
-    let file = File::create(out_filename).unwrap();
-    serde_json::to_writer(BufWriter::new(file), &compile_result).unwrap();
+    std::fs::write(out_filename, compile_result.serialize_json()).unwrap();
 }
 
 fn entry_points(module: &rspirv::dr::Module) -> Vec<String> {

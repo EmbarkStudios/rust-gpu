@@ -1,13 +1,14 @@
 //! SPIR-V decorations specific to `rustc_codegen_spirv`, produced during
 //! the original codegen of a crate, and consumed by the `linker`.
 
+#![allow(clippy::question_mark)] // warning from inside the nanoserde macro
+
+use nanoserde::{DeJson, SerJson};
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Decoration, Op, Word};
 use rustc_span::{source_map::SourceMap, FileName, Pos, Span};
-use serde::{Deserialize, Serialize};
-use std::marker::PhantomData;
-use std::path::PathBuf;
 use std::{iter, slice};
+use std::{marker::PhantomData, path::Path};
 
 /// Decorations not native to SPIR-V require some form of encoding into existing
 /// SPIR-V constructs, for which we use `OpDecorateString` with decoration type
@@ -22,7 +23,7 @@ use std::{iter, slice};
 ///
 /// TODO: uses `non_semantic` instead of piggybacking off of `UserTypeGOOGLE`
 /// <https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_non_semantic_info.html>
-pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
+pub trait CustomDecoration: DeJson + SerJson {
     const ENCODING_PREFIX: &'static str;
 
     fn encode(self, id: Word) -> Instruction {
@@ -30,7 +31,7 @@ pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
         // in `serde_json` for writing to something that impls `fmt::Write`,
         // only for `io::Write`, which would require performing redundant UTF-8
         // (re)validation, or relying on `unsafe` code, to use with `String`.
-        let json = serde_json::to_string(&self).unwrap();
+        let json = self.serialize_json();
         let encoded = [Self::ENCODING_PREFIX, &json].concat();
 
         Instruction::new(
@@ -93,27 +94,26 @@ pub struct LazilyDeserialized<'a, D> {
     _marker: PhantomData<D>,
 }
 
-impl<'a, D: Deserialize<'a>> LazilyDeserialized<'a, D> {
+impl<'a, D: DeJson> LazilyDeserialized<'a, D> {
     pub fn deserialize(self) -> D {
-        serde_json::from_str(self.json).unwrap()
+        D::deserialize_json(self.json).unwrap()
     }
 }
 
 /// An `OpFunction` with `#[spirv(unroll_loops)]` on the Rust `fn` definition,
 /// which should get `LoopControl::UNROLL` applied to all of its loops'
 /// `OpLoopMerge` instructions, during structuralization.
-#[derive(Deserialize, Serialize)]
+#[derive(DeJson, SerJson)]
 pub struct UnrollLoopsDecoration {}
 
 impl CustomDecoration for UnrollLoopsDecoration {
     const ENCODING_PREFIX: &'static str = "U";
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(DeJson, SerJson)]
 pub struct ZombieDecoration {
     pub reason: String,
 
-    #[serde(flatten)]
     pub span: Option<SerializedSpan>,
 }
 
@@ -124,9 +124,9 @@ impl CustomDecoration for ZombieDecoration {
 /// Representation of a `rustc` `Span` that can be turned into a `Span` again
 /// in another compilation, by reloading the file. However, note that this will
 /// fail if the file changed since, which is detected using the serialized `hash`.
-#[derive(Deserialize, Serialize)]
+#[derive(DeJson, SerJson)]
 pub struct SerializedSpan {
-    file: PathBuf,
+    file: String,
     hash: serde_adapters::SourceFileHash,
     lo: u32,
     hi: u32,
@@ -135,9 +135,9 @@ pub struct SerializedSpan {
 // HACK(eddyb) `rustc_span` types implement only `rustc_serialize` traits, but
 // not `serde` traits, and the easiest workaround is to have our own types.
 mod serde_adapters {
-    use serde::{Deserialize, Serialize};
+    use nanoserde::{DeJson, SerJson};
 
-    #[derive(Copy, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Copy, Clone, PartialEq, Eq, DeJson, SerJson)]
     pub enum SourceFileHashAlgorithm {
         Md5,
         Sha1,
@@ -154,7 +154,7 @@ mod serde_adapters {
         }
     }
 
-    #[derive(Copy, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Copy, Clone, PartialEq, Eq, DeJson, SerJson)]
     pub struct SourceFileHash {
         kind: SourceFileHashAlgorithm,
         value: [u8; 32],
@@ -197,7 +197,11 @@ impl SerializedSpan {
             file: match &file.name {
                 // We can only support real files, not "synthetic" ones (which
                 // are almost never exposed to the compiler backend anyway).
-                FileName::Real(real_name) => real_name.local_path()?.to_path_buf(),
+                FileName::Real(real_name) => real_name
+                    .local_path()?
+                    .to_path_buf()
+                    .to_string_lossy()
+                    .to_string(),
                 _ => return None,
             },
             hash: file.src_hash.into(),
@@ -207,7 +211,7 @@ impl SerializedSpan {
     }
 
     pub fn to_rustc(&self, source_map: &SourceMap) -> Option<Span> {
-        let file = source_map.load_file(&self.file).ok()?;
+        let file = source_map.load_file(Path::new(&self.file)).ok()?;
 
         // If the file has changed since serializing, there's not much we can do,
         // other than avoid creating invalid/confusing `Span`s.
