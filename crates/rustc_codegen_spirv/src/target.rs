@@ -75,29 +75,32 @@ impl SpirvTarget {
         }
     }
 
+    fn init_target_opts(&self) -> TargetOptions {
+        let mut o = TargetOptions::default();
+        o.simd_types_indirect = false;
+        o.allows_weak_linkage = false;
+        o.crt_static_allows_dylibs = true;
+        o.dll_prefix = "".into();
+        o.dll_suffix = ".spv".into();
+        o.dynamic_linking = true;
+        o.emit_debug_gdb_scripts = false;
+        o.linker_flavor = LinkerFlavor::Ld;
+        o.panic_strategy = PanicStrategy::Abort;
+        o.os = "unknown".into();
+        o.env = self.env.to_string().into();
+        o.vendor = self.vendor.clone().into();
+        // TODO: Investigate if main_needs_argc_argv is useful (for building exes)
+        o.main_needs_argc_argv = false;
+        o
+    }
+
     pub fn rustc_target(&self) -> Target {
         Target {
             llvm_target: self.to_string().into(),
             pointer_width: 32,
             data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".into(),
             arch: ARCH.into(),
-            options: TargetOptions {
-                simd_types_indirect: false,
-                allows_weak_linkage: false,
-                crt_static_allows_dylibs: true,
-                dll_prefix: "".into(),
-                dll_suffix: ".spv".into(),
-                dynamic_linking: true,
-                emit_debug_gdb_scripts: false,
-                linker_flavor: LinkerFlavor::Ld,
-                panic_strategy: PanicStrategy::Abort,
-                os: "unknown".into(),
-                env: self.env.to_string().into(),
-                vendor: self.vendor.clone().into(),
-                // TODO: Investigate if main_needs_argc_argv is useful (for building exes)
-                main_needs_argc_argv: false,
-                ..Default::default()
-            },
+            options: self.init_target_opts(),
         }
     }
 }
