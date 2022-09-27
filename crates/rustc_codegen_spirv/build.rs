@@ -32,9 +32,21 @@ fn get_required_commit_hash() -> Result<String, Box<dyn Error>> {
 }
 
 fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
-    if !cfg!(feature = "skip-toolchain-check") {
-        // gets the commit hash from current rustc
+    // if we're building from local source, check if REQUIRED_RUST_TOOLCHAIN matches ../../rust-toolchain
+    println!("{}", std::env::current_dir()?.display());
+    if std::env::current_dir()?.ends_with("crates/rustc_codegen_spirv") {
+        let current_toolchain = std::fs::read_to_string("../../rust-toolchain")?;
+        if !current_toolchain.contains(REQUIRED_RUST_TOOLCHAIN) {
+            return Err(Box::<dyn Error>::from(format!(
+                "error: building from local source while `REQUIRED_RUST_TOOLCHAIN` (defined in `{}`) doesn't match `{}`",
+                file!(),
+                std::path::Path::new("../../rust-toolchain").canonicalize()?.display()
+            )));
+        }
+    }
 
+    if !cfg!(feature = "skip-toolchain-check") {
+        // check if our current rustc's commit hash matches with what we expect it to be
         let current_hash = get_rustc_commit_hash()?;
         let required_hash = get_required_commit_hash()?;
         if current_hash != required_hash {
@@ -46,8 +58,7 @@ fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
                 .unwrap_or_default();
 
             return Err(Box::<dyn Error>::from(format!(
-                r#"
-error: wrong toolchain detected (found commit hash `{current_hash}`, expected `{required_hash}`).
+                r#"error: wrong toolchain detected (found commit hash `{current_hash}`, expected `{required_hash}`).
 Make sure your `rust_toolchain` file contains the following:
 -------------
 {stripped_toolchain}
