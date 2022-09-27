@@ -37,6 +37,7 @@ compile_error!(
     "Either \"use-compiled-tools\" (enabled by default) or \"use-installed-tools\" may be enabled."
 );
 
+extern crate rustc_apfloat;
 extern crate rustc_ast;
 extern crate rustc_attr;
 extern crate rustc_codegen_ssa;
