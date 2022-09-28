@@ -163,7 +163,7 @@ pub fn main_fs(
         let to_frag = v - from_coord(drag_start);
         let start_to_end = from_coord(drag_end) - from_coord(drag_start);
         let det = to_frag.perp_dot(start_to_end).abs();
-        distance /= 1.0 + det.min(1.0).powf(2.0);
+        distance /= 1.0 + det.powf(2.0);
         let t = constants.time;
         let rot = move |factor: f32| {
             (Mat2::from_angle((t / 3.0 + distance * factor).sin() * 3.0) * v).normalize()
