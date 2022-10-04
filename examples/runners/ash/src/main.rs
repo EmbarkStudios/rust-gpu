@@ -76,6 +76,7 @@ use ash::{
     vk,
 };
 
+use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 use winit::{
     event::{Event, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -271,11 +272,10 @@ impl RenderBase {
                 .map(|raw_name| raw_name.as_ptr())
                 .collect();
 
-            let mut extension_names_raw = ash_window::enumerate_required_extensions(&window)
-                .unwrap()
-                .iter()
-                .map(|ext| ext.as_ptr())
-                .collect::<Vec<_>>();
+            let mut extension_names_raw =
+                ash_window::enumerate_required_extensions(window.raw_display_handle())
+                    .unwrap()
+                    .to_vec();
             if options.debug_layer {
                 extension_names_raw.push(ext::DebugUtils::name().as_ptr());
             }
@@ -299,8 +299,16 @@ impl RenderBase {
             }
         };
 
-        let surface =
-            unsafe { ash_window::create_surface(&entry, &instance, &window, None).unwrap() };
+        let surface = unsafe {
+            ash_window::create_surface(
+                &entry,
+                &instance,
+                window.raw_display_handle(),
+                window.raw_window_handle(),
+                None,
+            )
+            .unwrap()
+        };
 
         let (debug_utils_loader, debug_call_back) = if options.debug_layer {
             let debug_utils_loader = ext::DebugUtils::new(&entry, &instance);

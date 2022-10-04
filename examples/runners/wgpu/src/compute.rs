@@ -1,7 +1,6 @@
 use wgpu::util::DeviceExt;
 
 use super::Options;
-use futures::future::join;
 use std::{convert::TryInto, future::Future, time::Duration};
 
 fn block_on<T>(future: impl Future<Output = T>) -> T {
@@ -24,13 +23,12 @@ pub async fn start_internal(
     _options: &Options,
     shader_binary: wgpu::ShaderModuleDescriptor<'static>,
 ) {
-    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
-    let adapter = instance
-        .request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: wgpu::PowerPreference::default(),
-            force_fallback_adapter: false,
-            compatible_surface: None,
-        })
+    let backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::PRIMARY);
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        backends,
+        dx12_shader_compiler: wgpu::util::dx12_shader_compiler_from_env().unwrap_or_default(),
+    });
+    let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
         .await
         .expect("Failed to find an appropriate adapter");
 
@@ -51,7 +49,7 @@ pub async fn start_internal(
     let timestamp_period = queue.get_timestamp_period();
 
     // Load the shaders from disk
-    let module = device.create_shader_module(&shader_binary);
+    let module = device.create_shader_module(shader_binary);
 
     let top = 2u32.pow(20);
     let src_range = 1..top;
@@ -135,7 +133,7 @@ pub async fn start_internal(
         cpass.set_bind_group(0, &bind_group, &[]);
         cpass.set_pipeline(&compute_pipeline);
         cpass.write_timestamp(&queries, 0);
-        cpass.dispatch(src_range.len() as u32 / 64, 1, 1);
+        cpass.dispatch_workgroups(src_range.len() as u32 / 64, 1, 1);
         cpass.write_timestamp(&queries, 1);
     }
 
@@ -151,41 +149,41 @@ pub async fn start_internal(
     queue.submit(Some(encoder.finish()));
     let buffer_slice = readback_buffer.slice(..);
     let timestamp_slice = timestamp_buffer.slice(..);
-    let timestamp_future = timestamp_slice.map_async(wgpu::MapMode::Read);
-    let buffer_future = buffer_slice.map_async(wgpu::MapMode::Read);
+    timestamp_slice.map_async(wgpu::MapMode::Read, |r| r.unwrap());
+    buffer_slice.map_async(wgpu::MapMode::Read, |r| r.unwrap());
+    // NOTE(eddyb) `poll` should return only after the above callbacks fire
+    // (see also https://github.com/gfx-rs/wgpu/pull/2698 for more details).
     device.poll(wgpu::Maintain::Wait);
 
-    if let (Ok(()), Ok(())) = join(buffer_future, timestamp_future).await {
-        let data = buffer_slice.get_mapped_range();
-        let timing_data = timestamp_slice.get_mapped_range();
-        let result = data
-            .chunks_exact(4)
-            .map(|b| u32::from_ne_bytes(b.try_into().unwrap()))
-            .collect::<Vec<_>>();
-        let timings = timing_data
-            .chunks_exact(8)
-            .map(|b| u64::from_ne_bytes(b.try_into().unwrap()))
-            .collect::<Vec<_>>();
-        drop(data);
-        readback_buffer.unmap();
-        drop(timing_data);
-        timestamp_buffer.unmap();
-        let mut max = 0;
-        for (src, out) in src_range.zip(result.iter().copied()) {
-            if out == u32::MAX {
-                println!("{src}: overflowed");
-                break;
-            } else if out > max {
-                max = out;
-                // Should produce <https://oeis.org/A006877>
-                println!("{src}: {out}");
-            }
+    let data = buffer_slice.get_mapped_range();
+    let timing_data = timestamp_slice.get_mapped_range();
+    let result = data
+        .chunks_exact(4)
+        .map(|b| u32::from_ne_bytes(b.try_into().unwrap()))
+        .collect::<Vec<_>>();
+    let timings = timing_data
+        .chunks_exact(8)
+        .map(|b| u64::from_ne_bytes(b.try_into().unwrap()))
+        .collect::<Vec<_>>();
+    drop(data);
+    readback_buffer.unmap();
+    drop(timing_data);
+    timestamp_buffer.unmap();
+    let mut max = 0;
+    for (src, out) in src_range.zip(result.iter().copied()) {
+        if out == u32::MAX {
+            println!("{src}: overflowed");
+            break;
+        } else if out > max {
+            max = out;
+            // Should produce <https://oeis.org/A006877>
+            println!("{src}: {out}");
         }
-        println!(
-            "Took: {:?}",
-            Duration::from_nanos(
-                ((timings[1] - timings[0]) as f64 * f64::from(timestamp_period)) as u64
-            )
-        );
     }
+    println!(
+        "Took: {:?}",
+        Duration::from_nanos(
+            ((timings[1] - timings[0]) as f64 * f64::from(timestamp_period)) as u64
+        )
+    );
 }
