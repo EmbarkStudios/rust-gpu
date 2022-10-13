@@ -5,7 +5,7 @@ use core::arch::asm;
 
 /// An acceleration structure type which is an opaque reference to an
 /// acceleration structure handle as defined in the client API specification.
-#[spirv(acceleration_structure)]
+#[rust_gpu::spirv(acceleration_structure)]
 #[derive(Copy, Clone)]
 pub struct AccelerationStructure {
     pub(crate) _private: u32,
@@ -185,7 +185,7 @@ pub enum CommittedIntersection {
 }
 
 /// A ray query type which is an opaque object representing a ray traversal.
-#[spirv(ray_query)]
+#[rust_gpu::spirv(ray_query)]
 pub struct RayQuery {
     _private: u32,
 }

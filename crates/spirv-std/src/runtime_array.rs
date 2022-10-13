@@ -6,7 +6,7 @@ use core::marker::PhantomData;
 /// Unfortunately, sometimes SPIR-V provides an unsized array with no way of obtaining its length.
 /// Hence, this type represents something very similar to a slice, but with no way of knowing its
 /// length.
-#[spirv(runtime_array)]
+#[rust_gpu::spirv(runtime_array)]
 pub struct RuntimeArray<T> {
     // spooky! this field does not exist, so if it's referenced in rust code, things will explode
     _do_not_touch: u32,

@@ -6,10 +6,10 @@
         asm_experimental_arch,
         core_intrinsics,
         lang_items,
-        register_attr,
+        register_tool,
         repr_simd,
     ),
-    register_attr(spirv)
+    register_tool(rust_gpu)
 )]
 // BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
@@ -93,8 +93,8 @@
 //! Core functions, traits, and more that make up a "standard library" for SPIR-V for use in
 //! rust-gpu.
 
-#[cfg_attr(not(target_arch = "spirv"), macro_use)]
 pub extern crate spirv_std_macros as macros;
+pub extern crate spirv_std_macros as rust_gpu;
 
 pub mod arch;
 pub mod byte_addressable_buffer;
