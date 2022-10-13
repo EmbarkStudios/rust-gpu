@@ -100,8 +100,8 @@ use std::fmt::Write;
 ///
 /// A basic example looks like this:
 /// ```rust,ignore
-/// #[spirv(vertex)]
-/// fn main(#[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled)) {}
+/// #[rust_gpu::spirv(vertex)]
+/// fn main(#[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled)) {}
 /// ```
 ///
 /// ## Arguments
@@ -150,7 +150,7 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     match tt {
                         TokenTree::Group(group)
                             if group.delimiter() == Delimiter::Bracket
-                                && matches!(group.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident == "spirv")
+                                && matches!(group.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident == "rust_gpu")
                                 && matches!(sub_tokens.last(), Some(TokenTree::Punct(p)) if p.as_char() == '#') =>
                         {
                             sub_tokens.pop();
