@@ -141,7 +141,7 @@ struct Structurizer<'a> {
     block_id_to_idx: FxHashMap<BlockId, BlockIdx>,
 
     /// `LoopControl` to use in all loops' `OpLoopMerge` instruction.
-    /// Currently only affected by function-scoped `#[spirv(unroll_loops)]`.
+    /// Currently only affected by function-scoped `#[rust_gpu::spirv(unroll_loops)]`.
     loop_control: LoopControl,
 
     /// Number of edges pointing to each block.

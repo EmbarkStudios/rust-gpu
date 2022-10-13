@@ -48,6 +48,7 @@ impl<'tcx> CodegenCx<'tcx> {
             body.params
         };
         for (arg_abi, hir_param) in fn_abi.args.iter().zip(hir_params) {
+            eprintln!("YUP***********");
             match arg_abi.mode {
                 PassMode::Direct(_) => {}
                 PassMode::Pair(..) => {
@@ -476,7 +477,7 @@ impl<'tcx> CodegenCx<'tcx> {
             if storage_class != StorageClass::Output {
                 self.tcx.sess.span_err(
                     invariant.span,
-                    "#[spirv(invariant)] is only valid on Output variables",
+                    "#[rust_gpu::spirv(invariant)] is only valid on Output variables",
                 );
             }
         }
@@ -510,14 +511,14 @@ impl<'tcx> CodegenCx<'tcx> {
             } else {
                 self.tcx.sess.span_err(
                     attachment_index.span,
-                    "#[spirv(input_attachment_index)] is only valid on Image types with dim = SubpassData"
+                    "#[rust_gpu::spirv(input_attachment_index)] is only valid on Image types with dim = SubpassData"
                 );
             }
             decoration_supersedes_location = true;
         } else if is_subpass_input {
             self.tcx.sess.span_err(
                 hir_param.ty_span,
-                "Image types with dim = SubpassData require #[spirv(input_attachment_index)] decoration",
+                "Image types with dim = SubpassData require #[rust_gpu::spirv(input_attachment_index)] decoration",
             );
         }
 
@@ -568,7 +569,7 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     // Booleans are only allowed in some storage classes. Error if they're in others.
-    // Integers and f64s must be decorated with `#[spirv(flat)]`.
+    // Integers and f64s must be decorated with `#[rust_gpu::spirv(flat)]`.
     fn check_for_bad_types(
         &self,
         span: Span,
@@ -603,9 +604,10 @@ impl<'tcx> CodegenCx<'tcx> {
             && must_be_flat
             && !is_flat
         {
-            self.tcx
-                .sess
-                .span_err(span, "parameter must be decorated with #[spirv(flat)]");
+            self.tcx.sess.span_err(
+                span,
+                "parameter must be decorated with #[rust_gpu::spirv(flat)]",
+            );
         }
         fn recurse(cx: &CodegenCx<'_>, ty: Word, has_bool: &mut bool, must_be_flat: &mut bool) {
             match cx.lookup_type(ty) {

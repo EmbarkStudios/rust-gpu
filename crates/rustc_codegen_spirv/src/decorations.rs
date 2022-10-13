@@ -99,7 +99,7 @@ impl<'a, D: Deserialize<'a>> LazilyDeserialized<'a, D> {
     }
 }
 
-/// An `OpFunction` with `#[spirv(unroll_loops)]` on the Rust `fn` definition,
+/// An `OpFunction` with `#[rust_gpu::spirv(unroll_loops)]` on the Rust `fn` definition,
 /// which should get `LoopControl::UNROLL` applied to all of its loops'
 /// `OpLoopMerge` instructions, during structuralization.
 #[derive(Deserialize, Serialize)]

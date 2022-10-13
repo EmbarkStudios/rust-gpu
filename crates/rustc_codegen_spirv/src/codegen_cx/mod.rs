@@ -55,7 +55,7 @@ pub struct CodegenCx<'tcx> {
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
     zombie_decorations: RefCell<FxHashMap<Word, ZombieDecoration>>,
-    /// Functions that have `#[spirv(unroll_loops)]`, and therefore should
+    /// Functions that have `#[rust_gpu::spirv(unroll_loops)]`, and therefore should
     /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
     /// instructions, during structuralization.
     unroll_loops_decorations: RefCell<FxHashSet<Word>>,
