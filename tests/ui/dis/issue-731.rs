@@ -7,7 +7,7 @@
 
 use spirv_std as _;
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(mut in_array: [f32; 3], out_array: &mut [f32; 3]) {
     in_array[0] += 1.0;
     *out_array = in_array;

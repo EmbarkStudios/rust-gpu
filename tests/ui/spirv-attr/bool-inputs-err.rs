@@ -8,11 +8,11 @@ pub struct Boolthing {
     b: bool,
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn fragment(
     input: bool,
     output: &mut bool,
-    #[spirv(push_constant)] push: &bool,
-    #[spirv(uniform)] uniform: &Boolthing,
+    #[rust_gpu::spirv(push_constant)] push: &bool,
+    #[rust_gpu::spirv(uniform)] uniform: &Boolthing,
 ) {
 }

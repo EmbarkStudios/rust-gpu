@@ -4,11 +4,11 @@
 use core::arch::asm;
 use spirv_std::{arch, Image, Sampler};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] image2d: &Image!(2D, type=f32, sampled),
-    #[spirv(descriptor_set = 2, binding = 2)] cubemap: &Image!(cube, type=f32, sampled),
-    #[spirv(descriptor_set = 3, binding = 3)] sampler: &Sampler,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image2d: &Image!(2D, type=f32, sampled),
+    #[rust_gpu::spirv(descriptor_set = 2, binding = 2)] cubemap: &Image!(cube, type=f32, sampled),
+    #[rust_gpu::spirv(descriptor_set = 3, binding = 3)] sampler: &Sampler,
     output: &mut glam::Vec4,
 ) {
     let v2 = glam::Vec2::new(0.0, 1.0);
@@ -24,10 +24,10 @@ pub fn main(
     target_env = "vulkan1.1spv1.4",
     target_env = "vulkan1.2"
 )))]
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main_rect(
-    #[spirv(descriptor_set = 1, binding = 1)] rect: &Image!(rect, type=f32, sampled),
-    #[spirv(descriptor_set = 3, binding = 3)] sampler: &Sampler,
+    #[rust_gpu::spirv(descriptor_set = 1, binding = 1)] rect: &Image!(rect, type=f32, sampled),
+    #[rust_gpu::spirv(descriptor_set = 3, binding = 3)] sampler: &Sampler,
     output: &mut glam::Vec4,
 ) {
     // Must be asm! and not -Ctarget-feature=+SampledRect due to being in cfg

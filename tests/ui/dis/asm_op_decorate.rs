@@ -39,7 +39,7 @@ fn add_decorate() {
         );
     }
 }
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     add_decorate();
 }

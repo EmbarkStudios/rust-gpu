@@ -56,7 +56,7 @@ fn sample_proj_lod(
         result
     }
 }
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     sample_proj_lod(glam::Vec4::ZERO, glam::Vec2::ZERO, glam::Vec2::ZERO, 0, 0);
 }

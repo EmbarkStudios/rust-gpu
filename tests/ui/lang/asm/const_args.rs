@@ -15,7 +15,7 @@ fn asm() {
     }
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     asm();
 }

@@ -6,7 +6,7 @@
 
 use spirv_std as _;
 
-#[spirv(fragment)]
-pub fn main(#[spirv(flat)] out: &mut u32) {
+#[rust_gpu::spirv(fragment)]
+pub fn main(#[rust_gpu::spirv(flat)] out: &mut u32) {
     *out = None.unwrap_or(15);
 }

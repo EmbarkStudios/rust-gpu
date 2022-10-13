@@ -4,7 +4,7 @@
 
 use spirv_std::{glam::Vec2, macros::debug_printf};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     unsafe {
         debug_printf!("%1");

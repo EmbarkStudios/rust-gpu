@@ -9,7 +9,7 @@ struct S {
 
 fn f(x: &u32) {}
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     let s = S { x: 2, y: 2 };
     f(&s.x);

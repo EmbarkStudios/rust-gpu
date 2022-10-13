@@ -2,7 +2,7 @@
 
 use spirv_std::arch::{signed_max, signed_min, unsigned_max, unsigned_min};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     assert!(unsigned_min(39_u8, 13) == 13);
     assert!(unsigned_min(39_u16, 13) == 13);

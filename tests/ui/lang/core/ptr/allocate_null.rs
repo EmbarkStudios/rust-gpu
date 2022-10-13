@@ -6,7 +6,7 @@ use spirv_std as _;
 use core::ptr::null;
 const NULL_PTR: *const i32 = null();
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     let _null_ptr = NULL_PTR;
 }

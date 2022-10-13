@@ -1,6 +1,6 @@
 // build-pass
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     spirv_std::arch::kill();
 }

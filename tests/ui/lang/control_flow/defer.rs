@@ -2,8 +2,8 @@
 
 use spirv_std as _;
 
-#[spirv(fragment)]
-pub fn main(#[spirv(flat)] i: i32) {
+#[rust_gpu::spirv(fragment)]
+pub fn main(#[rust_gpu::spirv(flat)] i: i32) {
     while i < 32 {
         let current_position = 0;
         if i < current_position {

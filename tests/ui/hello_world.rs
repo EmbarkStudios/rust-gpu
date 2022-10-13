@@ -3,5 +3,5 @@
 
 use spirv_std as _;
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {}

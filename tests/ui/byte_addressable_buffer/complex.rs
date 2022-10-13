@@ -17,9 +17,9 @@ pub struct Nesty {
     z: f32,
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn load(
-    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
     out: &mut Nesty,
 ) {
     unsafe {
@@ -28,9 +28,9 @@ pub fn load(
     }
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn store(
-    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
     val: Nesty,
 ) {
     unsafe {

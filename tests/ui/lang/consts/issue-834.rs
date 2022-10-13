@@ -2,7 +2,7 @@
 
 use spirv_std as _;
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     let arr = [0u32; 32];
 }

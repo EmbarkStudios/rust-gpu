@@ -3,11 +3,11 @@
 
 use spirv_std::{Image, Sampler};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled),
-    #[spirv(descriptor_set = 1, binding = 1)] image_array: &Image!(2D, type=f32, arrayed, sampled),
-    #[spirv(descriptor_set = 2, binding = 2)] sampler: &Sampler,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled),
+    #[rust_gpu::spirv(descriptor_set = 1, binding = 1)] image_array: &Image!(2D, type=f32, arrayed, sampled),
+    #[rust_gpu::spirv(descriptor_set = 2, binding = 2)] sampler: &Sampler,
     output: &mut f32,
 ) {
     let v2 = glam::Vec2::new(0.0, 1.0);
@@ -26,10 +26,10 @@ pub fn main(
     target_env = "vulkan1.1spv1.4",
     target_env = "vulkan1.2"
 )))]
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main_cubemap(
-    #[spirv(descriptor_set = 2, binding = 2)] sampler: &Sampler,
-    #[spirv(descriptor_set = 3, binding = 3)] cubemap: &Image!(3D, type=f32, sampled),
+    #[rust_gpu::spirv(descriptor_set = 2, binding = 2)] sampler: &Sampler,
+    #[rust_gpu::spirv(descriptor_set = 3, binding = 3)] cubemap: &Image!(3D, type=f32, sampled),
     output: &mut f32,
 ) {
     let v3 = glam::Vec3A::new(0.0, 0.0, 1.0);

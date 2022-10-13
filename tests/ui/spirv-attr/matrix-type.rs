@@ -4,7 +4,7 @@
 use spirv_std as _;
 
 #[derive(Clone, Copy)]
-#[spirv(matrix)]
+#[rust_gpu::spirv(matrix)]
 pub struct Affine3 {
     pub x: glam::Vec3,
     pub y: glam::Vec3,
@@ -35,19 +35,19 @@ impl Default for Affine3 {
     }
 }
 
-#[spirv(closest_hit)]
+#[rust_gpu::spirv(closest_hit)]
 pub fn main_attrs(
-    #[spirv(object_to_world)] _object_to_world: Affine3,
-    #[spirv(world_to_object)] _world_to_object: Affine3,
+    #[rust_gpu::spirv(object_to_world)] _object_to_world: Affine3,
+    #[rust_gpu::spirv(world_to_object)] _world_to_object: Affine3,
 ) {
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main_default(out: &mut Affine3) {
     *out = Affine3::default();
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main_add(affine3: Affine3, out: &mut glam::Vec3) {
     *out = affine3.x + affine3.y + affine3.z + affine3.w;
 }

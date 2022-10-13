@@ -2,10 +2,10 @@
 
 use spirv_std::{glam::Vec4, ByteAddressableBuffer};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn load(
-    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[spirv(flat)] out: &mut [i32; 4],
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[rust_gpu::spirv(flat)] out: &mut [i32; 4],
 ) {
     unsafe {
         let buf = ByteAddressableBuffer::new(buf);
@@ -13,10 +13,10 @@ pub fn load(
     }
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn store(
-    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[spirv(flat)] val: [i32; 4],
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[rust_gpu::spirv(flat)] val: [i32; 4],
 ) {
     unsafe {
         let mut buf = ByteAddressableBuffer::new(buf);

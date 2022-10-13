@@ -20,7 +20,7 @@ impl Struct {
     }
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     unsafe {
         debug_printf!();

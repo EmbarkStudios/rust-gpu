@@ -14,5 +14,5 @@ pub fn create_uninit_and_write() {
     let _maybei32 = unsafe { maybei32.assume_init() };
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {}

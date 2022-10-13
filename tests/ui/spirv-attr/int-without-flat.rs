@@ -2,5 +2,5 @@
 
 use spirv_std as _;
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn fragment(int: u32, double: f64) {}

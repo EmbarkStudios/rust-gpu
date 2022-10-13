@@ -20,11 +20,11 @@ fn deep_transpose(r: &'static &'static Mat2) -> Mat2 {
     r.transpose()
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
-    #[spirv(flat)] scalar_out: &mut u32,
-    #[spirv(push_constant)] vec_in: &Vec2,
-    #[spirv(flat)] bool_out: &mut u32,
+    #[rust_gpu::spirv(flat)] scalar_out: &mut u32,
+    #[rust_gpu::spirv(push_constant)] vec_in: &Vec2,
+    #[rust_gpu::spirv(flat)] bool_out: &mut u32,
     vec_out: &mut Vec2,
 ) {
     *scalar_out = deep_load(&&123);

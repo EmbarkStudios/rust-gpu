@@ -2,8 +2,10 @@
 
 use spirv_std::arch::IndexUnchecked;
 
-#[spirv(compute(threads(64)))]
-pub fn main(#[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffer: &mut [u32]) {
+#[rust_gpu::spirv(compute(threads(64)))]
+pub fn main(
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffer: &mut [u32],
+) {
     let reference = unsafe { buffer.index_unchecked_mut(0) };
 
     let old = unsafe {

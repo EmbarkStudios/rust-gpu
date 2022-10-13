@@ -4,10 +4,10 @@
 
 use spirv_std::{arch, Image};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
     texels: glam::Vec2,
-    #[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled=false),
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled=false),
 ) {
     unsafe {
         image.write(glam::UVec2::new(0, 1), texels);

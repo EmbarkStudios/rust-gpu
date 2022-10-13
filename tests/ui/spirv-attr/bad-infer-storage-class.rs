@@ -3,13 +3,13 @@
 
 use spirv_std::Image;
 
-#[spirv(vertex)]
+#[rust_gpu::spirv(vertex)]
 pub fn main(
-    #[spirv(uniform)] error: &Image!(2D, type=f32),
-    #[spirv(uniform_constant)] warning: &Image!(2D, type=f32),
+    #[rust_gpu::spirv(uniform)] error: &Image!(2D, type=f32),
+    #[rust_gpu::spirv(uniform_constant)] warning: &Image!(2D, type=f32),
 ) {
 }
 
 // https://github.com/EmbarkStudios/rust-gpu/issues/585
-#[spirv(vertex)]
+#[rust_gpu::spirv(vertex)]
 pub fn issue_585(invalid: Image!(2D, type=f32)) {}

@@ -3,11 +3,14 @@
 
 use spirv_std::{Image, RuntimeArray, Sampler};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] sampler: &Sampler,
-    #[spirv(descriptor_set = 0, binding = 1)] slice: &RuntimeArray<Image!(2D, type=f32, sampled)>,
-    #[spirv(descriptor_set = 0, binding = 2)] sized_slice: &[Image!(2D, type=f32, sampled); 5],
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] sampler: &Sampler,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 1)] slice: &RuntimeArray<
+        Image!(2D, type=f32, sampled),
+    >,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 2)] sized_slice: &[Image!(2D, type=f32, sampled);
+         5],
     output: &mut glam::Vec4,
 ) {
     let img = unsafe { slice.index(5) };

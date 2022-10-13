@@ -43,7 +43,7 @@ fn render(eye: Vec3, dir: Vec3, start: f32, end: f32) -> f32 {
     end
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     let v = Vec3::new(1.0, 1.0, 1.0);
     render(v, v, 1.0, 2.0);

@@ -1,13 +1,13 @@
 // build-pass
 // compile-flags: -Ctarget-feature=+RayTracingKHR,+ext:SPV_KHR_ray_tracing
 
-#[spirv(ray_generation)]
+#[rust_gpu::spirv(ray_generation)]
 // Rustfmt will eat long attributes (https://github.com/rust-lang/rustfmt/issues/4579)
 #[rustfmt::skip]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)]
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)]
     acceleration_structure: &spirv_std::ray_tracing::AccelerationStructure,
-    #[spirv(ray_payload)] payload: &mut glam::Vec3,
+    #[rust_gpu::spirv(ray_payload)] payload: &mut glam::Vec3,
 ) {
     unsafe {
         acceleration_structure.trace_ray(

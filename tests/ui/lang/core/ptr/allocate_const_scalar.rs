@@ -10,7 +10,7 @@ use spirv_std as _;
 use core::ptr::Unique;
 const POINTER: Unique<[u8; 4]> = Unique::<[u8; 4]>::dangling();
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     let _pointer = POINTER;
 }

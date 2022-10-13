@@ -24,7 +24,7 @@ impl<T: Num + Ord + Copy> Iterator for RangeIter<T> {
     }
 }
 
-#[spirv(fragment)]
-pub fn main(#[spirv(flat)] i: i32) {
+#[rust_gpu::spirv(fragment)]
+pub fn main(#[rust_gpu::spirv(flat)] i: i32) {
     for _ in RangeIter(0..i) {}
 }

@@ -26,10 +26,10 @@ impl<T: core::ops::Deref<Target = [u32]>> Newtype<T> {
 
 struct CustomPair(u32, u32);
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] slice: &[u32],
-    #[spirv(flat)] out: &mut u32,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] slice: &[u32],
+    #[rust_gpu::spirv(flat)] out: &mut u32,
 ) {
     let newtype_slice = Newtype(slice);
     *out = newtype_slice.get()[0];

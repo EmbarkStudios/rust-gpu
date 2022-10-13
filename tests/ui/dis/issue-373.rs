@@ -17,7 +17,7 @@ fn f() -> S {
     S { x: 2.0 }
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(out: &mut f32) {
     *out = f().x;
 }

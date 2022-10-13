@@ -7,10 +7,10 @@ pub struct SmallStruct {
     b: u32,
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn load(
-    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[spirv(flat)] out: &mut SmallStruct,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[rust_gpu::spirv(flat)] out: &mut SmallStruct,
 ) {
     unsafe {
         let buf = ByteAddressableBuffer::new(buf);
@@ -18,11 +18,11 @@ pub fn load(
     }
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn store(
-    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[spirv(flat)] a: u32,
-    #[spirv(flat)] b: u32,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[rust_gpu::spirv(flat)] a: u32,
+    #[rust_gpu::spirv(flat)] b: u32,
 ) {
     let val = SmallStruct { a, b };
     unsafe {

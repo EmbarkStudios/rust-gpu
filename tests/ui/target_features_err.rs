@@ -3,7 +3,7 @@
 
 use spirv_std as _;
 
-#[spirv(any_hit)]
+#[rust_gpu::spirv(any_hit)]
 pub fn main() {
     unsafe { spirv_std::arch::terminate_ray() }
 }

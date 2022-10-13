@@ -7,7 +7,7 @@ union U {
     a: (),
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     let _u = U { a: () };
 }

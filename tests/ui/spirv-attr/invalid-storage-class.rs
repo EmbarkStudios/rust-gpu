@@ -1,15 +1,15 @@
-// Tests that certain storage class `#[spirv(...)]` attributes are disallowed.
+// Tests that certain storage class `#[rust_gpu::spirv(...)]` attributes are disallowed.
 
 // build-fail
 
 use spirv_std as _;
 
-#[spirv(vertex)]
+#[rust_gpu::spirv(vertex)]
 fn _entry(
-    #[spirv(input)] _: (),
-    #[spirv(output)] _: (),
-    #[spirv(private)] _: (),
-    #[spirv(function)] _: (),
-    #[spirv(generic)] _: (),
+    #[rust_gpu::spirv(input)] _: (),
+    #[rust_gpu::spirv(output)] _: (),
+    #[rust_gpu::spirv(private)] _: (),
+    #[rust_gpu::spirv(function)] _: (),
+    #[rust_gpu::spirv(generic)] _: (),
 ) {
 }

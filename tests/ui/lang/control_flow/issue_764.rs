@@ -40,11 +40,11 @@ impl GivesFinalTransform for (i32, Transform2D) {
     }
 }
 
-#[spirv(compute(threads(64)))]
+#[rust_gpu::spirv(compute(threads(64)))]
 pub fn main_cs(
-    #[spirv(global_invocation_id)] id: UVec3,
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] raw_data: &mut [u8],
-    #[spirv(position)] output_position: &mut Vec4,
+    #[rust_gpu::spirv(global_invocation_id)] id: UVec3,
+    #[rust_gpu::spirv(storage_buffer, descriptor_set = 0, binding = 0)] raw_data: &mut [u8],
+    #[rust_gpu::spirv(position)] output_position: &mut Vec4,
 ) {
     let index = id.x as usize;
     let final_transform =

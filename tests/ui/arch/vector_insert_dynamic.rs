@@ -3,7 +3,7 @@
 
 use spirv_std::arch;
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     let vector = glam::Vec2::new(1.0, 2.0);
     let expected = glam::Vec2::new(1.0, 3.0);

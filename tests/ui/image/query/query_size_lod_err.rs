@@ -4,9 +4,9 @@
 
 use spirv_std::{arch, Image};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] image: &Image!(rect, type=f32, sampled),
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image: &Image!(rect, type=f32, sampled),
     output: &mut glam::UVec2,
 ) {
     *output = image.query_size_lod(0);

@@ -7,7 +7,7 @@ fn int_div(x: usize) -> usize {
     1 / x
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     int_div(0);
 }

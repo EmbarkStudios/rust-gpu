@@ -3,5 +3,5 @@
 
 use spirv_std as _;
 
-#[spirv(vertex)]
-pub fn main(#[spirv(invariant)] output: &mut f32) {}
+#[rust_gpu::spirv(vertex)]
+pub fn main(#[rust_gpu::spirv(invariant)] output: &mut f32) {}

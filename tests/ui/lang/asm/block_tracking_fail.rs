@@ -30,7 +30,7 @@ fn asm_invalid_op_terminator(x: f32) {
     }
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     asm_closed();
     asm_noreturn_open();

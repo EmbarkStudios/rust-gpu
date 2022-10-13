@@ -3,7 +3,7 @@
 
 use spirv_std as _;
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(input: glam::Mat3, output: &mut glam::Vec3) {
     let vector = input * glam::Vec3::new(1.0, 2.0, 3.0);
     *output = vector;

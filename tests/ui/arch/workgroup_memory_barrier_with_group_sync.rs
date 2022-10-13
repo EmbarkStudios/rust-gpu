@@ -7,7 +7,7 @@ unsafe fn workgroup_memory_barrier_with_group_sync() {
     spirv_std::arch::workgroup_memory_barrier_with_group_sync();
 }
 
-#[spirv(compute(threads(1, 1, 1)))]
+#[rust_gpu::spirv(compute(threads(1, 1, 1)))]
 pub fn main() {
     unsafe {
         workgroup_memory_barrier_with_group_sync();

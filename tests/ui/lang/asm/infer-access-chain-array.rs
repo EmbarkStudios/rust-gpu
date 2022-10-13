@@ -7,8 +7,12 @@ use core::arch::asm;
 use glam::Vec4;
 use spirv_std as _;
 
-#[spirv(fragment)]
-pub fn main(#[spirv(push_constant)] array_in: &[Vec4; 16], #[spirv(flat)] i: u32, out: &mut Vec4) {
+#[rust_gpu::spirv(fragment)]
+pub fn main(
+    #[rust_gpu::spirv(push_constant)] array_in: &[Vec4; 16],
+    #[rust_gpu::spirv(flat)] i: u32,
+    out: &mut Vec4,
+) {
     unsafe {
         asm!(
             "%val_ptr = OpAccessChain _ {array_ptr} {index}",

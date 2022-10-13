@@ -16,7 +16,7 @@ fn add_two_ints(x: u32, y: u32) -> u32 {
     }
     result
 }
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     add_two_ints(2, 3);
 }

@@ -3,10 +3,10 @@
 
 use spirv_std::{arch, Image};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled),
-    #[spirv(flat)] output: &mut u32,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled),
+    #[rust_gpu::spirv(flat)] output: &mut u32,
 ) {
     *output = image.query_levels();
 }

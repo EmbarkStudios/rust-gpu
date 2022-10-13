@@ -13,7 +13,7 @@ use spirv_std::image::Dimensionality;
 
 fn generic<T, const DIM: Dimensionality>() {}
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     generic::<f32, { Dimensionality::TwoD }>();
 }

@@ -5,7 +5,7 @@
 
 use spirv_std::memory::{Scope, Semantics};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     unsafe {
         spirv_std::arch::control_barrier::<

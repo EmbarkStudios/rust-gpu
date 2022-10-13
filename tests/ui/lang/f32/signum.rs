@@ -3,7 +3,7 @@
 
 use spirv_std::num_traits::Float;
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(i: f32, o: &mut f32) {
     *o = i.signum();
 }

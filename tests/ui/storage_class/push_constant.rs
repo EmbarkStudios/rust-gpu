@@ -10,7 +10,7 @@ pub struct ShaderConstants {
     pub time: f32,
 }
 
-#[spirv(fragment)]
-pub fn main(#[spirv(push_constant)] constants: &ShaderConstants) {
+#[rust_gpu::spirv(fragment)]
+pub fn main(#[rust_gpu::spirv(push_constant)] constants: &ShaderConstants) {
     let _constants = *constants;
 }

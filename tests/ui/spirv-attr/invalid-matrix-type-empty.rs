@@ -3,10 +3,10 @@
 
 use spirv_std as _;
 
-#[spirv(matrix)]
+#[rust_gpu::spirv(matrix)]
 pub struct _EmptyStruct {}
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn _entry() {
     let _empty_struct = _EmptyStruct {};
 }

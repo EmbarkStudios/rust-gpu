@@ -7,7 +7,7 @@ fn f(x: bool, y: bool) -> bool {
     x && y
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     f(false, true);
 }

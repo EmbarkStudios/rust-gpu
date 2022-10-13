@@ -4,9 +4,9 @@
 
 use spirv_std::{arch, Image};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled=false),
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled=false),
     output: &mut glam::Vec4,
 ) {
     let coords = image.read(glam::IVec2::new(0, 1));

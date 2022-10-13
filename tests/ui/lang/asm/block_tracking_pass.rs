@@ -23,7 +23,7 @@ fn asm_noreturn_single() -> ! {
     }
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     asm_label();
     asm_noreturn_single();

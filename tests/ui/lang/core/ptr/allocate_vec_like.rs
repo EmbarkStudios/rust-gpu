@@ -12,5 +12,5 @@ pub fn assign_vec_like() {
     let _vec_like = VEC_LIKE;
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {}

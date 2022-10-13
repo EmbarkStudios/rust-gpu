@@ -3,10 +3,10 @@
 
 use spirv_std as _;
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn fragment(
-    #[spirv(front_facing)] front_facing: bool,
-    #[spirv(fully_covered_ext)] fully_covered_ext: bool,
-    #[spirv(helper_invocation)] helper_invocation: bool,
+    #[rust_gpu::spirv(front_facing)] front_facing: bool,
+    #[rust_gpu::spirv(fully_covered_ext)] fully_covered_ext: bool,
+    #[rust_gpu::spirv(helper_invocation)] helper_invocation: bool,
 ) {
 }

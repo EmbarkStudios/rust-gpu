@@ -8,7 +8,7 @@ unsafe fn device_memory_barrier() {
     spirv_std::arch::device_memory_barrier();
 }
 
-#[spirv(compute(threads(1, 1, 1)))]
+#[rust_gpu::spirv(compute(threads(1, 1, 1)))]
 pub fn main() {
     unsafe {
         device_memory_barrier();

@@ -6,7 +6,7 @@ use spirv_std as _;
 fn copy_via_raw_ptr(src: &f32, dst: &mut f32) {
     unsafe { (dst as *mut f32).write(*src) }
 }
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(i: f32, o: &mut f32) {
     copy_via_raw_ptr(&i, o);
     // FIXME(eddyb) above call results in inlining `copy_via_raw_ptr`,

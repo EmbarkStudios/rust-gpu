@@ -9,7 +9,7 @@ const OFFSETS: [f32; 18] = [
 ];
 
 #[allow(unused_attributes)]
-#[spirv(fragment)]
-pub fn main(#[spirv(flat)] x: &mut u32) {
+#[rust_gpu::spirv(fragment)]
+pub fn main(#[rust_gpu::spirv(flat)] x: &mut u32) {
     *x = OFFSETS.len() as u32;
 }

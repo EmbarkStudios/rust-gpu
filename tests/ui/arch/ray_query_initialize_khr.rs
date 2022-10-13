@@ -4,12 +4,12 @@
 use glam::Vec3;
 use spirv_std::ray_tracing::{AccelerationStructure, RayFlags, RayQuery};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 // Rustfmt eats long attributes <https://github.com/rust-lang/rustfmt/issues/4579>
 #[rustfmt::skip]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] acceleration_structure: &AccelerationStructure,
-    #[spirv(ray_payload)] payload: &mut Vec3,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] acceleration_structure: &AccelerationStructure,
+    #[rust_gpu::spirv(ray_payload)] payload: &mut Vec3,
 ) {
     unsafe {
         spirv_std::ray_query!(let mut ray_query);

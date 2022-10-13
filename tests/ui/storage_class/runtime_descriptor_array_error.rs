@@ -2,9 +2,9 @@
 
 use spirv_std::{Image, RuntimeArray};
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] one: &[Image!(2D, type=f32, sampled)],
-    #[spirv(uniform, descriptor_set = 0, binding = 0)] two: &RuntimeArray<u32>,
+    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] one: &[Image!(2D, type=f32, sampled)],
+    #[rust_gpu::spirv(uniform, descriptor_set = 0, binding = 0)] two: &RuntimeArray<u32>,
 ) {
 }

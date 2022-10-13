@@ -8,7 +8,7 @@ unsafe fn all_memory_barrier() {
     spirv_std::arch::all_memory_barrier();
 }
 
-#[spirv(compute(threads(1, 1, 1)))]
+#[rust_gpu::spirv(compute(threads(1, 1, 1)))]
 pub fn main() {
     unsafe {
         all_memory_barrier();

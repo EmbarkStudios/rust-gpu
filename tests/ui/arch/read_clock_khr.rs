@@ -7,7 +7,7 @@ use spirv_std::{
     memory::Scope,
 };
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main() {
     let clock_time = unsafe { read_clock_khr::<{ Scope::Subgroup as u32 }>() };
 
