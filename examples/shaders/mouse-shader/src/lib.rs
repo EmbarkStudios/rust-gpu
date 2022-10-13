@@ -1,8 +1,8 @@
 #![cfg_attr(
     target_arch = "spirv",
     no_std,
-    feature(register_attr),
-    register_attr(spirv)
+    feature(register_tool),
+    register_tool(rust_gpu)
 )]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
@@ -17,8 +17,7 @@ use shared::*;
 use spirv_std::num_traits::Float;
 
 #[cfg(not(target_arch = "spirv"))]
-use spirv_std::macros::spirv;
-
+use spirv_std::rust_gpu;
 trait Shape: Copy {
     /// Distances indicate where the point is in relation to the shape:
     /// * negative distance: the point is "inside" the shape
@@ -143,10 +142,10 @@ impl Painter {
     }
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main_fs(
-    #[spirv(frag_coord)] in_frag_coord: Vec4,
-    #[spirv(push_constant)] constants: &ShaderConstants,
+    #[rust_gpu::spirv(frag_coord)] in_frag_coord: Vec4,
+    #[rust_gpu::spirv(push_constant)] constants: &ShaderConstants,
     output: &mut Vec4,
 ) {
     let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
@@ -251,8 +250,11 @@ pub fn main_fs(
     *output = painter.color.extend(1.0);
 }
 
-#[spirv(vertex)]
-pub fn main_vs(#[spirv(vertex_index)] vert_idx: i32, #[spirv(position)] builtin_pos: &mut Vec4) {
+#[rust_gpu::spirv(vertex)]
+pub fn main_vs(
+    #[rust_gpu::spirv(vertex_index)] vert_idx: i32,
+    #[rust_gpu::spirv(position)] builtin_pos: &mut Vec4,
+) {
     // Create a "full screen triangle" by mapping the vertex index.
     // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
     let uv = vec2(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);

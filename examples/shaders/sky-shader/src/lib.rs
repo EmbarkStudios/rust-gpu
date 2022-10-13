@@ -3,18 +3,17 @@
 #![cfg_attr(
     target_arch = "spirv",
     no_std,
-    feature(register_attr, lang_items),
-    register_attr(spirv)
+    feature(register_tool, lang_items),
+    register_tool(rust_gpu)
 )]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 
-#[cfg(not(target_arch = "spirv"))]
-use spirv_std::macros::spirv;
-
 use core::f32::consts::PI;
 use glam::{const_vec3, vec2, vec3, Vec2, Vec3, Vec4};
 use shared::*;
+#[cfg(not(target_arch = "spirv"))]
+use spirv_std::rust_gpu;
 
 // Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
 // we tie #[no_std] above to the same condition, so it's fine.
@@ -156,18 +155,21 @@ pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
     tonemap(color).extend(1.0)
 }
 
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 pub fn main_fs(
-    #[spirv(frag_coord)] in_frag_coord: Vec4,
-    #[spirv(push_constant)] constants: &ShaderConstants,
+    #[rust_gpu::spirv(frag_coord)] in_frag_coord: Vec4,
+    #[rust_gpu::spirv(push_constant)] constants: &ShaderConstants,
     output: &mut Vec4,
 ) {
     let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
     *output = fs(constants, frag_coord);
 }
 
-#[spirv(vertex)]
-pub fn main_vs(#[spirv(vertex_index)] vert_idx: i32, #[spirv(position)] builtin_pos: &mut Vec4) {
+#[rust_gpu::spirv(vertex)]
+pub fn main_vs(
+    #[rust_gpu::spirv(vertex_index)] vert_idx: i32,
+    #[rust_gpu::spirv(position)] builtin_pos: &mut Vec4,
+) {
     // Create a "full screen triangle" by mapping the vertex index.
     // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
     let uv = vec2(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
