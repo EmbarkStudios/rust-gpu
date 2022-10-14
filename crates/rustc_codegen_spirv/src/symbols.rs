@@ -422,11 +422,10 @@ pub(crate) fn parse_attrs_for_checking<'a>(
     attrs: &'a [Attribute],
 ) -> impl Iterator<Item = Result<(Span, SpirvAttribute), ParseAttrError>> + 'a {
     attrs.iter().flat_map(move |attr| {
-        let (whole_attr_error, args) = if !attr_is_spirv(attr, sym) && !attr.has_name(sym.spirv) {
+        let (whole_attr_error, args) = if !attr_is_spirv(attr, sym) {
             // Use an empty vec here to return empty
             (None, Vec::new())
         } else if let Some(args) = attr.meta_item_list() {
-            eprintln!("{:?}", args);
             (None, args)
         } else {
             (
@@ -442,11 +441,7 @@ pub(crate) fn parse_attrs_for_checking<'a>(
             .chain(args.into_iter().map(move |ref arg| {
                 let span = arg.span();
                 let parsed_attr = if arg.has_name(sym.descriptor_set) {
-                    eprintln!("asdfjkhasdlfkjhasldkfsdf");
-                    eprintln!("{:?}", arg);
-                    let my_int = parse_attr_int_value(arg)?;
-                    eprintln!("{}", my_int);
-                    SpirvAttribute::DescriptorSet(my_int)
+                    SpirvAttribute::DescriptorSet(parse_attr_int_value(arg)?)
                 } else if arg.has_name(sym.binding) {
                     SpirvAttribute::Binding(parse_attr_int_value(arg)?)
                 } else if arg.has_name(sym.input_attachment_index) {

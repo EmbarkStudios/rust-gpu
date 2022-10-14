@@ -48,7 +48,6 @@ impl<'tcx> CodegenCx<'tcx> {
             body.params
         };
         for (arg_abi, hir_param) in fn_abi.args.iter().zip(hir_params) {
-            eprintln!("YUP***********");
             match arg_abi.mode {
                 PassMode::Direct(_) => {}
                 PassMode::Pair(..) => {
