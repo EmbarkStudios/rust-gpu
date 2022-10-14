@@ -323,6 +323,10 @@ fn rust_flags(codegen_backend_path: &Path) -> String {
 
     [
         &*format!("-Zcodegen-backend={}", codegen_backend_path.display()),
+        // Ensure the codegen backend is emitted in `.d` files to force Cargo
+        // to rebuild crates compiled with it when it changes (this used to be
+        // the default until https://github.com/rust-lang/rust/pull/93969).
+        "-Zbinary-dep-depinfo",
         "-Coverflow-checks=off",
         "-Cdebug-assertions=off",
         "-Cdebuginfo=2",

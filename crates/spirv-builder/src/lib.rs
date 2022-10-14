@@ -419,6 +419,10 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     let mut rustflags = vec![
         format!("-Zcodegen-backend={}", rustc_codegen_spirv.display()),
+        // Ensure the codegen backend is emitted in `.d` files to force Cargo
+        // to rebuild crates compiled with it when it changes (this used to be
+        // the default until https://github.com/rust-lang/rust/pull/93969).
+        "-Zbinary-dep-depinfo".to_string(),
         "-Csymbol-mangling-version=v0".to_string(),
     ];
 
