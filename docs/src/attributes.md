@@ -11,32 +11,32 @@ When declaring an entry point to your shader, SPIR-V needs to know what type of 
 Example:
 
 ```rust
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 fn main() { }
 ```
 
-Common values are `#[spirv(fragment)]` and `#[spirv(vertex)]`. A list of all supported names can be found in [spirv_headers](https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.ExecutionModel.html) - convert the enum name to snake_case for the rust-gpu attribute name.
+Common values are `#[rust_gpu::spirv(fragment)]` and `#[rust_gpu::spirv(vertex)]`. A list of all supported names can be found in [spirv_headers](https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.ExecutionModel.html) - convert the enum name to snake_case for the rust-gpu attribute name.
 
 ### Compute shader dimensions
 
-The dimensions (`local_size_*` in openGL, `numthreads` in DX) of a compute shader must be specified (eg. `#[spirv(compute(threads(32, 16, 97)))]`).  Trailing ones may be elided.
+The dimensions (`local_size_*` in openGL, `numthreads` in DX) of a compute shader must be specified (eg. `#[rust_gpu::spirv(compute(threads(32, 16, 97)))]`).  Trailing ones may be elided.
 
 Example:
 
 ```rust
 // the x dimension is required
 // same as threads(32, 1, 1)
-#[spirv(compute(threads(32)))]
+#[rust_gpu::spirv(compute(threads(32)))]
 pub fn compute_1() {}
 
 // same as threads(32, 57, 1)
-#[spirv(compute(threads(32, 57)))]
+#[rust_gpu::spirv(compute(threads(32, 57)))]
 pub fn compute_2() {}
 ```
 
 ### Override entry point name
 
-You can override the default `OpEntryPoint` name for any entry point with the `entry_point_name` sub-attribute on any of the execution model attributes. (e.g. `#[spirv(vertex(entry_point_name="foo"))]`)
+You can override the default `OpEntryPoint` name for any entry point with the `entry_point_name` sub-attribute on any of the execution model attributes. (e.g. `#[rust_gpu::spirv(vertex(entry_point_name="foo"))]`)
 
 ## Builtins
 
@@ -45,13 +45,13 @@ When declaring inputs and outputs, sometimes you want to declare it as a "builti
 Example:
 
 ```rust
-#[spirv(vertex)]
+#[rust_gpu::spirv(vertex)]
 fn main(
-    #[spirv(position)] out_pos: &mut Vec4,
+    #[rust_gpu::spirv(position)] out_pos: &mut Vec4,
 ) { }
 ```
 
-Common values are `#[spirv(position)]`, `#[spirv(vertex_id)]`, and many more. A list of all supported names can be found in [spirv_headers](https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.BuiltIn.html) - convert the enum name to snake_case for the rust-gpu attribute name.
+Common values are `#[rust_gpu::spirv(position)]`, `#[rust_gpu::spirv(vertex_id)]`, and many more. A list of all supported names can be found in [spirv_headers](https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.BuiltIn.html) - convert the enum name to snake_case for the rust-gpu attribute name.
 
 ## Descriptor set and binding
 
@@ -60,9 +60,9 @@ A SPIR-V shader must declare where uniform variables are located with explicit i
 Example:
 
 ```rust
-#[spirv(fragment)]
+#[rust_gpu::spirv(fragment)]
 fn main(
-    #[spirv(uniform, descriptor_set = 2, binding = 5)] var: &mut Vec4,
+    #[rust_gpu::spirv(uniform, descriptor_set = 2, binding = 5)] var: &mut Vec4,
 ) { }
 ```
 
@@ -75,8 +75,8 @@ The flat attribute corresponds to the flat keyword in glsl - in other words, the
 Example:
 
 ```rust
-#[spirv(fragment)]
-fn main(#[spirv(flat)] obj: u32) { }
+#[rust_gpu::spirv(fragment)]
+fn main(#[rust_gpu::spirv(flat)] obj: u32) { }
 ```
 
 ## Invariant
@@ -86,8 +86,8 @@ The invariant attribute corresponds to the invariant keyword in glsl. It can onl
 Example:
 
 ```rust
-#[spirv(vertex)]
-fn main(#[spirv(invariant)] var: &mut f32) { }
+#[rust_gpu::spirv(vertex)]
+fn main(#[rust_gpu::spirv(invariant)] var: &mut f32) { }
 ```
 
 ## Workgroup shared memory
@@ -97,8 +97,8 @@ The `workgroup` attribute defines shared memory, which can be accessed by all in
 Example:
 
 ```rust
-#[spirv(compute(threads(32)))]
-fn main(#[spirv(workgroup)] var: &mut [Vec4; 4]) { }
+#[rust_gpu::spirv(compute(threads(32)))]
+fn main(#[rust_gpu::spirv(workgroup)] var: &mut [Vec4; 4]) { }
 ```
 
 ## Generic storage classes
