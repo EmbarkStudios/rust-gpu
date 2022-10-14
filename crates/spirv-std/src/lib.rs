@@ -93,7 +93,12 @@
 //! Core functions, traits, and more that make up a "standard library" for SPIR-V for use in
 //! rust-gpu.
 
-pub extern crate spirv_std_macros as macros;
+// HACK(eddyb) only `pub` for `debug_printf`, which should be exported directly.
+pub use spirv_std_macros as macros;
+
+// HACK(eddyb) this is `extern crate ... as ...` in order for `rust_gpu::` to
+// work without an extra `crate::`, as if it were `spirv_std_macros::`.
+#[cfg(not(target_arch = "spirv"))]
 pub extern crate spirv_std_macros as rust_gpu;
 
 pub mod arch;
