@@ -592,6 +592,10 @@
 <span id="592">592</span>
 <span id="593">593</span>
 <span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
 </pre><pre class="rust"><code><span class="comment">// BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;
@@ -1013,6 +1017,10 @@
 
     <span class="kw">let </span><span class="kw-2">mut </span>rustflags = <span class="macro">vec!</span>[
         <span class="macro">format!</span>(<span class="string">&quot;-Zcodegen-backend={}&quot;</span>, rustc_codegen_spirv.display()),
+        <span class="comment">// Ensure the codegen backend is emitted in `.d` files to force Cargo
+        // to rebuild crates compiled with it when it changes (this used to be
+        // the default until https://github.com/rust-lang/rust/pull/93969).
+        </span><span class="string">&quot;-Zbinary-dep-depinfo&quot;</span>.to_string(),
         <span class="string">&quot;-Csymbol-mangling-version=v0&quot;</span>.to_string(),
     ];
 
