@@ -10,8 +10,7 @@
 use spirv_std::glam::UVec3;
 #[cfg(target_arch = "spirv")]
 use spirv_std::memory::Scope;
-#[cfg(not(target_arch = "spirv"))]
-use spirv_std::rust_gpu;
+use spirv_std::spirv;
 
 #[doc(alias = "OpGroupNonUniformIAdd")]
 #[cfg(target_arch = "spirv")]
@@ -36,17 +35,17 @@ pub unsafe fn subgroup_add(_value: u32) -> u32 {
     panic!()
 }
 
-#[rust_gpu::spirv(compute(threads(256)))]
+#[spirv(compute(threads(256)))]
 pub fn main(
-    #[rust_gpu::spirv(global_invocation_id)] global_invocation_id: UVec3,
-    #[rust_gpu::spirv(local_invocation_id)] local_invocation_id: UVec3,
-    #[rust_gpu::spirv(subgroup_local_invocation_id)] subgroup_local_invocation_id: u32,
-    #[rust_gpu::spirv(workgroup_id)] workgroup_id: UVec3,
-    #[rust_gpu::spirv(subgroup_id)] subgroup_id: u32,
-    #[rust_gpu::spirv(num_subgroups)] num_subgroups: u32,
-    #[rust_gpu::spirv(storage_buffer, descriptor_set = 0, binding = 0)] input: &[u32],
-    #[rust_gpu::spirv(storage_buffer, descriptor_set = 0, binding = 1)] output: &mut [u32],
-    #[rust_gpu::spirv(workgroup)] shared: &mut [u32; 256],
+    #[spirv(global_invocation_id)] global_invocation_id: UVec3,
+    #[spirv(local_invocation_id)] local_invocation_id: UVec3,
+    #[spirv(subgroup_local_invocation_id)] subgroup_local_invocation_id: u32,
+    #[spirv(workgroup_id)] workgroup_id: UVec3,
+    #[spirv(subgroup_id)] subgroup_id: u32,
+    #[spirv(num_subgroups)] num_subgroups: u32,
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] input: &[u32],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] output: &mut [u32],
+    #[spirv(workgroup)] shared: &mut [u32; 256],
 ) {
     let global_invocation_id_x = global_invocation_id.x as usize;
     let local_invocation_id_x = local_invocation_id.x as usize;

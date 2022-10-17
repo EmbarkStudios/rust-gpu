@@ -8,9 +8,7 @@
 #![deny(warnings)]
 
 use glam::UVec3;
-use spirv_std::glam;
-#[cfg(not(target_arch = "spirv"))]
-use spirv_std::rust_gpu;
+use spirv_std::{glam, spirv};
 
 // Adapted from the wgpu hello-compute example
 
@@ -36,10 +34,10 @@ pub fn collatz(mut n: u32) -> Option<u32> {
 }
 
 // LocalSize/numthreads of (x = 64, y = 1, z = 1)
-#[rust_gpu::spirv(compute(threads(64)))]
+#[spirv(compute(threads(64)))]
 pub fn main_cs(
-    #[rust_gpu::spirv(global_invocation_id)] id: UVec3,
-    #[rust_gpu::spirv(storage_buffer, descriptor_set = 0, binding = 0)] prime_indices: &mut [u32],
+    #[spirv(global_invocation_id)] id: UVec3,
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] prime_indices: &mut [u32],
 ) {
     let index = id.x as usize;
     prime_indices[index] = collatz(prime_indices[index]).unwrap_or(u32::MAX);
