@@ -37,10 +37,10 @@ However, many things aren't implemented yet. That means that while being technic
 ```rust
 use glam::{Vec3, Vec4, vec2, vec3};
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main(
-    #[rust_gpu::spirv(frag_coord)] in_frag_coord: &Vec4,
-    #[rust_gpu::spirv(push_constant)] constants: &ShaderConstants,
+    #[spirv(frag_coord)] in_frag_coord: &Vec4,
+    #[spirv(push_constant)] constants: &ShaderConstants,
     output: &mut Vec4,
 ) {
     let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
