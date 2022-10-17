@@ -1,6 +1,6 @@
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 const OFFSETS: [f32; 18] = [
     0.000000, 1.494118, 3.486275, 5.478431, 7.470588, 9.462745, 11.454902, 13.447059, 15.439216,
@@ -9,7 +9,7 @@ const OFFSETS: [f32; 18] = [
 ];
 
 #[allow(unused_attributes)]
-#[rust_gpu::spirv(fragment)]
-pub fn main(#[rust_gpu::spirv(flat)] x: &mut u32) {
+#[spirv(fragment)]
+pub fn main(#[spirv(flat)] x: &mut u32) {
     *x = OFFSETS.len() as u32;
 }

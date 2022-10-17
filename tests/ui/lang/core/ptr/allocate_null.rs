@@ -1,12 +1,12 @@
 // Tests allocating a null pointer at `const` time.
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 use core::ptr::null;
 const NULL_PTR: *const i32 = null();
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     let _null_ptr = NULL_PTR;
 }

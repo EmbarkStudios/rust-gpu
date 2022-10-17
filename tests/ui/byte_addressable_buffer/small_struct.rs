@@ -1,3 +1,5 @@
+use spirv_std::spirv;
+
 // build-pass
 
 use spirv_std::ByteAddressableBuffer;
@@ -7,10 +9,10 @@ pub struct SmallStruct {
     b: u32,
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn load(
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[rust_gpu::spirv(flat)] out: &mut SmallStruct,
+    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[spirv(flat)] out: &mut SmallStruct,
 ) {
     unsafe {
         let buf = ByteAddressableBuffer::new(buf);
@@ -18,11 +20,11 @@ pub fn load(
     }
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn store(
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[rust_gpu::spirv(flat)] a: u32,
-    #[rust_gpu::spirv(flat)] b: u32,
+    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[spirv(flat)] a: u32,
+    #[spirv(flat)] b: u32,
 ) {
     let val = SmallStruct { a, b };
     unsafe {

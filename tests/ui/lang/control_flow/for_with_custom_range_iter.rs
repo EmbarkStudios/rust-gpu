@@ -1,3 +1,5 @@
+use spirv_std::spirv;
+
 // NOTE(eddyb) this tests `for` loop desugaring (with its call to `Iterator::next`
 // and matching on the resulting `Option`), without relying on a `Range` iterator.
 // More precisely, `Range` used to not compile, due to it using `mem::replace`,
@@ -24,7 +26,7 @@ impl<T: Num + Ord + Copy> Iterator for RangeIter<T> {
     }
 }
 
-#[rust_gpu::spirv(fragment)]
-pub fn main(#[rust_gpu::spirv(flat)] i: i32) {
+#[spirv(fragment)]
+pub fn main(#[spirv(flat)] i: i32) {
     for _ in RangeIter(0..i) {}
 }

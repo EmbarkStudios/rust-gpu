@@ -1,15 +1,17 @@
+use spirv_std::spirv;
+
 // build-pass
 // compile-flags: -Ctarget-feature=+RayTracingKHR,+RayQueryKHR,+ext:SPV_KHR_ray_tracing,+ext:SPV_KHR_ray_query
 
 use glam::Vec3;
 use spirv_std::ray_tracing::{AccelerationStructure, RayFlags, RayQuery};
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 // Rustfmt eats long attributes <https://github.com/rust-lang/rustfmt/issues/4579>
 #[rustfmt::skip]
 pub fn main(
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] acceleration_structure: &AccelerationStructure,
-    #[rust_gpu::spirv(ray_payload)] payload: &mut Vec3,
+    #[spirv(descriptor_set = 0, binding = 0)] acceleration_structure: &AccelerationStructure,
+    #[spirv(ray_payload)] payload: &mut Vec3,
 ) {
     unsafe {
         spirv_std::ray_query!(let mut ray_query);

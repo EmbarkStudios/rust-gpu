@@ -1,10 +1,12 @@
+use spirv_std::spirv;
+
 // build-fail
 // normalize-stderr-test "\S*/crates/spirv-std/src/" -> "$$SPIRV_STD_SRC/"
 // compile-flags: -Ctarget-feature=+ext:SPV_KHR_non_semantic_info
 
 use spirv_std::{glam::Vec2, macros::debug_printf};
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     unsafe {
         debug_printf!("%1");

@@ -1,3 +1,5 @@
+use spirv_std::spirv;
+
 // build-fail
 
 use spirv_std::{arch, Image, Sampler};
@@ -10,10 +12,10 @@ fn deep_stack(image2d: &Image!(2D, type=f32, sampled), sampler: &Sampler) -> gla
     deeper_stack(image2d, sampler)
 }
 
-#[rust_gpu::spirv(vertex)]
+#[spirv(vertex)]
 pub fn main(
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image2d: &Image!(2D, type=f32, sampled),
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 1)] sampler: &Sampler,
+    #[spirv(descriptor_set = 0, binding = 0)] image2d: &Image!(2D, type=f32, sampled),
+    #[spirv(descriptor_set = 0, binding = 1)] sampler: &Sampler,
     output: &mut glam::Vec4,
 ) {
     let v2 = glam::Vec2::new(0.0, 1.0);

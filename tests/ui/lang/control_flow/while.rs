@@ -1,8 +1,8 @@
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
-#[rust_gpu::spirv(fragment)]
-pub fn main(#[rust_gpu::spirv(flat)] i: i32) {
+#[spirv(fragment)]
+pub fn main(#[spirv(flat)] i: i32) {
     while i < 10 {}
 }

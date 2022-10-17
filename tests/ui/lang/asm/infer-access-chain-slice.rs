@@ -5,12 +5,12 @@
 
 use core::arch::asm;
 use glam::Vec4;
-use spirv_std as _;
+use spirv_std::spirv;
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main(
-    #[rust_gpu::spirv(storage_buffer, descriptor_set = 0, binding = 0)] slice_in: &[Vec4],
-    #[rust_gpu::spirv(flat)] i: u32,
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] slice_in: &[Vec4],
+    #[spirv(flat)] i: u32,
     out: &mut Vec4,
 ) {
     unsafe {

@@ -2,7 +2,7 @@
 
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[track_caller]
 fn track_caller_maybe_panic(x: u32) {
@@ -11,7 +11,7 @@ fn track_caller_maybe_panic(x: u32) {
     }
 }
 
-#[rust_gpu::spirv(fragment)]
-pub fn main(#[rust_gpu::spirv(flat)] x: u32) {
+#[spirv(fragment)]
+pub fn main(#[spirv(flat)] x: u32) {
     track_caller_maybe_panic(x);
 }

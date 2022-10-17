@@ -1,9 +1,9 @@
 // Test that calling `panic!` works.
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     panic!("aaa");
 }

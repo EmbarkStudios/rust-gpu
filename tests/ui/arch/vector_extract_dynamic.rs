@@ -1,9 +1,11 @@
+use spirv_std::spirv;
+
 // Test `OpVectorExtractDynamic`
 // build-pass
 
 use spirv_std::arch;
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     let vector = glam::Vec2::new(1.0, 2.0);
     let element = unsafe { arch::vector_extract_dynamic(vector, 1) };

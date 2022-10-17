@@ -1,6 +1,6 @@
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 struct S {
     x: u32,
@@ -9,7 +9,7 @@ struct S {
 
 fn f(x: &u32) {}
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     let s = S { x: 2, y: 2 };
     f(&s.x);

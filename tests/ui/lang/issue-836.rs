@@ -2,7 +2,7 @@
 
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 struct Newtype<T>(T);
 
@@ -26,10 +26,10 @@ impl<T: core::ops::Deref<Target = [u32]>> Newtype<T> {
 
 struct CustomPair(u32, u32);
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main(
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] slice: &[u32],
-    #[rust_gpu::spirv(flat)] out: &mut u32,
+    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] slice: &[u32],
+    #[spirv(flat)] out: &mut u32,
 ) {
     let newtype_slice = Newtype(slice);
     *out = newtype_slice.get()[0];

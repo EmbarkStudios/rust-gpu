@@ -1,12 +1,14 @@
+use spirv_std::spirv;
+
 // Test `OpImageSampleProjDrefImplicitLod`
 // build-pass
 
 use spirv_std::{arch, Image, Sampler};
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main(
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled),
-    #[rust_gpu::spirv(descriptor_set = 1, binding = 1)] sampler: &Sampler,
+    #[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled),
+    #[spirv(descriptor_set = 1, binding = 1)] sampler: &Sampler,
     output: &mut f32,
 ) {
     let v3 = glam::Vec3A::new(0.0, 0.0, 1.0);

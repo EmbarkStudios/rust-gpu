@@ -6,7 +6,7 @@
 
 #![cfg_attr(via_intrinsic, feature(intrinsics))]
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn copy_via_raw_ptr(src: &f32, dst: &mut f32) {
     #[cfg(via_intrinsic)]
@@ -28,7 +28,7 @@ fn copy_via_raw_ptr(src: &f32, dst: &mut f32) {
         unsafe { core::ptr::copy(src, dst, 1) }
     }
 }
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main(i: f32, o: &mut f32) {
     copy_via_raw_ptr(&i, o);
     // FIXME(eddyb) above call results in inlining `copy_via_raw_ptr`,

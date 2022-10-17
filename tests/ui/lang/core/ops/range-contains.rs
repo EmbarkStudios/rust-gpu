@@ -4,13 +4,13 @@
 
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn has_two_decimal_digits(x: u32) -> bool {
     (10..100).contains(&x)
 }
 
-#[rust_gpu::spirv(fragment)]
-pub fn main(#[rust_gpu::spirv(flat)] i: u32, #[rust_gpu::spirv(flat)] o: &mut u32) {
+#[spirv(fragment)]
+pub fn main(#[spirv(flat)] i: u32, #[spirv(flat)] o: &mut u32) {
     *o = has_two_decimal_digits(i) as u32;
 }

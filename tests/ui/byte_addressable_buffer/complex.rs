@@ -1,3 +1,5 @@
+use spirv_std::spirv;
+
 // build-pass
 
 use spirv_std::{glam::Vec2, ByteAddressableBuffer};
@@ -17,9 +19,9 @@ pub struct Nesty {
     z: f32,
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn load(
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
     out: &mut Nesty,
 ) {
     unsafe {
@@ -28,9 +30,9 @@ pub fn load(
     }
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn store(
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
     val: Nesty,
 ) {
     unsafe {

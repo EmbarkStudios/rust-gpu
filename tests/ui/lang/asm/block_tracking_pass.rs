@@ -3,7 +3,7 @@
 // build-pass
 
 use core::arch::asm;
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn asm_label() {
     unsafe {
@@ -23,7 +23,7 @@ fn asm_noreturn_single() -> ! {
     }
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     asm_label();
     asm_noreturn_single();

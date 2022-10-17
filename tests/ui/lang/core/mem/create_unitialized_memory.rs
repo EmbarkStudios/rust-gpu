@@ -1,7 +1,7 @@
 // Test creating unitialized memory.
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 use core::mem::MaybeUninit;
 const MAYBEI32: MaybeUninit<&i32> = MaybeUninit::<&i32>::uninit();
@@ -14,5 +14,5 @@ pub fn create_uninit_and_write() {
     let _maybei32 = unsafe { maybei32.assume_init() };
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {}

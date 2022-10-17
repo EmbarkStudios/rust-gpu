@@ -1,6 +1,6 @@
 // build-fail
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 pub struct Boolthing {
     x: u32,
@@ -8,11 +8,11 @@ pub struct Boolthing {
     b: bool,
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn fragment(
     input: bool,
     output: &mut bool,
-    #[rust_gpu::spirv(push_constant)] push: &bool,
-    #[rust_gpu::spirv(uniform)] uniform: &Boolthing,
+    #[spirv(push_constant)] push: &bool,
+    #[spirv(uniform)] uniform: &Boolthing,
 ) {
 }

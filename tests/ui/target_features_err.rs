@@ -1,9 +1,9 @@
 // build-fail
 // compile-flags: -Ctarget-feature=+rayTracingKHR,+ext:SPV_KHR_ray_tracing
 
-use spirv_std as _;
+use spirv_std::spirv;
 
-#[rust_gpu::spirv(any_hit)]
+#[spirv(any_hit)]
 pub fn main() {
     unsafe { spirv_std::arch::terminate_ray() }
 }

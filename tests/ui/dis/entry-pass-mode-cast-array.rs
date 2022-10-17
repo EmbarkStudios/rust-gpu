@@ -7,9 +7,9 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-entry=main
 
-use spirv_std as _;
+use spirv_std::spirv;
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main(mut in_array: [f32; 2], out_array: &mut [f32; 2]) {
     in_array[0] += 1.0;
     *out_array = in_array;

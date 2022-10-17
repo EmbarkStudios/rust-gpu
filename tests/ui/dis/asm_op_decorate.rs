@@ -11,7 +11,7 @@
 // ignore-vulkan1.2
 
 use core::arch::asm;
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn add_decorate() {
     unsafe {
@@ -39,7 +39,7 @@ fn add_decorate() {
         );
     }
 }
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     add_decorate();
 }

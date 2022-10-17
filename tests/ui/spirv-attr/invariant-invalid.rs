@@ -1,7 +1,7 @@
 // Tests that the invariant attribute can't be applied on inputs
 // build-fail
 
-use spirv_std as _;
+use spirv_std::spirv;
 
-#[rust_gpu::spirv(vertex)]
-pub fn main(#[rust_gpu::spirv(invariant)] input: f32) {}
+#[spirv(vertex)]
+pub fn main(#[spirv(invariant)] input: f32) {}

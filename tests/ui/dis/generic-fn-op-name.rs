@@ -10,10 +10,11 @@
 #![allow(incomplete_features)]
 
 use spirv_std::image::Dimensionality;
+use spirv_std::spirv;
 
 fn generic<T, const DIM: Dimensionality>() {}
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     generic::<f32, { Dimensionality::TwoD }>();
 }

@@ -1,9 +1,11 @@
+use spirv_std::spirv;
+
 // Test `OpVectorInsertDynamic`
 // build-pass
 
 use spirv_std::arch;
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     let vector = glam::Vec2::new(1.0, 2.0);
     let expected = glam::Vec2::new(1.0, 3.0);

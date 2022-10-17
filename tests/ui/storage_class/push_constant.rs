@@ -1,7 +1,7 @@
 // Test that using push constants passes (Vulkan) validation.
 
 // build-pass
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[derive(Copy, Clone)]
 pub struct ShaderConstants {
@@ -10,7 +10,7 @@ pub struct ShaderConstants {
     pub time: f32,
 }
 
-#[rust_gpu::spirv(fragment)]
-pub fn main(#[rust_gpu::spirv(push_constant)] constants: &ShaderConstants) {
+#[spirv(fragment)]
+pub fn main(#[spirv(push_constant)] constants: &ShaderConstants) {
     let _constants = *constants;
 }

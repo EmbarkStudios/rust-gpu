@@ -1,3 +1,5 @@
+use spirv_std::spirv;
+
 // build-pass
 // compile-flags: -Ctarget-feature=+ext:SPV_KHR_non_semantic_info
 
@@ -20,7 +22,7 @@ impl Struct {
     }
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     unsafe {
         debug_printf!();

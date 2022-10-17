@@ -5,7 +5,7 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-entry=main
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 struct Foo {
     a: u32,
@@ -23,8 +23,8 @@ impl Foo {
     }
 }
 
-#[rust_gpu::spirv(fragment)]
-pub fn main(#[rust_gpu::spirv(flat)] in_packed: u64, #[rust_gpu::spirv(flat)] out_sum: &mut u32) {
+#[spirv(fragment)]
+pub fn main(#[spirv(flat)] in_packed: u64, #[spirv(flat)] out_sum: &mut u32) {
     let foo = Foo::unpack(in_packed);
     *out_sum = foo.a + (foo.b + foo.c) as u32;
 }

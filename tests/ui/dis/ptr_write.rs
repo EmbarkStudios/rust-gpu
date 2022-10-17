@@ -1,12 +1,12 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=ptr_write::copy_via_raw_ptr
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn copy_via_raw_ptr(src: &f32, dst: &mut f32) {
     unsafe { core::ptr::write(dst, *src) }
 }
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main(i: f32, o: &mut f32) {
     copy_via_raw_ptr(&i, o);
     // FIXME(eddyb) above call results in inlining `copy_via_raw_ptr`,

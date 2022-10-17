@@ -1,15 +1,17 @@
+use spirv_std::spirv;
+
 // Test `OpImageSampleExplicitLod` Lod
 // build-pass
 
 use spirv_std::{arch, image::SampledImage, Image, Sampler};
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main(
-    #[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image2d: &Image!(2D, type=f32, sampled),
-    #[rust_gpu::spirv(descriptor_set = 1, binding = 1)] image2d_array: &Image!(2D, type=f32, arrayed, sampled),
-    #[rust_gpu::spirv(descriptor_set = 2, binding = 2)] cubemap: &Image!(3D, type=f32, sampled),
-    #[rust_gpu::spirv(descriptor_set = 3, binding = 3)] sampler: &Sampler,
-    #[rust_gpu::spirv(descriptor_set = 4, binding = 4)] sampled_image: &SampledImage<
+    #[spirv(descriptor_set = 0, binding = 0)] image2d: &Image!(2D, type=f32, sampled),
+    #[spirv(descriptor_set = 1, binding = 1)] image2d_array: &Image!(2D, type=f32, arrayed, sampled),
+    #[spirv(descriptor_set = 2, binding = 2)] cubemap: &Image!(3D, type=f32, sampled),
+    #[spirv(descriptor_set = 3, binding = 3)] sampler: &Sampler,
+    #[spirv(descriptor_set = 4, binding = 4)] sampled_image: &SampledImage<
         Image!(2D, type=f32, sampled),
     >,
     output: &mut glam::Vec4,

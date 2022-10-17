@@ -1,3 +1,5 @@
+use spirv_std::spirv;
+
 // build-pass
 // compile-flags: -Ctarget-feature=+Int64,+ShaderClockKHR,+ext:SPV_KHR_shader_clock
 
@@ -7,7 +9,7 @@ use spirv_std::{
     memory::Scope,
 };
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     let clock_time = unsafe { read_clock_khr::<{ Scope::Subgroup as u32 }>() };
 

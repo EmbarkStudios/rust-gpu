@@ -4,8 +4,9 @@
 #![allow(incomplete_features)]
 
 use spirv_std::memory::{Scope, Semantics};
+use spirv_std::spirv;
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     unsafe {
         spirv_std::arch::memory_barrier::<

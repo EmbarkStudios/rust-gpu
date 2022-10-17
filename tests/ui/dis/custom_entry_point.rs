@@ -4,7 +4,7 @@
 // normalize-stderr-test "OpExtension .SPV_KHR_vulkan_memory_model.\n" -> ""
 // normalize-stderr-test "OpMemoryModel Logical Vulkan" -> "OpMemoryModel Logical Simple"
 
-use spirv_std as _;
+use spirv_std::spirv;
 
-#[rust_gpu::spirv(fragment(entry_point_name = "hello_world"))]
+#[spirv(fragment(entry_point_name = "hello_world"))]
 pub fn main() {}

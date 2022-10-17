@@ -1,13 +1,13 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=workgroup_memory_barrier::workgroup_memory_barrier
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 unsafe fn workgroup_memory_barrier() {
     spirv_std::arch::workgroup_memory_barrier();
 }
 
-#[rust_gpu::spirv(compute(threads(1, 1, 1)))]
+#[spirv(compute(threads(1, 1, 1)))]
 pub fn main() {
     unsafe {
         workgroup_memory_barrier();

@@ -1,13 +1,13 @@
 // Test using `&&` operator.
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn f(x: bool, y: bool) -> bool {
     x && y
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     f(false, true);
 }

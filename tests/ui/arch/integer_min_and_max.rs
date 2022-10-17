@@ -1,8 +1,10 @@
+use spirv_std::spirv;
+
 // build-pass
 
 use spirv_std::arch::{signed_max, signed_min, unsigned_max, unsigned_min};
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main() {
     assert!(unsigned_min(39_u8, 13) == 13);
     assert!(unsigned_min(39_u16, 13) == 13);

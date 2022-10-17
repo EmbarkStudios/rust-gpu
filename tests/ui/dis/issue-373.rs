@@ -5,7 +5,7 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-entry=main
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -17,7 +17,7 @@ fn f() -> S {
     S { x: 2.0 }
 }
 
-#[rust_gpu::spirv(fragment)]
+#[spirv(fragment)]
 pub fn main(out: &mut f32) {
     *out = f().x;
 }
