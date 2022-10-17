@@ -788,7 +788,7 @@ fn trans_intrinsic_type<'tcx>(
                 return Err(cx
                     .tcx
                     .sess
-                    .err("#[rust_gpu::spirv(generic_image)] type must have size 4"));
+                    .err("#[spirv(generic_image)] type must have size 4"));
             }
 
             // fn type_from_variant_discriminant<'tcx, P: FromPrimitive>(
@@ -880,10 +880,7 @@ fn trans_intrinsic_type<'tcx>(
         IntrinsicType::Sampler => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
-                return Err(cx
-                    .tcx
-                    .sess
-                    .err("#[rust_gpu::spirv(sampler)] type must have size 4"));
+                return Err(cx.tcx.sess.err("#[spirv(sampler)] type must have size 4"));
             }
             Ok(SpirvType::Sampler.def(span, cx))
         }
@@ -897,7 +894,7 @@ fn trans_intrinsic_type<'tcx>(
                 return Err(cx
                     .tcx
                     .sess
-                    .err("#[rust_gpu::spirv(sampled_image)] type must have size 4"));
+                    .err("#[spirv(sampled_image)] type must have size 4"));
             }
 
             // We use a generic to indicate the underlying image type of the sampled image.
@@ -910,7 +907,7 @@ fn trans_intrinsic_type<'tcx>(
                 Err(cx
                     .tcx
                     .sess
-                    .err("#[rust_gpu::spirv(sampled_image)] type must have a generic image type"))
+                    .err("#[spirv(sampled_image)] type must have a generic image type"))
             }
         }
         IntrinsicType::RuntimeArray => {
@@ -918,7 +915,7 @@ fn trans_intrinsic_type<'tcx>(
                 return Err(cx
                     .tcx
                     .sess
-                    .err("#[rust_gpu::spirv(runtime_array)] type must have size 4"));
+                    .err("#[spirv(runtime_array)] type must have size 4"));
             }
 
             // We use a generic to indicate the underlying element type.
@@ -930,28 +927,28 @@ fn trans_intrinsic_type<'tcx>(
                 Err(cx
                     .tcx
                     .sess
-                    .err("#[rust_gpu::spirv(runtime_array)] type must have a generic element type"))
+                    .err("#[spirv(runtime_array)] type must have a generic element type"))
             }
         }
         IntrinsicType::Matrix => {
             let span = def_id_for_spirv_type_adt(ty)
                 .map(|did| cx.tcx.def_span(did))
-                .expect("#[rust_gpu::spirv(matrix)] must be added to a type which has DefId");
+                .expect("#[spirv(matrix)] must be added to a type which has DefId");
 
             let field_types = (0..ty.fields.count())
                 .map(|i| ty.field(cx, i).spirv_type(span, cx))
                 .collect::<Vec<_>>();
             if field_types.len() < 2 {
-                return Err(cx.tcx.sess.span_err(
-                    span,
-                    "#[rust_gpu::spirv(matrix)] type must have at least two fields",
-                ));
+                return Err(cx
+                    .tcx
+                    .sess
+                    .span_err(span, "#[spirv(matrix)] type must have at least two fields"));
             }
             let elem_type = field_types[0];
             if !field_types.iter().all(|&ty| ty == elem_type) {
                 return Err(cx.tcx.sess.span_err(
                     span,
-                    "#[rust_gpu::spirv(matrix)] type fields must all be the same type",
+                    "#[spirv(matrix)] type fields must all be the same type",
                 ));
             }
             match cx.lookup_type(elem_type) {
@@ -960,10 +957,7 @@ fn trans_intrinsic_type<'tcx>(
                     return Err(cx
                         .tcx
                         .sess
-                        .struct_span_err(
-                            span,
-                            "#[rust_gpu::spirv(matrix)] type fields must all be vectors",
-                        )
+                        .struct_span_err(span, "#[spirv(matrix)] type fields must all be vectors")
                         .note(&format!("field type is {}", ty.debug(elem_type, cx)))
                         .emit());
                 }

@@ -431,7 +431,7 @@ pub(crate) fn parse_attrs_for_checking<'a>(
             (
                 Some(Err((
                     attr.span,
-                    "#[rust_gpu::spirv(..)] attribute must have at least one argument".to_string(),
+                    "#[spirv(..)] attribute must have at least one argument".to_string(),
                 ))),
                 Vec::new(),
             )
@@ -451,10 +451,10 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                         Some(i) => i,
                         None => {
                             return Err((
-                            span,
-                            "#[rust_gpu::spirv(..)] attribute argument must be single identifier"
-                                .to_string(),
-                        ));
+                                span,
+                                "#[spirv(..)] attribute argument must be single identifier"
+                                    .to_string(),
+                            ));
                         }
                     };
                     sym.attributes.get(&name.name).map_or_else(
@@ -509,15 +509,15 @@ fn parse_local_size_attr(arg: &NestedMetaItem) -> Result<[u32; 3], ParseAttrErro
         }
         Some(tuple) if tuple.is_empty() => Err((
             arg.span,
-            "#[rust_gpu::spirv(compute(threads(x, y, z)))] must have the x dimension specified, trailing ones may be elided".to_string(),
+            "#[spirv(compute(threads(x, y, z)))] must have the x dimension specified, trailing ones may be elided".to_string(),
         )),
         Some(tuple) if tuple.len() > 3 => Err((
             arg.span,
-            "#[rust_gpu::spirv(compute(threads(x, y, z)))] is three dimensional".to_string(),
+            "#[spirv(compute(threads(x, y, z)))] is three dimensional".to_string(),
         )),
         _ => Err((
             arg.span,
-            "#[rust_gpu::spirv(compute(threads(x, y, z)))] must have 1 to 3 parameters, trailing ones may be elided".to_string(),
+            "#[spirv(compute(threads(x, y, z)))] must have 1 to 3 parameters, trailing ones may be elided".to_string(),
         )),
     }
 }
@@ -525,7 +525,7 @@ fn parse_local_size_attr(arg: &NestedMetaItem) -> Result<[u32; 3], ParseAttrErro
 // for a given entry, gather up the additional attributes
 // in this case ExecutionMode's, some have extra arguments
 // others are specified with x, y, or z components
-// ie #[rust_gpu::spirv(fragment(origin_lower_left))] or #[rust_gpu::spirv(gl_compute(local_size_x=64, local_size_y=8))]
+// ie #[spirv(fragment(origin_lower_left))] or #[spirv(gl_compute(local_size_x=64, local_size_y=8))]
 fn parse_entry_attrs(
     sym: &Symbols,
     arg: &NestedMetaItem,
@@ -561,7 +561,7 @@ fn parse_entry_attrs(
                                 return Err((
                                     attr_name.span,
                                     String::from(
-                                        "`#[rust_gpu::spirv(compute(threads))]` may only be specified once",
+                                        "`#[spirv(compute(threads))]` may only be specified once",
                                     ),
                                 ));
                             }
@@ -627,7 +627,7 @@ fn parse_entry_attrs(
                             return Err((
                                 attr_name.span,
                                 format!(
-                                    "#[rust_gpu::spirv({}(..))] unknown attribute argument {}",
+                                    "#[spirv({}(..))] unknown attribute argument {}",
                                     name.name.to_ident_string(),
                                     attr_name.name.to_ident_string()
                                 ),
@@ -638,7 +638,7 @@ fn parse_entry_attrs(
                     return Err((
                         attr_name.span,
                         format!(
-                            "#[rust_gpu::spirv({}(..))] unknown attribute argument {}",
+                            "#[spirv({}(..))] unknown attribute argument {}",
                             name.name.to_ident_string(),
                             attr_name.name.to_ident_string()
                         ),
@@ -648,7 +648,7 @@ fn parse_entry_attrs(
                 return Err((
                     arg.span(),
                     format!(
-                        "#[rust_gpu::spirv({}(..))] attribute argument must be single identifier",
+                        "#[spirv({}(..))] attribute argument must be single identifier",
                         name.name.to_ident_string()
                     ),
                 ));
@@ -671,7 +671,7 @@ fn parse_entry_attrs(
                 return Err((
                     arg.span(),
                     String::from(
-                        "The `threads` argument must be specified when using `#[rust_gpu::spirv(compute)]`, `#[rust_gpu::spirv(mesh_nv)]` or `#[rust_gpu::spirv(task_nv)]`",
+                        "The `threads` argument must be specified when using `#[spirv(compute)]`, `#[spirv(mesh_nv)]` or `#[spirv(task_nv)]`",
                     ),
                 ));
             }

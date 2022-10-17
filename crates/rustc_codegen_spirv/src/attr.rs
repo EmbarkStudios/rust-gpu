@@ -1,4 +1,4 @@
-//! `#[rust_gpu::spirv(...)]` attribute support.
+//! `#[spirv(...)]` attribute support.
 //!
 //! The attribute-checking parts of this try to follow `rustc_passes::check_attr`.
 
@@ -68,7 +68,7 @@ pub enum IntrinsicType {
     Matrix,
 }
 
-// NOTE(eddyb) when adding new `#[rust_gpu::spirv(...)]` attributes, the tests found inside
+// NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside
 // `tests/ui/spirv-attr` should be updated (and new ones added if necessary).
 #[derive(Debug, Clone)]
 pub enum SpirvAttribute {
@@ -192,7 +192,7 @@ impl AggregatedSpirvAttributes {
             IntrinsicType(value) => {
                 try_insert(&mut self.intrinsic_type, value, span, "intrinsic type")
             }
-            Block => try_insert(&mut self.block, (), span, "#[rust_gpu::spirv(block)]"),
+            Block => try_insert(&mut self.block, (), span, "#[spirv(block)]"),
             Entry(value) => try_insert(&mut self.entry, value, span, "entry-point"),
             StorageClass(value) => {
                 try_insert(&mut self.storage_class, value, span, "storage class")
@@ -202,44 +202,29 @@ impl AggregatedSpirvAttributes {
                 &mut self.descriptor_set,
                 value,
                 span,
-                "#[rust_gpu::spirv(descriptor_set)]",
+                "#[spirv(descriptor_set)]",
             ),
-            Binding(value) => try_insert(
-                &mut self.binding,
-                value,
-                span,
-                "#[rust_gpu::spirv(binding)]",
-            ),
-            Flat => try_insert(&mut self.flat, (), span, "#[rust_gpu::spirv(flat)]"),
-            Invariant => try_insert(
-                &mut self.invariant,
-                (),
-                span,
-                "#[rust_gpu::spirv(invariant)]",
-            ),
+            Binding(value) => try_insert(&mut self.binding, value, span, "#[spirv(binding)]"),
+            Flat => try_insert(&mut self.flat, (), span, "#[spirv(flat)]"),
+            Invariant => try_insert(&mut self.invariant, (), span, "#[spirv(invariant)]"),
             InputAttachmentIndex(value) => try_insert(
                 &mut self.input_attachment_index,
                 value,
                 span,
-                "#[rust_gpu::spirv(attachment_index)]",
+                "#[spirv(attachment_index)]",
             ),
-            UnrollLoops => try_insert(
-                &mut self.unroll_loops,
-                (),
-                span,
-                "#[rust_gpu::spirv(unroll_loops)]",
-            ),
+            UnrollLoops => try_insert(&mut self.unroll_loops, (), span, "#[spirv(unroll_loops)]"),
             BufferLoadIntrinsic => try_insert(
                 &mut self.buffer_load_intrinsic,
                 (),
                 span,
-                "#[rust_gpu::spirv(buffer_load_intrinsic)]",
+                "#[spirv(buffer_load_intrinsic)]",
             ),
             BufferStoreIntrinsic => try_insert(
                 &mut self.buffer_store_intrinsic,
                 (),
                 span,
-                "#[rust_gpu::spirv(buffer_store_intrinsic)]",
+                "#[spirv(buffer_store_intrinsic)]",
             ),
         }
     }
@@ -415,7 +400,7 @@ impl CheckSpirvAttrVisitor<'_> {
         if let Some(block_attr) = aggregated_attrs.block {
             self.tcx.sess.span_warn(
                 block_attr.span,
-                "#[rust_gpu::spirv(block)] is no longer needed and should be removed",
+                "#[spirv(block)] is no longer needed and should be removed",
             );
         }
     }
@@ -515,7 +500,7 @@ fn check_mod_attrs(tcx: TyCtxt<'_>, module_def_id: LocalDefId) {
 pub(crate) fn provide(providers: &mut Providers) {
     *providers = Providers {
         check_mod_attrs: |tcx, def_id| {
-            // Run both the default checks, and our `#[rust_gpu::spirv(...)]` ones.
+            // Run both the default checks, and our `#[spirv(...)]` ones.
             (rustc_interface::DEFAULT_QUERY_PROVIDERS.check_mod_attrs)(tcx, def_id);
             check_mod_attrs(tcx, def_id);
         },

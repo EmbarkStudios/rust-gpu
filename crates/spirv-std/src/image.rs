@@ -92,7 +92,7 @@ pub type Cubemap = crate::Image!(cube, type=f32, sampled, __crate_root=crate);
 /// arguments here can get extremely verbose.
 ///
 /// See SPIR-V OpTypeImage specification for the meaning of integer parameters.
-#[rust_gpu::spirv(generic_image_type)]
+#[spirv(generic_image_type)]
 #[derive(Copy, Clone)]
 pub struct Image<
     SampledType: SampleType<FORMAT>,
@@ -964,7 +964,7 @@ impl<
 ///
 /// The generic type parameter is the underlying image type, written like
 /// `SampledImage<Image!(...)>`.
-#[rust_gpu::spirv(sampled_image)]
+#[spirv(sampled_image)]
 #[derive(Copy, Clone)]
 pub struct SampledImage<I> {
     _image: I,

@@ -2,14 +2,14 @@
 
 use core::mem;
 
-#[rust_gpu::spirv(buffer_load_intrinsic)]
+#[spirv(buffer_load_intrinsic)]
 #[spirv_std_macros::gpu_only]
 #[allow(improper_ctypes_definitions)]
 unsafe fn buffer_load_intrinsic<T>(_buffer: &[u32], _offset: u32) -> T {
     unimplemented!()
 } // actually implemented in the compiler
 
-#[rust_gpu::spirv(buffer_store_intrinsic)]
+#[spirv(buffer_store_intrinsic)]
 #[spirv_std_macros::gpu_only]
 #[allow(improper_ctypes_definitions)]
 unsafe fn buffer_store_intrinsic<T>(_buffer: &mut [u32], _offset: u32, _value: T) {

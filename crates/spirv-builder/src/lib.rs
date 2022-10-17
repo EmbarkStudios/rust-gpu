@@ -424,6 +424,9 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         // the default until https://github.com/rust-lang/rust/pull/93969).
         "-Zbinary-dep-depinfo".to_string(),
         "-Csymbol-mangling-version=v0".to_string(),
+        "-Zcrate-attr=no_std".to_string(),
+        "-Zcrate-attr=feature(register_tool)".to_string(),
+        "-Zcrate-attr=register_tool(rust_gpu)".to_string(),
     ];
 
     let mut llvm_args = vec![];

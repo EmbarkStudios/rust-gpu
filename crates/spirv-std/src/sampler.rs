@@ -1,6 +1,6 @@
 /// An opaque reference to settings that describe how to access, filter, or
 /// sample an image.
-#[rust_gpu::spirv(sampler)]
+#[spirv(sampler)]
 #[derive(Copy, Clone)]
 pub struct Sampler {
     _x: u32,

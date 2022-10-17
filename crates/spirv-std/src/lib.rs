@@ -1,4 +1,4 @@
-#![no_std]
+//#![no_std]
 #![cfg_attr(
     target_arch = "spirv",
     feature(
@@ -6,10 +6,10 @@
         asm_experimental_arch,
         core_intrinsics,
         lang_items,
-        register_tool,
         repr_simd,
+        //register_tool
     ),
-    register_tool(rust_gpu)
+    //register_tool(rust_gpu)
 )]
 // BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
@@ -93,13 +93,9 @@
 //! Core functions, traits, and more that make up a "standard library" for SPIR-V for use in
 //! rust-gpu.
 
-// HACK(eddyb) only `pub` for `debug_printf`, which should be exported directly.
-pub use spirv_std_macros as macros;
-
-// HACK(eddyb) this is `extern crate ... as ...` in order for `rust_gpu::` to
-// work without an extra `crate::`, as if it were `spirv_std_macros::`.
-#[cfg(not(target_arch = "spirv"))]
-pub extern crate spirv_std_macros as rust_gpu;
+#[macro_use]
+pub extern crate spirv_std_macros as macros;
+pub use macros::spirv;
 
 pub mod arch;
 pub mod byte_addressable_buffer;

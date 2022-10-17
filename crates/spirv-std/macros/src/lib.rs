@@ -77,7 +77,7 @@ use proc_macro2::{Delimiter, Group, Ident, Span, TokenTree};
 
 use syn::{punctuated::Punctuated, spanned::Spanned, ItemFn, Token};
 
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use std::fmt::Write;
 
 /// A macro for creating SPIR-V `OpTypeImage` types. Always produces a
@@ -100,8 +100,8 @@ use std::fmt::Write;
 ///
 /// A basic example looks like this:
 /// ```rust,ignore
-/// #[rust_gpu::spirv(vertex)]
-/// fn main(#[rust_gpu::spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled)) {}
+/// #[spirv(vertex)]
+/// fn main(#[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled)) {}
 /// ```
 ///
 /// ## Arguments
@@ -138,9 +138,16 @@ pub fn Image(item: TokenStream) -> TokenStream {
     output.into()
 }
 
+/// Replaces all (nested) occurrences of the #[spirv(..)] attribute with
+/// #[cfg_attr(target_arch="spirv", rust_gpu::spirv(..))].
 #[proc_macro_attribute]
-pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let mut tokens = Vec::new();
+pub fn spirv(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let mut tokens: Vec<TokenTree> = Vec::new();
+
+    // prepend with #[rust_gpu::spirv(..)]
+    let attr: proc_macro2::TokenStream = attr.into();
+    tokens.extend(quote! { #[cfg_attr(target_arch="spirv", rust_gpu::spirv(#attr))] });
+
     let item: proc_macro2::TokenStream = item.into();
     for tt in item {
         match tt {
@@ -150,10 +157,14 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     match tt {
                         TokenTree::Group(group)
                             if group.delimiter() == Delimiter::Bracket
-                                && matches!(group.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident == "rust_gpu")
+                                && matches!(group.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident == "spirv")
                                 && matches!(sub_tokens.last(), Some(TokenTree::Punct(p)) if p.as_char() == '#') =>
                         {
-                            sub_tokens.pop();
+                            // group matches [spirv ...]
+                            let inner = group.stream(); // group stream doesn't include the brackets
+                            sub_tokens.extend(
+                                quote! { [cfg_attr(target_arch="spirv", rust_gpu::#inner)] },
+                            );
                         }
                         _ => sub_tokens.push(tt),
                     }
@@ -171,7 +182,6 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
         .collect::<proc_macro2::TokenStream>()
         .into()
 }
-
 /// Marks a function as runnable only on the GPU, and will panic on
 /// CPU platforms.
 #[proc_macro_attribute]
