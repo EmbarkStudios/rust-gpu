@@ -1,10 +1,9 @@
-use spirv_std::spirv;
-
 // build-pass
 // compile-flags: -Ctarget-feature=+RayQueryKHR,+ext:SPV_KHR_ray_query
 
 use glam::Vec3;
 use spirv_std::ray_tracing::{AccelerationStructure, RayFlags, RayQuery};
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn main(#[spirv(descriptor_set = 0, binding = 0)] accel: &AccelerationStructure) {

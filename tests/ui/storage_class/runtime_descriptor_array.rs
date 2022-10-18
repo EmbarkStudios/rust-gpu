@@ -1,8 +1,7 @@
-use spirv_std::spirv;
-
 // build-pass
 // compile-flags: -C target-feature=+RuntimeDescriptorArray,+ext:SPV_EXT_descriptor_indexing
 
+use spirv_std::spirv;
 use spirv_std::{Image, RuntimeArray, Sampler};
 
 #[spirv(fragment)]

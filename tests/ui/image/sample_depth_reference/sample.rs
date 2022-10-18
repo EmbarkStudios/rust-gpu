@@ -1,8 +1,7 @@
-use spirv_std::spirv;
-
 // Test `OpImageSampleDrefImplicitLod`
 // build-pass
 
+use spirv_std::spirv;
 use spirv_std::{arch, Image, Sampler};
 
 #[spirv(fragment)]

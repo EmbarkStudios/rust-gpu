@@ -1,10 +1,9 @@
-use spirv_std::spirv;
-
 // Test that various packing methods work.
 // build-pass
 
 use spirv_std::float::*;
 use spirv_std::glam::{Vec2, Vec4};
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn test_vec2_to_f16x2(i: Vec2, #[spirv(flat)] o: &mut u32) {

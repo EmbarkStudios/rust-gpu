@@ -1,7 +1,6 @@
-use spirv_std::spirv;
-
 // build-pass
 
+use spirv_std::spirv;
 use spirv_std::ByteAddressableBuffer;
 
 pub struct EmptyStruct {}

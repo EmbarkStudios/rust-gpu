@@ -1,9 +1,8 @@
-use spirv_std::spirv;
-
 // Test `OpVectorExtractDynamic`
 // build-pass
 
 use spirv_std::arch;
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn main() {

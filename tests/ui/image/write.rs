@@ -1,9 +1,8 @@
-use spirv_std::spirv;
-
 // Test `OpImageWrite`
 // build-pass
 // compile-flags: -C target-feature=+StorageImageWriteWithoutFormat
 
+use spirv_std::spirv;
 use spirv_std::{arch, Image};
 
 #[spirv(fragment)]

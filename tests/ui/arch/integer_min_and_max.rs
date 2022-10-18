@@ -1,8 +1,7 @@
-use spirv_std::spirv;
-
 // build-pass
 
 use spirv_std::arch::{signed_max, signed_min, unsigned_max, unsigned_min};
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn main() {

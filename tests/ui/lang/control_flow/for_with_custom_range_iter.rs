@@ -1,5 +1,3 @@
-use spirv_std::spirv;
-
 // NOTE(eddyb) this tests `for` loop desugaring (with its call to `Iterator::next`
 // and matching on the resulting `Option`), without relying on a `Range` iterator.
 // More precisely, `Range` used to not compile, due to it using `mem::replace`,
@@ -10,6 +8,7 @@ use spirv_std::spirv;
 
 use core::ops::Range;
 use spirv_std::num_traits::Num;
+use spirv_std::spirv;
 
 struct RangeIter<T>(Range<T>);
 

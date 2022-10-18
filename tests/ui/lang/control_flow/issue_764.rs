@@ -1,10 +1,9 @@
-use spirv_std::spirv;
-
 // build-pass
 
 use glam::UVec3;
 use spirv_std::glam;
 use spirv_std::glam::{Mat3, Vec3, Vec4};
+use spirv_std::spirv;
 
 fn index_to_transform(index: usize, raw_data: &[u8]) -> Transform2D {
     Transform2D {

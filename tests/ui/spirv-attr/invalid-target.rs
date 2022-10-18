@@ -30,7 +30,7 @@
 //   * 6 on `_entry_param`
 //   * 1 on `_closure`
 
-use spirv_std::spirv;
+//use spirv_std::spirv;
 
 #[spirv(
     sampler, block, sampled_image, generic_image_type, // struct-only
