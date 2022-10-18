@@ -407,35 +407,50 @@ impl Symbols {
 // FIXME(eddyb) find something nicer for the error type.
 type ParseAttrError = (Span, String);
 
-fn attr_is_spirv(a: &Attribute, sym: &Symbols) -> bool {
-    if let AttrKind::Normal(ref normal) = a.kind {
-        let s = &normal.item.path.segments;
-        s.len() == 2 && s[0].ident.name == sym.rust_gpu && s[1].ident.name == sym.spirv
-    } else {
-        false
-    }
-}
-
 // FIXME(eddyb) maybe move this to `attr`?
 pub(crate) fn parse_attrs_for_checking<'a>(
     sym: &'a Symbols,
     attrs: &'a [Attribute],
 ) -> impl Iterator<Item = Result<(Span, SpirvAttribute), ParseAttrError>> + 'a {
     attrs.iter().flat_map(move |attr| {
-        let (whole_attr_error, args) = if !attr_is_spirv(attr, sym) {
-            // Use an empty vec here to return empty
-            (None, Vec::new())
-        } else if let Some(args) = attr.meta_item_list() {
-            (None, args)
-        } else {
-            (
-                Some(Err((
-                    attr.span,
-                    "#[spirv(..)] attribute must have at least one argument".to_string(),
-                ))),
-                Vec::new(),
-            )
+        let (whole_attr_error, args) = match attr.kind {
+            AttrKind::Normal(ref normal) => {
+                // #[...], no doccomment
+                let s = &normal.item.path.segments;
+                if s.len() > 1 && s[0].ident.name == sym.rust_gpu {
+                    // #[rust_gpu ...]
+                    if s.len() != 2 || s[1].ident.name != sym.spirv {
+                        // #[rust_gpu::...] but not #[rust_gpu::spirv]
+                        (
+                            Some(Err((
+                                attr.span,
+                                "unknown `rust_gpu` attribute, expected `rust_gpu::spirv`"
+                                    .to_string(),
+                            ))),
+                            Vec::new(),
+                        )
+                    } else if let Some(args) = attr.meta_item_list() {
+                        // #[rust_gpu::spirv(...)]
+                        (None, args)
+                    } else {
+                        // #[rust_gpu::spirv]
+                        (
+                            Some(Err((
+                                attr.span,
+                                "#[rust_gpu::spirv(..)] attribute must have at least one argument"
+                                    .to_string(),
+                            ))),
+                            Vec::new(),
+                        )
+                    }
+                } else {
+                    // #[...] but not #[rust_gpu ...]
+                    (None, Vec::new())
+                }
+            }
+            _ => (None, Vec::new()), // doccomment
         };
+
         whole_attr_error
             .into_iter()
             .chain(args.into_iter().map(move |ref arg| {

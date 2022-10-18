@@ -1,4 +1,4 @@
-//#![no_std]
+#![no_std]
 #![cfg_attr(
     target_arch = "spirv",
     feature(
@@ -7,9 +7,7 @@
         core_intrinsics,
         lang_items,
         repr_simd,
-        //register_tool
-    ),
-    //register_tool(rust_gpu)
+    )
 )]
 // BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section

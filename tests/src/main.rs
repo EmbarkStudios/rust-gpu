@@ -122,6 +122,7 @@ impl Runner {
                 &*format!("--extern glam={}", deps.glam.display()),
                 "--crate-type dylib",
                 "-Zunstable-options",
+                "-Zcrate-attr=no_std",
                 "-Zcrate-attr=feature(asm_const,asm_experimental_arch)",
             ]
             .join(" ")
@@ -331,10 +332,8 @@ fn rust_flags(codegen_backend_path: &Path) -> String {
         "-Cembed-bitcode=no",
         &format!("-Ctarget-feature=+{}", target_features.join(",+")),
         "-Csymbol-mangling-version=v0",
-        "-Zcrate-attr=no_std",
         "-Zcrate-attr=feature(register_tool)",
         "-Zcrate-attr=register_tool(rust_gpu)",
-        "-Zcrate-attr=allow(unused_attributes)",
     ]
     .join(" ")
 }

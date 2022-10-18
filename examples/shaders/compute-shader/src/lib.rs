@@ -1,9 +1,4 @@
-#![cfg_attr(
-    target_arch = "spirv",
-    feature(register_tool),
-    register_tool(rust_gpu),
-    no_std
-)]
+#![cfg_attr(target_arch = "spirv", no_std)]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 

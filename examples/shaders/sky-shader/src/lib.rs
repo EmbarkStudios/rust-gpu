@@ -1,11 +1,6 @@
 //! Ported to Rust from <https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment>
 
-#![cfg_attr(
-    target_arch = "spirv",
-    no_std,
-    feature(register_tool, lang_items),
-    register_tool(rust_gpu)
-)]
+#![cfg_attr(target_arch = "spirv", no_std)]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 

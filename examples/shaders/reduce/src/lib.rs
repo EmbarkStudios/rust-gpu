@@ -1,9 +1,4 @@
-#![cfg_attr(
-    target_arch = "spirv",
-    no_std,
-    feature(register_tool),
-    register_tool(rust_gpu)
-)]
+#![cfg_attr(target_arch = "spirv", no_std)]
 #![allow(clippy::too_many_arguments, clippy::missing_safety_doc)]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
