@@ -138,8 +138,8 @@ pub fn Image(item: TokenStream) -> TokenStream {
     output.into()
 }
 
-/// Replaces all (nested) occurrences of the #[spirv(..)] attribute with
-/// #[cfg_attr(target_arch="spirv", rust_gpu::spirv(..))].
+/// Replaces all (nested) occurrences of the `#[spirv(..)]` attribute with
+/// `#[cfg_attr(target_arch="spirv", rust_gpu::spirv(..))]`.
 #[proc_macro_attribute]
 pub fn spirv(attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut tokens: Vec<TokenTree> = Vec::new();
