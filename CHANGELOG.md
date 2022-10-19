@@ -1,4 +1,4 @@
-# Changelog
+# `rust-gpu` Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed 🛠️
 
-- BREAKING: Migrated from `register_attr` to `register_tool`. [More information](docs/src/migration-to-register-tool.md).
+- 🚨BREAKING🚨 Migrated from `register_attr` to `register_tool`. [More information](docs/src/migration-to-register-tool.md).
 
 ## [0.4.0-alpha.15]
 
