@@ -8,22 +8,22 @@ In a [recent nightly Rust update](https://github.com/rust-lang/rust/commit/76dd5
 
 ## What does this mean for you as a shader maintainer
 
-You'll need to import the `spirv` proc macro attribute from `spirv-std` in order for the rust compiler:
+You'll need to import the `spirv` proc macro attribute from `spirv-std` in order for the `spirv` macro to be visible in global scope:
 
 ```rust
 use spirv_std::spirv;
 ```
 
-If your shader code already contains this line but is conditionally only included for non-spirv builds, like so:
+If your shader code already contains this line but is conditionally only included for non-SPIR-V builds, like so:
 
 ```rust
 #[cfg(not(target_arch = "spirv"))]
 use spirv_std::spirv;
 ```
 
-please remove the conditional attribute.
+please remove the conditional attribute (the line containing `#[cfg(..)]`).
 
-For this macro attribute to work correctly, it is important that `spirv` is visible in the global score and you use it like you used it before: `#[spirv(..)]`. An attempt to scope the attribute (such as `#[spirv_std::spirv(..)]`) will confuse the macro and likely fail.
+For this macro attribute to work correctly, it is important that `spirv` is visible in the global score and you use it like you used it before: `#[spirv(..)]`. An attempt to scope the attribute (such as `#[spirv_std::spirv(..)]`) will confuse the macro and it will likely fail to compile.
 
 You'll also need to remove the `feature(register_attr)` and `register_attr(spirv)` attributes from your shader crates. If you're building using `SpirvBuilder`, you don't need to do anything else; the new `register_tool` is applied automatically. If not, you'll need to include these attributes instead:
 
