@@ -415,7 +415,7 @@ pub(crate) fn parse_attrs_for_checking<'a>(
     attrs.iter().flat_map(move |attr| {
         let (whole_attr_error, args) = match attr.kind {
             AttrKind::Normal(ref normal) => {
-                // #[...], no doccomment
+                // #[...]
                 let s = &normal.item.path.segments;
                 if s.len() > 1 && s[0].ident.name == sym.rust_gpu {
                     // #[rust_gpu ...]
@@ -448,7 +448,7 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                     (None, Vec::new())
                 }
             }
-            _ => (None, Vec::new()), // doccomment
+            AttrKind::DocComment(..) => (None, Vec::new()), // doccomment
         };
 
         whole_attr_error
