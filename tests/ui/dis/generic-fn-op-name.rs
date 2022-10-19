@@ -10,6 +10,7 @@
 #![allow(incomplete_features)]
 
 use spirv_std::image::Dimensionality;
+use spirv_std::spirv;
 
 fn generic<T, const DIM: Dimensionality>() {}
 

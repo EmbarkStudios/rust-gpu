@@ -1,7 +1,7 @@
 // Tests that matrix type inference fails correctly, for empty struct
 // build-fail
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(matrix)]
 pub struct _EmptyStruct {}

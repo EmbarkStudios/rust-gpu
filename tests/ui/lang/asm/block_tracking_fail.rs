@@ -3,7 +3,7 @@
 // build-fail
 
 use core::arch::asm;
-use spirv_std as _;
+use spirv_std::spirv;
 
 // Active basic block with `noreturn`.
 fn asm_noreturn_open() {

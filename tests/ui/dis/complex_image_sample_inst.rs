@@ -3,7 +3,7 @@
 // compile-flags: -C llvm-args=--disassemble-fn=complex_image_sample_inst::sample_proj_lod
 
 use core::arch::asm;
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn sample_proj_lod(
     coord: glam::Vec4,

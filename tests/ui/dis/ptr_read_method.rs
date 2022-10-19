@@ -1,7 +1,7 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=ptr_read_method::copy_via_raw_ptr
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn copy_via_raw_ptr(src: &f32, dst: &mut f32) {
     unsafe { *dst = (src as *const f32).read() }

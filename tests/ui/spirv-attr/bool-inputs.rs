@@ -1,7 +1,7 @@
 // build-pass
 // compile-flags: -Ctarget-feature=+FragmentFullyCoveredEXT,+ext:SPV_EXT_fragment_fully_covered
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn fragment(

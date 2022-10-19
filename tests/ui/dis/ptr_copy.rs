@@ -6,7 +6,7 @@
 
 #![cfg_attr(via_intrinsic, feature(intrinsics))]
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn copy_via_raw_ptr(src: &f32, dst: &mut f32) {
     #[cfg(via_intrinsic)]

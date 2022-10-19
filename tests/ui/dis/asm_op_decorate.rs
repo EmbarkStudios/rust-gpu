@@ -11,7 +11,7 @@
 // ignore-vulkan1.2
 
 use core::arch::asm;
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn add_decorate() {
     unsafe {

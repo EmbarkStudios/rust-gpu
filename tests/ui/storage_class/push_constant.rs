@@ -1,7 +1,7 @@
 // Test that using push constants passes (Vulkan) validation.
 
 // build-pass
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[derive(Copy, Clone)]
 pub struct ShaderConstants {

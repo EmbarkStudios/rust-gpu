@@ -1,6 +1,7 @@
 // build-pass
 // compile-flags: -C target-feature=+InputAttachment
 
+use spirv_std::spirv;
 use spirv_std::{arch, Image};
 
 #[spirv(fragment)]

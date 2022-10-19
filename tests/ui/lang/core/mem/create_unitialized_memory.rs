@@ -1,7 +1,7 @@
 // Test creating unitialized memory.
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 use core::mem::MaybeUninit;
 const MAYBEI32: MaybeUninit<&i32> = MaybeUninit::<&i32>::uninit();

@@ -1,6 +1,7 @@
 // build-pass
 
 use spirv_std::arch::IndexUnchecked;
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn main(

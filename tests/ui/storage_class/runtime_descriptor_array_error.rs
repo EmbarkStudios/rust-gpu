@@ -1,6 +1,6 @@
 // build-fail
 
-use spirv_std::{Image, RuntimeArray};
+use spirv_std::{spirv, Image, RuntimeArray};
 
 #[spirv(fragment)]
 pub fn main(

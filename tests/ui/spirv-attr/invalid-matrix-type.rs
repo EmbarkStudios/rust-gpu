@@ -1,7 +1,7 @@
 // Tests that matrix type inference fails correctly
 // build-fail
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(matrix)]
 pub struct _FewerFields {

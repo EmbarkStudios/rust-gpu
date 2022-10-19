@@ -1,3 +1,5 @@
+use spirv_std::spirv;
+
 // build-pass
 // compile-flags: -Ctarget-feature=+Geometry
 

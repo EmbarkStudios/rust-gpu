@@ -2,7 +2,7 @@
 // build-pass
 
 use core::arch::asm;
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn asm() {
     unsafe {

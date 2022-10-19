@@ -3,6 +3,7 @@
 
 use glam::Vec3;
 use spirv_std::ray_tracing::{AccelerationStructure, RayFlags, RayQuery};
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 // Rustfmt eats long attributes <https://github.com/rust-lang/rustfmt/issues/4579>

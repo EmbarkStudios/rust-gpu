@@ -2,7 +2,7 @@
 
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[track_caller]
 fn track_caller_maybe_panic(x: u32) {

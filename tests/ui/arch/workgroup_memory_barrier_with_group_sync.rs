@@ -1,7 +1,7 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=workgroup_memory_barrier_with_group_sync::workgroup_memory_barrier_with_group_sync
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 unsafe fn workgroup_memory_barrier_with_group_sync() {
     spirv_std::arch::workgroup_memory_barrier_with_group_sync();

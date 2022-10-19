@@ -1,5 +1,6 @@
 // build-fail
 
+use spirv_std::spirv;
 use spirv_std::{arch, Image, Sampler};
 
 fn deeper_stack(image2d: &Image!(2D, type=f32, sampled), sampler: &Sampler) -> glam::Vec4 {

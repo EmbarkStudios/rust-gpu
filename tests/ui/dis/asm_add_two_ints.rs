@@ -2,7 +2,7 @@
 // compile-flags: -C llvm-args=--disassemble-fn=asm_add_two_ints::add_two_ints
 
 use core::arch::asm;
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn add_two_ints(x: u32, y: u32) -> u32 {
     let result;

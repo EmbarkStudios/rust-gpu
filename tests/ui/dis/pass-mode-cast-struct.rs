@@ -5,7 +5,7 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-entry=main
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 struct Foo {
     a: u32,

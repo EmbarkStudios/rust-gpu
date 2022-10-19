@@ -1,7 +1,7 @@
 // Test that bounds checking causes panics.
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn array_bounds_check(x: [u32; 4], i: usize) -> u32 {
     x[i]

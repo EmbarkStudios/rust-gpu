@@ -1,7 +1,7 @@
 // Tests that storage class inference fails correctly
 // build-fail
 
-use spirv_std::Image;
+use spirv_std::{spirv, Image};
 
 #[spirv(vertex)]
 pub fn main(

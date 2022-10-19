@@ -1,7 +1,7 @@
 use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
-use rustc_ast::ast::{Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
+use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
@@ -16,6 +16,7 @@ pub struct Symbols {
     // Used by `is_blocklisted_fn`.
     pub fmt_decimal: Symbol,
 
+    pub rust_gpu: Symbol,
     pub spirv: Symbol,
     pub spirv_std: Symbol,
     pub libm: Symbol,
@@ -373,6 +374,7 @@ impl Symbols {
         Self {
             fmt_decimal: Symbol::intern("fmt_decimal"),
 
+            rust_gpu: Symbol::intern("rust_gpu"),
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
             libm: Symbol::intern("libm"),
@@ -411,20 +413,44 @@ pub(crate) fn parse_attrs_for_checking<'a>(
     attrs: &'a [Attribute],
 ) -> impl Iterator<Item = Result<(Span, SpirvAttribute), ParseAttrError>> + 'a {
     attrs.iter().flat_map(move |attr| {
-        let (whole_attr_error, args) = if !attr.has_name(sym.spirv) {
-            // Use an empty vec here to return empty
-            (None, Vec::new())
-        } else if let Some(args) = attr.meta_item_list() {
-            (None, args)
-        } else {
-            (
-                Some(Err((
-                    attr.span,
-                    "#[spirv(..)] attribute must have at least one argument".to_string(),
-                ))),
-                Vec::new(),
-            )
+        let (whole_attr_error, args) = match attr.kind {
+            AttrKind::Normal(ref normal) => {
+                // #[...]
+                let s = &normal.item.path.segments;
+                if s.len() > 1 && s[0].ident.name == sym.rust_gpu {
+                    // #[rust_gpu ...]
+                    if s.len() != 2 || s[1].ident.name != sym.spirv {
+                        // #[rust_gpu::...] but not #[rust_gpu::spirv]
+                        (
+                            Some(Err((
+                                attr.span,
+                                "unknown `rust_gpu` attribute, expected `rust_gpu::spirv`"
+                                    .to_string(),
+                            ))),
+                            Vec::new(),
+                        )
+                    } else if let Some(args) = attr.meta_item_list() {
+                        // #[rust_gpu::spirv(...)]
+                        (None, args)
+                    } else {
+                        // #[rust_gpu::spirv]
+                        (
+                            Some(Err((
+                                attr.span,
+                                "#[rust_gpu::spirv(..)] attribute must have at least one argument"
+                                    .to_string(),
+                            ))),
+                            Vec::new(),
+                        )
+                    }
+                } else {
+                    // #[...] but not #[rust_gpu ...]
+                    (None, Vec::new())
+                }
+            }
+            AttrKind::DocComment(..) => (None, Vec::new()), // doccomment
         };
+
         whole_attr_error
             .into_iter()
             .chain(args.into_iter().map(move |ref arg| {

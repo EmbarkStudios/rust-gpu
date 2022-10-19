@@ -2,7 +2,7 @@
 
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 struct Newtype<T>(T);
 

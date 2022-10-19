@@ -2,7 +2,7 @@
 // normalize-stderr-test "\S*/crates/spirv-std/src/" -> "$$SPIRV_STD_SRC/"
 // compile-flags: -C target-feature=+ImageQuery
 
-use spirv_std::{arch, Image};
+use spirv_std::{arch, spirv, Image};
 
 #[spirv(fragment)]
 pub fn main(

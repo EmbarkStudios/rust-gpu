@@ -4,7 +4,7 @@
 // build-pass
 // compile-flags: -C target-feature=+VariablePointers
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 use glam::{const_mat2, Mat2, Vec2};
 

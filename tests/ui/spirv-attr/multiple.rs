@@ -3,7 +3,7 @@
 
 // build-fail
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(sampler, sampler)]
 struct _SameIntrinsicType {}

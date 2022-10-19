@@ -16,7 +16,7 @@
 // normalize-stderr-test "OpExtension .SPV_KHR_vulkan_memory_model.\n" -> ""
 // normalize-stderr-test "OpMemoryModel Logical Vulkan" -> "OpMemoryModel Logical Simple"
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn main(/* unused Output */ _: &mut glam::Vec4) {}

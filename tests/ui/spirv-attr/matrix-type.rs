@@ -1,7 +1,7 @@
 // build-pass
 // compile-flags: -Ctarget-feature=+RayTracingKHR,+ext:SPV_KHR_ray_tracing
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[derive(Clone, Copy)]
 #[spirv(matrix)]

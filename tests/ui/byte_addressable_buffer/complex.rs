@@ -1,5 +1,6 @@
 // build-pass
 
+use spirv_std::spirv;
 use spirv_std::{glam::Vec2, ByteAddressableBuffer};
 
 pub struct Complex {

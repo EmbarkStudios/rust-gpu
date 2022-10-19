@@ -1,6 +1,7 @@
 // build-pass
 
 use spirv_std::arch::IndexUnchecked;
+use spirv_std::spirv;
 
 #[spirv(compute(threads(64)))]
 pub fn main(#[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buffer: &mut [u32]) {

@@ -1,7 +1,7 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=unroll_loops::java_hash_ten_times
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(unroll_loops)]
 fn java_hash_ten_times(mut x: u32, y: u32) -> u32 {

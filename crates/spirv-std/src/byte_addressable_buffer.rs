@@ -45,7 +45,7 @@ impl<'a> ByteAddressableBuffer<'a> {
     /// transmute)
     pub unsafe fn load<T>(&self, byte_index: u32) -> T {
         if byte_index + mem::size_of::<T>() as u32 > self.data.len() as u32 {
-            panic!("Index out of range")
+            panic!("Index out of range");
         }
         buffer_load_intrinsic(self.data, byte_index)
     }
@@ -71,7 +71,7 @@ impl<'a> ByteAddressableBuffer<'a> {
     /// transmute)
     pub unsafe fn store<T>(&mut self, byte_index: u32, value: T) {
         if byte_index + mem::size_of::<T>() as u32 > self.data.len() as u32 {
-            panic!("Index out of range")
+            panic!("Index out of range");
         }
         buffer_store_intrinsic(self.data, byte_index, value);
     }

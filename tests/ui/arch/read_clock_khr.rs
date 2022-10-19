@@ -2,6 +2,7 @@
 // compile-flags: -Ctarget-feature=+Int64,+ShaderClockKHR,+ext:SPV_KHR_shader_clock
 
 use glam::UVec2;
+use spirv_std::spirv;
 use spirv_std::{
     arch::{read_clock_khr, read_clock_uvec2_khr},
     memory::Scope,

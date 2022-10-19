@@ -1,23 +1,16 @@
-#![cfg_attr(
-    target_arch = "spirv",
-    no_std,
-    feature(register_attr),
-    register_attr(spirv)
-)]
+#![cfg_attr(target_arch = "spirv", no_std)]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 
 use core::f32::consts::PI;
 use glam::{const_vec4, vec2, vec3, Mat2, Vec2, Vec3, Vec4, Vec4Swizzles};
 use shared::*;
+use spirv_std::spirv;
 
 // Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
 // we tie #[no_std] above to the same condition, so it's fine.
 #[cfg(target_arch = "spirv")]
 use spirv_std::num_traits::Float;
-
-#[cfg(not(target_arch = "spirv"))]
-use spirv_std::macros::spirv;
 
 trait Shape: Copy {
     /// Distances indicate where the point is in relation to the shape:

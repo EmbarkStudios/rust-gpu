@@ -4,6 +4,7 @@
 #![allow(incomplete_features)]
 
 use spirv_std::memory::{Scope, Semantics};
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn main() {

@@ -2,6 +2,7 @@
 // build-pass
 
 use core::arch::asm;
+use spirv_std::spirv;
 use spirv_std::{arch, Image, Sampler};
 
 #[spirv(fragment)]

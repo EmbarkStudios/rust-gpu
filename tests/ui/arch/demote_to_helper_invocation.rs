@@ -1,3 +1,5 @@
+use spirv_std::spirv;
+
 // build-pass
 //
 // compile-flags: -C target-feature=+DemoteToHelperInvocationEXT,+ext:SPV_EXT_demote_to_helper_invocation

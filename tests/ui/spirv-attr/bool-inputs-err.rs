@@ -1,6 +1,6 @@
 // build-fail
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 pub struct Boolthing {
     x: u32,

@@ -8,6 +8,7 @@
 
 use core::ops::Range;
 use spirv_std::num_traits::Num;
+use spirv_std::spirv;
 
 struct RangeIter<T>(Range<T>);
 

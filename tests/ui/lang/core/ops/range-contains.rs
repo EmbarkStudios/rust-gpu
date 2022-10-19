@@ -4,7 +4,7 @@
 
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn has_two_decimal_digits(x: u32) -> bool {
     (10..100).contains(&x)

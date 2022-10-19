@@ -1,7 +1,7 @@
 // build-fail
 // compile-flags: -Ctarget-feature=+rayTracingKHR,+ext:SPV_KHR_ray_tracing
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(any_hit)]
 pub fn main() {

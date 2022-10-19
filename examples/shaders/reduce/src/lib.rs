@@ -1,17 +1,11 @@
-#![cfg_attr(
-    target_arch = "spirv",
-    no_std,
-    feature(register_attr),
-    register_attr(spirv)
-)]
+#![cfg_attr(target_arch = "spirv", no_std)]
 #![allow(clippy::too_many_arguments, clippy::missing_safety_doc)]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 use spirv_std::glam::UVec3;
-#[cfg(not(target_arch = "spirv"))]
-use spirv_std::macros::spirv;
 #[cfg(target_arch = "spirv")]
 use spirv_std::memory::Scope;
+use spirv_std::spirv;
 
 #[doc(alias = "OpGroupNonUniformIAdd")]
 #[cfg(target_arch = "spirv")]

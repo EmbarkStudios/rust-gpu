@@ -7,7 +7,7 @@
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-entry=main
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn main(mut in_array: [f32; 2], out_array: &mut [f32; 2]) {

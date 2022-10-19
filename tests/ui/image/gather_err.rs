@@ -2,7 +2,7 @@
 // normalize-stderr-test "\S*/crates/spirv-std/src/" -> "$$SPIRV_STD_SRC/"
 // compile-flags: -Ctarget-feature=+Sampled1D
 
-use spirv_std::{arch, Image, Sampler};
+use spirv_std::{arch, spirv, Image, Sampler};
 
 #[spirv(fragment)]
 pub fn main(

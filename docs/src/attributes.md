@@ -2,6 +2,12 @@
 
 rust-gpu introduces a number of SPIR-V related attributes to express behavior specific to SPIR-V not exposed in the base rust language.
 
+Before you'll able to use these attributes, make sure you import the attribute from the `spirv-std` crate:
+
+```rust
+use spirv_std::spirv;
+```
+
 There are a few different categories of attributes:
 
 ## Entry points
