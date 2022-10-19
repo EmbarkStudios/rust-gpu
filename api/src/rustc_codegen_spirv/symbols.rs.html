@@ -670,10 +670,36 @@
 <span id="670">670</span>
 <span id="671">671</span>
 <span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 <span class="kw">use </span><span class="kw">crate</span>::builder::libm_intrinsics;
 <span class="kw">use </span>rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
-<span class="kw">use </span>rustc_ast::ast::{Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
+<span class="kw">use </span>rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 <span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
 <span class="kw">use </span>rustc_span::symbol::{Ident, Symbol};
 <span class="kw">use </span>rustc_span::Span;
@@ -688,6 +714,7 @@
     <span class="comment">// Used by `is_blocklisted_fn`.
     </span><span class="kw">pub </span>fmt_decimal: Symbol,
 
+    <span class="kw">pub </span>rust_gpu: Symbol,
     <span class="kw">pub </span>spirv: Symbol,
     <span class="kw">pub </span>spirv_std: Symbol,
     <span class="kw">pub </span>libm: Symbol,
@@ -1045,6 +1072,7 @@
         <span class="self">Self </span>{
             fmt_decimal: Symbol::intern(<span class="string">&quot;fmt_decimal&quot;</span>),
 
+            rust_gpu: Symbol::intern(<span class="string">&quot;rust_gpu&quot;</span>),
             spirv: Symbol::intern(<span class="string">&quot;spirv&quot;</span>),
             spirv_std: Symbol::intern(<span class="string">&quot;spirv_std&quot;</span>),
             libm: Symbol::intern(<span class="string">&quot;libm&quot;</span>),
@@ -1083,20 +1111,44 @@
     attrs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Attribute],
 ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="prelude-ty">Result</span>&lt;(Span, SpirvAttribute), ParseAttrError&gt;&gt; + <span class="lifetime">&#39;a </span>{
     attrs.iter().flat_map(<span class="kw">move </span>|attr| {
-        <span class="kw">let </span>(whole_attr_error, args) = <span class="kw">if </span>!attr.has_name(sym.spirv) {
-            <span class="comment">// Use an empty vec here to return empty
-            </span>(<span class="prelude-val">None</span>, Vec::new())
-        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(args) = attr.meta_item_list() {
-            (<span class="prelude-val">None</span>, args)
-        } <span class="kw">else </span>{
-            (
-                <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>((
-                    attr.span,
-                    <span class="string">&quot;#[spirv(..)] attribute must have at least one argument&quot;</span>.to_string(),
-                ))),
-                Vec::new(),
-            )
-        };
+        <span class="kw">let </span>(whole_attr_error, args) = <span class="kw">match </span>attr.kind {
+            AttrKind::Normal(<span class="kw-2">ref </span>normal) =&gt; {
+                <span class="comment">// #[...]
+                </span><span class="kw">let </span>s = <span class="kw-2">&amp;</span>normal.item.path.segments;
+                <span class="kw">if </span>s.len() &gt; <span class="number">1 </span>&amp;&amp; s[<span class="number">0</span>].ident.name == sym.rust_gpu {
+                    <span class="comment">// #[rust_gpu ...]
+                    </span><span class="kw">if </span>s.len() != <span class="number">2 </span>|| s[<span class="number">1</span>].ident.name != sym.spirv {
+                        <span class="comment">// #[rust_gpu::...] but not #[rust_gpu::spirv]
+                        </span>(
+                            <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>((
+                                attr.span,
+                                <span class="string">&quot;unknown `rust_gpu` attribute, expected `rust_gpu::spirv`&quot;
+                                    </span>.to_string(),
+                            ))),
+                            Vec::new(),
+                        )
+                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(args) = attr.meta_item_list() {
+                        <span class="comment">// #[rust_gpu::spirv(...)]
+                        </span>(<span class="prelude-val">None</span>, args)
+                    } <span class="kw">else </span>{
+                        <span class="comment">// #[rust_gpu::spirv]
+                        </span>(
+                            <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>((
+                                attr.span,
+                                <span class="string">&quot;#[rust_gpu::spirv(..)] attribute must have at least one argument&quot;
+                                    </span>.to_string(),
+                            ))),
+                            Vec::new(),
+                        )
+                    }
+                } <span class="kw">else </span>{
+                    <span class="comment">// #[...] but not #[rust_gpu ...]
+                    </span>(<span class="prelude-val">None</span>, Vec::new())
+                }
+            }
+            AttrKind::DocComment(..) =&gt; (<span class="prelude-val">None</span>, Vec::new()), <span class="comment">// doccomment
+        </span>};
+
         whole_attr_error
             .into_iter()
             .chain(args.into_iter().map(<span class="kw">move </span>|<span class="kw-2">ref </span>arg| {

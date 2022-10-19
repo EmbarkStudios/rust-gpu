@@ -613,6 +613,17 @@
 <span id="613">613</span>
 <span id="614">614</span>
 <span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
 </pre><pre class="rust"><code><span class="comment">// BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;
@@ -692,7 +703,7 @@
 
 <span class="kw">use </span>syn::{punctuated::Punctuated, spanned::Spanned, ItemFn, Token};
 
-<span class="kw">use </span>quote::ToTokens;
+<span class="kw">use </span>quote::{quote, ToTokens};
 <span class="kw">use </span>std::fmt::Write;
 
 <span class="doccomment">/// A macro for creating SPIR-V `OpTypeImage` types. Always produces a
@@ -753,9 +764,16 @@
     output.into()
 }
 
-<span class="attribute">#[proc_macro_attribute]
-</span><span class="kw">pub fn </span>spirv(_attr: TokenStream, item: TokenStream) -&gt; TokenStream {
-    <span class="kw">let </span><span class="kw-2">mut </span>tokens = Vec::new();
+<span class="doccomment">/// Replaces all (nested) occurrences of the `#[spirv(..)]` attribute with
+/// `#[cfg_attr(target_arch=&quot;spirv&quot;, rust_gpu::spirv(..))]`.
+</span><span class="attribute">#[proc_macro_attribute]
+</span><span class="kw">pub fn </span>spirv(attr: TokenStream, item: TokenStream) -&gt; TokenStream {
+    <span class="kw">let </span><span class="kw-2">mut </span>tokens: Vec&lt;TokenTree&gt; = Vec::new();
+
+    <span class="comment">// prepend with #[rust_gpu::spirv(..)]
+    </span><span class="kw">let </span>attr: proc_macro2::TokenStream = attr.into();
+    tokens.extend(<span class="macro">quote! </span>{ <span class="attribute">#[cfg_attr(target_arch=<span class="string">&quot;spirv&quot;</span>, rust_gpu::spirv(#attr))] </span>});
+
     <span class="kw">let </span>item: proc_macro2::TokenStream = item.into();
     <span class="kw">for </span>tt <span class="kw">in </span>item {
         <span class="kw">match </span>tt {
@@ -768,7 +786,11 @@
                                 &amp;&amp; <span class="macro">matches!</span>(group.stream().into_iter().next(), <span class="prelude-val">Some</span>(TokenTree::Ident(ident)) <span class="kw">if </span>ident == <span class="string">&quot;spirv&quot;</span>)
                                 &amp;&amp; <span class="macro">matches!</span>(sub_tokens.last(), <span class="prelude-val">Some</span>(TokenTree::Punct(p)) <span class="kw">if </span>p.as_char() == <span class="string">&#39;#&#39;</span>) =&gt;
                         {
-                            sub_tokens.pop();
+                            <span class="comment">// group matches [spirv ...]
+                            </span><span class="kw">let </span>inner = group.stream(); <span class="comment">// group stream doesn&#39;t include the brackets
+                            </span>sub_tokens.extend(
+                                <span class="macro">quote! </span>{ [cfg_attr(target_arch=<span class="string">&quot;spirv&quot;</span>, rust_gpu::#inner)] },
+                            );
                         }
                         <span class="kw">_ </span>=&gt; sub_tokens.push(tt),
                     }
