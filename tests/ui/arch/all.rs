@@ -1,6 +1,6 @@
-use spirv_std::spirv;
-
 // build-pass
+
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn main() {

@@ -1,7 +1,7 @@
-use spirv_std::spirv;
-
 // build-pass
 // compile-flags: -Ctarget-feature=+RayTracingKHR,+ext:SPV_KHR_ray_tracing
+
+use spirv_std::spirv;
 
 #[spirv(ray_generation)]
 pub fn main(#[spirv(ray_payload)] payload: &mut glam::Vec3) {
