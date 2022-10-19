@@ -182,6 +182,7 @@ pub fn spirv(attr: TokenStream, item: TokenStream) -> TokenStream {
         .collect::<proc_macro2::TokenStream>()
         .into()
 }
+
 /// Marks a function as runnable only on the GPU, and will panic on
 /// CPU platforms.
 #[proc_macro_attribute]

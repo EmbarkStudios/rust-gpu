@@ -1,6 +1,5 @@
 //! Ray-tracing data types
 use crate::vector::Vector;
-
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;
 
