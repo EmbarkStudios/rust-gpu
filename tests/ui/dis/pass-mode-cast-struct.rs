@@ -24,7 +24,7 @@ impl Foo {
 }
 
 #[spirv(fragment)]
-pub fn main(#[spirv(flat)] in_packed: u64, #[spirv(flat)] out_sum: &mut u32) {
+pub fn main(#[spirv(flat)] in_packed: u64, out_sum: &mut u32) {
     let foo = Foo::unpack(in_packed);
     *out_sum = foo.a + (foo.b + foo.c) as u32;
 }

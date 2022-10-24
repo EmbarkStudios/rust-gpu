@@ -6,7 +6,7 @@ use spirv_std::ByteAddressableBuffer;
 #[spirv(fragment)]
 pub fn load(
     #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[spirv(flat)] out: &mut u32,
+    out: &mut u32,
 ) {
     unsafe {
         let buf = ByteAddressableBuffer::new(buf);

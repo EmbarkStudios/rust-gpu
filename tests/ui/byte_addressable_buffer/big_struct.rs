@@ -15,7 +15,7 @@ pub struct BigStruct {
 #[spirv(fragment)]
 pub fn load(
     #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[spirv(flat)] out: &mut BigStruct,
+    out: &mut BigStruct,
 ) {
     unsafe {
         let buf = ByteAddressableBuffer::new(buf);
