@@ -8,7 +8,7 @@ pub struct EmptyStruct {}
 #[spirv(fragment)]
 pub fn load(
     #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[spirv(flat)] out: &mut EmptyStruct,
+    out: &mut EmptyStruct,
 ) {
     unsafe {
         let buf = ByteAddressableBuffer::new(buf);

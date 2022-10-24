@@ -22,9 +22,9 @@ fn deep_transpose(r: &'static &'static Mat2) -> Mat2 {
 
 #[spirv(fragment)]
 pub fn main(
-    #[spirv(flat)] scalar_out: &mut u32,
+    scalar_out: &mut u32,
     #[spirv(push_constant)] vec_in: &Vec2,
-    #[spirv(flat)] bool_out: &mut u32,
+    bool_out: &mut u32,
     vec_out: &mut Vec2,
 ) {
     *scalar_out = deep_load(&&123);

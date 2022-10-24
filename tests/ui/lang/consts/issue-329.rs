@@ -8,8 +8,7 @@ const OFFSETS: [f32; 18] = [
     33.368627,
 ];
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
-pub fn main(#[spirv(flat)] x: &mut u32) {
+pub fn main(x: &mut u32) {
     *x = OFFSETS.len() as u32;
 }

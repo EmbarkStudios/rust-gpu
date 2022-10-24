@@ -18,11 +18,11 @@ fn array3_deep_load(r: &'static [&'static u32; 3]) -> [u32; 3] {
 }
 
 #[spirv(fragment)]
-pub fn main_pair(#[spirv(flat)] pair_out: &mut (u32, f32)) {
+pub fn main_pair(pair_out: &mut (u32, f32)) {
     *pair_out = pair_deep_load(&(&123, &3.14));
 }
 
 #[spirv(fragment)]
-pub fn main_array3(#[spirv(flat)] array3_out: &mut [u32; 3]) {
+pub fn main_array3(array3_out: &mut [u32; 3]) {
     *array3_out = array3_deep_load(&[&0, &1, &2]);
 }
