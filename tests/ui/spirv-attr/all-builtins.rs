@@ -42,15 +42,6 @@ pub fn compute(
 #[spirv(vertex)]
 pub fn vertex(
     #[spirv(SMIDNV)] smidnv: u32,
-    #[spirv(bary_coord_no_persp_amd)] bary_coord_no_persp_amd: u32,
-    #[spirv(bary_coord_no_persp_centroid_amd)] bary_coord_no_persp_centroid_amd: u32,
-    #[spirv(bary_coord_no_persp_nv)] bary_coord_no_persp_nv: u32,
-    #[spirv(bary_coord_no_persp_sample_amd)] bary_coord_no_persp_sample_amd: u32,
-    #[spirv(bary_coord_nv)] bary_coord_nv: u32,
-    #[spirv(bary_coord_pull_model_amd)] bary_coord_pull_model_amd: u32,
-    #[spirv(bary_coord_smooth_amd)] bary_coord_smooth_amd: u32,
-    #[spirv(bary_coord_smooth_centroid_amd)] bary_coord_smooth_centroid_amd: u32,
-    #[spirv(bary_coord_smooth_sample_amd)] bary_coord_smooth_sample_amd: u32,
     #[spirv(base_instance)] base_instance: u32,
     #[spirv(base_vertex)] base_vertex: u32,
     #[spirv(clip_distance_per_view_nv)] clip_distance_per_view_nv: u32,
@@ -91,6 +82,15 @@ pub fn vertex(
 
 #[spirv(fragment)]
 pub fn fragment(
+    #[spirv(bary_coord_no_persp_amd)] bary_coord_no_persp_amd: Vec3,
+    #[spirv(bary_coord_no_persp_centroid_amd)] bary_coord_no_persp_centroid_amd: Vec3,
+    #[spirv(bary_coord_no_persp_nv)] bary_coord_no_persp_nv: Vec3,
+    #[spirv(bary_coord_no_persp_sample_amd)] bary_coord_no_persp_sample_amd: Vec3,
+    #[spirv(bary_coord_nv)] bary_coord_nv: Vec3,
+    #[spirv(bary_coord_pull_model_amd)] bary_coord_pull_model_amd: Vec3,
+    #[spirv(bary_coord_smooth_amd)] bary_coord_smooth_amd: Vec3,
+    #[spirv(bary_coord_smooth_centroid_amd)] bary_coord_smooth_centroid_amd: Vec3,
+    #[spirv(bary_coord_smooth_sample_amd)] bary_coord_smooth_sample_amd: Vec3,
     #[spirv(clip_distance)] clip_distance: [f32; 1],
     #[spirv(cull_distance)] cull_distance: [f32; 1],
     #[spirv(frag_coord)] frag_coord: Vec4,

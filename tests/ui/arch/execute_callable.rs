@@ -9,7 +9,7 @@ use spirv_std::spirv;
 pub fn main(
     #[spirv(descriptor_set = 0, binding = 0)]
     acceleration_structure: &spirv_std::ray_tracing::AccelerationStructure,
-    #[spirv(incoming_callable_data)] payload: &glam::Vec3,
+    #[spirv(callable_data)] payload: &glam::Vec3,
 ) {
     unsafe {
         spirv_std::arch::execute_callable::<_, 5>(payload);
