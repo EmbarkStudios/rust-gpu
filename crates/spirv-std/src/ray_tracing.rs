@@ -724,17 +724,19 @@ impl RayQuery {
     #[doc(alias = "OpRayQueryGetIntersectionFrontFaceKHR")]
     #[inline]
     pub unsafe fn get_candidate_intersection_front_face(&self) -> bool {
-        let result: u32;
+        let mut result = false;
 
         asm! {
+            "%bool = OpTypeBool",
             "%u32 = OpTypeInt 32 0",
             "%intersection = OpConstant %u32 0",
-            "{result} = OpRayQueryGetIntersectionFrontFaceKHR %u32 {ray_query} %intersection",
+            "%result = OpRayQueryGetIntersectionFrontFaceKHR %bool {ray_query} %intersection",
+            "OpStore {result} %result",
             ray_query = in(reg) self,
-            result = out(reg) result,
+            result = in(reg) &mut result,
         }
 
-        result != 0
+        result
     }
 
     /// Returns whether the current intersection considered in a ray query was with
@@ -749,17 +751,19 @@ impl RayQuery {
     #[doc(alias = "OpRayQueryGetIntersectionFrontFaceKHR")]
     #[inline]
     pub unsafe fn get_committed_intersection_front_face(&self) -> bool {
-        let result: u32;
+        let mut result = false;
 
         asm! {
+            "%bool = OpTypeBool",
             "%u32 = OpTypeInt 32 0",
             "%intersection = OpConstant %u32 1",
-            "{result} = OpRayQueryGetIntersectionFrontFaceKHR %u32 {ray_query} %intersection",
+            "%result = OpRayQueryGetIntersectionFrontFaceKHR %bool {ray_query} %intersection",
+            "OpStore {result} %result",
             ray_query = in(reg) self,
-            result = out(reg) result,
+            result = in(reg) &mut result,
         }
 
-        result != 0
+        result
     }
 
     /// Returns whether a candidate intersection considered in a ray query was with
@@ -768,16 +772,17 @@ impl RayQuery {
     #[doc(alias = "OpRayQueryGetIntersectionCandidateAABBOpaqueKHR")]
     #[inline]
     pub unsafe fn get_intersection_candidate_aabb_opaque(&self) -> bool {
-        let result: u32;
+        let mut result = false;
 
         asm! {
-            "%u32 = OpTypeInt 8 0",
-            "{result} = OpRayQueryGetIntersectionCandidateAABBOpaqueKHR %u32 {ray_query}",
+            "%bool = OpTypeBool",
+            "%result = OpRayQueryGetIntersectionCandidateAABBOpaqueKHR %bool {ray_query}",
+            "OpStore {result} %result",
             ray_query = in(reg) self,
-            result = out(reg) result,
+            result = in(reg) &mut result,
         }
 
-        result != 0
+        result
     }
 
     /// Gets the object-space ray direction for the current intersection considered
