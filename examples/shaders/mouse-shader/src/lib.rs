@@ -3,7 +3,7 @@
 #![deny(warnings)]
 
 use core::f32::consts::PI;
-use glam::{const_vec4, vec2, vec3, Mat2, Vec2, Vec3, Vec4, Vec4Swizzles};
+use glam::{vec2, vec3, vec4, Mat2, Vec2, Vec3, Vec4, Vec4Swizzles};
 use shared::*;
 use spirv_std::spirv;
 
@@ -182,8 +182,8 @@ pub fn main_fs(
         color: background,
     };
 
-    const WHITE: Vec4 = const_vec4!([1.0, 1.0, 1.0, 1.0]);
-    const RED: Vec4 = const_vec4!([1.0, 0.0, 0.0, 1.0]);
+    const WHITE: Vec4 = vec4(1.0, 1.0, 1.0, 1.0);
+    const RED: Vec4 = vec4(1.0, 0.0, 0.0, 1.0);
 
     if drag_start.distance_squared(drag_end) > f32::EPSILON {
         let drag_dir = (drag_end - drag_start).normalize();
