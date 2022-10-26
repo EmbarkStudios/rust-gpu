@@ -331,10 +331,6 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         }
     }
 
-    fn zst_to_backend(&self, _llty: Self::Type) -> Self::Value {
-        unreachable!();
-    }
-
     // FIXME(eddyb) this shouldn't exist, and is only used by vtable creation,
     // see https://github.com/rust-lang/rust/pull/86475#discussion_r680792727.
     fn const_data_from_alloc(&self, _alloc: ConstAllocation<'tcx>) -> Self::Value {
