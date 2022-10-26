@@ -47,7 +47,7 @@ fn validate(spirv: &[u32]) {
 
 fn load(bytes: &[u8]) -> Module {
     let mut loader = Loader::new();
-    rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
+    rspirv::binary::parse_bytes(bytes, &mut loader).unwrap();
     loader.module()
 }
 

@@ -521,7 +521,7 @@ fn do_link(
 ) -> linker::LinkResult {
     fn load(bytes: &[u8]) -> rspirv::dr::Module {
         let mut loader = rspirv::dr::Loader::new();
-        rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
+        rspirv::binary::parse_bytes(bytes, &mut loader).unwrap();
         loader.module()
     }
 

@@ -169,7 +169,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
 
     // Build compiletests-deps-helper
     std::process::Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "-p",
             "compiletests-deps-helper",
