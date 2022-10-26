@@ -339,7 +339,7 @@ impl SpirvBuilder {
         &self,
         at: &Path,
     ) -> Result<CompileResult, SpirvBuilderError> {
-        let metadata_contents = File::open(&at).map_err(SpirvBuilderError::MetadataFileMissing)?;
+        let metadata_contents = File::open(at).map_err(SpirvBuilderError::MetadataFileMissing)?;
         let metadata: CompileResult = serde_json::from_reader(BufReader::new(metadata_contents))
             .map_err(SpirvBuilderError::MetadataFileMalformed)?;
         match &metadata.module {
@@ -476,7 +476,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     }
 
     let mut cargo = Command::new("cargo");
-    cargo.args(&[
+    cargo.args([
         "build",
         "--lib",
         "--message-format=json-render-diagnostics",

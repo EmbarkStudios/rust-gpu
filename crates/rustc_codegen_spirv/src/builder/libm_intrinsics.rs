@@ -205,8 +205,8 @@ impl Builder<'_, '_> {
             LibmIntrinsic::Custom(LibmCustomIntrinsic::SinCos) => {
                 assert_eq!(args.len(), 1);
                 let x = args[0];
-                let sin = self.gl_op(GLOp::Sin, x.ty, &[x]).def(self);
-                let cos = self.gl_op(GLOp::Cos, x.ty, &[x]).def(self);
+                let sin = self.gl_op(GLOp::Sin, x.ty, [x]).def(self);
+                let cos = self.gl_op(GLOp::Cos, x.ty, [x]).def(self);
                 self.emit()
                     .composite_construct(result_type, None, [sin, cos].iter().copied())
                     .unwrap()
@@ -228,7 +228,7 @@ impl Builder<'_, '_> {
                 self.gl_op(
                     GLOp::Pow,
                     result_type,
-                    &[args[0], self.constant_float(args[0].ty, 1.0 / 3.0)],
+                    [args[0], self.constant_float(args[0].ty, 1.0 / 3.0)],
                 )
             }
             LibmIntrinsic::Custom(LibmCustomIntrinsic::Log10) => {
@@ -242,7 +242,7 @@ impl Builder<'_, '_> {
                 assert_eq!(args.len(), 1);
                 let one = self.constant_float(args[0].ty, 1.0);
                 let add = self.add(args[0], one);
-                self.gl_op(GLOp::Log, result_type, &[add])
+                self.gl_op(GLOp::Log, result_type, [add])
             }
             LibmIntrinsic::Custom(LibmCustomIntrinsic::Exp10) => {
                 assert_eq!(args.len(), 1);
@@ -252,7 +252,7 @@ impl Builder<'_, '_> {
                 self.gl_op(GLOp::Exp, result_type, [mul])
             }
             LibmIntrinsic::Custom(LibmCustomIntrinsic::Expm1) => {
-                let exp = self.gl_op(GLOp::Exp, args[0].ty, &[args[0]]);
+                let exp = self.gl_op(GLOp::Exp, args[0].ty, [args[0]]);
                 let one = self.constant_float(exp.ty, 1.0);
                 self.sub(exp, one)
             }
