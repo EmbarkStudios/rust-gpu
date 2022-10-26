@@ -128,11 +128,11 @@ pub(crate) fn provide(providers: &mut Providers) {
                     tag_encoding: match *tag_encoding {
                         TagEncoding::Direct => TagEncoding::Direct,
                         TagEncoding::Niche {
-                            dataful_variant,
+                            untagged_variant,
                             ref niche_variants,
                             niche_start,
                         } => TagEncoding::Niche {
-                            dataful_variant,
+                            untagged_variant,
                             niche_variants: niche_variants.clone(),
                             niche_start,
                         },

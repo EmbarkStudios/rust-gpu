@@ -10,9 +10,9 @@ use std::process::{Command, ExitCode};
 /// `cargo publish`. We need to figure out a way to do this properly, but let's hardcode it for now :/
 //const REQUIRED_RUST_TOOLCHAIN: &str = include_str!("../../rust-toolchain");
 const REQUIRED_RUST_TOOLCHAIN: &str = r#"[toolchain]
-channel = "nightly-2022-09-06"
+channel = "nightly-2022-09-10"
 components = ["rust-src", "rustc-dev", "llvm-tools-preview"]
-# commit_hash = b44197abb0b3ffe4908892e1e08ab1cd721ff3b9"#;
+# commit_hash = 1d37ed661a6922e7a167609b8cd7eb31e972b19b"#;
 
 fn get_rustc_commit_hash() -> Result<String, Box<dyn Error>> {
     let rustc = std::env::var("RUSTC").unwrap_or_else(|_| String::from("rustc"));
@@ -45,7 +45,9 @@ fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    if !cfg!(feature = "skip-toolchain-check") {
+    if !cfg!(feature = "skip-toolchain-check")
+        && !std::env::var("RUSTGPU_SKIP_TOOLCHAIN_CHECK").is_ok()
+    {
         // check if our current rustc's commit hash matches with what we expect it to be
         let current_hash = get_rustc_commit_hash()?;
         let required_hash = get_required_commit_hash()?;
