@@ -5,14 +5,14 @@
 
 use spirv_std::spirv;
 
-use glam::{const_mat2, Mat2, Vec2};
+use glam::{Mat2, Vec2};
 
 #[inline(never)]
 fn scalar_load(r: &'static u32) -> u32 {
     *r
 }
 
-const ROT90: Mat2 = const_mat2![[0.0, 1.0], [-1.0, 0.0]];
+const ROT90: Mat2 = Mat2::from_cols_array_2d(&[[0.0, 1.0], [-1.0, 0.0]]);
 
 #[spirv(fragment)]
 pub fn main(scalar_out: &mut u32, vec_in: Vec2, bool_out: &mut u32, vec_out: &mut Vec2) {

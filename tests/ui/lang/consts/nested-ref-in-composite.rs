@@ -5,8 +5,6 @@
 
 use spirv_std::spirv;
 
-use glam::{const_mat2, Mat2, Vec2};
-
 #[inline(never)]
 fn pair_deep_load(r: &'static (&'static u32, &'static f32)) -> (u32, f32) {
     (*r.0, *r.1)
