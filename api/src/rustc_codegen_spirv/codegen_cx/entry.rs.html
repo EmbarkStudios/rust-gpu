@@ -638,9 +638,63 @@
 <span id="638">638</span>
 <span id="639">639</span>
 <span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::CodegenCx;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
-<span class="kw">use </span><span class="kw">crate</span>::attr::{AggregatedSpirvAttributes, Entry};
+<span class="kw">use </span><span class="kw">crate</span>::attr::{AggregatedSpirvAttributes, Entry, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::builder::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvValue, SpirvValueExt};
 <span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
@@ -784,6 +838,7 @@
         <span class="kw">for </span>(entry_arg_abi, hir_param) <span class="kw">in </span>arg_abis.iter().zip(hir_params) {
             bx.set_span(hir_param.span);
             <span class="self">self</span>.declare_shader_interface_for_param(
+                execution_model,
                 entry_arg_abi,
                 hir_param,
                 <span class="kw-2">&amp;mut </span>op_entry_point_interface_operands,
@@ -924,8 +979,10 @@
         (spirv_ty, storage_class)
     }
 
-    <span class="kw">fn </span>declare_shader_interface_for_param(
+    <span class="attribute">#[allow(clippy::too_many_arguments)]
+    </span><span class="kw">fn </span>declare_shader_interface_for_param(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
+        execution_model: ExecutionModel,
         entry_arg_abi: <span class="kw-2">&amp;</span>ArgAbi&lt;<span class="lifetime">&#39;tcx</span>, Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;,
         hir_param: <span class="kw-2">&amp;</span>hir::Param&lt;<span class="lifetime">&#39;tcx</span>&gt;,
         op_entry_point_interface_operands: <span class="kw-2">&amp;mut </span>Vec&lt;Word&gt;,
@@ -1162,11 +1219,12 @@
         }
 
         <span class="self">self</span>.check_for_bad_types(
+            execution_model,
             hir_param.ty_span,
             var_ptr_spirv_type,
             storage_class,
             attrs.builtin.is_some(),
-            attrs.flat.is_some(),
+            attrs.flat,
         );
 
         <span class="comment">// Assign locations from left to right, incrementing each storage class
@@ -1208,45 +1266,95 @@
     }
 
     <span class="comment">// Booleans are only allowed in some storage classes. Error if they&#39;re in others.
-    // Integers and f64s must be decorated with `#[spirv(flat)]`.
+    // Integers and `f64`s must be decorated with `#[spirv(flat)]`.
     </span><span class="kw">fn </span>check_for_bad_types(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
+        execution_model: ExecutionModel,
         span: Span,
         ty: Word,
         storage_class: StorageClass,
         is_builtin: bool,
-        is_flat: bool,
+        flat_attr: <span class="prelude-ty">Option</span>&lt;Spanned&lt;()&gt;&gt;,
     ) {
         <span class="comment">// private and function are allowed here, but they can&#39;t happen.
-        // SPIR-V technically allows all input/output variables to be booleans, not just builtins,
+        </span><span class="kw">if </span><span class="macro">matches!</span>(
+            storage_class,
+            StorageClass::Workgroup | StorageClass::CrossWorkgroup
+        ) {
+            <span class="kw">return</span>;
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>has_bool = <span class="bool-val">false</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>type_must_be_flat = <span class="bool-val">false</span>;
+        recurse(<span class="self">self</span>, ty, <span class="kw-2">&amp;mut </span>has_bool, <span class="kw-2">&amp;mut </span>type_must_be_flat);
+
+        <span class="comment">// SPIR-V technically allows all input/output variables to be booleans, not just builtins,
         // but has a note:
         // &gt; Khronos Issue #363: OpTypeBool can be used in the Input and Output storage classes,
         //   but the client APIs still only allow built-in Boolean variables (e.g. FrontFacing),
         //   not user variables.
         // spirv-val disallows non-builtin inputs/outputs, so we do too, I guess.
-        </span><span class="kw">if </span><span class="macro">matches!</span>(
-            storage_class,
-            StorageClass::Workgroup | StorageClass::CrossWorkgroup
-        ) || is_builtin &amp;&amp; <span class="macro">matches!</span>(storage_class, StorageClass::Input | StorageClass::Output)
-        {
-            <span class="kw">return</span>;
-        }
-        <span class="kw">let </span><span class="kw-2">mut </span>has_bool = <span class="bool-val">false</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>must_be_flat = <span class="bool-val">false</span>;
-        recurse(<span class="self">self</span>, ty, <span class="kw-2">&amp;mut </span>has_bool, <span class="kw-2">&amp;mut </span>must_be_flat);
-        <span class="kw">if </span>has_bool {
-            <span class="self">self</span>.tcx
-                .sess
-                .span_err(span, <span class="string">&quot;entrypoint parameter cannot contain a boolean&quot;</span>);
-        }
-        <span class="kw">if </span><span class="macro">matches!</span>(storage_class, StorageClass::Input | StorageClass::Output)
-            &amp;&amp; must_be_flat
-            &amp;&amp; !is_flat
+        </span><span class="kw">if </span>has_bool
+            &amp;&amp; !(is_builtin &amp;&amp; <span class="macro">matches!</span>(storage_class, StorageClass::Input | StorageClass::Output))
         {
             <span class="self">self</span>.tcx
                 .sess
-                .span_err(span, <span class="string">&quot;parameter must be decorated with #[spirv(flat)]&quot;</span>);
+                .span_err(span, <span class="string">&quot;entry-point parameter cannot contain `bool`s&quot;</span>);
         }
+
+        <span class="comment">// Enforce Vulkan validation rules around `Flat` as accurately as possible,
+        // i.e. &quot;interpolation control&quot; can only be used &quot;within&quot; the rasterization
+        // pipeline (roughly: `vertex (outputs) -&gt; ... -&gt; (inputs for) fragment`),
+        // but not at the &quot;outer&quot; interface (vertex inputs/fragment outputs).
+        // Also, fragment inputs *require* it for some (&quot;uninterpolatable&quot;) types.
+        // FIXME(eddyb) maybe this kind of `enum` could be placed elsewhere?
+        </span><span class="kw">enum </span>Force {
+            Disallow,
+            Require,
+        }
+        <span class="attribute">#[allow(clippy::match_same_arms)]
+        </span><span class="kw">let </span>flat_forced = <span class="kw">match </span>(execution_model, storage_class) {
+            <span class="comment">// VUID-StandaloneSpirv-Flat-06202
+            // &gt; The `Flat`, `NoPerspective`, `Sample`, and `Centroid` decorations **must**
+            // &gt; not be used on variables with the `Input` storage class in a vertex shader
+            </span>(ExecutionModel::Vertex, StorageClass::Input) =&gt; <span class="prelude-val">Some</span>(Force::Disallow),
+
+            <span class="comment">// VUID-StandaloneSpirv-Flat-04744
+            // &gt; Any variable with integer or double-precision floating-point type and
+            // &gt; with `Input` storage class in a fragment shader, **must** be decorated `Flat`
+            </span>(ExecutionModel::Fragment, StorageClass::Input) <span class="kw">if </span>type_must_be_flat =&gt; {
+                <span class="comment">// FIXME(eddyb) shouldn&#39;t this be automatic then? (maybe with a warning?)
+                </span><span class="prelude-val">Some</span>(Force::Require)
+            }
+
+            <span class="comment">// VUID-StandaloneSpirv-Flat-06201
+            // &gt; The `Flat`, `NoPerspective`, `Sample`, and `Centroid` decorations **must**
+            // &gt; not be used on variables with the `Output` storage class in a fragment shader
+            </span>(ExecutionModel::Fragment, StorageClass::Output) =&gt; <span class="prelude-val">Some</span>(Force::Disallow),
+
+            <span class="comment">// VUID-StandaloneSpirv-Flat-04670
+            // &gt; The `Flat`, `NoPerspective`, `Sample`, and `Centroid` decorations **must**
+            // &gt; only be used on variables with the `Output` or `Input` storage class
+            </span>(<span class="kw">_</span>, StorageClass::Input | StorageClass::Output) =&gt; <span class="prelude-val">None</span>,
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(Force::Disallow),
+        };
+
+        <span class="kw">let </span>flat_mismatch = <span class="kw">match </span>(flat_forced, flat_attr) {
+            (<span class="prelude-val">Some</span>(Force::Disallow), <span class="prelude-val">Some</span>(flat_attr)) =&gt; <span class="prelude-val">Some</span>((flat_attr.span, <span class="string">&quot;cannot&quot;</span>)),
+            <span class="comment">// FIXME(eddyb) it would be useful to show the type that required it.
+            </span>(<span class="prelude-val">Some</span>(Force::Require), <span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Some</span>((span, <span class="string">&quot;must&quot;</span>)),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        };
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((span, must_or_cannot)) = flat_mismatch {
+            <span class="self">self</span>.tcx.sess.span_err(
+                span,
+                <span class="macro">format!</span>(
+                    <span class="string">&quot;`{execution_model:?}` entry-point `{storage_class:?}` parameter \
+                     {must_or_cannot} be decorated with `#[spirv(flat)]`&quot;
+                </span>),
+            );
+        }
+
         <span class="kw">fn </span>recurse(cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;_</span>&gt;, ty: Word, has_bool: <span class="kw-2">&amp;mut </span>bool, must_be_flat: <span class="kw-2">&amp;mut </span>bool) {
             <span class="kw">match </span>cx.lookup_type(ty) {
                 SpirvType::Bool =&gt; <span class="kw-2">*</span>has_bool = <span class="bool-val">true</span>,
