@@ -973,6 +973,11 @@
 <span id="973">973</span>
 <span id="974">974</span>
 <span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Ray-tracing data types
 </span><span class="kw">use </span><span class="kw">crate</span>::vector::Vector;
 <span class="attribute">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
@@ -1699,18 +1704,20 @@
     #[doc(alias = <span class="string">&quot;OpRayQueryGetIntersectionFrontFaceKHR&quot;</span>)]
     #[inline]
     </span><span class="kw">pub unsafe fn </span>get_candidate_intersection_front_face(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>result: u32;
+        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="bool-val">false</span>;
 
         <span class="macro">asm! </span>{
+            <span class="string">&quot;%bool = OpTypeBool&quot;</span>,
             <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
             <span class="string">&quot;%intersection = OpConstant %u32 0&quot;</span>,
-            <span class="string">&quot;{result} = OpRayQueryGetIntersectionFrontFaceKHR %u32 {ray_query} %intersection&quot;</span>,
+            <span class="string">&quot;%result = OpRayQueryGetIntersectionFrontFaceKHR %bool {ray_query} %intersection&quot;</span>,
+            <span class="string">&quot;OpStore {result} %result&quot;</span>,
             ray_query = <span class="kw">in</span>(reg) <span class="self">self</span>,
-            result = out(reg) result,
+            result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
         }
 
-        result != <span class="number">0
-    </span>}
+        result
+    }
 
     <span class="doccomment">/// Returns whether the current intersection considered in a ray query was with
     /// the front face (`true`) or back face (`false`) of a primitive.
@@ -1724,18 +1731,20 @@
     #[doc(alias = <span class="string">&quot;OpRayQueryGetIntersectionFrontFaceKHR&quot;</span>)]
     #[inline]
     </span><span class="kw">pub unsafe fn </span>get_committed_intersection_front_face(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>result: u32;
+        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="bool-val">false</span>;
 
         <span class="macro">asm! </span>{
+            <span class="string">&quot;%bool = OpTypeBool&quot;</span>,
             <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
             <span class="string">&quot;%intersection = OpConstant %u32 1&quot;</span>,
-            <span class="string">&quot;{result} = OpRayQueryGetIntersectionFrontFaceKHR %u32 {ray_query} %intersection&quot;</span>,
+            <span class="string">&quot;%result = OpRayQueryGetIntersectionFrontFaceKHR %bool {ray_query} %intersection&quot;</span>,
+            <span class="string">&quot;OpStore {result} %result&quot;</span>,
             ray_query = <span class="kw">in</span>(reg) <span class="self">self</span>,
-            result = out(reg) result,
+            result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
         }
 
-        result != <span class="number">0
-    </span>}
+        result
+    }
 
     <span class="doccomment">/// Returns whether a candidate intersection considered in a ray query was with
     /// an opaque AABB (Axis Aligned Bounding Box) or not.
@@ -1743,17 +1752,18 @@
     #[doc(alias = <span class="string">&quot;OpRayQueryGetIntersectionCandidateAABBOpaqueKHR&quot;</span>)]
     #[inline]
     </span><span class="kw">pub unsafe fn </span>get_intersection_candidate_aabb_opaque(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>result: u32;
+        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="bool-val">false</span>;
 
         <span class="macro">asm! </span>{
-            <span class="string">&quot;%u32 = OpTypeInt 8 0&quot;</span>,
-            <span class="string">&quot;{result} = OpRayQueryGetIntersectionCandidateAABBOpaqueKHR %u32 {ray_query}&quot;</span>,
+            <span class="string">&quot;%bool = OpTypeBool&quot;</span>,
+            <span class="string">&quot;%result = OpRayQueryGetIntersectionCandidateAABBOpaqueKHR %bool {ray_query}&quot;</span>,
+            <span class="string">&quot;OpStore {result} %result&quot;</span>,
             ray_query = <span class="kw">in</span>(reg) <span class="self">self</span>,
-            result = out(reg) result,
+            result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
         }
 
-        result != <span class="number">0
-    </span>}
+        result
+    }
 
     <span class="doccomment">/// Gets the object-space ray direction for the current intersection considered
     /// in a ray query.
