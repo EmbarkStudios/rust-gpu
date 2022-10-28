@@ -235,8 +235,8 @@ fn target_from_impl_item<'tcx>(tcx: TyCtxt<'tcx>, impl_item: &hir::ImplItem<'_>)
     match impl_item.kind {
         hir::ImplItemKind::Const(..) => Target::AssocConst,
         hir::ImplItemKind::Fn(..) => {
-            let parent_local_def_id = tcx.hir().get_parent_item(impl_item.hir_id());
-            let containing_item = tcx.hir().expect_item(parent_local_def_id);
+            let parent_owner_id = tcx.hir().get_parent_item(impl_item.hir_id());
+            let containing_item = tcx.hir().expect_item(parent_owner_id.def_id);
             let containing_impl_is_for_trait = match &containing_item.kind {
                 hir::ItemKind::Impl(hir::Impl { of_trait, .. }) => of_trait.is_some(),
                 _ => unreachable!("parent of an ImplItem must be an Impl"),
