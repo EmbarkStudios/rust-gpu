@@ -1169,6 +1169,21 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 ty
             )),
         };
+
+        // HACK(eddyb) https://github.com/rust-lang/rust/pull/101483 accidentally
+        // abused the fact that an `i1` LLVM value will be automatically `zext`'d
+        // to `i8` by `from_immediate`, and so you can pretend that, from the
+        // Rust perspective, a `bool` value has the type `u8`, as long as it will
+        // be stored to memory (which intrinsics all do, for historical reasons)
+        // - but we don't do that in `from_immediate`, so it's emulated here.
+        let val = match (self.lookup_type(val.ty), self.lookup_type(ptr_elem_ty)) {
+            (SpirvType::Bool, SpirvType::Integer(8, false)) => {
+                self.zext(val, ptr_elem_ty)
+            }
+
+            _ => val
+        };
+
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
         self.emit()
             .store(ptr.def(self), val.def(self), None, empty())
