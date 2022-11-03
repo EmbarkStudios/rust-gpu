@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added ⭐
+
+- Added check for env var `RUSTGPU_SKIP_TOOLCHAIN_CHECK` to prevent toolchain check
+
 ### Changed 🛠️
 
 - 🚨BREAKING🚨 Migrated from `register_attr` to `register_tool`. [More information](docs/src/migration-to-register-tool.md).
-- Updated toolchain to `nightly-2022-09-06`
+- Updated toolchain to `nightly-2022-10-01`
 - Updated `glam` to `0.22`
 - Removed `glam::BVec` support (they are no longer `#[repl(simd)]` in `glam`, as Rust doesn't support SIMD vectors with `bool` elements)
 
