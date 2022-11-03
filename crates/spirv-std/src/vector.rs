@@ -8,13 +8,6 @@
 pub unsafe trait Vector<T: crate::scalar::Scalar, const N: usize>: Default {}
 
 #[cfg(feature = "glam")]
-unsafe impl Vector<bool, 2> for glam::BVec2 {}
-#[cfg(feature = "glam")]
-unsafe impl Vector<bool, 3> for glam::BVec3 {}
-#[cfg(feature = "glam")]
-unsafe impl Vector<bool, 4> for glam::BVec4 {}
-
-#[cfg(feature = "glam")]
 unsafe impl Vector<f32, 2> for glam::Vec2 {}
 #[cfg(feature = "glam")]
 unsafe impl Vector<f32, 3> for glam::Vec3 {}
