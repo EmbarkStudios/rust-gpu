@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.20.2/src/euler.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>euler.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../glam/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.22.0/src/euler.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>euler.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../glam/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../glam/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -181,92 +181,17 @@
 <span id="181">181</span>
 <span id="182">182</span>
 <span id="183">183</span>
-<span id="184">184</span>
-<span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
-<span id="190">190</span>
-<span id="191">191</span>
-<span id="192">192</span>
-<span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
-<span id="198">198</span>
-<span id="199">199</span>
-<span id="200">200</span>
-<span id="201">201</span>
-<span id="202">202</span>
-<span id="203">203</span>
-<span id="204">204</span>
-<span id="205">205</span>
-<span id="206">206</span>
-<span id="207">207</span>
-<span id="208">208</span>
-<span id="209">209</span>
-<span id="210">210</span>
-<span id="211">211</span>
-<span id="212">212</span>
-<span id="213">213</span>
-<span id="214">214</span>
-<span id="215">215</span>
-<span id="216">216</span>
-<span id="217">217</span>
-<span id="218">218</span>
-<span id="219">219</span>
-<span id="220">220</span>
-<span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
-<span id="235">235</span>
-<span id="236">236</span>
-<span id="237">237</span>
-<span id="238">238</span>
-<span id="239">239</span>
-<span id="240">240</span>
-<span id="241">241</span>
-<span id="242">242</span>
-<span id="243">243</span>
-<span id="244">244</span>
-<span id="245">245</span>
-<span id="246">246</span>
-<span id="247">247</span>
-<span id="248">248</span>
-<span id="249">249</span>
-<span id="250">250</span>
-<span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
-<span id="259">259</span>
-<span id="260">260</span>
-<span id="261">261</span>
 </pre><pre class="rust"><code><span class="comment">/*
 Conversion from quaternions to Euler rotation sequences.
 
 From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
 */
 
-</span><span class="kw">use </span><span class="kw">super</span>::quat::{DQuat, Quat};
-<span class="kw">use </span><span class="kw">crate</span>::core::traits::scalar::<span class="kw-2">*</span>;
+</span><span class="kw">use super</span>::{DQuat, Quat};
+
+<span class="attribute">#[cfg(feature = <span class="string">&quot;libm&quot;</span>)]
+#[allow(unused_imports)]
+</span><span class="kw">use </span>num_traits::Float;
 
 <span class="doccomment">/// Euler rotation sequences.
 ///
@@ -274,9 +199,8 @@ From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
 /// E.g. XYZ will first apply the z-axis rotation.
 ///
 /// YXZ can be used for yaw (y-axis), pitch (x-axis), roll (z-axis).
-///
-/// The two-axis rotations (e.g. ZYZ) are not fully tested and have to be treated with caution.
-</span><span class="attribute">#[derive(Debug, Clone, Copy)]
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub enum </span>EulerRot {
     <span class="doccomment">/// Intrinsic three-axis rotation ZYX
     </span>ZYX,
@@ -290,25 +214,6 @@ From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
     </span>XYZ,
     <span class="doccomment">/// Intrinsic three-axis rotation XZY
     </span>XZY,
-
-    <span class="doccomment">/// Intrinsic two-axis rotation ZYZ
-    </span><span class="attribute">#[deprecated(note = <span class="string">&quot;Untested! Use at own risk!&quot;</span>)]
-    </span>ZYZ,
-    <span class="doccomment">/// Intrinsic two-axis rotation ZXZ
-    </span><span class="attribute">#[deprecated(note = <span class="string">&quot;Untested! Use at own risk!&quot;</span>)]
-    </span>ZXZ,
-    <span class="doccomment">/// Intrinsic two-axis rotation YXY
-    </span><span class="attribute">#[deprecated(note = <span class="string">&quot;Untested! Use at own risk!&quot;</span>)]
-    </span>YXY,
-    <span class="doccomment">/// Intrinsic two-axis rotation YZY
-    </span><span class="attribute">#[deprecated(note = <span class="string">&quot;Untested! Use at own risk!&quot;</span>)]
-    </span>YZY,
-    <span class="doccomment">/// Intrinsic two-axis rotation XYX
-    </span><span class="attribute">#[deprecated(note = <span class="string">&quot;Untested! Use at own risk!&quot;</span>)]
-    </span>XYX,
-    <span class="doccomment">/// Intrinsic two-axis rotation XZX
-    </span><span class="attribute">#[deprecated(note = <span class="string">&quot;Untested! Use at own risk!&quot;</span>)]
-    </span>XZX,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>EulerRot {
@@ -319,8 +224,8 @@ From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
 }
 
 <span class="doccomment">/// Conversion from quaternion to euler angles.
-</span><span class="kw">pub trait </span>EulerFromQuaternion&lt;Q: Copy&gt;: Sized + Copy {
-    <span class="kw">type </span>Output: FloatEx;
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>EulerFromQuaternion&lt;Q: Copy&gt;: Sized + Copy {
+    <span class="kw">type </span>Output;
     <span class="doccomment">/// Compute the angle of the first axis (X-x-x)
     </span><span class="kw">fn </span>first(<span class="self">self</span>, q: Q) -&gt; <span class="self">Self</span>::Output;
     <span class="doccomment">/// Compute then angle of the second axis (x-X-x)
@@ -335,7 +240,7 @@ From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
 }
 
 <span class="doccomment">/// Conversion from euler angles to quaternion.
-</span><span class="kw">pub trait </span>EulerToQuaternion&lt;T&gt;: Copy {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>EulerToQuaternion&lt;T&gt;: Copy {
     <span class="kw">type </span>Output;
     <span class="doccomment">/// Create the rotation quaternion for the three angles of this euler rotation sequence.
     </span><span class="kw">fn </span>new_quat(<span class="self">self</span>, u: T, v: T, w: T) -&gt; <span class="self">Self</span>::Output;
@@ -343,7 +248,7 @@ From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
 
 <span class="doccomment">/// Adds a atan2 that handles the negative zero case.
 /// Basically forces positive zero in the x-argument for atan2.
-</span><span class="kw">pub trait </span>Atan2Fixed&lt;T = <span class="self">Self</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>Atan2Fixed&lt;T = <span class="self">Self</span>&gt; {
     <span class="kw">fn </span>atan2_fixed(<span class="self">self</span>, other: T) -&gt; T;
 }
 
@@ -365,36 +270,18 @@ From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
             <span class="kw">fn </span>first(<span class="self">self</span>, q: <span class="macro-nonterminal">$quat</span>) -&gt; <span class="macro-nonterminal">$t </span>{
                 <span class="kw">use </span>EulerRot::<span class="kw-2">*</span>;
                 <span class="kw">match </span><span class="self">self </span>{
-                    ZYX =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.y + q.w * q.z))
+                    ZYX =&gt; (<span class="number">2.0 </span>* (q.x * q.y + q.w * q.z))
                         .atan2(q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z),
-                    ZXY =&gt; (-<span class="self">Self</span>::Output::TWO * (q.x * q.y - q.w * q.z))
+                    ZXY =&gt; (-<span class="number">2.0 </span>* (q.x * q.y - q.w * q.z))
                         .atan2(q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z),
-                    YXZ =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.z + q.w * q.y))
+                    YXZ =&gt; (<span class="number">2.0 </span>* (q.x * q.z + q.w * q.y))
                         .atan2(q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z),
-                    YZX =&gt; (-<span class="self">Self</span>::Output::TWO * (q.x * q.z - q.w * q.y))
+                    YZX =&gt; (-<span class="number">2.0 </span>* (q.x * q.z - q.w * q.y))
                         .atan2(q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z),
-                    XYZ =&gt; (-<span class="self">Self</span>::Output::TWO * (q.y * q.z - q.w * q.x))
+                    XYZ =&gt; (-<span class="number">2.0 </span>* (q.y * q.z - q.w * q.x))
                         .atan2(q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z),
-                    XZY =&gt; (<span class="self">Self</span>::Output::TWO * (q.y * q.z + q.w * q.x))
+                    XZY =&gt; (<span class="number">2.0 </span>* (q.y * q.z + q.w * q.x))
                         .atan2(q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>ZYZ =&gt; (<span class="self">Self</span>::Output::TWO * (q.y * q.z + q.w * q.x))
-                        .atan2_fixed(-<span class="self">Self</span>::Output::TWO * (q.x * q.z - q.w * q.y)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>ZXZ =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.z - q.w * q.y))
-                        .atan2_fixed(<span class="self">Self</span>::Output::TWO * (q.y * q.z + q.w * q.x)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>YXY =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.y + q.w * q.z))
-                        .atan2_fixed(-<span class="self">Self</span>::Output::TWO * (q.y * q.z - q.w * q.x)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>YZY =&gt; (<span class="self">Self</span>::Output::TWO * (q.y * q.z - q.w * q.x))
-                        .atan2_fixed(<span class="self">Self</span>::Output::TWO * (q.x * q.y + q.w * q.z)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>XYX =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.y - q.w * q.z))
-                        .atan2_fixed(<span class="self">Self</span>::Output::TWO * (q.x * q.z + q.w * q.y)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>XZX =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.z + q.w * q.y))
-                        .atan2_fixed(-<span class="self">Self</span>::Output::TWO * (q.x * q.y - q.w * q.z)),
                 }
             }
 
@@ -403,66 +290,35 @@ From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
 
                 <span class="doccomment">/// Clamp number to range [-1,1](-1,1) for asin() and acos(), else NaN is possible.
                 </span><span class="attribute">#[inline(always)]
-                </span><span class="kw">fn </span>arc_clamp&lt;T: FloatEx&gt;(val: T) -&gt; T {
-                    NumEx::min(NumEx::max(val, T::NEG_ONE), T::ONE)
+                </span><span class="kw">fn </span>arc_clamp(val: <span class="macro-nonterminal">$t</span>) -&gt; <span class="macro-nonterminal">$t </span>{
+                    &lt;<span class="macro-nonterminal">$t</span>&gt;::min(&lt;<span class="macro-nonterminal">$t</span>&gt;::max(val, -<span class="number">1.0</span>), <span class="number">1.0</span>)
                 }
 
                 <span class="kw">match </span><span class="self">self </span>{
-                    ZYX =&gt; arc_clamp(-<span class="self">Self</span>::Output::TWO * (q.x * q.z - q.w * q.y)).asin(),
-                    ZXY =&gt; arc_clamp(<span class="self">Self</span>::Output::TWO * (q.y * q.z + q.w * q.x)).asin(),
-                    YXZ =&gt; arc_clamp(-<span class="self">Self</span>::Output::TWO * (q.y * q.z - q.w * q.x)).asin(),
-                    YZX =&gt; arc_clamp(<span class="self">Self</span>::Output::TWO * (q.x * q.y + q.w * q.z)).asin(),
-                    XYZ =&gt; arc_clamp(<span class="self">Self</span>::Output::TWO * (q.x * q.z + q.w * q.y)).asin(),
-                    XZY =&gt; arc_clamp(-<span class="self">Self</span>::Output::TWO * (q.x * q.y - q.w * q.z)).asin(),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>ZYZ =&gt; arc_clamp(q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z).acos(),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>ZXZ =&gt; arc_clamp(q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z).acos(),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>YXY =&gt; arc_clamp(q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z).acos(),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>YZY =&gt; arc_clamp(q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z).acos(),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>XYX =&gt; arc_clamp(q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z).acos(),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>XZX =&gt; arc_clamp(q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z).acos(),
+                    ZYX =&gt; arc_clamp(-<span class="number">2.0 </span>* (q.x * q.z - q.w * q.y)).asin(),
+                    ZXY =&gt; arc_clamp(<span class="number">2.0 </span>* (q.y * q.z + q.w * q.x)).asin(),
+                    YXZ =&gt; arc_clamp(-<span class="number">2.0 </span>* (q.y * q.z - q.w * q.x)).asin(),
+                    YZX =&gt; arc_clamp(<span class="number">2.0 </span>* (q.x * q.y + q.w * q.z)).asin(),
+                    XYZ =&gt; arc_clamp(<span class="number">2.0 </span>* (q.x * q.z + q.w * q.y)).asin(),
+                    XZY =&gt; arc_clamp(-<span class="number">2.0 </span>* (q.x * q.y - q.w * q.z)).asin(),
                 }
             }
 
             <span class="kw">fn </span>third(<span class="self">self</span>, q: <span class="macro-nonterminal">$quat</span>) -&gt; <span class="macro-nonterminal">$t </span>{
                 <span class="kw">use </span>EulerRot::<span class="kw-2">*</span>;
-                <span class="attribute">#[allow(deprecated)]
-                </span><span class="kw">match </span><span class="self">self </span>{
-                    ZYX =&gt; (<span class="self">Self</span>::Output::TWO * (q.y * q.z + q.w * q.x))
+                <span class="kw">match </span><span class="self">self </span>{
+                    ZYX =&gt; (<span class="number">2.0 </span>* (q.y * q.z + q.w * q.x))
                         .atan2(q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z),
-                    ZXY =&gt; (-<span class="self">Self</span>::Output::TWO * (q.x * q.z - q.w * q.y))
+                    ZXY =&gt; (-<span class="number">2.0 </span>* (q.x * q.z - q.w * q.y))
                         .atan2(q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z),
-                    YXZ =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.y + q.w * q.z))
+                    YXZ =&gt; (<span class="number">2.0 </span>* (q.x * q.y + q.w * q.z))
                         .atan2(q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z),
-                    YZX =&gt; (-<span class="self">Self</span>::Output::TWO * (q.y * q.z - q.w * q.x))
+                    YZX =&gt; (-<span class="number">2.0 </span>* (q.y * q.z - q.w * q.x))
                         .atan2(q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z),
-                    XYZ =&gt; (-<span class="self">Self</span>::Output::TWO * (q.x * q.y - q.w * q.z))
+                    XYZ =&gt; (-<span class="number">2.0 </span>* (q.x * q.y - q.w * q.z))
                         .atan2(q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z),
-                    XZY =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.z + q.w * q.y))
+                    XZY =&gt; (<span class="number">2.0 </span>* (q.x * q.z + q.w * q.y))
                         .atan2(q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>ZYZ =&gt; (<span class="self">Self</span>::Output::TWO * (q.y * q.z - q.w * q.x))
-                        .atan2_fixed(<span class="self">Self</span>::Output::TWO * (q.x * q.z + q.w * q.y)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>ZXZ =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.z + q.w * q.y))
-                        .atan2_fixed(-<span class="self">Self</span>::Output::TWO * (q.y * q.z - q.w * q.x)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>YXY =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.y - q.w * q.z))
-                        .atan2_fixed(<span class="self">Self</span>::Output::TWO * (q.y * q.z + q.w * q.x)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>YZY =&gt; (<span class="self">Self</span>::Output::TWO * (q.y * q.z + q.w * q.x))
-                        .atan2_fixed(-<span class="self">Self</span>::Output::TWO * (q.x * q.y - q.w * q.z)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>XYX =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.y + q.w * q.z))
-                        .atan2_fixed(-<span class="self">Self</span>::Output::TWO * (q.x * q.z - q.w * q.y)),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>XZX =&gt; (<span class="self">Self</span>::Output::TWO * (q.x * q.z - q.w * q.y))
-                        .atan2_fixed(<span class="self">Self</span>::Output::TWO * (q.x * q.y + q.w * q.z)),
                 }
             }
         }
@@ -496,18 +352,6 @@ From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
                     YZX =&gt; rot_y(u) * rot_z(v) * rot_x(w),
                     XYZ =&gt; rot_x(u) * rot_y(v) * rot_z(w),
                     XZY =&gt; rot_x(u) * rot_z(v) * rot_y(w),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>ZYZ =&gt; rot_z(u) * rot_y(v) * rot_z(w),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>ZXZ =&gt; rot_z(u) * rot_x(v) * rot_z(w),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>YXY =&gt; rot_y(u) * rot_x(v) * rot_y(w),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>YZY =&gt; rot_y(u) * rot_z(v) * rot_y(w),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>XYX =&gt; rot_x(u) * rot_y(v) * rot_x(w),
-                    <span class="attribute">#[allow(deprecated)]
-                    </span>XZX =&gt; rot_x(u) * rot_z(v) * rot_x(w),
                 }
                 .normalize()
             }
@@ -521,4 +365,4 @@ From: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
 <span class="macro">impl_to_quat!</span>(f32, Quat);
 <span class="macro">impl_to_quat!</span>(f64, DQuat);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="glam" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (ce36e8825 2022-08-28)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="glam" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (b44197abb 2022-09-05)" ></div></body></html>

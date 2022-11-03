@@ -149,6 +149,9 @@
 <span id="149">149</span>
 <span id="150">150</span>
 <span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
 </pre><pre class="rust"><code><span class="kw">use </span>rspirv::spirv::MemoryModel;
 <span class="kw">use </span>rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions};
 <span class="kw">use </span>spirv_tools::TargetEnv;
@@ -226,29 +229,32 @@
         }
     }
 
+    <span class="kw">fn </span>init_target_opts(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TargetOptions {
+        <span class="kw">let </span><span class="kw-2">mut </span>o = TargetOptions::default();
+        o.simd_types_indirect = <span class="bool-val">false</span>;
+        o.allows_weak_linkage = <span class="bool-val">false</span>;
+        o.crt_static_allows_dylibs = <span class="bool-val">true</span>;
+        o.dll_prefix = <span class="string">&quot;&quot;</span>.into();
+        o.dll_suffix = <span class="string">&quot;.spv&quot;</span>.into();
+        o.dynamic_linking = <span class="bool-val">true</span>;
+        o.emit_debug_gdb_scripts = <span class="bool-val">false</span>;
+        o.linker_flavor = LinkerFlavor::Ld;
+        o.panic_strategy = PanicStrategy::Abort;
+        o.os = <span class="string">&quot;unknown&quot;</span>.into();
+        o.env = <span class="self">self</span>.env.to_string().into();
+        o.vendor = <span class="self">self</span>.vendor.clone().into();
+        <span class="comment">// TODO: Investigate if main_needs_argc_argv is useful (for building exes)
+        </span>o.main_needs_argc_argv = <span class="bool-val">false</span>;
+        o
+    }
+
     <span class="kw">pub fn </span>rustc_target(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Target {
         Target {
             llvm_target: <span class="self">self</span>.to_string().into(),
             pointer_width: <span class="number">32</span>,
             data_layout: <span class="string">&quot;e-m:e-p:32:32:32-i64:64-n8:16:32:64&quot;</span>.into(),
             arch: ARCH.into(),
-            options: TargetOptions {
-                simd_types_indirect: <span class="bool-val">false</span>,
-                allows_weak_linkage: <span class="bool-val">false</span>,
-                crt_static_allows_dylibs: <span class="bool-val">true</span>,
-                dll_prefix: <span class="string">&quot;&quot;</span>.into(),
-                dll_suffix: <span class="string">&quot;.spv&quot;</span>.into(),
-                dynamic_linking: <span class="bool-val">true</span>,
-                emit_debug_gdb_scripts: <span class="bool-val">false</span>,
-                linker_flavor: LinkerFlavor::Ld,
-                panic_strategy: PanicStrategy::Abort,
-                os: <span class="string">&quot;unknown&quot;</span>.into(),
-                env: <span class="self">self</span>.env.to_string().into(),
-                vendor: <span class="self">self</span>.vendor.clone().into(),
-                <span class="comment">// TODO: Investigate if main_needs_argc_argv is useful (for building exes)
-                </span>main_needs_argc_argv: <span class="bool-val">false</span>,
-                ..Default::default()
-            },
+            options: <span class="self">self</span>.init_target_opts(),
         }
     }
 }
@@ -301,4 +307,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (ce36e8825 2022-08-28)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (b44197abb 2022-09-05)" ></div></body></html>

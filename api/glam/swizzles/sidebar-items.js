@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["Vec2Swizzles","Swizzle methods for 2-dimensional vector types. "],["Vec3Swizzles","Swizzle methods for 3-dimensional vector types. "],["Vec4Swizzles","Swizzle methods for 4-dimensional vector types. "]]};
+window.SIDEBAR_ITEMS = {"trait":[["Vec2Swizzles",""],["Vec3Swizzles",""],["Vec4Swizzles",""]]};
