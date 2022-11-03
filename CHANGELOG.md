@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🚨BREAKING🚨 Migrated from `register_attr` to `register_tool`. [More information](docs/src/migration-to-register-tool.md).
 - Updated toolchain to `nightly-2022-09-06`
 - Updated `glam` to `0.22`
-- Removed `glam::BVec` support (they are no longer `#[repl(simd)]` in `glam`, as Rust doesn't support vector of bool types)
+- Removed `glam::BVec` support (they are no longer `#[repl(simd)]` in `glam`, as Rust doesn't support SIMD vectors with `bool` elements)
 
 ## [0.4.0-alpha.15]
 
