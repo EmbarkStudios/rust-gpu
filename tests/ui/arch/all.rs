@@ -21,7 +21,7 @@ impl<T: Scalar> Default for Vec2<T> {
 }
 
 #[spirv(fragment)]
-pub fn main(#[spirv(flat)] output: &mut u32) {
+pub fn main() {
     let vector = Vec2(true, true);
     assert!(spirv_std::arch::all(vector));
 }
