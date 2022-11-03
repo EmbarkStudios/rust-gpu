@@ -4,6 +4,7 @@
 
 use spirv_std::spirv;
 use spirv_std::{scalar::Scalar, vector::Vector};
+
 /// HACK(shesp). Rust doesn't allow us to declare regular (tuple-)structs containing `bool` members
 /// as `#[repl(simd)]`. But we need this for `spirv_std::arch::any()` and `spirv_std::arch::all()`
 /// to work.
