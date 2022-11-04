@@ -32,8 +32,10 @@ fn get_required_commit_hash() -> Result<String, Box<dyn Error>> {
 }
 
 fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
+    // make sure we rebuild if RUSTGPU_SKIP_TOOLCHAIN_CHECK env var changes
+    println!("cargo:rerun-if-env-changed=RUSTGPU_SKIP_TOOLCHAIN_CHECK");
+
     // if we're building from local source, check if REQUIRED_RUST_TOOLCHAIN matches ../../rust-toolchain
-    println!("{}", std::env::current_dir()?.display());
     if std::env::current_dir()?.ends_with("crates/rustc_codegen_spirv") {
         let current_toolchain = std::fs::read_to_string("../../rust-toolchain")?;
         if !current_toolchain.contains(REQUIRED_RUST_TOOLCHAIN) {
@@ -46,7 +48,7 @@ fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
     }
 
     if !cfg!(feature = "skip-toolchain-check")
-        && !std::env::var("RUSTGPU_SKIP_TOOLCHAIN_CHECK").is_ok()
+        && std::env::var("RUSTGPU_SKIP_TOOLCHAIN_CHECK").is_err()
     {
         // check if our current rustc's commit hash matches with what we expect it to be
         let current_hash = get_rustc_commit_hash()?;
