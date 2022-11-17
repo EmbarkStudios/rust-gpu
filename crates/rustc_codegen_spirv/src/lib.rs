@@ -17,6 +17,7 @@
 //! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
 #![feature(rustc_private)]
 #![feature(assert_matches)]
+#![feature(result_flattening)]
 #![feature(once_cell)]
 // crate-specific exceptions:
 #![allow(

@@ -12,12 +12,20 @@ use std::path::PathBuf;
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
-#[doc(hidden)]
-pub struct PrettyString<'a>(pub &'a str);
-/// Make diff to display string as multi-line string
-impl<'a> std::fmt::Debug for PrettyString<'a> {
+struct PrettyString(String);
+impl std::fmt::Debug for PrettyString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.0)
+        // HACK(eddyb) add extra newlines for readability when it shows up
+        // in `Result::unwrap` panic messages specifically.
+        f.write_str("\n")?;
+        f.write_str(self)?;
+        f.write_str("\n")
+    }
+}
+impl std::ops::Deref for PrettyString {
+    type Target = str;
+    fn deref(&self) -> &str {
+        &self.0
     }
 }
 
@@ -51,12 +59,12 @@ fn load(bytes: &[u8]) -> Module {
     loader.module()
 }
 
-fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
+fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
     let modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
 
     // need pipe here because Config takes ownership of the writer, and the writer must be 'static.
     let (mut read_diags, write_diags) = pipe();
-    let thread = std::thread::spawn(move || {
+    let read_diags_thread = std::thread::spawn(move || {
         // must spawn thread because pipe crate is synchronous
         let mut diags = String::new();
         read_diags.read_to_string(&mut diags).unwrap();
@@ -85,25 +93,33 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
         make_codegen_backend: None,
         registry: Registry::new(&[]),
     };
-    rustc_interface::interface::run_compiler(config, |compiler| {
-        let res = link(
-            compiler.session(),
-            modules,
-            &Options {
-                compact_ids: true,
-                dce: false,
-                structurize: false,
-                emit_multiple_modules: false,
-                spirv_metadata: SpirvMetadata::None,
-            },
-        );
-        assert_eq!(compiler.session().has_errors(), res.as_ref().err().copied());
-        res.map(|res| match res {
-            LinkResult::SingleModule(m) => *m,
-            LinkResult::MultipleModules(_) => unreachable!(),
+    // NOTE(eddyb) without `catch_fatal_errors`, you'd get the really strange
+    // effect of test failures with no output (because the `FatalError` "panic"
+    // is really a silent unwinding device, that should be treated the same as
+    // `Err(ErrorGuaranteed)` returns from `run_compiler`/`link`).
+    rustc_driver::catch_fatal_errors(|| {
+        rustc_interface::interface::run_compiler(config, |compiler| {
+            let res = link(
+                compiler.session(),
+                modules,
+                &Options {
+                    compact_ids: true,
+                    dce: false,
+                    structurize: false,
+                    emit_multiple_modules: false,
+                    spirv_metadata: SpirvMetadata::None,
+                },
+            );
+            assert_eq!(compiler.session().has_errors(), res.as_ref().err().copied());
+            res.map(|res| match res {
+                LinkResult::SingleModule(m) => *m,
+                LinkResult::MultipleModules(_) => unreachable!(),
+            })
         })
     })
-    .map_err(|_e| thread.join().unwrap())
+    .flatten()
+    .map_err(|_e| read_diags_thread.join().unwrap())
+    .map_err(PrettyString)
 }
 
 fn without_header_eq(mut result: Module, expected: &str) {
@@ -134,7 +150,7 @@ fn without_header_eq(mut result: Module, expected: &str) {
             \n\
             \n{}\
             \n",
-            pretty_assertions::Comparison::new(&PrettyString(&expected), &PrettyString(&result))
+            pretty_assertions::Comparison::new(&PrettyString(expected), &PrettyString(result))
         );
     }
 }
