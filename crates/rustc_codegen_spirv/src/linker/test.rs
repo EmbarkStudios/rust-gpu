@@ -176,6 +176,7 @@ fn without_header_eq(mut result: Module, expected: &str) {
 fn standard() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Import
         %2 = OpTypeFloat 32
         %1 = OpVariable %2 Uniform
@@ -184,6 +185,7 @@ fn standard() {
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Export
         %2 = OpTypeFloat 32
         %3 = OpConstant %2 42
@@ -192,7 +194,8 @@ fn standard() {
     );
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
-    let expect = r#"%1 = OpTypeFloat 32
+    let expect = r#"OpMemoryModel Logical OpenCL
+        %1 = OpTypeFloat 32
         %2 = OpVariable %1 Input
         %3 = OpConstant %1 42.0
         %4 = OpVariable %1 Uniform %3"#;
@@ -204,13 +207,15 @@ fn standard() {
 fn not_a_lib_extra_exports() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform"#,
     );
 
     let result = assemble_and_link(&[&a]).unwrap();
-    let expect = r#"%1 = OpTypeFloat 32
+    let expect = r#"OpMemoryModel Logical OpenCL
+        %1 = OpTypeFloat 32
         %2 = OpVariable %1 Uniform"#;
     without_header_eq(result, expect);
 }
@@ -219,12 +224,16 @@ fn not_a_lib_extra_exports() {
 fn unresolved_symbol() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform"#,
     );
 
-    let b = assemble_spirv("OpCapability Linkage");
+    let b = assemble_spirv(
+        "OpCapability Linkage
+        OpMemoryModel Logical OpenCL",
+    );
 
     let result = assemble_and_link(&[&a, &b]);
 
@@ -238,6 +247,7 @@ fn unresolved_symbol() {
 fn type_mismatch() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
@@ -246,6 +256,7 @@ fn type_mismatch() {
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeInt 32 0
             %3 = OpConstant %2 42
@@ -264,6 +275,7 @@ fn type_mismatch() {
 fn multiple_definitions() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
@@ -273,6 +285,7 @@ fn multiple_definitions() {
     let b = assemble_spirv(
         r#"OpCapability Linkage
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 42
@@ -281,6 +294,7 @@ fn multiple_definitions() {
 
     let c = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 -1
@@ -298,6 +312,7 @@ fn multiple_definitions() {
 fn multiple_definitions_different_types() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
@@ -307,6 +322,7 @@ fn multiple_definitions_different_types() {
     let b = assemble_spirv(
         r#"OpCapability Linkage
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeInt 32 0
             %3 = OpConstant %2 42
@@ -315,6 +331,7 @@ fn multiple_definitions_different_types() {
 
     let c = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 12
@@ -333,6 +350,7 @@ fn multiple_definitions_different_types() {
 fn decoration_mismatch() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Import
         OpDecorate %2 Constant
         %2 = OpTypeFloat 32
@@ -342,6 +360,7 @@ fn decoration_mismatch() {
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Export
         %2 = OpTypeFloat 32
         %3 = OpConstant %2 42
@@ -360,6 +379,7 @@ fn decoration_mismatch() {
 fn func_ctrl() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeVoid
             %3 = OpTypeFunction %2
@@ -371,6 +391,7 @@ fn func_ctrl() {
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeVoid
             %3 = OpTypeFunction %2
@@ -382,7 +403,8 @@ fn func_ctrl() {
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
-    let expect = r#"%1 = OpTypeVoid
+    let expect = r#"OpMemoryModel Logical OpenCL
+            %1 = OpTypeVoid
             %2 = OpTypeFunction %1
             %3 = OpTypeFloat 32
             %4 = OpVariable %3 Uniform
@@ -399,6 +421,7 @@ fn use_exported_func_param_attr() {
     let a = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             OpDecorate %3 FuncParamAttr Zext
             OpDecorate %4 FuncParamAttr Zext
@@ -420,6 +443,7 @@ fn use_exported_func_param_attr() {
     let b = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             OpDecorate %2 FuncParamAttr Sext
             %3 = OpTypeVoid
@@ -437,6 +461,7 @@ fn use_exported_func_param_attr() {
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
     let expect = r#"OpCapability Kernel
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 FuncParamAttr Zext
         OpDecorate %2 FuncParamAttr Sext
         %3 = OpTypeVoid
@@ -463,6 +488,7 @@ fn names_and_decorations() {
     let a = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpName %1 "foo"
             OpName %3 "param"
             OpDecorate %1 LinkageAttributes "foo" Import
@@ -488,6 +514,7 @@ fn names_and_decorations() {
     let b = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpName %1 "foo"
             OpName %2 "param"
             OpDecorate %1 LinkageAttributes "foo" Export
@@ -508,6 +535,7 @@ fn names_and_decorations() {
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
     let expect = r#"OpCapability Kernel
+        OpMemoryModel Logical OpenCL
         OpName %1 "foo"
         OpName %2 "param"
         OpDecorate %3 Restrict
