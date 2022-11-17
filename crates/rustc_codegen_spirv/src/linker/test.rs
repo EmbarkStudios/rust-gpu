@@ -400,9 +400,8 @@ fn use_exported_func_param_attr() {
         r#"OpCapability Kernel
             OpCapability Linkage
             OpDecorate %1 LinkageAttributes "foo" Import
-            OpDecorate %2 FuncParamAttr Zext
-            %2 = OpDecorationGroup
-            OpGroupDecorate %2 %3 %4
+            OpDecorate %3 FuncParamAttr Zext
+            OpDecorate %4 FuncParamAttr Zext
             %5 = OpTypeVoid
             %6 = OpTypeInt 32 0
             %7 = OpTypeFunction %5 %6
@@ -439,22 +438,20 @@ fn use_exported_func_param_attr() {
 
     let expect = r#"OpCapability Kernel
         OpDecorate %1 FuncParamAttr Zext
-        %1 = OpDecorationGroup
-        OpGroupDecorate %1 %2
-        OpDecorate %3 FuncParamAttr Sext
-        %4 = OpTypeVoid
-        %5 = OpTypeInt 32 0
-        %6 = OpTypeFunction %4 %5
-        %7 = OpFunction %4 None %6
-        %2 = OpFunctionParameter %5
-        %8 = OpLabel
-        %9 = OpLoad %5 %2
+        OpDecorate %2 FuncParamAttr Sext
+        %3 = OpTypeVoid
+        %4 = OpTypeInt 32 0
+        %5 = OpTypeFunction %3 %4
+        %6 = OpFunction %3 None %5
+        %1 = OpFunctionParameter %4
+        %7 = OpLabel
+        %8 = OpLoad %4 %1
         OpReturn
         OpFunctionEnd
-        %10 = OpFunction %4 None %6
-        %3 = OpFunctionParameter %5
-        %11 = OpLabel
-        %12 = OpLoad %5 %3
+        %9 = OpFunction %3 None %5
+        %2 = OpFunctionParameter %4
+        %10 = OpLabel
+        %11 = OpLoad %4 %2
         OpReturn
         OpFunctionEnd"#;
 
@@ -469,10 +466,9 @@ fn names_and_decorations() {
             OpName %1 "foo"
             OpName %3 "param"
             OpDecorate %1 LinkageAttributes "foo" Import
-            OpDecorate %2 Restrict
+            OpDecorate %3 Restrict
+            OpDecorate %4 Restrict
             OpDecorate %4 NonWritable
-            %2 = OpDecorationGroup
-            OpGroupDecorate %2 %3 %4
             %5 = OpTypeVoid
             %6 = OpTypeInt 32 0
             %9 = OpTypePointer Function %6
@@ -515,24 +511,22 @@ fn names_and_decorations() {
         OpName %1 "foo"
         OpName %2 "param"
         OpDecorate %3 Restrict
-        OpDecorate %4 NonWritable
-        %3 = OpDecorationGroup
-        OpGroupDecorate %3 %4
+        OpDecorate %3 NonWritable
         OpDecorate %2 Restrict
-        %5 = OpTypeVoid
-        %6 = OpTypeInt 32 0
-        %7 = OpTypePointer Function %6
-        %8 = OpTypeFunction %5 %7
-        %9 = OpFunction %5 None %8
-        %4 = OpFunctionParameter %7
-        %10 = OpLabel
-        %11 = OpLoad %6 %4
+        %4 = OpTypeVoid
+        %5 = OpTypeInt 32 0
+        %6 = OpTypePointer Function %5
+        %7 = OpTypeFunction %4 %6
+        %8 = OpFunction %4 None %7
+        %3 = OpFunctionParameter %6
+        %9 = OpLabel
+        %10 = OpLoad %5 %3
         OpReturn
         OpFunctionEnd
-        %1 = OpFunction %5 None %8
-        %2 = OpFunctionParameter %7
-        %12 = OpLabel
-        %13 = OpLoad %6 %2
+        %1 = OpFunction %4 None %7
+        %2 = OpFunctionParameter %6
+        %11 = OpLabel
+        %12 = OpLoad %5 %2
         OpReturn
         OpFunctionEnd"#;
 
