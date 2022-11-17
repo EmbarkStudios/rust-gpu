@@ -138,6 +138,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
     .map_err(PrettyString)
 }
 
+#[track_caller]
 fn without_header_eq(mut result: Module, expected: &str) {
     use rspirv::binary::Disassemble;
     //use rspirv::binary::Assemble;
