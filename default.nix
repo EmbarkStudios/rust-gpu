@@ -15,6 +15,12 @@ in with pkgs; stdenv.mkDerivation rec {
 
   # Runtime dependencies.
   LD_LIBRARY_PATH = with xorg; lib.makeLibraryPath [
-    libX11 libXcursor libXi libXrandr vulkan-loader
+    vulkan-loader
+
+    # NOTE(eddyb) winit really wants `libxkbcommon` on Wayland for some reason
+    # (see https://github.com/rust-windowing/winit/issues/1760 for more info).
+    wayland libxkbcommon
+
+    libX11 libXcursor libXi libXrandr
   ];
 }
