@@ -117,9 +117,6 @@ impl<'tcx> CodegenCx<'tcx> {
                 .map_or_else(|| instance.to_string(), ToString::to_string);
             self.entry_stub(&instance, fn_abi, declared, entry_name, entry);
         }
-        if attrs.unroll_loops.is_some() {
-            self.unroll_loops_decorations.borrow_mut().insert(fn_id);
-        }
         if attrs.buffer_load_intrinsic.is_some() {
             let mode = &fn_abi.ret.mode;
             self.buffer_load_intrinsic_fn_id

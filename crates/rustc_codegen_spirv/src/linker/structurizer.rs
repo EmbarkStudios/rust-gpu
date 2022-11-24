@@ -1,7 +1,7 @@
 use indexmap::{indexmap, IndexMap};
 use rspirv::dr::{Block, Builder, Function, InsertPoint, Module, Operand};
 use rspirv::spirv::{LoopControl, Op, SelectionControl, Word};
-use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_data_structures::fx::FxHashMap;
 use std::{iter, mem};
 
 /// Cached IDs of `OpTypeBool`, `OpConstantFalse`, and `OpConstantTrue`.
@@ -37,7 +37,7 @@ impl FuncBuilder<'_> {
     }
 }
 
-pub fn structurize(module: Module, unroll_loops_decorations: FxHashSet<Word>) -> Module {
+pub fn structurize(module: Module) -> Module {
     let mut builder = Builder::new_from_module(module);
 
     // Get the `OpTypeBool` type (it will only be created if it's missing).
@@ -72,14 +72,6 @@ pub fn structurize(module: Module, unroll_loops_decorations: FxHashSet<Word>) ->
             builder: &mut builder,
         };
 
-        let func_id = func.function().def_id().unwrap();
-
-        let loop_control = if unroll_loops_decorations.contains(&func_id) {
-            LoopControl::UNROLL
-        } else {
-            LoopControl::NONE
-        };
-
         let block_id_to_idx = func
             .blocks()
             .iter()
@@ -95,7 +87,6 @@ pub fn structurize(module: Module, unroll_loops_decorations: FxHashSet<Word>) ->
             },
             func,
             block_id_to_idx,
-            loop_control,
             incoming_edge_count: vec![],
             regions: FxHashMap::default(),
         }
@@ -139,10 +130,6 @@ struct Structurizer<'a> {
 
     func: FuncBuilder<'a>,
     block_id_to_idx: FxHashMap<BlockId, BlockIdx>,
-
-    /// `LoopControl` to use in all loops' `OpLoopMerge` instruction.
-    /// Currently only affected by function-scoped `#[spirv(unroll_loops)]`.
-    loop_control: LoopControl,
 
     /// Number of edges pointing to each block.
     /// Computed by `post_order` and updated when structuring loops
@@ -390,7 +377,7 @@ impl Structurizer<'_> {
                     .loop_merge(
                         while_exit_block_id,
                         while_body_merge_id,
-                        self.loop_control,
+                        LoopControl::NONE,
                         iter::empty(),
                     )
                     .unwrap();

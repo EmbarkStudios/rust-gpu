@@ -17,18 +17,17 @@
 // * builtin: `position`
 
 // NOTE(eddyb) accounting for the number of errors this test actually produces:
-// * 473 errors, all "attribute is only valid on" (see `invalid-target.stderr`)
+// * 437 errors, all "attribute is only valid on" (see `invalid-target.stderr`)
 // * 41 uses of `#[rust_gpu::spirv(...)]` in this test
-// * at most 12 attributes per `#[rust_gpu::spirv(...)]`, so an upper bound of `41*12 = 492`
-// * the difference between 492 and 473 is 19, i.e. valid attributes, made up of:
+// * at most 11 attributes per `#[rust_gpu::spirv(...)]`, so an upper bound of `41*11 = 451`
+// * the difference between 451 and 437 is 14, i.e. valid attributes, made up of:
 //   * 4 on `_Struct`
-//   * 8 on functions, i.e. 2 on each of:
+//   * 4 on functions, i.e. 1 on each of:
 //     * `_inherent_method`
 //     * `_trait_method_with_default`,
 //     * `_trait_method` (in `impl _Trait for ()`)
 //     * `_fn`
 //   * 6 on `_entry_param`
-//   * 1 on `_closure`
 
 // NOTE(shesp) Directly using `#[rust_gpu::spirv(...)]` because macro attributes are invalid in most contexts
 
@@ -36,7 +35,6 @@
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 macro_rules! _macro {
     () => {};
@@ -46,7 +44,6 @@ macro_rules! _macro {
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 extern crate spirv_std as _;
 
@@ -54,7 +51,6 @@ extern crate spirv_std as _;
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 use spirv_std as _;
 
@@ -62,7 +58,6 @@ use spirv_std as _;
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 mod _mod {}
 
@@ -70,14 +65,12 @@ mod _mod {}
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 extern "C" {
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     type _ForeignTy;
 
@@ -85,7 +78,6 @@ extern "C" {
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     static _FOREIGN_STATIC: ();
 
@@ -93,7 +85,6 @@ extern "C" {
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     fn _foreign_fn();
 }
@@ -102,7 +93,6 @@ extern "C" {
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 static _STATIC: () = ();
 
@@ -110,7 +100,6 @@ static _STATIC: () = ();
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 const _CONST: () = ();
 
@@ -118,7 +107,6 @@ const _CONST: () = ();
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 type _TyAlias = ();
 
@@ -126,7 +114,6 @@ type _TyAlias = ();
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 type _OpaqueTy = impl Copy;
 
@@ -138,21 +125,18 @@ fn _opaque_ty_definer() -> _OpaqueTy {
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 enum _Enum {
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     _Variant {
         #[rust_gpu::spirv(
             sampler, block, sampled_image, generic_image_type, // struct-only
             vertex, // fn-only
             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-            unroll_loops, // fn/closure-only
         )]
         _field: (),
     },
@@ -162,14 +146,12 @@ enum _Enum {
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 union _Union {
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     _field: (),
 }
@@ -177,14 +159,12 @@ union _Union {
 #[rust_gpu::spirv(
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 struct _Struct {
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     _field: (),
 }
@@ -193,14 +173,12 @@ struct _Struct {
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 impl _Struct {
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     const _INHERENT_ASSOC_CONST: () = ();
 
@@ -215,7 +193,6 @@ impl _Struct {
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 trait _TraitAlias = Copy;
 
@@ -223,14 +200,12 @@ trait _TraitAlias = Copy;
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 trait _Trait {
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     type _AssocTy;
 
@@ -238,7 +213,6 @@ trait _Trait {
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     const _TRAIT_ASSOC_CONST: ();
 
@@ -246,7 +220,6 @@ trait _Trait {
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     fn _trait_method();
 
@@ -261,14 +234,12 @@ trait _Trait {
     sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    unroll_loops, // fn/closure-only
 )]
 impl _Trait for () {
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     type _AssocTy = ();
 
@@ -276,7 +247,6 @@ impl _Trait for () {
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     const _TRAIT_ASSOC_CONST: () = ();
 
@@ -295,7 +265,6 @@ fn _fn(
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
-        unroll_loops, // fn/closure-only
     )]
     _entry_param: (),
 ) {
@@ -303,7 +272,6 @@ fn _fn(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )]
     let _statement = ();
 
@@ -319,7 +287,6 @@ fn _fn(
             sampler, block, sampled_image, generic_image_type, // struct-only
             vertex, // fn-only
             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-            unroll_loops, // fn/closure-only
         )]
         (1, 2, 3) // expression
     );
@@ -329,7 +296,6 @@ fn _fn(
             sampler, block, sampled_image, generic_image_type, // struct-only
             vertex, // fn-only
             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-            unroll_loops, // fn/closure-only
         )]
         _arm => {}
     }
@@ -340,19 +306,16 @@ fn _fn_with_generics<
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )] '_lifetime_param,
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )] _TyParam,
     #[rust_gpu::spirv(
         sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-        unroll_loops, // fn/closure-only
     )] const _CONST_PARAM: usize,
 >() {
 }

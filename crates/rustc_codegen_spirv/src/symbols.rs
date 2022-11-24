@@ -339,7 +339,6 @@ impl Symbols {
                 "matrix",
                 SpirvAttribute::IntrinsicType(IntrinsicType::Matrix),
             ),
-            ("unroll_loops", SpirvAttribute::UnrollLoops),
             ("buffer_load_intrinsic", SpirvAttribute::BufferLoadIntrinsic),
             (
                 "buffer_store_intrinsic",

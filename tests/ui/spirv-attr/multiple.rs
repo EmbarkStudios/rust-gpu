@@ -51,6 +51,3 @@ fn _entry(
     #[spirv(invariant, invariant)] _invariant: (),
 ) {
 }
-
-#[spirv(unroll_loops, unroll_loops)]
-fn _unroll_loops() {}
