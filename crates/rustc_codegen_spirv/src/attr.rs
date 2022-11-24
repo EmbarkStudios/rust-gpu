@@ -89,7 +89,6 @@ pub enum SpirvAttribute {
     InputAttachmentIndex(u32),
 
     // `fn`/closure attributes:
-    UnrollLoops,
     BufferLoadIntrinsic,
     BufferStoreIntrinsic,
 }
@@ -124,7 +123,6 @@ pub struct AggregatedSpirvAttributes {
     pub input_attachment_index: Option<Spanned<u32>>,
 
     // `fn`/closure attributes:
-    pub unroll_loops: Option<Spanned<()>>,
     pub buffer_load_intrinsic: Option<Spanned<()>>,
     pub buffer_store_intrinsic: Option<Spanned<()>>,
 }
@@ -213,7 +211,6 @@ impl AggregatedSpirvAttributes {
                 span,
                 "#[spirv(attachment_index)]",
             ),
-            UnrollLoops => try_insert(&mut self.unroll_loops, (), span, "#[spirv(unroll_loops)]"),
             BufferLoadIntrinsic => try_insert(
                 &mut self.buffer_load_intrinsic,
                 (),
@@ -345,15 +342,6 @@ impl CheckSpirvAttrVisitor<'_> {
                     }
 
                     _ => Err(Expected("function parameter")),
-                },
-                SpirvAttribute::UnrollLoops => match target {
-                    Target::Fn
-                    | Target::Closure
-                    | Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => {
-                        Ok(())
-                    }
-
-                    _ => Err(Expected("function or closure")),
                 },
                 SpirvAttribute::BufferLoadIntrinsic | SpirvAttribute::BufferStoreIntrinsic => {
                     match target {

@@ -5,9 +5,7 @@ mod type_;
 
 use crate::builder::{ExtInst, InstructionTable};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvConst, SpirvValue, SpirvValueKind};
-use crate::decorations::{
-    CustomDecoration, SerializedSpan, UnrollLoopsDecoration, ZombieDecoration,
-};
+use crate::decorations::{CustomDecoration, SerializedSpan, ZombieDecoration};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use crate::target::SpirvTarget;
@@ -20,7 +18,7 @@ use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, GlobalAsmOperandRef,
     MiscMethods,
 };
-use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
@@ -55,10 +53,6 @@ pub struct CodegenCx<'tcx> {
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
     zombie_decorations: RefCell<FxHashMap<Word, ZombieDecoration>>,
-    /// Functions that have `#[spirv(unroll_loops)]`, and therefore should
-    /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
-    /// instructions, during structuralization.
-    unroll_loops_decorations: RefCell<FxHashSet<Word>>,
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
@@ -121,7 +115,6 @@ impl<'tcx> CodegenCx<'tcx> {
             vtables: Default::default(),
             ext_inst: Default::default(),
             zombie_decorations: Default::default(),
-            unroll_loops_decorations: Default::default(),
             target,
             sym,
             instruction_table: InstructionTable::new(),
@@ -208,13 +201,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.zombie_decorations
                 .into_inner()
                 .into_iter()
-                .map(|(id, zombie)| zombie.encode(id))
-                .chain(
-                    self.unroll_loops_decorations
-                        .into_inner()
-                        .into_iter()
-                        .map(|id| UnrollLoopsDecoration {}.encode(id)),
-                ),
+                .map(|(id, zombie)| zombie.encode(id)),
         );
         result
     }

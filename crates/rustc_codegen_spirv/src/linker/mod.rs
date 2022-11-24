@@ -19,11 +19,10 @@ mod zombies;
 use std::borrow::Cow;
 
 use crate::codegen_cx::SpirvMetadata;
-use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
 use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
-use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
 
@@ -226,14 +225,9 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         dce::dce(&mut output);
     }
 
-    let unroll_loops_decorations = UnrollLoopsDecoration::decode_all(&output)
-        .map(|(id, _)| id)
-        .collect::<FxHashSet<_>>();
-    UnrollLoopsDecoration::remove_all(&mut output);
-
     let mut output = if opts.structurize {
         let _timer = sess.timer("link_structurize");
-        structurizer::structurize(output, unroll_loops_decorations)
+        structurizer::structurize(output)
     } else {
         output
     };

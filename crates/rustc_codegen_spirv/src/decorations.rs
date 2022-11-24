@@ -99,16 +99,6 @@ impl<'a, D: Deserialize<'a>> LazilyDeserialized<'a, D> {
     }
 }
 
-/// An `OpFunction` with `#[spirv(unroll_loops)]` on the Rust `fn` definition,
-/// which should get `LoopControl::UNROLL` applied to all of its loops'
-/// `OpLoopMerge` instructions, during structuralization.
-#[derive(Deserialize, Serialize)]
-pub struct UnrollLoopsDecoration {}
-
-impl CustomDecoration for UnrollLoopsDecoration {
-    const ENCODING_PREFIX: &'static str = "U";
-}
-
 #[derive(Deserialize, Serialize)]
 pub struct ZombieDecoration {
     pub reason: String,
