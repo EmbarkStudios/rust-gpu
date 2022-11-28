@@ -7,22 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- NOTE(eddyb) sections from the original template:
 
-### Added
+### Added ⭐
 - New features go here in a bullet list
 
-### Changed
+### Changed 🛠
 - Changes to existing functionality go here in a bullet list
 
-### Deprecated
+### Deprecated 🚧
 - Mark features soon-to-be removed in a bullet list
 
-### Removed
+### Removed 🔥
 - Features that have been removed in a bullet list
 
-### Fixed
+### Fixed 🩹
 - Bug fixes in a bullet list
 
-### Security
+### Security 🔐
 - Changes/fixes related to security vulnerabilities in a bullet list
 
 -->
@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Applied workspace inheritance to Cargo.toml files
 
-### Removed
+### Removed 🔥
 
 - Removed the `fn`/closure `#[spirv(unroll_loops)]` attribute, as it has no users,
   is becoming non-trivial to support, and requires redesign for better ergonomics
@@ -58,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated toolchain to `nightly-2022-10-01`
 - Updated `glam` to `0.22`
 
-### Removed
+### Removed 🔥
 
 - Removed `glam::BVec` support (they are no longer `#[repl(simd)]` in `glam`, as Rust doesn't support SIMD vectors with `bool` elements)
 
