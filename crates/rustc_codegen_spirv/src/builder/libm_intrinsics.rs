@@ -167,6 +167,8 @@ pub const TABLE: &[(&str, LibmIntrinsic)] = &[
         "remquof",
         LibmIntrinsic::Custom(LibmCustomIntrinsic::RemQuo),
     ),
+    ("rint", LibmIntrinsic::GLOp(GLOp::RoundEven)),
+    ("rintf", LibmIntrinsic::GLOp(GLOp::RoundEven)),
     ("round", LibmIntrinsic::GLOp(GLOp::Round)),
     ("roundf", LibmIntrinsic::GLOp(GLOp::Round)),
     ("scalbn", LibmIntrinsic::Custom(LibmCustomIntrinsic::Scalbn)),
