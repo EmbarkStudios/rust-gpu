@@ -560,23 +560,10 @@
 <span id="560">560</span>
 <span id="561">561</span>
 <span id="562">562</span>
-<span id="563">563</span>
-<span id="564">564</span>
-<span id="565">565</span>
-<span id="566">566</span>
-<span id="567">567</span>
-<span id="568">568</span>
-<span id="569">569</span>
-<span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
-<span id="573">573</span>
-<span id="574">574</span>
-<span id="575">575</span>
 </pre><pre class="rust"><code><span class="kw">use </span>indexmap::{indexmap, IndexMap};
 <span class="kw">use </span>rspirv::dr::{Block, Builder, Function, InsertPoint, Module, Operand};
 <span class="kw">use </span>rspirv::spirv::{LoopControl, Op, SelectionControl, Word};
-<span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
+<span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
 <span class="kw">use </span>std::{iter, mem};
 
 <span class="doccomment">/// Cached IDs of `OpTypeBool`, `OpConstantFalse`, and `OpConstantTrue`.
@@ -612,7 +599,7 @@
     }
 }
 
-<span class="kw">pub fn </span>structurize(module: Module, unroll_loops_decorations: FxHashSet&lt;Word&gt;) -&gt; Module {
+<span class="kw">pub fn </span>structurize(module: Module) -&gt; Module {
     <span class="kw">let </span><span class="kw-2">mut </span>builder = Builder::new_from_module(module);
 
     <span class="comment">// Get the `OpTypeBool` type (it will only be created if it&#39;s missing).
@@ -647,14 +634,6 @@
             builder: <span class="kw-2">&amp;mut </span>builder,
         };
 
-        <span class="kw">let </span>func_id = func.function().def_id().unwrap();
-
-        <span class="kw">let </span>loop_control = <span class="kw">if </span>unroll_loops_decorations.contains(<span class="kw-2">&amp;</span>func_id) {
-            LoopControl::UNROLL
-        } <span class="kw">else </span>{
-            LoopControl::NONE
-        };
-
         <span class="kw">let </span>block_id_to_idx = func
             .blocks()
             .iter()
@@ -670,7 +649,6 @@
             },
             func,
             block_id_to_idx,
-            loop_control,
             incoming_edge_count: <span class="macro">vec!</span>[],
             regions: FxHashMap::default(),
         }
@@ -714,10 +692,6 @@
 
     func: FuncBuilder&lt;<span class="lifetime">&#39;a</span>&gt;,
     block_id_to_idx: FxHashMap&lt;BlockId, BlockIdx&gt;,
-
-    <span class="doccomment">/// `LoopControl` to use in all loops&#39; `OpLoopMerge` instruction.
-    /// Currently only affected by function-scoped `#[spirv(unroll_loops)]`.
-    </span>loop_control: LoopControl,
 
     <span class="doccomment">/// Number of edges pointing to each block.
     /// Computed by `post_order` and updated when structuring loops
@@ -965,7 +939,7 @@
                     .loop_merge(
                         while_exit_block_id,
                         while_body_merge_id,
-                        <span class="self">self</span>.loop_control,
+                        LoopControl::NONE,
                         iter::empty(),
                     )
                     .unwrap();

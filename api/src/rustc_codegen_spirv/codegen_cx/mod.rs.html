@@ -669,19 +669,6 @@
 <span id="669">669</span>
 <span id="670">670</span>
 <span id="671">671</span>
-<span id="672">672</span>
-<span id="673">673</span>
-<span id="674">674</span>
-<span id="675">675</span>
-<span id="676">676</span>
-<span id="677">677</span>
-<span id="678">678</span>
-<span id="679">679</span>
-<span id="680">680</span>
-<span id="681">681</span>
-<span id="682">682</span>
-<span id="683">683</span>
-<span id="684">684</span>
 </pre><pre class="rust"><code><span class="kw">mod </span>constant;
 <span class="kw">mod </span>declare;
 <span class="kw">mod </span>entry;
@@ -689,9 +676,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::builder::{ExtInst, InstructionTable};
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvConst, SpirvValue, SpirvValueKind};
-<span class="kw">use </span><span class="kw">crate</span>::decorations::{
-    CustomDecoration, SerializedSpan, UnrollLoopsDecoration, ZombieDecoration,
-};
+<span class="kw">use </span><span class="kw">crate</span>::decorations::{CustomDecoration, SerializedSpan, ZombieDecoration};
 <span class="kw">use </span><span class="kw">crate</span>::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 <span class="kw">use </span><span class="kw">crate</span>::symbols::Symbols;
 <span class="kw">use </span><span class="kw">crate</span>::target::SpirvTarget;
@@ -704,7 +689,7 @@
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, GlobalAsmOperandRef,
     MiscMethods,
 };
-<span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
+<span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
 <span class="kw">use </span>rustc_middle::mir::mono::CodegenUnit;
 <span class="kw">use </span>rustc_middle::mir::Body;
 <span class="kw">use </span>rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
@@ -739,10 +724,6 @@
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
     </span>zombie_decorations: RefCell&lt;FxHashMap&lt;Word, ZombieDecoration&gt;&gt;,
-    <span class="doccomment">/// Functions that have `#[spirv(unroll_loops)]`, and therefore should
-    /// get `LoopControl::UNROLL` applied to all of their loops&#39; `OpLoopMerge`
-    /// instructions, during structuralization.
-    </span>unroll_loops_decorations: RefCell&lt;FxHashSet&lt;Word&gt;&gt;,
     <span class="doccomment">/// Cache of all the builtin symbols we need
     </span><span class="kw">pub </span>sym: Rc&lt;Symbols&gt;,
     <span class="kw">pub </span>instruction_table: InstructionTable,
@@ -805,7 +786,6 @@
             vtables: Default::default(),
             ext_inst: Default::default(),
             zombie_decorations: Default::default(),
-            unroll_loops_decorations: Default::default(),
             target,
             sym,
             instruction_table: InstructionTable::new(),
@@ -892,13 +872,7 @@
             <span class="self">self</span>.zombie_decorations
                 .into_inner()
                 .into_iter()
-                .map(|(id, zombie)| zombie.encode(id))
-                .chain(
-                    <span class="self">self</span>.unroll_loops_decorations
-                        .into_inner()
-                        .into_iter()
-                        .map(|id| UnrollLoopsDecoration {}.encode(id)),
-                ),
+                .map(|(id, zombie)| zombie.encode(id)),
         );
         result
     }
