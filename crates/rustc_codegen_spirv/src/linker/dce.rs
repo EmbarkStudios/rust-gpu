@@ -8,7 +8,7 @@
 //! concept.
 
 use rspirv::dr::{Function, Instruction, Module, Operand};
-use rspirv::spirv::{Op, StorageClass, Word};
+use rspirv::spirv::{Decoration, LinkageType, Op, StorageClass, Word};
 use rustc_data_structures::fx::FxHashSet;
 
 pub fn dce(module: &mut Module) {
@@ -19,9 +19,23 @@ pub fn dce(module: &mut Module) {
 
 pub fn collect_roots(module: &Module) -> FxHashSet<Word> {
     let mut rooted = FxHashSet::default();
+
     for inst in &module.entry_points {
         root(inst, &mut rooted);
     }
+
+    // NOTE(eddyb) such "link exports" roots are only relevant when `Options`'s
+    // `keep_link_export`s field is used to request that `Export`s are left in
+    // (primarily for unit testing - see also its doc comment).
+    for inst in &module.annotations {
+        if inst.class.opcode == Op::Decorate
+            && inst.operands[1].unwrap_decoration() == Decoration::LinkageAttributes
+            && inst.operands[3].unwrap_linkage_type() == LinkageType::Export
+        {
+            root(inst, &mut rooted);
+        }
+    }
+
     rooted
 }
 

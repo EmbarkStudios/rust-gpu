@@ -123,6 +123,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
                 modules,
                 &Options {
                     compact_ids: true,
+                    dce: true,
                     keep_link_exports: true,
                     ..Default::default()
                 },
@@ -175,6 +176,8 @@ fn without_header_eq(mut result: Module, expected: &str) {
 
 #[test]
 fn standard() {
+    // FIXME(eddyb) the `Input` `OpVariable` is completely unused and after
+    // enabling DCE, it started being removed, is it necessary at all?
     let a = assemble_spirv(
         r#"OpCapability Linkage
         OpMemoryModel Logical OpenCL
@@ -199,9 +202,8 @@ fn standard() {
         OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Export
         %2 = OpTypeFloat 32
-        %3 = OpVariable %2 Input
-        %4 = OpConstant %2 42.0
-        %1 = OpVariable %2 Uniform %4"#;
+        %3 = OpConstant %2 42.0
+        %1 = OpVariable %2 Uniform %3"#;
 
     without_header_eq(result, expect);
 }
@@ -382,6 +384,8 @@ fn decoration_mismatch() {
 
 #[test]
 fn func_ctrl() {
+    // FIXME(eddyb) the `Uniform` `OpVariable` is completely unused and after
+    // enabling DCE, it started being removed, is it necessary at all?
     let a = assemble_spirv(
         r#"OpCapability Linkage
             OpMemoryModel Logical OpenCL
@@ -413,10 +417,8 @@ fn func_ctrl() {
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeVoid
             %3 = OpTypeFunction %2
-            %4 = OpTypeFloat 32
-            %5 = OpVariable %4 Uniform
             %1 = OpFunction %2 DontInline %3
-            %6 = OpLabel
+            %4 = OpLabel
             OpReturn
             OpFunctionEnd"#;
 
@@ -425,6 +427,7 @@ fn func_ctrl() {
 
 #[test]
 fn use_exported_func_param_attr() {
+    // HACK(eddyb) this keeps an otherwise-dead `OpFunction` alive w/ an `Export`.
     let a = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
@@ -432,6 +435,7 @@ fn use_exported_func_param_attr() {
             OpDecorate %1 LinkageAttributes "foo" Import
             OpDecorate %3 FuncParamAttr Zext
             OpDecorate %4 FuncParamAttr Zext
+            OpDecorate %8 LinkageAttributes "HACK(eddyb) keep function alive" Export
             %5 = OpTypeVoid
             %6 = OpTypeInt 32 0
             %7 = OpTypeFunction %5 %6
@@ -471,21 +475,22 @@ fn use_exported_func_param_attr() {
         OpCapability Linkage
         OpMemoryModel Logical OpenCL
         OpDecorate %1 FuncParamAttr Zext
-        OpDecorate %2 LinkageAttributes "foo" Export
-        OpDecorate %3 FuncParamAttr Sext
-        %4 = OpTypeVoid
-        %5 = OpTypeInt 32 0
-        %6 = OpTypeFunction %4 %5
-        %7 = OpFunction %4 None %6
-        %1 = OpFunctionParameter %5
+        OpDecorate %2 LinkageAttributes "HACK(eddyb) keep function alive" Export
+        OpDecorate %3 LinkageAttributes "foo" Export
+        OpDecorate %4 FuncParamAttr Sext
+        %5 = OpTypeVoid
+        %6 = OpTypeInt 32 0
+        %7 = OpTypeFunction %5 %6
+        %2 = OpFunction %5 None %7
+        %1 = OpFunctionParameter %6
         %8 = OpLabel
-        %9 = OpLoad %5 %1
+        %9 = OpLoad %6 %1
         OpReturn
         OpFunctionEnd
-        %2 = OpFunction %4 None %6
-        %3 = OpFunctionParameter %5
+        %3 = OpFunction %5 None %7
+        %4 = OpFunctionParameter %6
         %10 = OpLabel
-        %11 = OpLoad %5 %3
+        %11 = OpLoad %6 %4
         OpReturn
         OpFunctionEnd"#;
 
@@ -494,6 +499,7 @@ fn use_exported_func_param_attr() {
 
 #[test]
 fn names_and_decorations() {
+    // HACK(eddyb) this keeps an otherwise-dead `OpFunction` alive w/ an `Export`.
     let a = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
@@ -504,6 +510,7 @@ fn names_and_decorations() {
             OpDecorate %3 Restrict
             OpDecorate %4 Restrict
             OpDecorate %4 NonWritable
+            OpDecorate %8 LinkageAttributes "HACK(eddyb) keep function alive" Export
             %5 = OpTypeVoid
             %6 = OpTypeInt 32 0
             %9 = OpTypePointer Function %6
@@ -550,22 +557,23 @@ fn names_and_decorations() {
         OpName %2 "param"
         OpDecorate %3 Restrict
         OpDecorate %3 NonWritable
+        OpDecorate %4 LinkageAttributes "HACK(eddyb) keep function alive" Export
         OpDecorate %1 LinkageAttributes "foo" Export
         OpDecorate %2 Restrict
-        %4 = OpTypeVoid
-        %5 = OpTypeInt 32 0
-        %6 = OpTypePointer Function %5
-        %7 = OpTypeFunction %4 %6
-        %8 = OpFunction %4 None %7
-        %3 = OpFunctionParameter %6
+        %5 = OpTypeVoid
+        %6 = OpTypeInt 32 0
+        %7 = OpTypePointer Function %6
+        %8 = OpTypeFunction %5 %7
+        %4 = OpFunction %5 None %8
+        %3 = OpFunctionParameter %7
         %9 = OpLabel
-        %10 = OpLoad %5 %3
+        %10 = OpLoad %6 %3
         OpReturn
         OpFunctionEnd
-        %1 = OpFunction %4 None %7
-        %2 = OpFunctionParameter %6
+        %1 = OpFunction %5 None %8
+        %2 = OpFunctionParameter %7
         %11 = OpLabel
-        %12 = OpLoad %5 %2
+        %12 = OpLoad %6 %2
         OpReturn
         OpFunctionEnd"#;
 
