@@ -149,11 +149,21 @@ impl<'tcx> CodegenCx<'tcx> {
             }
         }
 
-        if Some(instance_def_id) == self.tcx.lang_items().panic_fn() {
-            self.panic_fn_id.set(Some(fn_id));
+        if [
+            self.tcx.lang_items().panic_fn(),
+            self.tcx.lang_items().panic_fmt(),
+            self.tcx.lang_items().panic_display(),
+            self.tcx.lang_items().panic_bounds_check_fn(),
+        ]
+        .contains(&Some(instance_def_id))
+        {
+            self.panic_entry_point_ids.borrow_mut().insert(fn_id);
         }
-        if Some(instance_def_id) == self.tcx.lang_items().panic_bounds_check_fn() {
-            self.panic_bounds_check_fn_id.set(Some(fn_id));
+
+        // HACK(eddyb) there is no good way to identify this definition
+        // (e.g. no `#[lang = "..."]` attribute), but this works well enough.
+        if demangled_symbol_name == "<core::fmt::Arguments>::new_v1" {
+            self.fmt_args_new_fn_ids.borrow_mut().insert(fn_id);
         }
 
         declared

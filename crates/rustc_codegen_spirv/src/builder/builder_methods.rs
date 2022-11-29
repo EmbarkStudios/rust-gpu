@@ -2335,10 +2335,99 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 );
             }
             result
-        } else if [self.panic_fn_id.get(), self.panic_bounds_check_fn_id.get()]
-            .contains(&Some(callee_val))
-        {
-            // HACK(eddyb) redirect builtin panic calls to an abort, to avoid
+        } else if self.panic_entry_point_ids.borrow().contains(&callee_val) {
+            // HACK(eddyb) Rust 2021 `panic!` always uses `format_args!`, even
+            // in the simple case that used to pass a `&str` constant, which
+            // would not remain reachable in the SPIR-V - but `format_args!` is
+            // more complex and neither immediate (`fmt::Arguments` is too big)
+            // nor simplified in MIR (e.g. promoted to a constant) in any way,
+            // so we have to try and remove the `fmt::Arguments::new` call here.
+            // HACK(eddyb) this is basically a `try` block.
+            let remove_simple_format_args_if_possible = || -> Option<()> {
+                let format_args_id = match args {
+                    &[SpirvValue {
+                        kind: SpirvValueKind::Def(format_args_id),
+                        ..
+                    }, SpirvValue {
+                        kind: SpirvValueKind::IllegalConst(_panic_location_id),
+                        ..
+                    }] => format_args_id,
+
+                    _ => return None,
+                };
+
+                // HACK(eddyb) we can remove SSA instructions even when they have
+                // side-effects, *as long as* they are "local" enough and cannot
+                // be observed from outside this current invocation - because the
+                // the abort, any SSA definitions or local variable writes can't
+                // be actually used anywhere else (other than *before* the abort).
+                let mut builder = self.emit();
+                let func_idx = builder.selected_function().unwrap();
+                let block_idx = builder.selected_block().unwrap();
+                let func = &mut builder.module_mut().functions[func_idx];
+                let mut non_debug_insts = func.blocks[block_idx]
+                    .instructions
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, inst)| ![Op::Line, Op::NoLine].contains(&inst.class.opcode));
+                let mut relevant_insts_next_back = |expected_op| {
+                    non_debug_insts
+                        .next_back()
+                        .filter(|(_, inst)| inst.class.opcode == expected_op)
+                        .map(|(i, inst)| {
+                            (
+                                i,
+                                inst.result_id,
+                                inst.operands.iter().map(|operand| operand.unwrap_id_ref()),
+                            )
+                        })
+                };
+                let (_, load_src_id) = relevant_insts_next_back(Op::Load)
+                    .map(|(_, result_id, mut operands)| {
+                        (result_id.unwrap(), operands.next().unwrap())
+                    })
+                    .filter(|&(result_id, _)| result_id == format_args_id)?;
+                let (_, store_val_id) = relevant_insts_next_back(Op::Store)
+                    .map(|(_, _, mut operands)| {
+                        (operands.next().unwrap(), operands.next().unwrap())
+                    })
+                    .filter(|&(store_dst_id, _)| store_dst_id == load_src_id)?;
+                let (call_fmt_args_new_idx, _) = relevant_insts_next_back(Op::FunctionCall)
+                    .filter(|&(_, result_id, _)| result_id == Some(store_val_id))
+                    .map(|(i, _, mut operands)| (i, operands.next().unwrap(), operands))
+                    .filter(|&(_, callee, _)| self.fmt_args_new_fn_ids.borrow().contains(&callee))
+                    .map(|(i, _, mut call_args)| {
+                        assert_eq!(call_args.len(), 4);
+                        let mut arg = || call_args.next().unwrap();
+                        (i, [arg(), arg(), arg(), arg()])
+                    })
+                    .filter(|&(_, [_, _, _, fmt_args_len_id])| {
+                        // Only ever remove `fmt::Arguments` with no runtime values.
+                        matches!(
+                            self.builder.lookup_const_by_id(fmt_args_len_id),
+                            Some(SpirvConst::U32(0))
+                        )
+                    })?;
+
+                // Lastly, ensure that the `Op{Store,Load}` pair operates on
+                // a local `OpVariable`, i.e. is not externally observable.
+                let store_load_local_var = func.blocks[0]
+                    .instructions
+                    .iter()
+                    .take_while(|inst| inst.class.opcode == Op::Variable)
+                    .find(|inst| inst.result_id == Some(load_src_id));
+                if store_load_local_var.is_some() {
+                    // Keep all instructions up to (but not including) the call.
+                    func.blocks[block_idx]
+                        .instructions
+                        .truncate(call_fmt_args_new_idx);
+                }
+
+                None
+            };
+            remove_simple_format_args_if_possible();
+
+            // HACK(eddyb) redirect any possible panic call to an abort, to avoid
             // needing to materialize `&core::panic::Location` or `format_args!`.
             self.abort();
             self.undef(result_type)

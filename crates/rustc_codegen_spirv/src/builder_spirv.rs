@@ -616,10 +616,14 @@ impl<'tcx> BuilderSpirv<'tcx> {
         SpirvValue { kind, ty }
     }
 
+    pub fn lookup_const_by_id(&self, id: Word) -> Option<SpirvConst<'tcx>> {
+        Some(self.id_to_const.borrow().get(&id)?.val)
+    }
+
     pub fn lookup_const(&self, def: SpirvValue) -> Option<SpirvConst<'tcx>> {
         match def.kind {
             SpirvValueKind::Def(id) | SpirvValueKind::IllegalConst(id) => {
-                Some(self.id_to_const.borrow().get(&id)?.val)
+                self.lookup_const_by_id(id)
             }
             _ => None,
         }

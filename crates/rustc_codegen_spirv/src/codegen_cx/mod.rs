@@ -18,7 +18,7 @@ use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, GlobalAsmOperandRef,
     MiscMethods,
 };
-use rustc_data_structures::fx::FxHashMap;
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
@@ -30,7 +30,7 @@ use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::{FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::iter::once;
 use std::path::{Path, PathBuf};
@@ -59,14 +59,22 @@ pub struct CodegenCx<'tcx> {
     pub instruction_table: InstructionTable,
     pub libm_intrinsics: RefCell<FxHashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
-    /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
-    pub panic_fn_id: Cell<Option<Word>>,
+    /// All `panic!(...)`s and builtin panics (from MIR `Assert`s) call into one
+    /// of these lang items, which we always replace with an "abort", erasing
+    /// anything passed in (and that "abort" is just an infinite loop for now).
+    //
+    // FIXME(eddyb) we should not erase anywhere near as much, but `format_args!`
+    // is not representable due to containg Rust slices, and Rust 2021 has made
+    // it mandatory even for `panic!("...")` (that were previously separate).
+    pub panic_entry_point_ids: RefCell<FxHashSet<Word>>,
+
+    /// `core::fmt::Arguments::new_v1` instances (for Rust 2021 panics).
+    pub fmt_args_new_fn_ids: RefCell<FxHashSet<Word>>,
+
     /// Intrinsic for loading a <T> from a &[u32]. The PassMode is the mode of the <T>.
     pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
     /// Intrinsic for storing a <T> into a &[u32]. The PassMode is the mode of the <T>.
     pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
-    /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
-    pub panic_bounds_check_fn_id: Cell<Option<Word>>,
 
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
@@ -120,10 +128,10 @@ impl<'tcx> CodegenCx<'tcx> {
             sym,
             instruction_table: InstructionTable::new(),
             libm_intrinsics: Default::default(),
-            panic_fn_id: Default::default(),
+            panic_entry_point_ids: Default::default(),
+            fmt_args_new_fn_ids: Default::default(),
             buffer_load_intrinsic_fn_id: Default::default(),
             buffer_store_intrinsic_fn_id: Default::default(),
-            panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
             codegen_args,
         }

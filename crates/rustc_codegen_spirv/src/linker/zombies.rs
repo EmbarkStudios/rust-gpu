@@ -3,7 +3,7 @@
 use super::{get_name, get_names};
 use crate::decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::dr::{Instruction, Module};
-use rspirv::spirv::Word;
+use rspirv::spirv::{Op, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
@@ -84,6 +84,8 @@ fn spread_zombie(module: &mut Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_
     // No need to zombie defs within a function: If any def within a function is zombied, then the
     // whole function is zombied. But, we don't have to mark the defs within a function as zombie,
     // because the defs can't escape the function.
+    // HACK(eddyb) one exception to this is function-local variables, which may
+    // be unused and as such cannot be allowed to always zombie the function.
     for func in &module.functions {
         let func_id = func.def_id().unwrap();
         // Can't use zombie.entry() here, due to using the map in contains_zombie
@@ -91,13 +93,23 @@ fn spread_zombie(module: &mut Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_
             // Func is already zombie, no need to scan it again.
             continue;
         }
-        let func_is_zombie = func
-            .all_inst_iter()
-            .find_map(|inst| is_or_contains_zombie(inst, zombie));
-        if let Some(reason) = func_is_zombie {
-            let pushed_reason = reason.push_stack(func_id);
-            zombie.insert(func_id, pushed_reason);
-            any = true;
+        for inst in func.all_inst_iter() {
+            if inst.class.opcode == Op::Variable {
+                let result_id = inst.result_id.unwrap();
+                if let Some(reason) = contains_zombie(inst, zombie) {
+                    if zombie.contains_key(&result_id) {
+                        continue;
+                    }
+                    let reason = reason.clone();
+                    zombie.insert(result_id, reason);
+                    any = true;
+                }
+            } else if let Some(reason) = is_or_contains_zombie(inst, zombie) {
+                let pushed_reason = reason.push_stack(func_id);
+                zombie.insert(func_id, pushed_reason);
+                any = true;
+                break;
+            }
         }
     }
     any
