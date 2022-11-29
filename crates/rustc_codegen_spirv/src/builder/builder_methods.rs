@@ -1469,7 +1469,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .with_type(dest_ty);
 
             if val_is_ptr || dest_is_ptr {
-                if self.is_system_crate() {
+                if self.is_system_crate(self.span()) {
                     self.zombie(
                         result.def(self),
                         &format!(
