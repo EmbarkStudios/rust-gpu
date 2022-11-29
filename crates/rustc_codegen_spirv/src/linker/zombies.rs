@@ -107,7 +107,12 @@ fn spread_zombie(module: &mut Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_
 // If an entry point references a zombie'd value, then the entry point would normally get removed.
 // That's an absolutely horrible experience to debug, though, so instead, create a nice error
 // message containing the stack trace of how the entry point got to the zombie value.
-fn report_error_zombies(sess: &Session, module: &Module, zombie: &FxHashMap<Word, ZombieInfo<'_>>) {
+fn report_error_zombies(
+    sess: &Session,
+    module: &Module,
+    zombie: &FxHashMap<Word, ZombieInfo<'_>>,
+) -> super::Result<()> {
+    let mut result = Ok(());
     let mut names = None;
     for root in super::dce::collect_roots(module) {
         if let Some(reason) = zombie.get(&root) {
@@ -120,14 +125,16 @@ fn report_error_zombies(sess: &Session, module: &Module, zombie: &FxHashMap<Word
                 .chain(stack)
                 .collect::<Vec<_>>()
                 .join("\n");
-            sess.struct_span_err(reason.span, reason.reason)
+            result = Err(sess
+                .struct_span_err(reason.span, reason.reason)
                 .note(&stack_note)
-                .emit();
+                .emit());
         }
     }
+    result
 }
 
-pub fn remove_zombies(sess: &Session, module: &mut Module) {
+pub fn remove_zombies(sess: &Session, module: &mut Module) -> super::Result<()> {
     let zombies_owned = ZombieDecoration::decode_all(module)
         .map(|(id, zombie)| {
             let ZombieDecoration { reason, span } = zombie.deserialize();
@@ -145,7 +152,7 @@ pub fn remove_zombies(sess: &Session, module: &mut Module) {
     // Note: This is O(n^2).
     while spread_zombie(module, &mut zombies) {}
 
-    report_error_zombies(sess, module, &zombies);
+    let result = report_error_zombies(sess, module, &zombies);
 
     if env::var("PRINT_ALL_ZOMBIE").is_ok() {
         for (&zomb, reason) in &zombies {
@@ -208,4 +215,6 @@ pub fn remove_zombies(sess: &Session, module: &mut Module) {
     module
         .functions
         .retain(|f| is_zombie(f.def.as_ref().unwrap(), &zombies).is_none());
+
+    result
 }

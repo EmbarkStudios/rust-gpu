@@ -182,7 +182,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
 
     {
         let _timer = sess.timer("link_remove_zombies");
-        zombies::remove_zombies(sess, &mut output);
+        zombies::remove_zombies(sess, &mut output)?;
     }
 
     {
