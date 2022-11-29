@@ -24,7 +24,7 @@ use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 use rustc_session::Session;
-use rustc_span::def_id::{DefId, LOCAL_CRATE};
+use rustc_span::def_id::DefId;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::{FnAbi, PassMode};
@@ -166,7 +166,7 @@ impl<'tcx> CodegenCx<'tcx> {
     /// Finally, if *user* code is marked as zombie, then this means that the user tried to do
     /// something that isn't supported, and should be an error.
     pub fn zombie_with_span(&self, word: Word, span: Span, reason: &str) {
-        if self.is_system_crate() {
+        if self.is_system_crate(span) {
             self.zombie_even_in_user_code(word, span, reason);
         } else {
             self.tcx.sess.span_err(span, reason);
@@ -185,14 +185,30 @@ impl<'tcx> CodegenCx<'tcx> {
         );
     }
 
-    pub fn is_system_crate(&self) -> bool {
-        self.tcx
+    /// Returns `true` if the originating crate of `span` (which could very well
+    /// be a different crate, e.g. a generic/`#[inline]` function, or a macro),
+    /// is a "system crate", and therefore allowed to have some errors deferred
+    /// as "zombies" (see `zombie_with_span`'s docs above for more details).
+    pub fn is_system_crate(&self, span: Span) -> bool {
+        // HACK(eddyb) this ignores `.lo` vs `.hi` potentially resulting in
+        // different `SourceFile`s (which is likely a bug anyway).
+        let cnum = self
+            .tcx
             .sess
-            .contains_name(self.tcx.hir().krate_attrs(), sym::compiler_builtins)
-            || self.tcx.crate_name(LOCAL_CRATE) == sym::core
-            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.spirv_std
-            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.libm
-            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.num_traits
+            .source_map()
+            .lookup_source_file(span.data().lo)
+            .cnum;
+
+        self.tcx
+            .get_attr(cnum.as_def_id(), sym::compiler_builtins)
+            .is_some()
+            || [
+                sym::core,
+                self.sym.spirv_std,
+                self.sym.libm,
+                self.sym.num_traits,
+            ]
+            .contains(&self.tcx.crate_name(cnum))
     }
 
     pub fn finalize_module(self) -> Module {
@@ -532,7 +548,7 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         }
         .def(span, self);
 
-        if self.is_system_crate() {
+        if self.is_system_crate(span) {
             // Create these undefs up front instead of on demand in SpirvValue::def because
             // SpirvValue::def can't use cx.emit()
             self.def_constant(ty, SpirvConst::ZombieUndefForFnAddr);

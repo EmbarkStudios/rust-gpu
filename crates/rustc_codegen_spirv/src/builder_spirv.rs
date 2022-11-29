@@ -149,7 +149,7 @@ impl SpirvValue {
             }
 
             SpirvValueKind::FnAddr { .. } => {
-                if cx.is_system_crate() {
+                if cx.is_system_crate(span) {
                     cx.builder
                         .const_to_id
                         .borrow()
@@ -160,9 +160,10 @@ impl SpirvValue {
                         .expect("FnAddr didn't go through proper undef registration")
                         .val
                 } else {
-                    cx.tcx
-                        .sess
-                        .err("Cannot use this function pointer for anything other than calls");
+                    cx.tcx.sess.span_err(
+                        span,
+                        "Cannot use this function pointer for anything other than calls",
+                    );
                     // Because we never get beyond compilation (into e.g. linking),
                     // emitting an invalid ID reference here is OK.
                     0
@@ -174,7 +175,7 @@ impl SpirvValue {
                 original_pointee_ty,
                 zombie_target_undef,
             } => {
-                if cx.is_system_crate() {
+                if cx.is_system_crate(span) {
                     cx.zombie_with_span(
                         zombie_target_undef,
                         span,
