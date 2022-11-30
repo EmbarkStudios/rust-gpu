@@ -144,9 +144,11 @@ impl<'tcx> CodegenCx<'tcx> {
         self.builder.builder(cursor)
     }
 
+    // FIXME(eddyb) this should not clone the `SpirvType` back out, but we'd have
+    // to fix ~100 callsites (to add a `*` deref), if we change this signature.
     #[track_caller]
     pub fn lookup_type(&self, ty: Word) -> SpirvType {
-        self.type_cache.lookup(ty)
+        (*self.type_cache.lookup(ty)).clone()
     }
 
     pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'tcx> {

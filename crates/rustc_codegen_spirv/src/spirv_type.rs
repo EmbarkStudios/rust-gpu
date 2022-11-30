@@ -1,17 +1,18 @@
 use crate::abi::{RecursivePointeeCache, TyLayoutNameKey};
 use crate::builder_spirv::SpirvValue;
 use crate::codegen_cx::CodegenCx;
-use bimap::BiHashMap;
 use indexmap::IndexSet;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Capability, Decoration, Dim, ImageFormat, StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
+use rustc_middle::span_bug;
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::{Align, Size};
 use std::cell::RefCell;
 use std::fmt;
 use std::iter;
+use std::rc::Rc;
 use std::sync::{LazyLock, Mutex};
 
 /// Spir-v types are represented as simple Words, which are the `result_id` of instructions like
@@ -270,7 +271,7 @@ impl SpirvType {
                 result
             }
         };
-        cx.type_cache.def(result, self);
+        cx.type_cache_def(result, self, def_span);
         result
     }
 
@@ -304,7 +305,7 @@ impl SpirvType {
                 .sess
                 .fatal(&format!("def_with_id invalid for type {:?}", other)),
         };
-        cx.type_cache.def(result, self);
+        cx.type_cache_def(result, self, def_span);
         result
     }
 
@@ -328,6 +329,7 @@ impl SpirvType {
 
     /// Use this if you want a pretty type printing that recursively prints the types within (e.g. struct fields)
     pub fn debug<'cx, 'tcx>(
+        // FIXME(eddyb) don't require a clone of the `SpirvType` here.
         self,
         id: Word,
         cx: &'cx CodegenCx<'tcx>,
@@ -394,6 +396,7 @@ impl SpirvType {
 
 pub struct SpirvTypePrinter<'cx, 'tcx> {
     id: Word,
+    // FIXME(eddyb) don't require a clone of the `SpirvType` here.
     ty: SpirvType,
     cx: &'cx CodegenCx<'tcx>,
 }
@@ -689,8 +692,10 @@ impl SpirvTypePrinter<'_, '_> {
 
 #[derive(Default)]
 pub struct TypeCache<'tcx> {
-    /// Map between ID and structure
-    pub type_defs: RefCell<BiHashMap<Word, SpirvType>>,
+    // FIXME(eddyb) use `tcx.arena.dropless` to get `&'tcx _`, instead of `Rc`.
+    pub id_to_spirv_type: RefCell<FxHashMap<Word, Rc<SpirvType>>>,
+    pub spirv_type_to_id: RefCell<FxHashMap<Rc<SpirvType>, Word>>,
+
     /// Recursive pointer breaking
     pub recursive_pointee_cache: RecursivePointeeCache<'tcx>,
     /// Set of names for a type (only `SpirvType::Adt` currently).
@@ -701,22 +706,53 @@ pub struct TypeCache<'tcx> {
 
 impl TypeCache<'_> {
     fn get(&self, ty: &SpirvType) -> Option<Word> {
-        self.type_defs.borrow().get_by_right(ty).copied()
+        self.spirv_type_to_id.borrow().get(ty).copied()
     }
 
     #[track_caller]
-    pub fn lookup(&self, word: Word) -> SpirvType {
-        self.type_defs
+    pub fn lookup(&self, id: Word) -> Rc<SpirvType> {
+        self.id_to_spirv_type
             .borrow()
-            .get_by_left(&word)
-            .expect("Tried to lookup value that wasn't a type, or has no definition")
+            .get(&id)
+            .expect("tried to lookup ID that wasn't a type, or has no definition")
             .clone()
     }
+}
 
-    fn def(&self, word: Word, ty: SpirvType) {
-        self.type_defs
+impl CodegenCx<'_> {
+    fn type_cache_def(&self, id: Word, ty: SpirvType, def_span: Span) {
+        let ty = Rc::new(ty);
+
+        if let Some(old_ty) = self
+            .type_cache
+            .id_to_spirv_type
             .borrow_mut()
-            .insert_no_overwrite(word, ty)
-            .unwrap();
+            .insert(id, ty.clone())
+        {
+            span_bug!(
+                def_span,
+                "SPIR-V type with ID %{id} is being redefined\n\
+                old type: {old_ty}\n\
+                new type: {ty}",
+                // FIXME(eddyb) don't clone `SpirvType`s here.
+                old_ty = (*old_ty).clone().debug(id, self),
+                ty = (*ty).clone().debug(id, self)
+            );
+        }
+
+        if let Some(old_id) = self
+            .type_cache
+            .spirv_type_to_id
+            .borrow_mut()
+            .insert(ty.clone(), id)
+        {
+            span_bug!(
+                def_span,
+                "SPIR-V type is changing IDs (%{old_id} -> %{id}):\n\
+                {ty}",
+                // FIXME(eddyb) don't clone a `SpirvType` here.
+                ty = (*ty).clone().debug(id, self)
+            );
+        }
     }
 }
