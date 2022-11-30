@@ -558,27 +558,11 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         self.codegen_unit
     }
 
-    fn used_statics(&self) -> &RefCell<Vec<Self::Value>> {
-        todo!()
-    }
-
-    fn compiler_used_statics(&self) -> &RefCell<Vec<Self::Value>> {
-        todo!()
-    }
-
     fn set_frame_pointer_type(&self, _llfn: Self::Function) {
         todo!()
     }
 
     fn apply_target_cpu_attr(&self, _llfn: Self::Function) {
-        todo!()
-    }
-
-    fn create_used_variable(&self) {
-        todo!()
-    }
-
-    fn create_compiler_used_variable(&self) {
         todo!()
     }
 

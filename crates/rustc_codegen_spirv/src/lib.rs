@@ -288,7 +288,6 @@ impl WriteBackendMethods for SpirvCodegenBackend {
     type Module = Vec<u32>;
     type TargetMachine = ();
     type ModuleBuffer = SpirvModuleBuffer;
-    type Context = ();
     type ThinData = ();
     type ThinBuffer = SpirvThinBuffer;
 
@@ -402,7 +401,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
     ) -> (ModuleCodegen<Self::Module>, u64) {
         let _timer = tcx
             .prof
-            .extra_verbose_generic_activity("codegen_module", cgu_name.to_string());
+            .verbose_generic_activity_with_arg("codegen_module", cgu_name.to_string());
 
         // TODO: Do dep_graph stuff
         let cgu = tcx.codegen_unit(cgu_name);
@@ -466,14 +465,6 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
     ) -> Arc<(dyn Fn(TargetMachineFactoryConfig) -> Result<(), String> + Send + Sync + 'static)>
     {
         Arc::new(|_| Ok(()))
-    }
-
-    fn target_cpu<'b>(&self, _: &'b Session) -> &'b str {
-        todo!()
-    }
-
-    fn tune_cpu<'b>(&self, _: &'b Session) -> Option<&'b str> {
-        None
     }
 }
 
