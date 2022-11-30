@@ -692,9 +692,6 @@
 <span id="692">692</span>
 <span id="693">693</span>
 <span id="694">694</span>
-<span id="695">695</span>
-<span id="696">696</span>
-<span id="697">697</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 <span class="kw">use </span><span class="kw">crate</span>::builder::libm_intrinsics;
 <span class="kw">use </span>rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
@@ -713,6 +710,7 @@
     <span class="comment">// Used by `is_blocklisted_fn`.
     </span><span class="kw">pub </span>fmt_decimal: Symbol,
 
+    <span class="kw">pub </span>discriminant: Symbol,
     <span class="kw">pub </span>rust_gpu: Symbol,
     <span class="kw">pub </span>spirv: Symbol,
     <span class="kw">pub </span>spirv_std: Symbol,
@@ -721,9 +719,11 @@
     <span class="kw">pub </span>entry_point_name: Symbol,
     <span class="kw">pub </span>spv_intel_shader_integer_functions2: Symbol,
     <span class="kw">pub </span>spv_khr_vulkan_memory_model: Symbol,
+
     descriptor_set: Symbol,
     binding: Symbol,
     input_attachment_index: Symbol,
+
     attributes: FxHashMap&lt;Symbol, SpirvAttribute&gt;,
     execution_modes: FxHashMap&lt;Symbol, (ExecutionMode, ExecutionModeExtraDim)&gt;,
     <span class="kw">pub </span>libm_intrinsics: FxHashMap&lt;Symbol, libm_intrinsics::LibmIntrinsic&gt;,
@@ -1070,6 +1070,7 @@
         <span class="self">Self </span>{
             fmt_decimal: Symbol::intern(<span class="string">&quot;fmt_decimal&quot;</span>),
 
+            discriminant: Symbol::intern(<span class="string">&quot;discriminant&quot;</span>),
             rust_gpu: Symbol::intern(<span class="string">&quot;rust_gpu&quot;</span>),
             spirv: Symbol::intern(<span class="string">&quot;spirv&quot;</span>),
             spirv_std: Symbol::intern(<span class="string">&quot;spirv_std&quot;</span>),
@@ -1080,9 +1081,11 @@
                 <span class="string">&quot;SPV_INTEL_shader_integer_functions2&quot;</span>,
             ),
             spv_khr_vulkan_memory_model: Symbol::intern(<span class="string">&quot;SPV_KHR_vulkan_memory_model&quot;</span>),
+
             descriptor_set: Symbol::intern(<span class="string">&quot;descriptor_set&quot;</span>),
             binding: Symbol::intern(<span class="string">&quot;binding&quot;</span>),
             input_attachment_index: Symbol::intern(<span class="string">&quot;input_attachment_index&quot;</span>),
+
             attributes,
             execution_modes,
             libm_intrinsics,
@@ -1338,30 +1341,21 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>((
                                 attr_name.span,
                                 <span class="macro">format!</span>(
-                                    <span class="string">&quot;#[spirv({}(..))] unknown attribute argument {}&quot;</span>,
-                                    name.name.to_ident_string(),
-                                    attr_name.name.to_ident_string()
-                                ),
+                                    <span class="string">&quot;#[spirv({name}(..))] unknown attribute argument {attr_name}&quot;
+                                </span>),
                             ))
                         }
                     }
                 } <span class="kw">else </span>{
                     <span class="kw">return </span><span class="prelude-val">Err</span>((
                         attr_name.span,
-                        <span class="macro">format!</span>(
-                            <span class="string">&quot;#[spirv({}(..))] unknown attribute argument {}&quot;</span>,
-                            name.name.to_ident_string(),
-                            attr_name.name.to_ident_string()
-                        ),
+                        <span class="macro">format!</span>(<span class="string">&quot;#[spirv({name}(..))] unknown attribute argument {attr_name}&quot;</span>,),
                     ));
                 }
             } <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>((
                     arg.span(),
-                    <span class="macro">format!</span>(
-                        <span class="string">&quot;#[spirv({}(..))] attribute argument must be single identifier&quot;</span>,
-                        name.name.to_ident_string()
-                    ),
+                    <span class="macro">format!</span>(<span class="string">&quot;#[spirv({name}(..))] attribute argument must be single identifier&quot;</span>),
                 ));
             }
         }
