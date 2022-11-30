@@ -1,4 +1,3 @@
-use crate::decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::binary::Assemble;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
@@ -73,15 +72,20 @@ fn make_annotation_key(inst: &Instruction) -> Vec<u32> {
 fn gather_annotations(annotations: &[Instruction]) -> FxHashMap<Word, Vec<u32>> {
     let mut map = FxHashMap::default();
     for inst in annotations {
-        if inst.class.opcode == Op::Decorate || inst.class.opcode == Op::MemberDecorate {
-            match map.entry(inst.operands[0].id_ref_any().unwrap()) {
+        match inst.class.opcode {
+            Op::Decorate
+            | Op::DecorateId
+            | Op::DecorateString
+            | Op::MemberDecorate
+            | Op::MemberDecorateString => match map.entry(inst.operands[0].id_ref_any().unwrap()) {
                 hash_map::Entry::Vacant(entry) => {
                     entry.insert(vec![make_annotation_key(inst)]);
                 }
                 hash_map::Entry::Occupied(mut entry) => {
                     entry.get_mut().push(make_annotation_key(inst));
                 }
-            }
+            },
+            _ => {}
         }
     }
     map.into_iter()
@@ -110,7 +114,6 @@ fn gather_names(debug_names: &[Instruction]) -> FxHashMap<Word, String> {
 fn make_dedupe_key(
     inst: &Instruction,
     unresolved_forward_pointers: &FxHashSet<Word>,
-    zombies: &FxHashSet<Word>,
     annotations: &FxHashMap<Word, Vec<u32>>,
     names: &FxHashMap<Word, String>,
 ) -> Vec<u32> {
@@ -136,15 +139,6 @@ fn make_dedupe_key(
         }
     }
     if let Some(id) = inst.result_id {
-        data.push(if zombies.contains(&id) {
-            if inst.result_type.is_some() {
-                id
-            } else {
-                1
-            }
-        } else {
-            0
-        });
         if let Some(annos) = annotations.get(&id) {
             data.extend_from_slice(annos);
         }
@@ -152,6 +146,9 @@ fn make_dedupe_key(
             // Names only matter for OpVariable.
             if let Some(name) = names.get(&id) {
                 // Jump through some hoops to shove a String into a Vec<u32>.
+                //
+                // FIXME(eddyb) this should `.assemble_into(&mut data)` the
+                // `Operand::LiteralString(...)` from the original `Op::Name`.
                 for chunk in name.as_bytes().chunks(4) {
                     let slice = match *chunk {
                         [a] => [a, 0, 0, 0],
@@ -183,11 +180,6 @@ fn rewrite_inst_with_rules(inst: &mut Instruction, rules: &FxHashMap<u32, u32>) 
 
 pub fn remove_duplicate_types(module: &mut Module) {
     // Keep in mind, this algorithm requires forward type references to not exist - i.e. it's a valid spir-v module.
-
-    // Include zombies in the key to not merge zombies with non-zombies
-    let zombies: FxHashSet<Word> = ZombieDecoration::decode_all(module)
-        .map(|(z, _)| z)
-        .collect();
 
     // When a duplicate type is encountered, then this is a map from the deleted ID, to the new, deduplicated ID.
     let mut rewrite_rules = FxHashMap::default();
@@ -224,13 +216,7 @@ pub fn remove_duplicate_types(module: &mut Module) {
         // all_inst_iter_mut pass below. However, the code is a lil bit cleaner this way I guess.
         rewrite_inst_with_rules(inst, &rewrite_rules);
 
-        let key = make_dedupe_key(
-            inst,
-            &unresolved_forward_pointers,
-            &zombies,
-            &annotations,
-            &names,
-        );
+        let key = make_dedupe_key(inst, &unresolved_forward_pointers, &annotations, &names);
 
         match key_to_result_id.entry(key) {
             hash_map::Entry::Vacant(entry) => {

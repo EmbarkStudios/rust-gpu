@@ -1,4 +1,5 @@
 use super::Result;
+use crate::decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
@@ -25,6 +26,27 @@ fn find_import_export_pairs_and_killed_params(
     // Rules to rewrite the module with
     let mut rewrite_rules = FxHashMap::default();
     let mut killed_parameters = FxHashSet::default();
+
+    // HACK(eddyb) collect all zombies, and anything that transitively mentions
+    // them (or is "infected"), to ignore them when doing type checks, as they
+    // will either be removed later, or become an error of their own.
+    let mut zombie_infected: FxHashSet<Word> = ZombieDecoration::decode_all(module)
+        .map(|(z, _)| z)
+        .collect();
+    for inst in module.global_inst_iter() {
+        if let Some(result_id) = inst.result_id {
+            if !zombie_infected.contains(&result_id) {
+                let mut id_operands = inst.operands.iter().filter_map(|o| o.id_ref_any());
+                // NOTE(eddyb) this takes advantage of the fact that the module
+                // is ordered def-before-use (with the minor exception of forward
+                // references for recursive data, which are not fully supported),
+                // to be able to propagate "zombie infection" in one pass.
+                if id_operands.any(|id| zombie_infected.contains(&id)) {
+                    zombie_infected.insert(result_id);
+                }
+            }
+        }
+    }
 
     // First, collect all the exports.
     for annotation in &module.annotations {
@@ -53,7 +75,14 @@ fn find_import_export_pairs_and_killed_params(
         };
         let import_type = *type_map.get(&import_id).expect("Unexpected op");
         // Make sure the import/export pair has the same type.
-        check_tys_equal(sess, module, name, import_type, export_type)?;
+        check_tys_equal(
+            sess,
+            module,
+            name,
+            import_type,
+            export_type,
+            &zombie_infected,
+        )?;
         rewrite_rules.insert(import_id, export_id);
         if let Some(params) = fn_parameters.get(&import_id) {
             for &param in params {
@@ -111,8 +140,17 @@ fn check_tys_equal(
     name: &str,
     import_type: Word,
     export_type: Word,
+    zombie_infected: &FxHashSet<Word>,
 ) -> Result<()> {
-    if import_type == export_type {
+    let allowed = import_type == export_type || {
+        // HACK(eddyb) zombies can cause types to differ in definition, due to
+        // requiring multiple different instances (usually different `Span`s),
+        // so we ignore them, as `find_import_export_pairs_and_killed_params`'s
+        // own comment explains (zombies will cause errors or be removed, *later*).
+        zombie_infected.contains(&import_type) && zombie_infected.contains(&export_type)
+    };
+
+    if allowed {
         Ok(())
     } else {
         // We have an error. It's okay to do something really slow now to report the error.
