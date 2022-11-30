@@ -2,13 +2,8 @@ use super::{link, LinkResult, Options};
 use crate::codegen_cx::SpirvMetadata;
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
-use rustc_driver::handle_options;
 use rustc_errors::registry::Registry;
-use rustc_session::config::build_session_options;
-use rustc_session::config::Input;
-use rustc_session::DiagnosticOutput;
 use std::io::Read;
-use std::path::PathBuf;
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
@@ -62,60 +57,90 @@ fn load(bytes: &[u8]) -> Module {
 fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
     let modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
 
-    // need pipe here because Config takes ownership of the writer, and the writer must be 'static.
+    // FIXME(eddyb) this seems ridiculous, we should be able to write to
+    // some kind of `Arc<Mutex<Vec<u8>>>` without a separate thread.
+    //
+    // need pipe here because the writer must be 'static.
     let (mut read_diags, write_diags) = pipe();
     let read_diags_thread = std::thread::spawn(move || {
         // must spawn thread because pipe crate is synchronous
         let mut diags = String::new();
         read_diags.read_to_string(&mut diags).unwrap();
-        let suffix = "\n\nerror: aborting due to previous error\n\n";
-        if diags.ends_with(suffix) {
-            diags.truncate(diags.len() - suffix.len());
+        if let Some(diags_without_trailing_newlines) = diags.strip_suffix("\n\n") {
+            diags.truncate(diags_without_trailing_newlines.len());
         }
         diags
     });
-    let matches = handle_options(&["".to_string(), "x.rs".to_string()]).unwrap();
-    let sopts = build_session_options(&matches);
-    let config = rustc_interface::Config {
-        opts: sopts,
-        crate_cfg: Default::default(),
-        crate_check_cfg: Default::default(),
-        input: Input::File(PathBuf::new()),
-        input_path: None,
-        output_file: None,
-        output_dir: None,
-        file_loader: None,
-        diagnostic_output: DiagnosticOutput::Raw(Box::new(write_diags)),
-        lint_caps: Default::default(),
-        parse_sess_created: None,
-        register_lints: None,
-        override_queries: None,
-        make_codegen_backend: None,
-        registry: Registry::new(&[]),
-    };
+
     // NOTE(eddyb) without `catch_fatal_errors`, you'd get the really strange
     // effect of test failures with no output (because the `FatalError` "panic"
     // is really a silent unwinding device, that should be treated the same as
-    // `Err(ErrorGuaranteed)` returns from `run_compiler`/`link`).
+    // `Err(ErrorGuaranteed)` returns from `link`).
     rustc_driver::catch_fatal_errors(|| {
-        rustc_interface::interface::run_compiler(config, |compiler| {
-            let res = link(
-                compiler.session(),
-                modules,
-                &Options {
-                    compact_ids: true,
-                    dce: false,
-                    structurize: false,
-                    emit_multiple_modules: false,
-                    spirv_metadata: SpirvMetadata::None,
-                },
-            );
-            assert_eq!(compiler.session().has_errors(), res.as_ref().err().copied());
-            res.map(|res| match res {
-                LinkResult::SingleModule(m) => *m,
-                LinkResult::MultipleModules(_) => unreachable!(),
-            })
-        })
+        let matches = rustc_driver::handle_options(&["".to_string(), "x.rs".to_string()]).unwrap();
+        let sopts = rustc_session::config::build_session_options(&matches);
+
+        rustc_interface::util::run_in_thread_pool_with_globals(
+            sopts.edition,
+            sopts.unstable_opts.threads,
+            || {
+                let mut sess = rustc_session::build_session(
+                    sopts,
+                    None,
+                    None,
+                    Registry::new(&[]),
+                    rustc_session::DiagnosticOutput::Default,
+                    Default::default(),
+                    None,
+                    None,
+                );
+
+                // HACK(eddyb) inject `write_diags` into `sess`, to work around
+                // the removals in https://github.com/rust-lang/rust/pull/102992.
+                sess.parse_sess.span_diagnostic = {
+                    let fallback_bundle = {
+                        extern crate rustc_error_messages;
+                        rustc_error_messages::fallback_fluent_bundle(
+                            rustc_errors::DEFAULT_LOCALE_RESOURCES,
+                            sess.opts.unstable_opts.translate_directionality_markers,
+                        )
+                    };
+                    let emitter = rustc_errors::emitter::EmitterWriter::new(
+                        Box::new(write_diags),
+                        Some(sess.parse_sess.clone_source_map()),
+                        None,
+                        fallback_bundle,
+                        false,
+                        false,
+                        false,
+                        None,
+                        false,
+                    );
+
+                    rustc_errors::Handler::with_emitter_and_flags(
+                        Box::new(emitter),
+                        sess.opts.unstable_opts.diagnostic_handler_flags(true),
+                    )
+                };
+
+                let res = link(
+                    &sess,
+                    modules,
+                    &Options {
+                        compact_ids: true,
+                        dce: false,
+                        structurize: false,
+                        emit_multiple_modules: false,
+                        spirv_metadata: SpirvMetadata::None,
+                    },
+                );
+                assert_eq!(sess.has_errors(), res.as_ref().err().copied());
+                res.map(|res| match res {
+                    LinkResult::SingleModule(m) => *m,
+                    LinkResult::MultipleModules(_) => unreachable!(),
+                })
+            },
+        )
     })
     .flatten()
     .map_err(|_e| read_diags_thread.join().unwrap())
