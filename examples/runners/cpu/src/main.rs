@@ -88,7 +88,7 @@ fn srgb_oetf(x: f32) -> f32 {
 }
 
 fn color_u32_from_vec4(v: Vec4) -> u32 {
-    let convert = |f: f32| -> u32 { (f.min(1.0).max(0.0) * 255.0).round() as u32 };
+    let convert = |f: f32| -> u32 { (f.clamp(0.0, 1.0) * 255.0).round() as u32 };
 
     convert(srgb_oetf(v.z))
         | convert(srgb_oetf(v.y)) << 8
