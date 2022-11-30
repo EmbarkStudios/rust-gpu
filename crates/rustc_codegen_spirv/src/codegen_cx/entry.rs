@@ -154,7 +154,13 @@ impl<'tcx> CodegenCx<'tcx> {
             );
         }
         bx.set_span(span);
-        bx.call(entry_func.ty, None, entry_func, &call_args, None);
+        bx.call(
+            entry_func.ty,
+            Some(entry_fn_abi),
+            entry_func,
+            &call_args,
+            None,
+        );
         bx.ret_void();
 
         let stub_fn_id = stub_fn.def_cx(self);
