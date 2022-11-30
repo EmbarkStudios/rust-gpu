@@ -232,6 +232,7 @@ pub enum SpirvConst {
     // different functions, but of the same type, don't overlap their zombies.
     ZombieUndefForFnAddr,
 
+    // FIXME(eddyb) use `tcx.arena.dropless` to get `&'tcx [_]`, instead of `Rc`.
     Composite(Rc<[Word]>),
 
     /// Pointer to constant data, i.e. `&pointee`, represented as an `OpVariable`
