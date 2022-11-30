@@ -17,8 +17,8 @@ use rustc_middle::ty::{
 };
 use rustc_middle::{bug, span_bug};
 use rustc_span::def_id::DefId;
-use rustc_span::Span;
 use rustc_span::DUMMY_SP;
+use rustc_span::{Span, Symbol};
 use rustc_target::abi::call::{ArgAbi, ArgAttributes, FnAbi, PassMode};
 use rustc_target::abi::{
     Abi, Align, FieldsShape, LayoutS, Primitive, Scalar, Size, TagEncoding, VariantIdx, Variants,
@@ -300,6 +300,7 @@ impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
 
 impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
     fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
+        // FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
         let mut argument_types = Vec::new();
 
         let return_type = match self.ret.mode {
@@ -332,7 +333,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
 
         SpirvType::Function {
             return_type,
-            arguments: argument_types,
+            arguments: &argument_types,
         }
         .def(span, cx)
     }
@@ -364,8 +365,8 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
                 def_id: def_id_for_spirv_type_adt(*self),
                 size: Some(Size::ZERO),
                 align: Align::from_bytes(0).unwrap(),
-                field_types: Vec::new(),
-                field_offsets: Vec::new(),
+                field_types: &[],
+                field_offsets: &[],
                 field_names: None,
             }
             .def_with_name(cx, span, TyLayoutNameKey::from(*self)),
@@ -416,12 +417,13 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
                 } else {
                     Some(self.size)
                 };
+                // FIXME(eddyb) use `ArrayVec` here.
                 let mut field_names = Vec::new();
                 if let TyKind::Adt(adt, _) = self.ty.kind() {
                     if let Variants::Single { index } = self.variants {
                         for i in self.fields.index_by_increasing_offset() {
                             let field = &adt.variants()[index].fields[i];
-                            field_names.push(field.name.to_ident_string());
+                            field_names.push(field.name);
                         }
                     }
                 }
@@ -429,10 +431,10 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
                     def_id: def_id_for_spirv_type_adt(*self),
                     size,
                     align: self.align.abi,
-                    field_types: vec![a, b],
-                    field_offsets: vec![a_offset, b_offset],
+                    field_types: &[a, b],
+                    field_offsets: &[a_offset, b_offset],
                     field_names: if field_names.len() == 2 {
-                        Some(field_names)
+                        Some(&field_names)
                     } else {
                         None
                     },
@@ -598,8 +600,8 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
             def_id: def_id_for_spirv_type_adt(ty),
             size: Some(Size::ZERO),
             align: Align::from_bytes(0).unwrap(),
-            field_types: Vec::new(),
-            field_offsets: Vec::new(),
+            field_types: &[],
+            field_offsets: &[],
             field_names: None,
         }
         .def_with_name(cx, span, TyLayoutNameKey::from(ty))
@@ -664,6 +666,7 @@ pub fn auto_struct_layout<'tcx>(
     cx: &CodegenCx<'tcx>,
     field_types: &[Word],
 ) -> (Vec<Size>, Option<Size>, Align) {
+    // FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
     let mut field_offsets = Vec::with_capacity(field_types.len());
     let mut offset = Some(Size::ZERO);
     let mut max_align = Align::from_bytes(0).unwrap();
@@ -688,6 +691,7 @@ pub fn auto_struct_layout<'tcx>(
 fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
     let size = if ty.is_unsized() { None } else { Some(ty.size) };
     let align = ty.align.abi;
+    // FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
     let mut field_types = Vec::new();
     let mut field_offsets = Vec::new();
     let mut field_names = Vec::new();
@@ -699,9 +703,10 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
         if let Variants::Single { index } = ty.variants {
             if let TyKind::Adt(adt, _) = ty.ty.kind() {
                 let field = &adt.variants()[index].fields[i];
-                field_names.push(field.name.to_ident_string());
+                field_names.push(field.name);
             } else {
-                field_names.push(format!("{}", i));
+                // FIXME(eddyb) this looks like something that should exist in rustc.
+                field_names.push(Symbol::intern(&format!("{i}")));
             }
         } else {
             if let TyKind::Adt(_, _) = ty.ty.kind() {
@@ -709,7 +714,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
                 span_bug!(span, "Variants::Multiple not TyKind::Adt");
             }
             if i == 0 {
-                field_names.push("discriminant".to_string());
+                field_names.push(cx.sym.discriminant);
             } else {
                 cx.tcx.sess.fatal("Variants::Multiple has multiple fields")
             }
@@ -719,9 +724,9 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
         def_id: def_id_for_spirv_type_adt(ty),
         size,
         align,
-        field_types,
-        field_offsets,
-        field_names: Some(field_names),
+        field_types: &field_types,
+        field_offsets: &field_offsets,
+        field_names: Some(&field_names),
     }
     .def_with_name(cx, span, TyLayoutNameKey::from(ty))
 }

@@ -176,7 +176,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         semantics
     }
 
-    fn memset_const_pattern(&self, ty: &SpirvType, fill_byte: u8) -> Word {
+    fn memset_const_pattern(&self, ty: &SpirvType<'tcx>, fill_byte: u8) -> Word {
         match *ty {
             SpirvType::Void => self.fatal("memset invalid on void pattern"),
             SpirvType::Bool => self.fatal("memset invalid on bool pattern"),
@@ -212,7 +212,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 self.constant_composite(
-                    ty.clone().def(self.span(), self),
+                    ty.def(self.span(), self),
                     iter::repeat(elem_pat).take(count as usize),
                 )
                 .def(self)
@@ -221,7 +221,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 self.constant_composite(
-                    ty.clone().def(self.span(), self),
+                    ty.def(self.span(), self),
                     iter::repeat(elem_pat).take(count),
                 )
                 .def(self)
@@ -242,7 +242,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    fn memset_dynamic_pattern(&self, ty: &SpirvType, fill_var: Word) -> Word {
+    fn memset_dynamic_pattern(&self, ty: &SpirvType<'tcx>, fill_var: Word) -> Word {
         match *ty {
             SpirvType::Void => self.fatal("memset invalid on void pattern"),
             SpirvType::Bool => self.fatal("memset invalid on bool pattern"),
@@ -270,7 +270,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 self.emit()
                     .composite_construct(
-                        ty.clone().def(self.span(), self),
+                        ty.def(self.span(), self),
                         None,
                         iter::repeat(elem_pat).take(count),
                     )
@@ -280,7 +280,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let elem_pat = self.memset_dynamic_pattern(&self.lookup_type(element), fill_var);
                 self.emit()
                     .composite_construct(
-                        ty.clone().def(self.span(), self),
+                        ty.def(self.span(), self),
                         None,
                         iter::repeat(elem_pat).take(count as usize),
                     )
@@ -1260,9 +1260,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         let pointee_kind = self.lookup_type(pointee);
         let result_pointee_type = match pointee_kind {
-            SpirvType::Adt {
-                ref field_types, ..
-            } => field_types[idx as usize],
+            SpirvType::Adt { field_types, .. } => field_types[idx as usize],
             SpirvType::Array { element, .. }
             | SpirvType::RuntimeArray { element, .. }
             | SpirvType::Vector { element, .. }
@@ -2345,7 +2343,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             ),
         };
 
-        for (argument, argument_type) in args.iter().zip(argument_types) {
+        for (argument, &argument_type) in args.iter().zip(argument_types) {
             assert_ty_eq!(self, argument.ty, argument_type);
         }
         let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).copied();

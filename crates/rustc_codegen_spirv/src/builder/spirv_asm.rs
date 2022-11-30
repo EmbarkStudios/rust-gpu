@@ -1081,7 +1081,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             (OperandKind::LiteralContextDependentNumber, Some(word)) => {
                 assert!(matches!(inst.class.opcode, Op::Constant | Op::SpecConstant));
                 let ty = inst.result_type.unwrap();
-                fn parse(ty: SpirvType, w: &str) -> Result<dr::Operand, String> {
+                fn parse(ty: SpirvType<'_>, w: &str) -> Result<dr::Operand, String> {
                     fn fmt(x: impl ToString) -> String {
                         x.to_string()
                     }

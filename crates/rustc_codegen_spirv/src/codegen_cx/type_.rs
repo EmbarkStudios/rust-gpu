@@ -180,18 +180,19 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn type_func(&self, args: &[Self::Type], ret: Self::Type) -> Self::Type {
         SpirvType::Function {
             return_type: ret,
-            arguments: args.to_vec(),
+            arguments: args,
         }
         .def(DUMMY_SP, self)
     }
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
+        // FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
         let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, els);
         SpirvType::Adt {
             def_id: None,
             align,
             size,
-            field_types: els.to_vec(),
-            field_offsets,
+            field_types: els,
+            field_offsets: &field_offsets,
             field_names: None,
         }
         .def(DUMMY_SP, self)

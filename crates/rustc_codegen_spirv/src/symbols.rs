@@ -16,6 +16,7 @@ pub struct Symbols {
     // Used by `is_blocklisted_fn`.
     pub fmt_decimal: Symbol,
 
+    pub discriminant: Symbol,
     pub rust_gpu: Symbol,
     pub spirv: Symbol,
     pub spirv_std: Symbol,
@@ -24,9 +25,11 @@ pub struct Symbols {
     pub entry_point_name: Symbol,
     pub spv_intel_shader_integer_functions2: Symbol,
     pub spv_khr_vulkan_memory_model: Symbol,
+
     descriptor_set: Symbol,
     binding: Symbol,
     input_attachment_index: Symbol,
+
     attributes: FxHashMap<Symbol, SpirvAttribute>,
     execution_modes: FxHashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
     pub libm_intrinsics: FxHashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
@@ -373,6 +376,7 @@ impl Symbols {
         Self {
             fmt_decimal: Symbol::intern("fmt_decimal"),
 
+            discriminant: Symbol::intern("discriminant"),
             rust_gpu: Symbol::intern("rust_gpu"),
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
@@ -383,9 +387,11 @@ impl Symbols {
                 "SPV_INTEL_shader_integer_functions2",
             ),
             spv_khr_vulkan_memory_model: Symbol::intern("SPV_KHR_vulkan_memory_model"),
+
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             input_attachment_index: Symbol::intern("input_attachment_index"),
+
             attributes,
             execution_modes,
             libm_intrinsics,

@@ -125,7 +125,7 @@ impl<'tcx> CodegenCx<'tcx> {
             let void = SpirvType::Void.def(span, self);
             let fn_void_void = SpirvType::Function {
                 return_type: void,
-                arguments: vec![],
+                arguments: &[],
             }
             .def(span, self);
             let mut emit = self.emit_global();
@@ -666,7 +666,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 SpirvType::Bool => *has_bool = true,
                 SpirvType::Integer(_, _) | SpirvType::Float(64) => *must_be_flat = true,
                 SpirvType::Adt { field_types, .. } => {
-                    for f in field_types {
+                    for &f in field_types {
                         recurse(cx, f, has_bool, must_be_flat);
                     }
                 }
@@ -683,7 +683,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     arguments,
                 } => {
                     recurse(cx, return_type, has_bool, must_be_flat);
-                    for a in arguments {
+                    for &a in arguments {
                         recurse(cx, a, has_bool, must_be_flat);
                     }
                 }

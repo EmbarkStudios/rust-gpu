@@ -7,12 +7,11 @@ use rspirv::spirv::{Capability, Decoration, Dim, ImageFormat, StorageClass, Word
 use rustc_data_structures::fx::FxHashMap;
 use rustc_middle::span_bug;
 use rustc_span::def_id::DefId;
-use rustc_span::Span;
+use rustc_span::{Span, Symbol};
 use rustc_target::abi::{Align, Size};
 use std::cell::RefCell;
 use std::fmt;
 use std::iter;
-use std::rc::Rc;
 use std::sync::{LazyLock, Mutex};
 
 /// Spir-v types are represented as simple Words, which are the `result_id` of instructions like
@@ -21,8 +20,10 @@ use std::sync::{LazyLock, Mutex};
 /// information. All types that are emitted are registered in `CodegenCx`, so you can always look
 /// up the definition of a `Word` via `cx.lookup_type`. Note that this type doesn't actually store
 /// the `result_id` of the type declaration instruction, merely the contents.
-#[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub enum SpirvType {
+//
+// FIXME(eddyb) should `SpirvType`s be behind `&'tcx` from `tcx.arena.dropless`?
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+pub enum SpirvType<'tcx> {
     Void,
     Bool,
     Integer(u32, bool),
@@ -36,9 +37,9 @@ pub enum SpirvType {
 
         align: Align,
         size: Option<Size>,
-        field_types: Vec<Word>,
-        field_offsets: Vec<Size>,
-        field_names: Option<Vec<String>>,
+        field_types: &'tcx [Word],
+        field_offsets: &'tcx [Size],
+        field_names: Option<&'tcx [Symbol]>,
     },
     Vector {
         element: Word,
@@ -63,7 +64,7 @@ pub enum SpirvType {
     },
     Function {
         return_type: Word,
-        arguments: Vec<Word>,
+        arguments: &'tcx [Word],
     },
     Image {
         sampled_type: Word,
@@ -89,7 +90,7 @@ pub enum SpirvType {
     RayQueryKhr,
 }
 
-impl SpirvType {
+impl SpirvType<'_> {
     /// Note: `Builder::type_*` should be called *nowhere else* but here, to ensure
     /// `CodegenCx::type_defs` stays up-to-date
     pub fn def(self, def_span: Span, cx: &CodegenCx<'_>) -> Word {
@@ -149,9 +150,9 @@ impl SpirvType {
                 def_id: _,
                 align: _,
                 size: _,
-                ref field_types,
-                ref field_offsets,
-                ref field_names,
+                field_types,
+                field_offsets,
+                field_names,
             } => {
                 let mut emit = cx.emit_global();
                 let result = emit.type_struct_id(id, field_types.iter().cloned());
@@ -168,7 +169,7 @@ impl SpirvType {
                 }
                 if let Some(field_names) = field_names {
                     for (index, field_name) in field_names.iter().enumerate() {
-                        emit.member_name(result, index as u32, field_name);
+                        emit.member_name(result, index as u32, field_name.as_str());
                     }
                 }
                 result
@@ -215,7 +216,7 @@ impl SpirvType {
                     .emit_global()
                     .type_pointer(id, StorageClass::Generic, pointee);
                 // no pointers to functions
-                if let Self::Function { .. } = cx.lookup_type(pointee) {
+                if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(
                         result,
                         def_span,
@@ -226,7 +227,7 @@ impl SpirvType {
             }
             Self::Function {
                 return_type,
-                ref arguments,
+                arguments,
             } => cx
                 .emit_global()
                 .type_function_id(id, return_type, arguments.iter().cloned()),
@@ -271,7 +272,7 @@ impl SpirvType {
                 result
             }
         };
-        cx.type_cache_def(result, self, def_span);
+        cx.type_cache_def(result, self.tcx_arena_alloc_slices(cx), def_span);
         result
     }
 
@@ -291,7 +292,7 @@ impl SpirvType {
                     cx.emit_global()
                         .type_pointer(Some(id), StorageClass::Generic, pointee);
                 // no pointers to functions
-                if let Self::Function { .. } = cx.lookup_type(pointee) {
+                if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(
                         result,
                         def_span,
@@ -305,7 +306,7 @@ impl SpirvType {
                 .sess
                 .fatal(&format!("def_with_id invalid for type {:?}", other)),
         };
-        cx.type_cache_def(result, self, def_span);
+        cx.type_cache_def(result, self.tcx_arena_alloc_slices(cx), def_span);
         result
     }
 
@@ -327,17 +328,7 @@ impl SpirvType {
         id
     }
 
-    /// Use this if you want a pretty type printing that recursively prints the types within (e.g. struct fields)
-    pub fn debug<'cx, 'tcx>(
-        // FIXME(eddyb) don't require a clone of the `SpirvType` here.
-        self,
-        id: Word,
-        cx: &'cx CodegenCx<'tcx>,
-    ) -> SpirvTypePrinter<'cx, 'tcx> {
-        SpirvTypePrinter { ty: self, id, cx }
-    }
-
-    pub fn sizeof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Option<Size> {
+    pub fn sizeof(&self, cx: &CodegenCx<'_>) -> Option<Size> {
         let result = match *self {
             // Types that have a dynamic size, or no concept of size at all.
             Self::Void | Self::RuntimeArray { .. } | Self::Function { .. } => return None,
@@ -364,7 +355,7 @@ impl SpirvType {
         Some(result)
     }
 
-    pub fn alignof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Align {
+    pub fn alignof(&self, cx: &CodegenCx<'_>) -> Align {
         match *self {
             // Types that have no concept of size or alignment.
             Self::Void | Self::Function { .. } => Align::from_bytes(0).unwrap(),
@@ -392,13 +383,95 @@ impl SpirvType {
             Self::InterfaceBlock { inner_type } => cx.lookup_type(inner_type).alignof(cx),
         }
     }
+
+    /// Replace `&[T]` fields with `&'tcx [T]` ones produced by calling
+    /// `tcx.arena.dropless.alloc_slice(...)` - this is done late for two reasons:
+    /// 1. it avoids allocating in the arena when the cache would be hit anyway,
+    ///    which would create "garbage" (as in, unreachable allocations)
+    ///    (ideally these would also be interned, but that's even more refactors)
+    /// 2. an empty slice is disallowed (as it's usually handled as a special
+    ///    case elsewhere, e.g. `rustc`'s `ty::List` - sadly we can't use that)
+    fn tcx_arena_alloc_slices<'tcx>(self, cx: &CodegenCx<'tcx>) -> SpirvType<'tcx> {
+        fn arena_alloc_slice<'tcx, T: Copy>(cx: &CodegenCx<'tcx>, xs: &[T]) -> &'tcx [T] {
+            if xs.is_empty() {
+                &[]
+            } else {
+                cx.tcx.arena.dropless.alloc_slice(xs)
+            }
+        }
+
+        match self {
+            // FIXME(eddyb) these are all noop cases, could they be automated?
+            SpirvType::Void => SpirvType::Void,
+            SpirvType::Bool => SpirvType::Bool,
+            SpirvType::Integer(width, signedness) => SpirvType::Integer(width, signedness),
+            SpirvType::Float(width) => SpirvType::Float(width),
+            SpirvType::Vector { element, count } => SpirvType::Vector { element, count },
+            SpirvType::Matrix { element, count } => SpirvType::Matrix { element, count },
+            SpirvType::Array { element, count } => SpirvType::Array { element, count },
+            SpirvType::RuntimeArray { element } => SpirvType::RuntimeArray { element },
+            SpirvType::Pointer { pointee } => SpirvType::Pointer { pointee },
+            SpirvType::Image {
+                sampled_type,
+                dim,
+                depth,
+                arrayed,
+                multisampled,
+                sampled,
+                image_format,
+            } => SpirvType::Image {
+                sampled_type,
+                dim,
+                depth,
+                arrayed,
+                multisampled,
+                sampled,
+                image_format,
+            },
+            SpirvType::Sampler => SpirvType::Sampler,
+            SpirvType::SampledImage { image_type } => SpirvType::SampledImage { image_type },
+            SpirvType::InterfaceBlock { inner_type } => SpirvType::InterfaceBlock { inner_type },
+            SpirvType::AccelerationStructureKhr => SpirvType::AccelerationStructureKhr,
+            SpirvType::RayQueryKhr => SpirvType::RayQueryKhr,
+
+            // Only these variants have any slices to arena-allocate.
+            SpirvType::Adt {
+                def_id,
+                align,
+                size,
+                field_types,
+                field_offsets,
+                field_names,
+            } => SpirvType::Adt {
+                def_id,
+                align,
+                size,
+                field_types: arena_alloc_slice(cx, field_types),
+                field_offsets: arena_alloc_slice(cx, field_offsets),
+                field_names: field_names.map(|field_names| arena_alloc_slice(cx, field_names)),
+            },
+            SpirvType::Function {
+                return_type,
+                arguments,
+            } => SpirvType::Function {
+                return_type,
+                arguments: arena_alloc_slice(cx, arguments),
+            },
+        }
+    }
 }
 
-pub struct SpirvTypePrinter<'cx, 'tcx> {
+impl<'a> SpirvType<'a> {
+    /// Use this if you want a pretty type printing that recursively prints the types within (e.g. struct fields)
+    pub fn debug<'tcx>(self, id: Word, cx: &'a CodegenCx<'tcx>) -> SpirvTypePrinter<'a, 'tcx> {
+        SpirvTypePrinter { ty: self, id, cx }
+    }
+}
+
+pub struct SpirvTypePrinter<'a, 'tcx> {
     id: Word,
-    // FIXME(eddyb) don't require a clone of the `SpirvType` here.
-    ty: SpirvType,
-    cx: &'cx CodegenCx<'tcx>,
+    ty: SpirvType<'a>,
+    cx: &'a CodegenCx<'tcx>,
 }
 
 /// Types can be recursive, e.g. a struct can contain a pointer to itself. So, we need to keep
@@ -434,9 +507,9 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 def_id,
                 align,
                 size,
-                ref field_types,
-                ref field_offsets,
-                ref field_names,
+                field_types,
+                field_offsets,
+                field_names,
             } => {
                 let fields = field_types
                     .iter()
@@ -448,8 +521,8 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                     .field("align", &align)
                     .field("size", &size)
                     .field("field_types", &fields)
-                    .field("field_offsets", field_offsets)
-                    .field("field_names", field_names)
+                    .field("field_offsets", &field_offsets)
+                    .field("field_names", &field_names)
                     .finish()
             }
             SpirvType::Vector { element, count } => f
@@ -489,7 +562,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .finish(),
             SpirvType::Function {
                 return_type,
-                ref arguments,
+                arguments,
             } => {
                 let args = arguments
                     .iter()
@@ -582,7 +655,7 @@ impl SpirvTypePrinter<'_, '_> {
                 def_id: _,
                 align: _,
                 size: _,
-                ref field_types,
+                field_types,
                 field_offsets: _,
                 ref field_names,
             } => {
@@ -641,7 +714,7 @@ impl SpirvTypePrinter<'_, '_> {
             }
             SpirvType::Function {
                 return_type,
-                ref arguments,
+                arguments,
             } => {
                 f.write_str("fn(")?;
                 for (index, &arg) in arguments.iter().enumerate() {
@@ -692,9 +765,8 @@ impl SpirvTypePrinter<'_, '_> {
 
 #[derive(Default)]
 pub struct TypeCache<'tcx> {
-    // FIXME(eddyb) use `tcx.arena.dropless` to get `&'tcx _`, instead of `Rc`.
-    pub id_to_spirv_type: RefCell<FxHashMap<Word, Rc<SpirvType>>>,
-    pub spirv_type_to_id: RefCell<FxHashMap<Rc<SpirvType>, Word>>,
+    pub id_to_spirv_type: RefCell<FxHashMap<Word, SpirvType<'tcx>>>,
+    pub spirv_type_to_id: RefCell<FxHashMap<SpirvType<'tcx>, Word>>,
 
     /// Recursive pointer breaking
     pub recursive_pointee_cache: RecursivePointeeCache<'tcx>,
@@ -704,54 +776,40 @@ pub struct TypeCache<'tcx> {
     type_names: RefCell<FxHashMap<Word, IndexSet<TyLayoutNameKey<'tcx>>>>,
 }
 
-impl TypeCache<'_> {
-    fn get(&self, ty: &SpirvType) -> Option<Word> {
+impl<'tcx> TypeCache<'tcx> {
+    fn get(&self, ty: &SpirvType<'_>) -> Option<Word> {
         self.spirv_type_to_id.borrow().get(ty).copied()
     }
 
     #[track_caller]
-    pub fn lookup(&self, id: Word) -> Rc<SpirvType> {
-        self.id_to_spirv_type
+    pub fn lookup(&self, id: Word) -> SpirvType<'tcx> {
+        *self
+            .id_to_spirv_type
             .borrow()
             .get(&id)
             .expect("tried to lookup ID that wasn't a type, or has no definition")
-            .clone()
     }
 }
 
-impl CodegenCx<'_> {
-    fn type_cache_def(&self, id: Word, ty: SpirvType, def_span: Span) {
-        let ty = Rc::new(ty);
-
-        if let Some(old_ty) = self
-            .type_cache
-            .id_to_spirv_type
-            .borrow_mut()
-            .insert(id, ty.clone())
-        {
+impl<'tcx> CodegenCx<'tcx> {
+    fn type_cache_def(&self, id: Word, ty: SpirvType<'tcx>, def_span: Span) {
+        if let Some(old_ty) = self.type_cache.id_to_spirv_type.borrow_mut().insert(id, ty) {
             span_bug!(
                 def_span,
                 "SPIR-V type with ID %{id} is being redefined\n\
                 old type: {old_ty}\n\
                 new type: {ty}",
-                // FIXME(eddyb) don't clone `SpirvType`s here.
-                old_ty = (*old_ty).clone().debug(id, self),
-                ty = (*ty).clone().debug(id, self)
+                old_ty = old_ty.debug(id, self),
+                ty = ty.debug(id, self)
             );
         }
 
-        if let Some(old_id) = self
-            .type_cache
-            .spirv_type_to_id
-            .borrow_mut()
-            .insert(ty.clone(), id)
-        {
+        if let Some(old_id) = self.type_cache.spirv_type_to_id.borrow_mut().insert(ty, id) {
             span_bug!(
                 def_span,
                 "SPIR-V type is changing IDs (%{old_id} -> %{id}):\n\
                 {ty}",
-                // FIXME(eddyb) don't clone a `SpirvType` here.
-                ty = (*ty).clone().debug(id, self)
+                ty = ty.debug(id, self)
             );
         }
     }

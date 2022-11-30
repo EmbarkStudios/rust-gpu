@@ -259,7 +259,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
 impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
-        self.builder.def_constant(
+        self.def_constant(
             self.type_ptr_to(cv.ty),
             SpirvConst::PtrTo {
                 pointee: cv.def_cx(self),
