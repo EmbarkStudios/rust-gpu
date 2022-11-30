@@ -2,6 +2,7 @@ var sourcesIndex = JSON.parse('{\
 "ahash":["",[],["convert.rs","fallback_hash.rs","lib.rs","operations.rs","random_state.rs","specialize.rs"]],\
 "aho_corasick":["",[["packed",[["teddy",[],["compile.rs","mod.rs","runtime.rs"]]],["api.rs","mod.rs","pattern.rs","rabinkarp.rs","vector.rs"]]],["ahocorasick.rs","automaton.rs","buffer.rs","byte_frequencies.rs","classes.rs","dfa.rs","error.rs","lib.rs","nfa.rs","prefilter.rs","state_id.rs"]],\
 "ar":["",[],["lib.rs"]],\
+"bimap":["",[],["btree.rs","hash.rs","lib.rs","mem.rs"]],\
 "bitflags":["",[],["lib.rs"]],\
 "byteorder":["",[],["io.rs","lib.rs"]],\
 "cfg_if":["",[],["lib.rs"]],\

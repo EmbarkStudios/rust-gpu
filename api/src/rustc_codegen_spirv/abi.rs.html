@@ -971,11 +971,6 @@
 <span id="971">971</span>
 <span id="972">972</span>
 <span id="973">973</span>
-<span id="974">974</span>
-<span id="975">975</span>
-<span id="976">976</span>
-<span id="977">977</span>
-<span id="978">978</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s
 //! surprisingly difficult.
 
@@ -995,8 +990,8 @@
 };
 <span class="kw">use </span>rustc_middle::{bug, span_bug};
 <span class="kw">use </span>rustc_span::def_id::DefId;
+<span class="kw">use </span>rustc_span::Span;
 <span class="kw">use </span>rustc_span::DUMMY_SP;
-<span class="kw">use </span>rustc_span::{Span, Symbol};
 <span class="kw">use </span>rustc_target::abi::call::{ArgAbi, ArgAttributes, FnAbi, PassMode};
 <span class="kw">use </span>rustc_target::abi::{
     Abi, Align, FieldsShape, LayoutS, Primitive, Scalar, Size, TagEncoding, VariantIdx, Variants,
@@ -1278,8 +1273,7 @@
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; ConvSpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt; <span class="kw">for </span>FnAbi&lt;<span class="lifetime">&#39;tcx</span>, Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt; {
     <span class="kw">fn </span>spirv_type(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; Word {
-        <span class="comment">// FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>argument_types = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>argument_types = Vec::new();
 
         <span class="kw">let </span>return_type = <span class="kw">match </span><span class="self">self</span>.ret.mode {
             PassMode::Ignore =&gt; SpirvType::Void.def(span, cx),
@@ -1311,7 +1305,7 @@
 
         SpirvType::Function {
             return_type,
-            arguments: <span class="kw-2">&amp;</span>argument_types,
+            arguments: argument_types,
         }
         .def(span, cx)
     }
@@ -1343,8 +1337,8 @@
                 def_id: def_id_for_spirv_type_adt(<span class="kw-2">*</span><span class="self">self</span>),
                 size: <span class="prelude-val">Some</span>(Size::ZERO),
                 align: Align::from_bytes(<span class="number">0</span>).unwrap(),
-                field_types: <span class="kw-2">&amp;</span>[],
-                field_offsets: <span class="kw-2">&amp;</span>[],
+                field_types: Vec::new(),
+                field_offsets: Vec::new(),
                 field_names: <span class="prelude-val">None</span>,
             }
             .def_with_name(cx, span, TyLayoutNameKey::from(<span class="kw-2">*</span><span class="self">self</span>)),
@@ -1395,13 +1389,12 @@
                 </span>} <span class="kw">else </span>{
                     <span class="prelude-val">Some</span>(<span class="self">self</span>.size)
                 };
-                <span class="comment">// FIXME(eddyb) use `ArrayVec` here.
-                </span><span class="kw">let </span><span class="kw-2">mut </span>field_names = Vec::new();
+                <span class="kw">let </span><span class="kw-2">mut </span>field_names = Vec::new();
                 <span class="kw">if let </span>TyKind::Adt(adt, <span class="kw">_</span>) = <span class="self">self</span>.ty.kind() {
                     <span class="kw">if let </span>Variants::Single { index } = <span class="self">self</span>.variants {
                         <span class="kw">for </span>i <span class="kw">in </span><span class="self">self</span>.fields.index_by_increasing_offset() {
                             <span class="kw">let </span>field = <span class="kw-2">&amp;</span>adt.variants()[index].fields[i];
-                            field_names.push(field.name);
+                            field_names.push(field.name.to_ident_string());
                         }
                     }
                 }
@@ -1409,10 +1402,10 @@
                     def_id: def_id_for_spirv_type_adt(<span class="kw-2">*</span><span class="self">self</span>),
                     size,
                     align: <span class="self">self</span>.align.abi,
-                    field_types: <span class="kw-2">&amp;</span>[a, b],
-                    field_offsets: <span class="kw-2">&amp;</span>[a_offset, b_offset],
+                    field_types: <span class="macro">vec!</span>[a, b],
+                    field_offsets: <span class="macro">vec!</span>[a_offset, b_offset],
                     field_names: <span class="kw">if </span>field_names.len() == <span class="number">2 </span>{
-                        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>field_names)
+                        <span class="prelude-val">Some</span>(field_names)
                     } <span class="kw">else </span>{
                         <span class="prelude-val">None
                     </span>},
@@ -1578,8 +1571,8 @@
             def_id: def_id_for_spirv_type_adt(ty),
             size: <span class="prelude-val">Some</span>(Size::ZERO),
             align: Align::from_bytes(<span class="number">0</span>).unwrap(),
-            field_types: <span class="kw-2">&amp;</span>[],
-            field_offsets: <span class="kw-2">&amp;</span>[],
+            field_types: Vec::new(),
+            field_offsets: Vec::new(),
             field_names: <span class="prelude-val">None</span>,
         }
         .def_with_name(cx, span, TyLayoutNameKey::from(ty))
@@ -1644,8 +1637,7 @@
     cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;,
     field_types: <span class="kw-2">&amp;</span>[Word],
 ) -&gt; (Vec&lt;Size&gt;, <span class="prelude-ty">Option</span>&lt;Size&gt;, Align) {
-    <span class="comment">// FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>field_offsets = Vec::with_capacity(field_types.len());
+    <span class="kw">let </span><span class="kw-2">mut </span>field_offsets = Vec::with_capacity(field_types.len());
     <span class="kw">let </span><span class="kw-2">mut </span>offset = <span class="prelude-val">Some</span>(Size::ZERO);
     <span class="kw">let </span><span class="kw-2">mut </span>max_align = Align::from_bytes(<span class="number">0</span>).unwrap();
     <span class="kw">for </span><span class="kw-2">&amp;</span>field_type <span class="kw">in </span>field_types {
@@ -1669,8 +1661,7 @@
 </span><span class="kw">fn </span>trans_struct&lt;<span class="lifetime">&#39;tcx</span>&gt;(cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;, span: Span, ty: TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; Word {
     <span class="kw">let </span>size = <span class="kw">if </span>ty.is_unsized() { <span class="prelude-val">None </span>} <span class="kw">else </span>{ <span class="prelude-val">Some</span>(ty.size) };
     <span class="kw">let </span>align = ty.align.abi;
-    <span class="comment">// FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>field_types = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>field_types = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>field_offsets = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>field_names = Vec::new();
     <span class="kw">for </span>i <span class="kw">in </span>ty.fields.index_by_increasing_offset() {
@@ -1681,10 +1672,9 @@
         <span class="kw">if let </span>Variants::Single { index } = ty.variants {
             <span class="kw">if let </span>TyKind::Adt(adt, <span class="kw">_</span>) = ty.ty.kind() {
                 <span class="kw">let </span>field = <span class="kw-2">&amp;</span>adt.variants()[index].fields[i];
-                field_names.push(field.name);
+                field_names.push(field.name.to_ident_string());
             } <span class="kw">else </span>{
-                <span class="comment">// FIXME(eddyb) this looks like something that should exist in rustc.
-                </span>field_names.push(Symbol::intern(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{i}&quot;</span>)));
+                field_names.push(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, i));
             }
         } <span class="kw">else </span>{
             <span class="kw">if let </span>TyKind::Adt(<span class="kw">_</span>, <span class="kw">_</span>) = ty.ty.kind() {
@@ -1692,7 +1682,7 @@
                 <span class="macro">span_bug!</span>(span, <span class="string">&quot;Variants::Multiple not TyKind::Adt&quot;</span>);
             }
             <span class="kw">if </span>i == <span class="number">0 </span>{
-                field_names.push(cx.sym.discriminant);
+                field_names.push(<span class="string">&quot;discriminant&quot;</span>.to_string());
             } <span class="kw">else </span>{
                 cx.tcx.sess.fatal(<span class="string">&quot;Variants::Multiple has multiple fields&quot;</span>)
             }
@@ -1702,9 +1692,9 @@
         def_id: def_id_for_spirv_type_adt(ty),
         size,
         align,
-        field_types: <span class="kw-2">&amp;</span>field_types,
-        field_offsets: <span class="kw-2">&amp;</span>field_offsets,
-        field_names: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>field_names),
+        field_types,
+        field_offsets,
+        field_names: <span class="prelude-val">Some</span>(field_names),
     }
     .def_with_name(cx, span, TyLayoutNameKey::from(ty))
 }

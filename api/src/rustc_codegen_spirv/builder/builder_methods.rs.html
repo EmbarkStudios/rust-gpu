@@ -2402,6 +2402,8 @@
 <span id="2402">2402</span>
 <span id="2403">2403</span>
 <span id="2404">2404</span>
+<span id="2405">2405</span>
+<span id="2406">2406</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
@@ -2580,7 +2582,7 @@
         semantics
     }
 
-    <span class="kw">fn </span>memset_const_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: <span class="kw-2">&amp;</span>SpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt;, fill_byte: u8) -&gt; Word {
+    <span class="kw">fn </span>memset_const_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: <span class="kw-2">&amp;</span>SpirvType, fill_byte: u8) -&gt; Word {
         <span class="kw">match </span><span class="kw-2">*</span>ty {
             SpirvType::Void =&gt; <span class="self">self</span>.fatal(<span class="string">&quot;memset invalid on void pattern&quot;</span>),
             SpirvType::Bool =&gt; <span class="self">self</span>.fatal(<span class="string">&quot;memset invalid on bool pattern&quot;</span>),
@@ -2616,7 +2618,7 @@
             SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } =&gt; {
                 <span class="kw">let </span>elem_pat = <span class="self">self</span>.memset_const_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>.lookup_type(element), fill_byte);
                 <span class="self">self</span>.constant_composite(
-                    ty.def(<span class="self">self</span>.span(), <span class="self">self</span>),
+                    ty.clone().def(<span class="self">self</span>.span(), <span class="self">self</span>),
                     iter::repeat(elem_pat).take(count <span class="kw">as </span>usize),
                 )
                 .def(<span class="self">self</span>)
@@ -2625,7 +2627,7 @@
                 <span class="kw">let </span>elem_pat = <span class="self">self</span>.memset_const_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>.lookup_type(element), fill_byte);
                 <span class="kw">let </span>count = <span class="self">self</span>.builder.lookup_const_u64(count).unwrap() <span class="kw">as </span>usize;
                 <span class="self">self</span>.constant_composite(
-                    ty.def(<span class="self">self</span>.span(), <span class="self">self</span>),
+                    ty.clone().def(<span class="self">self</span>.span(), <span class="self">self</span>),
                     iter::repeat(elem_pat).take(count),
                 )
                 .def(<span class="self">self</span>)
@@ -2646,7 +2648,7 @@
         }
     }
 
-    <span class="kw">fn </span>memset_dynamic_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: <span class="kw-2">&amp;</span>SpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt;, fill_var: Word) -&gt; Word {
+    <span class="kw">fn </span>memset_dynamic_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: <span class="kw-2">&amp;</span>SpirvType, fill_var: Word) -&gt; Word {
         <span class="kw">match </span><span class="kw-2">*</span>ty {
             SpirvType::Void =&gt; <span class="self">self</span>.fatal(<span class="string">&quot;memset invalid on void pattern&quot;</span>),
             SpirvType::Bool =&gt; <span class="self">self</span>.fatal(<span class="string">&quot;memset invalid on bool pattern&quot;</span>),
@@ -2674,7 +2676,7 @@
                 <span class="kw">let </span>count = <span class="self">self</span>.builder.lookup_const_u64(count).unwrap() <span class="kw">as </span>usize;
                 <span class="self">self</span>.emit()
                     .composite_construct(
-                        ty.def(<span class="self">self</span>.span(), <span class="self">self</span>),
+                        ty.clone().def(<span class="self">self</span>.span(), <span class="self">self</span>),
                         <span class="prelude-val">None</span>,
                         iter::repeat(elem_pat).take(count),
                     )
@@ -2684,7 +2686,7 @@
                 <span class="kw">let </span>elem_pat = <span class="self">self</span>.memset_dynamic_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>.lookup_type(element), fill_var);
                 <span class="self">self</span>.emit()
                     .composite_construct(
-                        ty.def(<span class="self">self</span>.span(), <span class="self">self</span>),
+                        ty.clone().def(<span class="self">self</span>.span(), <span class="self">self</span>),
                         <span class="prelude-val">None</span>,
                         iter::repeat(elem_pat).take(count <span class="kw">as </span>usize),
                     )
@@ -3664,7 +3666,9 @@
         };
         <span class="kw">let </span>pointee_kind = <span class="self">self</span>.lookup_type(pointee);
         <span class="kw">let </span>result_pointee_type = <span class="kw">match </span>pointee_kind {
-            SpirvType::Adt { field_types, .. } =&gt; field_types[idx <span class="kw">as </span>usize],
+            SpirvType::Adt {
+                <span class="kw-2">ref </span>field_types, ..
+            } =&gt; field_types[idx <span class="kw">as </span>usize],
             SpirvType::Array { element, .. }
             | SpirvType::RuntimeArray { element, .. }
             | SpirvType::Vector { element, .. }
@@ -4747,7 +4751,7 @@
             ),
         };
 
-        <span class="kw">for </span>(argument, <span class="kw-2">&amp;</span>argument_type) <span class="kw">in </span>args.iter().zip(argument_types) {
+        <span class="kw">for </span>(argument, argument_type) <span class="kw">in </span>args.iter().zip(argument_types) {
             <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, argument.ty, argument_type);
         }
         <span class="kw">let </span>libm_intrinsic = <span class="self">self</span>.libm_intrinsics.borrow().get(<span class="kw-2">&amp;</span>callee_val).copied();

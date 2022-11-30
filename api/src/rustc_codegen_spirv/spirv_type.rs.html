@@ -720,110 +720,16 @@
 <span id="720">720</span>
 <span id="721">721</span>
 <span id="722">722</span>
-<span id="723">723</span>
-<span id="724">724</span>
-<span id="725">725</span>
-<span id="726">726</span>
-<span id="727">727</span>
-<span id="728">728</span>
-<span id="729">729</span>
-<span id="730">730</span>
-<span id="731">731</span>
-<span id="732">732</span>
-<span id="733">733</span>
-<span id="734">734</span>
-<span id="735">735</span>
-<span id="736">736</span>
-<span id="737">737</span>
-<span id="738">738</span>
-<span id="739">739</span>
-<span id="740">740</span>
-<span id="741">741</span>
-<span id="742">742</span>
-<span id="743">743</span>
-<span id="744">744</span>
-<span id="745">745</span>
-<span id="746">746</span>
-<span id="747">747</span>
-<span id="748">748</span>
-<span id="749">749</span>
-<span id="750">750</span>
-<span id="751">751</span>
-<span id="752">752</span>
-<span id="753">753</span>
-<span id="754">754</span>
-<span id="755">755</span>
-<span id="756">756</span>
-<span id="757">757</span>
-<span id="758">758</span>
-<span id="759">759</span>
-<span id="760">760</span>
-<span id="761">761</span>
-<span id="762">762</span>
-<span id="763">763</span>
-<span id="764">764</span>
-<span id="765">765</span>
-<span id="766">766</span>
-<span id="767">767</span>
-<span id="768">768</span>
-<span id="769">769</span>
-<span id="770">770</span>
-<span id="771">771</span>
-<span id="772">772</span>
-<span id="773">773</span>
-<span id="774">774</span>
-<span id="775">775</span>
-<span id="776">776</span>
-<span id="777">777</span>
-<span id="778">778</span>
-<span id="779">779</span>
-<span id="780">780</span>
-<span id="781">781</span>
-<span id="782">782</span>
-<span id="783">783</span>
-<span id="784">784</span>
-<span id="785">785</span>
-<span id="786">786</span>
-<span id="787">787</span>
-<span id="788">788</span>
-<span id="789">789</span>
-<span id="790">790</span>
-<span id="791">791</span>
-<span id="792">792</span>
-<span id="793">793</span>
-<span id="794">794</span>
-<span id="795">795</span>
-<span id="796">796</span>
-<span id="797">797</span>
-<span id="798">798</span>
-<span id="799">799</span>
-<span id="800">800</span>
-<span id="801">801</span>
-<span id="802">802</span>
-<span id="803">803</span>
-<span id="804">804</span>
-<span id="805">805</span>
-<span id="806">806</span>
-<span id="807">807</span>
-<span id="808">808</span>
-<span id="809">809</span>
-<span id="810">810</span>
-<span id="811">811</span>
-<span id="812">812</span>
-<span id="813">813</span>
-<span id="814">814</span>
-<span id="815">815</span>
-<span id="816">816</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::abi::{RecursivePointeeCache, TyLayoutNameKey};
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::SpirvValue;
 <span class="kw">use </span><span class="kw">crate</span>::codegen_cx::CodegenCx;
+<span class="kw">use </span>bimap::BiHashMap;
 <span class="kw">use </span>indexmap::IndexSet;
 <span class="kw">use </span>rspirv::dr::Operand;
 <span class="kw">use </span>rspirv::spirv::{Capability, Decoration, Dim, ImageFormat, StorageClass, Word};
 <span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
-<span class="kw">use </span>rustc_middle::span_bug;
 <span class="kw">use </span>rustc_span::def_id::DefId;
-<span class="kw">use </span>rustc_span::{Span, Symbol};
+<span class="kw">use </span>rustc_span::Span;
 <span class="kw">use </span>rustc_target::abi::{Align, Size};
 <span class="kw">use </span>std::cell::RefCell;
 <span class="kw">use </span>std::fmt;
@@ -836,10 +742,8 @@
 /// information. All types that are emitted are registered in `CodegenCx`, so you can always look
 /// up the definition of a `Word` via `cx.lookup_type`. Note that this type doesn&#39;t actually store
 /// the `result_id` of the type declaration instruction, merely the contents.
-</span><span class="comment">//
-// FIXME(eddyb) should `SpirvType`s be behind `&amp;&#39;tcx` from `tcx.arena.dropless`?
-</span><span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
-</span><span class="kw">pub enum </span>SpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt; {
+</span><span class="attribute">#[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+</span><span class="kw">pub enum </span>SpirvType {
     Void,
     Bool,
     Integer(u32, bool),
@@ -853,9 +757,9 @@
 
         align: Align,
         size: <span class="prelude-ty">Option</span>&lt;Size&gt;,
-        field_types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx </span>[Word],
-        field_offsets: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx </span>[Size],
-        field_names: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx </span>[Symbol]&gt;,
+        field_types: Vec&lt;Word&gt;,
+        field_offsets: Vec&lt;Size&gt;,
+        field_names: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
     },
     Vector {
         element: Word,
@@ -880,7 +784,7 @@
     },
     Function {
         return_type: Word,
-        arguments: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx </span>[Word],
+        arguments: Vec&lt;Word&gt;,
     },
     Image {
         sampled_type: Word,
@@ -906,7 +810,7 @@
     RayQueryKhr,
 }
 
-<span class="kw">impl </span>SpirvType&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>SpirvType {
     <span class="doccomment">/// Note: `Builder::type_*` should be called *nowhere else* but here, to ensure
     /// `CodegenCx::type_defs` stays up-to-date
     </span><span class="kw">pub fn </span>def(<span class="self">self</span>, def_span: Span, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Word {
@@ -966,9 +870,9 @@
                 def_id: <span class="kw">_</span>,
                 align: <span class="kw">_</span>,
                 size: <span class="kw">_</span>,
-                field_types,
-                field_offsets,
-                field_names,
+                <span class="kw-2">ref </span>field_types,
+                <span class="kw-2">ref </span>field_offsets,
+                <span class="kw-2">ref </span>field_names,
             } =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>emit = cx.emit_global();
                 <span class="kw">let </span>result = emit.type_struct_id(id, field_types.iter().cloned());
@@ -985,7 +889,7 @@
                 }
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(field_names) = field_names {
                     <span class="kw">for </span>(index, field_name) <span class="kw">in </span>field_names.iter().enumerate() {
-                        emit.member_name(result, index <span class="kw">as </span>u32, field_name.as_str());
+                        emit.member_name(result, index <span class="kw">as </span>u32, field_name);
                     }
                 }
                 result
@@ -1032,7 +936,7 @@
                     .emit_global()
                     .type_pointer(id, StorageClass::Generic, pointee);
                 <span class="comment">// no pointers to functions
-                </span><span class="kw">if let </span>SpirvType::Function { .. } = cx.lookup_type(pointee) {
+                </span><span class="kw">if let </span><span class="self">Self</span>::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(
                         result,
                         def_span,
@@ -1043,7 +947,7 @@
             }
             <span class="self">Self</span>::Function {
                 return_type,
-                arguments,
+                <span class="kw-2">ref </span>arguments,
             } =&gt; cx
                 .emit_global()
                 .type_function_id(id, return_type, arguments.iter().cloned()),
@@ -1088,7 +992,7 @@
                 result
             }
         };
-        cx.type_cache_def(result, <span class="self">self</span>.tcx_arena_alloc_slices(cx), def_span);
+        cx.type_cache.def(result, <span class="self">self</span>);
         result
     }
 
@@ -1108,7 +1012,7 @@
                     cx.emit_global()
                         .type_pointer(<span class="prelude-val">Some</span>(id), StorageClass::Generic, pointee);
                 <span class="comment">// no pointers to functions
-                </span><span class="kw">if let </span>SpirvType::Function { .. } = cx.lookup_type(pointee) {
+                </span><span class="kw">if let </span><span class="self">Self</span>::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(
                         result,
                         def_span,
@@ -1122,7 +1026,7 @@
                 .sess
                 .fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;def_with_id invalid for type {:?}&quot;</span>, other)),
         };
-        cx.type_cache_def(result, <span class="self">self</span>.tcx_arena_alloc_slices(cx), def_span);
+        cx.type_cache.def(result, <span class="self">self</span>);
         result
     }
 
@@ -1144,7 +1048,16 @@
         id
     }
 
-    <span class="kw">pub fn </span>sizeof(<span class="kw-2">&amp;</span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Size&gt; {
+    <span class="doccomment">/// Use this if you want a pretty type printing that recursively prints the types within (e.g. struct fields)
+    </span><span class="kw">pub fn </span>debug&lt;<span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span>&gt;(
+        <span class="self">self</span>,
+        id: Word,
+        cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;cx </span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+    ) -&gt; SpirvTypePrinter&lt;<span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+        SpirvTypePrinter { ty: <span class="self">self</span>, id, cx }
+    }
+
+    <span class="kw">pub fn </span>sizeof&lt;<span class="lifetime">&#39;tcx</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Size&gt; {
         <span class="kw">let </span>result = <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="comment">// Types that have a dynamic size, or no concept of size at all.
             </span><span class="self">Self</span>::Void | <span class="self">Self</span>::RuntimeArray { .. } | <span class="self">Self</span>::Function { .. } =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
@@ -1171,7 +1084,7 @@
         <span class="prelude-val">Some</span>(result)
     }
 
-    <span class="kw">pub fn </span>alignof(<span class="kw-2">&amp;</span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Align {
+    <span class="kw">pub fn </span>alignof&lt;<span class="lifetime">&#39;tcx</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; Align {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="comment">// Types that have no concept of size or alignment.
             </span><span class="self">Self</span>::Void | <span class="self">Self</span>::Function { .. } =&gt; Align::from_bytes(<span class="number">0</span>).unwrap(),
@@ -1199,95 +1112,12 @@
             <span class="self">Self</span>::InterfaceBlock { inner_type } =&gt; cx.lookup_type(inner_type).alignof(cx),
         }
     }
-
-    <span class="doccomment">/// Replace `&amp;[T]` fields with `&amp;&#39;tcx [T]` ones produced by calling
-    /// `tcx.arena.dropless.alloc_slice(...)` - this is done late for two reasons:
-    /// 1. it avoids allocating in the arena when the cache would be hit anyway,
-    ///    which would create &quot;garbage&quot; (as in, unreachable allocations)
-    ///    (ideally these would also be interned, but that&#39;s even more refactors)
-    /// 2. an empty slice is disallowed (as it&#39;s usually handled as a special
-    ///    case elsewhere, e.g. `rustc`&#39;s `ty::List` - sadly we can&#39;t use that)
-    </span><span class="kw">fn </span>tcx_arena_alloc_slices&lt;<span class="lifetime">&#39;tcx</span>&gt;(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; SpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt; {
-        <span class="kw">fn </span>arena_alloc_slice&lt;<span class="lifetime">&#39;tcx</span>, T: Copy&gt;(cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;, xs: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx </span>[T] {
-            <span class="kw">if </span>xs.is_empty() {
-                <span class="kw-2">&amp;</span>[]
-            } <span class="kw">else </span>{
-                cx.tcx.arena.dropless.alloc_slice(xs)
-            }
-        }
-
-        <span class="kw">match </span><span class="self">self </span>{
-            <span class="comment">// FIXME(eddyb) these are all noop cases, could they be automated?
-            </span>SpirvType::Void =&gt; SpirvType::Void,
-            SpirvType::Bool =&gt; SpirvType::Bool,
-            SpirvType::Integer(width, signedness) =&gt; SpirvType::Integer(width, signedness),
-            SpirvType::Float(width) =&gt; SpirvType::Float(width),
-            SpirvType::Vector { element, count } =&gt; SpirvType::Vector { element, count },
-            SpirvType::Matrix { element, count } =&gt; SpirvType::Matrix { element, count },
-            SpirvType::Array { element, count } =&gt; SpirvType::Array { element, count },
-            SpirvType::RuntimeArray { element } =&gt; SpirvType::RuntimeArray { element },
-            SpirvType::Pointer { pointee } =&gt; SpirvType::Pointer { pointee },
-            SpirvType::Image {
-                sampled_type,
-                dim,
-                depth,
-                arrayed,
-                multisampled,
-                sampled,
-                image_format,
-            } =&gt; SpirvType::Image {
-                sampled_type,
-                dim,
-                depth,
-                arrayed,
-                multisampled,
-                sampled,
-                image_format,
-            },
-            SpirvType::Sampler =&gt; SpirvType::Sampler,
-            SpirvType::SampledImage { image_type } =&gt; SpirvType::SampledImage { image_type },
-            SpirvType::InterfaceBlock { inner_type } =&gt; SpirvType::InterfaceBlock { inner_type },
-            SpirvType::AccelerationStructureKhr =&gt; SpirvType::AccelerationStructureKhr,
-            SpirvType::RayQueryKhr =&gt; SpirvType::RayQueryKhr,
-
-            <span class="comment">// Only these variants have any slices to arena-allocate.
-            </span>SpirvType::Adt {
-                def_id,
-                align,
-                size,
-                field_types,
-                field_offsets,
-                field_names,
-            } =&gt; SpirvType::Adt {
-                def_id,
-                align,
-                size,
-                field_types: arena_alloc_slice(cx, field_types),
-                field_offsets: arena_alloc_slice(cx, field_offsets),
-                field_names: field_names.map(|field_names| arena_alloc_slice(cx, field_names)),
-            },
-            SpirvType::Function {
-                return_type,
-                arguments,
-            } =&gt; SpirvType::Function {
-                return_type,
-                arguments: arena_alloc_slice(cx, arguments),
-            },
-        }
-    }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; SpirvType&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="doccomment">/// Use this if you want a pretty type printing that recursively prints the types within (e.g. struct fields)
-    </span><span class="kw">pub fn </span>debug&lt;<span class="lifetime">&#39;tcx</span>&gt;(<span class="self">self</span>, id: Word, cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; SpirvTypePrinter&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
-        SpirvTypePrinter { ty: <span class="self">self</span>, id, cx }
-    }
-}
-
-<span class="kw">pub struct </span>SpirvTypePrinter&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+<span class="kw">pub struct </span>SpirvTypePrinter&lt;<span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span>&gt; {
     id: Word,
-    ty: SpirvType&lt;<span class="lifetime">&#39;a</span>&gt;,
-    cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+    ty: SpirvType,
+    cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;cx </span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;,
 }
 
 <span class="doccomment">/// Types can be recursive, e.g. a struct can contain a pointer to itself. So, we need to keep
@@ -1323,9 +1153,9 @@
                 def_id,
                 align,
                 size,
-                field_types,
-                field_offsets,
-                field_names,
+                <span class="kw-2">ref </span>field_types,
+                <span class="kw-2">ref </span>field_offsets,
+                <span class="kw-2">ref </span>field_names,
             } =&gt; {
                 <span class="kw">let </span>fields = field_types
                     .iter()
@@ -1337,8 +1167,8 @@
                     .field(<span class="string">&quot;align&quot;</span>, <span class="kw-2">&amp;</span>align)
                     .field(<span class="string">&quot;size&quot;</span>, <span class="kw-2">&amp;</span>size)
                     .field(<span class="string">&quot;field_types&quot;</span>, <span class="kw-2">&amp;</span>fields)
-                    .field(<span class="string">&quot;field_offsets&quot;</span>, <span class="kw-2">&amp;</span>field_offsets)
-                    .field(<span class="string">&quot;field_names&quot;</span>, <span class="kw-2">&amp;</span>field_names)
+                    .field(<span class="string">&quot;field_offsets&quot;</span>, field_offsets)
+                    .field(<span class="string">&quot;field_names&quot;</span>, field_names)
                     .finish()
             }
             SpirvType::Vector { element, count } =&gt; f
@@ -1378,7 +1208,7 @@
                 .finish(),
             SpirvType::Function {
                 return_type,
-                arguments,
+                <span class="kw-2">ref </span>arguments,
             } =&gt; {
                 <span class="kw">let </span>args = arguments
                     .iter()
@@ -1471,7 +1301,7 @@
                 def_id: <span class="kw">_</span>,
                 align: <span class="kw">_</span>,
                 size: <span class="kw">_</span>,
-                field_types,
+                <span class="kw-2">ref </span>field_types,
                 field_offsets: <span class="kw">_</span>,
                 <span class="kw-2">ref </span>field_names,
             } =&gt; {
@@ -1530,7 +1360,7 @@
             }
             SpirvType::Function {
                 return_type,
-                arguments,
+                <span class="kw-2">ref </span>arguments,
             } =&gt; {
                 f.write_str(<span class="string">&quot;fn(&quot;</span>)<span class="question-mark">?</span>;
                 <span class="kw">for </span>(index, <span class="kw-2">&amp;</span>arg) <span class="kw">in </span>arguments.iter().enumerate() {
@@ -1581,9 +1411,8 @@
 
 <span class="attribute">#[derive(Default)]
 </span><span class="kw">pub struct </span>TypeCache&lt;<span class="lifetime">&#39;tcx</span>&gt; {
-    <span class="kw">pub </span>id_to_spirv_type: RefCell&lt;FxHashMap&lt;Word, SpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;&gt;,
-    <span class="kw">pub </span>spirv_type_to_id: RefCell&lt;FxHashMap&lt;SpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt;, Word&gt;&gt;,
-
+    <span class="doccomment">/// Map between ID and structure
+    </span><span class="kw">pub </span>type_defs: RefCell&lt;BiHashMap&lt;Word, SpirvType&gt;&gt;,
     <span class="doccomment">/// Recursive pointer breaking
     </span><span class="kw">pub </span>recursive_pointee_cache: RecursivePointeeCache&lt;<span class="lifetime">&#39;tcx</span>&gt;,
     <span class="doccomment">/// Set of names for a type (only `SpirvType::Adt` currently).
@@ -1592,42 +1421,25 @@
     </span>type_names: RefCell&lt;FxHashMap&lt;Word, IndexSet&lt;TyLayoutNameKey&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; TypeCache&lt;<span class="lifetime">&#39;tcx</span>&gt; {
-    <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: <span class="kw-2">&amp;</span>SpirvType&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Word&gt; {
-        <span class="self">self</span>.spirv_type_to_id.borrow().get(ty).copied()
+<span class="kw">impl </span>TypeCache&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: <span class="kw-2">&amp;</span>SpirvType) -&gt; <span class="prelude-ty">Option</span>&lt;Word&gt; {
+        <span class="self">self</span>.type_defs.borrow().get_by_right(ty).copied()
     }
 
     <span class="attribute">#[track_caller]
-    </span><span class="kw">pub fn </span>lookup(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Word) -&gt; SpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt; {
-        <span class="kw-2">*</span><span class="self">self
-            </span>.id_to_spirv_type
+    </span><span class="kw">pub fn </span>lookup(<span class="kw-2">&amp;</span><span class="self">self</span>, word: Word) -&gt; SpirvType {
+        <span class="self">self</span>.type_defs
             .borrow()
-            .get(<span class="kw-2">&amp;</span>id)
-            .expect(<span class="string">&quot;tried to lookup ID that wasn&#39;t a type, or has no definition&quot;</span>)
+            .get_by_left(<span class="kw-2">&amp;</span>word)
+            .expect(<span class="string">&quot;Tried to lookup value that wasn&#39;t a type, or has no definition&quot;</span>)
+            .clone()
     }
-}
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; {
-    <span class="kw">fn </span>type_cache_def(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Word, ty: SpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt;, def_span: Span) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(old_ty) = <span class="self">self</span>.type_cache.id_to_spirv_type.borrow_mut().insert(id, ty) {
-            <span class="macro">span_bug!</span>(
-                def_span,
-                <span class="string">&quot;SPIR-V type with ID %{id} is being redefined\n\
-                old type: {old_ty}\n\
-                new type: {ty}&quot;</span>,
-                old_ty = old_ty.debug(id, <span class="self">self</span>),
-                ty = ty.debug(id, <span class="self">self</span>)
-            );
-        }
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(old_id) = <span class="self">self</span>.type_cache.spirv_type_to_id.borrow_mut().insert(ty, id) {
-            <span class="macro">span_bug!</span>(
-                def_span,
-                <span class="string">&quot;SPIR-V type is changing IDs (%{old_id} -&gt; %{id}):\n\
-                {ty}&quot;</span>,
-                ty = ty.debug(id, <span class="self">self</span>)
-            );
-        }
+    <span class="kw">fn </span>def(<span class="kw-2">&amp;</span><span class="self">self</span>, word: Word, ty: SpirvType) {
+        <span class="self">self</span>.type_defs
+            .borrow_mut()
+            .insert_no_overwrite(word, ty)
+            .unwrap();
     }
 }
 </code></pre></div>

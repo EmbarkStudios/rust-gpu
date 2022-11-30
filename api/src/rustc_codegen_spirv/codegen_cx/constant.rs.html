@@ -586,6 +586,7 @@
 <span id="586">586</span>
 <span id="587">587</span>
 <span id="588">588</span>
+<span id="589">589</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::CodegenCx;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
@@ -600,38 +601,34 @@
 <span class="kw">use </span>rustc_target::abi::{<span class="self">self</span>, AddressSpace, HasDataLayout, Integer, Primitive, Size};
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; {
-    <span class="kw">pub fn </span>def_constant(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word, val: SpirvConst&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; SpirvValue {
-        <span class="self">self</span>.builder.def_constant_cx(ty, val, <span class="self">self</span>)
-    }
-
     <span class="kw">pub fn </span>constant_u8(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, val: u8) -&gt; SpirvValue {
         <span class="kw">let </span>ty = SpirvType::Integer(<span class="number">8</span>, <span class="bool-val">false</span>).def(span, <span class="self">self</span>);
-        <span class="self">self</span>.def_constant(ty, SpirvConst::U32(val <span class="kw">as </span>u32))
+        <span class="self">self</span>.builder.def_constant(ty, SpirvConst::U32(val <span class="kw">as </span>u32))
     }
 
     <span class="kw">pub fn </span>constant_i16(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, val: i16) -&gt; SpirvValue {
         <span class="kw">let </span>ty = SpirvType::Integer(<span class="number">16</span>, <span class="bool-val">true</span>).def(span, <span class="self">self</span>);
-        <span class="self">self</span>.def_constant(ty, SpirvConst::U32(val <span class="kw">as </span>u32))
+        <span class="self">self</span>.builder.def_constant(ty, SpirvConst::U32(val <span class="kw">as </span>u32))
     }
 
     <span class="kw">pub fn </span>constant_u16(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, val: u16) -&gt; SpirvValue {
         <span class="kw">let </span>ty = SpirvType::Integer(<span class="number">16</span>, <span class="bool-val">false</span>).def(span, <span class="self">self</span>);
-        <span class="self">self</span>.def_constant(ty, SpirvConst::U32(val <span class="kw">as </span>u32))
+        <span class="self">self</span>.builder.def_constant(ty, SpirvConst::U32(val <span class="kw">as </span>u32))
     }
 
     <span class="kw">pub fn </span>constant_i32(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, val: i32) -&gt; SpirvValue {
         <span class="kw">let </span>ty = SpirvType::Integer(<span class="number">32</span>, <span class="bool-val">true</span>).def(span, <span class="self">self</span>);
-        <span class="self">self</span>.def_constant(ty, SpirvConst::U32(val <span class="kw">as </span>u32))
+        <span class="self">self</span>.builder.def_constant(ty, SpirvConst::U32(val <span class="kw">as </span>u32))
     }
 
     <span class="kw">pub fn </span>constant_u32(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, val: u32) -&gt; SpirvValue {
         <span class="kw">let </span>ty = SpirvType::Integer(<span class="number">32</span>, <span class="bool-val">false</span>).def(span, <span class="self">self</span>);
-        <span class="self">self</span>.def_constant(ty, SpirvConst::U32(val))
+        <span class="self">self</span>.builder.def_constant(ty, SpirvConst::U32(val))
     }
 
     <span class="kw">pub fn </span>constant_u64(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, val: u64) -&gt; SpirvValue {
         <span class="kw">let </span>ty = SpirvType::Integer(<span class="number">64</span>, <span class="bool-val">false</span>).def(span, <span class="self">self</span>);
-        <span class="self">self</span>.def_constant(ty, SpirvConst::U64(val))
+        <span class="self">self</span>.builder.def_constant(ty, SpirvConst::U64(val))
     }
 
     <span class="kw">pub fn </span>constant_int(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word, val: u64) -&gt; SpirvValue {
@@ -639,7 +636,7 @@
             SpirvType::Integer(bits @ <span class="number">8</span>..=<span class="number">32</span>, signed) =&gt; {
                 <span class="kw">let </span>size = Size::from_bits(bits);
                 <span class="kw">let </span>val = val <span class="kw">as </span>u128;
-                <span class="self">self</span>.def_constant(
+                <span class="self">self</span>.builder.def_constant(
                     ty,
                     SpirvConst::U32(<span class="kw">if </span>signed {
                         size.sign_extend(val)
@@ -648,9 +645,9 @@
                     } <span class="kw">as </span>u32),
                 )
             }
-            SpirvType::Integer(<span class="number">64</span>, <span class="kw">_</span>) =&gt; <span class="self">self</span>.def_constant(ty, SpirvConst::U64(val)),
+            SpirvType::Integer(<span class="number">64</span>, <span class="kw">_</span>) =&gt; <span class="self">self</span>.builder.def_constant(ty, SpirvConst::U64(val)),
             SpirvType::Bool =&gt; <span class="kw">match </span>val {
-                <span class="number">0 </span>| <span class="number">1 </span>=&gt; <span class="self">self</span>.def_constant(ty, SpirvConst::Bool(val != <span class="number">0</span>)),
+                <span class="number">0 </span>| <span class="number">1 </span>=&gt; <span class="self">self</span>.builder.def_constant(ty, SpirvConst::Bool(val != <span class="number">0</span>)),
                 <span class="kw">_ </span>=&gt; <span class="self">self
                     </span>.tcx
                     .sess
@@ -670,18 +667,24 @@
 
     <span class="kw">pub fn </span>constant_f32(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, val: f32) -&gt; SpirvValue {
         <span class="kw">let </span>ty = SpirvType::Float(<span class="number">32</span>).def(span, <span class="self">self</span>);
-        <span class="self">self</span>.def_constant(ty, SpirvConst::F32(val.to_bits()))
+        <span class="self">self</span>.builder
+            .def_constant(ty, SpirvConst::F32(val.to_bits()))
     }
 
     <span class="kw">pub fn </span>constant_f64(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, val: f64) -&gt; SpirvValue {
         <span class="kw">let </span>ty = SpirvType::Float(<span class="number">64</span>).def(span, <span class="self">self</span>);
-        <span class="self">self</span>.def_constant(ty, SpirvConst::F64(val.to_bits()))
+        <span class="self">self</span>.builder
+            .def_constant(ty, SpirvConst::F64(val.to_bits()))
     }
 
     <span class="kw">pub fn </span>constant_float(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word, val: f64) -&gt; SpirvValue {
         <span class="kw">match </span><span class="self">self</span>.lookup_type(ty) {
-            SpirvType::Float(<span class="number">32</span>) =&gt; <span class="self">self</span>.def_constant(ty, SpirvConst::F32((val <span class="kw">as </span>f32).to_bits())),
-            SpirvType::Float(<span class="number">64</span>) =&gt; <span class="self">self</span>.def_constant(ty, SpirvConst::F64(val.to_bits())),
+            SpirvType::Float(<span class="number">32</span>) =&gt; <span class="self">self
+                </span>.builder
+                .def_constant(ty, SpirvConst::F32((val <span class="kw">as </span>f32).to_bits())),
+            SpirvType::Float(<span class="number">64</span>) =&gt; <span class="self">self
+                </span>.builder
+                .def_constant(ty, SpirvConst::F64(val.to_bits())),
             other =&gt; <span class="self">self</span>.tcx.sess.fatal(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;constant_float invalid on type {}&quot;</span>,
                 other.debug(ty, <span class="self">self</span>)
@@ -691,20 +694,20 @@
 
     <span class="kw">pub fn </span>constant_bool(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span, val: bool) -&gt; SpirvValue {
         <span class="kw">let </span>ty = SpirvType::Bool.def(span, <span class="self">self</span>);
-        <span class="self">self</span>.def_constant(ty, SpirvConst::Bool(val))
+        <span class="self">self</span>.builder.def_constant(ty, SpirvConst::Bool(val))
     }
 
     <span class="kw">pub fn </span>constant_composite(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word, fields: <span class="kw">impl </span>Iterator&lt;Item = Word&gt;) -&gt; SpirvValue {
-        <span class="comment">// FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
-        </span><span class="self">self</span>.def_constant(ty, SpirvConst::Composite(<span class="kw-2">&amp;</span>fields.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()))
+        <span class="self">self</span>.builder
+            .def_constant(ty, SpirvConst::Composite(fields.collect()))
     }
 
     <span class="kw">pub fn </span>constant_null(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word) -&gt; SpirvValue {
-        <span class="self">self</span>.def_constant(ty, SpirvConst::Null)
+        <span class="self">self</span>.builder.def_constant(ty, SpirvConst::Null)
     }
 
     <span class="kw">pub fn </span>undef(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word) -&gt; SpirvValue {
-        <span class="self">self</span>.def_constant(ty, SpirvConst::Undef)
+        <span class="self">self</span>.builder.def_constant(ty, SpirvConst::Undef)
     }
 }
 
@@ -758,7 +761,7 @@
             .spirv_type(DUMMY_SP, <span class="self">self</span>);
         <span class="comment">// FIXME(eddyb) include the actual byte data.
         </span>(
-            <span class="self">self</span>.def_constant(
+            <span class="self">self</span>.builder.def_constant(
                 <span class="self">self</span>.type_ptr_to(str_ty),
                 SpirvConst::PtrTo {
                     pointee: <span class="self">self</span>.undef(str_ty).def_cx(<span class="self">self</span>),
@@ -769,15 +772,14 @@
     }
     <span class="kw">fn </span>const_struct(<span class="kw-2">&amp;</span><span class="self">self</span>, elts: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Value], _packed: bool) -&gt; <span class="self">Self</span>::Value {
         <span class="comment">// Presumably this will get bitcasted to the right type?
-        // FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
         </span><span class="kw">let </span>field_types = elts.iter().map(|f| f.ty).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">let </span>(field_offsets, size, align) = <span class="kw">crate</span>::abi::auto_struct_layout(<span class="self">self</span>, <span class="kw-2">&amp;</span>field_types);
         <span class="kw">let </span>struct_ty = SpirvType::Adt {
             def_id: <span class="prelude-val">None</span>,
             size,
             align,
-            field_types: <span class="kw-2">&amp;</span>field_types,
-            field_offsets: <span class="kw-2">&amp;</span>field_offsets,
+            field_types,
+            field_offsets,
             field_names: <span class="prelude-val">None</span>,
         }
         .def(DUMMY_SP, <span class="self">self</span>);

@@ -280,7 +280,6 @@
 <span id="280">280</span>
 <span id="281">281</span>
 <span id="282">282</span>
-<span id="283">283</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::CodegenCx;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
@@ -463,19 +462,18 @@
     <span class="kw">fn </span>type_func(<span class="kw-2">&amp;</span><span class="self">self</span>, args: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Type], ret: <span class="self">Self</span>::Type) -&gt; <span class="self">Self</span>::Type {
         SpirvType::Function {
             return_type: ret,
-            arguments: args,
+            arguments: args.to_vec(),
         }
         .def(DUMMY_SP, <span class="self">self</span>)
     }
     <span class="kw">fn </span>type_struct(<span class="kw-2">&amp;</span><span class="self">self</span>, els: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Type], _packed: bool) -&gt; <span class="self">Self</span>::Type {
-        <span class="comment">// FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
-        </span><span class="kw">let </span>(field_offsets, size, align) = <span class="kw">crate</span>::abi::auto_struct_layout(<span class="self">self</span>, els);
+        <span class="kw">let </span>(field_offsets, size, align) = <span class="kw">crate</span>::abi::auto_struct_layout(<span class="self">self</span>, els);
         SpirvType::Adt {
             def_id: <span class="prelude-val">None</span>,
             align,
             size,
-            field_types: els,
-            field_offsets: <span class="kw-2">&amp;</span>field_offsets,
+            field_types: els.to_vec(),
+            field_offsets,
             field_names: <span class="prelude-val">None</span>,
         }
         .def(DUMMY_SP, <span class="self">self</span>)
