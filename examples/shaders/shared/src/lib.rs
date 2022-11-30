@@ -40,7 +40,7 @@ pub struct ShaderConstants {
 }
 
 pub fn saturate(x: f32) -> f32 {
-    x.max(0.0).min(1.0)
+    x.clamp(0.0, 1.0)
 }
 
 pub fn pow(v: Vec3, power: f32) -> Vec3 {
