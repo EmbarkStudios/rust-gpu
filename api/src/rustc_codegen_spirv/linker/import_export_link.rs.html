@@ -229,7 +229,46 @@
 <span id="229">229</span>
 <span id="230">230</span>
 <span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Result;
+<span class="kw">use </span><span class="kw">crate</span>::decorations::{CustomDecoration, ZombieDecoration};
 <span class="kw">use </span>rspirv::dr::{Instruction, Module};
 <span class="kw">use </span>rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
 <span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
@@ -256,6 +295,27 @@
     <span class="comment">// Rules to rewrite the module with
     </span><span class="kw">let </span><span class="kw-2">mut </span>rewrite_rules = FxHashMap::default();
     <span class="kw">let </span><span class="kw-2">mut </span>killed_parameters = FxHashSet::default();
+
+    <span class="comment">// HACK(eddyb) collect all zombies, and anything that transitively mentions
+    // them (or is &quot;infected&quot;), to ignore them when doing type checks, as they
+    // will either be removed later, or become an error of their own.
+    </span><span class="kw">let </span><span class="kw-2">mut </span>zombie_infected: FxHashSet&lt;Word&gt; = ZombieDecoration::decode_all(module)
+        .map(|(z, <span class="kw">_</span>)| z)
+        .collect();
+    <span class="kw">for </span>inst <span class="kw">in </span>module.global_inst_iter() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(result_id) = inst.result_id {
+            <span class="kw">if </span>!zombie_infected.contains(<span class="kw-2">&amp;</span>result_id) {
+                <span class="kw">let </span><span class="kw-2">mut </span>id_operands = inst.operands.iter().filter_map(|o| o.id_ref_any());
+                <span class="comment">// NOTE(eddyb) this takes advantage of the fact that the module
+                // is ordered def-before-use (with the minor exception of forward
+                // references for recursive data, which are not fully supported),
+                // to be able to propagate &quot;zombie infection&quot; in one pass.
+                </span><span class="kw">if </span>id_operands.any(|id| zombie_infected.contains(<span class="kw-2">&amp;</span>id)) {
+                    zombie_infected.insert(result_id);
+                }
+            }
+        }
+    }
 
     <span class="comment">// First, collect all the exports.
     </span><span class="kw">for </span>annotation <span class="kw">in </span><span class="kw-2">&amp;</span>module.annotations {
@@ -284,7 +344,14 @@
         };
         <span class="kw">let </span>import_type = <span class="kw-2">*</span>type_map.get(<span class="kw-2">&amp;</span>import_id).expect(<span class="string">&quot;Unexpected op&quot;</span>);
         <span class="comment">// Make sure the import/export pair has the same type.
-        </span>check_tys_equal(sess, module, name, import_type, export_type)<span class="question-mark">?</span>;
+        </span>check_tys_equal(
+            sess,
+            module,
+            name,
+            import_type,
+            export_type,
+            <span class="kw-2">&amp;</span>zombie_infected,
+        )<span class="question-mark">?</span>;
         rewrite_rules.insert(import_id, export_id);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(params) = fn_parameters.get(<span class="kw-2">&amp;</span>import_id) {
             <span class="kw">for </span><span class="kw-2">&amp;</span>param <span class="kw">in </span>params {
@@ -342,8 +409,17 @@
     name: <span class="kw-2">&amp;</span>str,
     import_type: Word,
     export_type: Word,
+    zombie_infected: <span class="kw-2">&amp;</span>FxHashSet&lt;Word&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">if </span>import_type == export_type {
+    <span class="kw">let </span>allowed = import_type == export_type || {
+        <span class="comment">// HACK(eddyb) zombies can cause types to differ in definition, due to
+        // requiring multiple different instances (usually different `Span`s),
+        // so we ignore them, as `find_import_export_pairs_and_killed_params`&#39;s
+        // own comment explains (zombies will cause errors or be removed, *later*).
+        </span>zombie_infected.contains(<span class="kw-2">&amp;</span>import_type) &amp;&amp; zombie_infected.contains(<span class="kw-2">&amp;</span>export_type)
+    };
+
+    <span class="kw">if </span>allowed {
         <span class="prelude-val">Ok</span>(())
     } <span class="kw">else </span>{
         <span class="comment">// We have an error. It&#39;s okay to do something really slow now to report the error.

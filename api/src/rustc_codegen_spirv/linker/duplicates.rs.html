@@ -282,22 +282,7 @@
 <span id="282">282</span>
 <span id="283">283</span>
 <span id="284">284</span>
-<span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
-<span id="296">296</span>
-<span id="297">297</span>
-<span id="298">298</span>
-</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::decorations::{CustomDecoration, ZombieDecoration};
-<span class="kw">use </span>rspirv::binary::Assemble;
+</pre><pre class="rust"><code><span class="kw">use </span>rspirv::binary::Assemble;
 <span class="kw">use </span>rspirv::dr::{Instruction, Module, Operand};
 <span class="kw">use </span>rspirv::spirv::{Op, Word};
 <span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
@@ -371,15 +356,20 @@
 <span class="kw">fn </span>gather_annotations(annotations: <span class="kw-2">&amp;</span>[Instruction]) -&gt; FxHashMap&lt;Word, Vec&lt;u32&gt;&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>map = FxHashMap::default();
     <span class="kw">for </span>inst <span class="kw">in </span>annotations {
-        <span class="kw">if </span>inst.class.opcode == Op::Decorate || inst.class.opcode == Op::MemberDecorate {
-            <span class="kw">match </span>map.entry(inst.operands[<span class="number">0</span>].id_ref_any().unwrap()) {
+        <span class="kw">match </span>inst.class.opcode {
+            Op::Decorate
+            | Op::DecorateId
+            | Op::DecorateString
+            | Op::MemberDecorate
+            | Op::MemberDecorateString =&gt; <span class="kw">match </span>map.entry(inst.operands[<span class="number">0</span>].id_ref_any().unwrap()) {
                 hash_map::Entry::Vacant(entry) =&gt; {
                     entry.insert(<span class="macro">vec!</span>[make_annotation_key(inst)]);
                 }
                 hash_map::Entry::Occupied(<span class="kw-2">mut </span>entry) =&gt; {
                     entry.get_mut().push(make_annotation_key(inst));
                 }
-            }
+            },
+            <span class="kw">_ </span>=&gt; {}
         }
     }
     map.into_iter()
@@ -408,7 +398,6 @@
 <span class="kw">fn </span>make_dedupe_key(
     inst: <span class="kw-2">&amp;</span>Instruction,
     unresolved_forward_pointers: <span class="kw-2">&amp;</span>FxHashSet&lt;Word&gt;,
-    zombies: <span class="kw-2">&amp;</span>FxHashSet&lt;Word&gt;,
     annotations: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, Vec&lt;u32&gt;&gt;,
     names: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, String&gt;,
 ) -&gt; Vec&lt;u32&gt; {
@@ -434,15 +423,6 @@
         }
     }
     <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = inst.result_id {
-        data.push(<span class="kw">if </span>zombies.contains(<span class="kw-2">&amp;</span>id) {
-            <span class="kw">if </span>inst.result_type.is_some() {
-                id
-            } <span class="kw">else </span>{
-                <span class="number">1
-            </span>}
-        } <span class="kw">else </span>{
-            <span class="number">0
-        </span>});
         <span class="kw">if let </span><span class="prelude-val">Some</span>(annos) = annotations.get(<span class="kw-2">&amp;</span>id) {
             data.extend_from_slice(annos);
         }
@@ -450,6 +430,9 @@
             <span class="comment">// Names only matter for OpVariable.
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(name) = names.get(<span class="kw-2">&amp;</span>id) {
                 <span class="comment">// Jump through some hoops to shove a String into a Vec&lt;u32&gt;.
+                //
+                // FIXME(eddyb) this should `.assemble_into(&amp;mut data)` the
+                // `Operand::LiteralString(...)` from the original `Op::Name`.
                 </span><span class="kw">for </span>chunk <span class="kw">in </span>name.as_bytes().chunks(<span class="number">4</span>) {
                     <span class="kw">let </span>slice = <span class="kw">match </span><span class="kw-2">*</span>chunk {
                         [a] =&gt; [a, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>],
@@ -482,12 +465,7 @@
 <span class="kw">pub fn </span>remove_duplicate_types(module: <span class="kw-2">&amp;mut </span>Module) {
     <span class="comment">// Keep in mind, this algorithm requires forward type references to not exist - i.e. it&#39;s a valid spir-v module.
 
-    // Include zombies in the key to not merge zombies with non-zombies
-    </span><span class="kw">let </span>zombies: FxHashSet&lt;Word&gt; = ZombieDecoration::decode_all(module)
-        .map(|(z, <span class="kw">_</span>)| z)
-        .collect();
-
-    <span class="comment">// When a duplicate type is encountered, then this is a map from the deleted ID, to the new, deduplicated ID.
+    // When a duplicate type is encountered, then this is a map from the deleted ID, to the new, deduplicated ID.
     </span><span class="kw">let </span><span class="kw-2">mut </span>rewrite_rules = FxHashMap::default();
     <span class="comment">// Instructions are encoded into &quot;keys&quot;: their opcode, followed by arguments, then annotations.
     // Importantly, result_id is left out. This means that any instruction that declares the same
@@ -522,13 +500,7 @@
         // all_inst_iter_mut pass below. However, the code is a lil bit cleaner this way I guess.
         </span>rewrite_inst_with_rules(inst, <span class="kw-2">&amp;</span>rewrite_rules);
 
-        <span class="kw">let </span>key = make_dedupe_key(
-            inst,
-            <span class="kw-2">&amp;</span>unresolved_forward_pointers,
-            <span class="kw-2">&amp;</span>zombies,
-            <span class="kw-2">&amp;</span>annotations,
-            <span class="kw-2">&amp;</span>names,
-        );
+        <span class="kw">let </span>key = make_dedupe_key(inst, <span class="kw-2">&amp;</span>unresolved_forward_pointers, <span class="kw-2">&amp;</span>annotations, <span class="kw-2">&amp;</span>names);
 
         <span class="kw">match </span>key_to_result_id.entry(key) {
             hash_map::Entry::Vacant(entry) =&gt; {

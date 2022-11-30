@@ -668,7 +668,6 @@
 <span id="668">668</span>
 <span id="669">669</span>
 <span id="670">670</span>
-<span id="671">671</span>
 </pre><pre class="rust"><code><span class="kw">mod </span>constant;
 <span class="kw">mod </span>declare;
 <span class="kw">mod </span>entry;
@@ -711,7 +710,7 @@
     <span class="kw">pub </span>tcx: TyCtxt&lt;<span class="lifetime">&#39;tcx</span>&gt;,
     <span class="kw">pub </span>codegen_unit: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx </span>CodegenUnit&lt;<span class="lifetime">&#39;tcx</span>&gt;,
     <span class="doccomment">/// Spir-v module builder
-    </span><span class="kw">pub </span>builder: BuilderSpirv,
+    </span><span class="kw">pub </span>builder: BuilderSpirv&lt;<span class="lifetime">&#39;tcx</span>&gt;,
     <span class="doccomment">/// Map from MIR function to spir-v function ID
     </span><span class="kw">pub </span>instances: RefCell&lt;FxHashMap&lt;Instance&lt;<span class="lifetime">&#39;tcx</span>&gt;, SpirvValue&gt;&gt;,
     <span class="doccomment">/// Map from function ID to parameter list
@@ -816,11 +815,11 @@
     }
 
     <span class="attribute">#[track_caller]
-    </span><span class="kw">pub fn </span>lookup_type(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word) -&gt; SpirvType {
+    </span><span class="kw">pub fn </span>lookup_type(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word) -&gt; SpirvType&lt;<span class="lifetime">&#39;tcx</span>&gt; {
         <span class="self">self</span>.type_cache.lookup(ty)
     }
 
-    <span class="kw">pub fn </span>debug_type&lt;<span class="lifetime">&#39;cx</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;cx </span><span class="self">self</span>, ty: Word) -&gt; SpirvTypePrinter&lt;<span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="kw">pub fn </span>debug_type(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: Word) -&gt; SpirvTypePrinter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;tcx</span>&gt; {
         <span class="self">self</span>.lookup_type(ty).debug(ty, <span class="self">self</span>)
     }
 
@@ -1206,8 +1205,7 @@
         <span class="kw">if </span><span class="self">self</span>.is_system_crate() {
             <span class="comment">// Create these undefs up front instead of on demand in SpirvValue::def because
             // SpirvValue::def can&#39;t use cx.emit()
-            </span><span class="self">self</span>.builder
-                .def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
+            </span><span class="self">self</span>.def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
         }
 
         SpirvValue {

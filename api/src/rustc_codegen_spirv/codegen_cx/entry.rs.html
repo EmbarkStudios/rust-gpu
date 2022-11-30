@@ -819,7 +819,7 @@
             <span class="kw">let </span>void = SpirvType::Void.def(span, <span class="self">self</span>);
             <span class="kw">let </span>fn_void_void = SpirvType::Function {
                 return_type: void,
-                arguments: <span class="macro">vec!</span>[],
+                arguments: <span class="kw-2">&amp;</span>[],
             }
             .def(span, <span class="self">self</span>);
             <span class="kw">let </span><span class="kw-2">mut </span>emit = <span class="self">self</span>.emit_global();
@@ -1360,7 +1360,7 @@
                 SpirvType::Bool =&gt; <span class="kw-2">*</span>has_bool = <span class="bool-val">true</span>,
                 SpirvType::Integer(<span class="kw">_</span>, <span class="kw">_</span>) | SpirvType::Float(<span class="number">64</span>) =&gt; <span class="kw-2">*</span>must_be_flat = <span class="bool-val">true</span>,
                 SpirvType::Adt { field_types, .. } =&gt; {
-                    <span class="kw">for </span>f <span class="kw">in </span>field_types {
+                    <span class="kw">for </span><span class="kw-2">&amp;</span>f <span class="kw">in </span>field_types {
                         recurse(cx, f, has_bool, must_be_flat);
                     }
                 }
@@ -1377,7 +1377,7 @@
                     arguments,
                 } =&gt; {
                     recurse(cx, return_type, has_bool, must_be_flat);
-                    <span class="kw">for </span>a <span class="kw">in </span>arguments {
+                    <span class="kw">for </span><span class="kw-2">&amp;</span>a <span class="kw">in </span>arguments {
                         recurse(cx, a, has_bool, must_be_flat);
                     }
                 }
