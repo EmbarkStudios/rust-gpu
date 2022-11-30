@@ -105,7 +105,7 @@ impl Runner {
                     .iter()
                     .map(|dir| format!("-L dependency={}", dir.display()))
                     .fold(String::new(), |a, b| b + " " + &a),
-                "--edition 2018",
+                "--edition 2021",
                 &*format!("--extern noprelude:core={}", deps.core.display()),
                 &*format!(
                     "--extern noprelude:compiler_builtins={}",
