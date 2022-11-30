@@ -209,6 +209,15 @@
 <span id="209">209</span>
 <span id="210">210</span>
 <span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
 </pre><pre class="rust"><code><span class="doccomment">//! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
 </span><span class="kw">use super</span>::{get_name, get_names};
@@ -318,7 +327,12 @@
 <span class="comment">// If an entry point references a zombie&#39;d value, then the entry point would normally get removed.
 // That&#39;s an absolutely horrible experience to debug, though, so instead, create a nice error
 // message containing the stack trace of how the entry point got to the zombie value.
-</span><span class="kw">fn </span>report_error_zombies(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;</span>Module, zombie: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, ZombieInfo&lt;<span class="lifetime">&#39;_</span>&gt;&gt;) {
+</span><span class="kw">fn </span>report_error_zombies(
+    sess: <span class="kw-2">&amp;</span>Session,
+    module: <span class="kw-2">&amp;</span>Module,
+    zombie: <span class="kw-2">&amp;</span>FxHashMap&lt;Word, ZombieInfo&lt;<span class="lifetime">&#39;_</span>&gt;&gt;,
+) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="prelude-val">Ok</span>(());
     <span class="kw">let </span><span class="kw-2">mut </span>names = <span class="prelude-val">None</span>;
     <span class="kw">for </span>root <span class="kw">in </span><span class="kw">super</span>::dce::collect_roots(module) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(reason) = zombie.get(<span class="kw-2">&amp;</span>root) {
@@ -331,14 +345,16 @@
                 .chain(stack)
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
                 .join(<span class="string">&quot;\n&quot;</span>);
-            sess.struct_span_err(reason.span, reason.reason)
+            result = <span class="prelude-val">Err</span>(sess
+                .struct_span_err(reason.span, reason.reason)
                 .note(<span class="kw-2">&amp;</span>stack_note)
-                .emit();
+                .emit());
         }
     }
+    result
 }
 
-<span class="kw">pub fn </span>remove_zombies(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;mut </span>Module) {
+<span class="kw">pub fn </span>remove_zombies(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;mut </span>Module) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
     <span class="kw">let </span>zombies_owned = ZombieDecoration::decode_all(module)
         .map(|(id, zombie)| {
             <span class="kw">let </span>ZombieDecoration { reason, span } = zombie.deserialize();
@@ -356,7 +372,7 @@
     <span class="comment">// Note: This is O(n^2).
     </span><span class="kw">while </span>spread_zombie(module, <span class="kw-2">&amp;mut </span>zombies) {}
 
-    report_error_zombies(sess, module, <span class="kw-2">&amp;</span>zombies);
+    <span class="kw">let </span>result = report_error_zombies(sess, module, <span class="kw-2">&amp;</span>zombies);
 
     <span class="kw">if </span>env::var(<span class="string">&quot;PRINT_ALL_ZOMBIE&quot;</span>).is_ok() {
         <span class="kw">for </span>(<span class="kw-2">&amp;</span>zomb, reason) <span class="kw">in </span><span class="kw-2">&amp;</span>zombies {
@@ -419,6 +435,8 @@
     module
         .functions
         .retain(|f| is_zombie(f.def.as_ref().unwrap(), <span class="kw-2">&amp;</span>zombies).is_none());
+
+    result
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (8ce3204af 2022-09-30)" ></div></body></html>
