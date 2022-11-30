@@ -98,7 +98,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let fn_id = self.shader_entry_stub(
             span,
             entry_func,
-            &fn_abi.args,
+            fn_abi,
             hir_params,
             name,
             entry.execution_model,
@@ -116,7 +116,7 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         span: Span,
         entry_func: SpirvValue,
-        arg_abis: &[ArgAbi<'tcx, Ty<'tcx>>],
+        entry_fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
         hir_params: &[hir::Param<'tcx>],
         name: String,
         execution_model: ExecutionModel,
@@ -141,7 +141,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let mut bx = Builder::build(self, Builder::append_block(self, stub_fn, ""));
         let mut call_args = vec![];
         let mut decoration_locations = FxHashMap::default();
-        for (entry_arg_abi, hir_param) in arg_abis.iter().zip(hir_params) {
+        for (entry_arg_abi, hir_param) in entry_fn_abi.args.iter().zip(hir_params) {
             bx.set_span(hir_param.span);
             self.declare_shader_interface_for_param(
                 execution_model,
