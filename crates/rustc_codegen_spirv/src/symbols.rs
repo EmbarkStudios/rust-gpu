@@ -641,9 +641,7 @@ fn parse_entry_attrs(
                             return Err((
                                 attr_name.span,
                                 format!(
-                                    "#[spirv({}(..))] unknown attribute argument {}",
-                                    name.name.to_ident_string(),
-                                    attr_name.name.to_ident_string()
+                                    "#[spirv({name}(..))] unknown attribute argument {attr_name}"
                                 ),
                             ))
                         }
@@ -651,20 +649,13 @@ fn parse_entry_attrs(
                 } else {
                     return Err((
                         attr_name.span,
-                        format!(
-                            "#[spirv({}(..))] unknown attribute argument {}",
-                            name.name.to_ident_string(),
-                            attr_name.name.to_ident_string()
-                        ),
+                        format!("#[spirv({name}(..))] unknown attribute argument {attr_name}",),
                     ));
                 }
             } else {
                 return Err((
                     arg.span(),
-                    format!(
-                        "#[spirv({}(..))] attribute argument must be single identifier",
-                        name.name.to_ident_string()
-                    ),
+                    format!("#[spirv({name}(..))] attribute argument must be single identifier"),
                 ));
             }
         }
