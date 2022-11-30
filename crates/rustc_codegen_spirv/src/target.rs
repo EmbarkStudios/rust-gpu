@@ -1,5 +1,5 @@
 use rspirv::spirv::MemoryModel;
-use rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions};
+use rustc_target::spec::{Cc, LinkerFlavor, PanicStrategy, Target, TargetOptions};
 use spirv_tools::TargetEnv;
 
 const ARCH: &str = "spirv";
@@ -84,7 +84,7 @@ impl SpirvTarget {
         o.dll_suffix = ".spv".into();
         o.dynamic_linking = true;
         o.emit_debug_gdb_scripts = false;
-        o.linker_flavor = LinkerFlavor::Ld;
+        o.linker_flavor = LinkerFlavor::Unix(Cc::No);
         o.panic_strategy = PanicStrategy::Abort;
         o.os = "unknown".into();
         o.env = self.env.to_string().into();

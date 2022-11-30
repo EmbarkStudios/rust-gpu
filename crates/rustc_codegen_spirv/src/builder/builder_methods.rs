@@ -18,6 +18,7 @@ use rustc_codegen_ssa::MemFlags;
 use rustc_middle::bug;
 use rustc_middle::ty::Ty;
 use rustc_span::Span;
+use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Abi, Align, Scalar, Size, WrappingRange};
 use std::convert::TryInto;
 use std::iter::{self, empty};
@@ -795,6 +796,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn invoke(
         &mut self,
         llty: Self::Type,
+        fn_abi: Option<&FnAbi<'tcx, Ty<'tcx>>>,
         llfn: Self::Value,
         args: &[Self::Value],
         then: Self::BasicBlock,
@@ -802,7 +804,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         funclet: Option<&Self::Funclet>,
     ) -> Self::Value {
         // Exceptions don't exist, jump directly to then block
-        let result = self.call(llty, llfn, args, funclet);
+        let result = self.call(llty, fn_abi, llfn, args, funclet);
         self.emit().branch(then).unwrap();
         result
     }
@@ -1009,13 +1011,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         result_id.with_type(ptr_ty)
     }
 
-    fn dynamic_alloca(&mut self, ty: Self::Type, align: Align) -> Self::Value {
-        let result = self.alloca(ty, align);
-        self.err("dynamic alloca is not supported yet");
-        result
-    }
-
-    fn array_alloca(&mut self, _ty: Self::Type, _len: Self::Value, _align: Align) -> Self::Value {
+    fn byte_array_alloca(&mut self, _len: Self::Value, _align: Align) -> Self::Value {
         self.fatal("array alloca not supported yet")
     }
 
@@ -2293,6 +2289,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn call(
         &mut self,
         callee_ty: Self::Type,
+        _fn_abi: Option<&FnAbi<'tcx, Ty<'tcx>>>,
         callee: Self::Value,
         args: &[Self::Value],
         funclet: Option<&Self::Funclet>,

@@ -364,8 +364,6 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
 }
 
 impl<'a, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'tcx> {
-    fn apply_attrs_callsite(&mut self, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>, _callsite: Self::Value) {}
-
     fn get_param(&mut self, index: usize) -> Self::Value {
         self.function_parameter_values.borrow()[&self.current_fn.def(self)][index]
     }

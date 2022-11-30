@@ -244,7 +244,7 @@ fn target_from_impl_item<'tcx>(tcx: TyCtxt<'tcx>, impl_item: &hir::ImplItem<'_>)
                 Target::Method(MethodKind::Inherent)
             }
         }
-        hir::ImplItemKind::TyAlias(..) => Target::AssocTy,
+        hir::ImplItemKind::Type(..) => Target::AssocTy,
     }
 }
 
