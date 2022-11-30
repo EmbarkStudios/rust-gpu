@@ -40,7 +40,7 @@ pub struct CodegenCx<'tcx> {
     pub tcx: TyCtxt<'tcx>,
     pub codegen_unit: &'tcx CodegenUnit<'tcx>,
     /// Spir-v module builder
-    pub builder: BuilderSpirv,
+    pub builder: BuilderSpirv<'tcx>,
     /// Map from MIR function to spir-v function ID
     pub instances: RefCell<FxHashMap<Instance<'tcx>, SpirvValue>>,
     /// Map from function ID to parameter list
@@ -144,14 +144,12 @@ impl<'tcx> CodegenCx<'tcx> {
         self.builder.builder(cursor)
     }
 
-    // FIXME(eddyb) this should not clone the `SpirvType` back out, but we'd have
-    // to fix ~100 callsites (to add a `*` deref), if we change this signature.
     #[track_caller]
-    pub fn lookup_type(&self, ty: Word) -> SpirvType {
-        (*self.type_cache.lookup(ty)).clone()
+    pub fn lookup_type(&self, ty: Word) -> SpirvType<'tcx> {
+        self.type_cache.lookup(ty)
     }
 
-    pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'tcx> {
+    pub fn debug_type(&self, ty: Word) -> SpirvTypePrinter<'_, 'tcx> {
         self.lookup_type(ty).debug(ty, self)
     }
 
@@ -537,8 +535,7 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         if self.is_system_crate() {
             // Create these undefs up front instead of on demand in SpirvValue::def because
             // SpirvValue::def can't use cx.emit()
-            self.builder
-                .def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
+            self.def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
         }
 
         SpirvValue {

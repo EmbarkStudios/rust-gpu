@@ -13,7 +13,6 @@ use rustc_span::symbol::Symbol;
 use rustc_span::{Span, DUMMY_SP};
 use std::assert_matches::assert_matches;
 use std::cell::{RefCell, RefMut};
-use std::rc::Rc;
 use std::{fs::File, io::Write, path::Path};
 
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -68,7 +67,7 @@ impl SpirvValue {
     pub fn const_fold_load(self, cx: &CodegenCx<'_>) -> Option<Self> {
         match self.kind {
             SpirvValueKind::Def(id) | SpirvValueKind::IllegalConst(id) => {
-                let entry = cx.builder.id_to_const.borrow().get(&id)?.clone();
+                let &entry = cx.builder.id_to_const.borrow().get(&id)?;
                 match entry.val {
                     SpirvConst::PtrTo { pointee } => {
                         let ty = match cx.lookup_type(self.ty) {
@@ -213,8 +212,8 @@ impl SpirvValueExt for Word {
     }
 }
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub enum SpirvConst {
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub enum SpirvConst<'tcx> {
     U32(u32),
     U64(u64),
     /// f32 isn't hash, so store bits
@@ -232,14 +231,47 @@ pub enum SpirvConst {
     // different functions, but of the same type, don't overlap their zombies.
     ZombieUndefForFnAddr,
 
-    // FIXME(eddyb) use `tcx.arena.dropless` to get `&'tcx [_]`, instead of `Rc`.
-    Composite(Rc<[Word]>),
+    Composite(&'tcx [Word]),
 
     /// Pointer to constant data, i.e. `&pointee`, represented as an `OpVariable`
     /// in the `Private` storage class, and with `pointee` as its initializer.
     PtrTo {
         pointee: Word,
     },
+}
+
+impl SpirvConst<'_> {
+    /// Replace `&[T]` fields with `&'tcx [T]` ones produced by calling
+    /// `tcx.arena.dropless.alloc_slice(...)` - this is done late for two reasons:
+    /// 1. it avoids allocating in the arena when the cache would be hit anyway,
+    ///    which would create "garbage" (as in, unreachable allocations)
+    ///    (ideally these would also be interned, but that's even more refactors)
+    /// 2. an empty slice is disallowed (as it's usually handled as a special
+    ///    case elsewhere, e.g. `rustc`'s `ty::List` - sadly we can't use that)
+    fn tcx_arena_alloc_slices<'tcx>(self, cx: &CodegenCx<'tcx>) -> SpirvConst<'tcx> {
+        fn arena_alloc_slice<'tcx, T: Copy>(cx: &CodegenCx<'tcx>, xs: &[T]) -> &'tcx [T] {
+            if xs.is_empty() {
+                &[]
+            } else {
+                cx.tcx.arena.dropless.alloc_slice(xs)
+            }
+        }
+
+        match self {
+            // FIXME(eddyb) these are all noop cases, could they be automated?
+            SpirvConst::U32(v) => SpirvConst::U32(v),
+            SpirvConst::U64(v) => SpirvConst::U64(v),
+            SpirvConst::F32(v) => SpirvConst::F32(v),
+            SpirvConst::F64(v) => SpirvConst::F64(v),
+            SpirvConst::Bool(v) => SpirvConst::Bool(v),
+            SpirvConst::Null => SpirvConst::Null,
+            SpirvConst::Undef => SpirvConst::Undef,
+            SpirvConst::ZombieUndefForFnAddr => SpirvConst::ZombieUndefForFnAddr,
+            SpirvConst::PtrTo { pointee } => SpirvConst::PtrTo { pointee },
+
+            SpirvConst::Composite(fields) => SpirvConst::Composite(arena_alloc_slice(cx, fields)),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -317,22 +349,22 @@ pub struct BuilderCursor {
     pub block: Option<usize>,
 }
 
-pub struct BuilderSpirv {
+pub struct BuilderSpirv<'tcx> {
     builder: RefCell<Builder>,
 
     // Bidirectional maps between `SpirvConst` and the ID of the defined global
     // (e.g. `OpConstant...`) instruction.
     // NOTE(eddyb) both maps have `WithConstLegality` around their keys, which
     // allows getting that legality information without additional lookups.
-    const_to_id: RefCell<FxHashMap<WithType<SpirvConst>, WithConstLegality<Word>>>,
-    id_to_const: RefCell<FxHashMap<Word, WithConstLegality<SpirvConst>>>,
+    const_to_id: RefCell<FxHashMap<WithType<SpirvConst<'tcx>>, WithConstLegality<Word>>>,
+    id_to_const: RefCell<FxHashMap<Word, WithConstLegality<SpirvConst<'tcx>>>>,
     string_cache: RefCell<FxHashMap<String, Word>>,
 
     enabled_capabilities: FxHashSet<Capability>,
     enabled_extensions: FxHashSet<Symbol>,
 }
 
-impl BuilderSpirv {
+impl<'tcx> BuilderSpirv<'tcx> {
     pub fn new(sym: &Symbols, target: &SpirvTarget, features: &[TargetFeature]) -> Self {
         let version = target.spirv_version();
         let memory_model = target.memory_model();
@@ -457,7 +489,12 @@ impl BuilderSpirv {
         bug!("Function not found: {}", id);
     }
 
-    pub fn def_constant(&self, ty: Word, val: SpirvConst) -> SpirvValue {
+    pub(crate) fn def_constant_cx(
+        &self,
+        ty: Word,
+        val: SpirvConst<'_>,
+        cx: &CodegenCx<'tcx>,
+    ) -> SpirvValue {
         let val_with_type = WithType { ty, val };
         let mut builder = self.builder(BuilderCursor::default());
         if let Some(entry) = self.const_to_id.borrow().get(&val_with_type) {
@@ -486,7 +523,7 @@ impl BuilderSpirv {
             SpirvConst::Null => builder.constant_null(ty),
             SpirvConst::Undef | SpirvConst::ZombieUndefForFnAddr => builder.undef(ty, None),
 
-            SpirvConst::Composite(ref v) => builder.constant_composite(ty, v.iter().copied()),
+            SpirvConst::Composite(v) => builder.constant_composite(ty, v.iter().copied()),
 
             SpirvConst::PtrTo { pointee } => {
                 builder.variable(ty, None, StorageClass::Private, Some(pointee))
@@ -517,7 +554,7 @@ impl BuilderSpirv {
                 Ok(())
             }
 
-            SpirvConst::Composite(ref v) => v.iter().fold(Ok(()), |composite_legal, field| {
+            SpirvConst::Composite(v) => v.iter().fold(Ok(()), |composite_legal, field| {
                 let field_entry = &self.id_to_const.borrow()[field];
                 let field_legal_in_composite = field_entry.legal.and(
                     // `field` is itself some legal `SpirvConst`, but can we have
@@ -556,14 +593,11 @@ impl BuilderSpirv {
                 }
             },
         };
+        let val = val.tcx_arena_alloc_slices(cx);
         assert_matches!(
-            self.const_to_id.borrow_mut().insert(
-                WithType {
-                    ty,
-                    val: val.clone()
-                },
-                WithConstLegality { val: id, legal }
-            ),
+            self.const_to_id
+                .borrow_mut()
+                .insert(WithType { ty, val }, WithConstLegality { val: id, legal }),
             None
         );
         assert_matches!(
@@ -581,10 +615,10 @@ impl BuilderSpirv {
         SpirvValue { kind, ty }
     }
 
-    pub fn lookup_const(&self, def: SpirvValue) -> Option<SpirvConst> {
+    pub fn lookup_const(&self, def: SpirvValue) -> Option<SpirvConst<'tcx>> {
         match def.kind {
             SpirvValueKind::Def(id) | SpirvValueKind::IllegalConst(id) => {
-                Some(self.id_to_const.borrow().get(&id)?.val.clone())
+                Some(self.id_to_const.borrow().get(&id)?.val)
             }
             _ => None,
         }
