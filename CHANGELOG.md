@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed 🛠️
 
-- Updated toolchain to `nightly-2022-10-15`
+- Updated toolchain to `nightly-2022-10-29`
 - Applied workspace inheritance to Cargo.toml files
 
 ### Removed 🔥
