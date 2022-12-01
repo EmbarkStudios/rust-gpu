@@ -724,6 +724,7 @@
 <span id="724">724</span>
 <span id="725">725</span>
 <span id="726">726</span>
+<span id="727">727</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::builder;
 <span class="kw">use </span><span class="kw">crate</span>::codegen_cx::CodegenCx;
 <span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
@@ -875,7 +876,7 @@
             }
 
             SpirvValueKind::FnAddr { .. } =&gt; {
-                <span class="kw">if </span>cx.is_system_crate() {
+                <span class="kw">if </span>cx.is_system_crate(span) {
                     cx.builder
                         .const_to_id
                         .borrow()
@@ -886,9 +887,10 @@
                         .expect(<span class="string">&quot;FnAddr didn&#39;t go through proper undef registration&quot;</span>)
                         .val
                 } <span class="kw">else </span>{
-                    cx.tcx
-                        .sess
-                        .err(<span class="string">&quot;Cannot use this function pointer for anything other than calls&quot;</span>);
+                    cx.tcx.sess.span_err(
+                        span,
+                        <span class="string">&quot;Cannot use this function pointer for anything other than calls&quot;</span>,
+                    );
                     <span class="comment">// Because we never get beyond compilation (into e.g. linking),
                     // emitting an invalid ID reference here is OK.
                     </span><span class="number">0
@@ -900,7 +902,7 @@
                 original_pointee_ty,
                 zombie_target_undef,
             } =&gt; {
-                <span class="kw">if </span>cx.is_system_crate() {
+                <span class="kw">if </span>cx.is_system_crate(span) {
                     cx.zombie_with_span(
                         zombie_target_undef,
                         span,

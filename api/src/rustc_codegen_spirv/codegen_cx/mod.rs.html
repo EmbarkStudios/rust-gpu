@@ -652,6 +652,22 @@
 <span id="652">652</span>
 <span id="653">653</span>
 <span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
 </pre><pre class="rust"><code><span class="kw">mod </span>constant;
 <span class="kw">mod </span>declare;
 <span class="kw">mod </span>entry;
@@ -678,7 +694,7 @@
 <span class="kw">use </span>rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 <span class="kw">use </span>rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 <span class="kw">use </span>rustc_session::Session;
-<span class="kw">use </span>rustc_span::def_id::{DefId, LOCAL_CRATE};
+<span class="kw">use </span>rustc_span::def_id::DefId;
 <span class="kw">use </span>rustc_span::symbol::{sym, Symbol};
 <span class="kw">use </span>rustc_span::{SourceFile, Span, DUMMY_SP};
 <span class="kw">use </span>rustc_target::abi::call::{FnAbi, PassMode};
@@ -820,7 +836,7 @@
     /// Finally, if *user* code is marked as zombie, then this means that the user tried to do
     /// something that isn&#39;t supported, and should be an error.
     </span><span class="kw">pub fn </span>zombie_with_span(<span class="kw-2">&amp;</span><span class="self">self</span>, word: Word, span: Span, reason: <span class="kw-2">&amp;</span>str) {
-        <span class="kw">if </span><span class="self">self</span>.is_system_crate() {
+        <span class="kw">if </span><span class="self">self</span>.is_system_crate(span) {
             <span class="self">self</span>.zombie_even_in_user_code(word, span, reason);
         } <span class="kw">else </span>{
             <span class="self">self</span>.tcx.sess.span_err(span, reason);
@@ -839,14 +855,30 @@
         );
     }
 
-    <span class="kw">pub fn </span>is_system_crate(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.tcx
+    <span class="doccomment">/// Returns `true` if the originating crate of `span` (which could very well
+    /// be a different crate, e.g. a generic/`#[inline]` function, or a macro),
+    /// is a &quot;system crate&quot;, and therefore allowed to have some errors deferred
+    /// as &quot;zombies&quot; (see `zombie_with_span`&#39;s docs above for more details).
+    </span><span class="kw">pub fn </span>is_system_crate(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span) -&gt; bool {
+        <span class="comment">// HACK(eddyb) this ignores `.lo` vs `.hi` potentially resulting in
+        // different `SourceFile`s (which is likely a bug anyway).
+        </span><span class="kw">let </span>cnum = <span class="self">self
+            </span>.tcx
             .sess
-            .contains_name(<span class="self">self</span>.tcx.hir().krate_attrs(), sym::compiler_builtins)
-            || <span class="self">self</span>.tcx.crate_name(LOCAL_CRATE) == sym::core
-            || <span class="self">self</span>.tcx.crate_name(LOCAL_CRATE) == <span class="self">self</span>.sym.spirv_std
-            || <span class="self">self</span>.tcx.crate_name(LOCAL_CRATE) == <span class="self">self</span>.sym.libm
-            || <span class="self">self</span>.tcx.crate_name(LOCAL_CRATE) == <span class="self">self</span>.sym.num_traits
+            .source_map()
+            .lookup_source_file(span.data().lo)
+            .cnum;
+
+        <span class="self">self</span>.tcx
+            .get_attr(cnum.as_def_id(), sym::compiler_builtins)
+            .is_some()
+            || [
+                sym::core,
+                <span class="self">self</span>.sym.spirv_std,
+                <span class="self">self</span>.sym.libm,
+                <span class="self">self</span>.sym.num_traits,
+            ]
+            .contains(<span class="kw-2">&amp;</span><span class="self">self</span>.tcx.crate_name(cnum))
     }
 
     <span class="kw">pub fn </span>finalize_module(<span class="self">self</span>) -&gt; Module {
@@ -1186,7 +1218,7 @@
         }
         .def(span, <span class="self">self</span>);
 
-        <span class="kw">if </span><span class="self">self</span>.is_system_crate() {
+        <span class="kw">if </span><span class="self">self</span>.is_system_crate(span) {
             <span class="comment">// Create these undefs up front instead of on demand in SpirvValue::def because
             // SpirvValue::def can&#39;t use cx.emit()
             </span><span class="self">self</span>.def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
