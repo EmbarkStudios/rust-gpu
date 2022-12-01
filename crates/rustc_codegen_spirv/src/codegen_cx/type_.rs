@@ -249,10 +249,10 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn vector_length(&self, ty: Self::Type) -> usize {
         match self.lookup_type(ty) {
             SpirvType::Vector { count, .. } => count as usize,
-            ty => self.tcx.sess.fatal(format!(
-                "vector_length called on non-vector type: {:?}",
-                ty
-            )),
+            ty => self
+                .tcx
+                .sess
+                .fatal(format!("vector_length called on non-vector type: {:?}", ty)),
         }
     }
 
