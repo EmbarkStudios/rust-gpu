@@ -51,7 +51,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     if !inlined_dont_inlines.is_empty() {
         let names = get_names(module);
         for f in inlined_dont_inlines {
-            sess.warn(&format!(
+            sess.warn(format!(
                 "`#[inline(never)]` function `{}` needs to be inlined \
                  because it has illegal argument or return types",
                 get_name(&names, f)
@@ -122,7 +122,7 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
                 let names = get_names(module);
                 let current_name = get_name(&names, module.functions[current].def_id().unwrap());
                 let next_name = get_name(&names, module.functions[next].def_id().unwrap());
-                *has_recursion = Some(sess.err(&format!(
+                *has_recursion = Some(sess.err(format!(
                     "module has recursion, which is not allowed: `{}` calls `{}`",
                     current_name, next_name
                 )));

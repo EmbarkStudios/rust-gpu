@@ -105,7 +105,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                     if let Some(modifier) = modifier {
                         self.tcx.sess.span_err(
                             span,
-                            &format!("asm modifiers are not supported: {}", modifier),
+                            format!("asm modifiers are not supported: {}", modifier),
                         );
                     }
                     let line = tokens.last_mut().unwrap();
@@ -577,7 +577,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             ));
         }
         if tokens.next().is_some() {
-            self.tcx.sess.err(&format!(
+            self.tcx.sess.err(format!(
                 "too many operands to instruction: {}",
                 instruction.class.opname
             ));
@@ -792,7 +792,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             _ => {
                 self.tcx
                     .sess
-                    .span_err(span, &format!("invalid register: {}", reg));
+                    .span_err(span, format!("invalid register: {}", reg));
             }
         }
     }
@@ -916,7 +916,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                             other => {
                                 self.tcx.sess.span_err(
                                     span,
-                                    &format!(
+                                    format!(
                                         "cannot use typeof* on non-pointer type: {}",
                                         other.debug(ty, self)
                                     ),
@@ -938,7 +938,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                             other => {
                                 self.tcx.sess.span_err(
                                     span,
-                                    &format!(
+                                    format!(
                                         "out register type not pointer: {}",
                                         other.debug(place.llval.ty, self)
                                     ),
@@ -1159,7 +1159,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         Some(Token::Placeholder(_, span)) => {
                             self.tcx.sess.span_err(
                                 span,
-                                &format!(
+                                format!(
                                     "expected a literal, not a dynamic value for a {:?}",
                                     kind
                                 ),
@@ -1168,7 +1168,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         Some(Token::Typeof(_, span, _)) => {
                             self.tcx.sess.span_err(
                                 span,
-                                &format!("expected a literal, not a type for a {:?}", kind),
+                                format!("expected a literal, not a type for a {:?}", kind),
                             );
                         }
                         None => {
@@ -1373,13 +1373,13 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Token::Placeholder(_, span) => {
                     self.tcx.sess.span_err(
                         span,
-                        &format!("expected a literal, not a dynamic value for a {:?}", kind),
+                        format!("expected a literal, not a dynamic value for a {:?}", kind),
                     );
                 }
                 Token::Typeof(_, span, _) => {
                     self.tcx.sess.span_err(
                         span,
-                        &format!("expected a literal, not a type for a {:?}", kind),
+                        format!("expected a literal, not a type for a {:?}", kind),
                     );
                 }
             },

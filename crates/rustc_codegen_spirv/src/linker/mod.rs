@@ -123,7 +123,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             bound += module.header.as_ref().unwrap().bound - 1;
             let this_version = module.header.as_ref().unwrap().version();
             if version != this_version {
-                sess.fatal(&format!(
+                sess.fatal(format!(
                     "cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}",
                     version.0, version.1, this_version.0, this_version.1
                 ))

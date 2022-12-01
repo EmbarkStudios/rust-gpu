@@ -12,7 +12,7 @@ fn build_shader(path_to_crate: &str, codegen_names: bool) -> Result<(), Box<dyn 
         let out_dir = env::var_os("OUT_DIR").unwrap();
         let dest_path = Path::new(&out_dir).join("entry_points.rs");
         fs::create_dir_all(&out_dir).unwrap();
-        fs::write(&dest_path, result.codegen_entry_point_strings()).unwrap();
+        fs::write(dest_path, result.codegen_entry_point_strings()).unwrap();
     }
     Ok(())
 }

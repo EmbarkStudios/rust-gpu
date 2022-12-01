@@ -38,7 +38,7 @@ impl<'tcx> CodegenCx<'tcx> {
             } else {
                 self.tcx
                     .sess
-                    .span_err(span, &format!("Cannot declare {} as an entry point", name));
+                    .span_err(span, format!("Cannot declare {} as an entry point", name));
                 return;
             };
             let body = self
@@ -57,7 +57,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     if !matches!(arg_abi.layout.ty.kind(), ty::Ref(..)) {
                         self.tcx.sess.span_err(
                             hir_param.ty_span,
-                            &format!(
+                            format!(
                                 "entry point parameter type not yet supported \
                                  (`{}` has `ScalarPair` ABI but is not a `&T`)",
                                 arg_abi.layout.ty
@@ -69,7 +69,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 // is any validation concern, it should be done on the types.
                 PassMode::Ignore => self.tcx.sess.span_fatal(
                     hir_param.ty_span,
-                    &format!(
+                    format!(
                         "entry point parameter type not yet supported \
                         (`{}` has size `0`)",
                         arg_abi.layout.ty
@@ -87,7 +87,7 @@ impl<'tcx> CodegenCx<'tcx> {
         } else {
             self.tcx.sess.span_err(
                 span,
-                &format!(
+                format!(
                     "entry point should return `()`, not `{}`",
                     fn_abi.ret.layout.ty
                 ),
@@ -206,7 +206,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 } else {
                     self.tcx.sess.span_err(
                         hir_param.ty_span,
-                        &format!(
+                        format!(
                             "entry parameter type must be by-reference: `&{}`",
                             layout.ty,
                         ),
@@ -232,7 +232,7 @@ impl<'tcx> CodegenCx<'tcx> {
             if !is_ref {
                 self.tcx.sess.span_fatal(
                     hir_param.ty_span,
-                    &format!(
+                    format!(
                         "invalid entry param type `{}` for storage class `{:?}` \
                          (expected `&{}T`)",
                         layout.ty,
@@ -281,7 +281,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 (true, hir::Mutability::Mut) => StorageClass::Output,
                 (true, hir::Mutability::Not) => self.tcx.sess.span_fatal(
                     hir_param.ty_span,
-                    &format!(
+                    format!(
                         "invalid entry param type `{}` (expected `{}` or `&mut {1}`)",
                         layout.ty, value_ty
                     ),
@@ -404,7 +404,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 if is_unsized {
                     self.tcx.sess.span_fatal(
                         hir_param.ty_span,
-                        &format!(
+                        format!(
                             "unsized types are not supported for storage class {:?}",
                             storage_class
                         ),

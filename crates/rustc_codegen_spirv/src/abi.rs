@@ -575,7 +575,7 @@ fn dig_scalar_pointee<'tcx>(
             let new_pointee = dig_scalar_pointee(cx, field, offset - field_offset);
             match pointee {
                 Some(old_pointee) if old_pointee != new_pointee => {
-                    cx.tcx.sess.fatal(&format!(
+                    cx.tcx.sess.fatal(format!(
                         "dig_scalar_pointee: unsupported Pointer with different \
                          pointee types ({:?} vs {:?}) at offset {:?} in {:#?}",
                         old_pointee, new_pointee, offset, layout
@@ -860,7 +860,7 @@ fn trans_intrinsic_type<'tcx>(
                     None => Err(cx
                         .tcx
                         .sess
-                        .err(&format!("Invalid value for Image const generic: {}", value))),
+                        .err(format!("Invalid value for Image const generic: {}", value))),
                 }
             }
 
