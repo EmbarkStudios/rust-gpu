@@ -1159,10 +1159,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         Some(Token::Placeholder(_, span)) => {
                             self.tcx.sess.span_err(
                                 span,
-                                format!(
-                                    "expected a literal, not a dynamic value for a {:?}",
-                                    kind
-                                ),
+                                format!("expected a literal, not a dynamic value for a {:?}", kind),
                             );
                         }
                         Some(Token::Typeof(_, span, _)) => {
