@@ -276,7 +276,7 @@ impl CodegenArgs {
             "single output or multiple output",
             "[single|multiple]",
         );
-        opts.optflagopt("", "disassemble", "print module to stderr", "");
+        opts.optflag("", "disassemble", "print module to stderr");
         opts.optopt("", "disassemble-fn", "print function to stderr", "NAME");
         opts.optopt(
             "",
@@ -284,22 +284,21 @@ impl CodegenArgs {
             "print entry point to stderr",
             "NAME",
         );
-        opts.optflagopt("", "disassemble-globals", "print globals to stderr", "");
+        opts.optflag("", "disassemble-globals", "print globals to stderr");
 
         opts.optopt("", "spirv-metadata", "how much metadata to include", "");
 
-        opts.optflagopt("", "relax-struct-store", "Allow store from one struct type to a different type with compatible layout and members.", "");
-        opts.optflagopt("", "relax-logical-pointer", "Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode", "");
-        opts.optflagopt("", "relax-block-layout", "Enable VK_KHR_relaxed_block_layout when checking standard uniform, storage buffer, and push constant layouts. This is the default when targeting Vulkan 1.1 or later.", "");
-        opts.optflagopt("", "uniform-buffer-standard-layout", "Enable VK_KHR_uniform_buffer_standard_layout when checking standard uniform buffer layouts.", "");
-        opts.optflagopt("", "scalar-block-layout", "Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.", "");
-        opts.optflagopt("", "skip-block-layout", "Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.", "");
+        opts.optflag("", "relax-struct-store", "Allow store from one struct type to a different type with compatible layout and members.");
+        opts.optflag("", "relax-logical-pointer", "Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode");
+        opts.optflag("", "relax-block-layout", "Enable VK_KHR_relaxed_block_layout when checking standard uniform, storage buffer, and push constant layouts. This is the default when targeting Vulkan 1.1 or later.");
+        opts.optflag("", "uniform-buffer-standard-layout", "Enable VK_KHR_uniform_buffer_standard_layout when checking standard uniform buffer layouts.");
+        opts.optflag("", "scalar-block-layout", "Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.");
+        opts.optflag("", "skip-block-layout", "Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.");
 
-        opts.optflagopt(
+        opts.optflag(
             "",
             "preserve-bindings",
             "Preserve unused descriptor bindings. Useful for reflection.",
-            "",
         );
 
         let matches = opts.parse(args)?;
