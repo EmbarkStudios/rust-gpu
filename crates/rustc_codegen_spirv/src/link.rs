@@ -66,7 +66,7 @@ pub fn link<'a>(
                     link_exe(sess, crate_type, &out_filename, codegen_results);
                 }
                 other => {
-                    sess.err(&format!("CrateType {:?} not supported yet", other));
+                    sess.err(format!("CrateType {:?} not supported yet", other));
                 }
             }
         }
@@ -99,7 +99,7 @@ fn link_rlib(sess: &Session, codegen_results: &CodegenResults, out_filename: &Pa
             | NativeLibKind::Unspecified => continue,
         }
         if let Some(name) = lib.name {
-            sess.err(&format!(
+            sess.err(format!(
                 "Adding native library to rlib not supported yet: {}",
                 name
             ));
@@ -236,7 +236,7 @@ fn post_link_single_module(
                 (optlevel, false) => format!("optlevel={:?}", optlevel),
                 (optlevel, true) => format!("optlevel={:?}, debuginfo=None", optlevel),
             };
-            sess.warn(&format!(
+            sess.warn(format!(
                 "spirv-opt should have ran ({}) but was disabled by NO_SPIRV_OPT",
                 reason
             ));
@@ -420,11 +420,11 @@ fn add_upstream_native_libraries(
                 continue;
             }
             match lib.kind {
-                NativeLibKind::Dylib { .. } | NativeLibKind::Unspecified => sess.fatal(&format!(
+                NativeLibKind::Dylib { .. } | NativeLibKind::Unspecified => sess.fatal(format!(
                     "TODO: dylib nativelibkind not supported yet: {}",
                     name
                 )),
-                NativeLibKind::Framework { .. } => sess.fatal(&format!(
+                NativeLibKind::Framework { .. } => sess.fatal(format!(
                     "TODO: framework nativelibkind not supported yet: {}",
                     name
                 )),
@@ -433,7 +433,7 @@ fn add_upstream_native_libraries(
                     ..
                 } => {
                     if data[cnum.as_usize() - 1] == Linkage::Static {
-                        sess.fatal(&format!(
+                        sess.fatal(format!(
                             "TODO: staticnobundle nativelibkind not supported yet: {}",
                             name
                         ))
@@ -444,9 +444,9 @@ fn add_upstream_native_libraries(
                     ..
                 } => {}
                 NativeLibKind::RawDylib => {
-                    sess.fatal(&format!("raw_dylib feature not yet implemented: {}", name))
+                    sess.fatal(format!("raw_dylib feature not yet implemented: {}", name))
                 }
-                NativeLibKind::LinkArg => sess.fatal(&format!(
+                NativeLibKind::LinkArg => sess.fatal(format!(
                     "TODO: linkarg nativelibkind not supported yet: {}",
                     name
                 )),

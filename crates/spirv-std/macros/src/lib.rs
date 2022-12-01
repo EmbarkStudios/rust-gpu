@@ -564,7 +564,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     if format_arguments.len() != variables.len() {
         return syn::Error::new(
             span,
-            &format!(
+            format!(
                 "{} % arguments were found, but {} variables were given",
                 format_arguments.len(),
                 variables.len()

@@ -66,14 +66,14 @@ impl<'tcx> CodegenCx<'tcx> {
                 _ => self
                     .tcx
                     .sess
-                    .fatal(&format!("Invalid constant value for bool: {}", val)),
+                    .fatal(format!("Invalid constant value for bool: {}", val)),
             },
             SpirvType::Integer(128, _) => {
                 let result = self.undef(ty);
                 self.zombie_no_span(result.def_cx(self), "u128 constant");
                 result
             }
-            other => self.tcx.sess.fatal(&format!(
+            other => self.tcx.sess.fatal(format!(
                 "constant_int invalid on type {}",
                 other.debug(ty, self)
             )),
@@ -94,7 +94,7 @@ impl<'tcx> CodegenCx<'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Float(32) => self.def_constant(ty, SpirvConst::F32((val as f32).to_bits())),
             SpirvType::Float(64) => self.def_constant(ty, SpirvConst::F64(val.to_bits())),
-            other => self.tcx.sess.fatal(&format!(
+            other => self.tcx.sess.fatal(format!(
                 "constant_float invalid on type {}",
                 other.debug(ty, self)
             )),
@@ -233,9 +233,9 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             _ => self
                                 .tcx
                                 .sess
-                                .fatal(&format!("Invalid constant value for bool: {}", data)),
+                                .fatal(format!("Invalid constant value for bool: {}", data)),
                         },
-                        other => self.tcx.sess.fatal(&format!(
+                        other => self.tcx.sess.fatal(format!(
                             "scalar_to_backend Primitive::Int not supported on type {}",
                             other.debug(ty, self)
                         )),
@@ -273,7 +273,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     GlobalAlloc::Memory(alloc) => {
                         let pointee = match self.lookup_type(ty) {
                             SpirvType::Pointer { pointee } => pointee,
-                            other => self.tcx.sess.fatal(&format!(
+                            other => self.tcx.sess.fatal(format!(
                                 "GlobalAlloc::Memory type not implemented: {}",
                                 other.debug(ty, self)
                             )),
@@ -293,7 +293,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             .unwrap_memory();
                         let pointee = match self.lookup_type(ty) {
                             SpirvType::Pointer { pointee } => pointee,
-                            other => self.tcx.sess.fatal(&format!(
+                            other => self.tcx.sess.fatal(format!(
                                 "GlobalAlloc::VTable type not implemented: {}",
                                 other.debug(ty, self)
                             )),
@@ -426,7 +426,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             other => {
                                 self.tcx
                                     .sess
-                                    .fatal(&format!("invalid size for integer: {}", other));
+                                    .fatal(format!("invalid size for integer: {}", other));
                             }
                         };
                         Primitive::Int(integer, int_signedness)
@@ -437,7 +437,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         other => {
                             self.tcx
                                 .sess
-                                .fatal(&format!("invalid size for float: {}", other));
+                                .fatal(format!("invalid size for float: {}", other));
                         }
                     },
                     SpirvType::Pointer { .. } => Primitive::Pointer,

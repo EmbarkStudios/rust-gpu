@@ -146,7 +146,7 @@ impl AggregatedSpirvAttributes {
             let (span, parsed_attr) = match parse_attr_result {
                 Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
-                    cx.tcx.sess.delay_span_bug(span, &msg);
+                    cx.tcx.sess.delay_span_bug(span, msg);
                     continue;
                 }
             };
@@ -158,7 +158,7 @@ impl AggregatedSpirvAttributes {
                 }) => {
                     cx.tcx
                         .sess
-                        .delay_span_bug(span, &format!("multiple {} attributes", category));
+                        .delay_span_bug(span, format!("multiple {} attributes", category));
                 }
             }
         }
@@ -264,7 +264,7 @@ impl CheckSpirvAttrVisitor<'_> {
             let (span, parsed_attr) = match parse_attr_result {
                 Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
-                    self.tcx.sess.span_err(span, &msg);
+                    self.tcx.sess.span_err(span, msg);
                     continue;
                 }
             };
@@ -333,7 +333,7 @@ impl CheckSpirvAttrVisitor<'_> {
                                 if let Err(msg) = valid {
                                     self.tcx.sess.span_err(
                                         span,
-                                        &format!("`{:?}` storage class {}", storage_class, msg),
+                                        format!("`{:?}` storage class {}", storage_class, msg),
                                     );
                                 }
                             }
@@ -354,7 +354,7 @@ impl CheckSpirvAttrVisitor<'_> {
                 Err(Expected(expected_target)) => {
                     self.tcx.sess.span_err(
                         span,
-                        &format!(
+                        format!(
                             "attribute is only valid on a {}, not on a {}",
                             expected_target, target
                         ),

@@ -141,7 +141,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
                     }
                     None => {
-                        self.tcx.sess.err(&format!(
+                        self.tcx.sess.err(format!(
                             "missing libm intrinsic {}, which is {}",
                             symbol_name, instance
                         ));
@@ -214,7 +214,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             Linkage::External => Some(LinkageType::Export),
             Linkage::Internal => None,
             other => {
-                self.tcx.sess.err(&format!(
+                self.tcx.sess.err(format!(
                     "TODO: Linkage type {:?} not supported yet for static var symbol {}",
                     other, symbol_name
                 ));
@@ -244,7 +244,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             Linkage::External | Linkage::WeakAny => Some(LinkageType::Export),
             Linkage::Internal => None,
             other => {
-                self.tcx.sess.err(&format!(
+                self.tcx.sess.err(format!(
                     "TODO: Linkage type {:?} not supported yet for function symbol {}",
                     other, symbol_name
                 ));
@@ -277,7 +277,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         };
         let value_ty = match self.lookup_type(g.ty) {
             SpirvType::Pointer { pointee } => pointee,
-            other => self.tcx.sess.fatal(&format!(
+            other => self.tcx.sess.fatal(format!(
                 "global had non-pointer type {}",
                 other.debug(g.ty, self)
             )),
