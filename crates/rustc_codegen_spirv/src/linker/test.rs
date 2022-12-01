@@ -3,8 +3,7 @@ use crate::codegen_cx::SpirvMetadata;
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
 use rustc_errors::registry::Registry;
-use rustc_span::edition::Edition;
-use std::{io::Read, thread};
+use std::io::Read;
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
@@ -55,43 +54,6 @@ fn load(bytes: &[u8]) -> Module {
     loader.module()
 }
 
-// HACK(shesp) This function was taken from `rustc_interface::util` since it's
-// no longer public. It's the non-parallel version since it's simpler and good
-// enough for our tests.
-fn run_in_thread_pool_with_globals<F: FnOnce() -> R + Send, R: Send>(
-    edition: Edition,
-    _threads: usize,
-    f: F,
-) -> R {
-    // The "thread pool" is a single spawned thread in the non-parallel
-    // compiler. We run on a spawned thread instead of the main thread (a) to
-    // provide control over the stack size, and (b) to increase similarity with
-    // the parallel compiler, in particular to ensure there is no accidental
-    // sharing of data between the main thread and the compilation thread
-    // (which might cause problems for the parallel compiler).
-    let mut builder = thread::Builder::new().name("rustc".to_string());
-    const STACK_SIZE: usize = 8 * 1024 * 1024;
-    builder = builder.stack_size(STACK_SIZE);
-
-    // We build the session globals and run `f` on the spawned thread, because
-    // `SessionGlobals` does not impl `Send` in the non-parallel compiler.
-    thread::scope(|s| {
-        // `unwrap` is ok here because `spawn_scoped` only panics if the thread
-        // name contains null bytes.
-        let r = builder
-            .spawn_scoped(s, move || {
-                rustc_span::create_session_globals_then(edition, f)
-            })
-            .unwrap()
-            .join();
-
-        match r {
-            Ok(v) => v,
-            Err(e) => std::panic::resume_unwind(e),
-        }
-    })
-}
-
 fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
     let modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
 
@@ -118,7 +80,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
         let matches = rustc_driver::handle_options(&["".to_string(), "x.rs".to_string()]).unwrap();
         let sopts = rustc_session::config::build_session_options(&matches);
 
-        run_in_thread_pool_with_globals(sopts.edition, sopts.unstable_opts.threads, || {
+        rustc_span::create_session_globals_then(sopts.edition, || {
             let mut sess = rustc_session::build_session(
                 sopts,
                 None,
