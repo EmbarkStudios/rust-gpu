@@ -428,36 +428,51 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         "-Zcrate-attr=register_tool(rust_gpu)".to_string(),
     ];
 
+    // Wrapper for `env::var` that appropriately informs Cargo of the dependency.
+    let tracked_env_var_get = |name| {
+        if let MetadataPrintout::Full | MetadataPrintout::DependencyOnly = builder.print_metadata {
+            println!("cargo:rerun-if-env-changed={name}");
+        }
+        env::var(name)
+    };
+
     let mut llvm_args = vec![];
     if builder.multimodule {
-        llvm_args.push("--module-output=multiple");
+        llvm_args.push("--module-output=multiple".to_string());
     }
     match builder.spirv_metadata {
         SpirvMetadata::None => (),
-        SpirvMetadata::NameVariables => llvm_args.push("--spirv-metadata=name-variables"),
-        SpirvMetadata::Full => llvm_args.push("--spirv-metadata=full"),
+        SpirvMetadata::NameVariables => {
+            llvm_args.push("--spirv-metadata=name-variables".to_string());
+        }
+        SpirvMetadata::Full => llvm_args.push("--spirv-metadata=full".to_string()),
     }
     if builder.relax_struct_store {
-        llvm_args.push("--relax-struct-store");
+        llvm_args.push("--relax-struct-store".to_string());
     }
     if builder.relax_logical_pointer {
-        llvm_args.push("--relax-logical-pointer");
+        llvm_args.push("--relax-logical-pointer".to_string());
     }
     if builder.relax_block_layout {
-        llvm_args.push("--relax-block-layout");
+        llvm_args.push("--relax-block-layout".to_string());
     }
     if builder.uniform_buffer_standard_layout {
-        llvm_args.push("--uniform-buffer-standard-layout");
+        llvm_args.push("--uniform-buffer-standard-layout".to_string());
     }
     if builder.scalar_block_layout {
-        llvm_args.push("--scalar-block-layout");
+        llvm_args.push("--scalar-block-layout".to_string());
     }
     if builder.skip_block_layout {
-        llvm_args.push("--skip-block-layout");
+        llvm_args.push("--skip-block-layout".to_string());
     }
     if builder.preserve_bindings {
-        llvm_args.push("--preserve-bindings");
+        llvm_args.push("--preserve-bindings".to_string());
     }
+
+    if let Ok(extra_codegen_args) = tracked_env_var_get("RUSTGPU_CODEGEN_ARGS") {
+        llvm_args.extend(extra_codegen_args.split_whitespace().map(|s| s.to_string()));
+    }
+
     let llvm_args = join_checking_for_separators(llvm_args, " ");
     if !llvm_args.is_empty() {
         rustflags.push(["-Cllvm-args=", &llvm_args].concat());
@@ -473,6 +488,10 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     if builder.deny_warnings {
         rustflags.push("-Dwarnings".to_string());
+    }
+
+    if let Ok(extra_rustflags) = tracked_env_var_get("RUSTGPU_RUSTFLAGS") {
+        rustflags.extend(extra_rustflags.split_whitespace().map(|s| s.to_string()));
     }
 
     let mut cargo = Command::new("cargo");

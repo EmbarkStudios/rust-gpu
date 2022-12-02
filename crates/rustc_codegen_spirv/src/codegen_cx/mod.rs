@@ -31,6 +31,7 @@ use rustc_target::abi::call::{FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
+use std::collections::BTreeSet;
 use std::iter::once;
 use std::path::Path;
 use std::rc::Rc;
@@ -308,12 +309,46 @@ impl CodegenArgs {
 
         let matches = opts.parse(args)?;
 
-        if matches.opt_present("h") || matches.opt_present("help") {
-            // FIXME(eddyb) make this somehow nicer wrt end-users
-            // (mentioning `-Cllvm-args` is pretty bad, we'd want to hide that).
+        let help_flag_positions: BTreeSet<_> = ["h", "help"]
+            .iter()
+            .flat_map(|&name| matches.opt_positions(name))
+            .collect();
+        if !help_flag_positions.is_empty() {
+            // HACK(eddyb) this tries to be a bit nicer to end-users, when they
+            // use `spirv-builder` (and so the `RUSTGPU_CODEGEN_ARGS` env var,
+            // to set codegen args), as mentioning `-Cllvm-args` is suboptimal.
+            let spirv_builder_env_var = "RUSTGPU_CODEGEN_ARGS";
+            let help_flag_comes_from_spirv_builder_env_var = std::env::var(spirv_builder_env_var)
+                .ok()
+                .and_then(|args_from_env| {
+                    let args_from_env: Vec<_> = args_from_env.split_whitespace().collect();
+                    if args_from_env.is_empty() {
+                        return None;
+                    }
+
+                    // HACK(eddyb) this may be a bit inefficient but we want to
+                    // make sure that *at least one* of the `-h`/`--help` flags
+                    // came from the `spirv-builder`-supported env var *and*
+                    // that the env var's contents are fully contained in the
+                    // `-C llvm-args` this `rustc` invocation is seeing.
+                    args.windows(args_from_env.len())
+                        .enumerate()
+                        .filter(|&(_, w)| w == args_from_env)
+                        .map(|(w_start, w)| w_start..w_start + w.len())
+                        .flat_map(|w_range| help_flag_positions.range(w_range))
+                        .next()
+                })
+                .is_some();
+            let codegen_args_lhs = if help_flag_comes_from_spirv_builder_env_var {
+                spirv_builder_env_var
+            } else {
+                "rustc -Cllvm-args"
+            };
             println!(
                 "{}",
-                opts.usage("Usage: rustc -Cllvm-args=\"[OPTIONS]\" with:")
+                opts.usage(&format!(
+                    "Usage: {codegen_args_lhs}=\"...\" with `...` from:"
+                ))
             );
             // HACK(eddyb) this avoids `Cargo` continuing after the message is printed.
             std::process::exit(1);
