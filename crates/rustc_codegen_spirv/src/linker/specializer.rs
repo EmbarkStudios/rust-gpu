@@ -106,10 +106,14 @@ impl<SO: Fn(&Operand) -> bool> Specialization for SimpleSpecialization<SO> {
     }
 }
 
-pub fn specialize(module: Module, specialization: impl Specialization) -> Module {
+pub fn specialize(
+    opts: &super::Options,
+    module: Module,
+    specialization: impl Specialization,
+) -> Module {
     // FIXME(eddyb) use `log`/`tracing` instead.
-    let debug = std::env::var("SPECIALIZER_DEBUG").is_ok();
-    let dump_instances = std::env::var("SPECIALIZER_DUMP_INSTANCES").ok();
+    let debug = opts.specializer_debug;
+    let dump_instances = &opts.specializer_dump_instances;
 
     let mut debug_names = FxHashMap::default();
     if debug || dump_instances.is_some() {

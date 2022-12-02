@@ -1,4 +1,4 @@
-use crate::codegen_cx::{CodegenArgs, ModuleOutputType, SpirvMetadata};
+use crate::codegen_cx::{CodegenArgs, SpirvMetadata};
 use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use ar::{Archive, GnuBuilder, Header};
 use rspirv::binary::Assemble;
@@ -17,7 +17,6 @@ use rustc_session::config::{CrateType, DebugInfo, Lto, OptLevel, OutputFilenames
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
-use std::env;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::{BufWriter, Read};
@@ -202,9 +201,12 @@ fn post_link_single_module(
     spv_binary: Vec<u32>,
     out_filename: &Path,
 ) {
-    if let Some(mut path) = crate::get_env_dump_dir("DUMP_POST_LINK") {
-        path.push(out_filename.file_name().unwrap());
-        std::fs::write(path, spirv_tools::binary::from_binary(&spv_binary)).unwrap();
+    if let Some(dir) = &cg_args.dump_post_link {
+        std::fs::write(
+            dir.join(out_filename.file_name().unwrap()),
+            spirv_tools::binary::from_binary(&spv_binary),
+        )
+        .unwrap();
     }
 
     let val_options = spirv_tools::val::ValidatorOptions {
@@ -227,7 +229,7 @@ fn post_link_single_module(
     let spv_binary = if sess.opts.optimize != OptLevel::No
         || (sess.opts.debuginfo == DebugInfo::None && cg_args.spirv_metadata == SpirvMetadata::None)
     {
-        if env::var("NO_SPIRV_OPT").is_err() {
+        if cg_args.run_spirv_opt {
             let _timer = sess.timer("link_spirv_opt");
             do_spirv_opt(sess, cg_args, spv_binary, out_filename, opt_options)
         } else {
@@ -237,7 +239,7 @@ fn post_link_single_module(
                 (optlevel, true) => format!("optlevel={:?}, debuginfo=None", optlevel),
             };
             sess.warn(format!(
-                "spirv-opt should have ran ({}) but was disabled by NO_SPIRV_OPT",
+                "`spirv-opt` should have ran ({}) but was disabled by `--no-spirv-opt`",
                 reason
             ));
             spv_binary
@@ -246,7 +248,7 @@ fn post_link_single_module(
         spv_binary
     };
 
-    if env::var("NO_SPIRV_VAL").is_err() {
+    if cg_args.run_spirv_val {
         do_spirv_val(sess, &spv_binary, out_filename, val_options);
     }
 
@@ -548,7 +550,7 @@ fn do_link(
         }
     }
 
-    if let Some(dir) = crate::get_env_dump_dir("DUMP_PRE_LINK") {
+    if let Some(dir) = &cg_args.dump_pre_link {
         for (num, module) in modules.iter().enumerate() {
             std::fs::write(
                 dir.join(format!("mod_{}.spv", num)),
@@ -560,15 +562,7 @@ fn do_link(
     drop(load_modules_timer);
 
     // Do the link...
-    let options = linker::Options {
-        dce: env::var("NO_DCE").is_err(),
-        compact_ids: env::var("NO_COMPACT_IDS").is_err(),
-        structurize: env::var("NO_STRUCTURIZE").is_err(),
-        emit_multiple_modules: cg_args.module_output_type == ModuleOutputType::Multiple,
-        spirv_metadata: cg_args.spirv_metadata,
-    };
-
-    let link_result = linker::link(sess, modules, &options);
+    let link_result = linker::link(sess, modules, &cg_args.linker_opts);
 
     match link_result {
         Ok(v) => v,

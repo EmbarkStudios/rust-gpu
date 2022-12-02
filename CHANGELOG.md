@@ -33,13 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added two `spirv-builder` environment variables to customize *only* the `rustc` invocations for shader crates and their dependencies:
     - `RUSTGPU_RUSTFLAGS="..."` for shader `RUSTFLAGS="..."`
-    - `RUSTGPU_CODEGEN_ARGS="..."` for shader `RUSTFLAGS=-Cllvm-args="..."`  
-      (run with `RUSTGPU_CODEGEN_ARGS=--help` to see a list of options)
+    - `RUSTGPU_CODEGEN_ARGS="..."` for shader "codegen args" (i.e. `RUSTFLAGS=-Cllvm-args="..."`)  
+      (check out ["codegen args" docs](docs/src/codegen-args.md), or run with `RUSTGPU_CODEGEN_ARGS=--help` to see the full list of options)
 
 ### Changed 🛠️
 
 - Updated toolchain to `nightly-2022-10-29`
-- Applied workspace inheritance to Cargo.toml files
+- Applied workspace inheritance to `Cargo.toml` files
+- Moved `rustc_codegen_spirv` debugging functionality from environment variables to "codegen args" options/flags (see [the updated docs](docs/src/codegen-args.md) for more details)
 
 ### Removed 🔥
 
@@ -58,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added ⭐
 
-- Added check for env var `RUSTGPU_SKIP_TOOLCHAIN_CHECK` to prevent toolchain check
+- Added check for environment variable `RUSTGPU_SKIP_TOOLCHAIN_CHECK` to prevent toolchain check
 
 ### Changed 🛠️
 

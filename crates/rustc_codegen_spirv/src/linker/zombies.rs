@@ -7,7 +7,6 @@ use rspirv::spirv::Word;
 use rustc_data_structures::fx::FxHashMap;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
-use std::env;
 use std::iter::once;
 
 #[derive(Clone)]
@@ -134,7 +133,11 @@ fn report_error_zombies(
     result
 }
 
-pub fn remove_zombies(sess: &Session, module: &mut Module) -> super::Result<()> {
+pub fn remove_zombies(
+    sess: &Session,
+    opts: &super::Options,
+    module: &mut Module,
+) -> super::Result<()> {
     let zombies_owned = ZombieDecoration::decode_all(module)
         .map(|(id, zombie)| {
             let ZombieDecoration { reason, span } = zombie.deserialize();
@@ -154,7 +157,8 @@ pub fn remove_zombies(sess: &Session, module: &mut Module) -> super::Result<()> 
 
     let result = report_error_zombies(sess, module, &zombies);
 
-    if env::var("PRINT_ALL_ZOMBIE").is_ok() {
+    // FIXME(eddyb) use `log`/`tracing` instead.
+    if opts.print_all_zombie {
         for (&zomb, reason) in &zombies {
             let orig = if zombies_owned.iter().any(|&(z, _)| z == zomb) {
                 "original"
@@ -165,7 +169,7 @@ pub fn remove_zombies(sess: &Session, module: &mut Module) -> super::Result<()> 
         }
     }
 
-    if env::var("PRINT_ZOMBIE").is_ok() {
+    if opts.print_zombie {
         let names = get_names(module);
         for f in &module.functions {
             if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), &zombies) {

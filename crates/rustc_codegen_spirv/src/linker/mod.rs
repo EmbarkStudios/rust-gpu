@@ -25,15 +25,27 @@ use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
+use std::path::PathBuf;
 
 pub type Result<T> = std::result::Result<T, ErrorGuaranteed>;
 
+#[derive(Default)]
 pub struct Options {
     pub compact_ids: bool,
     pub dce: bool,
     pub structurize: bool,
+
     pub emit_multiple_modules: bool,
     pub spirv_metadata: SpirvMetadata,
+
+    // NOTE(eddyb) these are debugging options that used to be env vars
+    // (for more information see `docs/src/codegen-args.md`).
+    pub dump_post_merge: Option<PathBuf>,
+    pub dump_post_split: Option<PathBuf>,
+    pub specializer_debug: bool,
+    pub specializer_dump_instances: Option<PathBuf>,
+    pub print_all_zombie: bool,
+    pub print_zombie: bool,
 }
 
 pub enum LinkResult {
@@ -147,7 +159,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         output
     };
 
-    if let Ok(ref path) = std::env::var("DUMP_POST_MERGE") {
+    if let Some(path) = &opts.dump_post_merge {
         std::fs::write(path, spirv_tools::binary::from_binary(&output.assemble())).unwrap();
     }
 
@@ -182,7 +194,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
 
     {
         let _timer = sess.timer("link_remove_zombies");
-        zombies::remove_zombies(sess, &mut output)?;
+        zombies::remove_zombies(sess, opts, &mut output)?;
     }
 
     {
@@ -194,6 +206,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             simple_passes::block_ordering_pass(func);
         }
         output = specializer::specialize(
+            opts,
             output,
             specializer::SimpleSpecialization {
                 specialize_operand: |operand| {
@@ -318,9 +331,12 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         LinkResult::MultipleModules(ref mut m) => Box::new(m.values_mut()),
     };
     for (i, output) in output_module_iter.enumerate() {
-        if let Some(mut path) = crate::get_env_dump_dir("DUMP_POST_SPLIT") {
-            path.push(format!("mod_{}.spv", i));
-            std::fs::write(path, spirv_tools::binary::from_binary(&output.assemble())).unwrap();
+        if let Some(dir) = &opts.dump_post_split {
+            std::fs::write(
+                dir.join(format!("mod_{}.spv", i)),
+                spirv_tools::binary::from_binary(&output.assemble()),
+            )
+            .unwrap();
         }
         // Run DCE again, even if emit_multiple_modules==false - the first DCE ran before
         // structurization and mem2reg (for perf reasons), and mem2reg may remove references to
