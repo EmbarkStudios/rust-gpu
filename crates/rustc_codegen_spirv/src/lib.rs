@@ -107,11 +107,10 @@ use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::{Target, TargetTriple};
 use std::any::Any;
-use std::env;
 use std::fs::{create_dir_all, File};
 use std::io::Cursor;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 
 fn dump_mir<'tcx>(
@@ -410,9 +409,8 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         let do_codegen = || {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
-            if let Some(mut path) = get_env_dump_dir("DUMP_MIR") {
-                path.push(cgu_name.to_string());
-                dump_mir(tcx, &mono_items, &path);
+            if let Some(dir) = &cx.codegen_args.dump_mir {
+                dump_mir(tcx, &mono_items, &dir.join(cgu_name.to_string()));
             }
 
             for &(mono_item, (linkage, visibility)) in mono_items.iter() {
@@ -438,7 +436,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
                 // attributes::sanitize(&cx, SanitizerSet::empty(), entry);
             }
         };
-        if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
+        if let Some(path) = &cx.codegen_args.dump_module_on_panic {
             let module_dumper = DumpModuleOnPanic { cx: &cx, path };
             with_no_trimmed_paths!(do_codegen());
             drop(module_dumper);
@@ -470,32 +468,18 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
 
 struct DumpModuleOnPanic<'a, 'cx, 'tcx> {
     cx: &'cx CodegenCx<'tcx>,
-    path: &'a str,
+    path: &'a Path,
 }
 
 impl Drop for DumpModuleOnPanic<'_, '_, '_> {
     fn drop(&mut self) {
         if std::thread::panicking() {
-            let path: &Path = self.path.as_ref();
-            if path.has_root() {
-                self.cx.builder.dump_module(path);
+            if self.path.has_root() {
+                self.cx.builder.dump_module(self.path);
             } else {
                 println!("{}", self.cx.builder.dump_module_str());
             }
         }
-    }
-}
-
-fn get_env_dump_dir(env_var: &str) -> Option<PathBuf> {
-    if let Some(path) = std::env::var_os(env_var) {
-        let path = PathBuf::from(path);
-        if path.is_file() {
-            std::fs::remove_file(&path).unwrap();
-        }
-        std::fs::create_dir_all(&path).unwrap();
-        Some(path)
-    } else {
-        None
     }
 }
 

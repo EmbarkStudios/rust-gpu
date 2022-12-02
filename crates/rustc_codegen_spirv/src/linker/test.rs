@@ -1,5 +1,4 @@
 use super::{link, LinkResult, Options};
-use crate::codegen_cx::SpirvMetadata;
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
 use rustc_errors::registry::Registry;
@@ -124,10 +123,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
                 modules,
                 &Options {
                     compact_ids: true,
-                    dce: false,
-                    structurize: false,
-                    emit_multiple_modules: false,
-                    spirv_metadata: SpirvMetadata::None,
+                    ..Default::default()
                 },
             );
             assert_eq!(sess.has_errors(), res.as_ref().err().copied());

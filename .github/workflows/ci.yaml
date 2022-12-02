@@ -151,6 +151,27 @@ jobs:
         run: RUSTDOCFLAGS=-Dwarnings cargo doc --no-deps
       - name: Clippy
         run: .github/workflows/clippy.sh
+      # HACK(eddyb) see `docs/src/codegen-args.md` for more context around this,
+      # but basically we're implementing a custom "lint" to ban `std::env` usage,
+      # which could be disastrous because env vars access can't be tracked by
+      # `rustc`, unlike its CLI flags (which are integrated with incremental).
+      - name: Disallow `std::env` (mis)use from `rustc_codegen_spirv``
+        run: |
+          if (
+              egrep -r '::\s*env|env\s*::' crates/rustc_codegen_spirv/src/ |
+              # HACK(eddyb) exclude the one place in `rustc_codegen_spirv`
+              # needing access to an env var (only for codegen args `--help`).
+              egrep -v '^crates/rustc_codegen_spirv/src/codegen_cx/mod.rs:            let help_flag_comes_from_spirv_builder_env_var = std::env::var\(spirv_builder_env_var\)$'
+          ); then
+            echo '^^^'
+            echo '!!! Found disallowed `std::env` usage in `rustc_codegen_spirv` !!!'
+            echo ' ("codegen args" should be used instead of environment variables)'
+            echo
+            echo 'For more details on "codegen args", see: docs/src/codegen-args.md'
+            echo ' (and/or https://github.com/EmbarkStudios/rust-gpu/pull/959)'
+            echo
+            exit 1
+          fi
 
   cargo-deny:
     runs-on: ubuntu-20.04

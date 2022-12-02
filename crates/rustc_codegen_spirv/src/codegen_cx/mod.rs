@@ -33,7 +33,7 @@ use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeSet;
 use std::iter::once;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -232,8 +232,9 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum SpirvMetadata {
+    #[default]
     None,
     NameVariables,
     Full,
@@ -248,6 +249,8 @@ pub struct CodegenArgs {
 
     pub spirv_metadata: SpirvMetadata,
 
+    pub run_spirv_val: bool,
+
     // spirv-val flags
     pub relax_struct_store: bool,
     pub relax_logical_pointer: bool,
@@ -256,8 +259,22 @@ pub struct CodegenArgs {
     pub scalar_block_layout: bool,
     pub skip_block_layout: bool,
 
+    pub run_spirv_opt: bool,
+
     // spirv-opt flags
     pub preserve_bindings: bool,
+
+    /// All options pertinent to `rustc_codegen_spirv::linker` specifically.
+    //
+    // FIXME(eddyb) should these be handled as `-C linker-args="..."` instead?
+    pub linker_opts: crate::linker::Options,
+
+    // NOTE(eddyb) these are debugging options that used to be env vars
+    // (for more information see `docs/src/codegen-args.md`).
+    pub dump_mir: Option<PathBuf>,
+    pub dump_module_on_panic: Option<PathBuf>,
+    pub dump_pre_link: Option<PathBuf>,
+    pub dump_post_link: Option<PathBuf>,
 }
 
 impl CodegenArgs {
@@ -268,6 +285,7 @@ impl CodegenArgs {
         }
     }
 
+    // FIXME(eddyb) `structopt` would come a long way to making this nicer.
     pub fn parse(args: &[String]) -> Result<Self, rustc_session::getopts::Fail> {
         use rustc_session::getopts;
 
@@ -294,6 +312,13 @@ impl CodegenArgs {
 
         opts.optopt("", "spirv-metadata", "how much metadata to include", "");
 
+        // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+        opts.optflag(
+            "",
+            "no-spirv-val",
+            "disables running spirv-val on the final output",
+        );
+
         opts.optflag("", "relax-struct-store", "Allow store from one struct type to a different type with compatible layout and members.");
         opts.optflag("", "relax-logical-pointer", "Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode");
         opts.optflag("", "relax-block-layout", "Enable VK_KHR_relaxed_block_layout when checking standard uniform, storage buffer, and push constant layouts. This is the default when targeting Vulkan 1.1 or later.");
@@ -301,10 +326,89 @@ impl CodegenArgs {
         opts.optflag("", "scalar-block-layout", "Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.");
         opts.optflag("", "skip-block-layout", "Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.");
 
+        // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+        opts.optflag(
+            "",
+            "no-spirv-opt",
+            "disables running spirv-opt on the final output",
+        );
+
         opts.optflag(
             "",
             "preserve-bindings",
             "Preserve unused descriptor bindings. Useful for reflection.",
+        );
+
+        // Linker options.
+        // FIXME(eddyb) should these be handled as `-C linker-args="..."` instead?
+        {
+            // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+            opts.optflag("", "no-dce", "disables running dead code elimination");
+            opts.optflag(
+                "",
+                "no-compact-ids",
+                "disables compaction of SPIR-V IDs at the end of linking",
+            );
+            opts.optflag("", "no-structurize", "disables CFG structurization");
+
+            // NOTE(eddyb) these are debugging options that used to be env vars
+            // (for more information see `docs/src/codegen-args.md`).
+            opts.optopt(
+                "",
+                "dump-post-merge",
+                "dump the merged module immediately after merging, to FILE",
+                "FILE",
+            );
+            opts.optopt(
+                "",
+                "dump-post-split",
+                "dump modules immediately after multimodule splitting, to files in DIR",
+                "DIR",
+            );
+            opts.optflag(
+                "",
+                "specializer-debug",
+                "enable debug logging for the specializer",
+            );
+            opts.optopt(
+                "",
+                "specializer-dump-instances",
+                "dump all instances inferred by the specializer, to FILE",
+                "FILE",
+            );
+            opts.optflag("", "print-all-zombie", "prints all removed zombies");
+            opts.optflag(
+                "",
+                "print-zombie",
+                "prints everything removed (even transitively) due to zombies",
+            );
+        }
+
+        // NOTE(eddyb) these are debugging options that used to be env vars
+        // (for more information see `docs/src/codegen-args.md`).
+        opts.optopt(
+            "",
+            "dump-mir",
+            "dump every MIR body codegen sees, to files in DIR",
+            "DIR",
+        );
+        opts.optopt(
+            "",
+            "dump-module-on-panic",
+            "if codegen panics, dump the (partially) emitted module, to FILE",
+            "FILE",
+        );
+        opts.optopt(
+            "",
+            "dump-pre-link",
+            "dump all input modules to the linker, to files in DIR",
+            "DIR",
+        );
+        opts.optopt(
+            "",
+            "dump-post-link",
+            "dump all output modules from the linker, to files in DIR",
+            "DIR",
         );
 
         let matches = opts.parse(args)?;
@@ -363,12 +467,18 @@ impl CodegenArgs {
 
         let spirv_metadata = matches.opt_str("spirv-metadata");
 
+        // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+        let run_spirv_val = !matches.opt_present("no-spirv-val");
+
         let relax_struct_store = matches.opt_present("relax-struct-store");
         let relax_logical_pointer = matches.opt_present("relax-logical-pointer");
         let relax_block_layout = matches.opt_present("relax-block-layout");
         let uniform_buffer_standard_layout = matches.opt_present("uniform-buffer-standard-layout");
         let scalar_block_layout = matches.opt_present("scalar-block-layout");
         let skip_block_layout = matches.opt_present("skip-block-layout");
+
+        // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+        let run_spirv_opt = !matches.opt_present("no-spirv-opt");
 
         let preserve_bindings = matches.opt_present("preserve-bindings");
 
@@ -385,6 +495,37 @@ impl CodegenArgs {
             }
         };
 
+        let matches_opt_path = |name| matches.opt_str(name).map(PathBuf::from);
+        let matches_opt_dump_dir_path = |name| {
+            matches_opt_path(name).map(|path| {
+                if path.is_file() {
+                    std::fs::remove_file(&path).unwrap();
+                }
+                std::fs::create_dir_all(&path).unwrap();
+                path
+            })
+        };
+        // FIXME(eddyb) should these be handled as `-C linker-args="..."` instead?
+        let linker_opts = crate::linker::Options {
+            // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+            dce: !matches.opt_present("no-dce"),
+            compact_ids: !matches.opt_present("no-compact-ids"),
+            structurize: !matches.opt_present("no-structurize"),
+
+            // FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
+            emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,
+            spirv_metadata,
+
+            // NOTE(eddyb) these are debugging options that used to be env vars
+            // (for more information see `docs/src/codegen-args.md`).
+            dump_post_merge: matches_opt_path("dump-post-merge"),
+            dump_post_split: matches_opt_dump_dir_path("dump-post-split"),
+            specializer_debug: matches.opt_present("specializer-debug"),
+            specializer_dump_instances: matches_opt_path("specializer-dump-instances"),
+            print_all_zombie: matches.opt_present("print-all-zombie"),
+            print_zombie: matches.opt_present("print-zombie"),
+        };
+
         Ok(Self {
             module_output_type,
             disassemble,
@@ -394,6 +535,8 @@ impl CodegenArgs {
 
             spirv_metadata,
 
+            run_spirv_val,
+
             relax_struct_store,
             relax_logical_pointer,
             relax_block_layout,
@@ -401,7 +544,18 @@ impl CodegenArgs {
             scalar_block_layout,
             skip_block_layout,
 
+            run_spirv_opt,
+
             preserve_bindings,
+
+            linker_opts,
+
+            // NOTE(eddyb) these are debugging options that used to be env vars
+            // (for more information see `docs/src/codegen-args.md`).
+            dump_mir: matches_opt_dump_dir_path("dump-mir"),
+            dump_module_on_panic: matches_opt_path("dump-module-on-panic"),
+            dump_pre_link: matches_opt_dump_dir_path("dump-pre-link"),
+            dump_post_link: matches_opt_dump_dir_path("dump-post-link"),
         })
     }
 
