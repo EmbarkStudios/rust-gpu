@@ -123,6 +123,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
                 modules,
                 &Options {
                     compact_ids: true,
+                    keep_link_exports: true,
                     ..Default::default()
                 },
             );
@@ -194,11 +195,13 @@ fn standard() {
     );
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
-    let expect = r#"OpMemoryModel Logical OpenCL
-        %1 = OpTypeFloat 32
-        %2 = OpVariable %1 Input
-        %3 = OpConstant %1 42.0
-        %4 = OpVariable %1 Uniform %3"#;
+    let expect = r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
+        OpDecorate %1 LinkageAttributes "foo" Export
+        %2 = OpTypeFloat 32
+        %3 = OpVariable %2 Input
+        %4 = OpConstant %2 42.0
+        %1 = OpVariable %2 Uniform %4"#;
 
     without_header_eq(result, expect);
 }
@@ -214,9 +217,11 @@ fn not_a_lib_extra_exports() {
     );
 
     let result = assemble_and_link(&[&a]).unwrap();
-    let expect = r#"OpMemoryModel Logical OpenCL
-        %1 = OpTypeFloat 32
-        %2 = OpVariable %1 Uniform"#;
+    let expect = r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
+        OpDecorate %1 LinkageAttributes "foo" Export
+        %2 = OpTypeFloat 32
+        %1 = OpVariable %2 Uniform"#;
     without_header_eq(result, expect);
 }
 
@@ -403,12 +408,14 @@ fn func_ctrl() {
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
-    let expect = r#"OpMemoryModel Logical OpenCL
-            %1 = OpTypeVoid
-            %2 = OpTypeFunction %1
-            %3 = OpTypeFloat 32
-            %4 = OpVariable %3 Uniform
-            %5 = OpFunction %1 DontInline %2
+    let expect = r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
+            OpDecorate %1 LinkageAttributes "foo" Export
+            %2 = OpTypeVoid
+            %3 = OpTypeFunction %2
+            %4 = OpTypeFloat 32
+            %5 = OpVariable %4 Uniform
+            %1 = OpFunction %2 DontInline %3
             %6 = OpLabel
             OpReturn
             OpFunctionEnd"#;
@@ -461,22 +468,24 @@ fn use_exported_func_param_attr() {
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
     let expect = r#"OpCapability Kernel
+        OpCapability Linkage
         OpMemoryModel Logical OpenCL
         OpDecorate %1 FuncParamAttr Zext
-        OpDecorate %2 FuncParamAttr Sext
-        %3 = OpTypeVoid
-        %4 = OpTypeInt 32 0
-        %5 = OpTypeFunction %3 %4
-        %6 = OpFunction %3 None %5
-        %1 = OpFunctionParameter %4
-        %7 = OpLabel
-        %8 = OpLoad %4 %1
+        OpDecorate %2 LinkageAttributes "foo" Export
+        OpDecorate %3 FuncParamAttr Sext
+        %4 = OpTypeVoid
+        %5 = OpTypeInt 32 0
+        %6 = OpTypeFunction %4 %5
+        %7 = OpFunction %4 None %6
+        %1 = OpFunctionParameter %5
+        %8 = OpLabel
+        %9 = OpLoad %5 %1
         OpReturn
         OpFunctionEnd
-        %9 = OpFunction %3 None %5
-        %2 = OpFunctionParameter %4
+        %2 = OpFunction %4 None %6
+        %3 = OpFunctionParameter %5
         %10 = OpLabel
-        %11 = OpLoad %4 %2
+        %11 = OpLoad %5 %3
         OpReturn
         OpFunctionEnd"#;
 
@@ -535,11 +544,13 @@ fn names_and_decorations() {
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
     let expect = r#"OpCapability Kernel
+        OpCapability Linkage
         OpMemoryModel Logical OpenCL
         OpName %1 "foo"
         OpName %2 "param"
         OpDecorate %3 Restrict
         OpDecorate %3 NonWritable
+        OpDecorate %1 LinkageAttributes "foo" Export
         OpDecorate %2 Restrict
         %4 = OpTypeVoid
         %5 = OpTypeInt 32 0

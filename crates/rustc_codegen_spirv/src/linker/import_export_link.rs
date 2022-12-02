@@ -5,10 +5,10 @@ use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_session::Session;
 
-pub fn run(sess: &Session, module: &mut Module) -> Result<()> {
+pub fn run(opts: &super::Options, sess: &Session, module: &mut Module) -> Result<()> {
     let (rewrite_rules, killed_parameters) =
         find_import_export_pairs_and_killed_params(sess, module)?;
-    kill_linkage_instructions(module, &rewrite_rules);
+    kill_linkage_instructions(opts, module, &rewrite_rules);
     import_kill_annotations_and_debug(module, &rewrite_rules, &killed_parameters);
     replace_all_uses_with(module, &rewrite_rules);
     Ok(())
@@ -215,7 +215,11 @@ fn replace_all_uses_with(module: &mut Module, rules: &FxHashMap<u32, u32>) {
     });
 }
 
-fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &FxHashMap<u32, u32>) {
+fn kill_linkage_instructions(
+    opts: &super::Options,
+    module: &mut Module,
+    rewrite_rules: &FxHashMap<u32, u32>,
+) {
     // drop imported functions
     module
         .functions
@@ -227,16 +231,27 @@ fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &FxHashMap<u32,
             .map_or(true, |v| !rewrite_rules.contains_key(&v))
     });
 
+    // NOTE(eddyb) `Options`'s `keep_link_export`s field requests that `Export`s
+    // are left in (primarily for unit testing - see also its doc comment).
+    let mut kept_any_linkage_decorations = false;
     module.annotations.retain(|inst| {
-        inst.class.opcode != Op::Decorate
-            || inst.operands[1].unwrap_decoration() != Decoration::LinkageAttributes
+        !(inst.class.opcode == Op::Decorate
+            && inst.operands[1].unwrap_decoration() == Decoration::LinkageAttributes
+            && match inst.operands[3].unwrap_linkage_type() {
+                LinkageType::Export if opts.keep_link_exports => {
+                    kept_any_linkage_decorations = true;
+                    false
+                }
+                _ => true,
+            })
     });
-
-    // drop OpCapability Linkage
-    module.capabilities.retain(|inst| {
-        inst.class.opcode != Op::Capability
-            || inst.operands[0].unwrap_capability() != Capability::Linkage
-    });
+    if !kept_any_linkage_decorations {
+        // drop OpCapability Linkage
+        module.capabilities.retain(|inst| {
+            inst.class.opcode != Op::Capability
+                || inst.operands[0].unwrap_capability() != Capability::Linkage
+        });
+    }
 }
 
 fn import_kill_annotations_and_debug(
