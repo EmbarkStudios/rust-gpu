@@ -38,6 +38,12 @@ pub struct Options {
     pub emit_multiple_modules: bool,
     pub spirv_metadata: SpirvMetadata,
 
+    /// Whether to preserve `LinkageAttributes "..." Export` decorations,
+    /// even after resolving imports to exports.
+    ///
+    /// **Note**: currently only used for unit testing, and not exposed elsewhere.
+    pub keep_link_exports: bool,
+
     // NOTE(eddyb) these are debugging options that used to be env vars
     // (for more information see `docs/src/codegen-args.md`).
     pub dump_post_merge: Option<PathBuf>,
@@ -176,7 +182,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     // find import / export pairs
     {
         let _timer = sess.timer("link_find_pairs");
-        import_export_link::run(sess, &mut output)?;
+        import_export_link::run(opts, sess, &mut output)?;
     }
 
     {

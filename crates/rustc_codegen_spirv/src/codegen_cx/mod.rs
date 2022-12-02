@@ -515,6 +515,7 @@ impl CodegenArgs {
             // FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
             emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,
             spirv_metadata,
+            keep_link_exports: false,
 
             // NOTE(eddyb) these are debugging options that used to be env vars
             // (for more information see `docs/src/codegen-args.md`).
