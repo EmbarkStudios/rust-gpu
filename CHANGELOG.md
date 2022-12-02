@@ -29,6 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added ⭐
+
+- Added two `spirv-builder` environment variables to customize *only* the `rustc` invocations for shader crates and their dependencies:
+    - `RUSTGPU_RUSTFLAGS="..."` for shader `RUSTFLAGS="..."`
+    - `RUSTGPU_CODEGEN_ARGS="..."` for shader `RUSTFLAGS=-Cllvm-args="..."`  
+      (run with `RUSTGPU_CODEGEN_ARGS=--help` to see a list of options)
+
 ### Changed 🛠️
 
 - Updated toolchain to `nightly-2022-10-29`
