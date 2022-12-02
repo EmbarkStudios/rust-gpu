@@ -269,7 +269,12 @@ impl CodegenArgs {
 
     pub fn parse(args: &[String]) -> Result<Self, rustc_session::getopts::Fail> {
         use rustc_session::getopts;
+
+        // FIXME(eddyb) figure out what casing ("Foo bar" vs "foo bar") to use
+        // for the descriptions, `rustc` seems a bit inconsistent itself on this.
+
         let mut opts = getopts::Options::new();
+        opts.optflag("h", "help", "Display this message");
         opts.optopt(
             "",
             "module-output",
@@ -302,6 +307,18 @@ impl CodegenArgs {
         );
 
         let matches = opts.parse(args)?;
+
+        if matches.opt_present("h") || matches.opt_present("help") {
+            // FIXME(eddyb) make this somehow nicer wrt end-users
+            // (mentioning `-Cllvm-args` is pretty bad, we'd want to hide that).
+            println!(
+                "{}",
+                opts.usage("Usage: rustc -Cllvm-args=\"[OPTIONS]\" with:")
+            );
+            // HACK(eddyb) this avoids `Cargo` continuing after the message is printed.
+            std::process::exit(1);
+        }
+
         let module_output_type =
             matches.opt_get_default("module-output", ModuleOutputType::Single)?;
         let disassemble = matches.opt_present("disassemble");
