@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/pat.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pat.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.105/src/pat.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pat.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -925,9 +925,6 @@
 <span id="925">925</span>
 <span id="926">926</span>
 <span id="927">927</span>
-<span id="928">928</span>
-<span id="929">929</span>
-<span id="930">930</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::punctuated::Punctuated;
 <span class="kw">use </span>proc_macro2::TokenStream;
@@ -944,6 +941,7 @@
     ///
     /// [syntax tree enum]: Expr#syntax-tree-enums
     </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;full&quot;</span>)))]
+    #[cfg_attr(not(syn_no_non_exhaustive), non_exhaustive)]
     </span><span class="kw">pub enum </span>Pat {
         <span class="doccomment">/// A box pattern: `box v`.
         </span>Box(PatBox),
@@ -1002,18 +1000,17 @@
         <span class="doccomment">/// A pattern that matches any value: `_`.
         </span>Wild(PatWild),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of
-        // this enum.
+        <span class="comment">// Not public API.
         //
-        //     match expr {
-        //         Pat::Box(e) =&gt; {...}
-        //         Pat::Ident(e) =&gt; {...}
+        // For testing exhaustiveness in downstream code, use the following idiom:
+        //
+        //     match pat {
+        //         Pat::Box(pat) =&gt; {...}
+        //         Pat::Ident(pat) =&gt; {...}
         //         ...
-        //         Pat::Wild(e) =&gt; {...}
+        //         Pat::Wild(pat) =&gt; {...}
         //
-        //         #[cfg(test)]
-        //         Pat::__TestExhaustive(_) =&gt; unimplemented!(),
-        //         #[cfg(not(test))]
+        //         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]
         //         _ =&gt; { /* some sane fallback */ }
         //     }
         //
@@ -1021,12 +1018,9 @@
         // a variant. You will be notified by a test failure when a variant is
         // added, so that you can add code to handle it, but your library will
         // continue to compile and work for downstream users in the interim.
-        //
-        // Once `deny(reachable)` is available in rustc, Pat will be
-        // reimplemented as a non_exhaustive enum.
-        // https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237
-        </span><span class="attribute">#[doc(hidden)]
-        </span>__TestExhaustive(<span class="kw">crate</span>::private),
+        </span><span class="attribute">#[cfg(syn_no_non_exhaustive)]
+        #[doc(hidden)]
+        </span>__NonExhaustive,
     }
 }
 
@@ -1333,11 +1327,11 @@
         }
 
         <span class="kw">if </span>input.peek(token::Brace) {
-            <span class="kw">let </span>pat = pat_struct(input, path)<span class="question-mark">?</span>;
+            <span class="kw">let </span>pat = pat_struct(begin.fork(), input, path)<span class="question-mark">?</span>;
             <span class="kw">if </span>qself.is_some() {
                 <span class="prelude-val">Ok</span>(Pat::Verbatim(verbatim::between(begin, input)))
             } <span class="kw">else </span>{
-                <span class="prelude-val">Ok</span>(Pat::Struct(pat))
+                <span class="prelude-val">Ok</span>(pat)
             }
         } <span class="kw">else if </span>input.peek(token::Paren) {
             <span class="kw">let </span>pat = pat_tuple_struct(input, path)<span class="question-mark">?</span>;
@@ -1398,13 +1392,23 @@
         })
     }
 
-    <span class="kw">fn </span>pat_struct(input: ParseStream, path: Path) -&gt; <span class="prelude-ty">Result</span>&lt;PatStruct&gt; {
+    <span class="kw">fn </span>pat_struct(begin: ParseBuffer, input: ParseStream, path: Path) -&gt; <span class="prelude-ty">Result</span>&lt;Pat&gt; {
         <span class="kw">let </span>content;
         <span class="kw">let </span>brace_token = <span class="macro">braced!</span>(content <span class="kw">in </span>input);
 
         <span class="kw">let </span><span class="kw-2">mut </span>fields = Punctuated::new();
-        <span class="kw">while </span>!content.is_empty() &amp;&amp; !content.peek(<span class="macro">Token!</span>[..]) {
-            <span class="kw">let </span>value = content.call(field_pat)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>dot2_token = <span class="prelude-val">None</span>;
+        <span class="kw">while </span>!content.is_empty() {
+            <span class="kw">let </span>attrs = content.call(Attribute::parse_outer)<span class="question-mark">?</span>;
+            <span class="kw">if </span>content.peek(<span class="macro">Token!</span>[..]) {
+                dot2_token = <span class="prelude-val">Some</span>(content.parse()<span class="question-mark">?</span>);
+                <span class="kw">if </span>!attrs.is_empty() {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(Pat::Verbatim(verbatim::between(begin, input)));
+                }
+                <span class="kw">break</span>;
+            }
+            <span class="kw">let </span><span class="kw-2">mut </span>value = content.call(field_pat)<span class="question-mark">?</span>;
+            value.attrs = attrs;
             fields.push_value(value);
             <span class="kw">if </span>content.is_empty() {
                 <span class="kw">break</span>;
@@ -1413,19 +1417,13 @@
             fields.push_punct(punct);
         }
 
-        <span class="kw">let </span>dot2_token = <span class="kw">if </span>fields.empty_or_trailing() &amp;&amp; content.peek(<span class="macro">Token!</span>[..]) {
-            <span class="prelude-val">Some</span>(content.parse()<span class="question-mark">?</span>)
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>};
-
-        <span class="prelude-val">Ok</span>(PatStruct {
+        <span class="prelude-val">Ok</span>(Pat::Struct(PatStruct {
             attrs: Vec::new(),
             path,
             brace_token,
             fields,
             dot2_token,
-        })
+        }))
     }
 
     <span class="kw">impl </span>Member {
@@ -1438,7 +1436,6 @@
     }
 
     <span class="kw">fn </span>field_pat(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;FieldPat&gt; {
-        <span class="kw">let </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
         <span class="kw">let </span>boxed: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[<span class="kw">box</span>]&gt; = input.parse()<span class="question-mark">?</span>;
         <span class="kw">let </span>by_ref: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[<span class="kw-2">ref</span>]&gt; = input.parse()<span class="question-mark">?</span>;
         <span class="kw">let </span>mutability: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[<span class="kw-2">mut</span>]&gt; = input.parse()<span class="question-mark">?</span>;
@@ -1448,7 +1445,7 @@
             || member.is_unnamed()
         {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(FieldPat {
-                attrs,
+                attrs: Vec::new(),
                 member,
                 colon_token: input.parse()<span class="question-mark">?</span>,
                 pat: Box::new(multi_pat_with_leading_vert(input)<span class="question-mark">?</span>),
@@ -1477,7 +1474,7 @@
         }
 
         <span class="prelude-val">Ok</span>(FieldPat {
-            attrs,
+            attrs: Vec::new(),
             member: Member::Named(ident),
             colon_token: <span class="prelude-val">None</span>,
             pat: Box::new(pat),
@@ -1584,7 +1581,7 @@
     <span class="kw">fn </span>pat_lit_expr(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Box&lt;Expr&gt;&gt;&gt; {
         <span class="kw">if </span>input.is_empty()
             || input.peek(<span class="macro">Token!</span>[|])
-            || input.peek(<span class="macro">Token!</span>[=&gt;])
+            || input.peek(<span class="macro">Token!</span>[=])
             || input.peek(<span class="macro">Token!</span>[:]) &amp;&amp; !input.peek(<span class="macro">Token!</span>[::])
             || input.peek(<span class="macro">Token!</span>[,])
             || input.peek(<span class="macro">Token!</span>[;])
@@ -1757,7 +1754,7 @@
     </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>PatPath {
         <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
             tokens.append_all(<span class="self">self</span>.attrs.outer());
-            private::print_path(tokens, <span class="kw-2">&amp;</span><span class="self">self</span>.qself, <span class="kw-2">&amp;</span><span class="self">self</span>.path);
+            path::printing::print_path(tokens, <span class="kw-2">&amp;</span><span class="self">self</span>.qself, <span class="kw-2">&amp;</span><span class="self">self</span>.path);
         }
     }
 
@@ -1811,10 +1808,7 @@
         <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
             tokens.append_all(<span class="self">self</span>.attrs.outer());
             <span class="self">self</span>.lo.to_tokens(tokens);
-            <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.limits {
-                RangeLimits::HalfOpen(t) =&gt; t.to_tokens(tokens),
-                RangeLimits::Closed(t) =&gt; t.to_tokens(tokens),
-            }
+            <span class="self">self</span>.limits.to_tokens(tokens);
             <span class="self">self</span>.hi.to_tokens(tokens);
         }
     }

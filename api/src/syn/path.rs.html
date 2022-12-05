@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/path.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>path.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.105/src/path.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>path.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -840,6 +840,18 @@
 <span id="840">840</span>
 <span id="841">841</span>
 <span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::punctuated::Punctuated;
 
@@ -931,9 +943,8 @@
         }
     }
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;parsing&quot;</span>)]
-    </span><span class="kw">fn </span>is_none(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+    <span class="kw">pub fn </span>is_none(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">match </span><span class="self">self </span>{
             PathArguments::None =&gt; <span class="bool-val">true</span>,
             PathArguments::AngleBracketed(<span class="kw">_</span>) | PathArguments::Parenthesized(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
         }
@@ -951,16 +962,16 @@
         </span>Lifetime(Lifetime),
         <span class="doccomment">/// A type argument.
         </span>Type(Type),
-        <span class="doccomment">/// A binding (equality constraint) on an associated type: the `Item =
-        /// u8` in `Iterator&lt;Item = u8&gt;`.
-        </span>Binding(Binding),
-        <span class="doccomment">/// An associated type bound: `Iterator&lt;Item: Display&gt;`.
-        </span>Constraint(Constraint),
         <span class="doccomment">/// A const expression. Must be inside of a block.
         ///
         /// NOTE: Identity expressions are represented as Type arguments, as
         /// they are indistinguishable syntactically.
         </span>Const(Expr),
+        <span class="doccomment">/// A binding (equality constraint) on an associated type: the `Item =
+        /// u8` in `Iterator&lt;Item = u8&gt;`.
+        </span>Binding(Binding),
+        <span class="doccomment">/// An associated type bound: `Iterator&lt;Item: Display&gt;`.
+        </span>Constraint(Constraint),
     }
 }
 
@@ -1073,7 +1084,38 @@
             }
 
             <span class="kw">if </span>input.peek(Ident) &amp;&amp; input.peek2(<span class="macro">Token!</span>[=]) {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(GenericArgument::Binding(input.parse()<span class="question-mark">?</span>));
+                <span class="kw">let </span>ident: Ident = input.parse()<span class="question-mark">?</span>;
+                <span class="kw">let </span>eq_token: <span class="macro">Token!</span>[=] = input.parse()<span class="question-mark">?</span>;
+
+                <span class="kw">let </span>ty = <span class="kw">if </span>input.peek(Lit) {
+                    <span class="kw">let </span>begin = input.fork();
+                    input.parse::&lt;Lit&gt;()<span class="question-mark">?</span>;
+                    Type::Verbatim(verbatim::between(begin, input))
+                } <span class="kw">else if </span>input.peek(token::Brace) {
+                    <span class="kw">let </span>begin = input.fork();
+
+                    <span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
+                    </span>{
+                        input.parse::&lt;ExprBlock&gt;()<span class="question-mark">?</span>;
+                    }
+
+                    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;full&quot;</span>))]
+                    </span>{
+                        <span class="kw">let </span>content;
+                        <span class="macro">braced!</span>(content <span class="kw">in </span>input);
+                        content.parse::&lt;Expr&gt;()<span class="question-mark">?</span>;
+                    }
+
+                    Type::Verbatim(verbatim::between(begin, input))
+                } <span class="kw">else </span>{
+                    input.parse()<span class="question-mark">?
+                </span>};
+
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(GenericArgument::Binding(Binding {
+                    ident,
+                    eq_token,
+                    ty,
+                }));
             }
 
             <span class="attribute">#[cfg(feature = <span class="string">&quot;full&quot;</span>)]
@@ -1495,7 +1537,7 @@
 }
 
 <span class="attribute">#[cfg(feature = <span class="string">&quot;printing&quot;</span>)]
-</span><span class="kw">mod </span>printing {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>printing {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::print::TokensOrDefault;
     <span class="kw">use </span>proc_macro2::TokenStream;
@@ -1540,8 +1582,6 @@
             <span class="kw">match </span><span class="self">self </span>{
                 GenericArgument::Lifetime(lt) =&gt; lt.to_tokens(tokens),
                 GenericArgument::Type(ty) =&gt; ty.to_tokens(tokens),
-                GenericArgument::Binding(tb) =&gt; tb.to_tokens(tokens),
-                GenericArgument::Constraint(tc) =&gt; tc.to_tokens(tokens),
                 GenericArgument::Const(e) =&gt; <span class="kw">match </span><span class="kw-2">*</span>e {
                     Expr::Lit(<span class="kw">_</span>) =&gt; e.to_tokens(tokens),
 
@@ -1557,6 +1597,8 @@
                         e.to_tokens(tokens);
                     }),
                 },
+                GenericArgument::Binding(tb) =&gt; tb.to_tokens(tokens),
+                GenericArgument::Constraint(tc) =&gt; tc.to_tokens(tokens),
             }
         }
     }
@@ -1567,11 +1609,8 @@
             <span class="self">self</span>.colon2_token.to_tokens(tokens);
             <span class="self">self</span>.lt_token.to_tokens(tokens);
 
-            <span class="comment">// Print lifetimes before types and consts, all before bindings,
-            // regardless of their order in self.args.
-            //
-            // TODO: ordering rules for const arguments vs type arguments have
-            // not been settled yet. https://github.com/rust-lang/rust/issues/44580
+            <span class="comment">// Print lifetimes before types/consts/bindings, regardless of their
+            // order in self.args.
             </span><span class="kw">let </span><span class="kw-2">mut </span>trailing_or_empty = <span class="bool-val">true</span>;
             <span class="kw">for </span>param <span class="kw">in </span><span class="self">self</span>.args.pairs() {
                 <span class="kw">match </span><span class="kw-2">**</span>param.value() {
@@ -1580,37 +1619,24 @@
                         trailing_or_empty = param.punct().is_some();
                     }
                     GenericArgument::Type(<span class="kw">_</span>)
-                    | GenericArgument::Binding(<span class="kw">_</span>)
-                    | GenericArgument::Constraint(<span class="kw">_</span>)
-                    | GenericArgument::Const(<span class="kw">_</span>) =&gt; {}
-                }
-            }
-            <span class="kw">for </span>param <span class="kw">in </span><span class="self">self</span>.args.pairs() {
-                <span class="kw">match </span><span class="kw-2">**</span>param.value() {
-                    GenericArgument::Type(<span class="kw">_</span>) | GenericArgument::Const(<span class="kw">_</span>) =&gt; {
-                        <span class="kw">if </span>!trailing_or_empty {
-                            &lt;<span class="macro">Token!</span>[,]&gt;::default().to_tokens(tokens);
-                        }
-                        param.to_tokens(tokens);
-                        trailing_or_empty = param.punct().is_some();
-                    }
-                    GenericArgument::Lifetime(<span class="kw">_</span>)
+                    | GenericArgument::Const(<span class="kw">_</span>)
                     | GenericArgument::Binding(<span class="kw">_</span>)
                     | GenericArgument::Constraint(<span class="kw">_</span>) =&gt; {}
                 }
             }
             <span class="kw">for </span>param <span class="kw">in </span><span class="self">self</span>.args.pairs() {
                 <span class="kw">match </span><span class="kw-2">**</span>param.value() {
-                    GenericArgument::Binding(<span class="kw">_</span>) | GenericArgument::Constraint(<span class="kw">_</span>) =&gt; {
+                    GenericArgument::Type(<span class="kw">_</span>)
+                    | GenericArgument::Const(<span class="kw">_</span>)
+                    | GenericArgument::Binding(<span class="kw">_</span>)
+                    | GenericArgument::Constraint(<span class="kw">_</span>) =&gt; {
                         <span class="kw">if </span>!trailing_or_empty {
                             &lt;<span class="macro">Token!</span>[,]&gt;::default().to_tokens(tokens);
                         }
                         param.to_tokens(tokens);
                         trailing_or_empty = param.punct().is_some();
                     }
-                    GenericArgument::Lifetime(<span class="kw">_</span>)
-                    | GenericArgument::Type(<span class="kw">_</span>)
-                    | GenericArgument::Const(<span class="kw">_</span>) =&gt; {}
+                    GenericArgument::Lifetime(<span class="kw">_</span>) =&gt; {}
                 }
             }
 
@@ -1646,39 +1672,37 @@
         }
     }
 
-    <span class="kw">impl </span>private {
-        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>print_path(tokens: <span class="kw-2">&amp;mut </span>TokenStream, qself: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;QSelf&gt;, path: <span class="kw-2">&amp;</span>Path) {
-            <span class="kw">let </span>qself = <span class="kw">match </span>qself {
-                <span class="prelude-val">Some</span>(qself) =&gt; qself,
-                <span class="prelude-val">None </span>=&gt; {
-                    path.to_tokens(tokens);
-                    <span class="kw">return</span>;
-                }
-            };
-            qself.lt_token.to_tokens(tokens);
-            qself.ty.to_tokens(tokens);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>print_path(tokens: <span class="kw-2">&amp;mut </span>TokenStream, qself: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;QSelf&gt;, path: <span class="kw-2">&amp;</span>Path) {
+        <span class="kw">let </span>qself = <span class="kw">match </span>qself {
+            <span class="prelude-val">Some</span>(qself) =&gt; qself,
+            <span class="prelude-val">None </span>=&gt; {
+                path.to_tokens(tokens);
+                <span class="kw">return</span>;
+            }
+        };
+        qself.lt_token.to_tokens(tokens);
+        qself.ty.to_tokens(tokens);
 
-            <span class="kw">let </span>pos = cmp::min(qself.position, path.segments.len());
-            <span class="kw">let </span><span class="kw-2">mut </span>segments = path.segments.pairs();
-            <span class="kw">if </span>pos &gt; <span class="number">0 </span>{
-                TokensOrDefault(<span class="kw-2">&amp;</span>qself.as_token).to_tokens(tokens);
-                path.leading_colon.to_tokens(tokens);
-                <span class="kw">for </span>(i, segment) <span class="kw">in </span>segments.by_ref().take(pos).enumerate() {
-                    <span class="kw">if </span>i + <span class="number">1 </span>== pos {
-                        segment.value().to_tokens(tokens);
-                        qself.gt_token.to_tokens(tokens);
-                        segment.punct().to_tokens(tokens);
-                    } <span class="kw">else </span>{
-                        segment.to_tokens(tokens);
-                    }
+        <span class="kw">let </span>pos = cmp::min(qself.position, path.segments.len());
+        <span class="kw">let </span><span class="kw-2">mut </span>segments = path.segments.pairs();
+        <span class="kw">if </span>pos &gt; <span class="number">0 </span>{
+            TokensOrDefault(<span class="kw-2">&amp;</span>qself.as_token).to_tokens(tokens);
+            path.leading_colon.to_tokens(tokens);
+            <span class="kw">for </span>(i, segment) <span class="kw">in </span>segments.by_ref().take(pos).enumerate() {
+                <span class="kw">if </span>i + <span class="number">1 </span>== pos {
+                    segment.value().to_tokens(tokens);
+                    qself.gt_token.to_tokens(tokens);
+                    segment.punct().to_tokens(tokens);
+                } <span class="kw">else </span>{
+                    segment.to_tokens(tokens);
                 }
-            } <span class="kw">else </span>{
-                qself.gt_token.to_tokens(tokens);
-                path.leading_colon.to_tokens(tokens);
             }
-            <span class="kw">for </span>segment <span class="kw">in </span>segments {
-                segment.to_tokens(tokens);
-            }
+        } <span class="kw">else </span>{
+            qself.gt_token.to_tokens(tokens);
+            path.leading_colon.to_tokens(tokens);
+        }
+        <span class="kw">for </span>segment <span class="kw">in </span>segments {
+            segment.to_tokens(tokens);
         }
     }
 }

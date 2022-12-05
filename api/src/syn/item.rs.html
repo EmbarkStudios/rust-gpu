@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/item.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>item.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.105/src/item.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>item.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -3306,6 +3306,11 @@
 <span id="3306">3306</span>
 <span id="3307">3307</span>
 <span id="3308">3308</span>
+<span id="3309">3309</span>
+<span id="3310">3310</span>
+<span id="3311">3311</span>
+<span id="3312">3312</span>
+<span id="3313">3313</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::derive::{Data, DataEnum, DataStruct, DataUnion, DeriveInput};
 <span class="kw">use </span><span class="kw">crate</span>::punctuated::Punctuated;
@@ -3325,6 +3330,7 @@
     ///
     /// [syntax tree enum]: Expr#syntax-tree-enums
     </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;full&quot;</span>)))]
+    #[cfg_attr(not(syn_no_non_exhaustive), non_exhaustive)]
     </span><span class="kw">pub enum </span>Item {
         <span class="doccomment">/// A constant item: `const MAX: u16 = 65535`.
         </span>Const(ItemConst),
@@ -3379,18 +3385,17 @@
         <span class="doccomment">/// Tokens forming an item not interpreted by Syn.
         </span>Verbatim(TokenStream),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of
-        // this enum.
+        <span class="comment">// Not public API.
         //
-        //     match expr {
-        //         Item::Const(e) =&gt; {...}
-        //         Item::Enum(e) =&gt; {...}
+        // For testing exhaustiveness in downstream code, use the following idiom:
+        //
+        //     match item {
+        //         Item::Const(item) =&gt; {...}
+        //         Item::Enum(item) =&gt; {...}
         //         ...
-        //         Item::Verbatim(e) =&gt; {...}
+        //         Item::Verbatim(item) =&gt; {...}
         //
-        //         #[cfg(test)]
-        //         Item::__TestExhaustive(_) =&gt; unimplemented!(),
-        //         #[cfg(not(test))]
+        //         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]
         //         _ =&gt; { /* some sane fallback */ }
         //     }
         //
@@ -3398,12 +3403,9 @@
         // a variant. You will be notified by a test failure when a variant is
         // added, so that you can add code to handle it, but your library will
         // continue to compile and work for downstream users in the interim.
-        //
-        // Once `deny(reachable)` is available in rustc, Item will be
-        // reimplemented as a non_exhaustive enum.
-        // https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237
-        </span><span class="attribute">#[doc(hidden)]
-        </span>__TestExhaustive(<span class="kw">crate</span>::private),
+        </span><span class="attribute">#[cfg(syn_no_non_exhaustive)]
+        #[doc(hidden)]
+        </span>__NonExhaustive,
     }
 }
 
@@ -3689,9 +3691,7 @@
             | Item::Macro2(ItemMacro2 { attrs, .. }) =&gt; mem::replace(attrs, new),
             Item::Verbatim(<span class="kw">_</span>) =&gt; Vec::new(),
 
-            <span class="attribute">#[cfg(test)]
-            </span>Item::__TestExhaustive(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-            <span class="attribute">#[cfg(not(test))]
+            <span class="attribute">#[cfg(syn_no_non_exhaustive)]
             </span><span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
     }
@@ -3872,6 +3872,7 @@
     ///
     /// [syntax tree enum]: Expr#syntax-tree-enums
     </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;full&quot;</span>)))]
+    #[cfg_attr(not(syn_no_non_exhaustive), non_exhaustive)]
     </span><span class="kw">pub enum </span>ForeignItem {
         <span class="doccomment">/// A foreign function in an `extern` block.
         </span>Fn(ForeignItemFn),
@@ -3888,18 +3889,17 @@
         <span class="doccomment">/// Tokens in an `extern` block not interpreted by Syn.
         </span>Verbatim(TokenStream),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of
-        // this enum.
+        <span class="comment">// Not public API.
         //
-        //     match expr {
-        //         ForeignItem::Fn(e) =&gt; {...}
-        //         ForeignItem::Static(e) =&gt; {...}
+        // For testing exhaustiveness in downstream code, use the following idiom:
+        //
+        //     match item {
+        //         ForeignItem::Fn(item) =&gt; {...}
+        //         ForeignItem::Static(item) =&gt; {...}
         //         ...
-        //         ForeignItem::Verbatim(e) =&gt; {...}
+        //         ForeignItem::Verbatim(item) =&gt; {...}
         //
-        //         #[cfg(test)]
-        //         ForeignItem::__TestExhaustive(_) =&gt; unimplemented!(),
-        //         #[cfg(not(test))]
+        //         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]
         //         _ =&gt; { /* some sane fallback */ }
         //     }
         //
@@ -3907,12 +3907,9 @@
         // a variant. You will be notified by a test failure when a variant is
         // added, so that you can add code to handle it, but your library will
         // continue to compile and work for downstream users in the interim.
-        //
-        // Once `deny(reachable)` is available in rustc, ForeignItem will be
-        // reimplemented as a non_exhaustive enum.
-        // https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237
-        </span><span class="attribute">#[doc(hidden)]
-        </span>__TestExhaustive(<span class="kw">crate</span>::private),
+        </span><span class="attribute">#[cfg(syn_no_non_exhaustive)]
+        #[doc(hidden)]
+        </span>__NonExhaustive,
     }
 }
 
@@ -3983,6 +3980,7 @@
     ///
     /// [syntax tree enum]: Expr#syntax-tree-enums
     </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;full&quot;</span>)))]
+    #[cfg_attr(not(syn_no_non_exhaustive), non_exhaustive)]
     </span><span class="kw">pub enum </span>TraitItem {
         <span class="doccomment">/// An associated constant within the definition of a trait.
         </span>Const(TraitItemConst),
@@ -3999,18 +3997,17 @@
         <span class="doccomment">/// Tokens within the definition of a trait not interpreted by Syn.
         </span>Verbatim(TokenStream),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of
-        // this enum.
+        <span class="comment">// Not public API.
         //
-        //     match expr {
-        //         TraitItem::Const(e) =&gt; {...}
-        //         TraitItem::Method(e) =&gt; {...}
+        // For testing exhaustiveness in downstream code, use the following idiom:
+        //
+        //     match item {
+        //         TraitItem::Const(item) =&gt; {...}
+        //         TraitItem::Method(item) =&gt; {...}
         //         ...
-        //         TraitItem::Verbatim(e) =&gt; {...}
+        //         TraitItem::Verbatim(item) =&gt; {...}
         //
-        //         #[cfg(test)]
-        //         TraitItem::__TestExhaustive(_) =&gt; unimplemented!(),
-        //         #[cfg(not(test))]
+        //         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]
         //         _ =&gt; { /* some sane fallback */ }
         //     }
         //
@@ -4018,12 +4015,9 @@
         // a variant. You will be notified by a test failure when a variant is
         // added, so that you can add code to handle it, but your library will
         // continue to compile and work for downstream users in the interim.
-        //
-        // Once `deny(reachable)` is available in rustc, TraitItem will be
-        // reimplemented as a non_exhaustive enum.
-        // https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237
-        </span><span class="attribute">#[doc(hidden)]
-        </span>__TestExhaustive(<span class="kw">crate</span>::private),
+        </span><span class="attribute">#[cfg(syn_no_non_exhaustive)]
+        #[doc(hidden)]
+        </span>__NonExhaustive,
     }
 }
 
@@ -4096,6 +4090,7 @@
     ///
     /// [syntax tree enum]: Expr#syntax-tree-enums
     </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;full&quot;</span>)))]
+    #[cfg_attr(not(syn_no_non_exhaustive), non_exhaustive)]
     </span><span class="kw">pub enum </span>ImplItem {
         <span class="doccomment">/// An associated constant within an impl block.
         </span>Const(ImplItemConst),
@@ -4112,18 +4107,17 @@
         <span class="doccomment">/// Tokens within an impl block not interpreted by Syn.
         </span>Verbatim(TokenStream),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of
-        // this enum.
+        <span class="comment">// Not public API.
         //
-        //     match expr {
-        //         ImplItem::Const(e) =&gt; {...}
-        //         ImplItem::Method(e) =&gt; {...}
+        // For testing exhaustiveness in downstream code, use the following idiom:
+        //
+        //     match item {
+        //         ImplItem::Const(item) =&gt; {...}
+        //         ImplItem::Method(item) =&gt; {...}
         //         ...
-        //         ImplItem::Verbatim(e) =&gt; {...}
+        //         ImplItem::Verbatim(item) =&gt; {...}
         //
-        //         #[cfg(test)]
-        //         ImplItem::__TestExhaustive(_) =&gt; unimplemented!(),
-        //         #[cfg(not(test))]
+        //         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]
         //         _ =&gt; { /* some sane fallback */ }
         //     }
         //
@@ -4131,12 +4125,9 @@
         // a variant. You will be notified by a test failure when a variant is
         // added, so that you can add code to handle it, but your library will
         // continue to compile and work for downstream users in the interim.
-        //
-        // Once `deny(reachable)` is available in rustc, ImplItem will be
-        // reimplemented as a non_exhaustive enum.
-        // https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237
-        </span><span class="attribute">#[doc(hidden)]
-        </span>__TestExhaustive(<span class="kw">crate</span>::private),
+        </span><span class="attribute">#[cfg(syn_no_non_exhaustive)]
+        #[doc(hidden)]
+        </span>__NonExhaustive,
     }
 }
 
@@ -4485,14 +4476,25 @@
         semi_token: <span class="macro">Token!</span>[;],
     }
 
-    <span class="kw">impl </span>Parse <span class="kw">for </span>FlexibleItemType {
-        <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">enum </span>WhereClauseLocation {
+        <span class="comment">// type Ty&lt;T&gt; where T: &#39;static = T;
+        </span>BeforeEq,
+        <span class="comment">// type Ty&lt;T&gt; = T where T: &#39;static;
+        </span><span class="attribute">#[allow(dead_code)]
+        </span>AfterEq,
+        <span class="comment">// TODO: goes away once the migration period on rust-lang/rust#89122 is over
+        </span>Both,
+    }
+
+    <span class="kw">impl </span>FlexibleItemType {
+        <span class="kw">fn </span>parse(input: ParseStream, where_clause_location: WhereClauseLocation) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
             <span class="kw">let </span>vis: Visibility = input.parse()<span class="question-mark">?</span>;
             <span class="kw">let </span>defaultness: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[default]&gt; = input.parse()<span class="question-mark">?</span>;
             <span class="kw">let </span>type_token: <span class="macro">Token!</span>[<span class="kw">type</span>] = input.parse()<span class="question-mark">?</span>;
             <span class="kw">let </span>ident: Ident = input.parse()<span class="question-mark">?</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>generics: Generics = input.parse()<span class="question-mark">?</span>;
             <span class="kw">let </span>colon_token: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[:]&gt; = input.parse()<span class="question-mark">?</span>;
+
             <span class="kw">let </span><span class="kw-2">mut </span>bounds = Punctuated::new();
             <span class="kw">if </span>colon_token.is_some() {
                 <span class="kw">loop </span>{
@@ -4506,12 +4508,29 @@
                     bounds.push_punct(input.parse::&lt;<span class="macro">Token!</span>[+]&gt;()<span class="question-mark">?</span>);
                 }
             }
-            generics.where_clause = input.parse()<span class="question-mark">?</span>;
+
+            <span class="kw">match </span>where_clause_location {
+                WhereClauseLocation::BeforeEq | WhereClauseLocation::Both =&gt; {
+                    generics.where_clause = input.parse()<span class="question-mark">?</span>;
+                }
+                <span class="kw">_ </span>=&gt; {}
+            }
+
             <span class="kw">let </span>ty = <span class="kw">if let </span><span class="prelude-val">Some</span>(eq_token) = input.parse()<span class="question-mark">? </span>{
                 <span class="prelude-val">Some</span>((eq_token, input.parse::&lt;Type&gt;()<span class="question-mark">?</span>))
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>};
+
+            <span class="kw">match </span>where_clause_location {
+                WhereClauseLocation::AfterEq | WhereClauseLocation::Both
+                    <span class="kw">if </span>generics.where_clause.is_none() =&gt;
+                {
+                    generics.where_clause = input.parse()<span class="question-mark">?</span>;
+                }
+                <span class="kw">_ </span>=&gt; {}
+            }
+
             <span class="kw">let </span>semi_token: <span class="macro">Token!</span>[;] = input.parse()<span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(FlexibleItemType {
@@ -5108,9 +5127,7 @@
                 ForeignItem::Macro(item) =&gt; <span class="kw-2">&amp;mut </span>item.attrs,
                 ForeignItem::Verbatim(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(item),
 
-                <span class="attribute">#[cfg(test)]
-                </span>ForeignItem::__TestExhaustive(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-                <span class="attribute">#[cfg(not(test))]
+                <span class="attribute">#[cfg(syn_no_non_exhaustive)]
                 </span><span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
             };
             attrs.append(item_attrs);
@@ -5176,7 +5193,7 @@
             bounds: <span class="kw">_</span>,
             ty,
             semi_token,
-        } = input.parse()<span class="question-mark">?</span>;
+        } = FlexibleItemType::parse(input, WhereClauseLocation::BeforeEq)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>defaultness.is_some()
             || generics.lt_token.is_some()
@@ -5245,7 +5262,7 @@
             bounds: <span class="kw">_</span>,
             ty,
             semi_token,
-        } = input.parse()<span class="question-mark">?</span>;
+        } = FlexibleItemType::parse(input, WhereClauseLocation::BeforeEq)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>defaultness.is_some() || colon_token.is_some() || ty.is_none() {
             <span class="prelude-val">Ok</span>(Item::Verbatim(verbatim::between(begin, input)))
@@ -5267,13 +5284,12 @@
     <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>ItemStruct {
         <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
+            <span class="kw">let </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
             <span class="kw">let </span>vis = input.parse::&lt;Visibility&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>struct_token = input.parse::&lt;<span class="macro">Token!</span>[<span class="kw">struct</span>]&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>ident = input.parse::&lt;Ident&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>generics = input.parse::&lt;Generics&gt;()<span class="question-mark">?</span>;
-            <span class="kw">let </span>(where_clause, fields, semi_token) =
-                derive::parsing::data_struct(input, <span class="kw-2">&amp;mut </span>attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>(where_clause, fields, semi_token) = derive::parsing::data_struct(input)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(ItemStruct {
                 attrs,
                 vis,
@@ -5292,13 +5308,12 @@
     <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>ItemEnum {
         <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
+            <span class="kw">let </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
             <span class="kw">let </span>vis = input.parse::&lt;Visibility&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>enum_token = input.parse::&lt;<span class="macro">Token!</span>[<span class="kw">enum</span>]&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>ident = input.parse::&lt;Ident&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>generics = input.parse::&lt;Generics&gt;()<span class="question-mark">?</span>;
-            <span class="kw">let </span>(where_clause, brace_token, variants) =
-                derive::parsing::data_enum(input, <span class="kw-2">&amp;mut </span>attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>(where_clause, brace_token, variants) = derive::parsing::data_enum(input)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(ItemEnum {
                 attrs,
                 vis,
@@ -5317,12 +5332,12 @@
     <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>ItemUnion {
         <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
+            <span class="kw">let </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
             <span class="kw">let </span>vis = input.parse::&lt;Visibility&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>union_token = input.parse::&lt;<span class="macro">Token!</span>[union]&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>ident = input.parse::&lt;Ident&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>generics = input.parse::&lt;Generics&gt;()<span class="question-mark">?</span>;
-            <span class="kw">let </span>(where_clause, fields) = derive::parsing::data_union(input, <span class="kw-2">&amp;mut </span>attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>(where_clause, fields) = derive::parsing::data_union(input)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(ItemUnion {
                 attrs,
                 vis,
@@ -5546,9 +5561,7 @@
                 TraitItem::Macro(item) =&gt; <span class="kw-2">&amp;mut </span>item.attrs,
                 TraitItem::Verbatim(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
 
-                <span class="attribute">#[cfg(test)]
-                </span>TraitItem::__TestExhaustive(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-                <span class="attribute">#[cfg(not(test))]
+                <span class="attribute">#[cfg(syn_no_non_exhaustive)]
                 </span><span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
             };
             attrs.append(item_attrs);
@@ -5636,7 +5649,6 @@
                 }
             }
 
-            generics.where_clause = input.parse()<span class="question-mark">?</span>;
             <span class="kw">let </span>default = <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[=]) {
                 <span class="kw">let </span>eq_token: <span class="macro">Token!</span>[=] = input.parse()<span class="question-mark">?</span>;
                 <span class="kw">let </span>default: Type = input.parse()<span class="question-mark">?</span>;
@@ -5644,6 +5656,8 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>};
+
+            generics.where_clause = input.parse()<span class="question-mark">?</span>;
             <span class="kw">let </span>semi_token: <span class="macro">Token!</span>[;] = input.parse()<span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(TraitItemType {
@@ -5670,7 +5684,7 @@
             bounds,
             ty,
             semi_token,
-        } = input.parse()<span class="question-mark">?</span>;
+        } = FlexibleItemType::parse(input, WhereClauseLocation::Both)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>defaultness.is_some() || vis.is_some() {
             <span class="prelude-val">Ok</span>(TraitItem::Verbatim(verbatim::between(begin, input)))
@@ -5888,9 +5902,7 @@
                     ImplItem::Macro(item) =&gt; <span class="kw-2">&amp;mut </span>item.attrs,
                     ImplItem::Verbatim(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(item),
 
-                    <span class="attribute">#[cfg(test)]
-                    </span>ImplItem::__TestExhaustive(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-                    <span class="attribute">#[cfg(not(test))]
+                    <span class="attribute">#[cfg(syn_no_non_exhaustive)]
                     </span><span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 };
                 attrs.append(item_attrs);
@@ -5969,20 +5981,26 @@
     <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>ImplItemType {
         <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+            <span class="kw">let </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
+            <span class="kw">let </span>vis: Visibility = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>defaultness: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[default]&gt; = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>type_token: <span class="macro">Token!</span>[<span class="kw">type</span>] = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>ident: Ident = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>generics: Generics = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>eq_token: <span class="macro">Token!</span>[=] = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>ty: Type = input.parse()<span class="question-mark">?</span>;
+            generics.where_clause = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>semi_token: <span class="macro">Token!</span>[;] = input.parse()<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(ImplItemType {
-                attrs: input.call(Attribute::parse_outer)<span class="question-mark">?</span>,
-                vis: input.parse()<span class="question-mark">?</span>,
-                defaultness: input.parse()<span class="question-mark">?</span>,
-                type_token: input.parse()<span class="question-mark">?</span>,
-                ident: input.parse()<span class="question-mark">?</span>,
-                generics: {
-                    <span class="kw">let </span><span class="kw-2">mut </span>generics: Generics = input.parse()<span class="question-mark">?</span>;
-                    generics.where_clause = input.parse()<span class="question-mark">?</span>;
-                    generics
-                },
-                eq_token: input.parse()<span class="question-mark">?</span>,
-                ty: input.parse()<span class="question-mark">?</span>,
-                semi_token: input.parse()<span class="question-mark">?</span>,
+                attrs,
+                vis,
+                defaultness,
+                type_token,
+                ident,
+                generics,
+                eq_token,
+                ty,
+                semi_token,
             })
         }
     }
@@ -5998,7 +6016,7 @@
             bounds: <span class="kw">_</span>,
             ty,
             semi_token,
-        } = input.parse()<span class="question-mark">?</span>;
+        } = FlexibleItemType::parse(input, WhereClauseLocation::Both)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>colon_token.is_some() || ty.is_none() {
             <span class="prelude-val">Ok</span>(ImplItem::Verbatim(verbatim::between(begin, input)))
@@ -6060,7 +6078,6 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::attr::FilterAttrs;
     <span class="kw">use </span><span class="kw">crate</span>::print::TokensOrDefault;
-    <span class="kw">use </span><span class="kw">crate</span>::punctuated::Pair;
     <span class="kw">use </span>proc_macro2::TokenStream;
     <span class="kw">use </span>quote::{ToTokens, TokenStreamExt};
 
@@ -6414,11 +6431,11 @@
                 TokensOrDefault(<span class="kw-2">&amp;</span><span class="self">self</span>.colon_token).to_tokens(tokens);
                 <span class="self">self</span>.bounds.to_tokens(tokens);
             }
-            <span class="self">self</span>.generics.where_clause.to_tokens(tokens);
             <span class="kw">if let </span><span class="prelude-val">Some</span>((eq_token, default)) = <span class="kw-2">&amp;</span><span class="self">self</span>.default {
                 eq_token.to_tokens(tokens);
                 default.to_tokens(tokens);
             }
+            <span class="self">self</span>.generics.where_clause.to_tokens(tokens);
             <span class="self">self</span>.semi_token.to_tokens(tokens);
         }
     }
@@ -6479,9 +6496,9 @@
             <span class="self">self</span>.type_token.to_tokens(tokens);
             <span class="self">self</span>.ident.to_tokens(tokens);
             <span class="self">self</span>.generics.to_tokens(tokens);
-            <span class="self">self</span>.generics.where_clause.to_tokens(tokens);
             <span class="self">self</span>.eq_token.to_tokens(tokens);
             <span class="self">self</span>.ty.to_tokens(tokens);
+            <span class="self">self</span>.generics.where_clause.to_tokens(tokens);
             <span class="self">self</span>.semi_token.to_tokens(tokens);
         }
     }
@@ -6578,16 +6595,9 @@
             <span class="self">self</span>.generics.to_tokens(tokens);
             <span class="self">self</span>.paren_token.surround(tokens, |tokens| {
                 <span class="kw">let </span><span class="kw-2">mut </span>last_is_variadic = <span class="bool-val">false</span>;
-                <span class="kw">for </span>input <span class="kw">in </span><span class="self">self</span>.inputs.pairs() {
-                    <span class="kw">match </span>input {
-                        Pair::Punctuated(input, comma) =&gt; {
-                            maybe_variadic_to_tokens(input, tokens);
-                            comma.to_tokens(tokens);
-                        }
-                        Pair::End(input) =&gt; {
-                            last_is_variadic = maybe_variadic_to_tokens(input, tokens);
-                        }
-                    }
+                <span class="kw">for </span>pair <span class="kw">in </span><span class="self">self</span>.inputs.pairs() {
+                    last_is_variadic = maybe_variadic_to_tokens(pair.value(), tokens);
+                    pair.punct().to_tokens(tokens);
                 }
                 <span class="kw">if </span><span class="self">self</span>.variadic.is_some() &amp;&amp; !last_is_variadic {
                     <span class="kw">if </span>!<span class="self">self</span>.inputs.empty_or_trailing() {

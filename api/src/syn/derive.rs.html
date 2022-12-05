@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/derive.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>derive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.105/src/derive.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>derive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -272,12 +272,6 @@
 <span id="272">272</span>
 <span id="273">273</span>
 <span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::punctuated::Punctuated;
 
@@ -375,7 +369,7 @@
     <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>DeriveInput {
         <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
+            <span class="kw">let </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
             <span class="kw">let </span>vis = input.parse::&lt;Visibility&gt;()<span class="question-mark">?</span>;
 
             <span class="kw">let </span>lookahead = input.lookahead1();
@@ -383,7 +377,7 @@
                 <span class="kw">let </span>struct_token = input.parse::&lt;<span class="macro">Token!</span>[<span class="kw">struct</span>]&gt;()<span class="question-mark">?</span>;
                 <span class="kw">let </span>ident = input.parse::&lt;Ident&gt;()<span class="question-mark">?</span>;
                 <span class="kw">let </span>generics = input.parse::&lt;Generics&gt;()<span class="question-mark">?</span>;
-                <span class="kw">let </span>(where_clause, fields, semi) = data_struct(input, <span class="kw-2">&amp;mut </span>attrs)<span class="question-mark">?</span>;
+                <span class="kw">let </span>(where_clause, fields, semi) = data_struct(input)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(DeriveInput {
                     attrs,
                     vis,
@@ -402,7 +396,7 @@
                 <span class="kw">let </span>enum_token = input.parse::&lt;<span class="macro">Token!</span>[<span class="kw">enum</span>]&gt;()<span class="question-mark">?</span>;
                 <span class="kw">let </span>ident = input.parse::&lt;Ident&gt;()<span class="question-mark">?</span>;
                 <span class="kw">let </span>generics = input.parse::&lt;Generics&gt;()<span class="question-mark">?</span>;
-                <span class="kw">let </span>(where_clause, brace, variants) = data_enum(input, <span class="kw-2">&amp;mut </span>attrs)<span class="question-mark">?</span>;
+                <span class="kw">let </span>(where_clause, brace, variants) = data_enum(input)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(DeriveInput {
                     attrs,
                     vis,
@@ -421,7 +415,7 @@
                 <span class="kw">let </span>union_token = input.parse::&lt;<span class="macro">Token!</span>[union]&gt;()<span class="question-mark">?</span>;
                 <span class="kw">let </span>ident = input.parse::&lt;Ident&gt;()<span class="question-mark">?</span>;
                 <span class="kw">let </span>generics = input.parse::&lt;Generics&gt;()<span class="question-mark">?</span>;
-                <span class="kw">let </span>(where_clause, fields) = data_union(input, <span class="kw-2">&amp;mut </span>attrs)<span class="question-mark">?</span>;
+                <span class="kw">let </span>(where_clause, fields) = data_union(input)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(DeriveInput {
                     attrs,
                     vis,
@@ -443,7 +437,6 @@
 
     <span class="kw">pub fn </span>data_struct(
         input: ParseStream,
-        attrs: <span class="kw-2">&amp;mut </span>Vec&lt;Attribute&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="prelude-ty">Option</span>&lt;WhereClause&gt;, Fields, <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[;]&gt;)&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>lookahead = input.lookahead1();
         <span class="kw">let </span><span class="kw-2">mut </span>where_clause = <span class="prelude-val">None</span>;
@@ -468,7 +461,7 @@
                 <span class="prelude-val">Err</span>(lookahead.error())
             }
         } <span class="kw">else if </span>lookahead.peek(token::Brace) {
-            <span class="kw">let </span>fields = data::parsing::parse_braced(input, attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>fields = input.parse()<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>((where_clause, Fields::Named(fields), <span class="prelude-val">None</span>))
         } <span class="kw">else if </span>lookahead.peek(<span class="macro">Token!</span>[;]) {
             <span class="kw">let </span>semi = input.parse()<span class="question-mark">?</span>;
@@ -480,7 +473,6 @@
 
     <span class="kw">pub fn </span>data_enum(
         input: ParseStream,
-        attrs: <span class="kw-2">&amp;mut </span>Vec&lt;Attribute&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(
         <span class="prelude-ty">Option</span>&lt;WhereClause&gt;,
         token::Brace,
@@ -490,18 +482,14 @@
 
         <span class="kw">let </span>content;
         <span class="kw">let </span>brace = <span class="macro">braced!</span>(content <span class="kw">in </span>input);
-        attr::parsing::parse_inner(<span class="kw-2">&amp;</span>content, attrs)<span class="question-mark">?</span>;
         <span class="kw">let </span>variants = content.parse_terminated(Variant::parse)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>((where_clause, brace, variants))
     }
 
-    <span class="kw">pub fn </span>data_union(
-        input: ParseStream,
-        attrs: <span class="kw-2">&amp;mut </span>Vec&lt;Attribute&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="prelude-ty">Option</span>&lt;WhereClause&gt;, FieldsNamed)&gt; {
+    <span class="kw">pub fn </span>data_union(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="prelude-ty">Option</span>&lt;WhereClause&gt;, FieldsNamed)&gt; {
         <span class="kw">let </span>where_clause = input.parse()<span class="question-mark">?</span>;
-        <span class="kw">let </span>fields = data::parsing::parse_braced(input, attrs)<span class="question-mark">?</span>;
+        <span class="kw">let </span>fields = input.parse()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>((where_clause, fields))
     }
 }

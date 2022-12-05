@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.84/src/ty.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ty.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.105/src/ty.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ty.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../syn/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -1253,6 +1253,55 @@
 <span id="1253">1253</span>
 <span id="1254">1254</span>
 <span id="1255">1255</span>
+<span id="1256">1256</span>
+<span id="1257">1257</span>
+<span id="1258">1258</span>
+<span id="1259">1259</span>
+<span id="1260">1260</span>
+<span id="1261">1261</span>
+<span id="1262">1262</span>
+<span id="1263">1263</span>
+<span id="1264">1264</span>
+<span id="1265">1265</span>
+<span id="1266">1266</span>
+<span id="1267">1267</span>
+<span id="1268">1268</span>
+<span id="1269">1269</span>
+<span id="1270">1270</span>
+<span id="1271">1271</span>
+<span id="1272">1272</span>
+<span id="1273">1273</span>
+<span id="1274">1274</span>
+<span id="1275">1275</span>
+<span id="1276">1276</span>
+<span id="1277">1277</span>
+<span id="1278">1278</span>
+<span id="1279">1279</span>
+<span id="1280">1280</span>
+<span id="1281">1281</span>
+<span id="1282">1282</span>
+<span id="1283">1283</span>
+<span id="1284">1284</span>
+<span id="1285">1285</span>
+<span id="1286">1286</span>
+<span id="1287">1287</span>
+<span id="1288">1288</span>
+<span id="1289">1289</span>
+<span id="1290">1290</span>
+<span id="1291">1291</span>
+<span id="1292">1292</span>
+<span id="1293">1293</span>
+<span id="1294">1294</span>
+<span id="1295">1295</span>
+<span id="1296">1296</span>
+<span id="1297">1297</span>
+<span id="1298">1298</span>
+<span id="1299">1299</span>
+<span id="1300">1300</span>
+<span id="1301">1301</span>
+<span id="1302">1302</span>
+<span id="1303">1303</span>
+<span id="1304">1304</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::punctuated::Punctuated;
 <span class="kw">use </span>proc_macro2::TokenStream;
@@ -1269,6 +1318,7 @@
     ///
     /// [syntax tree enum]: Expr#syntax-tree-enums
     </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(any(feature = <span class="string">&quot;full&quot;</span>, feature = <span class="string">&quot;derive&quot;</span>))))]
+    #[cfg_attr(not(syn_no_non_exhaustive), non_exhaustive)]
     </span><span class="kw">pub enum </span>Type {
         <span class="doccomment">/// A fixed size array type: `[T; n]`.
         </span>Array(TypeArray),
@@ -1308,7 +1358,7 @@
         <span class="doccomment">/// A dynamically sized slice type: `[T]`.
         </span>Slice(TypeSlice),
 
-        <span class="doccomment">/// A trait object type `Bound1 + Bound2 + Bound3` where `Bound` is a
+        <span class="doccomment">/// A trait object type `dyn Bound1 + Bound2 + Bound3` where `Bound` is a
         /// trait or a lifetime.
         </span>TraitObject(TypeTraitObject),
 
@@ -1318,18 +1368,17 @@
         <span class="doccomment">/// Tokens in type position not interpreted by Syn.
         </span>Verbatim(TokenStream),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of
-        // this enum.
+        <span class="comment">// Not public API.
         //
-        //     match expr {
-        //         Type::Array(e) =&gt; {...}
-        //         Type::BareFn(e) =&gt; {...}
+        // For testing exhaustiveness in downstream code, use the following idiom:
+        //
+        //     match ty {
+        //         Type::Array(ty) =&gt; {...}
+        //         Type::BareFn(ty) =&gt; {...}
         //         ...
-        //         Type::Verbatim(e) =&gt; {...}
+        //         Type::Verbatim(ty) =&gt; {...}
         //
-        //         #[cfg(test)]
-        //         Type::__TestExhaustive(_) =&gt; unimplemented!(),
-        //         #[cfg(not(test))]
+        //         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]
         //         _ =&gt; { /* some sane fallback */ }
         //     }
         //
@@ -1337,12 +1386,9 @@
         // a variant. You will be notified by a test failure when a variant is
         // added, so that you can add code to handle it, but your library will
         // continue to compile and work for downstream users in the interim.
-        //
-        // Once `deny(reachable)` is available in rustc, Type will be
-        // reimplemented as a non_exhaustive enum.
-        // https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237
-        </span><span class="attribute">#[doc(hidden)]
-        </span>__TestExhaustive(<span class="kw">crate</span>::private),
+        </span><span class="attribute">#[cfg(syn_no_non_exhaustive)]
+        #[doc(hidden)]
+        </span>__NonExhaustive,
     }
 }
 
@@ -1502,7 +1548,7 @@
 }
 
 <span class="macro">ast_struct! </span>{
-    <span class="doccomment">/// A trait object type `Bound1 + Bound2 + Bound3` where `Bound` is a
+    <span class="doccomment">/// A trait object type `dyn Bound1 + Bound2 + Bound3` where `Bound` is a
     /// trait or a lifetime.
     ///
     /// *This type is available only if Syn is built with the `&quot;derive&quot;` or
@@ -1595,13 +1641,14 @@
     <span class="kw">use </span><span class="kw">crate</span>::ext::IdentExt;
     <span class="kw">use </span><span class="kw">crate</span>::parse::{Parse, ParseStream, <span class="prelude-ty">Result</span>};
     <span class="kw">use </span><span class="kw">crate</span>::path;
-    <span class="kw">use </span>proc_macro2::{Punct, Spacing, TokenTree};
+    <span class="kw">use </span>proc_macro2::{Punct, Spacing, Span, TokenTree};
 
     <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>Type {
         <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
             <span class="kw">let </span>allow_plus = <span class="bool-val">true</span>;
-            ambig_ty(input, allow_plus)
+            <span class="kw">let </span>allow_group_generic = <span class="bool-val">true</span>;
+            ambig_ty(input, allow_plus, allow_group_generic)
         }
     }
 
@@ -1614,11 +1661,16 @@
         </span><span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
         </span><span class="kw">pub fn </span>without_plus(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
             <span class="kw">let </span>allow_plus = <span class="bool-val">false</span>;
-            ambig_ty(input, allow_plus)
+            <span class="kw">let </span>allow_group_generic = <span class="bool-val">true</span>;
+            ambig_ty(input, allow_plus, allow_group_generic)
         }
     }
 
-    <span class="kw">fn </span>ambig_ty(input: ParseStream, allow_plus: bool) -&gt; <span class="prelude-ty">Result</span>&lt;Type&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ambig_ty(
+        input: ParseStream,
+        allow_plus: bool,
+        allow_group_generic: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Type&gt; {
         <span class="kw">let </span>begin = input.fork();
 
         <span class="kw">if </span>input.peek(token::Group) {
@@ -1639,7 +1691,9 @@
                         path: Path::parse_helper(input, <span class="bool-val">false</span>)<span class="question-mark">?</span>,
                     }));
                 }
-            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[&lt;]) || input.peek(<span class="macro">Token!</span>[::]) &amp;&amp; input.peek3(<span class="macro">Token!</span>[&lt;]) {
+            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[&lt;]) &amp;&amp; allow_group_generic
+                || input.peek(<span class="macro">Token!</span>[::]) &amp;&amp; input.peek3(<span class="macro">Token!</span>[&lt;])
+            {
                 <span class="kw">if let </span>Type::Path(<span class="kw-2">mut </span>ty) = <span class="kw-2">*</span>group.elem {
                     <span class="kw">let </span>arguments = <span class="kw-2">&amp;mut </span>ty.path.segments.last_mut().unwrap().arguments;
                     <span class="kw">if let </span>PathArguments::None = arguments {
@@ -1795,9 +1849,19 @@
             || lookahead.peek(<span class="macro">Token!</span>[::])
             || lookahead.peek(<span class="macro">Token!</span>[&lt;])
         {
-            <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">dyn</span>]) {
-                <span class="kw">let </span>trait_object = TypeTraitObject::parse(input, allow_plus)<span class="question-mark">?</span>;
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(Type::TraitObject(trait_object));
+            <span class="kw">let </span>dyn_token: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[<span class="kw">dyn</span>]&gt; = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(dyn_token) = dyn_token {
+                <span class="kw">let </span>dyn_span = dyn_token.span;
+                <span class="kw">let </span>star_token: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[<span class="kw-2">*</span>]&gt; = input.parse()<span class="question-mark">?</span>;
+                <span class="kw">let </span>bounds = TypeTraitObject::parse_bounds(dyn_span, input, allow_plus)<span class="question-mark">?</span>;
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="kw">if </span>star_token.is_some() {
+                    Type::Verbatim(verbatim::between(begin, input))
+                } <span class="kw">else </span>{
+                    Type::TraitObject(TypeTraitObject {
+                        dyn_token: <span class="prelude-val">Some</span>(dyn_token),
+                        bounds,
+                    })
+                });
             }
 
             <span class="kw">let </span>ty: TypePath = input.parse()<span class="question-mark">?</span>;
@@ -1995,7 +2059,10 @@
                         <span class="kw">break</span>;
                     }
 
-                    inputs.push_punct(args.parse()<span class="question-mark">?</span>);
+                    <span class="kw">let </span>comma = args.parse()<span class="question-mark">?</span>;
+                    <span class="kw">if </span>!has_mut_self {
+                        inputs.push_punct(comma);
+                    }
                 }
 
                 inputs
@@ -2074,15 +2141,28 @@
     <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>TypePath {
         <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-            <span class="kw">let </span>(qself, <span class="kw-2">mut </span>path) = path::parsing::qpath(input, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>expr_style = <span class="bool-val">false</span>;
+            <span class="kw">let </span>(qself, <span class="kw-2">mut </span>path) = path::parsing::qpath(input, expr_style)<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>path.segments.last().unwrap().arguments.is_empty()
+            <span class="kw">while </span>path.segments.last().unwrap().arguments.is_empty()
                 &amp;&amp; (input.peek(token::Paren) || input.peek(<span class="macro">Token!</span>[::]) &amp;&amp; input.peek3(token::Paren))
             {
                 input.parse::&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[::]&gt;&gt;()<span class="question-mark">?</span>;
                 <span class="kw">let </span>args: ParenthesizedGenericArguments = input.parse()<span class="question-mark">?</span>;
+                <span class="kw">let </span>allow_associated_type = <span class="macro">cfg!</span>(feature = <span class="string">&quot;full&quot;</span>)
+                    &amp;&amp; <span class="kw">match </span><span class="kw-2">&amp;</span>args.output {
+                        ReturnType::Default =&gt; <span class="bool-val">true</span>,
+                        ReturnType::Type(<span class="kw">_</span>, ty) =&gt; <span class="kw">match </span><span class="kw-2">**</span>ty {
+                            <span class="comment">// TODO: probably some of the other kinds allow this too.
+                            </span>Type::Paren(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+                            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+                        },
+                    };
                 <span class="kw">let </span>parenthesized = PathArguments::Parenthesized(args);
                 path.segments.last_mut().unwrap().arguments = parenthesized;
+                <span class="kw">if </span>allow_associated_type {
+                    Path::parse_rest(input, <span class="kw-2">&amp;mut </span>path, expr_style)<span class="question-mark">?</span>;
+                }
             }
 
             <span class="prelude-val">Ok</span>(TypePath { qself, path })
@@ -2099,7 +2179,8 @@
         <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>parse(input: ParseStream, allow_plus: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
             <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[-&gt;]) {
                 <span class="kw">let </span>arrow = input.parse()<span class="question-mark">?</span>;
-                <span class="kw">let </span>ty = ambig_ty(input, allow_plus)<span class="question-mark">?</span>;
+                <span class="kw">let </span>allow_group_generic = <span class="bool-val">true</span>;
+                <span class="kw">let </span>ty = ambig_ty(input, allow_plus, allow_group_generic)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(ReturnType::Type(arrow, Box::new(ty)))
             } <span class="kw">else </span>{
                 <span class="prelude-val">Ok</span>(ReturnType::Default)
@@ -2123,15 +2204,6 @@
         }
     }
 
-    <span class="kw">fn </span>at_least_one_type(bounds: <span class="kw-2">&amp;</span>Punctuated&lt;TypeParamBound, <span class="macro">Token!</span>[+]&gt;) -&gt; bool {
-        <span class="kw">for </span>bound <span class="kw">in </span>bounds {
-            <span class="kw">if let </span>TypeParamBound::Trait(<span class="kw">_</span>) = <span class="kw-2">*</span>bound {
-                <span class="kw">return </span><span class="bool-val">true</span>;
-            }
-        }
-        <span class="bool-val">false
-    </span>}
-
     <span class="kw">impl </span>TypeTraitObject {
         <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;parsing&quot;</span>)))]
         </span><span class="kw">pub fn </span>without_plus(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
@@ -2141,35 +2213,38 @@
 
         <span class="comment">// Only allow multiple trait references if allow_plus is true.
         </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>parse(input: ParseStream, allow_plus: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-            <span class="prelude-val">Ok</span>(TypeTraitObject {
-                dyn_token: input.parse()<span class="question-mark">?</span>,
-                bounds: <span class="self">Self</span>::parse_bounds(input, allow_plus)<span class="question-mark">?</span>,
-            })
+            <span class="kw">let </span>dyn_token: <span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[<span class="kw">dyn</span>]&gt; = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>dyn_span = <span class="kw">match </span><span class="kw-2">&amp;</span>dyn_token {
+                <span class="prelude-val">Some</span>(token) =&gt; token.span,
+                <span class="prelude-val">None </span>=&gt; input.span(),
+            };
+            <span class="kw">let </span>bounds = <span class="self">Self</span>::parse_bounds(dyn_span, input, allow_plus)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(TypeTraitObject { dyn_token, bounds })
         }
 
         <span class="kw">fn </span>parse_bounds(
+            dyn_span: Span,
             input: ParseStream,
             allow_plus: bool,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;Punctuated&lt;TypeParamBound, <span class="macro">Token!</span>[+]&gt;&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>bounds = Punctuated::new();
-            <span class="kw">loop </span>{
-                bounds.push_value(input.parse()<span class="question-mark">?</span>);
-                <span class="kw">if </span>!(allow_plus &amp;&amp; input.peek(<span class="macro">Token!</span>[+])) {
-                    <span class="kw">break</span>;
-                }
-                bounds.push_punct(input.parse()<span class="question-mark">?</span>);
-                <span class="kw">if </span>!(input.peek(Ident::peek_any)
-                    || input.peek(<span class="macro">Token!</span>[::])
-                    || input.peek(<span class="macro">Token!</span>[<span class="question-mark">?</span>])
-                    || input.peek(Lifetime)
-                    || input.peek(token::Paren))
-                {
-                    <span class="kw">break</span>;
+            <span class="kw">let </span>bounds = TypeParamBound::parse_multiple(input, allow_plus)<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>last_lifetime_span = <span class="prelude-val">None</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>at_least_one_trait = <span class="bool-val">false</span>;
+            <span class="kw">for </span>bound <span class="kw">in </span><span class="kw-2">&amp;</span>bounds {
+                <span class="kw">match </span>bound {
+                    TypeParamBound::Trait(<span class="kw">_</span>) =&gt; {
+                        at_least_one_trait = <span class="bool-val">true</span>;
+                        <span class="kw">break</span>;
+                    }
+                    TypeParamBound::Lifetime(lifetime) =&gt; {
+                        last_lifetime_span = <span class="prelude-val">Some</span>(lifetime.ident.span());
+                    }
                 }
             }
             <span class="comment">// Just lifetimes like `&#39;a + &#39;b` is not a TraitObject.
-            </span><span class="kw">if </span>!at_least_one_type(<span class="kw-2">&amp;</span>bounds) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(input.error(<span class="string">&quot;expected at least one type&quot;</span>));
+            </span><span class="kw">if </span>!at_least_one_trait {
+                <span class="kw">let </span>msg = <span class="string">&quot;at least one trait is required for an object type&quot;</span>;
+                <span class="kw">return </span><span class="prelude-val">Err</span>(error::new2(dyn_span, last_lifetime_span.unwrap(), msg));
             }
             <span class="prelude-val">Ok</span>(bounds)
         }
@@ -2191,10 +2266,30 @@
         }
 
         <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>parse(input: ParseStream, allow_plus: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-            <span class="prelude-val">Ok</span>(TypeImplTrait {
-                impl_token: input.parse()<span class="question-mark">?</span>,
-                bounds: TypeTraitObject::parse_bounds(input, allow_plus)<span class="question-mark">?</span>,
-            })
+            <span class="kw">let </span>impl_token: <span class="macro">Token!</span>[<span class="kw">impl</span>] = input.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>bounds = TypeParamBound::parse_multiple(input, allow_plus)<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>last_lifetime_span = <span class="prelude-val">None</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>at_least_one_trait = <span class="bool-val">false</span>;
+            <span class="kw">for </span>bound <span class="kw">in </span><span class="kw-2">&amp;</span>bounds {
+                <span class="kw">match </span>bound {
+                    TypeParamBound::Trait(<span class="kw">_</span>) =&gt; {
+                        at_least_one_trait = <span class="bool-val">true</span>;
+                        <span class="kw">break</span>;
+                    }
+                    TypeParamBound::Lifetime(lifetime) =&gt; {
+                        last_lifetime_span = <span class="prelude-val">Some</span>(lifetime.ident.span());
+                    }
+                }
+            }
+            <span class="kw">if </span>!at_least_one_trait {
+                <span class="kw">let </span>msg = <span class="string">&quot;at least one trait must be specified&quot;</span>;
+                <span class="kw">return </span><span class="prelude-val">Err</span>(error::new2(
+                    impl_token.span,
+                    last_lifetime_span.unwrap(),
+                    msg,
+                ));
+            }
+            <span class="prelude-val">Ok</span>(TypeImplTrait { impl_token, bounds })
         }
     }
 
@@ -2222,7 +2317,10 @@
             <span class="kw">let </span>content;
             <span class="prelude-val">Ok</span>(TypeParen {
                 paren_token: <span class="macro">parenthesized!</span>(content <span class="kw">in </span>input),
-                elem: Box::new(ambig_ty(<span class="kw-2">&amp;</span>content, allow_plus)<span class="question-mark">?</span>),
+                elem: Box::new({
+                    <span class="kw">let </span>allow_group_generic = <span class="bool-val">true</span>;
+                    ambig_ty(<span class="kw-2">&amp;</span>content, allow_plus, allow_group_generic)<span class="question-mark">?
+                </span>}),
             })
         }
     }
@@ -2415,7 +2513,7 @@
     <span class="attribute">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">&quot;printing&quot;</span>)))]
     </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>TypePath {
         <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
-            private::print_path(tokens, <span class="kw-2">&amp;</span><span class="self">self</span>.qself, <span class="kw-2">&amp;</span><span class="self">self</span>.path);
+            path::printing::print_path(tokens, <span class="kw-2">&amp;</span><span class="self">self</span>.qself, <span class="kw-2">&amp;</span><span class="self">self</span>.path);
         }
     }
 
