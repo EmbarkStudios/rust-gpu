@@ -2554,6 +2554,10 @@
 <span id="2554">2554</span>
 <span id="2555">2555</span>
 <span id="2556">2556</span>
+<span id="2557">2557</span>
+<span id="2558">2558</span>
+<span id="2559">2559</span>
+<span id="2560">2560</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Specialize globals (types, constants and module-scoped variables) and functions,
 //! to legalize a SPIR-V module representing a &quot;family&quot; of types with a single type,
 //! by treating some globals and functions as &quot;generic&quot;, inferring minimal sets
@@ -2662,10 +2666,14 @@
     }
 }
 
-<span class="kw">pub fn </span>specialize(module: Module, specialization: <span class="kw">impl </span>Specialization) -&gt; Module {
+<span class="kw">pub fn </span>specialize(
+    opts: <span class="kw-2">&amp;</span><span class="kw">super</span>::Options,
+    module: Module,
+    specialization: <span class="kw">impl </span>Specialization,
+) -&gt; Module {
     <span class="comment">// FIXME(eddyb) use `log`/`tracing` instead.
-    </span><span class="kw">let </span>debug = std::env::var(<span class="string">&quot;SPECIALIZER_DEBUG&quot;</span>).is_ok();
-    <span class="kw">let </span>dump_instances = std::env::var(<span class="string">&quot;SPECIALIZER_DUMP_INSTANCES&quot;</span>).ok();
+    </span><span class="kw">let </span>debug = opts.specializer_debug;
+    <span class="kw">let </span>dump_instances = <span class="kw-2">&amp;</span>opts.specializer_dump_instances;
 
     <span class="kw">let </span><span class="kw-2">mut </span>debug_names = FxHashMap::default();
     <span class="kw">if </span>debug || dump_instances.is_some() {

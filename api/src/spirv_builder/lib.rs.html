@@ -598,6 +598,25 @@
 <span id="598">598</span>
 <span id="599">599</span>
 <span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
 </pre><pre class="rust"><code><span class="comment">// BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;
@@ -1028,36 +1047,51 @@
         <span class="string">&quot;-Zcrate-attr=register_tool(rust_gpu)&quot;</span>.to_string(),
     ];
 
+    <span class="comment">// Wrapper for `env::var` that appropriately informs Cargo of the dependency.
+    </span><span class="kw">let </span>tracked_env_var_get = |name| {
+        <span class="kw">if let </span>MetadataPrintout::Full | MetadataPrintout::DependencyOnly = builder.print_metadata {
+            <span class="macro">println!</span>(<span class="string">&quot;cargo:rerun-if-env-changed={name}&quot;</span>);
+        }
+        env::var(name)
+    };
+
     <span class="kw">let </span><span class="kw-2">mut </span>llvm_args = <span class="macro">vec!</span>[];
     <span class="kw">if </span>builder.multimodule {
-        llvm_args.push(<span class="string">&quot;--module-output=multiple&quot;</span>);
+        llvm_args.push(<span class="string">&quot;--module-output=multiple&quot;</span>.to_string());
     }
     <span class="kw">match </span>builder.spirv_metadata {
         SpirvMetadata::None =&gt; (),
-        SpirvMetadata::NameVariables =&gt; llvm_args.push(<span class="string">&quot;--spirv-metadata=name-variables&quot;</span>),
-        SpirvMetadata::Full =&gt; llvm_args.push(<span class="string">&quot;--spirv-metadata=full&quot;</span>),
+        SpirvMetadata::NameVariables =&gt; {
+            llvm_args.push(<span class="string">&quot;--spirv-metadata=name-variables&quot;</span>.to_string());
+        }
+        SpirvMetadata::Full =&gt; llvm_args.push(<span class="string">&quot;--spirv-metadata=full&quot;</span>.to_string()),
     }
     <span class="kw">if </span>builder.relax_struct_store {
-        llvm_args.push(<span class="string">&quot;--relax-struct-store&quot;</span>);
+        llvm_args.push(<span class="string">&quot;--relax-struct-store&quot;</span>.to_string());
     }
     <span class="kw">if </span>builder.relax_logical_pointer {
-        llvm_args.push(<span class="string">&quot;--relax-logical-pointer&quot;</span>);
+        llvm_args.push(<span class="string">&quot;--relax-logical-pointer&quot;</span>.to_string());
     }
     <span class="kw">if </span>builder.relax_block_layout {
-        llvm_args.push(<span class="string">&quot;--relax-block-layout&quot;</span>);
+        llvm_args.push(<span class="string">&quot;--relax-block-layout&quot;</span>.to_string());
     }
     <span class="kw">if </span>builder.uniform_buffer_standard_layout {
-        llvm_args.push(<span class="string">&quot;--uniform-buffer-standard-layout&quot;</span>);
+        llvm_args.push(<span class="string">&quot;--uniform-buffer-standard-layout&quot;</span>.to_string());
     }
     <span class="kw">if </span>builder.scalar_block_layout {
-        llvm_args.push(<span class="string">&quot;--scalar-block-layout&quot;</span>);
+        llvm_args.push(<span class="string">&quot;--scalar-block-layout&quot;</span>.to_string());
     }
     <span class="kw">if </span>builder.skip_block_layout {
-        llvm_args.push(<span class="string">&quot;--skip-block-layout&quot;</span>);
+        llvm_args.push(<span class="string">&quot;--skip-block-layout&quot;</span>.to_string());
     }
     <span class="kw">if </span>builder.preserve_bindings {
-        llvm_args.push(<span class="string">&quot;--preserve-bindings&quot;</span>);
+        llvm_args.push(<span class="string">&quot;--preserve-bindings&quot;</span>.to_string());
     }
+
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(extra_codegen_args) = tracked_env_var_get(<span class="string">&quot;RUSTGPU_CODEGEN_ARGS&quot;</span>) {
+        llvm_args.extend(extra_codegen_args.split_whitespace().map(|s| s.to_string()));
+    }
+
     <span class="kw">let </span>llvm_args = join_checking_for_separators(llvm_args, <span class="string">&quot; &quot;</span>);
     <span class="kw">if </span>!llvm_args.is_empty() {
         rustflags.push([<span class="string">&quot;-Cllvm-args=&quot;</span>, <span class="kw-2">&amp;</span>llvm_args].concat());
@@ -1073,6 +1107,10 @@
 
     <span class="kw">if </span>builder.deny_warnings {
         rustflags.push(<span class="string">&quot;-Dwarnings&quot;</span>.to_string());
+    }
+
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(extra_rustflags) = tracked_env_var_get(<span class="string">&quot;RUSTGPU_RUSTFLAGS&quot;</span>) {
+        rustflags.extend(extra_rustflags.split_whitespace().map(|s| s.to_string()));
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>cargo = Command::new(<span class="string">&quot;cargo&quot;</span>);

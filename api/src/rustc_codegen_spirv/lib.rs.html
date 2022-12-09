@@ -530,22 +530,6 @@
 <span id="530">530</span>
 <span id="531">531</span>
 <span id="532">532</span>
-<span id="533">533</span>
-<span id="534">534</span>
-<span id="535">535</span>
-<span id="536">536</span>
-<span id="537">537</span>
-<span id="538">538</span>
-<span id="539">539</span>
-<span id="540">540</span>
-<span id="541">541</span>
-<span id="542">542</span>
-<span id="543">543</span>
-<span id="544">544</span>
-<span id="545">545</span>
-<span id="546">546</span>
-<span id="547">547</span>
-<span id="548">548</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is
 //! unstable and mainly intended for developing on the project itself. This is
 //! the API documentation for `rustc_codegen_spirv` which is not that useful on
@@ -655,11 +639,10 @@
 <span class="kw">use </span>rustc_span::symbol::{sym, Symbol};
 <span class="kw">use </span>rustc_target::spec::{Target, TargetTriple};
 <span class="kw">use </span>std::any::Any;
-<span class="kw">use </span>std::env;
 <span class="kw">use </span>std::fs::{create_dir_all, File};
 <span class="kw">use </span>std::io::Cursor;
 <span class="kw">use </span>std::io::Write;
-<span class="kw">use </span>std::path::{Path, PathBuf};
+<span class="kw">use </span>std::path::Path;
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">fn </span>dump_mir&lt;<span class="lifetime">&#39;tcx</span>&gt;(
@@ -958,9 +941,8 @@
         <span class="kw">let </span>do_codegen = || {
             <span class="kw">let </span>mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>path) = get_env_dump_dir(<span class="string">&quot;DUMP_MIR&quot;</span>) {
-                path.push(cgu_name.to_string());
-                dump_mir(tcx, <span class="kw-2">&amp;</span>mono_items, <span class="kw-2">&amp;</span>path);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(dir) = <span class="kw-2">&amp;</span>cx.codegen_args.dump_mir {
+                dump_mir(tcx, <span class="kw-2">&amp;</span>mono_items, <span class="kw-2">&amp;</span>dir.join(cgu_name.to_string()));
             }
 
             <span class="kw">for </span><span class="kw-2">&amp;</span>(mono_item, (linkage, visibility)) <span class="kw">in </span>mono_items.iter() {
@@ -986,7 +968,7 @@
                 <span class="comment">// attributes::sanitize(&amp;cx, SanitizerSet::empty(), entry);
             </span>}
         };
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>path) = env::var(<span class="string">&quot;DUMP_MODULE_ON_PANIC&quot;</span>) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(path) = <span class="kw-2">&amp;</span>cx.codegen_args.dump_module_on_panic {
             <span class="kw">let </span>module_dumper = DumpModuleOnPanic { cx: <span class="kw-2">&amp;</span>cx, path };
             <span class="macro">with_no_trimmed_paths!</span>(do_codegen());
             drop(module_dumper);
@@ -1018,33 +1000,19 @@
 
 <span class="kw">struct </span>DumpModuleOnPanic&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span>&gt; {
     cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;cx </span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;,
-    path: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    path: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Path,
 }
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>DumpModuleOnPanic&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>std::thread::panicking() {
-            <span class="kw">let </span>path: <span class="kw-2">&amp;</span>Path = <span class="self">self</span>.path.as_ref();
-            <span class="kw">if </span>path.has_root() {
-                <span class="self">self</span>.cx.builder.dump_module(path);
+            <span class="kw">if </span><span class="self">self</span>.path.has_root() {
+                <span class="self">self</span>.cx.builder.dump_module(<span class="self">self</span>.path);
             } <span class="kw">else </span>{
                 <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.cx.builder.dump_module_str());
             }
         }
     }
-}
-
-<span class="kw">fn </span>get_env_dump_dir(env_var: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;PathBuf&gt; {
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(path) = std::env::var_os(env_var) {
-        <span class="kw">let </span>path = PathBuf::from(path);
-        <span class="kw">if </span>path.is_file() {
-            std::fs::remove_file(<span class="kw-2">&amp;</span>path).unwrap();
-        }
-        std::fs::create_dir_all(<span class="kw-2">&amp;</span>path).unwrap();
-        <span class="prelude-val">Some</span>(path)
-    } <span class="kw">else </span>{
-        <span class="prelude-val">None
-    </span>}
 }
 
 <span class="doccomment">/// This is the entrypoint for a hot plugged `rustc_codegen_spirv`

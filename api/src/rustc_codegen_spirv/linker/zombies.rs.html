@@ -218,6 +218,10 @@
 <span id="218">218</span>
 <span id="219">219</span>
 <span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
 </pre><pre class="rust"><code><span class="doccomment">//! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
 </span><span class="kw">use super</span>::{get_name, get_names};
@@ -227,7 +231,6 @@
 <span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
 <span class="kw">use </span>rustc_session::Session;
 <span class="kw">use </span>rustc_span::{Span, DUMMY_SP};
-<span class="kw">use </span>std::env;
 <span class="kw">use </span>std::iter::once;
 
 <span class="attribute">#[derive(Clone)]
@@ -354,7 +357,11 @@
     result
 }
 
-<span class="kw">pub fn </span>remove_zombies(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;mut </span>Module) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+<span class="kw">pub fn </span>remove_zombies(
+    sess: <span class="kw-2">&amp;</span>Session,
+    opts: <span class="kw-2">&amp;</span><span class="kw">super</span>::Options,
+    module: <span class="kw-2">&amp;mut </span>Module,
+) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
     <span class="kw">let </span>zombies_owned = ZombieDecoration::decode_all(module)
         .map(|(id, zombie)| {
             <span class="kw">let </span>ZombieDecoration { reason, span } = zombie.deserialize();
@@ -374,7 +381,8 @@
 
     <span class="kw">let </span>result = report_error_zombies(sess, module, <span class="kw-2">&amp;</span>zombies);
 
-    <span class="kw">if </span>env::var(<span class="string">&quot;PRINT_ALL_ZOMBIE&quot;</span>).is_ok() {
+    <span class="comment">// FIXME(eddyb) use `log`/`tracing` instead.
+    </span><span class="kw">if </span>opts.print_all_zombie {
         <span class="kw">for </span>(<span class="kw-2">&amp;</span>zomb, reason) <span class="kw">in </span><span class="kw-2">&amp;</span>zombies {
             <span class="kw">let </span>orig = <span class="kw">if </span>zombies_owned.iter().any(|<span class="kw-2">&amp;</span>(z, <span class="kw">_</span>)| z == zomb) {
                 <span class="string">&quot;original&quot;
@@ -385,7 +393,7 @@
         }
     }
 
-    <span class="kw">if </span>env::var(<span class="string">&quot;PRINT_ZOMBIE&quot;</span>).is_ok() {
+    <span class="kw">if </span>opts.print_zombie {
         <span class="kw">let </span>names = get_names(module);
         <span class="kw">for </span>f <span class="kw">in </span><span class="kw-2">&amp;</span>module.functions {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(reason) = is_zombie(f.def.as_ref().unwrap(), <span class="kw-2">&amp;</span>zombies) {
