@@ -13,25 +13,22 @@ use structopt::StructOpt;
     usage = "cargo compiletest [FLAGS] [FILTER]..."
 )]
 struct Opt {
-    /// Automatically update stderr/stdout files
+    /// Automatically update stderr/stdout files.
     #[structopt(long)]
     bless: bool,
 
     /// The environment to compile to the SPIR-V tests.
-    #[structopt(long)]
-    target_env: Option<String>,
+    #[structopt(long, default_value = "spv1.3")]
+    target_env: String,
 
-    /// Only run tests that match these filters
+    /// Only run tests that match these filters.
     #[structopt(name = "FILTER")]
     filters: Vec<String>,
 }
 
 impl Opt {
     pub fn environments(&self) -> Vec<String> {
-        match &self.target_env {
-            Some(env) => env.split(',').map(String::from).collect(),
-            None => vec!["spv1.3".into()],
-        }
+        self.target_env.split(',').map(String::from).collect()
     }
 }
 
