@@ -568,6 +568,113 @@
 <span id="568">568</span>
 <span id="569">569</span>
 <span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.
 //! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a
 //! `StorageClass::Input` pointer. Our frontend definitely allows it, though, this is like taking a
@@ -582,6 +689,8 @@
 <span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
 <span class="kw">use </span>rustc_errors::ErrorGuaranteed;
 <span class="kw">use </span>rustc_session::Session;
+<span class="kw">use </span>smallvec::SmallVec;
+<span class="kw">use </span>std::convert::TryInto;
 <span class="kw">use </span>std::mem::take;
 
 <span class="kw">type </span>FunctionMap = FxHashMap&lt;Word, Function&gt;;
@@ -942,18 +1051,24 @@
         </span>};
         <span class="kw">let </span>return_jump = <span class="self">self</span>.id();
         <span class="comment">// Rewrite OpReturns of the callee.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>inlined_blocks = get_inlined_blocks(callee, return_variable, return_jump);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>inlined_callee_blocks = get_inlined_blocks(callee, return_variable, return_jump);
         <span class="comment">// Clone the IDs of the callee, because otherwise they&#39;d be defined multiple times if the
         // fn is inlined multiple times.
-        </span><span class="self">self</span>.add_clone_id_rules(<span class="kw-2">&amp;mut </span>rewrite_rules, <span class="kw-2">&amp;</span>inlined_blocks);
-        apply_rewrite_rules(<span class="kw-2">&amp;</span>rewrite_rules, <span class="kw-2">&amp;mut </span>inlined_blocks);
+        </span><span class="self">self</span>.add_clone_id_rules(<span class="kw-2">&amp;mut </span>rewrite_rules, <span class="kw-2">&amp;</span>inlined_callee_blocks);
+        apply_rewrite_rules(<span class="kw-2">&amp;</span>rewrite_rules, <span class="kw-2">&amp;mut </span>inlined_callee_blocks);
 
-        <span class="comment">// Split the block containing the OpFunctionCall into two, around the call.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>post_call_block_insts = caller.blocks[block_idx]
+        <span class="comment">// Split the block containing the `OpFunctionCall` into pre-call vs post-call.
+        </span><span class="kw">let </span>pre_call_block_idx = block_idx;
+        <span class="attribute">#[expect(unused)]
+        </span><span class="kw">let </span>block_idx: usize; <span class="comment">// HACK(eddyb) disallowing using the unrenamed variable.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>post_call_block_insts = caller.blocks[pre_call_block_idx]
             .instructions
             .split_off(call_index + <span class="number">1</span>);
         <span class="comment">// pop off OpFunctionCall
-        </span><span class="kw">let </span>call = caller.blocks[block_idx].instructions.pop().unwrap();
+        </span><span class="kw">let </span>call = caller.blocks[pre_call_block_idx]
+            .instructions
+            .pop()
+            .unwrap();
         <span class="macro">assert!</span>(call.class.opcode == Op::FunctionCall);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(call_result_type) = call_result_type {
@@ -966,19 +1081,13 @@
             );
         }
 
-        <span class="comment">// Fuse the first block of the callee into the block of the caller. This is okay because
-        // it&#39;s illegal to branch to the first BB in a function.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>callee_header = inlined_blocks.remove(<span class="number">0</span>).instructions;
-        <span class="comment">// TODO: OpLine handling
-        </span><span class="kw">let </span>num_variables = callee_header
-            .iter()
-            .position(|inst| inst.class.opcode != Op::Variable)
-            .unwrap_or(callee_header.len());
-        caller.blocks[block_idx]
-            .instructions
-            .append(<span class="kw-2">&amp;mut </span>callee_header.split_off(num_variables));
-        <span class="comment">// Move the OpVariables of the callee to the caller.
-        </span>insert_opvariables(<span class="kw-2">&amp;mut </span>caller.blocks[<span class="number">0</span>], callee_header);
+        <span class="comment">// Insert non-entry inlined callee blocks just after the pre-call block.
+        </span><span class="kw">let </span>non_entry_inlined_callee_blocks = inlined_callee_blocks.drain(<span class="number">1</span>..);
+        <span class="kw">let </span>num_non_entry_inlined_callee_blocks = non_entry_inlined_callee_blocks.len();
+        caller.blocks.splice(
+            (pre_call_block_idx + <span class="number">1</span>)..(pre_call_block_idx + <span class="number">1</span>),
+            non_entry_inlined_callee_blocks,
+        );
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(call_result_type) = call_result_type {
             <span class="comment">// Add the load of the result value after the inlined function. Note there&#39;s guaranteed no
@@ -993,18 +1102,67 @@
                 ),
             );
         }
-        <span class="comment">// Insert the second half of the split block.
-        </span><span class="kw">let </span>continue_block = Block {
-            label: <span class="prelude-val">Some</span>(Instruction::new(Op::Label, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(return_jump), <span class="macro">vec!</span>[])),
-            instructions: post_call_block_insts,
-        };
-        caller.blocks.insert(block_idx + <span class="number">1</span>, continue_block);
 
-        <span class="comment">// Insert the rest of the blocks (i.e. not the first) between the original block that was
-        // split.
-        </span>caller
-            .blocks
-            .splice((block_idx + <span class="number">1</span>)..(block_idx + <span class="number">1</span>), inlined_blocks);
+        <span class="comment">// Insert the post-call block, after all the inlined callee blocks.
+        </span>{
+            <span class="kw">let </span>post_call_block_idx = pre_call_block_idx + num_non_entry_inlined_callee_blocks + <span class="number">1</span>;
+            <span class="kw">let </span>post_call_block = Block {
+                label: <span class="prelude-val">Some</span>(Instruction::new(Op::Label, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(return_jump), <span class="macro">vec!</span>[])),
+                instructions: post_call_block_insts,
+            };
+            caller.blocks.insert(post_call_block_idx, post_call_block);
+
+            <span class="comment">// Adjust any `OpPhi`s in the (caller) targets of the original call block,
+            // to refer to post-call block (the new source of those CFG edges).
+            </span>rewrite_phi_sources(
+                caller.blocks[pre_call_block_idx].label_id().unwrap(),
+                <span class="kw-2">&amp;mut </span>caller.blocks,
+                post_call_block_idx,
+            );
+        }
+
+        <span class="comment">// Fuse the inlined callee entry block into the pre-call block.
+        // This is okay because it&#39;s illegal to branch to the first BB in a function.
+        </span>{
+            <span class="comment">// Take a prefix sequence of `OpVariable`s from the start of `insts`,
+            // and return it as a new `Vec` (while keeping the rest in `insts`).
+            </span><span class="kw">let </span>steal_vars = |insts: <span class="kw-2">&amp;mut </span>Vec&lt;Instruction&gt;| {
+                <span class="kw">let </span><span class="kw-2">mut </span>vars_and_non_vars = take(insts);
+
+                <span class="comment">// TODO: OpLine handling
+                </span><span class="kw">let </span>num_vars = vars_and_non_vars
+                    .iter()
+                    .position(|inst| inst.class.opcode != Op::Variable)
+                    .unwrap_or(vars_and_non_vars.len());
+                <span class="kw">let </span>(non_vars, vars) = (vars_and_non_vars.split_off(num_vars), vars_and_non_vars);
+
+                <span class="comment">// Keep non-`OpVariable`s in `insts` while returning `OpVariable`s.
+                </span><span class="kw-2">*</span>insts = non_vars;
+                vars
+            };
+
+            <span class="kw">let </span>[<span class="kw-2">mut </span>inlined_callee_entry_block]: [<span class="kw">_</span>; <span class="number">1</span>] =
+                inlined_callee_blocks.try_into().unwrap();
+
+            <span class="comment">// Move the `OpVariable`s of the callee to the caller.
+            </span>insert_opvariables(
+                <span class="kw-2">&amp;mut </span>caller.blocks[<span class="number">0</span>],
+                steal_vars(<span class="kw-2">&amp;mut </span>inlined_callee_entry_block.instructions),
+            );
+
+            caller.blocks[pre_call_block_idx]
+                .instructions
+                .append(<span class="kw-2">&amp;mut </span>inlined_callee_entry_block.instructions);
+
+            <span class="comment">// Adjust any `OpPhi`s in the (inlined callee) targets of the
+            // inlined callee entry block, to refer to the pre-call block
+            // (the new source of those CFG edges).
+            </span>rewrite_phi_sources(
+                inlined_callee_entry_block.label_id().unwrap(),
+                <span class="kw-2">&amp;mut </span>caller.blocks,
+                pre_call_block_idx,
+            );
+        }
 
         <span class="bool-val">true
     </span>}
@@ -1102,6 +1260,21 @@
 <span class="kw">fn </span>fuse_trivial_branches(function: <span class="kw-2">&amp;mut </span>Function) {
     <span class="kw">let </span>all_preds = compute_preds(<span class="kw-2">&amp;</span>function.blocks);
     <span class="lifetime">&#39;outer</span>: <span class="kw">for </span>(dest_block, <span class="kw-2">mut </span>preds) <span class="kw">in </span>all_preds.iter().enumerate() {
+        <span class="comment">// Don&#39;t fuse branches into blocks with `OpPhi`s.
+        </span><span class="kw">let </span>any_phis = function.blocks[dest_block]
+            .instructions
+            .iter()
+            .filter(|inst| {
+                <span class="comment">// These are the only instructions that are allowed before `OpPhi`.
+                </span>!<span class="macro">matches!</span>(inst.class.opcode, Op::Line | Op::NoLine)
+            })
+            .take_while(|inst| inst.class.opcode == Op::Phi)
+            .next()
+            .is_some();
+        <span class="kw">if </span>any_phis {
+            <span class="kw">continue</span>;
+        }
+
         <span class="comment">// if there&#39;s two trivial branches in a row, the middle one might get inlined before the
         // last one, so when processing the last one, skip through to the first one.
         </span><span class="kw">let </span>pred = <span class="kw">loop </span>{
@@ -1120,6 +1293,14 @@
             <span class="kw">let </span>pred_insts = <span class="kw-2">&amp;mut </span>function.blocks[pred].instructions;
             pred_insts.pop(); <span class="comment">// pop the branch
             </span>pred_insts.append(<span class="kw-2">&amp;mut </span>dest_insts);
+
+            <span class="comment">// Adjust any `OpPhi`s in the targets of the original block, to refer
+            // to the sole predecessor (the new source of those CFG edges).
+            </span>rewrite_phi_sources(
+                function.blocks[dest_block].label_id().unwrap(),
+                <span class="kw-2">&amp;mut </span>function.blocks,
+                pred,
+            );
         }
     }
     function.blocks.retain(|b| !b.instructions.is_empty());
@@ -1137,6 +1318,39 @@
         }
     }
     result
+}
+
+<span class="doccomment">/// Helper for adjusting `OpPhi` source label IDs, when the terminator of the
+/// `original_label_id`-labeled block got moved to `blocks[original_block_idx]`.
+</span><span class="kw">fn </span>rewrite_phi_sources(original_label_id: Word, blocks: <span class="kw-2">&amp;mut </span>[Block], new_block_idx: usize) {
+    <span class="kw">let </span>new_label_id = blocks[new_block_idx].label_id().unwrap();
+
+    <span class="comment">// HACK(eddyb) can&#39;t keep `blocks` borrowed, the loop needs mutable access.
+    </span><span class="kw">let </span>target_ids: SmallVec&lt;[<span class="kw">_</span>; <span class="number">4</span>]&gt; = outgoing_edges(<span class="kw-2">&amp;</span>blocks[new_block_idx]).collect();
+
+    <span class="kw">for </span>target_id <span class="kw">in </span>target_ids {
+        <span class="kw">let </span>target_block = blocks
+            .iter_mut()
+            .find(|b| b.label_id().unwrap() == target_id)
+            .unwrap();
+        <span class="kw">let </span>phis = target_block
+            .instructions
+            .iter_mut()
+            .filter(|inst| {
+                <span class="comment">// These are the only instructions that are allowed before `OpPhi`.
+                </span>!<span class="macro">matches!</span>(inst.class.opcode, Op::Line | Op::NoLine)
+            })
+            .take_while(|inst| inst.class.opcode == Op::Phi);
+        <span class="kw">for </span>phi <span class="kw">in </span>phis {
+            <span class="kw">for </span>value_and_source_id <span class="kw">in </span>phi.operands.chunks_mut(<span class="number">2</span>) {
+                <span class="kw">let </span>source_id = value_and_source_id[<span class="number">1</span>].id_ref_any_mut().unwrap();
+                <span class="kw">if </span><span class="kw-2">*</span>source_id == original_label_id {
+                    <span class="kw-2">*</span>source_id = new_label_id;
+                    <span class="kw">break</span>;
+                }
+            }
+        }
+    }
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (9565dfeb4 2022-10-28)" ></div></body></html>
