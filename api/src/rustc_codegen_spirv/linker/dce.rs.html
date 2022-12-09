@@ -271,6 +271,20 @@
 <span id="271">271</span>
 <span id="272">272</span>
 <span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Dead code elimination
 //!
 //! This pass removes any instruction that doesn&#39;t affect the module. It does so by considering all
@@ -281,7 +295,7 @@
 //! concept.
 
 </span><span class="kw">use </span>rspirv::dr::{Function, Instruction, Module, Operand};
-<span class="kw">use </span>rspirv::spirv::{Op, StorageClass, Word};
+<span class="kw">use </span>rspirv::spirv::{Decoration, LinkageType, Op, StorageClass, Word};
 <span class="kw">use </span>rustc_data_structures::fx::FxHashSet;
 
 <span class="kw">pub fn </span>dce(module: <span class="kw-2">&amp;mut </span>Module) {
@@ -292,9 +306,23 @@
 
 <span class="kw">pub fn </span>collect_roots(module: <span class="kw-2">&amp;</span>Module) -&gt; FxHashSet&lt;Word&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>rooted = FxHashSet::default();
+
     <span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;</span>module.entry_points {
         root(inst, <span class="kw-2">&amp;mut </span>rooted);
     }
+
+    <span class="comment">// NOTE(eddyb) such &quot;link exports&quot; roots are only relevant when `Options`&#39;s
+    // `keep_link_export`s field is used to request that `Export`s are left in
+    // (primarily for unit testing - see also its doc comment).
+    </span><span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;</span>module.annotations {
+        <span class="kw">if </span>inst.class.opcode == Op::Decorate
+            &amp;&amp; inst.operands[<span class="number">1</span>].unwrap_decoration() == Decoration::LinkageAttributes
+            &amp;&amp; inst.operands[<span class="number">3</span>].unwrap_linkage_type() == LinkageType::Export
+        {
+            root(inst, <span class="kw-2">&amp;mut </span>rooted);
+        }
+    }
+
     rooted
 }
 

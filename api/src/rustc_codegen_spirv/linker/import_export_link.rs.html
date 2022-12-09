@@ -267,6 +267,21 @@
 <span id="267">267</span>
 <span id="268">268</span>
 <span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Result;
 <span class="kw">use </span><span class="kw">crate</span>::decorations::{CustomDecoration, ZombieDecoration};
 <span class="kw">use </span>rspirv::dr::{Instruction, Module};
@@ -274,10 +289,10 @@
 <span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
 <span class="kw">use </span>rustc_session::Session;
 
-<span class="kw">pub fn </span>run(sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;mut </span>Module) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<span class="kw">pub fn </span>run(opts: <span class="kw-2">&amp;</span><span class="kw">super</span>::Options, sess: <span class="kw-2">&amp;</span>Session, module: <span class="kw-2">&amp;mut </span>Module) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>(rewrite_rules, killed_parameters) =
         find_import_export_pairs_and_killed_params(sess, module)<span class="question-mark">?</span>;
-    kill_linkage_instructions(module, <span class="kw-2">&amp;</span>rewrite_rules);
+    kill_linkage_instructions(opts, module, <span class="kw-2">&amp;</span>rewrite_rules);
     import_kill_annotations_and_debug(module, <span class="kw-2">&amp;</span>rewrite_rules, <span class="kw-2">&amp;</span>killed_parameters);
     replace_all_uses_with(module, <span class="kw-2">&amp;</span>rewrite_rules);
     <span class="prelude-val">Ok</span>(())
@@ -484,7 +499,11 @@
     });
 }
 
-<span class="kw">fn </span>kill_linkage_instructions(module: <span class="kw-2">&amp;mut </span>Module, rewrite_rules: <span class="kw-2">&amp;</span>FxHashMap&lt;u32, u32&gt;) {
+<span class="kw">fn </span>kill_linkage_instructions(
+    opts: <span class="kw-2">&amp;</span><span class="kw">super</span>::Options,
+    module: <span class="kw-2">&amp;mut </span>Module,
+    rewrite_rules: <span class="kw-2">&amp;</span>FxHashMap&lt;u32, u32&gt;,
+) {
     <span class="comment">// drop imported functions
     </span>module
         .functions
@@ -496,16 +515,27 @@
             .map_or(<span class="bool-val">true</span>, |v| !rewrite_rules.contains_key(<span class="kw-2">&amp;</span>v))
     });
 
+    <span class="comment">// NOTE(eddyb) `Options`&#39;s `keep_link_export`s field requests that `Export`s
+    // are left in (primarily for unit testing - see also its doc comment).
+    </span><span class="kw">let </span><span class="kw-2">mut </span>kept_any_linkage_decorations = <span class="bool-val">false</span>;
     module.annotations.retain(|inst| {
-        inst.class.opcode != Op::Decorate
-            || inst.operands[<span class="number">1</span>].unwrap_decoration() != Decoration::LinkageAttributes
+        !(inst.class.opcode == Op::Decorate
+            &amp;&amp; inst.operands[<span class="number">1</span>].unwrap_decoration() == Decoration::LinkageAttributes
+            &amp;&amp; <span class="kw">match </span>inst.operands[<span class="number">3</span>].unwrap_linkage_type() {
+                LinkageType::Export <span class="kw">if </span>opts.keep_link_exports =&gt; {
+                    kept_any_linkage_decorations = <span class="bool-val">true</span>;
+                    <span class="bool-val">false
+                </span>}
+                <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>,
+            })
     });
-
-    <span class="comment">// drop OpCapability Linkage
-    </span>module.capabilities.retain(|inst| {
-        inst.class.opcode != Op::Capability
-            || inst.operands[<span class="number">0</span>].unwrap_capability() != Capability::Linkage
-    });
+    <span class="kw">if </span>!kept_any_linkage_decorations {
+        <span class="comment">// drop OpCapability Linkage
+        </span>module.capabilities.retain(|inst| {
+            inst.class.opcode != Op::Capability
+                || inst.operands[<span class="number">0</span>].unwrap_capability() != Capability::Linkage
+        });
+    }
 }
 
 <span class="kw">fn </span>import_kill_annotations_and_debug(
