@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `RUSTGPU_RUSTFLAGS="..."` for shader `RUSTFLAGS="..."`
   - `RUSTGPU_CODEGEN_ARGS="..."` for shader "codegen args" (i.e. `RUSTFLAGS=-Cllvm-args="..."`)  
     (check out ["codegen args" docs](docs/src/codegen-args.md), or run with `RUSTGPU_CODEGEN_ARGS=--help` to see the full list of options)
+- [PR#940](https://github.com/EmbarkStudios/rust-gpu/pull/940) integrated the experimental [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) into the linker  
+  (opt-in via `RUSTGPU_CODEGEN_ARGS=--spirt`, see also [the `--spirt` docs](docs/src/codegen-args.md#--spirt), for more details)
 
 ### Changed 🛠️
 - [PR#958](https://github.com/EmbarkStudios/rust-gpu/pull/958) updated toolchain to `nightly-2022-10-29`

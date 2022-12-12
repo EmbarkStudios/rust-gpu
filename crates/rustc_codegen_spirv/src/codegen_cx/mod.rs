@@ -351,6 +351,12 @@ impl CodegenArgs {
             );
             opts.optflag("", "no-structurize", "disables CFG structurization");
 
+            opts.optflag(
+                "",
+                "spirt",
+                "use SPIR-T for legalization (see also `docs/src/codegen-args.md`)",
+            );
+
             // NOTE(eddyb) these are debugging options that used to be env vars
             // (for more information see `docs/src/codegen-args.md`).
             opts.optopt(
@@ -364,6 +370,12 @@ impl CodegenArgs {
                 "dump-post-split",
                 "dump modules immediately after multimodule splitting, to files in DIR",
                 "DIR",
+            );
+            opts.optopt(
+                "",
+                "dump-spirt-passes",
+                "dump the SPIR-T module across passes, to FILE and FILE.html",
+                "FILE",
             );
             opts.optflag(
                 "",
@@ -511,6 +523,7 @@ impl CodegenArgs {
             dce: !matches.opt_present("no-dce"),
             compact_ids: !matches.opt_present("no-compact-ids"),
             structurize: !matches.opt_present("no-structurize"),
+            spirt: matches.opt_present("spirt"),
 
             // FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
             emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,
@@ -521,6 +534,7 @@ impl CodegenArgs {
             // (for more information see `docs/src/codegen-args.md`).
             dump_post_merge: matches_opt_path("dump-post-merge"),
             dump_post_split: matches_opt_dump_dir_path("dump-post-split"),
+            dump_spirt_passes: matches_opt_path("dump-spirt-passes"),
             specializer_debug: matches.opt_present("specializer-debug"),
             specializer_dump_instances: matches_opt_path("specializer-dump-instances"),
             print_all_zombie: matches.opt_present("print-all-zombie"),
