@@ -138,3 +138,18 @@ anyway, be careful).
 ### `--no-structurize`
 
 Disables CFG structurization. Probably results in invalid modules.
+
+### `--spirt`
+
+Enables using the experimental [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) in the linker - more specifically, this:
+- adds a `SPIR-V -> SPIR-🇹 -> SPIR-V` roundtrip  
+  (future `SPIR-🇹` passes would go in the middle of this, and eventually codegen might not produce `SPIR-V` at all)
+- replaces the existing structurizer with `SPIR-🇹` structurization (which is more robust and can e.g. handle `OpPhi`s)
+- runs some existing `SPIR-V` legalization/optimization passes (`mem2reg`) *before* inlining, instead of *only after* (as the `OpPhi`s they would produce are no longer an issue for structurization)
+
+For more information, also see [the `SPIR-🇹` repository](https://github.com/EmbarkStudios/spirt).
+
+### `--dump-spirt-passes FILE`
+
+Dump the `SPIR-🇹` module across passes (i.e. all of the versions before/after each pass), as a combined report, to `FILE` and `FILE.html`.  
+<sub>(the `.html` version of the report is the recommended form for viewing, as it uses tabling for versions, syntax-highlighting-like styling, and use->def linking)</sub>

@@ -34,6 +34,7 @@ pub struct Options {
     pub compact_ids: bool,
     pub dce: bool,
     pub structurize: bool,
+    pub spirt: bool,
 
     pub emit_multiple_modules: bool,
     pub spirv_metadata: SpirvMetadata,
@@ -48,6 +49,7 @@ pub struct Options {
     // (for more information see `docs/src/codegen-args.md`).
     pub dump_post_merge: Option<PathBuf>,
     pub dump_post_split: Option<PathBuf>,
+    pub dump_spirt_passes: Option<PathBuf>,
     pub specializer_debug: bool,
     pub specializer_dump_instances: Option<PathBuf>,
     pub print_all_zombie: bool,
@@ -141,10 +143,10 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             bound += module.header.as_ref().unwrap().bound - 1;
             let this_version = module.header.as_ref().unwrap().version();
             if version != this_version {
-                sess.fatal(format!(
+                return Err(sess.err(format!(
                     "cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}",
                     version.0, version.1, this_version.0, this_version.1
-                ))
+                )));
             }
         }
 
@@ -234,25 +236,14 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         );
     }
 
-    {
-        let _timer = sess.timer("link_inline");
-        inline::inline(sess, &mut output)?;
-    }
+    // NOTE(eddyb) with SPIR-T, we can do `mem2reg` before inlining, too!
+    if opts.spirt {
+        if opts.dce {
+            let _timer = sess.timer("link_dce-before-inlining");
+            dce::dce(&mut output);
+        }
 
-    if opts.dce {
-        let _timer = sess.timer("link_dce");
-        dce::dce(&mut output);
-    }
-
-    let mut output = if opts.structurize {
-        let _timer = sess.timer("link_structurize");
-        structurizer::structurize(output)
-    } else {
-        output
-    };
-
-    {
-        let _timer = sess.timer("link_block_ordering_pass_and_mem2reg");
+        let _timer = sess.timer("link_block_ordering_pass_and_mem2reg-before-inlining");
         let mut pointer_to_pointee = FxHashMap::default();
         let mut constants = FxHashMap::default();
         let mut u32 = None;
@@ -288,6 +279,142 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             );
             destructure_composites::destructure_composites(func);
         }
+    }
+
+    {
+        let _timer = sess.timer("link_inline");
+        inline::inline(sess, &mut output)?;
+    }
+
+    if opts.dce {
+        let _timer = sess.timer("link_dce-after-inlining");
+        dce::dce(&mut output);
+    }
+
+    let mut output = if opts.structurize && !opts.spirt {
+        let _timer = sess.timer("link_structurize");
+        structurizer::structurize(output)
+    } else {
+        output
+    };
+
+    {
+        let _timer = sess.timer("link_block_ordering_pass_and_mem2reg-after-inlining");
+        let mut pointer_to_pointee = FxHashMap::default();
+        let mut constants = FxHashMap::default();
+        let mut u32 = None;
+        for inst in &output.types_global_values {
+            match inst.class.opcode {
+                Op::TypePointer => {
+                    pointer_to_pointee
+                        .insert(inst.result_id.unwrap(), inst.operands[1].unwrap_id_ref());
+                }
+                Op::TypeInt
+                    if inst.operands[0].unwrap_literal_int32() == 32
+                        && inst.operands[1].unwrap_literal_int32() == 0 =>
+                {
+                    assert!(u32.is_none());
+                    u32 = Some(inst.result_id.unwrap());
+                }
+                Op::Constant if u32.is_some() && inst.result_type == u32 => {
+                    let value = inst.operands[0].unwrap_literal_int32();
+                    constants.insert(inst.result_id.unwrap(), value);
+                }
+                _ => {}
+            }
+        }
+        for func in &mut output.functions {
+            simple_passes::block_ordering_pass(func);
+            // Note: mem2reg requires functions to be in RPO order (i.e. block_ordering_pass)
+            mem2reg::mem2reg(
+                output.header.as_mut().unwrap(),
+                &mut output.types_global_values,
+                &pointer_to_pointee,
+                &constants,
+                func,
+            );
+            destructure_composites::destructure_composites(func);
+        }
+    }
+
+    if opts.spirt {
+        let mut per_pass_module_for_dumping = vec![];
+        let mut after_pass = |pass, module: &spirt::Module| {
+            if opts.dump_spirt_passes.is_some() {
+                per_pass_module_for_dumping.push((pass, module.clone()));
+            }
+        };
+
+        let spv_bytes = {
+            let _timer = sess.timer("assemble-to-spv_bytes-for-spirt");
+            spirv_tools::binary::from_binary(&output.assemble()).to_vec()
+        };
+        let cx = std::rc::Rc::new(spirt::Context::new());
+        let mut module = {
+            let _timer = sess.timer("spirt::Module::lower_from_spv_file");
+            match spirt::Module::lower_from_spv_bytes(cx.clone(), spv_bytes) {
+                Ok(module) => module,
+                Err(e) => {
+                    use rspirv::binary::Disassemble;
+
+                    return Err(sess
+                        .struct_err(format!("{e}"))
+                        .note(format!(
+                            "while lowering this SPIR-V module to SPIR-T:\n{}",
+                            output.disassemble()
+                        ))
+                        .emit());
+                }
+            }
+        };
+        after_pass("lower_from_spv", &module);
+
+        if opts.structurize {
+            {
+                let _timer = sess.timer("spirt::legalize::structurize_func_cfgs");
+                spirt::passes::legalize::structurize_func_cfgs(&mut module);
+            }
+            after_pass("structurize_func_cfgs", &module);
+        }
+
+        // NOTE(eddyb) this should be *before* `lift_to_spv` below,
+        // so if that fails, the dump could be used to debug it.
+        if let Some(dump_file) = &opts.dump_spirt_passes {
+            // HACK(eddyb) using `.with_extension(...)` may replace part of a
+            // `.`-containing file name, but we want to always append `.html`.
+            let mut dump_file_html = dump_file.as_os_str().to_owned();
+            dump_file_html.push(".html");
+
+            let plan = spirt::print::Plan::for_versions(
+                &cx,
+                per_pass_module_for_dumping
+                    .iter()
+                    .map(|(pass, module)| (format!("after {pass}"), module)),
+            );
+            let pretty = plan.pretty_print();
+
+            // FIXME(eddyb) don't allocate whole `String`s here.
+            std::fs::write(dump_file, pretty.to_string()).unwrap();
+            std::fs::write(
+                dump_file_html,
+                pretty
+                    .render_to_html()
+                    .with_dark_mode_support()
+                    .to_html_doc(),
+            )
+            .unwrap();
+        }
+
+        let spv_words = {
+            let _timer = sess.timer("spirt::Module::lift_to_spv_module_emitter");
+            module.lift_to_spv_module_emitter().unwrap().words
+        };
+        output = {
+            let _timer = sess.timer("parse-spv_words-from-spirt");
+            let mut loader = Loader::new();
+            rspirv::binary::parse_words(&spv_words, &mut loader).unwrap();
+            loader.module()
+        };
     }
 
     {
