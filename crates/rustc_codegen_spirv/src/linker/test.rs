@@ -1,4 +1,4 @@
-use super::{link, LinkResult, Options};
+use super::{link, LinkResult};
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
 use rustc_errors::registry::Registry;
@@ -53,7 +53,55 @@ fn load(bytes: &[u8]) -> Module {
     loader.module()
 }
 
-fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
+struct TestLinkOutputs {
+    // Old output, equivalent to not passing `--spirt` in codegen args.
+    without_spirt: Module,
+
+    // New output, equivalent to passing `--spirt` in codegen args.
+    with_spirt: Module,
+}
+
+// FIXME(eddyb) shouldn't this be named just `link`? (`assemble_spirv` is separate)
+fn assemble_and_link(binaries: &[&[u8]]) -> Result<TestLinkOutputs, PrettyString> {
+    let link_with_spirt = |spirt: bool| {
+        link_with_linker_opts(
+            binaries,
+            &crate::linker::Options {
+                compact_ids: true,
+                dce: true,
+                keep_link_exports: true,
+                spirt,
+                ..Default::default()
+            },
+        )
+    };
+    match [link_with_spirt(false), link_with_spirt(true)] {
+        [Ok(without_spirt), Ok(with_spirt)] => Ok(TestLinkOutputs {
+            without_spirt,
+            with_spirt,
+        }),
+
+        [Err(without_spirt), Err(with_spirt)] if without_spirt == with_spirt => Err(without_spirt),
+
+        // Different error, or only one side errored.
+        [without_spirt, with_spirt] => {
+            let pretty = |result: Result<Module, _>| {
+                result.map(|m| {
+                    use rspirv::binary::Disassemble;
+                    PrettyString(m.disassemble())
+                })
+            };
+            // HACK(eddyb) using `assert_eq!` to dump the different `Result`s.
+            assert_eq!(pretty(without_spirt), pretty(with_spirt));
+            unreachable!();
+        }
+    }
+}
+
+fn link_with_linker_opts(
+    binaries: &[&[u8]],
+    opts: &crate::linker::Options,
+) -> Result<Module, PrettyString> {
     let modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
 
     // FIXME(eddyb) this seems ridiculous, we should be able to write to
@@ -118,16 +166,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
                 )
             };
 
-            let res = link(
-                &sess,
-                modules,
-                &Options {
-                    compact_ids: true,
-                    dce: true,
-                    keep_link_exports: true,
-                    ..Default::default()
-                },
-            );
+            let res = link(&sess, modules, opts);
             assert_eq!(sess.has_errors(), res.as_ref().err().copied());
             res.map(|res| match res {
                 LinkResult::SingleModule(m) => *m,
@@ -141,14 +180,33 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
 }
 
 #[track_caller]
-fn without_header_eq(mut result: Module, expected: &str) {
-    use rspirv::binary::Disassemble;
-    //use rspirv::binary::Assemble;
+fn without_header_eq(outputs: TestLinkOutputs, expected: &str) {
+    let result = {
+        let disasm = |mut result: Module| {
+            use rspirv::binary::Disassemble;
+            //use rspirv::binary::Assemble;
 
-    // validate(&result.assemble());
+            // validate(&result.assemble());
 
-    result.header = None;
-    let result = result.disassemble();
+            result.header = None;
+            result.disassemble()
+        };
+        let [without_spirt, with_spirt] =
+            [disasm(outputs.without_spirt), disasm(outputs.with_spirt)];
+
+        // HACK(eddyb) merge the two outputs into a single "dump".
+        if without_spirt == with_spirt {
+            without_spirt
+        } else {
+            format!(
+                "=== without SPIR-T ===\n\
+                 {without_spirt}\n\
+                 \n\
+                 ===   with  SPIR-T ===\n\
+                 {with_spirt}"
+            )
+        }
+    };
 
     let expected = expected
         .split('\n')
@@ -471,7 +529,8 @@ fn use_exported_func_param_attr() {
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
-    let expect = r#"OpCapability Kernel
+    let expect = r#"=== without SPIR-T ===
+        OpCapability Kernel
         OpCapability Linkage
         OpMemoryModel Logical OpenCL
         OpDecorate %1 FuncParamAttr Zext
@@ -491,6 +550,30 @@ fn use_exported_func_param_attr() {
         %4 = OpFunctionParameter %6
         %10 = OpLabel
         %11 = OpLoad %6 %4
+        OpReturn
+        OpFunctionEnd
+
+        ===  with SPIR-T ===
+        OpCapability Linkage
+        OpCapability Kernel
+        OpMemoryModel Logical OpenCL
+        OpDecorate %1 FuncParamAttr Zext
+        OpDecorate %2 FuncParamAttr Sext
+        OpDecorate %3 LinkageAttributes "HACK(eddyb) keep function alive" Export
+        OpDecorate %4 LinkageAttributes "foo" Export
+        %5 = OpTypeVoid
+        %6 = OpTypeInt 32 0
+        %7 = OpTypeFunction %5 %6
+        %3 = OpFunction %5 None %7
+        %1 = OpFunctionParameter %6
+        %8 = OpLabel
+        %9 = OpLoad %6 %1
+        OpReturn
+        OpFunctionEnd
+        %4 = OpFunction %5 None %7
+        %2 = OpFunctionParameter %6
+        %10 = OpLabel
+        %11 = OpLoad %6 %2
         OpReturn
         OpFunctionEnd"#;
 
@@ -550,7 +633,8 @@ fn names_and_decorations() {
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
-    let expect = r#"OpCapability Kernel
+    let expect = r#"=== without SPIR-T ===
+        OpCapability Kernel
         OpCapability Linkage
         OpMemoryModel Logical OpenCL
         OpName %1 "foo"
@@ -560,6 +644,34 @@ fn names_and_decorations() {
         OpDecorate %4 LinkageAttributes "HACK(eddyb) keep function alive" Export
         OpDecorate %1 LinkageAttributes "foo" Export
         OpDecorate %2 Restrict
+        %5 = OpTypeVoid
+        %6 = OpTypeInt 32 0
+        %7 = OpTypePointer Function %6
+        %8 = OpTypeFunction %5 %7
+        %4 = OpFunction %5 None %8
+        %3 = OpFunctionParameter %7
+        %9 = OpLabel
+        %10 = OpLoad %6 %3
+        OpReturn
+        OpFunctionEnd
+        %1 = OpFunction %5 None %8
+        %2 = OpFunctionParameter %7
+        %11 = OpLabel
+        %12 = OpLoad %6 %2
+        OpReturn
+        OpFunctionEnd
+
+        ===  with SPIR-T ===
+        OpCapability Linkage
+        OpCapability Kernel
+        OpMemoryModel Logical OpenCL
+        OpName %1 "foo"
+        OpName %2 "param"
+        OpDecorate %3 Restrict
+        OpDecorate %3 NonWritable
+        OpDecorate %2 Restrict
+        OpDecorate %4 LinkageAttributes "HACK(eddyb) keep function alive" Export
+        OpDecorate %1 LinkageAttributes "foo" Export
         %5 = OpTypeVoid
         %6 = OpTypeInt 32 0
         %7 = OpTypePointer Function %6

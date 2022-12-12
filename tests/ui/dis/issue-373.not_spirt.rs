@@ -1,3 +1,6 @@
+// HACK(eddyb) duplicate of issue-373.spirt.rs because only-/ignore- do not work with revisions.
+// only-not_spirt
+
 // Test that returning a single-scalar-field `#[repr(C)] struct` doesn't generate
 // unsupported pointer casts (the problem was the use of `PassMode::Cast`, through
 // the default Rust ABI adjustments, that we now override through query hooks).

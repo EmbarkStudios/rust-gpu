@@ -1,3 +1,5 @@
+// normalize-stderr-not_spirt "OpLine %5 18 1" -> "OpNoLine"
+
 // This is a similar setup to the `issue-731` test, but instead of "just" the
 // missing copy out of the global (`Input`) `OpVariable`, small enough types
 // would fail much earlier (by generating unsupported pointer casts).

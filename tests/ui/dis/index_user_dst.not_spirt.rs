@@ -1,3 +1,6 @@
+// HACK(eddyb) duplicate of index_user_dst.spirt.rs because only-/ignore- do not work with revisions.
+// only-not_spirt
+
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-entry=main
 

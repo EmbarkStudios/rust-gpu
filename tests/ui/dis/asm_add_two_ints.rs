@@ -1,3 +1,5 @@
+// normalize-stderr-not_spirt "OpLine %7 20 1" -> "OpNoLine"
+
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=asm_add_two_ints::add_two_ints
 
