@@ -1,3 +1,5 @@
+// normalize-stderr-not_spirt "OpLine %8 10 1" -> "OpNoLine"
+
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=workgroup_memory_barrier::workgroup_memory_barrier
 

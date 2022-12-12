@@ -1,3 +1,6 @@
+// HACK(eddyb) duplicate of custom_entry_point.not_spirt.rs because only-/ignore- do not work with revisions.
+// only-spirt
+
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-globals
 // normalize-stderr-test "OpCapability VulkanMemoryModel\n" -> ""

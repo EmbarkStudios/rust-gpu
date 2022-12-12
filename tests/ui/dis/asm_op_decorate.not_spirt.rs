@@ -1,3 +1,6 @@
+// HACK(eddyb) duplicate of asm_op_decorate.spirt.rs because only-/ignore- do not work with revisions.
+// only-not_spirt
+
 // build-pass
 // compile-flags: -C target-feature=+RuntimeDescriptorArray,+ext:SPV_EXT_descriptor_indexing
 // compile-flags: -C llvm-args=--disassemble-globals

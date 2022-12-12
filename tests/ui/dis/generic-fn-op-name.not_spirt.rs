@@ -1,3 +1,6 @@
+// HACK(eddyb) duplicate of generic-fn-op-name.spirt.rs because only-/ignore- do not work with revisions.
+// only-not_spirt
+
 // Test that generic functions' `OpName` correctly include generic arguments.
 
 // build-pass

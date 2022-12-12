@@ -27,8 +27,8 @@ struct Opt {
 }
 
 impl Opt {
-    pub fn environments(&self) -> Vec<String> {
-        self.target_env.split(',').map(String::from).collect()
+    pub fn environments(&self) -> impl Iterator<Item = &str> {
+        self.target_env.split(',')
     }
 }
 
@@ -125,12 +125,20 @@ impl Runner {
             .join(" ")
         }
 
-        for env in self.opt.environments() {
-            let target = format!("{}{}", TARGET_PREFIX, env);
-            let mut config = compiletest::Config::default();
-            let libs = build_deps(&self.deps_target_dir, &self.codegen_backend_path, &target);
+        for (env, spirt) in self
+            .opt
+            .environments()
+            .flat_map(|env| [(env, false), (env, true)])
+        {
+            // HACK(eddyb) in order to allow *some* tests to have separate output
+            // with the SPIR-T support enabled (via `--spirt`), while keeping
+            // *most* of the tests unchanged, we take advantage of "stage IDs",
+            // which offer `// only-S` and `// ignore-S` for any stage ID `S`.
+            let stage_id = if spirt { "spirt" } else { "not_spirt" };
 
-            let flags = test_rustc_flags(
+            let target = format!("{}{}", TARGET_PREFIX, env);
+            let libs = build_deps(&self.deps_target_dir, &self.codegen_backend_path, &target);
+            let mut flags = test_rustc_flags(
                 &self.codegen_backend_path,
                 &libs,
                 &[
@@ -142,14 +150,22 @@ impl Runner {
                         .join(DepKind::ProcMacro.target_dir_suffix(&target)),
                 ],
             );
+            if spirt {
+                flags += " -Cllvm-args=--spirt";
+            }
 
-            config.target_rustcflags = Some(flags);
-            config.mode = mode.parse().expect("Invalid mode");
-            config.target = target;
-            config.src_base = self.tests_dir.join(mode);
-            config.build_base = self.compiletest_build_dir.clone();
-            config.bless = self.opt.bless;
-            config.filters = self.opt.filters.clone();
+            let config = compiletest::Config {
+                stage_id: stage_id.to_string(),
+                target_rustcflags: Some(flags),
+                mode: mode.parse().expect("Invalid mode"),
+                target,
+                src_base: self.tests_dir.join(mode),
+                build_base: self.compiletest_build_dir.clone(),
+                bless: self.opt.bless,
+                filters: self.opt.filters.clone(),
+                ..compiletest::Config::default()
+            };
+            // FIXME(eddyb) do we need this? shouldn't `compiletest` be independent?
             config.clean_rmeta();
 
             compiletest::run_tests(&config);

@@ -1,3 +1,5 @@
+// normalize-stderr-not_spirt "OpLine %5 16 1" -> "OpNoLine"
+
 // Test that non-immediate (i.e. not one of scalar/scalar-pair/vector) inputs
 // get properly copied out of the global (`Input`) `OpVariable` and mutation is
 // only ever done on `fn`-local `OpVariable`s, not on the original global.
