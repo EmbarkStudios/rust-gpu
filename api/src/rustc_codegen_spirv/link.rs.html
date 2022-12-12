@@ -616,12 +616,6 @@
 <span id="616">616</span>
 <span id="617">617</span>
 <span id="618">618</span>
-<span id="619">619</span>
-<span id="620">620</span>
-<span id="621">621</span>
-<span id="622">622</span>
-<span id="623">623</span>
-<span id="624">624</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::codegen_cx::{CodegenArgs, SpirvMetadata};
 <span class="kw">use crate</span>::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 <span class="kw">use </span>ar::{Archive, GnuBuilder, Header};
@@ -761,40 +755,34 @@
 
     <span class="kw">let </span>cg_args = CodegenArgs::from_session(sess);
 
-    <span class="kw">let </span>spv_binary = do_link(sess, <span class="kw-2">&amp;</span>cg_args, <span class="kw-2">&amp;</span>objects, <span class="kw-2">&amp;</span>rlibs);
+    <span class="comment">// HACK(eddyb) this removes the `.json` in `.spv.json`, from `out_filename`.
+    </span><span class="kw">let </span>out_path_spv = out_filename.with_extension(<span class="string">&quot;&quot;</span>);
 
-    <span class="kw">let </span><span class="kw-2">mut </span>root_file_name = out_filename.file_name().unwrap().to_owned();
-    root_file_name.push(<span class="string">&quot;.dir&quot;</span>);
-    <span class="kw">let </span>out_dir = out_filename.with_file_name(root_file_name);
-    <span class="kw">if </span>!out_dir.is_dir() {
-        std::fs::create_dir_all(<span class="kw-2">&amp;</span>out_dir).unwrap();
-    }
-
-    <span class="kw">let </span>compile_result = <span class="kw">match </span>spv_binary {
-        linker::LinkResult::SingleModule(spv_binary) =&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>module_filename = out_dir;
-            module_filename.push(<span class="string">&quot;module&quot;</span>);
-            post_link_single_module(sess, <span class="kw-2">&amp;</span>cg_args, spv_binary.assemble(), <span class="kw-2">&amp;</span>module_filename);
-            cg_args.do_disassemble(<span class="kw-2">&amp;</span>spv_binary);
+    <span class="kw">let </span>compile_result = <span class="kw">match </span>do_link(sess, <span class="kw-2">&amp;</span>cg_args, <span class="kw-2">&amp;</span>objects, <span class="kw-2">&amp;</span>rlibs) {
+        linker::LinkResult::SingleModule(module) =&gt; {
+            <span class="kw">let </span>module_filename = out_path_spv;
+            post_link_single_module(sess, <span class="kw-2">&amp;</span>cg_args, module.assemble(), <span class="kw-2">&amp;</span>module_filename);
+            cg_args.do_disassemble(<span class="kw-2">&amp;</span>module);
             <span class="kw">let </span>module_result = ModuleResult::SingleModule(module_filename);
             CompileResult {
                 module: module_result,
-                entry_points: entry_points(<span class="kw-2">&amp;</span>spv_binary),
+                entry_points: entry_points(<span class="kw-2">&amp;</span>module),
             }
         }
         linker::LinkResult::MultipleModules(map) =&gt; {
+            <span class="kw">let </span>out_dir = out_path_spv.with_extension(<span class="string">&quot;spvs&quot;</span>);
+            <span class="kw">if </span>!out_dir.is_dir() {
+                std::fs::create_dir_all(<span class="kw-2">&amp;</span>out_dir).unwrap();
+            }
+
             <span class="kw">let </span>entry_points = map.keys().cloned().collect();
             <span class="kw">let </span>map = map
                 .into_iter()
-                .map(|(name, spv_binary)| {
+                .map(|(name, module)| {
                     <span class="kw">let </span><span class="kw-2">mut </span>module_filename = out_dir.clone();
                     module_filename.push(sanitize_filename::sanitize(<span class="kw-2">&amp;</span>name));
-                    post_link_single_module(
-                        sess,
-                        <span class="kw-2">&amp;</span>cg_args,
-                        spv_binary.assemble(),
-                        <span class="kw-2">&amp;</span>module_filename,
-                    );
+                    module_filename.set_extension(<span class="string">&quot;spv&quot;</span>);
+                    post_link_single_module(sess, <span class="kw-2">&amp;</span>cg_args, module.assemble(), <span class="kw-2">&amp;</span>module_filename);
                     (name, module_filename)
                 })
                 .collect();
