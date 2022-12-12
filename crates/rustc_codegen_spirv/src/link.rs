@@ -137,40 +137,34 @@ fn link_exe(
 
     let cg_args = CodegenArgs::from_session(sess);
 
-    let spv_binary = do_link(sess, &cg_args, &objects, &rlibs);
+    // HACK(eddyb) this removes the `.json` in `.spv.json`, from `out_filename`.
+    let out_path_spv = out_filename.with_extension("");
 
-    let mut root_file_name = out_filename.file_name().unwrap().to_owned();
-    root_file_name.push(".dir");
-    let out_dir = out_filename.with_file_name(root_file_name);
-    if !out_dir.is_dir() {
-        std::fs::create_dir_all(&out_dir).unwrap();
-    }
-
-    let compile_result = match spv_binary {
-        linker::LinkResult::SingleModule(spv_binary) => {
-            let mut module_filename = out_dir;
-            module_filename.push("module");
-            post_link_single_module(sess, &cg_args, spv_binary.assemble(), &module_filename);
-            cg_args.do_disassemble(&spv_binary);
+    let compile_result = match do_link(sess, &cg_args, &objects, &rlibs) {
+        linker::LinkResult::SingleModule(module) => {
+            let module_filename = out_path_spv;
+            post_link_single_module(sess, &cg_args, module.assemble(), &module_filename);
+            cg_args.do_disassemble(&module);
             let module_result = ModuleResult::SingleModule(module_filename);
             CompileResult {
                 module: module_result,
-                entry_points: entry_points(&spv_binary),
+                entry_points: entry_points(&module),
             }
         }
         linker::LinkResult::MultipleModules(map) => {
+            let out_dir = out_path_spv.with_extension("spvs");
+            if !out_dir.is_dir() {
+                std::fs::create_dir_all(&out_dir).unwrap();
+            }
+
             let entry_points = map.keys().cloned().collect();
             let map = map
                 .into_iter()
-                .map(|(name, spv_binary)| {
+                .map(|(name, module)| {
                     let mut module_filename = out_dir.clone();
                     module_filename.push(sanitize_filename::sanitize(&name));
-                    post_link_single_module(
-                        sess,
-                        &cg_args,
-                        spv_binary.assemble(),
-                        &module_filename,
-                    );
+                    module_filename.set_extension("spv");
+                    post_link_single_module(sess, &cg_args, module.assemble(), &module_filename);
                     (name, module_filename)
                 })
                 .collect();
