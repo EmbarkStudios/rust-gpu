@@ -19,12 +19,15 @@ mod zombies;
 use std::borrow::Cow;
 
 use crate::codegen_cx::SpirvMetadata;
+use either::Either;
 use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
+use std::collections::BTreeMap;
+use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
 
 pub type Result<T> = std::result::Result<T, ErrorGuaranteed>;
@@ -58,7 +61,13 @@ pub struct Options {
 
 pub enum LinkResult {
     SingleModule(Box<Module>),
-    MultipleModules(FxHashMap<String, Module>),
+    MultipleModules {
+        /// The "file stem" key is computed from the "entry name" in the value
+        /// (through `sanitize_filename`, replacing invalid chars with `-`),
+        /// but it's used as the map key because it *has to* be unique, even if
+        /// lossy sanitization could have erased distinctions between entry names.
+        file_stem_to_entry_name_and_module: BTreeMap<OsString, (String, Module)>,
+    },
 }
 
 fn id(header: &mut ModuleHeader) -> Word {
@@ -131,7 +140,12 @@ fn get_name<'a>(names: &FxHashMap<Word, &'a str>, id: Word) -> Cow<'a, str> {
     )
 }
 
-pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<LinkResult> {
+pub fn link(
+    sess: &Session,
+    mut inputs: Vec<Module>,
+    opts: &Options,
+    disambiguated_crate_name_for_dumps: &OsStr,
+) -> Result<LinkResult> {
     let mut output = {
         let _timer = sess.timer("link_merge");
         // shift all the ids
@@ -167,8 +181,13 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         output
     };
 
-    if let Some(path) = &opts.dump_post_merge {
-        std::fs::write(path, spirv_tools::binary::from_binary(&output.assemble())).unwrap();
+    if let Some(dir) = &opts.dump_post_merge {
+        std::fs::write(
+            dir.join(disambiguated_crate_name_for_dumps)
+                .with_extension("spv"),
+            spirv_tools::binary::from_binary(&output.assemble()),
+        )
+        .unwrap();
     }
 
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
@@ -379,11 +398,10 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
 
         // NOTE(eddyb) this should be *before* `lift_to_spv` below,
         // so if that fails, the dump could be used to debug it.
-        if let Some(dump_file) = &opts.dump_spirt_passes {
-            // HACK(eddyb) using `.with_extension(...)` may replace part of a
-            // `.`-containing file name, but we want to always append `.html`.
-            let mut dump_file_html = dump_file.as_os_str().to_owned();
-            dump_file_html.push(".html");
+        if let Some(dump_dir) = &opts.dump_spirt_passes {
+            let dump_spirt_file_path = dump_dir
+                .join(disambiguated_crate_name_for_dumps)
+                .with_extension("spirt");
 
             let plan = spirt::print::Plan::for_versions(
                 &cx,
@@ -394,9 +412,9 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             let pretty = plan.pretty_print();
 
             // FIXME(eddyb) don't allocate whole `String`s here.
-            std::fs::write(dump_file, pretty.to_string()).unwrap();
+            std::fs::write(&dump_spirt_file_path, pretty.to_string()).unwrap();
             std::fs::write(
-                dump_file_html,
+                dump_spirt_file_path.with_extension("spirt.html"),
                 pretty
                     .render_to_html()
                     .with_dark_mode_support()
@@ -443,30 +461,73 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     }
 
     let mut output = if opts.emit_multiple_modules {
-        let modules = output
-            .entry_points
-            .iter()
-            .map(|entry| {
-                let mut module = output.clone();
-                module.entry_points.clear();
-                module.entry_points.push(entry.clone());
-                let name = entry.operands[2].unwrap_literal_string();
-                (name.to_string(), module)
-            })
-            .collect();
-        LinkResult::MultipleModules(modules)
+        let mut file_stem_to_entry_name_and_module = BTreeMap::new();
+        for (i, entry) in output.entry_points.iter().enumerate() {
+            let mut module = output.clone();
+            module.entry_points.clear();
+            module.entry_points.push(entry.clone());
+            let entry_name = entry.operands[2].unwrap_literal_string().to_string();
+            let mut file_stem = OsString::from(
+                sanitize_filename::sanitize_with_options(
+                    &entry_name,
+                    sanitize_filename::Options {
+                        replacement: "-",
+                        ..Default::default()
+                    },
+                )
+                .replace("--", "-"),
+            );
+            // It's always possible to find an unambiguous `file_stem`, but it
+            // may take two tries (or more, in bizzare/adversarial cases).
+            let mut disambiguator = Some(i);
+            loop {
+                use std::collections::btree_map::Entry;
+                match file_stem_to_entry_name_and_module.entry(file_stem) {
+                    Entry::Vacant(entry) => {
+                        entry.insert((entry_name, module));
+                        break;
+                    }
+                    Entry::Occupied(entry) => {
+                        // FIXME(eddyb) there's no way to access the owned key
+                        // passed to `BTreeMap::entry` from `OccupiedEntry`.
+                        file_stem = entry.key().clone();
+                        file_stem.push(".");
+                        match disambiguator.take() {
+                            Some(d) => file_stem.push(d.to_string()),
+                            None => file_stem.push("next"),
+                        }
+                    }
+                }
+            }
+        }
+        LinkResult::MultipleModules {
+            file_stem_to_entry_name_and_module,
+        }
     } else {
         LinkResult::SingleModule(Box::new(output))
     };
 
-    let output_module_iter: Box<dyn Iterator<Item = &mut Module>> = match output {
-        LinkResult::SingleModule(ref mut m) => Box::new(std::iter::once(&mut *m as &mut Module)),
-        LinkResult::MultipleModules(ref mut m) => Box::new(m.values_mut()),
+    let output_module_iter = match &mut output {
+        LinkResult::SingleModule(m) => Either::Left(std::iter::once((None, &mut **m))),
+        LinkResult::MultipleModules {
+            file_stem_to_entry_name_and_module,
+        } => Either::Right(
+            file_stem_to_entry_name_and_module
+                .iter_mut()
+                .map(|(file_stem, (_, m))| (Some(file_stem), m)),
+        ),
     };
-    for (i, output) in output_module_iter.enumerate() {
+    for (file_stem, output) in output_module_iter {
         if let Some(dir) = &opts.dump_post_split {
+            let mut file_name = disambiguated_crate_name_for_dumps.to_os_string();
+            if let Some(file_stem) = file_stem {
+                file_name.push(".");
+                file_name.push(file_stem);
+            }
+            file_name.push(".spv");
+
             std::fs::write(
-                dir.join(format!("mod_{}.spv", i)),
+                dir.join(file_name),
                 spirv_tools::binary::from_binary(&output.assemble()),
             )
             .unwrap();

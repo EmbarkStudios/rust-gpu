@@ -166,11 +166,11 @@ fn link_with_linker_opts(
                 )
             };
 
-            let res = link(&sess, modules, opts);
+            let res = link(&sess, modules, opts, Default::default());
             assert_eq!(sess.has_errors(), res.as_ref().err().copied());
             res.map(|res| match res {
                 LinkResult::SingleModule(m) => *m,
-                LinkResult::MultipleModules(_) => unreachable!(),
+                LinkResult::MultipleModules { .. } => unreachable!(),
             })
         })
     })

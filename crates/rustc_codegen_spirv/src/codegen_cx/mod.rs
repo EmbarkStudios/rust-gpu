@@ -362,8 +362,8 @@ impl CodegenArgs {
             opts.optopt(
                 "",
                 "dump-post-merge",
-                "dump the merged module immediately after merging, to FILE",
-                "FILE",
+                "dump the merged module immediately after merging, to a file in DIR",
+                "DIR",
             );
             opts.optopt(
                 "",
@@ -374,8 +374,8 @@ impl CodegenArgs {
             opts.optopt(
                 "",
                 "dump-spirt-passes",
-                "dump the SPIR-T module across passes, to FILE and FILE.html",
-                "FILE",
+                "dump the SPIR-T module across passes, to a (pair of) file(s) in DIR",
+                "DIR",
             );
             opts.optflag(
                 "",
@@ -532,9 +532,9 @@ impl CodegenArgs {
 
             // NOTE(eddyb) these are debugging options that used to be env vars
             // (for more information see `docs/src/codegen-args.md`).
-            dump_post_merge: matches_opt_path("dump-post-merge"),
+            dump_post_merge: matches_opt_dump_dir_path("dump-post-merge"),
             dump_post_split: matches_opt_dump_dir_path("dump-post-split"),
-            dump_spirt_passes: matches_opt_path("dump-spirt-passes"),
+            dump_spirt_passes: matches_opt_dump_dir_path("dump-spirt-passes"),
             specializer_debug: matches.opt_present("specializer-debug"),
             specializer_dump_instances: matches_opt_path("specializer-dump-instances"),
             print_all_zombie: matches.opt_present("print-all-zombie"),

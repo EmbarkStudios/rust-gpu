@@ -72,9 +72,9 @@ for codegen, if the linker panics, this option does nothing, sadly.
 
 Dumps all input modules to the linker, to files in `DIR`, before the linker touches them at all.
 
-### `--dump-post-merge FILE`
+### `--dump-post-merge DIR`
 
-Dumps the merged module, to `FILE`, immediately after merging, but before the linker has done anything else
+Dumps the merged module, to a file in `DIR`, immediately after merging, but before the linker has done anything else
 (including, well, linking the methods - `LinkageAttributes` will still exist, etc.). This is very
 similar to `--dump-pre-link`, except it outputs only a single file, which might make grepping through
 for stuff easier.
@@ -149,7 +149,7 @@ Enables using the experimental [`SPIR-🇹` shader IR framework](https://github.
 
 For more information, also see [the `SPIR-🇹` repository](https://github.com/EmbarkStudios/spirt).
 
-### `--dump-spirt-passes FILE`
+### `--dump-spirt-passes DIR`
 
-Dump the `SPIR-🇹` module across passes (i.e. all of the versions before/after each pass), as a combined report, to `FILE` and `FILE.html`.  
-<sub>(the `.html` version of the report is the recommended form for viewing, as it uses tabling for versions, syntax-highlighting-like styling, and use->def linking)</sub>
+Dump the `SPIR-🇹` module across passes (i.e. all of the versions before/after each pass), as a combined report, to a pair of files (`.spirt` and `.spirt.html`) in `DIR`.  
+<sub>(the `.spirt.html` version of the report is the recommended form for viewing, as it uses tabling for versions, syntax-highlighting-like styling, and use->def linking)</sub>
