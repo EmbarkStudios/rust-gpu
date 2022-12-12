@@ -345,7 +345,15 @@ impl SpirvBuilder {
         match &metadata.module {
             ModuleResult::SingleModule(spirv_module) => {
                 assert!(!self.multimodule);
-                let env_var = at.file_name().unwrap().to_str().unwrap();
+                let env_var = format!(
+                    "{}.spv",
+                    at.file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .strip_suffix(".spv.json")
+                        .unwrap()
+                );
                 if self.print_metadata == MetadataPrintout::Full {
                     println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
                 }
@@ -511,23 +519,41 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     // If we're nested in `cargo` invocation, use a different `--target-dir`,
     // to avoid waiting on the same lock (which effectively dead-locks us).
-    // This also helps with e.g. RLS, which uses `--target target/rls`,
-    // so we'll have a separate `target/rls/spirv-builder` for it.
-    if let (Ok(profile), Some(mut dir)) = (
-        env::var("PROFILE"),
-        env::var_os("OUT_DIR").map(PathBuf::from),
-    ) {
-        // Strip `$profile/build/*/out`.
-        if dir.ends_with("out")
-            && dir.pop()
-            && dir.pop()
-            && dir.ends_with("build")
-            && dir.pop()
-            && dir.ends_with(profile)
-            && dir.pop()
-        {
-            cargo.arg("--target-dir").arg(dir.join("spirv-builder"));
+    let outer_target_dir = match (env::var("PROFILE"), env::var_os("OUT_DIR")) {
+        (Ok(profile), Some(dir)) => {
+            // Strip `$profile/build/*/out`.
+            [&profile, "build", "*", "out"].iter().rev().try_fold(
+                PathBuf::from(dir),
+                |mut dir, &filter| {
+                    if (filter == "*" || dir.ends_with(filter)) && dir.pop() {
+                        Some(dir)
+                    } else {
+                        None
+                    }
+                },
+            )
         }
+        _ => None,
+    };
+    // FIXME(eddyb) use `crate metadata` to always be able to get the "outer"
+    // (or "default") `--target-dir`, to append `/spirv-builder` to it.
+    let target_dir = outer_target_dir.map(|outer| outer.join("spirv-builder"));
+    if let Some(target_dir) = target_dir {
+        // HACK(eddyb) Cargo caches some information it got from `rustc` in
+        // `.rustc_info.json`, and assumes it only depends on the `rustc`
+        // binary, but in our case, `rustc_codegen_spirv` changes are also
+        // relevant - so we remove the cache file if it may be out of date.
+        let mtime = |path| std::fs::metadata(path)?.modified();
+        let rustc_info = target_dir.join(".rustc_info.json");
+        if let Ok(rustc_info_mtime) = mtime(&rustc_info) {
+            if let Ok(rustc_codegen_spirv_mtime) = mtime(&rustc_codegen_spirv) {
+                if rustc_codegen_spirv_mtime > rustc_info_mtime {
+                    let _ = std::fs::remove_file(rustc_info);
+                }
+            }
+        }
+
+        cargo.arg("--target-dir").arg(target_dir);
     }
 
     for (key, _) in env::vars_os() {
@@ -552,9 +578,14 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // we do that even in case of an error, to let through any useful messages
     // that ended up on stdout instead of stderr.
     let stdout = String::from_utf8(build.stdout).unwrap();
-    let artifact = get_last_artifact(&stdout);
     if build.status.success() {
-        Ok(artifact.expect("Artifact created when compilation succeeded"))
+        get_sole_artifact(&stdout).ok_or_else(|| {
+            eprintln!("--- build output ---\n{stdout}");
+            panic!(
+                "`{}` artifact not found in (supposedly successful) build output (see above)",
+                ARTIFACT_SUFFIX
+            );
+        })
     } else {
         Err(SpirvBuilderError::BuildFailed)
     }
@@ -566,7 +597,9 @@ struct RustcOutput {
     filenames: Option<Vec<String>>,
 }
 
-fn get_last_artifact(out: &str) -> Option<PathBuf> {
+const ARTIFACT_SUFFIX: &str = ".spv.json";
+
+fn get_sole_artifact(out: &str) -> Option<PathBuf> {
     let last = out
         .lines()
         .filter_map(|line| {
@@ -586,9 +619,13 @@ fn get_last_artifact(out: &str) -> Option<PathBuf> {
         .filenames
         .unwrap()
         .into_iter()
-        .filter(|v| v.ends_with(".spv"));
+        .filter(|v| v.ends_with(ARTIFACT_SUFFIX));
     let filename = filenames.next()?;
-    assert_eq!(filenames.next(), None, "Crate had multiple .spv artifacts");
+    assert_eq!(
+        filenames.next(),
+        None,
+        "build had multiple `{ARTIFACT_SUFFIX}` artifacts"
+    );
     Some(filename.into())
 }
 

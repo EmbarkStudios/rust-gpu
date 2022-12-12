@@ -81,7 +81,7 @@ impl SpirvTarget {
         o.allows_weak_linkage = false;
         o.crt_static_allows_dylibs = true;
         o.dll_prefix = "".into();
-        o.dll_suffix = ".spv".into();
+        o.dll_suffix = ".spv.json".into();
         o.dynamic_linking = true;
         o.emit_debug_gdb_scripts = false;
         o.linker_flavor = LinkerFlavor::Unix(Cc::No);
