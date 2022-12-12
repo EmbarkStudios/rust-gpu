@@ -32,8 +32,8 @@ impl ModuleResult {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CompileResult {
-    pub module: ModuleResult,
     pub entry_points: Vec<String>,
+    pub module: ModuleResult,
 }
 
 impl CompileResult {

@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [PR#959](https://github.com/EmbarkStudios/rust-gpu/pull/959) added two `spirv-builder` environment variables to customize *only* the `rustc` invocations for shader crates and their dependencies:
   - `RUSTGPU_RUSTFLAGS="..."` for shader `RUSTFLAGS="..."`
   - `RUSTGPU_CODEGEN_ARGS="..."` for shader "codegen args" (i.e. `RUSTFLAGS=-Cllvm-args="..."`)  
-    (check out ["codegen args" docs](docs/src/codegen-args.md), or run with `RUSTGPU_CODEGEN_ARGS=--help` to see the full list of options)
+    (check out [the "codegen args" docs](docs/src/codegen-args.md), or run with `RUSTGPU_CODEGEN_ARGS=--help` to see the full list of options)
 - [PR#940](https://github.com/EmbarkStudios/rust-gpu/pull/940) integrated the experimental [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) into the linker  
   (opt-in via `RUSTGPU_CODEGEN_ARGS=--spirt`, see also [the `--spirt` docs](docs/src/codegen-args.md#--spirt), for more details)
 
@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [PR#958](https://github.com/EmbarkStudios/rust-gpu/pull/958) updated toolchain to `nightly-2022-10-29`
 - [PR#941](https://github.com/EmbarkStudios/rust-gpu/pull/941) applied workspace inheritance to `Cargo.toml` files
 - [PR#959](https://github.com/EmbarkStudios/rust-gpu/pull/959) moved `rustc_codegen_spirv` debugging functionality from environment variables to "codegen args" options/flags (see [the updated docs](docs/src/codegen-args.md) for more details)
+- [PR#967](https://github.com/EmbarkStudios/rust-gpu/pull/967) made `--dump-*` ["codegen args"](docs/src/codegen-args.md) include identifying information (e.g. crate names) in the names of files they emit
 
 ### Removed 🔥
 - [PR#946](https://github.com/EmbarkStudios/rust-gpu/pull/946) removed the `fn`/closure `#[spirv(unroll_loops)]` attribute, as it has no users, is becoming non-trivial to support, and requires redesign for better ergonomics (e.g. `#[spirv(unroll)]` applied to individual loops, not the whole `fn`/closure)

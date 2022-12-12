@@ -2,6 +2,7 @@ use crate::codegen_cx::{CodegenArgs, SpirvMetadata};
 use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use ar::{Archive, GnuBuilder, Header};
 use rspirv::binary::Assemble;
+use rspirv::dr::Module;
 use rustc_ast::CRATE_NODE_ID;
 use rustc_codegen_spirv_types::{CompileResult, ModuleResult};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
@@ -17,7 +18,8 @@ use rustc_session::config::{CrateType, DebugInfo, Lto, OptLevel, OutputFilenames
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
-use std::ffi::CString;
+use std::collections::BTreeMap;
+use std::ffi::{CString, OsStr};
 use std::fs::File;
 use std::io::{BufWriter, Read};
 use std::iter;
@@ -62,7 +64,21 @@ pub fn link<'a>(
                     link_rlib(sess, codegen_results, &out_filename);
                 }
                 CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => {
-                    link_exe(sess, crate_type, &out_filename, codegen_results);
+                    // HACK(eddyb) there's no way way to access `outputs.filestem`,
+                    // so we pay the cost of building a whole `PathBuf` instead.
+                    let disambiguated_crate_name_for_dumps = outputs
+                        .with_extension("")
+                        .file_name()
+                        .unwrap()
+                        .to_os_string();
+
+                    link_exe(
+                        sess,
+                        crate_type,
+                        &out_filename,
+                        codegen_results,
+                        &disambiguated_crate_name_for_dumps,
+                    );
                 }
                 other => {
                     sess.err(format!("CrateType {:?} not supported yet", other));
@@ -117,6 +133,7 @@ fn link_exe(
     crate_type: CrateType,
     out_filename: &Path,
     codegen_results: &CodegenResults,
+    disambiguated_crate_name_for_dumps: &OsStr,
 ) {
     let mut objects = Vec::new();
     let mut rlibs = Vec::new();
@@ -140,38 +157,49 @@ fn link_exe(
     // HACK(eddyb) this removes the `.json` in `.spv.json`, from `out_filename`.
     let out_path_spv = out_filename.with_extension("");
 
-    let compile_result = match do_link(sess, &cg_args, &objects, &rlibs) {
+    let link_result = do_link(
+        sess,
+        &cg_args,
+        &objects,
+        &rlibs,
+        disambiguated_crate_name_for_dumps,
+    );
+    let compile_result = match link_result {
         linker::LinkResult::SingleModule(module) => {
-            let module_filename = out_path_spv;
-            post_link_single_module(sess, &cg_args, module.assemble(), &module_filename);
-            cg_args.do_disassemble(&module);
-            let module_result = ModuleResult::SingleModule(module_filename);
+            let entry_points = entry_points(&module);
+            post_link_single_module(sess, &cg_args, *module, &out_path_spv, None);
             CompileResult {
-                module: module_result,
-                entry_points: entry_points(&module),
+                entry_points,
+                module: ModuleResult::SingleModule(out_path_spv),
             }
         }
-        linker::LinkResult::MultipleModules(map) => {
+        linker::LinkResult::MultipleModules {
+            file_stem_to_entry_name_and_module,
+        } => {
             let out_dir = out_path_spv.with_extension("spvs");
             if !out_dir.is_dir() {
                 std::fs::create_dir_all(&out_dir).unwrap();
             }
 
-            let entry_points = map.keys().cloned().collect();
-            let map = map
+            let entry_name_to_file_path: BTreeMap<_, _> = file_stem_to_entry_name_and_module
                 .into_iter()
-                .map(|(name, module)| {
-                    let mut module_filename = out_dir.clone();
-                    module_filename.push(sanitize_filename::sanitize(&name));
-                    module_filename.set_extension("spv");
-                    post_link_single_module(sess, &cg_args, module.assemble(), &module_filename);
-                    (name, module_filename)
+                .map(|(file_stem, (entry_name, module))| {
+                    let mut out_file_name = file_stem;
+                    out_file_name.push(".spv");
+                    let out_file_path = out_dir.join(out_file_name);
+                    post_link_single_module(
+                        sess,
+                        &cg_args,
+                        module,
+                        &out_file_path,
+                        Some(disambiguated_crate_name_for_dumps),
+                    );
+                    (entry_name, out_file_path)
                 })
                 .collect();
-            let module_result = ModuleResult::MultiModule(map);
             CompileResult {
-                module: module_result,
-                entry_points,
+                entry_points: entry_name_to_file_path.keys().cloned().collect(),
+                module: ModuleResult::MultiModule(entry_name_to_file_path),
             }
         }
     };
@@ -192,15 +220,21 @@ fn entry_points(module: &rspirv::dr::Module) -> Vec<String> {
 fn post_link_single_module(
     sess: &Session,
     cg_args: &CodegenArgs,
-    spv_binary: Vec<u32>,
+    module: Module,
     out_filename: &Path,
+    dump_prefix: Option<&OsStr>,
 ) {
+    cg_args.do_disassemble(&module);
+    let spv_binary = module.assemble();
+
     if let Some(dir) = &cg_args.dump_post_link {
-        std::fs::write(
-            dir.join(out_filename.file_name().unwrap()),
-            spirv_tools::binary::from_binary(&spv_binary),
-        )
-        .unwrap();
+        // FIXME(eddyb) rename `filename` with `file_path` to make this less confusing.
+        let out_filename_file_name = out_filename.file_name().unwrap();
+        let dump_path = match dump_prefix {
+            Some(prefix) => dir.join(prefix).with_extension(out_filename_file_name),
+            None => dir.join(out_filename_file_name),
+        };
+        std::fs::write(dump_path, spirv_tools::binary::from_binary(&spv_binary)).unwrap();
     }
 
     let val_options = spirv_tools::val::ValidatorOptions {
@@ -514,20 +548,34 @@ fn do_link(
     cg_args: &CodegenArgs,
     objects: &[PathBuf],
     rlibs: &[PathBuf],
+    disambiguated_crate_name_for_dumps: &OsStr,
 ) -> linker::LinkResult {
-    fn load(bytes: &[u8]) -> rspirv::dr::Module {
-        let mut loader = rspirv::dr::Loader::new();
-        rspirv::binary::parse_bytes(bytes, &mut loader).unwrap();
-        loader.module()
-    }
-
     let load_modules_timer = sess.timer("link_load_modules");
+
     let mut modules = Vec::new();
+    let mut add_module = |file_name: &OsStr, bytes: &[u8]| {
+        let module = {
+            let mut loader = rspirv::dr::Loader::new();
+            rspirv::binary::parse_bytes(bytes, &mut loader).unwrap();
+            loader.module()
+        };
+        if let Some(dir) = &cg_args.dump_pre_link {
+            // FIXME(eddyb) is it a good idea to re-`assemble` the `rspirv::dr`
+            // module, or should this just save the original bytes?
+            std::fs::write(
+                dir.join(file_name).with_extension("spv"),
+                spirv_tools::binary::from_binary(&module.assemble()),
+            )
+            .unwrap();
+        }
+        modules.push(module);
+    };
+
     // `objects` are the plain obj files we need to link - usually produced by the final crate.
     for obj in objects {
-        let bytes = std::fs::read(obj).unwrap();
-        modules.push(load(&bytes));
+        add_module(obj.file_name().unwrap(), &std::fs::read(obj).unwrap());
     }
+
     // `rlibs` are archive files we've created in `create_archive`, usually produced by crates that are being
     // referenced. We need to unpack them and add the modules inside.
     for rlib in rlibs {
@@ -539,24 +587,22 @@ fn do_link(
                 // https://github.com/rust-lang/rust/blob/72868e017bdade60603a25889e253f556305f996/library/std/src/fs.rs#L200-L202
                 let mut bytes = Vec::with_capacity(entry.header().size() as usize + 1);
                 entry.read_to_end(&mut bytes).unwrap();
-                modules.push(load(&bytes));
+
+                let file_name = std::str::from_utf8(entry.header().identifier()).unwrap();
+                add_module(OsStr::new(file_name), &bytes);
             }
         }
     }
 
-    if let Some(dir) = &cg_args.dump_pre_link {
-        for (num, module) in modules.iter().enumerate() {
-            std::fs::write(
-                dir.join(format!("mod_{}.spv", num)),
-                spirv_tools::binary::from_binary(&module.assemble()),
-            )
-            .unwrap();
-        }
-    }
     drop(load_modules_timer);
 
     // Do the link...
-    let link_result = linker::link(sess, modules, &cg_args.linker_opts);
+    let link_result = linker::link(
+        sess,
+        modules,
+        &cg_args.linker_opts,
+        disambiguated_crate_name_for_dumps,
+    );
 
     match link_result {
         Ok(v) => v,
