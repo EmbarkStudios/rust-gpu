@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["FrozenIndexMap","Append-only version of `indexmap::IndexMap` where insertion does not require mutable access"]]};

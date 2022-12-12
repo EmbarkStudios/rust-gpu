@@ -1,0 +1,101 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A marker trait that allows types that have some invalid bit patterns to be used in places that otherwise require [`AnyBitPattern`] or `Pod` types by performing a runtime check on a perticular set of bits. This is particularly useful for types like fieldless (‘C-style’) enums, [`char`], bool, and structs containing them."><meta name="keywords" content="rust, rustlang, rust-lang, CheckedBitPattern"><title>CheckedBitPattern in bytemuck::checked - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bytemuck/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../bytemuck/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"><a href="#">CheckedBitPattern</a></h2><div class="sidebar-elems"><section><h3><a href="#required-associated-types">Required Associated Types</a></h3><ul class="block"><li><a href="#associatedtype.Bits">Bits</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.is_valid_bit_pattern">is_valid_bit_pattern</a></li></ul><h3><a href="#foreign-impls">Implementations on Foreign Types</a></h3><ul class="block"><li><a href="#impl-CheckedBitPattern-for-bool">bool</a></li><li><a href="#impl-CheckedBitPattern-for-char">char</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><h2><a href="index.html">In bytemuck::checked</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1 class="fqn">Trait <a href="../index.html">bytemuck</a>::<wbr><a href="index.html">checked</a>::<wbr><a class="trait" href="#">CheckedBitPattern</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../../src/bytemuck/checked.rs.html#130-141">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="item-decl"><pre class="rust trait"><code>pub unsafe trait CheckedBitPattern: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Copy.html" title="trait core::marker::Copy">Copy</a> {
+    type <a href="#associatedtype.Bits" class="associatedtype">Bits</a>: <a class="trait" href="../trait.AnyBitPattern.html" title="trait bytemuck::AnyBitPattern">AnyBitPattern</a>;
+
+    fn <a href="#tymethod.is_valid_bit_pattern" class="fnname">is_valid_bit_pattern</a>(bits: &amp;Self::<a class="associatedtype" href="trait.CheckedBitPattern.html#associatedtype.Bits" title="type bytemuck::checked::CheckedBitPattern::Bits">Bits</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.bool.html">bool</a>;
+}</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A marker trait that allows types that have some invalid bit patterns to be
+used in places that otherwise require <a href="../trait.AnyBitPattern.html" title="AnyBitPattern"><code>AnyBitPattern</code></a> or <a href="../trait.Pod.html"><code>Pod</code></a> types by
+performing a runtime check on a perticular set of bits. This is particularly
+useful for types like fieldless (‘C-style’) enums, <a href="https://doc.rust-lang.org/nightly/core/primitive.char.html" title="char"><code>char</code></a>, bool, and
+structs containing them.</p>
+<p>To do this, we define a <code>Bits</code> type which is a type with equivalent layout
+to <code>Self</code> other than the invalid bit patterns which disallow <code>Self</code> from
+being <a href="../trait.AnyBitPattern.html" title="AnyBitPattern"><code>AnyBitPattern</code></a>. This <code>Bits</code> type must itself implement
+<a href="../trait.AnyBitPattern.html" title="AnyBitPattern"><code>AnyBitPattern</code></a>. Then, we implement a function that checks wheter a
+certain instance of the <code>Bits</code> is also a valid bit pattern of <code>Self</code>. If
+this check passes, then we can allow casting from the <code>Bits</code> to <code>Self</code> (and
+therefore, any type which is able to be cast to <code>Bits</code> is also able to be
+cast to <code>Self</code>).</p>
+<p><a href="../trait.AnyBitPattern.html" title="AnyBitPattern"><code>AnyBitPattern</code></a> is a subset of <a href="trait.CheckedBitPattern.html" title="CheckedBitPattern"><code>CheckedBitPattern</code></a>, meaning that any <code>T: AnyBitPattern</code> is also <a href="trait.CheckedBitPattern.html" title="CheckedBitPattern"><code>CheckedBitPattern</code></a>. This means you can also use
+any <a href="../trait.AnyBitPattern.html" title="AnyBitPattern"><code>AnyBitPattern</code></a> type in the checked versions of casting functions in
+this module. If it’s possible, prefer implementing <a href="../trait.AnyBitPattern.html" title="AnyBitPattern"><code>AnyBitPattern</code></a> for
+your type directly instead of <a href="trait.CheckedBitPattern.html" title="CheckedBitPattern"><code>CheckedBitPattern</code></a> as it gives greater
+flexibility.</p>
+<h2 id="derive"><a href="#derive">Derive</a></h2>
+<p>A <code>#[derive(CheckedBitPattern)]</code> macro is provided under the <code>derive</code>
+feature flag which will automatically validate the requirements of this
+trait and implement the trait for you for both enums and structs. This is
+the recommended method for implementing the trait, however it’s also
+possible to do manually.</p>
+<h2 id="example"><a href="#example">Example</a></h2>
+<p>If manually implementing the trait, we can do something like so:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>bytemuck::{CheckedBitPattern, NoUninit};
+
+<span class="attribute">#[repr(u32)]
+#[derive(Copy, Clone)]
+</span><span class="kw">enum </span>MyEnum {
+    Variant0 = <span class="number">0</span>,
+    Variant1 = <span class="number">1</span>,
+    Variant2 = <span class="number">2</span>,
+}
+
+<span class="kw">unsafe impl </span>CheckedBitPattern <span class="kw">for </span>MyEnum {
+    <span class="kw">type </span>Bits = u32;
+
+    <span class="kw">fn </span>is_valid_bit_pattern(bits: <span class="kw-2">&amp;</span>u32) -&gt; bool {
+        <span class="kw">match </span><span class="kw-2">*</span>bits {
+            <span class="number">0 </span>| <span class="number">1 </span>| <span class="number">2 </span>=&gt; <span class="bool-val">true</span>,
+            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+        }
+    }
+}
+
+<span class="comment">// It is often useful to also implement `NoUninit` on our `CheckedBitPattern` types.
+// This will allow us to do casting of mutable references (and mutable slices).
+// It is not always possible to do so, but in this case we have no padding so it is.
+</span><span class="kw">unsafe impl </span>NoUninit <span class="kw">for </span>MyEnum {}</code></pre></div>
+<p>We can now use relevant casting functions. For example,</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>bytemuck::{bytes_of, bytes_of_mut};
+<span class="kw">use </span>bytemuck::checked;
+
+<span class="kw">let </span>bytes = bytes_of(<span class="kw-2">&amp;</span><span class="number">2u32</span>);
+<span class="kw">let </span>result = checked::try_from_bytes::&lt;MyEnum&gt;(bytes);
+<span class="macro">assert_eq!</span>(result, <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span>MyEnum::Variant2));
+
+<span class="comment">// Fails for invalid discriminant
+</span><span class="kw">let </span>bytes = bytes_of(<span class="kw-2">&amp;</span><span class="number">100u32</span>);
+<span class="kw">let </span>result = checked::try_from_bytes::&lt;MyEnum&gt;(bytes);
+<span class="macro">assert!</span>(result.is_err());
+
+<span class="comment">// Since we implemented NoUninit, we can also cast mutably from an original type
+// that is `NoUninit + AnyBitPattern`:
+</span><span class="kw">let </span><span class="kw-2">mut </span>my_u32 = <span class="number">2u32</span>;
+{
+  <span class="kw">let </span>as_enum_mut = checked::cast_mut::&lt;<span class="kw">_</span>, MyEnum&gt;(<span class="kw-2">&amp;mut </span>my_u32);
+  <span class="macro">assert_eq!</span>(as_enum_mut, <span class="kw-2">&amp;mut </span>MyEnum::Variant2);
+  <span class="kw-2">*</span>as_enum_mut = MyEnum::Variant0;
+}
+<span class="macro">assert_eq!</span>(my_u32, <span class="number">0u32</span>);</code></pre></div>
+<h2 id="safety"><a href="#safety">Safety</a></h2>
+<ul>
+<li><code>Self</code> <em>must</em> have the same layout as the specified <code>Bits</code> except for
+the possible invalid bit patterns being checked during
+<a href="trait.CheckedBitPattern.html#tymethod.is_valid_bit_pattern"><code>is_valid_bit_pattern</code></a>.
+<ul>
+<li>This almost certainly means your type must be <code>#[repr(C)]</code> or a similar
+specified repr, but if you think you know better, you probably don’t. If
+you   still think you know better, be careful and have fun. And don’t mess
+it up   (I mean it).</li>
+</ul>
+</li>
+<li>If <a href="trait.CheckedBitPattern.html#tymethod.is_valid_bit_pattern"><code>is_valid_bit_pattern</code></a> returns true, then the bit pattern contained
+in <code>bits</code> must also be valid for an instance of <code>Self</code>.</li>
+<li>Probably more, don’t mess it up (I mean it 2.0)</li>
+</ul>
+</div></details><h2 id="required-associated-types" class="small-section-header">Required Associated Types<a href="#required-associated-types" class="anchor"></a></h2><div class="methods"><details class="rustdoc-toggle method-toggle" open><summary><section id="associatedtype.Bits" class="method has-srclink"><a class="srclink rightside" href="../../src/bytemuck/checked.rs.html#136">source</a><h4 class="code-header">type <a href="#associatedtype.Bits" class="associatedtype">Bits</a>: <a class="trait" href="../trait.AnyBitPattern.html" title="trait bytemuck::AnyBitPattern">AnyBitPattern</a></h4></section></summary><div class="docblock"><p><code>Self</code> <em>must</em> have the same layout as the specified <code>Bits</code> except for
+the possible invalid bit patterns being checked during
+<a href="trait.CheckedBitPattern.html#tymethod.is_valid_bit_pattern"><code>is_valid_bit_pattern</code></a>.</p>
+</div></details></div><h2 id="required-methods" class="small-section-header">Required Methods<a href="#required-methods" class="anchor"></a></h2><div class="methods"><details class="rustdoc-toggle method-toggle" open><summary><section id="tymethod.is_valid_bit_pattern" class="method has-srclink"><a class="srclink rightside" href="../../src/bytemuck/checked.rs.html#140">source</a><h4 class="code-header">fn <a href="#tymethod.is_valid_bit_pattern" class="fnname">is_valid_bit_pattern</a>(bits: &amp;Self::<a class="associatedtype" href="trait.CheckedBitPattern.html#associatedtype.Bits" title="type bytemuck::checked::CheckedBitPattern::Bits">Bits</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>If this function returns true, then it must be valid to reinterpret <code>bits</code>
+as <code>&amp;Self</code>.</p>
+</div></details></div><h2 id="foreign-impls" class="small-section-header">Implementations on Foreign Types<a href="#foreign-impls" class="anchor"></a></h2><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-CheckedBitPattern-for-char" class="impl has-srclink"><a class="srclink rightside" href="../../src/bytemuck/checked.rs.html#152-159">source</a><a href="#impl-CheckedBitPattern-for-char" class="anchor"></a><h3 class="code-header">impl <a class="trait" href="trait.CheckedBitPattern.html" title="trait bytemuck::checked::CheckedBitPattern">CheckedBitPattern</a> for <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.char.html">char</a></h3></section></summary><div class="impl-items"><section id="associatedtype.Bits-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Bits-1" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.Bits" class="associatedtype">Bits</a> = <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u32.html">u32</a></h4></section><section id="method.is_valid_bit_pattern" class="method trait-impl has-srclink"><a class="srclink rightside" href="../../src/bytemuck/checked.rs.html#156-158">source</a><a href="#method.is_valid_bit_pattern" class="anchor"></a><h4 class="code-header">fn <a href="#tymethod.is_valid_bit_pattern" class="fnname">is_valid_bit_pattern</a>(bits: &amp;Self::<a class="associatedtype" href="trait.CheckedBitPattern.html#associatedtype.Bits" title="type bytemuck::checked::CheckedBitPattern::Bits">Bits</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.bool.html">bool</a></h4></section></div></details><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-CheckedBitPattern-for-bool" class="impl has-srclink"><a class="srclink rightside" href="../../src/bytemuck/checked.rs.html#161-171">source</a><a href="#impl-CheckedBitPattern-for-bool" class="anchor"></a><h3 class="code-header">impl <a class="trait" href="trait.CheckedBitPattern.html" title="trait bytemuck::checked::CheckedBitPattern">CheckedBitPattern</a> for <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.bool.html">bool</a></h3></section></summary><div class="impl-items"><section id="associatedtype.Bits-2" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Bits-2" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.Bits" class="associatedtype">Bits</a> = <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a></h4></section><section id="method.is_valid_bit_pattern-1" class="method trait-impl has-srclink"><a class="srclink rightside" href="../../src/bytemuck/checked.rs.html#165-170">source</a><a href="#method.is_valid_bit_pattern-1" class="anchor"></a><h4 class="code-header">fn <a href="#tymethod.is_valid_bit_pattern" class="fnname">is_valid_bit_pattern</a>(bits: &amp;Self::<a class="associatedtype" href="trait.CheckedBitPattern.html#associatedtype.Bits" title="type bytemuck::checked::CheckedBitPattern::Bits">Bits</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.bool.html">bool</a></h4></section></div></details><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor"></a></h2><div id="implementors-list"><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-CheckedBitPattern-for-T" class="impl has-srclink"><a class="srclink rightside" href="../../src/bytemuck/checked.rs.html#143-150">source</a><a href="#impl-CheckedBitPattern-for-T" class="anchor"></a><h3 class="code-header">impl&lt;T:&nbsp;<a class="trait" href="../trait.AnyBitPattern.html" title="trait bytemuck::AnyBitPattern">AnyBitPattern</a>&gt; <a class="trait" href="trait.CheckedBitPattern.html" title="trait bytemuck::checked::CheckedBitPattern">CheckedBitPattern</a> for T</h3></section></summary><div class="impl-items"><section id="associatedtype.Bits-3" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Bits-3" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.Bits" class="associatedtype">Bits</a> = T</h4></section></div></details></div><script src="../../implementors/bytemuck/checked/trait.CheckedBitPattern.js" data-ignore-extern-crates="core" async></script></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bytemuck" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (9565dfeb4 2022-10-28)" ></div></body></html>

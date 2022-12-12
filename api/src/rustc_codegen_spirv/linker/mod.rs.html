@@ -366,6 +366,133 @@
 <span id="366">366</span>
 <span id="367">367</span>
 <span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
 </pre><pre class="rust"><code><span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test;
 
@@ -402,6 +529,7 @@
     <span class="kw">pub </span>compact_ids: bool,
     <span class="kw">pub </span>dce: bool,
     <span class="kw">pub </span>structurize: bool,
+    <span class="kw">pub </span>spirt: bool,
 
     <span class="kw">pub </span>emit_multiple_modules: bool,
     <span class="kw">pub </span>spirv_metadata: SpirvMetadata,
@@ -416,6 +544,7 @@
     // (for more information see `docs/src/codegen-args.md`).
     </span><span class="kw">pub </span>dump_post_merge: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
     <span class="kw">pub </span>dump_post_split: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+    <span class="kw">pub </span>dump_spirt_passes: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
     <span class="kw">pub </span>specializer_debug: bool,
     <span class="kw">pub </span>specializer_dump_instances: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
     <span class="kw">pub </span>print_all_zombie: bool,
@@ -509,10 +638,10 @@
             bound += module.header.as_ref().unwrap().bound - <span class="number">1</span>;
             <span class="kw">let </span>this_version = module.header.as_ref().unwrap().version();
             <span class="kw">if </span>version != this_version {
-                sess.fatal(<span class="macro">format!</span>(
+                <span class="kw">return </span><span class="prelude-val">Err</span>(sess.err(<span class="macro">format!</span>(
                     <span class="string">&quot;cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}&quot;</span>,
                     version.<span class="number">0</span>, version.<span class="number">1</span>, this_version.<span class="number">0</span>, this_version.<span class="number">1
-                </span>))
+                </span>)));
             }
         }
 
@@ -602,25 +731,14 @@
         );
     }
 
-    {
-        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_inline&quot;</span>);
-        inline::inline(sess, <span class="kw-2">&amp;mut </span>output)<span class="question-mark">?</span>;
-    }
+    <span class="comment">// NOTE(eddyb) with SPIR-T, we can do `mem2reg` before inlining, too!
+    </span><span class="kw">if </span>opts.spirt {
+        <span class="kw">if </span>opts.dce {
+            <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_dce-before-inlining&quot;</span>);
+            dce::dce(<span class="kw-2">&amp;mut </span>output);
+        }
 
-    <span class="kw">if </span>opts.dce {
-        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_dce&quot;</span>);
-        dce::dce(<span class="kw-2">&amp;mut </span>output);
-    }
-
-    <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="kw">if </span>opts.structurize {
-        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_structurize&quot;</span>);
-        structurizer::structurize(output)
-    } <span class="kw">else </span>{
-        output
-    };
-
-    {
-        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_block_ordering_pass_and_mem2reg&quot;</span>);
+        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_block_ordering_pass_and_mem2reg-before-inlining&quot;</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>pointer_to_pointee = FxHashMap::default();
         <span class="kw">let </span><span class="kw-2">mut </span>constants = FxHashMap::default();
         <span class="kw">let </span><span class="kw-2">mut </span>u32 = <span class="prelude-val">None</span>;
@@ -656,6 +774,142 @@
             );
             destructure_composites::destructure_composites(func);
         }
+    }
+
+    {
+        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_inline&quot;</span>);
+        inline::inline(sess, <span class="kw-2">&amp;mut </span>output)<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">if </span>opts.dce {
+        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_dce-after-inlining&quot;</span>);
+        dce::dce(<span class="kw-2">&amp;mut </span>output);
+    }
+
+    <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="kw">if </span>opts.structurize &amp;&amp; !opts.spirt {
+        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_structurize&quot;</span>);
+        structurizer::structurize(output)
+    } <span class="kw">else </span>{
+        output
+    };
+
+    {
+        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_block_ordering_pass_and_mem2reg-after-inlining&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>pointer_to_pointee = FxHashMap::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>constants = FxHashMap::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>u32 = <span class="prelude-val">None</span>;
+        <span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;</span>output.types_global_values {
+            <span class="kw">match </span>inst.class.opcode {
+                Op::TypePointer =&gt; {
+                    pointer_to_pointee
+                        .insert(inst.result_id.unwrap(), inst.operands[<span class="number">1</span>].unwrap_id_ref());
+                }
+                Op::TypeInt
+                    <span class="kw">if </span>inst.operands[<span class="number">0</span>].unwrap_literal_int32() == <span class="number">32
+                        </span>&amp;&amp; inst.operands[<span class="number">1</span>].unwrap_literal_int32() == <span class="number">0 </span>=&gt;
+                {
+                    <span class="macro">assert!</span>(u32.is_none());
+                    u32 = <span class="prelude-val">Some</span>(inst.result_id.unwrap());
+                }
+                Op::Constant <span class="kw">if </span>u32.is_some() &amp;&amp; inst.result_type == u32 =&gt; {
+                    <span class="kw">let </span>value = inst.operands[<span class="number">0</span>].unwrap_literal_int32();
+                    constants.insert(inst.result_id.unwrap(), value);
+                }
+                <span class="kw">_ </span>=&gt; {}
+            }
+        }
+        <span class="kw">for </span>func <span class="kw">in </span><span class="kw-2">&amp;mut </span>output.functions {
+            simple_passes::block_ordering_pass(func);
+            <span class="comment">// Note: mem2reg requires functions to be in RPO order (i.e. block_ordering_pass)
+            </span>mem2reg::mem2reg(
+                output.header.as_mut().unwrap(),
+                <span class="kw-2">&amp;mut </span>output.types_global_values,
+                <span class="kw-2">&amp;</span>pointer_to_pointee,
+                <span class="kw-2">&amp;</span>constants,
+                func,
+            );
+            destructure_composites::destructure_composites(func);
+        }
+    }
+
+    <span class="kw">if </span>opts.spirt {
+        <span class="kw">let </span><span class="kw-2">mut </span>per_pass_module_for_dumping = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>after_pass = |pass, module: <span class="kw-2">&amp;</span>spirt::Module| {
+            <span class="kw">if </span>opts.dump_spirt_passes.is_some() {
+                per_pass_module_for_dumping.push((pass, module.clone()));
+            }
+        };
+
+        <span class="kw">let </span>spv_bytes = {
+            <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;assemble-to-spv_bytes-for-spirt&quot;</span>);
+            spirv_tools::binary::from_binary(<span class="kw-2">&amp;</span>output.assemble()).to_vec()
+        };
+        <span class="kw">let </span>cx = std::rc::Rc::new(spirt::Context::new());
+        <span class="kw">let </span><span class="kw-2">mut </span>module = {
+            <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt::Module::lower_from_spv_file&quot;</span>);
+            <span class="kw">match </span>spirt::Module::lower_from_spv_bytes(cx.clone(), spv_bytes) {
+                <span class="prelude-val">Ok</span>(module) =&gt; module,
+                <span class="prelude-val">Err</span>(e) =&gt; {
+                    <span class="kw">use </span>rspirv::binary::Disassemble;
+
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(sess
+                        .struct_err(<span class="macro">format!</span>(<span class="string">&quot;{e}&quot;</span>))
+                        .note(<span class="macro">format!</span>(
+                            <span class="string">&quot;while lowering this SPIR-V module to SPIR-T:\n{}&quot;</span>,
+                            output.disassemble()
+                        ))
+                        .emit());
+                }
+            }
+        };
+        after_pass(<span class="string">&quot;lower_from_spv&quot;</span>, <span class="kw-2">&amp;</span>module);
+
+        <span class="kw">if </span>opts.structurize {
+            {
+                <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt::legalize::structurize_func_cfgs&quot;</span>);
+                spirt::passes::legalize::structurize_func_cfgs(<span class="kw-2">&amp;mut </span>module);
+            }
+            after_pass(<span class="string">&quot;structurize_func_cfgs&quot;</span>, <span class="kw-2">&amp;</span>module);
+        }
+
+        <span class="comment">// NOTE(eddyb) this should be *before* `lift_to_spv` below,
+        // so if that fails, the dump could be used to debug it.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(dump_file) = <span class="kw-2">&amp;</span>opts.dump_spirt_passes {
+            <span class="comment">// HACK(eddyb) using `.with_extension(...)` may replace part of a
+            // `.`-containing file name, but we want to always append `.html`.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>dump_file_html = dump_file.as_os_str().to_owned();
+            dump_file_html.push(<span class="string">&quot;.html&quot;</span>);
+
+            <span class="kw">let </span>plan = spirt::print::Plan::for_versions(
+                <span class="kw-2">&amp;</span>cx,
+                per_pass_module_for_dumping
+                    .iter()
+                    .map(|(pass, module)| (<span class="macro">format!</span>(<span class="string">&quot;after {pass}&quot;</span>), module)),
+            );
+            <span class="kw">let </span>pretty = plan.pretty_print();
+
+            <span class="comment">// FIXME(eddyb) don&#39;t allocate whole `String`s here.
+            </span>std::fs::write(dump_file, pretty.to_string()).unwrap();
+            std::fs::write(
+                dump_file_html,
+                pretty
+                    .render_to_html()
+                    .with_dark_mode_support()
+                    .to_html_doc(),
+            )
+            .unwrap();
+        }
+
+        <span class="kw">let </span>spv_words = {
+            <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt::Module::lift_to_spv_module_emitter&quot;</span>);
+            module.lift_to_spv_module_emitter().unwrap().words
+        };
+        output = {
+            <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;parse-spv_words-from-spirt&quot;</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>loader = Loader::new();
+            rspirv::binary::parse_words(<span class="kw-2">&amp;</span>spv_words, <span class="kw-2">&amp;mut </span>loader).unwrap();
+            loader.module()
+        };
     }
 
     {

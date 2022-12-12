@@ -874,6 +874,20 @@
 <span id="874">874</span>
 <span id="875">875</span>
 <span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
 </pre><pre class="rust"><code><span class="kw">mod </span>constant;
 <span class="kw">mod </span>declare;
 <span class="kw">mod </span>entry;
@@ -1227,6 +1241,12 @@
             );
             opts.optflag(<span class="string">&quot;&quot;</span>, <span class="string">&quot;no-structurize&quot;</span>, <span class="string">&quot;disables CFG structurization&quot;</span>);
 
+            opts.optflag(
+                <span class="string">&quot;&quot;</span>,
+                <span class="string">&quot;spirt&quot;</span>,
+                <span class="string">&quot;use SPIR-T for legalization (see also `docs/src/codegen-args.md`)&quot;</span>,
+            );
+
             <span class="comment">// NOTE(eddyb) these are debugging options that used to be env vars
             // (for more information see `docs/src/codegen-args.md`).
             </span>opts.optopt(
@@ -1240,6 +1260,12 @@
                 <span class="string">&quot;dump-post-split&quot;</span>,
                 <span class="string">&quot;dump modules immediately after multimodule splitting, to files in DIR&quot;</span>,
                 <span class="string">&quot;DIR&quot;</span>,
+            );
+            opts.optopt(
+                <span class="string">&quot;&quot;</span>,
+                <span class="string">&quot;dump-spirt-passes&quot;</span>,
+                <span class="string">&quot;dump the SPIR-T module across passes, to FILE and FILE.html&quot;</span>,
+                <span class="string">&quot;FILE&quot;</span>,
             );
             opts.optflag(
                 <span class="string">&quot;&quot;</span>,
@@ -1387,6 +1413,7 @@
             </span>dce: !matches.opt_present(<span class="string">&quot;no-dce&quot;</span>),
             compact_ids: !matches.opt_present(<span class="string">&quot;no-compact-ids&quot;</span>),
             structurize: !matches.opt_present(<span class="string">&quot;no-structurize&quot;</span>),
+            spirt: matches.opt_present(<span class="string">&quot;spirt&quot;</span>),
 
             <span class="comment">// FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
             </span>emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,
@@ -1397,6 +1424,7 @@
             // (for more information see `docs/src/codegen-args.md`).
             </span>dump_post_merge: matches_opt_path(<span class="string">&quot;dump-post-merge&quot;</span>),
             dump_post_split: matches_opt_dump_dir_path(<span class="string">&quot;dump-post-split&quot;</span>),
+            dump_spirt_passes: matches_opt_path(<span class="string">&quot;dump-spirt-passes&quot;</span>),
             specializer_debug: matches.opt_present(<span class="string">&quot;specializer-debug&quot;</span>),
             specializer_dump_instances: matches_opt_path(<span class="string">&quot;specializer-dump-instances&quot;</span>),
             print_all_zombie: matches.opt_present(<span class="string">&quot;print-all-zombie&quot;</span>),

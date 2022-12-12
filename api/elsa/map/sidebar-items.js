@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["FrozenBTreeMap","Append-only version of `std::collections::BTreeMap` where insertion does not require mutable access"],["FrozenMap","Append-only version of `std::collections::HashMap` where insertion does not require mutable access"]]};

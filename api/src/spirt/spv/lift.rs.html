@@ -1,0 +1,3716 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/cda161b/src/spv/lift.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lift.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
+<span id="995">995</span>
+<span id="996">996</span>
+<span id="997">997</span>
+<span id="998">998</span>
+<span id="999">999</span>
+<span id="1000">1000</span>
+<span id="1001">1001</span>
+<span id="1002">1002</span>
+<span id="1003">1003</span>
+<span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
+<span id="1009">1009</span>
+<span id="1010">1010</span>
+<span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+<span id="1029">1029</span>
+<span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
+<span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+<span id="1094">1094</span>
+<span id="1095">1095</span>
+<span id="1096">1096</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
+<span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
+<span id="1116">1116</span>
+<span id="1117">1117</span>
+<span id="1118">1118</span>
+<span id="1119">1119</span>
+<span id="1120">1120</span>
+<span id="1121">1121</span>
+<span id="1122">1122</span>
+<span id="1123">1123</span>
+<span id="1124">1124</span>
+<span id="1125">1125</span>
+<span id="1126">1126</span>
+<span id="1127">1127</span>
+<span id="1128">1128</span>
+<span id="1129">1129</span>
+<span id="1130">1130</span>
+<span id="1131">1131</span>
+<span id="1132">1132</span>
+<span id="1133">1133</span>
+<span id="1134">1134</span>
+<span id="1135">1135</span>
+<span id="1136">1136</span>
+<span id="1137">1137</span>
+<span id="1138">1138</span>
+<span id="1139">1139</span>
+<span id="1140">1140</span>
+<span id="1141">1141</span>
+<span id="1142">1142</span>
+<span id="1143">1143</span>
+<span id="1144">1144</span>
+<span id="1145">1145</span>
+<span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
+<span id="1149">1149</span>
+<span id="1150">1150</span>
+<span id="1151">1151</span>
+<span id="1152">1152</span>
+<span id="1153">1153</span>
+<span id="1154">1154</span>
+<span id="1155">1155</span>
+<span id="1156">1156</span>
+<span id="1157">1157</span>
+<span id="1158">1158</span>
+<span id="1159">1159</span>
+<span id="1160">1160</span>
+<span id="1161">1161</span>
+<span id="1162">1162</span>
+<span id="1163">1163</span>
+<span id="1164">1164</span>
+<span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
+<span id="1175">1175</span>
+<span id="1176">1176</span>
+<span id="1177">1177</span>
+<span id="1178">1178</span>
+<span id="1179">1179</span>
+<span id="1180">1180</span>
+<span id="1181">1181</span>
+<span id="1182">1182</span>
+<span id="1183">1183</span>
+<span id="1184">1184</span>
+<span id="1185">1185</span>
+<span id="1186">1186</span>
+<span id="1187">1187</span>
+<span id="1188">1188</span>
+<span id="1189">1189</span>
+<span id="1190">1190</span>
+<span id="1191">1191</span>
+<span id="1192">1192</span>
+<span id="1193">1193</span>
+<span id="1194">1194</span>
+<span id="1195">1195</span>
+<span id="1196">1196</span>
+<span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
+<span id="1201">1201</span>
+<span id="1202">1202</span>
+<span id="1203">1203</span>
+<span id="1204">1204</span>
+<span id="1205">1205</span>
+<span id="1206">1206</span>
+<span id="1207">1207</span>
+<span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
+<span id="1212">1212</span>
+<span id="1213">1213</span>
+<span id="1214">1214</span>
+<span id="1215">1215</span>
+<span id="1216">1216</span>
+<span id="1217">1217</span>
+<span id="1218">1218</span>
+<span id="1219">1219</span>
+<span id="1220">1220</span>
+<span id="1221">1221</span>
+<span id="1222">1222</span>
+<span id="1223">1223</span>
+<span id="1224">1224</span>
+<span id="1225">1225</span>
+<span id="1226">1226</span>
+<span id="1227">1227</span>
+<span id="1228">1228</span>
+<span id="1229">1229</span>
+<span id="1230">1230</span>
+<span id="1231">1231</span>
+<span id="1232">1232</span>
+<span id="1233">1233</span>
+<span id="1234">1234</span>
+<span id="1235">1235</span>
+<span id="1236">1236</span>
+<span id="1237">1237</span>
+<span id="1238">1238</span>
+<span id="1239">1239</span>
+<span id="1240">1240</span>
+<span id="1241">1241</span>
+<span id="1242">1242</span>
+<span id="1243">1243</span>
+<span id="1244">1244</span>
+<span id="1245">1245</span>
+<span id="1246">1246</span>
+<span id="1247">1247</span>
+<span id="1248">1248</span>
+<span id="1249">1249</span>
+<span id="1250">1250</span>
+<span id="1251">1251</span>
+<span id="1252">1252</span>
+<span id="1253">1253</span>
+<span id="1254">1254</span>
+<span id="1255">1255</span>
+<span id="1256">1256</span>
+<span id="1257">1257</span>
+<span id="1258">1258</span>
+<span id="1259">1259</span>
+<span id="1260">1260</span>
+<span id="1261">1261</span>
+<span id="1262">1262</span>
+<span id="1263">1263</span>
+<span id="1264">1264</span>
+<span id="1265">1265</span>
+<span id="1266">1266</span>
+<span id="1267">1267</span>
+<span id="1268">1268</span>
+<span id="1269">1269</span>
+<span id="1270">1270</span>
+<span id="1271">1271</span>
+<span id="1272">1272</span>
+<span id="1273">1273</span>
+<span id="1274">1274</span>
+<span id="1275">1275</span>
+<span id="1276">1276</span>
+<span id="1277">1277</span>
+<span id="1278">1278</span>
+<span id="1279">1279</span>
+<span id="1280">1280</span>
+<span id="1281">1281</span>
+<span id="1282">1282</span>
+<span id="1283">1283</span>
+<span id="1284">1284</span>
+<span id="1285">1285</span>
+<span id="1286">1286</span>
+<span id="1287">1287</span>
+<span id="1288">1288</span>
+<span id="1289">1289</span>
+<span id="1290">1290</span>
+<span id="1291">1291</span>
+<span id="1292">1292</span>
+<span id="1293">1293</span>
+<span id="1294">1294</span>
+<span id="1295">1295</span>
+<span id="1296">1296</span>
+<span id="1297">1297</span>
+<span id="1298">1298</span>
+<span id="1299">1299</span>
+<span id="1300">1300</span>
+<span id="1301">1301</span>
+<span id="1302">1302</span>
+<span id="1303">1303</span>
+<span id="1304">1304</span>
+<span id="1305">1305</span>
+<span id="1306">1306</span>
+<span id="1307">1307</span>
+<span id="1308">1308</span>
+<span id="1309">1309</span>
+<span id="1310">1310</span>
+<span id="1311">1311</span>
+<span id="1312">1312</span>
+<span id="1313">1313</span>
+<span id="1314">1314</span>
+<span id="1315">1315</span>
+<span id="1316">1316</span>
+<span id="1317">1317</span>
+<span id="1318">1318</span>
+<span id="1319">1319</span>
+<span id="1320">1320</span>
+<span id="1321">1321</span>
+<span id="1322">1322</span>
+<span id="1323">1323</span>
+<span id="1324">1324</span>
+<span id="1325">1325</span>
+<span id="1326">1326</span>
+<span id="1327">1327</span>
+<span id="1328">1328</span>
+<span id="1329">1329</span>
+<span id="1330">1330</span>
+<span id="1331">1331</span>
+<span id="1332">1332</span>
+<span id="1333">1333</span>
+<span id="1334">1334</span>
+<span id="1335">1335</span>
+<span id="1336">1336</span>
+<span id="1337">1337</span>
+<span id="1338">1338</span>
+<span id="1339">1339</span>
+<span id="1340">1340</span>
+<span id="1341">1341</span>
+<span id="1342">1342</span>
+<span id="1343">1343</span>
+<span id="1344">1344</span>
+<span id="1345">1345</span>
+<span id="1346">1346</span>
+<span id="1347">1347</span>
+<span id="1348">1348</span>
+<span id="1349">1349</span>
+<span id="1350">1350</span>
+<span id="1351">1351</span>
+<span id="1352">1352</span>
+<span id="1353">1353</span>
+<span id="1354">1354</span>
+<span id="1355">1355</span>
+<span id="1356">1356</span>
+<span id="1357">1357</span>
+<span id="1358">1358</span>
+<span id="1359">1359</span>
+<span id="1360">1360</span>
+<span id="1361">1361</span>
+<span id="1362">1362</span>
+<span id="1363">1363</span>
+<span id="1364">1364</span>
+<span id="1365">1365</span>
+<span id="1366">1366</span>
+<span id="1367">1367</span>
+<span id="1368">1368</span>
+<span id="1369">1369</span>
+<span id="1370">1370</span>
+<span id="1371">1371</span>
+<span id="1372">1372</span>
+<span id="1373">1373</span>
+<span id="1374">1374</span>
+<span id="1375">1375</span>
+<span id="1376">1376</span>
+<span id="1377">1377</span>
+<span id="1378">1378</span>
+<span id="1379">1379</span>
+<span id="1380">1380</span>
+<span id="1381">1381</span>
+<span id="1382">1382</span>
+<span id="1383">1383</span>
+<span id="1384">1384</span>
+<span id="1385">1385</span>
+<span id="1386">1386</span>
+<span id="1387">1387</span>
+<span id="1388">1388</span>
+<span id="1389">1389</span>
+<span id="1390">1390</span>
+<span id="1391">1391</span>
+<span id="1392">1392</span>
+<span id="1393">1393</span>
+<span id="1394">1394</span>
+<span id="1395">1395</span>
+<span id="1396">1396</span>
+<span id="1397">1397</span>
+<span id="1398">1398</span>
+<span id="1399">1399</span>
+<span id="1400">1400</span>
+<span id="1401">1401</span>
+<span id="1402">1402</span>
+<span id="1403">1403</span>
+<span id="1404">1404</span>
+<span id="1405">1405</span>
+<span id="1406">1406</span>
+<span id="1407">1407</span>
+<span id="1408">1408</span>
+<span id="1409">1409</span>
+<span id="1410">1410</span>
+<span id="1411">1411</span>
+<span id="1412">1412</span>
+<span id="1413">1413</span>
+<span id="1414">1414</span>
+<span id="1415">1415</span>
+<span id="1416">1416</span>
+<span id="1417">1417</span>
+<span id="1418">1418</span>
+<span id="1419">1419</span>
+<span id="1420">1420</span>
+<span id="1421">1421</span>
+<span id="1422">1422</span>
+<span id="1423">1423</span>
+<span id="1424">1424</span>
+<span id="1425">1425</span>
+<span id="1426">1426</span>
+<span id="1427">1427</span>
+<span id="1428">1428</span>
+<span id="1429">1429</span>
+<span id="1430">1430</span>
+<span id="1431">1431</span>
+<span id="1432">1432</span>
+<span id="1433">1433</span>
+<span id="1434">1434</span>
+<span id="1435">1435</span>
+<span id="1436">1436</span>
+<span id="1437">1437</span>
+<span id="1438">1438</span>
+<span id="1439">1439</span>
+<span id="1440">1440</span>
+<span id="1441">1441</span>
+<span id="1442">1442</span>
+<span id="1443">1443</span>
+<span id="1444">1444</span>
+<span id="1445">1445</span>
+<span id="1446">1446</span>
+<span id="1447">1447</span>
+<span id="1448">1448</span>
+<span id="1449">1449</span>
+<span id="1450">1450</span>
+<span id="1451">1451</span>
+<span id="1452">1452</span>
+<span id="1453">1453</span>
+<span id="1454">1454</span>
+<span id="1455">1455</span>
+<span id="1456">1456</span>
+<span id="1457">1457</span>
+<span id="1458">1458</span>
+<span id="1459">1459</span>
+<span id="1460">1460</span>
+<span id="1461">1461</span>
+<span id="1462">1462</span>
+<span id="1463">1463</span>
+<span id="1464">1464</span>
+<span id="1465">1465</span>
+<span id="1466">1466</span>
+<span id="1467">1467</span>
+<span id="1468">1468</span>
+<span id="1469">1469</span>
+<span id="1470">1470</span>
+<span id="1471">1471</span>
+<span id="1472">1472</span>
+<span id="1473">1473</span>
+<span id="1474">1474</span>
+<span id="1475">1475</span>
+<span id="1476">1476</span>
+<span id="1477">1477</span>
+<span id="1478">1478</span>
+<span id="1479">1479</span>
+<span id="1480">1480</span>
+<span id="1481">1481</span>
+<span id="1482">1482</span>
+<span id="1483">1483</span>
+<span id="1484">1484</span>
+<span id="1485">1485</span>
+<span id="1486">1486</span>
+<span id="1487">1487</span>
+<span id="1488">1488</span>
+<span id="1489">1489</span>
+<span id="1490">1490</span>
+<span id="1491">1491</span>
+<span id="1492">1492</span>
+<span id="1493">1493</span>
+<span id="1494">1494</span>
+<span id="1495">1495</span>
+<span id="1496">1496</span>
+<span id="1497">1497</span>
+<span id="1498">1498</span>
+<span id="1499">1499</span>
+<span id="1500">1500</span>
+<span id="1501">1501</span>
+<span id="1502">1502</span>
+<span id="1503">1503</span>
+<span id="1504">1504</span>
+<span id="1505">1505</span>
+<span id="1506">1506</span>
+<span id="1507">1507</span>
+<span id="1508">1508</span>
+<span id="1509">1509</span>
+<span id="1510">1510</span>
+<span id="1511">1511</span>
+<span id="1512">1512</span>
+<span id="1513">1513</span>
+<span id="1514">1514</span>
+<span id="1515">1515</span>
+<span id="1516">1516</span>
+<span id="1517">1517</span>
+<span id="1518">1518</span>
+<span id="1519">1519</span>
+<span id="1520">1520</span>
+<span id="1521">1521</span>
+<span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
+<span id="1532">1532</span>
+<span id="1533">1533</span>
+<span id="1534">1534</span>
+<span id="1535">1535</span>
+<span id="1536">1536</span>
+<span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
+<span id="1540">1540</span>
+<span id="1541">1541</span>
+<span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
+<span id="1545">1545</span>
+<span id="1546">1546</span>
+<span id="1547">1547</span>
+<span id="1548">1548</span>
+<span id="1549">1549</span>
+<span id="1550">1550</span>
+<span id="1551">1551</span>
+<span id="1552">1552</span>
+<span id="1553">1553</span>
+<span id="1554">1554</span>
+<span id="1555">1555</span>
+<span id="1556">1556</span>
+<span id="1557">1557</span>
+<span id="1558">1558</span>
+<span id="1559">1559</span>
+<span id="1560">1560</span>
+<span id="1561">1561</span>
+<span id="1562">1562</span>
+<span id="1563">1563</span>
+<span id="1564">1564</span>
+<span id="1565">1565</span>
+<span id="1566">1566</span>
+<span id="1567">1567</span>
+<span id="1568">1568</span>
+<span id="1569">1569</span>
+<span id="1570">1570</span>
+<span id="1571">1571</span>
+<span id="1572">1572</span>
+<span id="1573">1573</span>
+<span id="1574">1574</span>
+<span id="1575">1575</span>
+<span id="1576">1576</span>
+<span id="1577">1577</span>
+<span id="1578">1578</span>
+<span id="1579">1579</span>
+<span id="1580">1580</span>
+<span id="1581">1581</span>
+<span id="1582">1582</span>
+<span id="1583">1583</span>
+<span id="1584">1584</span>
+<span id="1585">1585</span>
+<span id="1586">1586</span>
+<span id="1587">1587</span>
+<span id="1588">1588</span>
+<span id="1589">1589</span>
+<span id="1590">1590</span>
+<span id="1591">1591</span>
+<span id="1592">1592</span>
+<span id="1593">1593</span>
+<span id="1594">1594</span>
+<span id="1595">1595</span>
+<span id="1596">1596</span>
+<span id="1597">1597</span>
+<span id="1598">1598</span>
+<span id="1599">1599</span>
+<span id="1600">1600</span>
+<span id="1601">1601</span>
+<span id="1602">1602</span>
+<span id="1603">1603</span>
+<span id="1604">1604</span>
+<span id="1605">1605</span>
+<span id="1606">1606</span>
+<span id="1607">1607</span>
+<span id="1608">1608</span>
+<span id="1609">1609</span>
+<span id="1610">1610</span>
+<span id="1611">1611</span>
+<span id="1612">1612</span>
+<span id="1613">1613</span>
+<span id="1614">1614</span>
+<span id="1615">1615</span>
+<span id="1616">1616</span>
+<span id="1617">1617</span>
+<span id="1618">1618</span>
+<span id="1619">1619</span>
+<span id="1620">1620</span>
+<span id="1621">1621</span>
+<span id="1622">1622</span>
+<span id="1623">1623</span>
+<span id="1624">1624</span>
+<span id="1625">1625</span>
+<span id="1626">1626</span>
+<span id="1627">1627</span>
+<span id="1628">1628</span>
+<span id="1629">1629</span>
+<span id="1630">1630</span>
+<span id="1631">1631</span>
+<span id="1632">1632</span>
+<span id="1633">1633</span>
+<span id="1634">1634</span>
+<span id="1635">1635</span>
+<span id="1636">1636</span>
+<span id="1637">1637</span>
+<span id="1638">1638</span>
+<span id="1639">1639</span>
+<span id="1640">1640</span>
+<span id="1641">1641</span>
+<span id="1642">1642</span>
+<span id="1643">1643</span>
+<span id="1644">1644</span>
+<span id="1645">1645</span>
+<span id="1646">1646</span>
+<span id="1647">1647</span>
+<span id="1648">1648</span>
+<span id="1649">1649</span>
+<span id="1650">1650</span>
+<span id="1651">1651</span>
+<span id="1652">1652</span>
+<span id="1653">1653</span>
+<span id="1654">1654</span>
+<span id="1655">1655</span>
+<span id="1656">1656</span>
+<span id="1657">1657</span>
+<span id="1658">1658</span>
+<span id="1659">1659</span>
+<span id="1660">1660</span>
+<span id="1661">1661</span>
+<span id="1662">1662</span>
+<span id="1663">1663</span>
+<span id="1664">1664</span>
+<span id="1665">1665</span>
+<span id="1666">1666</span>
+<span id="1667">1667</span>
+<span id="1668">1668</span>
+<span id="1669">1669</span>
+<span id="1670">1670</span>
+<span id="1671">1671</span>
+<span id="1672">1672</span>
+<span id="1673">1673</span>
+<span id="1674">1674</span>
+<span id="1675">1675</span>
+<span id="1676">1676</span>
+<span id="1677">1677</span>
+<span id="1678">1678</span>
+<span id="1679">1679</span>
+<span id="1680">1680</span>
+<span id="1681">1681</span>
+<span id="1682">1682</span>
+<span id="1683">1683</span>
+<span id="1684">1684</span>
+<span id="1685">1685</span>
+<span id="1686">1686</span>
+<span id="1687">1687</span>
+<span id="1688">1688</span>
+<span id="1689">1689</span>
+<span id="1690">1690</span>
+<span id="1691">1691</span>
+<span id="1692">1692</span>
+<span id="1693">1693</span>
+<span id="1694">1694</span>
+<span id="1695">1695</span>
+<span id="1696">1696</span>
+<span id="1697">1697</span>
+<span id="1698">1698</span>
+<span id="1699">1699</span>
+<span id="1700">1700</span>
+<span id="1701">1701</span>
+<span id="1702">1702</span>
+<span id="1703">1703</span>
+<span id="1704">1704</span>
+<span id="1705">1705</span>
+<span id="1706">1706</span>
+<span id="1707">1707</span>
+<span id="1708">1708</span>
+<span id="1709">1709</span>
+<span id="1710">1710</span>
+<span id="1711">1711</span>
+<span id="1712">1712</span>
+<span id="1713">1713</span>
+<span id="1714">1714</span>
+<span id="1715">1715</span>
+<span id="1716">1716</span>
+<span id="1717">1717</span>
+<span id="1718">1718</span>
+<span id="1719">1719</span>
+<span id="1720">1720</span>
+<span id="1721">1721</span>
+<span id="1722">1722</span>
+<span id="1723">1723</span>
+<span id="1724">1724</span>
+<span id="1725">1725</span>
+<span id="1726">1726</span>
+<span id="1727">1727</span>
+<span id="1728">1728</span>
+<span id="1729">1729</span>
+<span id="1730">1730</span>
+<span id="1731">1731</span>
+<span id="1732">1732</span>
+<span id="1733">1733</span>
+<span id="1734">1734</span>
+<span id="1735">1735</span>
+<span id="1736">1736</span>
+<span id="1737">1737</span>
+<span id="1738">1738</span>
+<span id="1739">1739</span>
+<span id="1740">1740</span>
+<span id="1741">1741</span>
+<span id="1742">1742</span>
+<span id="1743">1743</span>
+<span id="1744">1744</span>
+<span id="1745">1745</span>
+<span id="1746">1746</span>
+<span id="1747">1747</span>
+<span id="1748">1748</span>
+<span id="1749">1749</span>
+<span id="1750">1750</span>
+<span id="1751">1751</span>
+<span id="1752">1752</span>
+<span id="1753">1753</span>
+<span id="1754">1754</span>
+<span id="1755">1755</span>
+<span id="1756">1756</span>
+<span id="1757">1757</span>
+<span id="1758">1758</span>
+<span id="1759">1759</span>
+<span id="1760">1760</span>
+<span id="1761">1761</span>
+<span id="1762">1762</span>
+<span id="1763">1763</span>
+<span id="1764">1764</span>
+<span id="1765">1765</span>
+<span id="1766">1766</span>
+<span id="1767">1767</span>
+<span id="1768">1768</span>
+<span id="1769">1769</span>
+<span id="1770">1770</span>
+<span id="1771">1771</span>
+<span id="1772">1772</span>
+<span id="1773">1773</span>
+<span id="1774">1774</span>
+<span id="1775">1775</span>
+<span id="1776">1776</span>
+<span id="1777">1777</span>
+<span id="1778">1778</span>
+<span id="1779">1779</span>
+<span id="1780">1780</span>
+<span id="1781">1781</span>
+<span id="1782">1782</span>
+<span id="1783">1783</span>
+<span id="1784">1784</span>
+<span id="1785">1785</span>
+<span id="1786">1786</span>
+<span id="1787">1787</span>
+<span id="1788">1788</span>
+<span id="1789">1789</span>
+<span id="1790">1790</span>
+<span id="1791">1791</span>
+<span id="1792">1792</span>
+<span id="1793">1793</span>
+<span id="1794">1794</span>
+<span id="1795">1795</span>
+<span id="1796">1796</span>
+<span id="1797">1797</span>
+<span id="1798">1798</span>
+<span id="1799">1799</span>
+<span id="1800">1800</span>
+<span id="1801">1801</span>
+<span id="1802">1802</span>
+<span id="1803">1803</span>
+<span id="1804">1804</span>
+<span id="1805">1805</span>
+<span id="1806">1806</span>
+<span id="1807">1807</span>
+<span id="1808">1808</span>
+<span id="1809">1809</span>
+<span id="1810">1810</span>
+<span id="1811">1811</span>
+<span id="1812">1812</span>
+<span id="1813">1813</span>
+<span id="1814">1814</span>
+<span id="1815">1815</span>
+<span id="1816">1816</span>
+<span id="1817">1817</span>
+<span id="1818">1818</span>
+<span id="1819">1819</span>
+<span id="1820">1820</span>
+<span id="1821">1821</span>
+<span id="1822">1822</span>
+<span id="1823">1823</span>
+<span id="1824">1824</span>
+<span id="1825">1825</span>
+<span id="1826">1826</span>
+<span id="1827">1827</span>
+<span id="1828">1828</span>
+<span id="1829">1829</span>
+<span id="1830">1830</span>
+<span id="1831">1831</span>
+<span id="1832">1832</span>
+<span id="1833">1833</span>
+<span id="1834">1834</span>
+<span id="1835">1835</span>
+<span id="1836">1836</span>
+<span id="1837">1837</span>
+<span id="1838">1838</span>
+<span id="1839">1839</span>
+<span id="1840">1840</span>
+<span id="1841">1841</span>
+<span id="1842">1842</span>
+<span id="1843">1843</span>
+<span id="1844">1844</span>
+<span id="1845">1845</span>
+<span id="1846">1846</span>
+<span id="1847">1847</span>
+<span id="1848">1848</span>
+<span id="1849">1849</span>
+<span id="1850">1850</span>
+<span id="1851">1851</span>
+<span id="1852">1852</span>
+<span id="1853">1853</span>
+<span id="1854">1854</span>
+<span id="1855">1855</span>
+<span id="1856">1856</span>
+<span id="1857">1857</span>
+</pre><pre class="rust"><code><span class="doccomment">//! SPIR-T to SPIR-V lifting.
+
+</span><span class="kw">use </span><span class="kw">crate</span>::func_at::FuncAt;
+<span class="kw">use </span><span class="kw">crate</span>::spv::{<span class="self">self</span>, spec};
+<span class="kw">use </span><span class="kw">crate</span>::visit::{InnerVisit, Visitor};
+<span class="kw">use crate</span>::{
+    cfg, AddrSpace, Attr, AttrSet, Const, ConstCtor, ConstDef, Context, ControlNode,
+    ControlNodeKind, ControlNodeOutputDecl, ControlRegion, ControlRegionInputDecl, DataInst,
+    DataInstDef, DataInstKind, DeclDef, EntityList, ExportKey, Exportee, Func, FuncDecl, FuncParam,
+    FxIndexMap, FxIndexSet, GlobalVar, GlobalVarDefBody, Import, Module, ModuleDebugInfo,
+    ModuleDialect, SelectionKind, Type, TypeCtor, TypeCtorArg, TypeDef, Value,
+};
+<span class="kw">use </span>rustc_hash::FxHashMap;
+<span class="kw">use </span>smallvec::SmallVec;
+<span class="kw">use </span>std::borrow::Cow;
+<span class="kw">use </span>std::collections::{BTreeMap, BTreeSet};
+<span class="kw">use </span>std::num::NonZeroU32;
+<span class="kw">use </span>std::path::Path;
+<span class="kw">use </span>std::{io, iter, mem, slice};
+
+<span class="kw">impl </span>spv::Dialect {
+    <span class="kw">fn </span>capability_insts(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = spv::InstWithIds&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="kw">let </span>wk = <span class="kw-2">&amp;</span>spec::Spec::get().well_known;
+        <span class="self">self</span>.capabilities.iter().map(<span class="kw">move </span>|<span class="kw-2">&amp;</span>cap| spv::InstWithIds {
+            without_ids: spv::Inst {
+                opcode: wk.OpCapability,
+                imms: iter::once(spv::Imm::Short(wk.Capability, cap)).collect(),
+            },
+            result_type_id: <span class="prelude-val">None</span>,
+            result_id: <span class="prelude-val">None</span>,
+            ids: [].into_iter().collect(),
+        })
+    }
+
+    <span class="kw">pub fn </span>extension_insts(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = spv::InstWithIds&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="kw">let </span>wk = <span class="kw-2">&amp;</span>spec::Spec::get().well_known;
+        <span class="self">self</span>.extensions.iter().map(<span class="kw">move </span>|ext| spv::InstWithIds {
+            without_ids: spv::Inst {
+                opcode: wk.OpExtension,
+                imms: spv::encode_literal_string(ext).collect(),
+            },
+            result_type_id: <span class="prelude-val">None</span>,
+            result_id: <span class="prelude-val">None</span>,
+            ids: [].into_iter().collect(),
+        })
+    }
+}
+
+<span class="kw">impl </span>spv::ModuleDebugInfo {
+    <span class="kw">fn </span>source_extension_insts(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = spv::InstWithIds&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="kw">let </span>wk = <span class="kw-2">&amp;</span>spec::Spec::get().well_known;
+        <span class="self">self</span>.source_extensions
+            .iter()
+            .map(<span class="kw">move </span>|ext| spv::InstWithIds {
+                without_ids: spv::Inst {
+                    opcode: wk.OpSourceExtension,
+                    imms: spv::encode_literal_string(ext).collect(),
+                },
+                result_type_id: <span class="prelude-val">None</span>,
+                result_id: <span class="prelude-val">None</span>,
+                ids: [].into_iter().collect(),
+            })
+    }
+
+    <span class="kw">fn </span>module_processed_insts(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = spv::InstWithIds&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="kw">let </span>wk = <span class="kw-2">&amp;</span>spec::Spec::get().well_known;
+        <span class="self">self</span>.module_processes
+            .iter()
+            .map(<span class="kw">move </span>|proc| spv::InstWithIds {
+                without_ids: spv::Inst {
+                    opcode: wk.OpModuleProcessed,
+                    imms: spv::encode_literal_string(proc).collect(),
+                },
+                result_type_id: <span class="prelude-val">None</span>,
+                result_id: <span class="prelude-val">None</span>,
+                ids: [].into_iter().collect(),
+            })
+    }
+}
+
+<span class="kw">impl </span>FuncDecl {
+    <span class="kw">fn </span>spv_func_type(<span class="kw-2">&amp;</span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>Context) -&gt; Type {
+        <span class="kw">let </span>wk = <span class="kw-2">&amp;</span>spec::Spec::get().well_known;
+
+        cx.intern(TypeDef {
+            attrs: AttrSet::default(),
+            ctor: TypeCtor::SpvInst(wk.OpTypeFunction.into()),
+            ctor_args: iter::once(<span class="self">self</span>.ret_type)
+                .chain(<span class="self">self</span>.params.iter().map(|param| param.ty))
+                .map(TypeCtorArg::Type)
+                .collect(),
+        })
+    }
+}
+
+<span class="kw">struct </span>NeedsIdsCollector&lt;<span class="lifetime">&#39;a</span>&gt; {
+    cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Context,
+    module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Module,
+
+    ext_inst_imports: BTreeSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
+    debug_strings: BTreeSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
+
+    globals: FxIndexSet&lt;Global&gt;,
+    global_vars_seen: FxIndexSet&lt;GlobalVar&gt;,
+    funcs: FxIndexSet&lt;Func&gt;,
+}
+
+<span class="attribute">#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">enum </span>Global {
+    Type(Type),
+    Const(Const),
+}
+
+<span class="kw">impl </span>Visitor&lt;<span class="lifetime">&#39;_</span>&gt; <span class="kw">for </span>NeedsIdsCollector&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">fn </span>visit_attr_set_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, attrs: AttrSet) {
+        <span class="self">self</span>.visit_attr_set_def(<span class="kw-2">&amp;</span><span class="self">self</span>.cx[attrs]);
+    }
+    <span class="kw">fn </span>visit_type_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: Type) {
+        <span class="kw">let </span>global = Global::Type(ty);
+        <span class="kw">if </span><span class="self">self</span>.globals.contains(<span class="kw-2">&amp;</span>global) {
+            <span class="kw">return</span>;
+        }
+        <span class="kw">let </span>ty_def = <span class="kw-2">&amp;</span><span class="self">self</span>.cx[ty];
+        <span class="kw">match </span>ty_def.ctor {
+            TypeCtor::SpvInst(<span class="kw">_</span>) =&gt; {}
+            TypeCtor::SpvStringLiteralForExtInst =&gt; {
+                <span class="macro">unreachable!</span>(
+                    <span class="string">&quot;`TypeCtor::SpvStringLiteralForExtInst` should not be used \
+                     as a type outside of `ConstCtor::SpvStringLiteralForExtInst`&quot;
+                </span>);
+            }
+        }
+        <span class="self">self</span>.visit_type_def(ty_def);
+        <span class="self">self</span>.globals.insert(global);
+    }
+    <span class="kw">fn </span>visit_const_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ct: Const) {
+        <span class="kw">let </span>global = Global::Const(ct);
+        <span class="kw">if </span><span class="self">self</span>.globals.contains(<span class="kw-2">&amp;</span>global) {
+            <span class="kw">return</span>;
+        }
+        <span class="kw">let </span>ct_def = <span class="kw-2">&amp;</span><span class="self">self</span>.cx[ct];
+        <span class="kw">match </span>ct_def.ctor {
+            ConstCtor::PtrToGlobalVar(<span class="kw">_</span>) | ConstCtor::SpvInst(<span class="kw">_</span>) =&gt; {
+                <span class="self">self</span>.visit_const_def(ct_def);
+                <span class="self">self</span>.globals.insert(global);
+            }
+
+            <span class="comment">// HACK(eddyb) because this is an `OpString` and needs to go earlier
+            // in the module than any `OpConstant*`, it needs to be special-cased,
+            // without visiting its type, or an entry in `self.globals`.
+            </span>ConstCtor::SpvStringLiteralForExtInst(s) =&gt; {
+                <span class="kw">let </span>ConstDef {
+                    attrs,
+                    ty,
+                    ctor: <span class="kw">_</span>,
+                    ctor_args,
+                } = ct_def;
+
+                <span class="macro">assert!</span>(<span class="kw-2">*</span>attrs == AttrSet::default());
+                <span class="macro">assert!</span>(
+                    <span class="self">self</span>.cx[<span class="kw-2">*</span>ty]
+                        == TypeDef {
+                            attrs: AttrSet::default(),
+                            ctor: TypeCtor::SpvStringLiteralForExtInst,
+                            ctor_args: SmallVec::new(),
+                        }
+                );
+                <span class="macro">assert!</span>(ctor_args.is_empty());
+
+                <span class="self">self</span>.debug_strings.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.cx[s]);
+            }
+        }
+    }
+
+    <span class="kw">fn </span>visit_global_var_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, gv: GlobalVar) {
+        <span class="kw">if </span><span class="self">self</span>.global_vars_seen.insert(gv) {
+            <span class="self">self</span>.visit_global_var_decl(<span class="kw-2">&amp;</span><span class="self">self</span>.module.global_vars[gv]);
+        }
+    }
+    <span class="kw">fn </span>visit_func_use(<span class="kw-2">&amp;mut </span><span class="self">self</span>, func: Func) {
+        <span class="kw">if </span><span class="self">self</span>.funcs.contains(<span class="kw-2">&amp;</span>func) {
+            <span class="kw">return</span>;
+        }
+        <span class="comment">// NOTE(eddyb) inserting first results in a different function ordering
+        // in the resulting module, but the order doesn&#39;t matter, and we need
+        // to avoid infinite recursion for recursive functions.
+        </span><span class="self">self</span>.funcs.insert(func);
+
+        <span class="kw">let </span>func_decl = <span class="kw-2">&amp;</span><span class="self">self</span>.module.funcs[func];
+        <span class="comment">// FIXME(eddyb) should this be cached in `self.funcs`?
+        </span><span class="self">self</span>.visit_type_use(func_decl.spv_func_type(<span class="self">self</span>.cx));
+        <span class="self">self</span>.visit_func_decl(func_decl);
+    }
+
+    <span class="kw">fn </span>visit_spv_module_debug_info(<span class="kw-2">&amp;mut </span><span class="self">self</span>, debug_info: <span class="kw-2">&amp;</span>spv::ModuleDebugInfo) {
+        <span class="kw">for </span>sources <span class="kw">in </span>debug_info.source_languages.values() {
+            <span class="comment">// The file operand of `OpSource` has to point to an `OpString`.
+            </span><span class="self">self</span>.debug_strings
+                .extend(sources.file_contents.keys().copied().map(|s| <span class="kw-2">&amp;</span><span class="self">self</span>.cx[s]));
+        }
+    }
+    <span class="kw">fn </span>visit_attr(<span class="kw-2">&amp;mut </span><span class="self">self</span>, attr: <span class="kw-2">&amp;</span>Attr) {
+        <span class="kw">match </span><span class="kw-2">*</span>attr {
+            Attr::SpvAnnotation { .. } | Attr::SpvBitflagsOperand(<span class="kw">_</span>) =&gt; {}
+            Attr::SpvDebugLine { file_path, .. } =&gt; {
+                <span class="self">self</span>.debug_strings.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.cx[file_path.<span class="number">0</span>]);
+            }
+        }
+    }
+
+    <span class="kw">fn </span>visit_data_inst_def(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_inst_def: <span class="kw-2">&amp;</span>DataInstDef) {
+        <span class="kw">match </span>data_inst_def.kind {
+            DataInstKind::FuncCall(<span class="kw">_</span>) =&gt; {}
+
+            DataInstKind::SpvInst(<span class="kw">_</span>) =&gt; {}
+            DataInstKind::SpvExtInst { ext_set, .. } =&gt; {
+                <span class="self">self</span>.ext_inst_imports.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.cx[ext_set]);
+            }
+        }
+        data_inst_def.inner_visit_with(<span class="self">self</span>);
+    }
+}
+
+<span class="kw">struct </span>AllocatedIds&lt;<span class="lifetime">&#39;a</span>&gt; {
+    ext_inst_imports: BTreeMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, spv::Id&gt;,
+    debug_strings: BTreeMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, spv::Id&gt;,
+
+    <span class="comment">// FIXME(eddyb) use `EntityOrientedDenseMap` here.
+    </span>globals: FxIndexMap&lt;Global, spv::Id&gt;,
+    <span class="comment">// FIXME(eddyb) use `EntityOrientedDenseMap` here.
+    </span>funcs: FxIndexMap&lt;Func, FuncLifting&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+}
+
+<span class="comment">// FIXME(eddyb) should this use ID ranges instead of `SmallVec&lt;[spv::Id; 4]&gt;`?
+</span><span class="kw">struct </span>FuncLifting&lt;<span class="lifetime">&#39;a</span>&gt; {
+    func_id: spv::Id,
+    param_ids: SmallVec&lt;[spv::Id; <span class="number">4</span>]&gt;,
+
+    <span class="comment">// FIXME(eddyb) use `EntityOrientedDenseMap` here.
+    </span>region_inputs_source: FxHashMap&lt;ControlRegion, RegionInputsSource&gt;,
+    <span class="comment">// FIXME(eddyb) use `EntityOrientedDenseMap` here.
+    </span>data_inst_output_ids: FxHashMap&lt;DataInst, spv::Id&gt;,
+
+    label_ids: FxHashMap&lt;CfgPoint, spv::Id&gt;,
+    blocks: FxIndexMap&lt;CfgPoint, BlockLifting&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+}
+
+<span class="doccomment">/// What determines the values for `Value::ControlRegionInput`s, for a specific
+/// region (effectively the subset of &quot;region parents&quot; that support inputs).
+///
+/// Note that this is not used when a `cfg::ControlInst` has `target_inputs`,
+/// and the target `ControlRegion` itself has phis for its `inputs`.
+</span><span class="kw">enum </span>RegionInputsSource {
+    FuncParams,
+    LoopHeaderPhis(ControlNode),
+}
+
+<span class="doccomment">/// Any of the possible points in structured or unstructured SPIR-T control-flow,
+/// that may require a separate SPIR-V basic block.
+</span><span class="attribute">#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">enum </span>CfgPoint {
+    RegionEntry(ControlRegion),
+    RegionExit(ControlRegion),
+
+    ControlNodeEntry(ControlNode),
+    ControlNodeExit(ControlNode),
+}
+
+<span class="kw">struct </span>BlockLifting&lt;<span class="lifetime">&#39;a</span>&gt; {
+    phis: SmallVec&lt;[Phi; <span class="number">2</span>]&gt;,
+    insts: SmallVec&lt;[EntityList&lt;DataInst&gt;; <span class="number">1</span>]&gt;,
+    terminator: Terminator&lt;<span class="lifetime">&#39;a</span>&gt;,
+}
+
+<span class="kw">struct </span>Phi {
+    attrs: AttrSet,
+    ty: Type,
+
+    result_id: spv::Id,
+    cases: FxIndexMap&lt;CfgPoint, Value&gt;,
+
+    <span class="comment">// HACK(eddyb) used for `Loop` `initial_inputs`, to indicate that any edge
+    // to the `Loop` (other than the backedge, which is already in `cases`)
+    // should automatically get an entry into `cases`, with this value.
+    </span>default_value: <span class="prelude-ty">Option</span>&lt;Value&gt;,
+}
+
+<span class="doccomment">/// Similar to `cfg::ControlInst`, except:
+/// * `targets` use `CfgPoint`s instead of `ControlRegion`s, to be able to
+///   reach any of the SPIR-V blocks being created during lifting
+/// * φ (&quot;phi&quot;) values can be provided for targets regardless of &quot;which side&quot; of
+///   the structured control-flow they are for (&quot;region input&quot; vs &quot;node output&quot;)
+/// * optional `merge` (for `OpSelectionMerge`/`OpLoopMerge`)
+/// * existing data is borrowed (from the `FuncDefBody`) wherever possible
+</span><span class="kw">struct </span>Terminator&lt;<span class="lifetime">&#39;a</span>&gt; {
+    attrs: AttrSet,
+
+    kind: Cow&lt;<span class="lifetime">&#39;a</span>, cfg::ControlInstKind&gt;,
+
+    <span class="comment">// FIXME(eddyb) use `Cow` or something, but ideally the &quot;owned&quot; case always
+    // has at most one input, so allocating a whole `Vec` for that seems unwise.
+    </span>inputs: SmallVec&lt;[Value; <span class="number">2</span>]&gt;,
+
+    <span class="comment">// FIXME(eddyb) change the inline size of this to fit most instructions.
+    </span>targets: SmallVec&lt;[CfgPoint; <span class="number">4</span>]&gt;,
+
+    target_phi_values: FxIndexMap&lt;CfgPoint, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Value]&gt;,
+
+    merge: <span class="prelude-ty">Option</span>&lt;Merge&lt;CfgPoint&gt;&gt;,
+}
+
+<span class="attribute">#[derive(Copy, Clone)]
+</span><span class="kw">enum </span>Merge&lt;L&gt; {
+    Selection(L),
+
+    Loop {
+        <span class="doccomment">/// The label just after the whole loop, i.e. the `break` target.
+        </span>loop_merge: L,
+
+        <span class="doccomment">/// A label that the back-edge block post-dominates, i.e. some point in
+        /// the loop body where looping around is inevitable (modulo `break`ing
+        /// out of the loop through a `do`-`while`-style conditional back-edge).
+        ///
+        /// SPIR-V calls this &quot;the `continue` target&quot;, but unlike other aspects
+        /// of SPIR-V &quot;structured control-flow&quot;, there can be multiple valid
+        /// choices (any that fit the post-dominator/&quot;inevitability&quot; definition).
+        </span>loop_continue: L,
+    },
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; NeedsIdsCollector&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>alloc_ids&lt;E&gt;(
+        <span class="self">self</span>,
+        <span class="kw-2">mut </span>alloc_id: <span class="kw">impl </span>FnMut() -&gt; <span class="prelude-ty">Result</span>&lt;spv::Id, E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;AllocatedIds&lt;<span class="lifetime">&#39;a</span>&gt;, E&gt; {
+        <span class="kw">let </span><span class="self">Self </span>{
+            cx,
+            module,
+            ext_inst_imports,
+            debug_strings,
+            globals,
+            global_vars_seen: <span class="kw">_</span>,
+            funcs,
+        } = <span class="self">self</span>;
+
+        <span class="prelude-val">Ok</span>(AllocatedIds {
+            ext_inst_imports: ext_inst_imports
+                .into_iter()
+                .map(|name| <span class="prelude-val">Ok</span>((name, alloc_id()<span class="question-mark">?</span>)))
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
+            debug_strings: debug_strings
+                .into_iter()
+                .map(|s| <span class="prelude-val">Ok</span>((s, alloc_id()<span class="question-mark">?</span>)))
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
+            globals: globals
+                .into_iter()
+                .map(|g| <span class="prelude-val">Ok</span>((g, alloc_id()<span class="question-mark">?</span>)))
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
+            funcs: funcs
+                .into_iter()
+                .map(|func| {
+                    <span class="prelude-val">Ok</span>((
+                        func,
+                        FuncLifting::from_func_decl(cx, <span class="kw-2">&amp;</span>module.funcs[func], || alloc_id())<span class="question-mark">?</span>,
+                    ))
+                })
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
+        })
+    }
+}
+
+<span class="doccomment">/// Helper type for deep traversal of the CFG (as a graph of `CfgPoint`s), which
+/// tracks the necessary context for navigating a `ControlRegion`/`ControlNode`.
+</span><span class="attribute">#[derive(Copy, Clone)]
+</span><span class="kw">struct </span>CfgCursor&lt;<span class="lifetime">&#39;p</span>, P = CfgPoint&gt; {
+    point: P,
+    parent: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;p </span>CfgCursor&lt;<span class="lifetime">&#39;p</span>, ControlParent&gt;&gt;,
+}
+
+<span class="kw">enum </span>ControlParent {
+    Region(ControlRegion),
+    ControlNode(ControlNode),
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;p</span>&gt; FuncAt&lt;<span class="lifetime">&#39;a</span>, CfgCursor&lt;<span class="lifetime">&#39;p</span>&gt;&gt; {
+    <span class="doccomment">/// Return the next `CfgPoint` (wrapped in `CfgCursor`) in a linear
+    /// chain within structured control-flow (i.e. no branching to child regions).
+    </span><span class="kw">fn </span>unique_successor(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;CfgCursor&lt;<span class="lifetime">&#39;p</span>&gt;&gt; {
+        <span class="kw">let </span>cursor = <span class="self">self</span>.position;
+        <span class="kw">match </span>cursor.point {
+            <span class="comment">// Entering a `ControlRegion` enters its first `ControlNode` child,
+            // or exits the region right away (if it has no children).
+            </span>CfgPoint::RegionEntry(region) =&gt; <span class="prelude-val">Some</span>(CfgCursor {
+                point: <span class="kw">match </span><span class="self">self</span>.at(region).def().children.iter().first {
+                    <span class="prelude-val">Some</span>(first_child) =&gt; CfgPoint::ControlNodeEntry(first_child),
+                    <span class="prelude-val">None </span>=&gt; CfgPoint::RegionExit(region),
+                },
+                parent: cursor.parent,
+            }),
+
+            <span class="comment">// Exiting a `ControlRegion` exits its parent `ControlNode`.
+            </span>CfgPoint::RegionExit(<span class="kw">_</span>) =&gt; cursor.parent.map(|parent| <span class="kw">match </span>parent.point {
+                ControlParent::Region(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+                ControlParent::ControlNode(parent_control_node) =&gt; CfgCursor {
+                    point: CfgPoint::ControlNodeExit(parent_control_node),
+                    parent: parent.parent,
+                },
+            }),
+
+            <span class="comment">// Entering a `ControlNode` depends entirely on the `ControlNodeKind`.
+            </span>CfgPoint::ControlNodeEntry(control_node) =&gt; <span class="kw">match </span><span class="self">self</span>.at(control_node).def().kind {
+                ControlNodeKind::Block { .. } =&gt; <span class="prelude-val">Some</span>(CfgCursor {
+                    point: CfgPoint::ControlNodeExit(control_node),
+                    parent: cursor.parent,
+                }),
+
+                ControlNodeKind::Select { .. } | ControlNodeKind::Loop { .. } =&gt; <span class="prelude-val">None</span>,
+            },
+
+            <span class="comment">// Exiting a `ControlNode` chains to a sibling/parent.
+            </span>CfgPoint::ControlNodeExit(control_node) =&gt; {
+                <span class="prelude-val">Some</span>(<span class="kw">match </span><span class="self">self</span>.control_nodes[control_node].next_in_list() {
+                    <span class="comment">// Enter the next sibling in the `ControlRegion`, if one exists.
+                    </span><span class="prelude-val">Some</span>(next_control_node) =&gt; CfgCursor {
+                        point: CfgPoint::ControlNodeEntry(next_control_node),
+                        parent: cursor.parent,
+                    },
+
+                    <span class="comment">// Exit the parent `ControlRegion`.
+                    </span><span class="prelude-val">None </span>=&gt; {
+                        <span class="kw">let </span>parent = cursor.parent.unwrap();
+                        <span class="kw">match </span>cursor.parent.unwrap().point {
+                            ControlParent::Region(parent_region) =&gt; CfgCursor {
+                                point: CfgPoint::RegionExit(parent_region),
+                                parent: parent.parent,
+                            },
+                            ControlParent::ControlNode(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+                        }
+                    }
+                })
+            }
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; FuncAt&lt;<span class="lifetime">&#39;a</span>, ControlRegion&gt; {
+    <span class="doccomment">/// Traverse every `CfgPoint` (deeply) contained in this `ControlRegion`,
+    /// in reverse post-order (RPO), with `f` receiving each `CfgPoint`
+    /// in turn (wrapped in `CfgCursor`, for further traversal flexibility),
+    /// and being able to stop iteration by returning `Err`.
+    ///
+    /// RPO iteration over a CFG provides certain guarantees, most importantly
+    /// that SSA definitions are visited before any of their uses.
+    </span><span class="kw">fn </span>rev_post_order_try_for_each&lt;E&gt;(
+        <span class="self">self</span>,
+        <span class="kw-2">mut </span>f: <span class="kw">impl </span>FnMut(CfgCursor&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt; {
+        <span class="self">self</span>.rev_post_order_try_for_each_inner(<span class="kw-2">&amp;mut </span>f, <span class="prelude-val">None</span>)
+    }
+
+    <span class="kw">fn </span>rev_post_order_try_for_each_inner&lt;E&gt;(
+        <span class="self">self</span>,
+        f: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(CfgCursor&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt;,
+        parent: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>CfgCursor&lt;<span class="lifetime">&#39;_</span>, ControlParent&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt; {
+        <span class="kw">let </span>region = <span class="self">self</span>.position;
+        f(CfgCursor {
+            point: CfgPoint::RegionEntry(region),
+            parent,
+        })<span class="question-mark">?</span>;
+        <span class="kw">for </span>func_at_control_node <span class="kw">in </span><span class="self">self</span>.at_children() {
+            func_at_control_node.rev_post_order_try_for_each_inner(
+                f,
+                <span class="kw-2">&amp;</span>CfgCursor {
+                    point: ControlParent::Region(region),
+                    parent,
+                },
+            )<span class="question-mark">?</span>;
+        }
+        f(CfgCursor {
+            point: CfgPoint::RegionExit(region),
+            parent,
+        })
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; FuncAt&lt;<span class="lifetime">&#39;a</span>, ControlNode&gt; {
+    <span class="kw">fn </span>rev_post_order_try_for_each_inner&lt;E&gt;(
+        <span class="self">self</span>,
+        f: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(CfgCursor&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt;,
+        parent: <span class="kw-2">&amp;</span>CfgCursor&lt;<span class="lifetime">&#39;_</span>, ControlParent&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt; {
+        <span class="kw">let </span>child_regions: <span class="kw-2">&amp;</span>[<span class="kw">_</span>] = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.def().kind {
+            ControlNodeKind::Block { .. } =&gt; <span class="kw-2">&amp;</span>[],
+            ControlNodeKind::Select { cases, .. } =&gt; cases,
+            ControlNodeKind::Loop { body, .. } =&gt; slice::from_ref(body),
+        };
+
+        <span class="kw">let </span>control_node = <span class="self">self</span>.position;
+        <span class="kw">let </span>parent = <span class="prelude-val">Some</span>(parent);
+        f(CfgCursor {
+            point: CfgPoint::ControlNodeEntry(control_node),
+            parent,
+        })<span class="question-mark">?</span>;
+        <span class="kw">for </span><span class="kw-2">&amp;</span>region <span class="kw">in </span>child_regions {
+            <span class="self">self</span>.at(region).rev_post_order_try_for_each_inner(
+                f,
+                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>CfgCursor {
+                    point: ControlParent::ControlNode(control_node),
+                    parent,
+                }),
+            )<span class="question-mark">?</span>;
+        }
+        f(CfgCursor {
+            point: CfgPoint::ControlNodeExit(control_node),
+            parent,
+        })
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; FuncLifting&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>from_func_decl&lt;E&gt;(
+        cx: <span class="kw-2">&amp;</span>Context,
+        func_decl: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FuncDecl,
+        <span class="kw-2">mut </span>alloc_id: <span class="kw">impl </span>FnMut() -&gt; <span class="prelude-ty">Result</span>&lt;spv::Id, E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, E&gt; {
+        <span class="kw">let </span>wk = <span class="kw-2">&amp;</span>spec::Spec::get().well_known;
+
+        <span class="kw">let </span>func_id = alloc_id()<span class="question-mark">?</span>;
+        <span class="kw">let </span>param_ids = func_decl
+            .params
+            .iter()
+            .map(|<span class="kw">_</span>| alloc_id())
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>func_def_body = <span class="kw">match </span><span class="kw-2">&amp;</span>func_decl.def {
+            DeclDef::Imported(<span class="kw">_</span>) =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+                    func_id,
+                    param_ids,
+                    region_inputs_source: Default::default(),
+                    data_inst_output_ids: Default::default(),
+                    label_ids: Default::default(),
+                    blocks: Default::default(),
+                });
+            }
+            DeclDef::Present(def) =&gt; def,
+        };
+
+        <span class="kw">let </span><span class="kw-2">mut </span>region_inputs_source = FxHashMap::default();
+        region_inputs_source.insert(func_def_body.body, RegionInputsSource::FuncParams);
+
+        <span class="comment">// Create a SPIR-V block for every CFG point needing one.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = FxIndexMap::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>visit_cfg_point = |point_cursor: CfgCursor| {
+            <span class="kw">let </span>point = point_cursor.point;
+
+            <span class="kw">let </span>phis = <span class="kw">match </span>point {
+                CfgPoint::RegionEntry(region) =&gt; {
+                    <span class="kw">if </span>region_inputs_source.contains_key(<span class="kw-2">&amp;</span>region) {
+                        <span class="comment">// Region inputs handled by the parent of the region.
+                        </span>SmallVec::new()
+                    } <span class="kw">else </span>{
+                        func_def_body
+                            .at(region)
+                            .def()
+                            .inputs
+                            .iter()
+                            .map(|<span class="kw-2">&amp;</span>ControlRegionInputDecl { attrs, ty }| {
+                                <span class="prelude-val">Ok</span>(Phi {
+                                    attrs,
+                                    ty,
+
+                                    result_id: alloc_id()<span class="question-mark">?</span>,
+                                    cases: FxIndexMap::default(),
+                                    default_value: <span class="prelude-val">None</span>,
+                                })
+                            })
+                            .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?
+                    </span>}
+                }
+                CfgPoint::RegionExit(<span class="kw">_</span>) =&gt; SmallVec::new(),
+
+                CfgPoint::ControlNodeEntry(control_node) =&gt; {
+                    <span class="kw">match </span><span class="kw-2">&amp;</span>func_def_body.at(control_node).def().kind {
+                        <span class="comment">// The backedge of a SPIR-V structured loop points to
+                        // the &quot;loop header&quot;, i.e. the `Entry` of the `Loop`,
+                        // so that&#39;s where `body` `inputs` phis have to go.
+                        </span>ControlNodeKind::Loop {
+                            initial_inputs,
+                            body,
+                            ..
+                        } =&gt; {
+                            <span class="kw">let </span>loop_body_def = func_def_body.at(<span class="kw-2">*</span>body).def();
+                            <span class="kw">let </span>loop_body_inputs = <span class="kw-2">&amp;</span>loop_body_def.inputs;
+
+                            <span class="kw">if </span>!loop_body_inputs.is_empty() {
+                                region_inputs_source.insert(
+                                    <span class="kw-2">*</span>body,
+                                    RegionInputsSource::LoopHeaderPhis(control_node),
+                                );
+                            }
+
+                            loop_body_inputs
+                                .iter()
+                                .enumerate()
+                                .map(|(i, <span class="kw-2">&amp;</span>ControlRegionInputDecl { attrs, ty })| {
+                                    <span class="prelude-val">Ok</span>(Phi {
+                                        attrs,
+                                        ty,
+
+                                        result_id: alloc_id()<span class="question-mark">?</span>,
+                                        cases: FxIndexMap::default(),
+                                        default_value: <span class="prelude-val">Some</span>(initial_inputs[i]),
+                                    })
+                                })
+                                .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?
+                        </span>}
+                        <span class="kw">_ </span>=&gt; SmallVec::new(),
+                    }
+                }
+                CfgPoint::ControlNodeExit(control_node) =&gt; func_def_body
+                    .at(control_node)
+                    .def()
+                    .outputs
+                    .iter()
+                    .map(|<span class="kw-2">&amp;</span>ControlNodeOutputDecl { attrs, ty }| {
+                        <span class="prelude-val">Ok</span>(Phi {
+                            attrs,
+                            ty,
+
+                            result_id: alloc_id()<span class="question-mark">?</span>,
+                            cases: FxIndexMap::default(),
+                            default_value: <span class="prelude-val">None</span>,
+                        })
+                    })
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
+            };
+
+            <span class="kw">let </span>insts = <span class="kw">match </span>point {
+                CfgPoint::ControlNodeEntry(control_node) =&gt; {
+                    <span class="kw">match </span>func_def_body.at(control_node).def().kind {
+                        ControlNodeKind::Block { insts } =&gt; [insts].into_iter().collect(),
+                        <span class="kw">_ </span>=&gt; SmallVec::new(),
+                    }
+                }
+                <span class="kw">_ </span>=&gt; SmallVec::new(),
+            };
+
+            <span class="comment">// Get the terminator, or reconstruct it from structured control-flow.
+            </span><span class="kw">let </span>terminator = <span class="kw">match </span>(point, func_def_body.at(point_cursor).unique_successor()) {
+                <span class="comment">// Exiting a `ControlRegion` w/o a structured parent.
+                </span>(CfgPoint::RegionExit(region), <span class="prelude-val">None</span>) =&gt; {
+                    <span class="kw">let </span>unstructured_terminator = func_def_body
+                        .unstructured_cfg
+                        .as_ref()
+                        .and_then(|cfg| cfg.control_inst_on_exit_from.get(region));
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(terminator) = unstructured_terminator {
+                        <span class="kw">let </span>cfg::ControlInst {
+                            attrs,
+                            kind,
+                            inputs,
+                            targets,
+                            target_inputs,
+                        } = terminator;
+                        Terminator {
+                            attrs: <span class="kw-2">*</span>attrs,
+                            kind: Cow::Borrowed(kind),
+                            <span class="comment">// FIXME(eddyb) borrow these whenever possible.
+                            </span>inputs: inputs.clone(),
+                            targets: targets
+                                .iter()
+                                .map(|<span class="kw-2">&amp;</span>target| CfgPoint::RegionEntry(target))
+                                .collect(),
+                            target_phi_values: target_inputs
+                                .iter()
+                                .map(|(<span class="kw-2">&amp;</span>target, target_inputs)| {
+                                    (CfgPoint::RegionEntry(target), <span class="kw-2">&amp;</span>target_inputs[..])
+                                })
+                                .collect(),
+                            merge: <span class="prelude-val">None</span>,
+                        }
+                    } <span class="kw">else </span>{
+                        <span class="comment">// Structured return out of the function body.
+                        </span><span class="macro">assert!</span>(region == func_def_body.body);
+                        Terminator {
+                            attrs: AttrSet::default(),
+                            kind: Cow::Owned(cfg::ControlInstKind::Return),
+                            inputs: func_def_body.at_body().def().outputs.clone(),
+                            targets: [].into_iter().collect(),
+                            target_phi_values: FxIndexMap::default(),
+                            merge: <span class="prelude-val">None</span>,
+                        }
+                    }
+                }
+
+                <span class="comment">// Entering a `ControlNode` with child `ControlRegion`s.
+                </span>(CfgPoint::ControlNodeEntry(control_node), <span class="prelude-val">None</span>) =&gt; {
+                    <span class="kw">let </span>control_node_def = func_def_body.at(control_node).def();
+                    <span class="kw">match </span><span class="kw-2">&amp;</span>control_node_def.kind {
+                        ControlNodeKind::Block { .. } =&gt; {
+                            <span class="macro">unreachable!</span>()
+                        }
+
+                        ControlNodeKind::Select {
+                            kind,
+                            scrutinee,
+                            cases,
+                        } =&gt; Terminator {
+                            attrs: AttrSet::default(),
+                            kind: Cow::Owned(cfg::ControlInstKind::SelectBranch(kind.clone())),
+                            inputs: [<span class="kw-2">*</span>scrutinee].into_iter().collect(),
+                            targets: cases
+                                .iter()
+                                .map(|<span class="kw-2">&amp;</span>case| CfgPoint::RegionEntry(case))
+                                .collect(),
+                            target_phi_values: FxIndexMap::default(),
+                            merge: <span class="prelude-val">Some</span>(Merge::Selection(CfgPoint::ControlNodeExit(control_node))),
+                        },
+
+                        ControlNodeKind::Loop {
+                            initial_inputs: <span class="kw">_</span>,
+                            body,
+                            repeat_condition: <span class="kw">_</span>,
+                        } =&gt; Terminator {
+                            attrs: AttrSet::default(),
+                            kind: Cow::Owned(cfg::ControlInstKind::Branch),
+                            inputs: [].into_iter().collect(),
+                            targets: [CfgPoint::RegionEntry(<span class="kw-2">*</span>body)].into_iter().collect(),
+                            target_phi_values: FxIndexMap::default(),
+                            merge: <span class="prelude-val">Some</span>(Merge::Loop {
+                                loop_merge: CfgPoint::ControlNodeExit(control_node),
+                                <span class="comment">// NOTE(eddyb) this may seem weird, but see the
+                                // note on `Merge::Loop`&#39;s `loop_continue`
+                                // field - in particular, for SPIR-T loops, we
+                                // can pick any point before/after/between
+                                // `body`&#39;s `children` and it should be valid.
+                                </span>loop_continue: CfgPoint::RegionEntry(<span class="kw-2">*</span>body),
+                            }),
+                        },
+                    }
+                }
+
+                <span class="comment">// Exiting a `ControlRegion` to the parent `ControlNode`.
+                </span>(CfgPoint::RegionExit(region), <span class="prelude-val">Some</span>(parent_exit_cursor)) =&gt; {
+                    <span class="kw">let </span>region_outputs = <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>func_def_body.at(region).def().outputs[..])
+                        .filter(|outputs| !outputs.is_empty());
+
+                    <span class="kw">let </span>parent_exit = parent_exit_cursor.point;
+                    <span class="kw">let </span>parent_node = <span class="kw">match </span>parent_exit {
+                        CfgPoint::ControlNodeExit(parent_node) =&gt; parent_node,
+                        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                    };
+
+                    <span class="kw">match </span>func_def_body.at(parent_node).def().kind {
+                        ControlNodeKind::Block { .. } =&gt; {
+                            <span class="macro">unreachable!</span>()
+                        }
+
+                        ControlNodeKind::Select { .. } =&gt; Terminator {
+                            attrs: AttrSet::default(),
+                            kind: Cow::Owned(cfg::ControlInstKind::Branch),
+                            inputs: [].into_iter().collect(),
+                            targets: [parent_exit].into_iter().collect(),
+                            target_phi_values: region_outputs
+                                .map(|outputs| (parent_exit, outputs))
+                                .into_iter()
+                                .collect(),
+                            merge: <span class="prelude-val">None</span>,
+                        },
+
+                        ControlNodeKind::Loop {
+                            initial_inputs: <span class="kw">_</span>,
+                            body: <span class="kw">_</span>,
+                            repeat_condition,
+                        } =&gt; {
+                            <span class="kw">let </span>backedge = CfgPoint::ControlNodeEntry(parent_node);
+                            <span class="kw">let </span>target_phi_values = region_outputs
+                                .map(|outputs| (backedge, outputs))
+                                .into_iter()
+                                .collect();
+
+                            <span class="kw">let </span>is_infinite_loop = <span class="kw">match </span>repeat_condition {
+                                Value::Const(cond) =&gt; {
+                                    cx[cond].ctor == ConstCtor::SpvInst(wk.OpConstantTrue.into())
+                                }
+
+                                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+                            };
+                            <span class="kw">if </span>is_infinite_loop {
+                                Terminator {
+                                    attrs: AttrSet::default(),
+                                    kind: Cow::Owned(cfg::ControlInstKind::Branch),
+                                    inputs: [].into_iter().collect(),
+                                    targets: [backedge].into_iter().collect(),
+                                    target_phi_values,
+                                    merge: <span class="prelude-val">None</span>,
+                                }
+                            } <span class="kw">else </span>{
+                                Terminator {
+                                    attrs: AttrSet::default(),
+                                    kind: Cow::Owned(cfg::ControlInstKind::SelectBranch(
+                                        SelectionKind::BoolCond,
+                                    )),
+                                    inputs: [repeat_condition].into_iter().collect(),
+                                    targets: [backedge, parent_exit].into_iter().collect(),
+                                    target_phi_values,
+                                    merge: <span class="prelude-val">None</span>,
+                                }
+                            }
+                        }
+                    }
+                }
+
+                <span class="comment">// Siblings in the same `ControlRegion` (including the
+                // implied edge from a `Block`&#39;s `Entry` to its `Exit`).
+                </span>(<span class="kw">_</span>, <span class="prelude-val">Some</span>(succ_cursor)) =&gt; Terminator {
+                    attrs: AttrSet::default(),
+                    kind: Cow::Owned(cfg::ControlInstKind::Branch),
+                    inputs: [].into_iter().collect(),
+                    targets: [succ_cursor.point].into_iter().collect(),
+                    target_phi_values: FxIndexMap::default(),
+                    merge: <span class="prelude-val">None</span>,
+                },
+
+                <span class="comment">// Impossible cases, they always return `(_, Some(_))`.
+                </span>(CfgPoint::RegionEntry(<span class="kw">_</span>) | CfgPoint::ControlNodeExit(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; {
+                    <span class="macro">unreachable!</span>()
+                }
+            };
+
+            blocks.insert(
+                point,
+                BlockLifting {
+                    phis,
+                    insts,
+                    terminator,
+                },
+            );
+
+            <span class="prelude-val">Ok</span>(())
+        };
+        <span class="kw">match </span><span class="kw-2">&amp;</span>func_def_body.unstructured_cfg {
+            <span class="prelude-val">None </span>=&gt; func_def_body
+                .at_body()
+                .rev_post_order_try_for_each(visit_cfg_point)<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(cfg) =&gt; {
+                <span class="kw">for </span>region <span class="kw">in </span>cfg.rev_post_order(func_def_body) {
+                    func_def_body
+                        .at(region)
+                        .rev_post_order_try_for_each(<span class="kw-2">&amp;mut </span>visit_cfg_point)<span class="question-mark">?
+                </span>}
+            }
+        }
+
+        <span class="comment">// Count the number of &quot;uses&quot; of each block (each incoming edge, plus
+        // `1` for the entry block), to help determine which blocks are part
+        // of a linear branch chain (and potentially fusable), later on.
+        //
+        // FIXME(eddyb) use `EntityOrientedDenseMap` here.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>use_counts = FxHashMap::default();
+        use_counts.reserve(blocks.len());
+        <span class="kw">let </span>all_edges = blocks
+            .first()
+            .map(|(<span class="kw-2">&amp;</span>entry_point, <span class="kw">_</span>)| entry_point)
+            .into_iter()
+            .chain(blocks.values().flat_map(|block| {
+                block
+                    .terminator
+                    .merge
+                    .iter()
+                    .flat_map(|merge| {
+                        <span class="kw">let </span>(a, b) = <span class="kw">match </span>merge {
+                            Merge::Selection(a) =&gt; (a, <span class="prelude-val">None</span>),
+                            Merge::Loop {
+                                loop_merge: a,
+                                loop_continue: b,
+                            } =&gt; (a, <span class="prelude-val">Some</span>(b)),
+                        };
+                        [a].into_iter().chain(b)
+                    })
+                    .chain(<span class="kw-2">&amp;</span>block.terminator.targets)
+                    .copied()
+            }));
+        <span class="kw">for </span>target <span class="kw">in </span>all_edges {
+            <span class="kw-2">*</span>use_counts.entry(target).or_default() += <span class="number">1</span>;
+        }
+
+        <span class="comment">// Fuse chains of linear branches, when there is no information being
+        // lost by the fusion. This is done in reverse order, so that in e.g.
+        // `a -&gt; b -&gt; c`, `b -&gt; c` is fused first, then when the iteration
+        // reaches `a`, it sees `a -&gt; bc` and can further fuse that into one
+        // `abc` block, without knowing about `b` and `c` themselves
+        // (this is possible because RPO will always output `[a, b, c]`, when
+        // `b` and `c` only have one predecessor each).
+        //
+        // FIXME(eddyb) while this could theoretically fuse certain kinds of
+        // merge blocks (mostly loop bodies) into their unique precedessor, that
+        // would require adjusting the `Merge` that points to them.
+        //
+        // HACK(eddyb) this takes advantage of `blocks` being an `IndexMap`,
+        // to iterate at the same time as mutating other entries.
+        </span><span class="kw">for </span>block_idx <span class="kw">in </span>(<span class="number">0</span>..blocks.len()).rev() {
+            <span class="kw">let </span>BlockLifting {
+                terminator: original_terminator,
+                ..
+            } = <span class="kw-2">&amp;</span>blocks[block_idx];
+
+            <span class="kw">let </span>is_trivial_branch = {
+                <span class="kw">let </span>Terminator {
+                    attrs,
+                    kind,
+                    inputs,
+                    targets,
+                    target_phi_values,
+                    merge,
+                } = original_terminator;
+
+                <span class="kw-2">*</span>attrs == AttrSet::default()
+                    &amp;&amp; <span class="macro">matches!</span>(<span class="kw-2">**</span>kind, cfg::ControlInstKind::Branch)
+                    &amp;&amp; inputs.is_empty()
+                    &amp;&amp; targets.len() == <span class="number">1
+                    </span>&amp;&amp; target_phi_values.is_empty()
+                    &amp;&amp; merge.is_none()
+            };
+
+            <span class="kw">if </span>is_trivial_branch {
+                <span class="kw">let </span>target = original_terminator.targets[<span class="number">0</span>];
+                <span class="kw">let </span>target_use_count = use_counts.get_mut(<span class="kw-2">&amp;</span>target).unwrap();
+
+                <span class="kw">if </span><span class="kw-2">*</span>target_use_count == <span class="number">1 </span>{
+                    <span class="kw">let </span>BlockLifting {
+                        phis: <span class="kw-2">ref </span>target_phis,
+                        insts: <span class="kw-2">ref mut </span>extra_insts,
+                        terminator: <span class="kw-2">ref mut </span>new_terminator,
+                    } = blocks[<span class="kw-2">&amp;</span>target];
+
+                    <span class="comment">// FIXME(eddyb) check for block-level attributes, once/if
+                    // they start being tracked.
+                    </span><span class="kw">if </span>target_phis.is_empty() {
+                        <span class="kw">let </span>extra_insts = mem::take(extra_insts);
+                        <span class="kw">let </span>new_terminator = mem::replace(
+                            new_terminator,
+                            Terminator {
+                                attrs: Default::default(),
+                                kind: Cow::Owned(cfg::ControlInstKind::Unreachable),
+                                inputs: Default::default(),
+                                targets: Default::default(),
+                                target_phi_values: Default::default(),
+                                merge: <span class="prelude-val">None</span>,
+                            },
+                        );
+                        <span class="kw-2">*</span>target_use_count = <span class="number">0</span>;
+
+                        <span class="kw">let </span>combined_block = <span class="kw-2">&amp;mut </span>blocks[block_idx];
+                        combined_block.insts.extend(extra_insts);
+                        combined_block.terminator = new_terminator;
+                    }
+                }
+            }
+        }
+
+        <span class="comment">// Remove now-unused blocks.
+        </span>blocks.retain(|point, <span class="kw">_</span>| use_counts[<span class="kw-2">&amp;</span>point] &gt; <span class="number">0</span>);
+
+        <span class="comment">// Collect `OpPhi`s from other blocks&#39; edges into each block.
+        //
+        // HACK(eddyb) this takes advantage of `blocks` being an `IndexMap`,
+        // to iterate at the same time as mutating other entries.
+        </span><span class="kw">for </span>source_block_idx <span class="kw">in </span><span class="number">0</span>..blocks.len() {
+            <span class="kw">let </span>(<span class="kw-2">&amp;</span>source_point, source_block) = blocks.get_index(source_block_idx).unwrap();
+            <span class="kw">let </span>targets = source_block.terminator.targets.clone();
+
+            <span class="kw">for </span>target <span class="kw">in </span>targets {
+                <span class="kw">let </span>source_values = {
+                    <span class="kw">let </span>(<span class="kw">_</span>, source_block) = blocks.get_index(source_block_idx).unwrap();
+                    source_block
+                        .terminator
+                        .target_phi_values
+                        .get(<span class="kw-2">&amp;</span>target)
+                        .copied()
+                };
+                <span class="kw">let </span>target_block = blocks.get_mut(<span class="kw-2">&amp;</span>target).unwrap();
+                <span class="kw">for </span>(i, target_phi) <span class="kw">in </span>target_block.phis.iter_mut().enumerate() {
+                    <span class="kw">use </span>indexmap::map::Entry;
+
+                    <span class="kw">let </span>source_value = source_values
+                        .map(|values| values[i])
+                        .or(target_phi.default_value)
+                        .unwrap();
+                    <span class="kw">match </span>target_phi.cases.entry(source_point) {
+                        Entry::Vacant(entry) =&gt; {
+                            entry.insert(source_value);
+                        }
+
+                        <span class="comment">// NOTE(eddyb) the only reason duplicates are allowed,
+                        // is that `targets` may itself contain the same target
+                        // multiple times (which would result in the same value).
+                        </span>Entry::Occupied(entry) =&gt; {
+                            <span class="macro">assert!</span>(<span class="kw-2">*</span>entry.get() == source_value);
+                        }
+                    }
+                }
+            }
+        }
+
+        <span class="kw">let </span>all_insts_with_output = blocks
+            .values()
+            .flat_map(|block| block.insts.iter().copied())
+            .flat_map(|insts| func_def_body.at(insts))
+            .filter(|<span class="kw-2">&amp;</span>func_at_inst| func_at_inst.def().output_type.is_some())
+            .map(|func_at_inst| func_at_inst.position);
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            func_id,
+            param_ids,
+            region_inputs_source,
+            data_inst_output_ids: all_insts_with_output
+                .map(|inst| <span class="prelude-val">Ok</span>((inst, alloc_id()<span class="question-mark">?</span>)))
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
+            label_ids: blocks
+                .keys()
+                .map(|<span class="kw-2">&amp;</span>point| <span class="prelude-val">Ok</span>((point, alloc_id()<span class="question-mark">?</span>)))
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
+            blocks,
+        })
+    }
+}
+
+<span class="doccomment">/// &quot;Maybe-decorated &quot;lazy&quot; SPIR-V instruction, allowing separately emitting
+/// decorations from attributes, and the instruction itself, without eagerly
+/// allocating all the instructions.
+</span><span class="attribute">#[derive(Copy, Clone)]
+</span><span class="kw">enum </span>LazyInst&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
+    Global(Global),
+    OpFunction {
+        func_id: spv::Id,
+        func_decl: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FuncDecl,
+    },
+    OpFunctionParameter {
+        param_id: spv::Id,
+        param: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FuncParam,
+    },
+    OpLabel {
+        label_id: spv::Id,
+    },
+    OpPhi {
+        parent_func: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>FuncLifting&lt;<span class="lifetime">&#39;a</span>&gt;,
+        phi: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>Phi,
+    },
+    DataInst {
+        parent_func: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>FuncLifting&lt;<span class="lifetime">&#39;a</span>&gt;,
+        result_id: <span class="prelude-ty">Option</span>&lt;spv::Id&gt;,
+        data_inst_def: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>DataInstDef,
+    },
+    Merge(Merge&lt;spv::Id&gt;),
+    Terminator {
+        parent_func: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>FuncLifting&lt;<span class="lifetime">&#39;a</span>&gt;,
+        terminator: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>Terminator&lt;<span class="lifetime">&#39;a</span>&gt;,
+    },
+    OpFunctionEnd,
+}
+
+<span class="kw">impl </span>LazyInst&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">fn </span>result_id_attrs_and_import(
+        <span class="self">self</span>,
+        module: <span class="kw-2">&amp;</span>Module,
+        ids: <span class="kw-2">&amp;</span>AllocatedIds,
+    ) -&gt; (<span class="prelude-ty">Option</span>&lt;spv::Id&gt;, AttrSet, <span class="prelude-ty">Option</span>&lt;Import&gt;) {
+        <span class="kw">let </span>cx = module.cx_ref();
+
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Global(global) =&gt; {
+                <span class="kw">let </span>(attrs, import) = <span class="kw">match </span>global {
+                    Global::Type(ty) =&gt; (cx[ty].attrs, <span class="prelude-val">None</span>),
+                    Global::Const(ct) =&gt; {
+                        <span class="kw">let </span>ct_def = <span class="kw-2">&amp;</span>cx[ct];
+                        <span class="kw">match </span>ct_def.ctor {
+                            ConstCtor::PtrToGlobalVar(gv) =&gt; {
+                                <span class="kw">let </span>gv_decl = <span class="kw-2">&amp;</span>module.global_vars[gv];
+                                <span class="kw">let </span>import = <span class="kw">match </span>gv_decl.def {
+                                    DeclDef::Imported(import) =&gt; <span class="prelude-val">Some</span>(import),
+                                    DeclDef::Present(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+                                };
+                                (gv_decl.attrs, import)
+                            }
+                            ConstCtor::SpvInst { .. } =&gt; (ct_def.attrs, <span class="prelude-val">None</span>),
+
+                            <span class="comment">// Not inserted into `globals` while visiting.
+                            </span>ConstCtor::SpvStringLiteralForExtInst(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+                        }
+                    }
+                };
+                (<span class="prelude-val">Some</span>(ids.globals[<span class="kw-2">&amp;</span>global]), attrs, import)
+            }
+            <span class="self">Self</span>::OpFunction { func_id, func_decl } =&gt; {
+                <span class="kw">let </span>import = <span class="kw">match </span>func_decl.def {
+                    DeclDef::Imported(import) =&gt; <span class="prelude-val">Some</span>(import),
+                    DeclDef::Present(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+                };
+                (<span class="prelude-val">Some</span>(func_id), func_decl.attrs, import)
+            }
+            <span class="self">Self</span>::OpFunctionParameter { param_id, param } =&gt; (<span class="prelude-val">Some</span>(param_id), param.attrs, <span class="prelude-val">None</span>),
+            <span class="self">Self</span>::OpLabel { label_id } =&gt; (<span class="prelude-val">Some</span>(label_id), AttrSet::default(), <span class="prelude-val">None</span>),
+            <span class="self">Self</span>::OpPhi {
+                parent_func: <span class="kw">_</span>,
+                phi,
+            } =&gt; (<span class="prelude-val">Some</span>(phi.result_id), phi.attrs, <span class="prelude-val">None</span>),
+            <span class="self">Self</span>::DataInst {
+                parent_func: <span class="kw">_</span>,
+                result_id,
+                data_inst_def,
+            } =&gt; (result_id, data_inst_def.attrs, <span class="prelude-val">None</span>),
+            <span class="self">Self</span>::Merge(<span class="kw">_</span>) =&gt; (<span class="prelude-val">None</span>, AttrSet::default(), <span class="prelude-val">None</span>),
+            <span class="self">Self</span>::Terminator {
+                parent_func: <span class="kw">_</span>,
+                terminator,
+            } =&gt; (<span class="prelude-val">None</span>, terminator.attrs, <span class="prelude-val">None</span>),
+            <span class="self">Self</span>::OpFunctionEnd =&gt; (<span class="prelude-val">None</span>, AttrSet::default(), <span class="prelude-val">None</span>),
+        }
+    }
+
+    <span class="kw">fn </span>to_inst_and_attrs(<span class="self">self</span>, module: <span class="kw-2">&amp;</span>Module, ids: <span class="kw-2">&amp;</span>AllocatedIds) -&gt; (spv::InstWithIds, AttrSet) {
+        <span class="kw">let </span>wk = <span class="kw-2">&amp;</span>spec::Spec::get().well_known;
+        <span class="kw">let </span>cx = module.cx_ref();
+
+        <span class="kw">let </span>value_to_id = |parent_func: <span class="kw-2">&amp;</span>FuncLifting, v| <span class="kw">match </span>v {
+            Value::Const(ct) =&gt; <span class="kw">match </span>cx[ct].ctor {
+                ConstCtor::SpvStringLiteralForExtInst(s) =&gt; ids.debug_strings[<span class="kw-2">&amp;</span>cx[s]],
+
+                <span class="kw">_ </span>=&gt; ids.globals[<span class="kw-2">&amp;</span>Global::Const(ct)],
+            },
+            Value::ControlRegionInput { region, input_idx } =&gt; {
+                <span class="kw">let </span>input_idx = usize::try_from(input_idx).unwrap();
+                <span class="kw">match </span>parent_func.region_inputs_source.get(<span class="kw-2">&amp;</span>region) {
+                    <span class="prelude-val">Some</span>(RegionInputsSource::FuncParams) =&gt; parent_func.param_ids[input_idx],
+                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>RegionInputsSource::LoopHeaderPhis(loop_node)) =&gt; {
+                        parent_func.blocks[<span class="kw-2">&amp;</span>CfgPoint::ControlNodeEntry(loop_node)].phis[input_idx]
+                            .result_id
+                    }
+                    <span class="prelude-val">None </span>=&gt; {
+                        parent_func.blocks[<span class="kw-2">&amp;</span>CfgPoint::RegionEntry(region)].phis[input_idx].result_id
+                    }
+                }
+            }
+            Value::ControlNodeOutput {
+                control_node,
+                output_idx,
+            } =&gt; {
+                parent_func.blocks[<span class="kw-2">&amp;</span>CfgPoint::ControlNodeExit(control_node)].phis
+                    [usize::try_from(output_idx).unwrap()]
+                .result_id
+            }
+            Value::DataInstOutput(inst) =&gt; parent_func.data_inst_output_ids[<span class="kw-2">&amp;</span>inst],
+        };
+
+        <span class="kw">let </span>(result_id, attrs, <span class="kw">_</span>) = <span class="self">self</span>.result_id_attrs_and_import(module, ids);
+        <span class="kw">let </span>inst = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Global(global) =&gt; <span class="kw">match </span>global {
+                Global::Type(ty) =&gt; {
+                    <span class="kw">let </span>ty_def = <span class="kw-2">&amp;</span>cx[ty];
+                    <span class="kw">match </span><span class="kw-2">&amp;</span>ty_def.ctor {
+                        TypeCtor::SpvInst(inst) =&gt; spv::InstWithIds {
+                            without_ids: inst.clone(),
+                            result_type_id: <span class="prelude-val">None</span>,
+                            result_id,
+                            ids: ty_def
+                                .ctor_args
+                                .iter()
+                                .map(|<span class="kw-2">&amp;</span>arg| {
+                                    ids.globals[<span class="kw-2">&amp;</span><span class="kw">match </span>arg {
+                                        TypeCtorArg::Type(ty) =&gt; Global::Type(ty),
+                                        TypeCtorArg::Const(ct) =&gt; Global::Const(ct),
+                                    }]
+                                })
+                                .collect(),
+                        },
+
+                        <span class="comment">// Not inserted into `globals` while visiting.
+                        </span>TypeCtor::SpvStringLiteralForExtInst =&gt; <span class="macro">unreachable!</span>(),
+                    }
+                }
+                Global::Const(ct) =&gt; {
+                    <span class="kw">let </span>ct_def = <span class="kw-2">&amp;</span>cx[ct];
+                    <span class="kw">match </span><span class="kw-2">&amp;</span>ct_def.ctor {
+                        <span class="kw-2">&amp;</span>ConstCtor::PtrToGlobalVar(gv) =&gt; {
+                            <span class="macro">assert!</span>(ct_def.attrs == AttrSet::default());
+                            <span class="macro">assert!</span>(ct_def.ctor_args.is_empty());
+
+                            <span class="kw">let </span>gv_decl = <span class="kw-2">&amp;</span>module.global_vars[gv];
+
+                            <span class="macro">assert!</span>(ct_def.ty == gv_decl.type_of_ptr_to);
+
+                            <span class="kw">let </span>storage_class = <span class="kw">match </span>gv_decl.addr_space {
+                                AddrSpace::SpvStorageClass(sc) =&gt; {
+                                    spv::Imm::Short(wk.StorageClass, sc)
+                                }
+                            };
+                            <span class="kw">let </span>initializer = <span class="kw">match </span>gv_decl.def {
+                                DeclDef::Imported(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+                                DeclDef::Present(GlobalVarDefBody { initializer }) =&gt; initializer
+                                    .map(|initializer| ids.globals[<span class="kw-2">&amp;</span>Global::Const(initializer)]),
+                            };
+                            spv::InstWithIds {
+                                without_ids: spv::Inst {
+                                    opcode: wk.OpVariable,
+                                    imms: iter::once(storage_class).collect(),
+                                },
+                                result_type_id: <span class="prelude-val">Some</span>(ids.globals[<span class="kw-2">&amp;</span>Global::Type(ct_def.ty)]),
+                                result_id,
+                                ids: initializer.into_iter().collect(),
+                            }
+                        }
+
+                        ConstCtor::SpvInst(inst) =&gt; spv::InstWithIds {
+                            without_ids: inst.clone(),
+                            result_type_id: <span class="prelude-val">Some</span>(ids.globals[<span class="kw-2">&amp;</span>Global::Type(ct_def.ty)]),
+                            result_id,
+                            ids: ct_def
+                                .ctor_args
+                                .iter()
+                                .map(|<span class="kw-2">&amp;</span>ct| ids.globals[<span class="kw-2">&amp;</span>Global::Const(ct)])
+                                .collect(),
+                        },
+
+                        <span class="comment">// Not inserted into `globals` while visiting.
+                        </span>ConstCtor::SpvStringLiteralForExtInst(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+                    }
+                }
+            },
+            <span class="self">Self</span>::OpFunction {
+                func_id: <span class="kw">_</span>,
+                func_decl,
+            } =&gt; {
+                <span class="comment">// FIXME(eddyb) make this less of a search and more of a
+                // lookup by splitting attrs into key and value parts.
+                </span><span class="kw">let </span>func_ctrl = cx[attrs]
+                    .attrs
+                    .iter()
+                    .find_map(|attr| <span class="kw">match </span><span class="kw-2">*</span>attr {
+                        Attr::SpvBitflagsOperand(spv::Imm::Short(kind, word))
+                            <span class="kw">if </span>kind == wk.FunctionControl =&gt;
+                        {
+                            <span class="prelude-val">Some</span>(word)
+                        }
+                        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                    })
+                    .unwrap_or(<span class="number">0</span>);
+
+                spv::InstWithIds {
+                    without_ids: spv::Inst {
+                        opcode: wk.OpFunction,
+                        imms: iter::once(spv::Imm::Short(wk.FunctionControl, func_ctrl)).collect(),
+                    },
+                    result_type_id: <span class="prelude-val">Some</span>(ids.globals[<span class="kw-2">&amp;</span>Global::Type(func_decl.ret_type)]),
+                    result_id,
+                    ids: iter::once(ids.globals[<span class="kw-2">&amp;</span>Global::Type(func_decl.spv_func_type(cx))])
+                        .collect(),
+                }
+            }
+            <span class="self">Self</span>::OpFunctionParameter { param_id: <span class="kw">_</span>, param } =&gt; spv::InstWithIds {
+                without_ids: wk.OpFunctionParameter.into(),
+                result_type_id: <span class="prelude-val">Some</span>(ids.globals[<span class="kw-2">&amp;</span>Global::Type(param.ty)]),
+                result_id,
+                ids: [].into_iter().collect(),
+            },
+            <span class="self">Self</span>::OpLabel { label_id: <span class="kw">_ </span>} =&gt; spv::InstWithIds {
+                without_ids: wk.OpLabel.into(),
+                result_type_id: <span class="prelude-val">None</span>,
+                result_id,
+                ids: [].into_iter().collect(),
+            },
+            <span class="self">Self</span>::OpPhi { parent_func, phi } =&gt; spv::InstWithIds {
+                without_ids: wk.OpPhi.into(),
+                result_type_id: <span class="prelude-val">Some</span>(ids.globals[<span class="kw-2">&amp;</span>Global::Type(phi.ty)]),
+                result_id: <span class="prelude-val">Some</span>(phi.result_id),
+                ids: phi
+                    .cases
+                    .iter()
+                    .flat_map(|(<span class="kw-2">&amp;</span>source_point, <span class="kw-2">&amp;</span>v)| {
+                        [
+                            value_to_id(parent_func, v),
+                            parent_func.label_ids[<span class="kw-2">&amp;</span>source_point],
+                        ]
+                    })
+                    .collect(),
+            },
+            <span class="self">Self</span>::DataInst {
+                parent_func,
+                result_id: <span class="kw">_</span>,
+                data_inst_def,
+            } =&gt; {
+                <span class="kw">let </span>(inst, extra_initial_id_operand) = <span class="kw">match </span><span class="kw-2">&amp;</span>data_inst_def.kind {
+                    <span class="kw-2">&amp;</span>DataInstKind::FuncCall(callee) =&gt; {
+                        (wk.OpFunctionCall.into(), <span class="prelude-val">Some</span>(ids.funcs[<span class="kw-2">&amp;</span>callee].func_id))
+                    }
+                    DataInstKind::SpvInst(inst) =&gt; (inst.clone(), <span class="prelude-val">None</span>),
+                    <span class="kw-2">&amp;</span>DataInstKind::SpvExtInst { ext_set, inst } =&gt; (
+                        spv::Inst {
+                            opcode: wk.OpExtInst,
+                            imms: iter::once(spv::Imm::Short(wk.LiteralExtInstInteger, inst))
+                                .collect(),
+                        },
+                        <span class="prelude-val">Some</span>(ids.ext_inst_imports[<span class="kw-2">&amp;</span>cx[ext_set]]),
+                    ),
+                };
+                spv::InstWithIds {
+                    without_ids: inst,
+                    result_type_id: data_inst_def
+                        .output_type
+                        .map(|ty| ids.globals[<span class="kw-2">&amp;</span>Global::Type(ty)]),
+                    result_id,
+                    ids: extra_initial_id_operand
+                        .into_iter()
+                        .chain(
+                            data_inst_def
+                                .inputs
+                                .iter()
+                                .map(|<span class="kw-2">&amp;</span>v| value_to_id(parent_func, v)),
+                        )
+                        .collect(),
+                }
+            }
+            <span class="self">Self</span>::Merge(Merge::Selection(merge_label_id)) =&gt; spv::InstWithIds {
+                without_ids: spv::Inst {
+                    opcode: wk.OpSelectionMerge,
+                    imms: [spv::Imm::Short(wk.SelectionControl, <span class="number">0</span>)]
+                        .into_iter()
+                        .collect(),
+                },
+                result_type_id: <span class="prelude-val">None</span>,
+                result_id: <span class="prelude-val">None</span>,
+                ids: [merge_label_id].into_iter().collect(),
+            },
+            <span class="self">Self</span>::Merge(Merge::Loop {
+                loop_merge: merge_label_id,
+                loop_continue: continue_label_id,
+            }) =&gt; spv::InstWithIds {
+                without_ids: spv::Inst {
+                    opcode: wk.OpLoopMerge,
+                    imms: [spv::Imm::Short(wk.LoopControl, <span class="number">0</span>)].into_iter().collect(),
+                },
+                result_type_id: <span class="prelude-val">None</span>,
+                result_id: <span class="prelude-val">None</span>,
+                ids: [merge_label_id, continue_label_id].into_iter().collect(),
+            },
+            <span class="self">Self</span>::Terminator {
+                parent_func,
+                terminator,
+            } =&gt; {
+                <span class="kw">let </span>inst = <span class="kw">match </span><span class="kw-2">&amp;*</span>terminator.kind {
+                    cfg::ControlInstKind::Unreachable =&gt; wk.OpUnreachable.into(),
+                    cfg::ControlInstKind::Return =&gt; {
+                        <span class="kw">if </span>terminator.inputs.is_empty() {
+                            wk.OpReturn.into()
+                        } <span class="kw">else </span>{
+                            wk.OpReturnValue.into()
+                        }
+                    }
+                    cfg::ControlInstKind::ExitInvocation(cfg::ExitInvocationKind::SpvInst(
+                        inst,
+                    )) =&gt; inst.clone(),
+
+                    cfg::ControlInstKind::Branch =&gt; wk.OpBranch.into(),
+
+                    cfg::ControlInstKind::SelectBranch(SelectionKind::BoolCond) =&gt; {
+                        wk.OpBranchConditional.into()
+                    }
+                    cfg::ControlInstKind::SelectBranch(SelectionKind::SpvInst(inst)) =&gt; {
+                        inst.clone()
+                    }
+                };
+                spv::InstWithIds {
+                    without_ids: inst,
+                    result_type_id: <span class="prelude-val">None</span>,
+                    result_id: <span class="prelude-val">None</span>,
+                    ids: terminator
+                        .inputs
+                        .iter()
+                        .map(|<span class="kw-2">&amp;</span>v| value_to_id(parent_func, v))
+                        .chain(
+                            terminator
+                                .targets
+                                .iter()
+                                .map(|<span class="kw-2">&amp;</span>target| parent_func.label_ids[<span class="kw-2">&amp;</span>target]),
+                        )
+                        .collect(),
+                }
+            }
+            <span class="self">Self</span>::OpFunctionEnd =&gt; spv::InstWithIds {
+                without_ids: wk.OpFunctionEnd.into(),
+                result_type_id: <span class="prelude-val">None</span>,
+                result_id: <span class="prelude-val">None</span>,
+                ids: [].into_iter().collect(),
+            },
+        };
+        (inst, attrs)
+    }
+}
+
+<span class="kw">impl </span>Module {
+    <span class="kw">pub fn </span>lift_to_spv_file(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw">impl </span>AsRef&lt;Path&gt;) -&gt; io::Result&lt;()&gt; {
+        <span class="self">self</span>.lift_to_spv_module_emitter()<span class="question-mark">?</span>.write_to_spv_file(path)
+    }
+
+    <span class="kw">pub fn </span>lift_to_spv_module_emitter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;spv::write::ModuleEmitter&gt; {
+        <span class="kw">let </span>spv_spec = spec::Spec::get();
+        <span class="kw">let </span>wk = <span class="kw-2">&amp;</span>spv_spec.well_known;
+
+        <span class="kw">let </span>cx = <span class="self">self</span>.cx();
+        <span class="kw">let </span>(dialect, debug_info) = <span class="kw">match </span>(<span class="kw-2">&amp;</span><span class="self">self</span>.dialect, <span class="kw-2">&amp;</span><span class="self">self</span>.debug_info) {
+            (ModuleDialect::Spv(dialect), ModuleDebugInfo::Spv(debug_info)) =&gt; {
+                (dialect, debug_info)
+            }
+
+            <span class="comment">// FIXME(eddyb) support by computing some valid &quot;minimum viable&quot;
+            // `spv::Dialect`, or by taking it as additional input.
+            </span><span class="attribute">#[allow(unreachable_patterns)]
+            </span><span class="kw">_ </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    <span class="string">&quot;not a SPIR-V module&quot;</span>,
+                ));
+            }
+        };
+
+        <span class="comment">// Collect uses scattered throughout the module, that require def IDs.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>needs_ids_collector = NeedsIdsCollector {
+            cx: <span class="kw-2">&amp;</span>cx,
+            module: <span class="self">self</span>,
+            ext_inst_imports: BTreeSet::new(),
+            debug_strings: BTreeSet::new(),
+            globals: FxIndexSet::default(),
+            global_vars_seen: FxIndexSet::default(),
+            funcs: FxIndexSet::default(),
+        };
+        needs_ids_collector.visit_module(<span class="self">self</span>);
+
+        <span class="comment">// Because `GlobalVar`s are given IDs by the `Const`s that point to them
+        // (i.e. `ConstCtor::PtrToGlobalVar`), any `GlobalVar`s in other positions
+        // require extra care to ensure the ID-giving `Const` is visited.
+        </span><span class="kw">let </span>global_var_to_id_giving_global = |gv| {
+            <span class="kw">let </span>type_of_ptr_to_global_var = <span class="self">self</span>.global_vars[gv].type_of_ptr_to;
+            <span class="kw">let </span>ptr_to_global_var = cx.intern(ConstDef {
+                attrs: AttrSet::default(),
+                ty: type_of_ptr_to_global_var,
+                ctor: ConstCtor::PtrToGlobalVar(gv),
+                ctor_args: [].into_iter().collect(),
+            });
+            Global::Const(ptr_to_global_var)
+        };
+        <span class="kw">for </span><span class="kw-2">&amp;</span>gv <span class="kw">in </span><span class="kw-2">&amp;</span>needs_ids_collector.global_vars_seen {
+            needs_ids_collector
+                .globals
+                .insert(global_var_to_id_giving_global(gv));
+        }
+
+        <span class="comment">// IDs can be allocated once we have the full sets needing them, whether
+        // sorted by contents, or ordered by the first occurence in the module.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>id_bound = NonZeroU32::new(<span class="number">1</span>).unwrap();
+        <span class="kw">let </span>ids = needs_ids_collector.alloc_ids(|| {
+            <span class="kw">let </span>id = id_bound;
+
+            <span class="comment">// FIXME(eddyb) use `id_bound.checked_add(1)` once that&#39;s stabilized.
+            </span><span class="kw">match </span>id_bound.get().checked_add(<span class="number">1</span>).and_then(NonZeroU32::new) {
+                <span class="prelude-val">Some</span>(new_bound) =&gt; {
+                    id_bound = new_bound;
+                    <span class="prelude-val">Ok</span>(id)
+                }
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    <span class="string">&quot;ID bound of SPIR-V module doesn&#39;t fit in 32 bits&quot;</span>,
+                )),
+            }
+        })<span class="question-mark">?</span>;
+
+        <span class="comment">// HACK(eddyb) allow `move` closures below to reference `cx` or `ids`
+        // without causing unwanted moves out of them.
+        </span><span class="kw">let </span>(cx, ids) = (<span class="kw-2">&amp;*</span>cx, <span class="kw-2">&amp;</span>ids);
+
+        <span class="kw">let </span>global_and_func_insts =
+            ids.globals
+                .keys()
+                .copied()
+                .map(LazyInst::Global)
+                .chain(ids.funcs.iter().flat_map(|(<span class="kw-2">&amp;</span>func, func_lifting)| {
+                    <span class="kw">let </span>func_decl = <span class="kw-2">&amp;</span><span class="self">self</span>.funcs[func];
+                    <span class="kw">let </span>func_def_body = <span class="kw">match </span><span class="kw-2">&amp;</span>func_decl.def {
+                        DeclDef::Imported(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+                        DeclDef::Present(def) =&gt; <span class="prelude-val">Some</span>(def),
+                    };
+
+                    iter::once(LazyInst::OpFunction {
+                        func_id: func_lifting.func_id,
+                        func_decl,
+                    })
+                    .chain(func_lifting.param_ids.iter().zip(<span class="kw-2">&amp;</span>func_decl.params).map(
+                        |(<span class="kw-2">&amp;</span>param_id, param)| LazyInst::OpFunctionParameter { param_id, param },
+                    ))
+                    .chain(func_lifting.blocks.iter().flat_map(<span class="kw">move </span>|(point, block)| {
+                        <span class="kw">let </span>BlockLifting {
+                            phis,
+                            insts,
+                            terminator,
+                        } = block;
+
+                        iter::once(LazyInst::OpLabel {
+                            label_id: func_lifting.label_ids[<span class="kw-2">&amp;</span>point],
+                        })
+                        .chain(phis.iter().map(|phi| LazyInst::OpPhi {
+                            parent_func: func_lifting,
+                            phi,
+                        }))
+                        .chain(
+                            insts
+                                .iter()
+                                .copied()
+                                .flat_map(<span class="kw">move </span>|insts| func_def_body.unwrap().at(insts))
+                                .map(<span class="kw">move </span>|func_at_inst| {
+                                    <span class="kw">let </span>data_inst_def = func_at_inst.def();
+                                    LazyInst::DataInst {
+                                        parent_func: func_lifting,
+                                        result_id: data_inst_def.output_type.map(|<span class="kw">_</span>| {
+                                            func_lifting.data_inst_output_ids
+                                                [<span class="kw-2">&amp;</span>func_at_inst.position]
+                                        }),
+                                        data_inst_def,
+                                    }
+                                }),
+                        )
+                        .chain(terminator.merge.map(|merge| {
+                            LazyInst::Merge(<span class="kw">match </span>merge {
+                                Merge::Selection(merge) =&gt; {
+                                    Merge::Selection(func_lifting.label_ids[<span class="kw-2">&amp;</span>merge])
+                                }
+                                Merge::Loop {
+                                    loop_merge,
+                                    loop_continue,
+                                } =&gt; Merge::Loop {
+                                    loop_merge: func_lifting.label_ids[<span class="kw-2">&amp;</span>loop_merge],
+                                    loop_continue: func_lifting.label_ids[<span class="kw-2">&amp;</span>loop_continue],
+                                },
+                            })
+                        }))
+                        .chain([LazyInst::Terminator {
+                            parent_func: func_lifting,
+                            terminator,
+                        }])
+                    }))
+                    .chain([LazyInst::OpFunctionEnd])
+                }));
+
+        <span class="kw">let </span>reserved_inst_schema = <span class="number">0</span>;
+        <span class="kw">let </span>header = [
+            spv_spec.magic,
+            (u32::from(dialect.version_major) &lt;&lt; <span class="number">16</span>) | (u32::from(dialect.version_minor) &lt;&lt; <span class="number">8</span>),
+            debug_info.original_generator_magic.map_or(<span class="number">0</span>, |x| x.get()),
+            id_bound.get(),
+            reserved_inst_schema,
+        ];
+
+        <span class="kw">let </span><span class="kw-2">mut </span>emitter = spv::write::ModuleEmitter::with_header(header);
+
+        <span class="kw">for </span>cap_inst <span class="kw">in </span>dialect.capability_insts() {
+            emitter.push_inst(<span class="kw-2">&amp;</span>cap_inst)<span class="question-mark">?</span>;
+        }
+        <span class="kw">for </span>ext_inst <span class="kw">in </span>dialect.extension_insts() {
+            emitter.push_inst(<span class="kw-2">&amp;</span>ext_inst)<span class="question-mark">?</span>;
+        }
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>id) <span class="kw">in </span><span class="kw-2">&amp;</span>ids.ext_inst_imports {
+            emitter.push_inst(<span class="kw-2">&amp;</span>spv::InstWithIds {
+                without_ids: spv::Inst {
+                    opcode: wk.OpExtInstImport,
+                    imms: spv::encode_literal_string(name).collect(),
+                },
+                result_type_id: <span class="prelude-val">None</span>,
+                result_id: <span class="prelude-val">Some</span>(id),
+                ids: [].into_iter().collect(),
+            })<span class="question-mark">?</span>;
+        }
+        emitter.push_inst(<span class="kw-2">&amp;</span>spv::InstWithIds {
+            without_ids: spv::Inst {
+                opcode: wk.OpMemoryModel,
+                imms: [
+                    spv::Imm::Short(wk.AddressingModel, dialect.addressing_model),
+                    spv::Imm::Short(wk.MemoryModel, dialect.memory_model),
+                ]
+                .into_iter()
+                .collect(),
+            },
+            result_type_id: <span class="prelude-val">None</span>,
+            result_id: <span class="prelude-val">None</span>,
+            ids: [].into_iter().collect(),
+        })<span class="question-mark">?</span>;
+
+        <span class="comment">// Collect the various sources of attributes.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>entry_point_insts = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>execution_mode_insts = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>debug_name_insts = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>decoration_insts = <span class="macro">vec!</span>[];
+
+        <span class="kw">for </span>lazy_inst <span class="kw">in </span>global_and_func_insts.clone() {
+            <span class="kw">let </span>(result_id, attrs, import) = lazy_inst.result_id_attrs_and_import(<span class="self">self</span>, <span class="kw-2">&amp;</span>ids);
+
+            <span class="kw">for </span>attr <span class="kw">in </span>cx[attrs].attrs.iter() {
+                <span class="kw">match </span>attr {
+                    Attr::SpvAnnotation(inst @ spv::Inst { opcode, .. }) =&gt; {
+                        <span class="kw">let </span>target_id = result_id.expect(
+                            <span class="string">&quot;FIXME: it shouldn&#39;t be possible to attach \
+                                 attributes to instructions without an output&quot;</span>,
+                        );
+
+                        <span class="kw">let </span>inst = spv::InstWithIds {
+                            without_ids: inst.clone(),
+                            result_type_id: <span class="prelude-val">None</span>,
+                            result_id: <span class="prelude-val">None</span>,
+                            ids: iter::once(target_id).collect(),
+                        };
+
+                        <span class="kw">if </span>[wk.OpExecutionMode, wk.OpExecutionModeId].contains(<span class="kw-2">&amp;</span>opcode) {
+                            execution_mode_insts.push(inst);
+                        } <span class="kw">else if </span>[wk.OpName, wk.OpMemberName].contains(<span class="kw-2">&amp;</span>opcode) {
+                            debug_name_insts.push(inst);
+                        } <span class="kw">else </span>{
+                            decoration_insts.push(inst);
+                        }
+                    }
+                    Attr::SpvDebugLine { .. } | Attr::SpvBitflagsOperand(<span class="kw">_</span>) =&gt; {}
+                }
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(import) = import {
+                    <span class="kw">let </span>target_id = result_id.unwrap();
+                    <span class="kw">match </span>import {
+                        Import::LinkName(name) =&gt; {
+                            decoration_insts.push(spv::InstWithIds {
+                                without_ids: spv::Inst {
+                                    opcode: wk.OpDecorate,
+                                    imms: iter::once(spv::Imm::Short(
+                                        wk.Decoration,
+                                        wk.LinkageAttributes,
+                                    ))
+                                    .chain(spv::encode_literal_string(<span class="kw-2">&amp;</span>cx[name]))
+                                    .chain([spv::Imm::Short(wk.LinkageType, wk.Import)])
+                                    .collect(),
+                                },
+                                result_type_id: <span class="prelude-val">None</span>,
+                                result_id: <span class="prelude-val">None</span>,
+                                ids: iter::once(target_id).collect(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        <span class="kw">for </span>(export_key, <span class="kw-2">&amp;</span>exportee) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.exports {
+            <span class="kw">let </span>target_id = <span class="kw">match </span>exportee {
+                Exportee::GlobalVar(gv) =&gt; ids.globals[<span class="kw-2">&amp;</span>global_var_to_id_giving_global(gv)],
+                Exportee::Func(func) =&gt; ids.funcs[<span class="kw-2">&amp;</span>func].func_id,
+            };
+            <span class="kw">match </span>export_key {
+                <span class="kw-2">&amp;</span>ExportKey::LinkName(name) =&gt; {
+                    decoration_insts.push(spv::InstWithIds {
+                        without_ids: spv::Inst {
+                            opcode: wk.OpDecorate,
+                            imms: iter::once(spv::Imm::Short(wk.Decoration, wk.LinkageAttributes))
+                                .chain(spv::encode_literal_string(<span class="kw-2">&amp;</span>cx[name]))
+                                .chain([spv::Imm::Short(wk.LinkageType, wk.Export)])
+                                .collect(),
+                        },
+                        result_type_id: <span class="prelude-val">None</span>,
+                        result_id: <span class="prelude-val">None</span>,
+                        ids: iter::once(target_id).collect(),
+                    });
+                }
+                ExportKey::SpvEntryPoint {
+                    imms,
+                    interface_global_vars,
+                } =&gt; {
+                    entry_point_insts.push(spv::InstWithIds {
+                        without_ids: spv::Inst {
+                            opcode: wk.OpEntryPoint,
+                            imms: imms.iter().copied().collect(),
+                        },
+                        result_type_id: <span class="prelude-val">None</span>,
+                        result_id: <span class="prelude-val">None</span>,
+                        ids: iter::once(target_id)
+                            .chain(
+                                interface_global_vars
+                                    .iter()
+                                    .map(|<span class="kw-2">&amp;</span>gv| ids.globals[<span class="kw-2">&amp;</span>global_var_to_id_giving_global(gv)]),
+                            )
+                            .collect(),
+                    });
+                }
+            }
+        }
+
+        <span class="comment">// FIXME(eddyb) maybe make a helper for `push_inst` with an iterator?
+        </span><span class="kw">for </span>entry_point_inst <span class="kw">in </span>entry_point_insts {
+            emitter.push_inst(<span class="kw-2">&amp;</span>entry_point_inst)<span class="question-mark">?</span>;
+        }
+        <span class="kw">for </span>execution_mode_inst <span class="kw">in </span>execution_mode_insts {
+            emitter.push_inst(<span class="kw-2">&amp;</span>execution_mode_inst)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>s, <span class="kw-2">&amp;</span>id) <span class="kw">in </span><span class="kw-2">&amp;</span>ids.debug_strings {
+            emitter.push_inst(<span class="kw-2">&amp;</span>spv::InstWithIds {
+                without_ids: spv::Inst {
+                    opcode: wk.OpString,
+                    imms: spv::encode_literal_string(s).collect(),
+                },
+                result_type_id: <span class="prelude-val">None</span>,
+                result_id: <span class="prelude-val">Some</span>(id),
+                ids: [].into_iter().collect(),
+            })<span class="question-mark">?</span>;
+        }
+        <span class="kw">for </span>(lang, sources) <span class="kw">in </span><span class="kw-2">&amp;</span>debug_info.source_languages {
+            <span class="kw">let </span>lang_imms = || {
+                [
+                    spv::Imm::Short(wk.SourceLanguage, lang.lang),
+                    spv::Imm::Short(wk.LiteralInteger, lang.version),
+                ]
+                .into_iter()
+            };
+            <span class="kw">if </span>sources.file_contents.is_empty() {
+                emitter.push_inst(<span class="kw-2">&amp;</span>spv::InstWithIds {
+                    without_ids: spv::Inst {
+                        opcode: wk.OpSource,
+                        imms: lang_imms().collect(),
+                    },
+                    result_type_id: <span class="prelude-val">None</span>,
+                    result_id: <span class="prelude-val">None</span>,
+                    ids: [].into_iter().collect(),
+                })<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                <span class="kw">for </span>(<span class="kw-2">&amp;</span>file, contents) <span class="kw">in </span><span class="kw-2">&amp;</span>sources.file_contents {
+                    <span class="comment">// The maximum word count is `2**16 - 1`, the first word is
+                    // taken up by the opcode &amp; word count, and one extra byte is
+                    // taken up by the nil byte at the end of the LiteralString.
+                    </span><span class="kw">const </span>MAX_OP_SOURCE_CONT_CONTENTS_LEN: usize = (<span class="number">0xffff </span>- <span class="number">1</span>) * <span class="number">4 </span>- <span class="number">1</span>;
+
+                    <span class="comment">// `OpSource` has 3 more operands than `OpSourceContinued`,
+                    // and each of them take up exactly one word.
+                    </span><span class="kw">const </span>MAX_OP_SOURCE_CONTENTS_LEN: usize =
+                        MAX_OP_SOURCE_CONT_CONTENTS_LEN - <span class="number">3 </span>* <span class="number">4</span>;
+
+                    <span class="kw">let </span>(contents_initial, <span class="kw-2">mut </span>contents_rest) =
+                        contents.split_at(contents.len().min(MAX_OP_SOURCE_CONTENTS_LEN));
+
+                    emitter.push_inst(<span class="kw-2">&amp;</span>spv::InstWithIds {
+                        without_ids: spv::Inst {
+                            opcode: wk.OpSource,
+                            imms: lang_imms()
+                                .chain(spv::encode_literal_string(contents_initial))
+                                .collect(),
+                        },
+                        result_type_id: <span class="prelude-val">None</span>,
+                        result_id: <span class="prelude-val">None</span>,
+                        ids: iter::once(ids.debug_strings[<span class="kw-2">&amp;</span>cx[file]]).collect(),
+                    })<span class="question-mark">?</span>;
+
+                    <span class="kw">while </span>!contents_rest.is_empty() {
+                        <span class="kw">let </span>(cont_chunk, rest) = contents_rest
+                            .split_at(contents_rest.len().min(MAX_OP_SOURCE_CONT_CONTENTS_LEN));
+                        contents_rest = rest;
+
+                        emitter.push_inst(<span class="kw-2">&amp;</span>spv::InstWithIds {
+                            without_ids: spv::Inst {
+                                opcode: wk.OpSourceContinued,
+                                imms: spv::encode_literal_string(cont_chunk).collect(),
+                            },
+                            result_type_id: <span class="prelude-val">None</span>,
+                            result_id: <span class="prelude-val">None</span>,
+                            ids: [].into_iter().collect(),
+                        })<span class="question-mark">?</span>;
+                    }
+                }
+            }
+        }
+        <span class="kw">for </span>ext_inst <span class="kw">in </span>debug_info.source_extension_insts() {
+            emitter.push_inst(<span class="kw-2">&amp;</span>ext_inst)<span class="question-mark">?</span>;
+        }
+        <span class="kw">for </span>debug_name_inst <span class="kw">in </span>debug_name_insts {
+            emitter.push_inst(<span class="kw-2">&amp;</span>debug_name_inst)<span class="question-mark">?</span>;
+        }
+        <span class="kw">for </span>mod_proc_inst <span class="kw">in </span>debug_info.module_processed_insts() {
+            emitter.push_inst(<span class="kw-2">&amp;</span>mod_proc_inst)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">for </span>decoration_inst <span class="kw">in </span>decoration_insts {
+            emitter.push_inst(<span class="kw-2">&amp;</span>decoration_inst)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>current_debug_line = <span class="prelude-val">None</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>current_block_id = <span class="prelude-val">None</span>; <span class="comment">// HACK(eddyb) for `current_debug_line` resets.
+        </span><span class="kw">for </span>lazy_inst <span class="kw">in </span>global_and_func_insts {
+            <span class="kw">let </span>(inst, attrs) = lazy_inst.to_inst_and_attrs(<span class="self">self</span>, <span class="kw-2">&amp;</span>ids);
+
+            <span class="comment">// Reset line debuginfo when crossing/leaving blocks.
+            </span><span class="kw">let </span>new_block_id = <span class="kw">if </span>inst.opcode == wk.OpLabel {
+                <span class="prelude-val">Some</span>(inst.result_id.unwrap())
+            } <span class="kw">else if </span>inst.opcode == wk.OpFunctionEnd {
+                <span class="prelude-val">None
+            </span>} <span class="kw">else </span>{
+                current_block_id
+            };
+            <span class="kw">if </span>current_block_id != new_block_id {
+                current_debug_line = <span class="prelude-val">None</span>;
+            }
+            current_block_id = new_block_id;
+
+            <span class="comment">// Determine whether to emit `OpLine`/`OpNoLine` before `inst`,
+            // in order to end up with the expected line debuginfo.
+            // FIXME(eddyb) make this less of a search and more of a
+            // lookup by splitting attrs into key and value parts.
+            </span><span class="kw">let </span>new_debug_line = cx[attrs].attrs.iter().find_map(|attr| <span class="kw">match </span><span class="kw-2">*</span>attr {
+                Attr::SpvDebugLine {
+                    file_path,
+                    line,
+                    col,
+                } =&gt; <span class="prelude-val">Some</span>((ids.debug_strings[<span class="kw-2">&amp;</span>cx[file_path.<span class="number">0</span>]], line, col)),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+            });
+            <span class="kw">if </span>current_debug_line != new_debug_line {
+                <span class="kw">let </span>(opcode, imms, ids) = <span class="kw">match </span>new_debug_line {
+                    <span class="prelude-val">Some</span>((file_path_id, line, col)) =&gt; (
+                        wk.OpLine,
+                        [
+                            spv::Imm::Short(wk.LiteralInteger, line),
+                            spv::Imm::Short(wk.LiteralInteger, col),
+                        ]
+                        .into_iter()
+                        .collect(),
+                        iter::once(file_path_id).collect(),
+                    ),
+                    <span class="prelude-val">None </span>=&gt; (
+                        wk.OpNoLine,
+                        [].into_iter().collect(),
+                        [].into_iter().collect(),
+                    ),
+                };
+                emitter.push_inst(<span class="kw-2">&amp;</span>spv::InstWithIds {
+                    without_ids: spv::Inst { opcode, imms },
+                    result_type_id: <span class="prelude-val">None</span>,
+                    result_id: <span class="prelude-val">None</span>,
+                    ids,
+                })<span class="question-mark">?</span>;
+            }
+            current_debug_line = new_debug_line;
+
+            emitter.push_inst(<span class="kw-2">&amp;</span>inst)<span class="question-mark">?</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(emitter)
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirt" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (9565dfeb4 2022-10-28)" ></div></body></html>
