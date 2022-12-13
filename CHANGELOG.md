@@ -239,3 +239,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed 🔥
 - [PR#476](https://github.com/EmbarkStudios/rust-gpu/pull/476) removed `glam` as a dependency of `spirv-std`
+
+## [0.3.0]
+
+### Added ⭐
+- [PR#414](https://github.com/EmbarkStudios/rust-gpu/pull/414) added storage class type inference
+- [PR#469](https://github.com/EmbarkStudios/rust-gpu/pull/469) added initial support for Algebraic Data Type enums (e.g. `Option<T>`)
+- [PR#421](https://github.com/EmbarkStudios/rust-gpu/pull/421) added ability to provide `const` arguments to `asm!`
+- [PR#458](https://github.com/EmbarkStudios/rust-gpu/pull/458) added ability to set `entry_point_name` in entry point attributes to change the final name of an entry point
+- [PR#337](https://github.com/EmbarkStudios/rust-gpu/pull/337) added `#[spirv(unroll_loops)]` attribute to functions, which tells `rustc_codegen_spirv` to annotate all loops inside with `Unroll`
+- [PR#394](https://github.com/EmbarkStudios/rust-gpu/pull/394) added a new [`arch`] module which provides an abstraction some basic SPIR-V instructions as free functions.
+- [PR#340](https://github.com/EmbarkStudios/rust-gpu/pull/340) added the `spirv-std-macros` crate for holding the `spirv` proc macro
+- [PR#392](https://github.com/EmbarkStudios/rust-gpu/pull/392) added the `gpu_only` proc macro
+- [PR#377](https://github.com/EmbarkStudios/rust-gpu/pull/377) `Derivative` is now implemented for `glam::{Vec2, Vec3, Vec3A, Vec4}`
+- [PR#401](https://github.com/EmbarkStudios/rust-gpu/pull/401) added ability to build shaders in `release` mode
+- new `spirv-std` APIs: `vector_extract_dynamic`<sup>[PR#394](https://github.com/EmbarkStudios/rust-gpu/pull/394)</sup>, `vector_insert_dynamic`<sup>[PR#411](https://github.com/EmbarkStudios/rust-gpu/pull/411)</sup>, `textures::StorageImage2d`<sup>[PR#434](https://github.com/EmbarkStudios/rust-gpu/pull/434)</sup>, `any`/`all`<sup>[PR#380](https://github.com/EmbarkStudios/rust-gpu/pull/441)</sup>, `discard`<sup>[PR#441](https://github.com/EmbarkStudios/rust-gpu/pull/380)</sup>, `demote_to_helper_invocation`<sup>[PR#380](https://github.com/EmbarkStudios/rust-gpu/pull/380)</sup>, ``SampledImage``<sup>[PR#320](https://github.com/EmbarkStudios/rust-gpu/pull/320)</sup>
+
+### Changed 🛠
+- [PR#461](https://github.com/EmbarkStudios/rust-gpu/pull/461) removed requirement of `#[allow(unused_attributes)]` in front of `#[spirv]` attributes to remove warnings
+- [PR#398](https://github.com/EmbarkStudios/rust-gpu/pull/398) `rustc_codegen_spirv` now removes different `OpName`s that target the same ID
+- [PR#396](https://github.com/EmbarkStudios/rust-gpu/pull/396) `rustc_codegen_spirv` now tries to deduplicate generated `OpVariable`s
