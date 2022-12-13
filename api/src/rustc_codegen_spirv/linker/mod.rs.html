@@ -493,6 +493,67 @@
 <span id="493">493</span>
 <span id="494">494</span>
 <span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
 </pre><pre class="rust"><code><span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test;
 
@@ -514,12 +575,15 @@
 <span class="kw">use </span>std::borrow::Cow;
 
 <span class="kw">use </span><span class="kw">crate</span>::codegen_cx::SpirvMetadata;
+<span class="kw">use </span>either::Either;
 <span class="kw">use </span>rspirv::binary::{Assemble, Consumer};
 <span class="kw">use </span>rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 <span class="kw">use </span>rspirv::spirv::{Op, StorageClass, Word};
 <span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
 <span class="kw">use </span>rustc_errors::ErrorGuaranteed;
 <span class="kw">use </span>rustc_session::Session;
+<span class="kw">use </span>std::collections::BTreeMap;
+<span class="kw">use </span>std::ffi::{OsStr, OsString};
 <span class="kw">use </span>std::path::PathBuf;
 
 <span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = std::result::Result&lt;T, ErrorGuaranteed&gt;;
@@ -553,7 +617,13 @@
 
 <span class="kw">pub enum </span>LinkResult {
     SingleModule(Box&lt;Module&gt;),
-    MultipleModules(FxHashMap&lt;String, Module&gt;),
+    MultipleModules {
+        <span class="doccomment">/// The &quot;file stem&quot; key is computed from the &quot;entry name&quot; in the value
+        /// (through `sanitize_filename`, replacing invalid chars with `-`),
+        /// but it&#39;s used as the map key because it *has to* be unique, even if
+        /// lossy sanitization could have erased distinctions between entry names.
+        </span>file_stem_to_entry_name_and_module: BTreeMap&lt;OsString, (String, Module)&gt;,
+    },
 }
 
 <span class="kw">fn </span>id(header: <span class="kw-2">&amp;mut </span>ModuleHeader) -&gt; Word {
@@ -626,7 +696,12 @@
     )
 }
 
-<span class="kw">pub fn </span>link(sess: <span class="kw-2">&amp;</span>Session, <span class="kw-2">mut </span>inputs: Vec&lt;Module&gt;, opts: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;LinkResult&gt; {
+<span class="kw">pub fn </span>link(
+    sess: <span class="kw-2">&amp;</span>Session,
+    <span class="kw-2">mut </span>inputs: Vec&lt;Module&gt;,
+    opts: <span class="kw-2">&amp;</span>Options,
+    disambiguated_crate_name_for_dumps: <span class="kw-2">&amp;</span>OsStr,
+) -&gt; <span class="prelude-ty">Result</span>&lt;LinkResult&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>output = {
         <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_merge&quot;</span>);
         <span class="comment">// shift all the ids
@@ -662,8 +737,13 @@
         output
     };
 
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(path) = <span class="kw-2">&amp;</span>opts.dump_post_merge {
-        std::fs::write(path, spirv_tools::binary::from_binary(<span class="kw-2">&amp;</span>output.assemble())).unwrap();
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(dir) = <span class="kw-2">&amp;</span>opts.dump_post_merge {
+        std::fs::write(
+            dir.join(disambiguated_crate_name_for_dumps)
+                .with_extension(<span class="string">&quot;spv&quot;</span>),
+            spirv_tools::binary::from_binary(<span class="kw-2">&amp;</span>output.assemble()),
+        )
+        .unwrap();
     }
 
     <span class="comment">// remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
@@ -874,11 +954,10 @@
 
         <span class="comment">// NOTE(eddyb) this should be *before* `lift_to_spv` below,
         // so if that fails, the dump could be used to debug it.
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(dump_file) = <span class="kw-2">&amp;</span>opts.dump_spirt_passes {
-            <span class="comment">// HACK(eddyb) using `.with_extension(...)` may replace part of a
-            // `.`-containing file name, but we want to always append `.html`.
-            </span><span class="kw">let </span><span class="kw-2">mut </span>dump_file_html = dump_file.as_os_str().to_owned();
-            dump_file_html.push(<span class="string">&quot;.html&quot;</span>);
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(dump_dir) = <span class="kw-2">&amp;</span>opts.dump_spirt_passes {
+            <span class="kw">let </span>dump_spirt_file_path = dump_dir
+                .join(disambiguated_crate_name_for_dumps)
+                .with_extension(<span class="string">&quot;spirt&quot;</span>);
 
             <span class="kw">let </span>plan = spirt::print::Plan::for_versions(
                 <span class="kw-2">&amp;</span>cx,
@@ -889,9 +968,9 @@
             <span class="kw">let </span>pretty = plan.pretty_print();
 
             <span class="comment">// FIXME(eddyb) don&#39;t allocate whole `String`s here.
-            </span>std::fs::write(dump_file, pretty.to_string()).unwrap();
+            </span>std::fs::write(<span class="kw-2">&amp;</span>dump_spirt_file_path, pretty.to_string()).unwrap();
             std::fs::write(
-                dump_file_html,
+                dump_spirt_file_path.with_extension(<span class="string">&quot;spirt.html&quot;</span>),
                 pretty
                     .render_to_html()
                     .with_dark_mode_support()
@@ -938,30 +1017,73 @@
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="kw">if </span>opts.emit_multiple_modules {
-        <span class="kw">let </span>modules = output
-            .entry_points
-            .iter()
-            .map(|entry| {
-                <span class="kw">let </span><span class="kw-2">mut </span>module = output.clone();
-                module.entry_points.clear();
-                module.entry_points.push(entry.clone());
-                <span class="kw">let </span>name = entry.operands[<span class="number">2</span>].unwrap_literal_string();
-                (name.to_string(), module)
-            })
-            .collect();
-        LinkResult::MultipleModules(modules)
+        <span class="kw">let </span><span class="kw-2">mut </span>file_stem_to_entry_name_and_module = BTreeMap::new();
+        <span class="kw">for </span>(i, entry) <span class="kw">in </span>output.entry_points.iter().enumerate() {
+            <span class="kw">let </span><span class="kw-2">mut </span>module = output.clone();
+            module.entry_points.clear();
+            module.entry_points.push(entry.clone());
+            <span class="kw">let </span>entry_name = entry.operands[<span class="number">2</span>].unwrap_literal_string().to_string();
+            <span class="kw">let </span><span class="kw-2">mut </span>file_stem = OsString::from(
+                sanitize_filename::sanitize_with_options(
+                    <span class="kw-2">&amp;</span>entry_name,
+                    sanitize_filename::Options {
+                        replacement: <span class="string">&quot;-&quot;</span>,
+                        ..Default::default()
+                    },
+                )
+                .replace(<span class="string">&quot;--&quot;</span>, <span class="string">&quot;-&quot;</span>),
+            );
+            <span class="comment">// It&#39;s always possible to find an unambiguous `file_stem`, but it
+            // may take two tries (or more, in bizzare/adversarial cases).
+            </span><span class="kw">let </span><span class="kw-2">mut </span>disambiguator = <span class="prelude-val">Some</span>(i);
+            <span class="kw">loop </span>{
+                <span class="kw">use </span>std::collections::btree_map::Entry;
+                <span class="kw">match </span>file_stem_to_entry_name_and_module.entry(file_stem) {
+                    Entry::Vacant(entry) =&gt; {
+                        entry.insert((entry_name, module));
+                        <span class="kw">break</span>;
+                    }
+                    Entry::Occupied(entry) =&gt; {
+                        <span class="comment">// FIXME(eddyb) there&#39;s no way to access the owned key
+                        // passed to `BTreeMap::entry` from `OccupiedEntry`.
+                        </span>file_stem = entry.key().clone();
+                        file_stem.push(<span class="string">&quot;.&quot;</span>);
+                        <span class="kw">match </span>disambiguator.take() {
+                            <span class="prelude-val">Some</span>(d) =&gt; file_stem.push(d.to_string()),
+                            <span class="prelude-val">None </span>=&gt; file_stem.push(<span class="string">&quot;next&quot;</span>),
+                        }
+                    }
+                }
+            }
+        }
+        LinkResult::MultipleModules {
+            file_stem_to_entry_name_and_module,
+        }
     } <span class="kw">else </span>{
         LinkResult::SingleModule(Box::new(output))
     };
 
-    <span class="kw">let </span>output_module_iter: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = <span class="kw-2">&amp;mut </span>Module&gt;&gt; = <span class="kw">match </span>output {
-        LinkResult::SingleModule(<span class="kw-2">ref mut </span>m) =&gt; Box::new(std::iter::once(<span class="kw-2">&amp;mut *</span>m <span class="kw">as </span><span class="kw-2">&amp;mut </span>Module)),
-        LinkResult::MultipleModules(<span class="kw-2">ref mut </span>m) =&gt; Box::new(m.values_mut()),
+    <span class="kw">let </span>output_module_iter = <span class="kw">match </span><span class="kw-2">&amp;mut </span>output {
+        LinkResult::SingleModule(m) =&gt; Either::Left(std::iter::once((<span class="prelude-val">None</span>, <span class="kw-2">&amp;mut **</span>m))),
+        LinkResult::MultipleModules {
+            file_stem_to_entry_name_and_module,
+        } =&gt; Either::Right(
+            file_stem_to_entry_name_and_module
+                .iter_mut()
+                .map(|(file_stem, (<span class="kw">_</span>, m))| (<span class="prelude-val">Some</span>(file_stem), m)),
+        ),
     };
-    <span class="kw">for </span>(i, output) <span class="kw">in </span>output_module_iter.enumerate() {
+    <span class="kw">for </span>(file_stem, output) <span class="kw">in </span>output_module_iter {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(dir) = <span class="kw-2">&amp;</span>opts.dump_post_split {
+            <span class="kw">let </span><span class="kw-2">mut </span>file_name = disambiguated_crate_name_for_dumps.to_os_string();
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(file_stem) = file_stem {
+                file_name.push(<span class="string">&quot;.&quot;</span>);
+                file_name.push(file_stem);
+            }
+            file_name.push(<span class="string">&quot;.spv&quot;</span>);
+
             std::fs::write(
-                dir.join(<span class="macro">format!</span>(<span class="string">&quot;mod_{}.spv&quot;</span>, i)),
+                dir.join(file_name),
                 spirv_tools::binary::from_binary(<span class="kw-2">&amp;</span>output.assemble()),
             )
             .unwrap();
