@@ -259,3 +259,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [PR#461](https://github.com/EmbarkStudios/rust-gpu/pull/461) removed requirement of `#[allow(unused_attributes)]` in front of `#[spirv]` attributes to remove warnings
 - [PR#398](https://github.com/EmbarkStudios/rust-gpu/pull/398) `rustc_codegen_spirv` now removes different `OpName`s that target the same ID
 - [PR#396](https://github.com/EmbarkStudios/rust-gpu/pull/396) `rustc_codegen_spirv` now tries to deduplicate generated `OpVariable`s
+
+## [0.2.0]
+
+### Added ⭐
+- [PR#287](https://github.com/EmbarkStudios/rust-gpu/pull/287) added a new structurizer, which means that you can now use `match` expressions and `continue`s
+- [PR#317](https://github.com/EmbarkStudios/rust-gpu/pull/317) added the `#[spirv(flat)]` attribute that matches SPIR-V's "Flat" decorator.
+- [PR#276](https://github.com/EmbarkStudios/rust-gpu/pull/276) added support for textures.
+- [PR#305](https://github.com/EmbarkStudios/rust-gpu/pull/305) added support for `panic!`
+- [PR#165](https://github.com/EmbarkStudios/rust-gpu/pull/165) added support for SPIR-V `1.0`
+- [PR#268](https://github.com/EmbarkStudios/rust-gpu/pull/268) added support for procedural macros
+- [PR#195](https://github.com/EmbarkStudios/rust-gpu/pull/195) added initial support for  compute shaders
+- [PR#254](https://github.com/EmbarkStudios/rust-gpu/pull/254) added initial support in Rust and `rust-gpu` for inline SPIR-V with the `asm!` nightly feature
+
+### Changed 🛠
+- [PR#219](https://github.com/EmbarkStudios/rust-gpu/pull/219) improvements to error messages regarding constant pointers
+- [PR#280](https://github.com/EmbarkStudios/rust-gpu/pull/280) all Storage Classes (e.g. `Input`/`Output`) are now defined in `spirv_std::storage_class`
+- [PR#275](https://github.com/EmbarkStudios/rust-gpu/pull/275) Rust's language items such `rust_eh_personality` and `panic_handler` are now defined in `spirv-std` for SPIR-V targets
