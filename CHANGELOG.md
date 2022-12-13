@@ -276,3 +276,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [PR#219](https://github.com/EmbarkStudios/rust-gpu/pull/219) improvements to error messages regarding constant pointers
 - [PR#280](https://github.com/EmbarkStudios/rust-gpu/pull/280) all Storage Classes (e.g. `Input`/`Output`) are now defined in `spirv_std::storage_class`
 - [PR#275](https://github.com/EmbarkStudios/rust-gpu/pull/275) Rust's language items such `rust_eh_personality` and `panic_handler` are now defined in `spirv-std` for SPIR-V targets
+
+## [0.1.0]
+
+Initial release.
