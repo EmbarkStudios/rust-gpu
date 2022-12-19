@@ -87,9 +87,7 @@
     clippy::unimplemented,
 )]
 #![warn(missing_docs)]
-
-//! Core functions, traits, and more that make up a "standard library" for SPIR-V for use in
-//! rust-gpu.
+#![doc = include_str!("../README.md")]
 
 #[macro_use]
 pub extern crate spirv_std_macros as macros;

@@ -1,6 +1,6 @@
 # `rustc_codegen_spirv`
 
-Compiler backend for the `SPIR-V` target architecture. This crate is not intended to be used directly. Please refer to [`spirv-builder`](https://crates.io/crates/spirv-builder) for more information.
+Compiler backend for the `SPIR-V` target architecture. This crate is not intended to be used directly. Please refer to [`spirv-builder`](https://docs.rs/spirv-builder/) for more information.
 
 ## Documentation
 
