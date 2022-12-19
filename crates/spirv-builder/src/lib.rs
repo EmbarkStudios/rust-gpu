@@ -539,22 +539,14 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // (or "default") `--target-dir`, to append `/spirv-builder` to it.
     let target_dir = outer_target_dir.map(|outer| outer.join("spirv-builder"));
     if let Some(target_dir) = target_dir {
-        // HACK(eddyb) Cargo caches some information it got from `rustc` in
-        // `.rustc_info.json`, and assumes it only depends on the `rustc`
-        // binary, but in our case, `rustc_codegen_spirv` changes are also
-        // relevant - so we remove the cache file if it may be out of date.
-        let mtime = |path| std::fs::metadata(path)?.modified();
-        let rustc_info = target_dir.join(".rustc_info.json");
-        if let Ok(rustc_info_mtime) = mtime(&rustc_info) {
-            if let Ok(rustc_codegen_spirv_mtime) = mtime(&rustc_codegen_spirv) {
-                if rustc_codegen_spirv_mtime > rustc_info_mtime {
-                    let _ = std::fs::remove_file(rustc_info);
-                }
-            }
-        }
-
         cargo.arg("--target-dir").arg(target_dir);
     }
+
+    // NOTE(eddyb) Cargo caches some information it got from `rustc` in
+    // `.rustc_info.json`, and assumes it only depends on the `rustc` binary,
+    // but in our case, `rustc_codegen_spirv` changes are also relevant,
+    // so we turn off that caching with an env var, just to avoid any issues.
+    cargo.env("CARGO_CACHE_RUSTC_INFO", "0");
 
     for (key, _) in env::vars_os() {
         let remove = key.to_str().map_or(false, |s| {
