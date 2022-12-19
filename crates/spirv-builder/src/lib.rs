@@ -69,6 +69,7 @@
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
 // #![allow()]
+#![doc = include_str!("../README.md")]
 
 mod depfile;
 #[cfg(feature = "watch")]

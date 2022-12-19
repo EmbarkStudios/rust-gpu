@@ -1,4 +1,4 @@
-//! Types used by both `rustc_codegen_spirv` and `spirv-builder`.
+#![doc = include_str!("../README.md")]
 
 pub use rspirv::spirv::Capability;
 

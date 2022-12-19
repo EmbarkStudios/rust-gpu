@@ -6,7 +6,7 @@ This crate gives a `rust-gpu` shader access to the required `#![spirv(..)]` attr
 
 ## 🚨 BREAKING 🚨
 
-As of `0.4.0-alpha.16`, your shaders will require a different preamble. See [this doc][migration] for more information.
+As of `0.4.0-alpha.16`, your shaders will require a different preamble. See [this migration guide][migration] for more information.
 
 ## Example
 
