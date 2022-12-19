@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/cda161b/src/spv/read.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>read.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirt-0.1.0/src/spv/read.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>read.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -486,18 +486,18 @@
                         <span class="kw">let </span>unsupported = spec::BitIdx::of_all_set_bits(word)
                             .filter(|<span class="kw-2">&amp;</span>bit_idx| bits.get(bit_idx).is_none())
                             .fold(<span class="number">0u32</span>, |x, i| x | (<span class="number">1 </span>&lt;&lt; i.<span class="number">0</span>));
-                        <span class="macro">format!</span>(<span class="string">&quot;unsupported {} bit-pattern 0x{:08x}&quot;</span>, name, unsupported).into()
+                        <span class="macro">format!</span>(<span class="string">&quot;unsupported {name} bit-pattern 0x{unsupported:08x}&quot;</span>).into()
                     }
 
                     spec::OperandKindDef::ValueEnum { .. } =&gt; {
-                        <span class="macro">format!</span>(<span class="string">&quot;unsupported {} value {}&quot;</span>, name, word).into()
+                        <span class="macro">format!</span>(<span class="string">&quot;unsupported {name} value {word}&quot;</span>).into()
                     }
 
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 }
             }
             <span class="self">Self</span>::UnknownResultTypeId(id) =&gt; {
-                <span class="macro">format!</span>(<span class="string">&quot;ID %{} used as result type before definition&quot;</span>, id).into()
+                <span class="macro">format!</span>(<span class="string">&quot;ID %{id} used as result type before definition&quot;</span>).into()
             }
             <span class="self">Self</span>::MissingContextSensitiveLiteralType =&gt; <span class="string">&quot;missing type for literal&quot;</span>.into(),
             <span class="self">Self</span>::UnsupportedContextSensitiveLiteralType { type_opcode } =&gt; {
@@ -515,10 +515,8 @@
 
     <span class="kw">fn </span>enumerant_params(<span class="kw-2">&amp;mut </span><span class="self">self</span>, enumerant: <span class="kw-2">&amp;</span>spec::Enumerant) -&gt; <span class="prelude-ty">Result</span>&lt;(), InstParseError&gt; {
         <span class="kw">for </span>(mode, kind) <span class="kw">in </span>enumerant.all_params() {
-            <span class="kw">if </span>mode == spec::OperandMode::Optional {
-                <span class="kw">if </span><span class="self">self</span>.is_exhausted() {
-                    <span class="kw">break</span>;
-                }
+            <span class="kw">if </span>mode == spec::OperandMode::Optional &amp;&amp; <span class="self">self</span>.is_exhausted() {
+                <span class="kw">break</span>;
             }
             <span class="self">self</span>.operand(kind)<span class="question-mark">?</span>;
         }
@@ -553,7 +551,7 @@
             }
 
             spec::OperandKindDef::Id =&gt; {
-                <span class="kw">let </span>id = word.try_into().map_err(|<span class="kw">_</span>| Error::IdZero)<span class="question-mark">?</span>;
+                <span class="kw">let </span>id = word.try_into().ok().ok_or(Error::IdZero)<span class="question-mark">?</span>;
                 <span class="self">self</span>.inst.ids.push(id);
             }
 
@@ -629,10 +627,11 @@
                     .next()
                     .ok_or(Error::NotEnoughWords)<span class="question-mark">?
                     </span>.try_into()
-                    .map_err(|<span class="kw">_</span>| Error::IdZero)
+                    .ok()
+                    .ok_or(Error::IdZero)
             };
-            <span class="self">self</span>.inst.result_type_id = def.has_result_type_id.then(|| id()).transpose()<span class="question-mark">?</span>;
-            <span class="self">self</span>.inst.result_id = def.has_result_id.then(|| id()).transpose()<span class="question-mark">?</span>;
+            <span class="self">self</span>.inst.result_type_id = def.has_result_type_id.then(<span class="kw-2">&amp;mut </span>id).transpose()<span class="question-mark">?</span>;
+            <span class="self">self</span>.inst.result_id = def.has_result_id.then(<span class="kw-2">&amp;mut </span>id).transpose()<span class="question-mark">?</span>;
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(type_id) = <span class="self">self</span>.inst.result_type_id {
@@ -643,10 +642,8 @@
         }
 
         <span class="kw">for </span>(mode, kind) <span class="kw">in </span>def.all_operands() {
-            <span class="kw">if </span>mode == spec::OperandMode::Optional {
-                <span class="kw">if </span><span class="self">self</span>.is_exhausted() {
-                    <span class="kw">break</span>;
-                }
+            <span class="kw">if </span>mode == spec::OperandMode::Optional &amp;&amp; <span class="self">self</span>.is_exhausted() {
+                <span class="kw">break</span>;
             }
             <span class="self">self</span>.operand(kind)<span class="question-mark">?</span>;
         }
@@ -680,7 +677,7 @@
 </span><span class="kw">fn </span>invalid(reason: <span class="kw-2">&amp;</span>str) -&gt; io::Error {
     io::Error::new(
         io::ErrorKind::InvalidData,
-        <span class="macro">format!</span>(<span class="string">&quot;malformed SPIR-V ({})&quot;</span>, reason),
+        <span class="macro">format!</span>(<span class="string">&quot;malformed SPIR-V ({reason})&quot;</span>),
     )
 }
 
@@ -735,16 +732,16 @@
         <span class="kw">let </span>wk = <span class="kw-2">&amp;</span>spv_spec.well_known;
 
         <span class="kw">let </span>words = <span class="kw-2">&amp;</span>bytemuck::cast_slice::&lt;u8, u32&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.word_bytes)[<span class="self">self</span>.next_word..];
-        <span class="kw">let </span><span class="kw-2">&amp;</span>opcode = words.get(<span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">&amp;</span>opcode = words.first()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(inst_len, opcode) = ((opcode &gt;&gt; <span class="number">16</span>) <span class="kw">as </span>usize, opcode <span class="kw">as </span>u16);
 
         <span class="kw">let </span>(opcode, inst_name, def) = <span class="kw">match </span>spec::Opcode::try_from_u16_with_name_and_def(opcode) {
             <span class="prelude-val">Some</span>(opcode_name_and_def) =&gt; opcode_name_and_def,
-            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unsupported opcode {}&quot;</span>, opcode)))),
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;unsupported opcode {opcode}&quot;</span>)))),
         };
 
-        <span class="kw">let </span>invalid = |msg: <span class="kw-2">&amp;</span>str| invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;in {}: {}&quot;</span>, inst_name, msg));
+        <span class="kw">let </span>invalid = |msg: <span class="kw-2">&amp;</span>str| invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;in {inst_name}: {msg}&quot;</span>));
 
         <span class="kw">if </span>words.len() &lt; inst_len {
             <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(invalid(<span class="string">&quot;truncated instruction&quot;</span>)));
@@ -772,7 +769,9 @@
                 KnownIdDef::TypeInt(<span class="kw">match </span>inst.imms[<span class="number">0</span>] {
                     spv::Imm::Short(kind, n) =&gt; {
                         <span class="macro">assert!</span>(kind == wk.LiteralInteger);
-                        n.try_into().map_err(|<span class="kw">_</span>| invalid(<span class="string">&quot;Width cannot be 0&quot;</span>))<span class="question-mark">?
+                        n.try_into()
+                            .ok()
+                            .ok_or_else(|| invalid(<span class="string">&quot;Width cannot be 0&quot;</span>))<span class="question-mark">?
                     </span>}
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 })
@@ -780,7 +779,9 @@
                 KnownIdDef::TypeFloat(<span class="kw">match </span>inst.imms[<span class="number">0</span>] {
                     spv::Imm::Short(kind, n) =&gt; {
                         <span class="macro">assert!</span>(kind == wk.LiteralInteger);
-                        n.try_into().map_err(|<span class="kw">_</span>| invalid(<span class="string">&quot;Width cannot be 0&quot;</span>))<span class="question-mark">?
+                        n.try_into()
+                            .ok()
+                            .ok_or_else(|| invalid(<span class="string">&quot;Width cannot be 0&quot;</span>))<span class="question-mark">?
                     </span>}
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 })
@@ -794,9 +795,8 @@
             <span class="kw">let </span>old = <span class="self">self</span>.known_ids.insert(id, known_id_def);
             <span class="kw">if </span>old.is_some() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">&quot;ID %{} is a result of multiple instructions&quot;</span>,
-                    id
-                )));
+                    <span class="string">&quot;ID %{id} is a result of multiple instructions&quot;
+                </span>)));
             }
 
             <span class="prelude-val">Ok</span>(())

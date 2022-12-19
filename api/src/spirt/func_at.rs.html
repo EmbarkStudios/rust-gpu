@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/cda161b/src/func_at.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>func_at.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirt-0.1.0/src/func_at.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>func_at.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -233,15 +233,21 @@
 <span id="233">233</span>
 <span id="234">234</span>
 <span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Traversal helpers for intra-function entities.
 //!
-//! `FuncAt&lt;P&gt;`/`FuncAtMut&lt;P&gt;` are like `(&amp;FuncDefBody, P)`/`(&amp;mut FuncDefBody, P`)
+//! [`FuncAt&lt;P&gt;`]/[`FuncAtMut&lt;P&gt;`] are like `(&amp;FuncDefBody, P)`/`(&amp;mut FuncDefBody, P`)
 //! (where `P` is some type describing a &quot;position&quot; in the function), except:
-//! * they only borrow the `EntityDefs` fields of `FuncDefBody`
+//! * they only borrow the [`EntityDefs`] fields of [`FuncDefBody`]
 //!   * this can prevent borrow conflicts, especially when mutating other fields
 //!   * it also avoids accidentally accessing parts of the function definition
-//!     without going through `P` (as `EntityDefs` requires keys for any access)
+//!     without going through `P` (as [`EntityDefs`] requires keys for any access)
 //! * they&#39;re dedicated types with inherent methods and trait `impl`s
+
+</span><span class="comment">// NOTE(eddyb) wrong wrt lifetimes (https://github.com/rust-lang/rust-clippy/issues/5004).
+</span><span class="attribute">#![allow(clippy::should_implement_trait)]
 
 </span><span class="kw">use crate</span>::{
     Context, ControlNode, ControlNodeDef, ControlRegion, ControlRegionDef, DataInst, DataInstDef,
@@ -251,7 +257,7 @@
 <span class="doccomment">/// Immutable traversal (i.e. visiting) helper for intra-function entities.
 ///
 /// The point/position type `P` should be an entity or a shallow entity wrapper
-/// (e.g. `EntityList&lt;ControlNode&gt;`).
+/// (e.g. [`EntityList&lt;ControlNode&gt;`]).
 </span><span class="attribute">#[derive(Copy, Clone)]
 </span><span class="kw">pub struct </span>FuncAt&lt;<span class="lifetime">&#39;a</span>, P: Copy&gt; {
     <span class="kw">pub </span>control_regions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>EntityDefs&lt;ControlRegion&gt;,
@@ -294,7 +300,7 @@
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>FuncAt&lt;<span class="lifetime">&#39;a</span>, EntityListIter&lt;ControlNode&gt;&gt; {
     <span class="kw">type </span>Item = FuncAt&lt;<span class="lifetime">&#39;a</span>, ControlNode&gt;;
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
-        <span class="kw">let </span>(next, rest) = <span class="self">self</span>.position.split_first(<span class="kw-2">&amp;</span><span class="self">self</span>.control_nodes)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(next, rest) = <span class="self">self</span>.position.split_first(<span class="self">self</span>.control_nodes)<span class="question-mark">?</span>;
         <span class="self">self</span>.position = rest;
         <span class="prelude-val">Some</span>(<span class="self">self</span>.at(next))
     }
@@ -317,7 +323,7 @@
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>FuncAt&lt;<span class="lifetime">&#39;a</span>, EntityListIter&lt;DataInst&gt;&gt; {
     <span class="kw">type </span>Item = FuncAt&lt;<span class="lifetime">&#39;a</span>, DataInst&gt;;
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
-        <span class="kw">let </span>(next, rest) = <span class="self">self</span>.position.split_first(<span class="kw-2">&amp;</span><span class="self">self</span>.data_insts)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(next, rest) = <span class="self">self</span>.position.split_first(<span class="self">self</span>.data_insts)<span class="question-mark">?</span>;
         <span class="self">self</span>.position = rest;
         <span class="prelude-val">Some</span>(<span class="self">self</span>.at(next))
     }
@@ -330,7 +336,7 @@
 }
 
 <span class="kw">impl </span>FuncAt&lt;<span class="lifetime">&#39;_</span>, Value&gt; {
-    <span class="doccomment">/// Return the `Type` of this `Value` (`Context` used for `Value::Const`).
+    <span class="doccomment">/// Return the [`Type`] of this [`Value`] ([`Context`] used for [`Value::Const`]).
     </span><span class="kw">pub fn </span>type_of(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>Context) -&gt; Type {
         <span class="kw">match </span><span class="self">self</span>.position {
             Value::Const(ct) =&gt; cx[ct].ty,
@@ -349,7 +355,7 @@
 <span class="doccomment">/// Mutable traversal (i.e. transforming) helper for intra-function entities.
 ///
 /// The point/position type `P` should be an entity or a shallow entity wrapper
-/// (e.g. `EntityList&lt;ControlNode&gt;`).
+/// (e.g. [`EntityList&lt;ControlNode&gt;`]).
 </span><span class="kw">pub struct </span>FuncAtMut&lt;<span class="lifetime">&#39;a</span>, P: Copy&gt; {
     <span class="kw">pub </span>control_regions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>EntityDefs&lt;ControlRegion&gt;,
     <span class="kw">pub </span>control_nodes: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>EntityDefs&lt;ControlNode&gt;,
@@ -402,7 +408,7 @@
 <span class="comment">// HACK(eddyb) can&#39;t implement `Iterator` because `next` borrows `self`.
 </span><span class="kw">impl </span>FuncAtMut&lt;<span class="lifetime">&#39;_</span>, EntityListIter&lt;ControlNode&gt;&gt; {
     <span class="kw">pub fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;FuncAtMut&lt;<span class="lifetime">&#39;_</span>, ControlNode&gt;&gt; {
-        <span class="kw">let </span>(next, rest) = <span class="self">self</span>.position.split_first(<span class="kw-2">&amp;</span><span class="self">self</span>.control_nodes)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(next, rest) = <span class="self">self</span>.position.split_first(<span class="self">self</span>.control_nodes)<span class="question-mark">?</span>;
         <span class="self">self</span>.position = rest;
         <span class="prelude-val">Some</span>(<span class="self">self</span>.reborrow().at(next))
     }
@@ -425,7 +431,7 @@
 <span class="comment">// HACK(eddyb) can&#39;t implement `Iterator` because `next` borrows `self`.
 </span><span class="kw">impl </span>FuncAtMut&lt;<span class="lifetime">&#39;_</span>, EntityListIter&lt;DataInst&gt;&gt; {
     <span class="kw">pub fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;FuncAtMut&lt;<span class="lifetime">&#39;_</span>, DataInst&gt;&gt; {
-        <span class="kw">let </span>(next, rest) = <span class="self">self</span>.position.split_first(<span class="kw-2">&amp;</span><span class="self">self</span>.data_insts)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(next, rest) = <span class="self">self</span>.position.split_first(<span class="self">self</span>.data_insts)<span class="question-mark">?</span>;
         <span class="self">self</span>.position = rest;
         <span class="prelude-val">Some</span>(<span class="self">self</span>.reborrow().at(next))
     }
@@ -439,7 +445,7 @@
 
 <span class="kw">impl </span>FuncDefBody {
     <span class="doccomment">/// Start immutably traversing the function at `position`.
-    </span><span class="kw">pub fn </span>at&lt;<span class="lifetime">&#39;a</span>, P: Copy&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, position: P) -&gt; FuncAt&lt;<span class="lifetime">&#39;a</span>, P&gt; {
+    </span><span class="kw">pub fn </span>at&lt;P: Copy&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, position: P) -&gt; FuncAt&lt;<span class="lifetime">&#39;_</span>, P&gt; {
         FuncAt {
             control_regions: <span class="kw-2">&amp;</span><span class="self">self</span>.control_regions,
             control_nodes: <span class="kw-2">&amp;</span><span class="self">self</span>.control_nodes,
@@ -449,7 +455,7 @@
     }
 
     <span class="doccomment">/// Start mutably traversing the function at `position`.
-    </span><span class="kw">pub fn </span>at_mut&lt;<span class="lifetime">&#39;a</span>, P: Copy&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, position: P) -&gt; FuncAtMut&lt;<span class="lifetime">&#39;a</span>, P&gt; {
+    </span><span class="kw">pub fn </span>at_mut&lt;P: Copy&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: P) -&gt; FuncAtMut&lt;<span class="lifetime">&#39;_</span>, P&gt; {
         FuncAtMut {
             control_regions: <span class="kw-2">&amp;mut </span><span class="self">self</span>.control_regions,
             control_nodes: <span class="kw-2">&amp;mut </span><span class="self">self</span>.control_nodes,
@@ -459,12 +465,12 @@
     }
 
     <span class="doccomment">/// Shorthand for `func_def_body.at(func_def_body.body)`.
-    </span><span class="kw">pub fn </span>at_body&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>) -&gt; FuncAt&lt;<span class="lifetime">&#39;a</span>, ControlRegion&gt; {
+    </span><span class="kw">pub fn </span>at_body(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FuncAt&lt;<span class="lifetime">&#39;_</span>, ControlRegion&gt; {
         <span class="self">self</span>.at(<span class="self">self</span>.body)
     }
 
     <span class="doccomment">/// Shorthand for `func_def_body.at_mut(func_def_body.body)`.
-    </span><span class="kw">pub fn </span>at_mut_body&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; FuncAtMut&lt;<span class="lifetime">&#39;a</span>, ControlRegion&gt; {
+    </span><span class="kw">pub fn </span>at_mut_body(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; FuncAtMut&lt;<span class="lifetime">&#39;_</span>, ControlRegion&gt; {
         <span class="self">self</span>.at_mut(<span class="self">self</span>.body)
     }
 }

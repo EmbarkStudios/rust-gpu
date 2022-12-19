@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/cda161b/src/context.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirt-0.1.0/src/context.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -844,7 +844,17 @@
 <span id="844">844</span>
 <span id="845">845</span>
 <span id="846">846</span>
-</pre><pre class="rust"><code><span class="kw">use </span>rustc_hash::FxHashMap;
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+</pre><pre class="rust"><code><span class="doccomment">//! [`Context`](struct.Context.html) and related types/traits.
+
+</span><span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>std::hash::Hash;
 <span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::num::NonZeroU32;
@@ -855,10 +865,10 @@
 /// Those resources currently are:
 /// * interners, for anything without an identity, and which can be deduplicated
 /// * &quot;entity&quot; allocators, for everything else - i.e. anything with an identity
-///   that needs to remain unique across an entire `Context`
-///   * the *definition* of an entity isn&#39;t kept in the `Context`, but rather in
-///     some `EntityDefs` collection somewhere in a `Module` (or further nested),
-///     with only the entity *indices* being allocated by the `Context`
+///   that needs to remain unique across an entire [`Context`]
+///   * the *definition* of an entity isn&#39;t kept in the [`Context`], but rather in
+///     some [`EntityDefs`] collection somewhere in a [`Module`](crate::Module) (or further nested),
+///     with only the entity *indices* being allocated by the [`Context`]
 </span><span class="attribute">#[derive(Default)]
 </span><span class="kw">pub struct </span>Context {
     interners: Interners,
@@ -1006,15 +1016,18 @@
     }
 }
 
-<span class="doccomment">/// Collection holding the actual definitions for `Context`-allocated entities.
+<span class="comment">// FIXME(eddyb) consider including `Rc&lt;Context&gt;` in `EntityDefs` to avoid having
+// to pass it manually to the `EntityDefs::define` methods (which feels dangerous!).
+//
+</span><span class="doccomment">/// Collection holding the actual definitions for [`Context`]-allocated entities.
 ///
-/// By design there is no way to iterate the contents of an `EntityDefs`, or
-/// generate entity indices without defining the entity in an `EntityDefs`.
+/// By design there is no way to iterate the contents of an [`EntityDefs`], or
+/// generate entity indices without defining the entity in an [`EntityDefs`].
 </span><span class="attribute">#[derive(Clone)]
 </span><span class="kw">pub struct </span>EntityDefs&lt;E: sealed::Entity&gt; {
     <span class="doccomment">/// Entities are grouped into chunks, with per-entity-type chunk sizes
     /// (powers of 2) specified via `entities!` below.
-    /// This allows different `EntityDefs`s to independently define more
+    /// This allows different [`EntityDefs`]s to independently define more
     /// entities, without losing compactness (until a whole chunk is filled).
     </span><span class="comment">//
     // FIXME(eddyb) consider using `u32` instead of `usize` for the &quot;flattened base&quot;.
@@ -1026,7 +1039,7 @@
     /// defining more entities into it, without allocating new chunks).
     </span>incomplete_chunk_start_and_flattened_base: <span class="prelude-ty">Option</span>&lt;(E, usize)&gt;,
 
-    <span class="doccomment">/// All chunks&#39; definitions are flattened into one contiguous `Vec`, where
+    <span class="doccomment">/// All chunks&#39; definitions are flattened into one contiguous [`Vec`], where
     /// the start of each chunk&#39;s definitions in `flattened` is indicated by
     /// either `complete_chunk_start_to_flattened_base` (for completed chunks)
     /// or `incomplete_chunk_start_and_flattened_base`.
@@ -1149,16 +1162,16 @@
 
 <span class="doccomment">/// Map with `K` keys and `V` values, that is:
 /// * &quot;entity-oriented&quot; `K` keys, i.e. that are or contain exactly one entity
-///   (supported via `K: EntityOrientedMapKey&lt;V&gt;` for extensibility)
+///   (supported via [`K: EntityOrientedMapKey&lt;V&gt;`](EntityOrientedMapKey) for extensibility)
 /// * &quot;dense&quot; in the sense of few (or no) gaps in (the entities in) its keys
-///   (relative to the entities defined in the corresponding `EntityDefs`)
+///   (relative to the entities defined in the corresponding [`EntityDefs`])
 ///
-/// By design there is no way to iterate the entries in an `EntityOrientedDenseMap`.
+/// By design there is no way to iterate the entries in an [`EntityOrientedDenseMap`].
 </span><span class="comment">//
 // FIXME(eddyb) implement a &quot;sparse&quot; version as well, and maybe some bitsets?
 </span><span class="attribute">#[derive(Clone)]
 </span><span class="kw">pub struct </span>EntityOrientedDenseMap&lt;K: EntityOrientedMapKey&lt;V&gt;, V&gt; {
-    <span class="doccomment">/// Like in `EntityDefs`, entities are grouped into chunks, but there is no
+    <span class="doccomment">/// Like in [`EntityDefs`], entities are grouped into chunks, but there is no
     /// flattening, since arbitrary insertion orders have to be supported.
     </span>chunk_start_to_value_slots: SmallFxHashMap&lt;K::Entity, Vec&lt;K::DenseValueSlots&gt;&gt;,
 }
@@ -1211,7 +1224,8 @@
     }
 
     <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, k: K) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>V&gt; {
-        <span class="kw">match </span><span class="self">self </span>{
+        <span class="attribute">#[allow(clippy::match_same_arms)]
+        </span><span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Empty =&gt; <span class="prelude-val">None</span>,
             <span class="self">Self</span>::One(old_k, old_v) <span class="kw">if </span><span class="kw-2">*</span>old_k == k =&gt; <span class="prelude-val">Some</span>(old_v),
             <span class="self">Self</span>::One(..) =&gt; <span class="prelude-val">None</span>,
@@ -1220,7 +1234,8 @@
     }
 
     <span class="kw">fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, k: K) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>V&gt; {
-        <span class="kw">match </span><span class="self">self </span>{
+        <span class="attribute">#[allow(clippy::match_same_arms)]
+        </span><span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Empty =&gt; <span class="prelude-val">None</span>,
             <span class="self">Self</span>::One(old_k, old_v) <span class="kw">if </span><span class="kw-2">*</span>old_k == k =&gt; <span class="prelude-val">Some</span>(old_v),
             <span class="self">Self</span>::One(..) =&gt; <span class="prelude-val">None</span>,
@@ -1302,8 +1317,9 @@
     }
 }
 
-<span class="doccomment">/// Doubly-linked list, &quot;intrusively&quot; going through `E::Def`, which must be an
-/// `EntityListNode&lt;E, _&gt;` (to hold the &quot;previous/next node&quot; links).
+<span class="attribute">#[allow(rustdoc::private_intra_doc_links)]
+</span><span class="doccomment">/// Doubly-linked list, &quot;intrusively&quot; going through `E::Def`, which must be an
+/// [`EntityListNode&lt;E, _&gt;`] (to hold the &quot;previous/next node&quot; links).
 ///
 /// Fields are private to avoid arbitrary user interactions.
 </span><span class="attribute">#[derive(Copy, Clone)]
@@ -1448,7 +1464,7 @@
     }
 }
 
-<span class="doccomment">/// `EntityList&lt;E&gt;` iterator, but with a different API than `Iterator`.
+<span class="doccomment">/// [`EntityList&lt;E&gt;`] iterator, but with a different API than [`Iterator`].
 ///
 /// This can also be considered a (non-random-access) &quot;subslice&quot; of the list.
 </span><span class="attribute">#[derive(Copy, Clone)]
@@ -1501,11 +1517,11 @@
     }
 }
 
-<span class="doccomment">/// `EntityList&lt;E&gt;` node, containing the &quot;intrusive&quot; list links, and the rest of
+<span class="doccomment">/// [`EntityList&lt;E&gt;`] node, containing the &quot;intrusive&quot; list links, and the rest of
 /// the entity definition (the `inner_def` field of type `D`).
 ///
 /// Fields are private to avoid arbitrary user interactions outside of special
-/// methods and `Deref`/`DerefMut`.
+/// methods and [`Deref`]/[`DerefMut`].
 </span><span class="comment">//
 // FIXME(eddyb) `Deref`/`DerefMut` aren&#39;t the best API, could this be hidden
 // further by making `EntityDefs` hide the list links in the `Index` impl?
@@ -1573,7 +1589,7 @@
             </span><span class="kw">pub struct </span><span class="macro-nonterminal">$name</span>(
                 <span class="comment">// FIXME(eddyb) figure out how to sneak niches into these types, to
                 // allow e.g. `Option` around them to not increase the size.
-                </span>u32,
+                </span><span class="attribute">#[doc(hidden)] </span>u32,
             );
 
             $(<span class="kw">impl </span>Default <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
@@ -1659,7 +1675,7 @@
             <span class="comment">// NOTE(eddyb) never derive `PartialOrd, Ord` for these types, as
             // observing the entity index allocation order shouldn&#39;t be allowed.
             </span><span class="attribute">#[derive(Copy, Clone, PartialEq, Eq, Hash)]
-            </span><span class="kw">pub struct </span><span class="macro-nonterminal">$name</span>(NonZeroU32);
+            </span><span class="kw">pub struct </span><span class="macro-nonterminal">$name</span>(<span class="attribute">#[doc(hidden)] </span>NonZeroU32);
 
             <span class="kw">impl </span>sealed::Entity <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
                 <span class="kw">type </span>Def = <span class="macro-nonterminal">$def</span>;

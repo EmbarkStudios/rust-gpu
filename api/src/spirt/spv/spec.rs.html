@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/cda161b/src/spv/spec.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spec.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirt-0.1.0/src/spv/spec.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spec.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -1195,7 +1195,13 @@
 <span id="1195">1195</span>
 <span id="1196">1196</span>
 <span id="1197">1197</span>
-</pre><pre class="rust"><code><span class="kw">use </span>arrayvec::ArrayVec;
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
+<span id="1201">1201</span>
+</pre><pre class="rust"><code><span class="doccomment">//! SPIR-V specification parsing/indexing.
+
+</span><span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>lazy_static::lazy_static;
 <span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>std::iter;
@@ -1348,7 +1354,7 @@
 }
 
 <span class="kw">impl </span>Opcode {
-    <span class="doccomment">/// Lookup the name &amp; definition for `opcode` in the lazily-loaded `Spec`,
+    <span class="doccomment">/// Lookup the name &amp; definition for `opcode` in the lazily-loaded [`Spec`],
     /// returning `None` if it&#39;s not a known opcode.
     </span><span class="kw">pub fn </span>try_from_u16_with_name_and_def(
         opcode: u16,
@@ -1362,19 +1368,19 @@
         <span class="self">self</span>.<span class="number">0
     </span>}
 
-    <span class="doccomment">/// Lookup the name &amp; definition for this opcode in the lazily-loaded `Spec`.
+    <span class="doccomment">/// Lookup the name &amp; definition for this opcode in the lazily-loaded [`Spec`].
     </span><span class="attribute">#[inline]
     </span><span class="kw">pub fn </span>name_and_def(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>InstructionDef) {
         Spec::get().instructions.get_named(<span class="self">self</span>).unwrap()
     }
 
-    <span class="doccomment">/// Lookup the name for this opcode in the lazily-loaded `Spec`.
+    <span class="doccomment">/// Lookup the name for this opcode in the lazily-loaded [`Spec`].
     </span><span class="attribute">#[inline]
     </span><span class="kw">pub fn </span>name(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
         <span class="self">self</span>.name_and_def().<span class="number">0
     </span>}
 
-    <span class="doccomment">/// Lookup the definition for this opcode in the lazily-loaded `Spec`.
+    <span class="doccomment">/// Lookup the definition for this opcode in the lazily-loaded [`Spec`].
     </span><span class="attribute">#[inline]
     </span><span class="kw">pub fn </span>def(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>InstructionDef {
         <span class="self">self</span>.name_and_def().<span class="number">1
@@ -1417,8 +1423,8 @@
 }
 
 <span class="kw">impl </span>InstructionDef {
-    <span class="doccomment">/// Return a (potentially infinite) iterator of `OperandKind`s, along with
-    /// the `OperandMode` indicating whether an operand is expected (`Required`),
+    <span class="doccomment">/// Return a (potentially infinite) iterator of [`OperandKind`]s, along with
+    /// the [`OperandMode`] indicating whether an operand is expected (`Required`),
     /// or that an operand&#39;s absence signals the end of operands (`Optional`),
     /// which is also the exit signal for the &quot;rest operands&quot; infinite iterators.
     </span><span class="kw">pub fn </span>all_operands(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (OperandMode, OperandKind)&gt; + <span class="lifetime">&#39;_ </span>{
@@ -1459,19 +1465,19 @@
 }
 
 <span class="kw">impl </span>OperandKind {
-    <span class="doccomment">/// Lookup the name &amp; definition for this operand kind in the lazily-loaded `Spec`.
+    <span class="doccomment">/// Lookup the name &amp; definition for this operand kind in the lazily-loaded [`Spec`].
     </span><span class="attribute">#[inline]
     </span><span class="kw">pub fn </span>name_and_def(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperandKindDef) {
         Spec::get().operand_kinds.get_named(<span class="self">self</span>).unwrap()
     }
 
-    <span class="doccomment">/// Lookup the name for this operand kind in the lazily-loaded `Spec`.
+    <span class="doccomment">/// Lookup the name for this operand kind in the lazily-loaded [`Spec`].
     </span><span class="attribute">#[inline]
     </span><span class="kw">pub fn </span>name(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
         <span class="self">self</span>.name_and_def().<span class="number">0
     </span>}
 
-    <span class="doccomment">/// Lookup the definition for this operand kind in the lazily-loaded `Spec`.
+    <span class="doccomment">/// Lookup the definition for this operand kind in the lazily-loaded [`Spec`].
     </span><span class="attribute">#[inline]
     </span><span class="kw">pub fn </span>def(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperandKindDef {
         <span class="self">self</span>.name_and_def().<span class="number">1
@@ -1507,7 +1513,7 @@
         </span>}
     }
 
-    <span class="doccomment">/// Returns an iterator of `BitIdx`s, from which `x` can be reconstructed
+    <span class="doccomment">/// Returns an iterator of [`BitIdx`]s, from which `x` can be reconstructed
     /// by OR-ing together `1 &lt;&lt; i` for every `BitIdx(i)`.
     ///
     /// The iterator is ordered: lower bit indices appear before higher ones.
@@ -1544,8 +1550,8 @@
 }
 
 <span class="kw">impl </span>Enumerant {
-    <span class="doccomment">/// Return a (potentially infinite) iterator of `OperandKind`s, along with
-    /// the `OperandMode` indicating whether an operand is expected (`Required`),
+    <span class="doccomment">/// Return a (potentially infinite) iterator of [`OperandKind`]s, along with
+    /// the [`OperandMode`] indicating whether an operand is expected (`Required`),
     /// or that an operand&#39;s absence signals the end of operands (`Optional`),
     /// which is also the exit signal for the &quot;rest operands&quot; infinite iterators.
     </span><span class="kw">pub fn </span>all_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (OperandMode, OperandKind)&gt; + <span class="lifetime">&#39;_ </span>{
@@ -1574,7 +1580,7 @@
 }
 
 <span class="kw">impl </span>Spec {
-    <span class="doccomment">/// Return a lazily-loaded `Spec` (only does significant work for the first call).
+    <span class="doccomment">/// Return a lazily-loaded [`Spec`] (only does significant work for the first call).
     </span><span class="attribute">#[inline(always)]
     #[must_use]
     </span><span class="kw">pub fn </span>get() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>Spec {
@@ -1591,15 +1597,15 @@
                     </span><span class="string">&quot;../../khronos-spec/SPIRV-Headers/include/spirv/unified1/spirv.core.grammar.json&quot;
                 </span>);
 
-                <span class="kw">let </span>raw_core_grammar: raw::CoreGrammar = serde_json::from_str(SPIRV_CORE_GRAMMAR_JSON)
-                .unwrap();
+                <span class="kw">let </span>raw_core_grammar: raw::CoreGrammar&lt;<span class="lifetime">&#39;static</span>&gt; =
+                    serde_json::from_str(SPIRV_CORE_GRAMMAR_JSON).unwrap();
                 Spec::from_raw(raw_core_grammar)
             };
         }
         <span class="kw-2">&amp;</span>SPEC
     }
 
-    <span class="doccomment">/// Implementation detail of `Spec::get`, indexes the raw data to produce a `Spec`.
+    <span class="doccomment">/// Implementation detail of [`Spec::get`], indexes the raw data to produce a [`Spec`].
     </span><span class="kw">fn </span>from_raw(raw_core_grammar: raw::CoreGrammar&lt;<span class="lifetime">&#39;static</span>&gt;) -&gt; <span class="self">Self </span>{
         <span class="doccomment">/// Helper for picking a name when the same index has multiple names.
         </span><span class="kw">fn </span>preferred_name_between_dups&lt;<span class="lifetime">&#39;a</span>&gt;(a: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, b: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str {
@@ -1632,7 +1638,7 @@
             .operand_kinds
             .iter()
             .filter_map(|o| {
-                <span class="kw">let </span>enumerant_from_raw = |e: <span class="kw-2">&amp;</span>raw::OperandKindEnumerant| {
+                <span class="kw">let </span>enumerant_from_raw = |e: <span class="kw-2">&amp;</span>raw::OperandKindEnumerant&lt;<span class="lifetime">&#39;_</span>&gt;| {
                     <span class="kw">let </span><span class="kw-2">mut </span>all_params = e
                         .parameters
                         .iter()
@@ -1950,12 +1956,14 @@
                             Seq::Rest
                         }
                     };
-                    <span class="macro">assert!</span>(seq &lt;= <span class="prelude-val">Some</span>(next_seq), <span class="string">&quot;{:?} -&gt; {:?}&quot;</span>, next_seq, seq);
+                    <span class="macro">assert!</span>(seq &lt;= <span class="prelude-val">Some</span>(next_seq), <span class="string">&quot;{next_seq:?} -&gt; {seq:?}&quot;</span>);
                     seq = <span class="prelude-val">Some</span>(next_seq);
                 }
 
                 <span class="comment">// `IdResultType` without `IdResult` is impossible.
-                </span><span class="macro">assert!</span>(!(def.has_result_type_id &amp;&amp; !def.has_result_id));
+                </span><span class="kw">if </span>def.has_result_type_id {
+                    <span class="macro">assert!</span>(def.has_result_id);
+                }
 
                 (inst.opcode, (inst.opname, def))
             }),
@@ -1964,9 +1972,7 @@
                 <span class="comment">// Only allow aliases that do not meaningfully differ.
                 </span><span class="macro">assert!</span>(
                     prev_def == new_def,
-                    <span class="string">&quot;instructions {} and {} share an opcode but differ in definition&quot;</span>,
-                    prev_name,
-                    new_name,
+                    <span class="string">&quot;instructions {prev_name} and {new_name} share an opcode but differ in definition&quot;</span>,
                 );
 
                 (preferred_name_between_dups(prev_name, new_name), new_def)
@@ -2137,14 +2143,17 @@
                 </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
             {
                 <span class="kw">let </span>x = Deserialize::deserialize(deserializer)<span class="question-mark">?</span>;
-                (|<span class="macro-nonterminal">$x</span>: <span class="macro-nonterminal">$in_ty</span>| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="macro-nonterminal">$out_ty</span>, <span class="kw">_</span>&gt; { <span class="macro-nonterminal">$body </span>})(x)
+
+                <span class="comment">// HACK(eddyb) this is a `try {...}`-like use of a closure.
+                </span><span class="attribute">#[allow(clippy::redundant_closure_call)]
+                </span>(|<span class="macro-nonterminal">$x</span>: <span class="macro-nonterminal">$in_ty</span>| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="macro-nonterminal">$out_ty</span>, <span class="kw">_</span>&gt; { <span class="macro-nonterminal">$body </span>})(x)
                     .map_err(serde::de::Error::custom)
             })*
         };
     }
 
     <span class="macro">dew_and_then! </span>{
-        dew_u32_maybe_hex: |x: DecOrHex&lt;u32&gt;| -&gt; u32 { x.try_into() },
+        dew_u32_maybe_hex: |x: DecOrHex&lt;<span class="lifetime">&#39;_</span>, u32&gt;| -&gt; u32 { x.try_into() },
     }
 
     <span class="attribute">#[derive(Deserialize)]
@@ -2197,7 +2206,7 @@
         }
     }
 
-    <span class="doccomment">/// Flat array (`Vec`) storage, likely used with compact indices.
+    <span class="doccomment">/// Flat array ([`Vec`]) storage, likely used with compact indices.
     </span><span class="kw">pub enum </span>Flat {}
 
     <span class="kw">impl</span>&lt;I: FlatIdx, T&gt; StorageShape&lt;I, T&gt; <span class="kw">for </span>Flat {
@@ -2207,7 +2216,7 @@
         }
     }
 
-    <span class="doccomment">/// Like `Flat`, but the `Vec` elements are wrapped in `Option`.
+    <span class="doccomment">/// Like [`Flat`], but the [`Vec`] elements are wrapped in [`Option`].
     </span><span class="kw">pub enum </span>FlatWithHoles {}
 
     <span class="kw">impl</span>&lt;I: FlatIdx, T&gt; StorageShape&lt;I, T&gt; <span class="kw">for </span>FlatWithHoles {
@@ -2225,7 +2234,7 @@
     ///   than the standard range, the blockiness allows some optimizations
     </span><span class="kw">pub enum </span>KhrSegmented {}
 
-    <span class="doccomment">/// Khronos-oriented segmented sparse array (see `KhrSegmented`).
+    <span class="doccomment">/// Khronos-oriented segmented sparse array (see [`KhrSegmented`]).
     </span><span class="kw">pub struct </span>KhrSegmentedVec&lt;T&gt; {
         <span class="doccomment">/// Concatenation of values for indices lower than `4096`, with values
         /// for indices in a `64`-sized/aligned block starting at/above `4096`.
@@ -2286,8 +2295,7 @@
                 // for special handling of duplicates (via `merge_duplicates`).
                 </span><span class="kw">if </span>usize::from(idx) &lt; last_idx {
                     <span class="macro">panic!</span>(
-                        <span class="string">&quot;KhrSegmentedVec::insert_in_order: out of order indices ({} after {})&quot;</span>,
-                        idx, last_idx,
+                        <span class="string">&quot;KhrSegmentedVec::insert_in_order: out of order indices ({idx} after {last_idx})&quot;</span>,
                     );
                 }
             }
@@ -2319,7 +2327,7 @@
             }
         }
 
-        <span class="doccomment">/// Construct a `KhrSegmentedVec` out of an iterator with ordered indices.
+        <span class="doccomment">/// Construct a [`KhrSegmentedVec`] out of an iterator with ordered indices.
         ///
         /// An exception is made for duplicates, which have to be handled by the
         /// `merge_duplicates` closure, instead of being outright disallowed.

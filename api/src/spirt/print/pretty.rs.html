@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/cda161b/src/print/pretty.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pretty.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirt-0.1.0/src/print/pretty.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pretty.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -884,6 +884,9 @@
 <span id="884">884</span>
 <span id="885">885</span>
 <span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Pretty-printing functionality (such as automatic indentation).
 
 </span><span class="kw">use </span>indexmap::IndexSet;
@@ -892,7 +895,9 @@
 <span class="kw">use </span>std::fmt::Write <span class="kw">as _</span>;
 <span class="kw">use </span>std::{fmt, iter, mem};
 
-<span class="doccomment">/// Part of a pretty document, made up of `Node`s.
+<span class="doccomment">/// Part of a pretty document, made up of [`Node`]s.
+</span><span class="comment">//
+// FIXME(eddyb) `Document` might be too long, what about renaming this to `Doc`?
 </span><span class="attribute">#[derive(Clone, Default, PartialEq)]
 </span><span class="kw">pub struct </span>Fragment {
     <span class="kw">pub </span>nodes: SmallVec&lt;[Node; <span class="number">8</span>]&gt;,
@@ -905,10 +910,10 @@
     <span class="comment">// FIXME(eddyb) should this contain a `Node` instead of being text-only?
     </span>StyledText(Box&lt;(Styles, Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;)&gt;),
 
-    <span class="doccomment">/// Container for `Fragment`s, using block layout (indented on separate lines).
+    <span class="doccomment">/// Container for [`Fragment`]s, using block layout (indented on separate lines).
     </span>IndentedBlock(Vec&lt;Fragment&gt;),
 
-    <span class="doccomment">/// Container for `Fragment`s, either using inline layout (all on one line)
+    <span class="doccomment">/// Container for [`Fragment`]s, either using inline layout (all on one line)
     /// or block layout (indented on separate lines).
     </span>InlineOrIndentedBlock(Vec&lt;Fragment&gt;),
 
@@ -1013,7 +1018,7 @@
         }
     }
 
-    <span class="doccomment">/// Perform layout on the `Fragment`, limiting lines to `max_line_width`
+    <span class="doccomment">/// Perform layout on the [`Fragment`], limiting lines to `max_line_width`
     /// columns where possible.
     </span><span class="kw">pub fn </span>layout_with_max_line_width(<span class="kw-2">mut </span><span class="self">self</span>, max_line_width: usize) -&gt; FragmentPostLayout {
         <span class="self">self</span>.approx_layout(MaxWidths {
@@ -1028,14 +1033,13 @@
 </span><span class="kw">pub struct </span>FragmentPostLayout(Fragment);
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>FragmentPostLayout {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="prelude-val">Ok</span>(());
         <span class="self">self</span>.<span class="number">0</span>.render_to_line_ops(
-            <span class="kw-2">&amp;mut </span>LineOp::interpret_with(|op| <span class="kw">match </span>op {
-                TextOp::Text(text) =&gt; {
+            <span class="kw-2">&amp;mut </span>LineOp::interpret_with(|op| {
+                <span class="kw">if let </span>TextOp::Text(text) = op {
                     result = result.and_then(|<span class="kw">_</span>| f.write_str(text));
                 }
-                <span class="kw">_ </span>=&gt; {}
             }),
             <span class="bool-val">false</span>,
         );
@@ -1119,7 +1123,7 @@
 }
 
 <span class="kw">impl </span>FragmentPostLayout {
-    <span class="doccomment">/// Flatten the `Fragment` to HTML, producing a `HtmlSnippet`.
+    <span class="doccomment">/// Flatten the [`Fragment`] to HTML, producing a [`HtmlSnippet`].
     </span><span class="comment">//
     // FIXME(eddyb) provide a non-allocating version.
     </span><span class="kw">pub fn </span>render_to_html(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HtmlSnippet {
@@ -1164,7 +1168,7 @@
                     <span class="kw">let </span>tag = special_tags.next().unwrap_or(<span class="string">&quot;span&quot;</span>);
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(other_tag) = special_tags.next() {
                         <span class="comment">// FIXME(eddyb) support by opening/closing multiple tags.
-                        </span><span class="macro">unimplemented!</span>(<span class="string">&quot;`&lt;{tag}&gt;` conflicts with `&lt;{other_tag}&gt;`&quot;</span>);
+                        </span><span class="macro">panic!</span>(<span class="string">&quot;`&lt;{tag}&gt;` conflicts with `&lt;{other_tag}&gt;`&quot;</span>);
                     }
 
                     body += <span class="string">&quot;&lt;&quot;</span>;
@@ -1248,12 +1252,12 @@
 
 <span class="comment">// Rendering implementation details (including approximate layout).
 
-</span><span class="doccomment">/// The approximate shape of a `Node`, regarding its 2D placement.
+</span><span class="doccomment">/// The approximate shape of a [`Node`], regarding its 2D placement.
 </span><span class="attribute">#[derive(Copy, Clone)]
 </span><span class="kw">enum </span>ApproxLayout {
     <span class="doccomment">/// Only occupies part of a line, (at most) `worst_width` columns wide.
     ///
-    /// `worst_width` can exceed the `inline` field of `MaxWidths`, in which
+    /// `worst_width` can exceed the `inline` field of [`MaxWidths`], in which
     /// case the choice of inline vs block is instead made by a surrounding node.
     </span>Inline { worst_width: usize },
 
@@ -1310,7 +1314,7 @@
     }
 }
 
-<span class="doccomment">/// Maximum numbers of columns, available to a `Node`, for both inline layout
+<span class="doccomment">/// Maximum numbers of columns, available to a [`Node`], for both inline layout
 /// and block layout (i.e. multi-line with indentation).
 ///
 /// That is, these are the best-case scenarios across all possible choices of
@@ -1326,10 +1330,10 @@
 </span><span class="kw">const </span>INDENT: <span class="kw-2">&amp;</span>str = <span class="string">&quot;  &quot;</span>;
 
 <span class="kw">impl </span>Node {
-    <span class="doccomment">/// Determine the &quot;rigid&quot; component of the `ApproxLayout` of this `Node`.
+    <span class="doccomment">/// Determine the &quot;rigid&quot; component of the [`ApproxLayout`] of this [`Node`].
     ///
-    /// That is, this accounts for the parts of the `Node` that don&#39;t depend on
-    /// contextual sizing, i.e. `MaxWidths` (see also `approx_flex_layout`).
+    /// That is, this accounts for the parts of the [`Node`] that don&#39;t depend on
+    /// contextual sizing, i.e. [`MaxWidths`] (see also `approx_flex_layout`).
     </span><span class="kw">fn </span>approx_rigid_layout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ApproxLayout {
         <span class="comment">// HACK(eddyb) workaround for the `Self::StyledText` arm not being able
         // to destructure through the `Box&lt;(_, Cow&lt;str&gt;)&gt;`.
@@ -1352,7 +1356,9 @@
                 ApproxLayout::Inline { worst_width: width }
             }
         };
-        <span class="kw">match </span><span class="self">self </span>{
+
+        <span class="attribute">#[allow(clippy::match_same_arms)]
+        </span><span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Text(text) =&gt; text_approx_rigid_layout(text),
             <span class="self">Self</span>::StyledText(styles_and_text) =&gt; text_approx_rigid_layout(<span class="kw-2">&amp;</span>styles_and_text.<span class="number">1</span>),
 
@@ -1384,11 +1390,11 @@
         }
     }
 
-    <span class="doccomment">/// Determine the &quot;flexible&quot; component of the `ApproxLayout` of this `Node`,
+    <span class="doccomment">/// Determine the &quot;flexible&quot; component of the [`ApproxLayout`] of this [`Node`],
     /// potentially making adjustments in order to fit within `max_widths`.
     ///
-    /// That is, this accounts for the parts of the `Node` that do depend on
-    /// contextual sizing, i.e. `MaxWidths` (see also `approx_rigid_layout`).
+    /// That is, this accounts for the parts of the [`Node`] that do depend on
+    /// contextual sizing, i.e. [`MaxWidths`] (see also `approx_rigid_layout`).
     </span><span class="kw">fn </span>approx_flex_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, max_widths: MaxWidths) -&gt; ApproxLayout {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::IndentedBlock(fragments) =&gt; {
@@ -1469,7 +1475,7 @@
 }
 
 <span class="kw">impl </span>Fragment {
-    <span class="doccomment">/// Determine the `ApproxLayout` of this `Fragment`, potentially making
+    <span class="doccomment">/// Determine the [`ApproxLayout`] of this [`Fragment`], potentially making
     /// adjustments in order to fit within `max_widths`.
     </span><span class="kw">fn </span>approx_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, max_widths: MaxWidths) -&gt; ApproxLayout {
         <span class="kw">let </span><span class="kw-2">mut </span>layout = ApproxLayout::Inline { worst_width: <span class="number">0 </span>};
@@ -1533,8 +1539,8 @@
 <span class="doccomment">/// Line-oriented operation (i.e. as if lines are stored separately).
 ///
 /// However, a representation that stores lines separately doesn&#39;t really exist,
-/// and instead `LineOp`s are (statefully) transformed into `TextOp`s on the fly
-/// (see `LineOp::interpret_with`).
+/// and instead [`LineOp`]s are (statefully) transformed into [`TextOp`]s on the fly
+/// (see [`LineOp::interpret_with`]).
 </span><span class="attribute">#[derive(Copy, Clone)]
 </span><span class="kw">enum </span>LineOp&lt;<span class="lifetime">&#39;a</span>&gt; {
     PushIndent,
@@ -1554,7 +1560,7 @@
 }
 
 <span class="kw">impl </span>Node {
-    <span class="doccomment">/// Flatten the `Fragment` to `LineOp`s, passed to `each_line_op`.
+    <span class="doccomment">/// Flatten the [`Node`] to [`LineOp`]s, passed to `each_line_op`.
     </span><span class="kw">fn </span>render_to_line_ops&lt;<span class="lifetime">&#39;a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
         each_line_op: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(LineOp&lt;<span class="lifetime">&#39;a</span>&gt;),
@@ -1612,7 +1618,7 @@
 }
 
 <span class="kw">impl </span>Fragment {
-    <span class="doccomment">/// Flatten the `Fragment` to `LineOp`s, passed to `each_line_op`.
+    <span class="doccomment">/// Flatten the [`Fragment`] to [`LineOp`]s, passed to `each_line_op`.
     </span><span class="kw">fn </span>render_to_line_ops&lt;<span class="lifetime">&#39;a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
         each_line_op: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(LineOp&lt;<span class="lifetime">&#39;a</span>&gt;),
@@ -1633,8 +1639,8 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; LineOp&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="doccomment">/// Expand `LineOp`s passed to the returned `impl FnMut(LineOp&lt;&#39;a&gt;)` closure,
-    /// forwarding the expanded `TextOp`s to `each_text_op`.
+    <span class="doccomment">/// Expand [`LineOp`]s passed to the returned `impl FnMut(LineOp&lt;&#39;a&gt;)` closure,
+    /// forwarding the expanded [`TextOp`]s to `each_text_op`.
     </span><span class="comment">//
     // FIXME(eddyb) this&#39;d be nicer if instead of returning a closure, it could
     // be passed to an `impl for&lt;F: FnMut(LineOp&lt;&#39;a&gt;)&gt; FnOnce(F)` callback.
@@ -1723,7 +1729,7 @@
 //
 // FIXME(eddyb) should these be methods on `Node`/`Fragment`?
 
-</span><span class="doccomment">/// Constructs the `Fragment` corresponding to one of:
+</span><span class="doccomment">/// Constructs the [`Fragment`] corresponding to one of:
 /// * inline layout: `header + &quot; &quot; + contents.join(&quot; &quot;)`
 /// * block layout: `header + &quot;\n&quot; + indent(contents).join(&quot;\n&quot;)`
 </span><span class="kw">pub fn </span>join_space(
@@ -1743,7 +1749,7 @@
     ])
 }
 
-<span class="doccomment">/// Constructs the `Fragment` corresponding to one of:
+<span class="doccomment">/// Constructs the [`Fragment`] corresponding to one of:
 /// * inline layout: `prefix + contents.join(&quot;, &quot;) + suffix`
 /// * block layout: `prefix + &quot;\n&quot; + indent(contents).join(&quot;,\n&quot;) + &quot;,\n&quot; + suffix`
 </span><span class="kw">pub fn </span>join_comma_sep(

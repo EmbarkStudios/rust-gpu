@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/cda161b/src/transform.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transform.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirt-0.1.0/src/transform.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transform.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -703,7 +703,11 @@
 <span id="703">703</span>
 <span id="704">704</span>
 <span id="705">705</span>
-</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::func_at::FuncAtMut;
+<span id="706">706</span>
+<span id="707">707</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Mutable IR traversal.
+
+</span><span class="kw">use </span><span class="kw">crate</span>::func_at::FuncAtMut;
 <span class="kw">use crate</span>::{
     cfg, spv, AddrSpace, Attr, AttrSet, AttrSetDef, Const, ConstCtor, ConstDef, ControlNode,
     ControlNodeDef, ControlNodeKind, ControlNodeOutputDecl, ControlRegion, ControlRegionDef,
@@ -747,8 +751,8 @@
 // can call e.g. `Transformed::foo(...)` methods.
 </span><span class="kw">impl </span>Transformed&lt;()&gt; {
     <span class="doccomment">/// Map every element of an iterator through `transform_elem` and return
-    /// `Transformed::Changed(new_iter)` if any `transform_elem` call returned
-    /// `Transformed::Changed`, with `new_iter` containing a combination of the
+    /// [`Transformed::Changed(new_iter)`] if any `transform_elem` call returned
+    /// [`Transformed::Changed`], with `new_iter` containing a combination of the
     /// changed elements, and clones of the unchanged elements.
     </span><span class="kw">pub fn </span>map_iter&lt;<span class="lifetime">&#39;a</span>, T: <span class="lifetime">&#39;a </span>+ Clone&gt;(
         iter: <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; + Clone + <span class="lifetime">&#39;a</span>,
@@ -781,9 +785,9 @@
     }
 }
 
-<span class="doccomment">/// Helper macro to create a combined `Transformed` out of several variables,
-/// each with their own transformation, where any `Transformed::Changed` input
-/// will result in a `Transformed::Changed` output, using a combination of the
+<span class="doccomment">/// Helper macro to create a combined [`Transformed`] out of several variables,
+/// each with their own transformation, where any [`Transformed::Changed`] input
+/// will result in a [`Transformed::Changed`] output, using a combination of the
 /// changed inputs, and clones of the unchanged inputs.
 </span><span class="macro">macro_rules! </span>transform {
     <span class="comment">// User-facing entry-point, dispatches to the internal more-explicit form.
@@ -906,7 +910,7 @@
 <span class="doccomment">/// Trait implemented on &quot;transformable&quot; types, to further &quot;elaborate&quot; a type by
 /// transforming its &quot;interior&quot; (i.e. variants and/or fields).
 ///
-/// That is, an `impl InnerTransform for X` will call the relevant `Transformer`
+/// That is, an `impl InnerTransform for X` will call the relevant [`Transformer`]
 /// method for each `X` field, effectively performing a single level of a deep
 /// transform.
 /// Also, if `Transformer::transform_X` exists for a given `X`, its default should
@@ -918,7 +922,7 @@
     </span><span class="kw">fn </span>inner_transform_with(<span class="kw-2">&amp;</span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer) -&gt; Transformed&lt;<span class="self">Self</span>&gt;;
 }
 
-<span class="doccomment">/// Like `InnerTransform`, but only for the `in_place_transform_X` cases.
+<span class="doccomment">/// Like [`InnerTransform`], but only for the `in_place_transform_X` cases.
 </span><span class="kw">pub trait </span>InnerInPlaceTransform {
     <span class="kw">fn </span>inner_in_place_transform_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, transformer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Transformer);
 }

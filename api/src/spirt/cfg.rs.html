@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/cda161b/src/cfg.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cfg.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirt-0.1.0/src/cfg.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cfg.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../spirt/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -1320,7 +1320,6 @@
 <span id="1320">1320</span>
 <span id="1321">1321</span>
 <span id="1322">1322</span>
-<span id="1323">1323</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Control-flow graph (CFG) abstractions and utilities.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::func_at::FuncAt;
@@ -1333,7 +1332,7 @@
 <span class="kw">use </span>std::mem;
 
 <span class="doccomment">/// The control-flow graph (CFG) of a function, as control-flow instructions
-/// (`ControlInst`s) attached to `ControlRegion`s, as an &quot;action on exit&quot;, i.e.
+/// ([`ControlInst`]s) attached to [`ControlRegion`]s, as an &quot;action on exit&quot;, i.e.
 /// &quot;terminator&quot; (while intra-region control-flow is strictly structured).
 </span><span class="attribute">#[derive(Clone, Default)]
 </span><span class="kw">pub struct </span>ControlFlowGraph {
@@ -1351,7 +1350,7 @@
     <span class="comment">// FIXME(eddyb) change the inline size of this to fit most instructions.
     </span><span class="kw">pub </span>targets: SmallVec&lt;[ControlRegion; <span class="number">4</span>]&gt;,
 
-    <span class="doccomment">/// `target_inputs[region][input_idx]` is the `Value` that
+    <span class="doccomment">/// `target_inputs[region][input_idx]` is the [`Value`] that
     /// `Value::ControlRegionInput { region, input_idx }` will get on entry,
     /// where `region` must be appear at least once in `targets` - this is a
     /// separate map instead of being part of `targets` because it reflects the
@@ -1391,7 +1390,7 @@
 }
 
 <span class="kw">impl </span>ControlFlowGraph {
-    <span class="doccomment">/// Iterate over all `ControlRegion`s making up `func_def_body`&#39;s CFG, in
+    <span class="doccomment">/// Iterate over all [`ControlRegion`]s making up `func_def_body`&#39;s CFG, in
     /// reverse post-order (RPO).
     ///
     /// RPO iteration over a CFG provides certain guarantees, most importantly
@@ -1418,10 +1417,10 @@
 <span class="comment">// HACK(eddyb) this only serves to disallow accessing `private_count` field of
 // `IncomingEdgeCount`.
 </span><span class="kw">mod </span>sealed {
-    <span class="doccomment">/// Opaque newtype for the count of incoming edges (into a `ControlRegion`).
+    <span class="doccomment">/// Opaque newtype for the count of incoming edges (into a [`ControlRegion`](crate::ControlRegion)).
     ///
     /// The private field prevents direct mutation or construction, forcing the
-    /// use of `IncomingEdgeCount::ONE` and addition operations to produce some
+    /// use of [`IncomingEdgeCount::ONE`] and addition operations to produce some
     /// specific count (which would require explicit workarounds for misuse).
     </span><span class="attribute">#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>IncomingEdgeCount(usize);
@@ -1472,7 +1471,7 @@
 
     <span class="kw">fn </span>traverse(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        func_at_region: FuncAt&lt;ControlRegion&gt;,
+        func_at_region: FuncAt&lt;<span class="lifetime">&#39;_</span>, ControlRegion&gt;,
         incoming_edge_counts: <span class="kw-2">&amp;mut </span>EntityOrientedDenseMap&lt;ControlRegion, IncomingEdgeCount&gt;,
         pre_order_visit: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(ControlRegion),
         post_order_visit: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(ControlRegion),
@@ -1506,10 +1505,11 @@
     }
 }
 
-<span class="doccomment">/// Control-flow &quot;structurizer&quot;, which attempts to convert as much of the CFG
+<span class="attribute">#[allow(rustdoc::private_intra_doc_links)]
+</span><span class="doccomment">/// Control-flow &quot;structurizer&quot;, which attempts to convert as much of the CFG
 /// as possible into structural control-flow (regions).
 ///
-/// See `StructurizeRegionState`&#39;s docs for more details on the algorithm.
+/// See [`StructurizeRegionState`]&#39;s docs for more details on the algorithm.
 </span><span class="comment">//
 // FIXME(eddyb) document this (instead of having it on `StructurizeRegionState`).
 //
@@ -1534,22 +1534,22 @@
 </span><span class="kw">pub struct </span>Structurizer&lt;<span class="lifetime">&#39;a</span>&gt; {
     cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Context,
 
-    <span class="doccomment">/// Scrutinee type for `SelectionKind::BoolCond`.
+    <span class="doccomment">/// Scrutinee type for [`SelectionKind::BoolCond`].
     </span>type_bool: Type,
 
-    <span class="doccomment">/// Scrutinee value for `SelectionKind::BoolCond`, for the &quot;then&quot; case.
+    <span class="doccomment">/// Scrutinee value for [`SelectionKind::BoolCond`], for the &quot;then&quot; case.
     </span>const_true: Const,
 
-    <span class="doccomment">/// Scrutinee value for `SelectionKind::BoolCond`, for the &quot;else&quot; case.
+    <span class="doccomment">/// Scrutinee value for [`SelectionKind::BoolCond`], for the &quot;else&quot; case.
     </span>const_false: Const,
 
     func_def_body: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>FuncDefBody,
     incoming_edge_counts: EntityOrientedDenseMap&lt;ControlRegion, IncomingEdgeCount&gt;,
 
-    <span class="doccomment">/// Keyed by the input to `structurize_region_from` (the start `ControlRegion`),
+    <span class="doccomment">/// Keyed by the input to `structurize_region_from` (the start [`ControlRegion`]),
     /// and describing the state of that partial structurization step.
     ///
-    /// See also `StructurizeRegionState`&#39;s docs.
+    /// See also [`StructurizeRegionState`]&#39;s docs.
     </span><span class="comment">//
     // FIXME(eddyb) use `EntityOrientedDenseMap` (which lacks iteration by design).
     </span>structurize_region_state: FxIndexMap&lt;ControlRegion, StructurizeRegionState&gt;,
@@ -1562,10 +1562,10 @@
 }
 
 <span class="doccomment">/// The state of one `structurize_region_from` invocation (keyed on its start
-/// `ControlRegion` in `Structurizer`) and its `PartialControlRegion` output.
+/// [`ControlRegion`] in [`Structurizer`]) and its [`PartialControlRegion`] output.
 ///
 /// There is a fourth (or 0th) implicit state, which is where nothing has yet
-/// observed some region, and `Structurizer` isn&#39;t tracking it at all.
+/// observed some region, and [`Structurizer`] isn&#39;t tracking it at all.
 </span><span class="comment">//
 // FIXME(eddyb) make the 0th state explicit and move `incoming_edge_counts` to it.
 </span><span class="kw">enum </span>StructurizeRegionState {
@@ -1574,8 +1574,8 @@
 
     <span class="doccomment">/// Structurization completed, and this region can now be claimed.
     </span>Ready {
-        <span class="doccomment">/// If this region had backedges (targeting its start `ControlRegion`),
-        /// their bundle is taken from the region&#39;s `DeferredEdgeBundleSet`,
+        <span class="doccomment">/// If this region had backedges (targeting its start [`ControlRegion`]),
+        /// their bundle is taken from the region&#39;s [`DeferredEdgeBundleSet`],
         /// and kept in this field instead (for simpler/faster access).
         ///
         /// Claiming a region with backedges can combine them with the bundled
@@ -1587,27 +1587,27 @@
         region: PartialControlRegion,
     },
 
-    <span class="doccomment">/// Region was claimed (by an `IncomingEdgeBundle`, with the appropriate
-    /// total `IncomingEdgeCount`, minus any `consumed_backedges`), and has
+    <span class="doccomment">/// Region was claimed (by an [`IncomingEdgeBundle`], with the appropriate
+    /// total [`IncomingEdgeCount`], minus any `consumed_backedges`), and has
     /// since likely been incorporated as part of some larger region.
     </span>Claimed,
 }
 
 <span class="doccomment">/// An &quot;(incoming) edge bundle&quot; is a subset of the edges into a single `target`.
 ///
-/// When `accumulated_count` reaches the total `IncomingEdgeCount` for `target`,
-/// that `IncomingEdgeBundle` is said to &quot;effectively own&quot; its `target` (akin to
+/// When `accumulated_count` reaches the total [`IncomingEdgeCount`] for `target`,
+/// that [`IncomingEdgeBundle`] is said to &quot;effectively own&quot; its `target` (akin to
 /// the more commonly used CFG domination relation, but more &quot;incremental&quot;).
 </span><span class="kw">struct </span>IncomingEdgeBundle {
     target: ControlRegion,
     accumulated_count: IncomingEdgeCount,
 
-    <span class="doccomment">/// The `Value`s that `Value::ControlRegionInput { region, .. }` will get
+    <span class="doccomment">/// The [`Value`]s that `Value::ControlRegionInput { region, .. }` will get
     /// on entry into `region`, through this &quot;edge bundle&quot;.
     </span>target_inputs: SmallVec&lt;[Value; <span class="number">2</span>]&gt;,
 }
 
-<span class="doccomment">/// A &quot;deferred (incoming) edge bundle&quot; is an `IncomingEdgeBundle` that cannot
+<span class="doccomment">/// A &quot;deferred (incoming) edge bundle&quot; is an [`IncomingEdgeBundle`] that cannot
 /// be structurized immediately, but instead waits for its `accumulated_count`
 /// to reach the full count of its `target`, before it can grafted into some
 /// structured control-flow region.
@@ -1638,7 +1638,7 @@
 ///     branch =&gt; label1
 /// }
 /// ```
-/// which could theoretically be simplified (after the `Structurizer`) to:
+/// which could theoretically be simplified (after the [`Structurizer`]) to:
 /// ```text
 /// label1_condition = a | b
 /// if label1_condition {
@@ -1650,7 +1650,7 @@
     edge_bundle: IncomingEdgeBundle,
 }
 
-<span class="doccomment">/// Set of `DeferredEdgeBundle`s, uniquely keyed by their `target`s.
+<span class="doccomment">/// Set of [`DeferredEdgeBundle`]s, uniquely keyed by their `target`s.
 </span><span class="kw">struct </span>DeferredEdgeBundleSet {
     <span class="comment">// FIXME(eddyb) this field requires this invariant to be maintained:
     // `target_to_deferred[target].edge_bundle.target == target` - but that&#39;s
@@ -1658,25 +1658,25 @@
     </span>target_to_deferred: FxIndexMap&lt;ControlRegion, DeferredEdgeBundle&gt;,
 }
 
-<span class="doccomment">/// Partially structurized `ControlRegion`, the result of combining together
-/// several smaller `ControlRegion`s, based on CFG edges between them.
+<span class="doccomment">/// Partially structurized [`ControlRegion`], the result of combining together
+/// several smaller [`ControlRegion`]s, based on CFG edges between them.
 </span><span class="kw">struct </span>PartialControlRegion {
     <span class="comment">// FIXME(eddyb) keep this in the original `ControlRegion` instead.
     </span>children: EntityList&lt;ControlNode&gt;,
 
-    <span class="doccomment">/// When not all transitive targets could be claimed into the `ControlRegion`,
+    <span class="doccomment">/// When not all transitive targets could be claimed into the [`ControlRegion`],
     /// some remain as deferred exits, blocking further structurization until
     /// all other edges to those targets are gathered together.
     ///
     /// If both `deferred_edges` is empty and `deferred_return` is `None`, then
-    /// the `ControlRegion` never exits, i.e. it has divergent control-flow
+    /// the [`ControlRegion`] never exits, i.e. it has divergent control-flow
     /// (such as an infinite loop).
     </span>deferred_edges: DeferredEdgeBundleSet,
 
     <span class="doccomment">/// Structured &quot;return&quot; out of the function (holding `output`s for the
-    /// function body, i.e. the inputs to the `ControlInstKind::Return`).
+    /// function body, i.e. the inputs to the [`ControlInstKind::Return`]).
     ///
-    /// Unlike `DeferredEdgeBundle`, this doesn&#39;t need a condition, as it&#39;s
+    /// Unlike [`DeferredEdgeBundle`], this doesn&#39;t need a condition, as it&#39;s
     /// effectively a &quot;fallback&quot;, only used when `deferred_edges` is empty.
     </span>deferred_return: <span class="prelude-ty">Option</span>&lt;SmallVec&lt;[Value; <span class="number">2</span>]&gt;&gt;,
 }
@@ -1959,13 +1959,13 @@
     }
 
     <span class="doccomment">/// Structurize a region starting from `unstructured_region`, and extending
-    /// it (by combining the smaller `ControlRegion`s) as much as possible into
+    /// it (by combining the smaller [`ControlRegion`]s) as much as possible into
     /// the CFG (likely everything dominated by `unstructured_region`).
     ///
     /// The output of this process is stored in, and any other bookkeeping is
     /// done through, `self.structurize_region_state[unstructured_region]`.
     ///
-    /// See also `StructurizeRegionState`&#39;s docs.
+    /// See also [`StructurizeRegionState`]&#39;s docs.
     </span><span class="kw">fn </span>structurize_region_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, unstructured_region: ControlRegion) {
         {
             <span class="kw">let </span>old_state = <span class="self">self
@@ -1996,7 +1996,7 @@
                    `ControlInst` (CFG wasn&#39;t unstructured in the first place?)&quot;</span>,
             );
 
-        <span class="doccomment">/// Marker error type for unhandled `ControlInst`s below.
+        <span class="doccomment">/// Marker error type for unhandled [`ControlInst`]s below.
         </span><span class="kw">struct </span>UnsupportedControlInst(ControlInst);
 
         <span class="kw">let </span>region_from_control_inst = {
@@ -2066,7 +2066,7 @@
                 ControlInstKind::Branch =&gt; {
                     <span class="macro">assert_eq!</span>((inputs.len(), child_regions.len()), (<span class="number">0</span>, <span class="number">1</span>));
 
-                    <span class="prelude-val">Ok</span>(child_regions.into_iter().nth(<span class="number">0</span>).unwrap())
+                    <span class="prelude-val">Ok</span>(child_regions.into_iter().next().unwrap())
                 }
 
                 ControlInstKind::SelectBranch(kind) =&gt; {
@@ -2093,8 +2093,7 @@
                         inputs: [].into_iter().collect(),
                         children: EntityList::empty(),
                         outputs: [].into_iter().collect(),
-                    }
-                    .into(),
+                    },
                 );
                 <span class="self">self</span>.func_def_body
                     .unstructured_cfg
@@ -2234,7 +2233,7 @@
         }
     }
 
-    <span class="doccomment">/// Build a `Select` `ControlNode`, from partially structured `cases`,
+    <span class="doccomment">/// Build a `Select` [`ControlNode`], from partially structured `cases`,
     /// merging all of their `deferred_{edges,returns}` together.
     </span><span class="kw">fn </span>structurize_select(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -2494,7 +2493,7 @@
     }
 
     <span class="doccomment">/// When structurization is only partial, and there remain unclaimed regions,
-    /// they have to be reintegrated into the CFG, putting back `ControlInst`s
+    /// they have to be reintegrated into the CFG, putting back [`ControlInst`]s
     /// where `structurize_region_from` has taken them from.
     ///
     /// This function handles one region at a time to make it more manageable,
@@ -2558,8 +2557,7 @@
                             inputs: [].into_iter().collect(),
                             children: EntityList::empty(),
                             outputs: [].into_iter().collect(),
-                        }
-                        .into(),
+                        },
                     );
                     control_source = <span class="prelude-val">Some</span>(new_empty_region);
                     <span class="prelude-val">Some</span>((new_empty_region, [].into_iter().collect()))

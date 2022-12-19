@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/spirt-9c237dd53f05c2cc/cda161b/src/spv/write.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>write.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirt-0.1.0/src/spv/write.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>write.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -246,11 +246,6 @@
 <span id="246">246</span>
 <span id="247">247</span>
 <span id="248">248</span>
-<span id="249">249</span>
-<span id="250">250</span>
-<span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Low-level emission of SPIR-V binary form.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::spv::{<span class="self">self</span>, spec};
@@ -303,11 +298,11 @@
                         <span class="kw">let </span>unsupported = spec::BitIdx::of_all_set_bits(word)
                             .filter(|<span class="kw-2">&amp;</span>bit_idx| bits.get(bit_idx).is_none())
                             .fold(<span class="number">0u32</span>, |x, i| x | (<span class="number">1 </span>&lt;&lt; i.<span class="number">0</span>));
-                        <span class="macro">format!</span>(<span class="string">&quot;unsupported {} bit-pattern 0x{:08x}&quot;</span>, name, unsupported).into()
+                        <span class="macro">format!</span>(<span class="string">&quot;unsupported {name} bit-pattern 0x{unsupported:08x}&quot;</span>).into()
                     }
 
                     spec::OperandKindDef::ValueEnum { .. } =&gt; {
-                        <span class="macro">format!</span>(<span class="string">&quot;unsupported {} value {}&quot;</span>, name, word).into()
+                        <span class="macro">format!</span>(<span class="string">&quot;unsupported {name} value {word}&quot;</span>).into()
                     }
 
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
@@ -326,10 +321,8 @@
 
     <span class="kw">fn </span>enumerant_params(<span class="kw-2">&amp;mut </span><span class="self">self</span>, enumerant: <span class="kw-2">&amp;</span>spec::Enumerant) -&gt; <span class="prelude-ty">Result</span>&lt;(), OperandEmitError&gt; {
         <span class="kw">for </span>(mode, kind) <span class="kw">in </span>enumerant.all_params() {
-            <span class="kw">if </span>mode == spec::OperandMode::Optional {
-                <span class="kw">if </span><span class="self">self</span>.is_exhausted() {
-                    <span class="kw">break</span>;
-                }
+            <span class="kw">if </span>mode == spec::OperandMode::Optional &amp;&amp; <span class="self">self</span>.is_exhausted() {
+                <span class="kw">break</span>;
             }
             <span class="self">self</span>.operand(kind)<span class="question-mark">?</span>;
         }
@@ -345,7 +338,7 @@
                 <span class="macro">assert!</span>(kind == found_kind);
                 <span class="prelude-val">Ok</span>(word)
             }
-            <span class="prelude-val">Some</span>(spv::Imm::LongStart(..)) | <span class="prelude-val">Some</span>(spv::Imm::LongCont(..)) =&gt; <span class="macro">unreachable!</span>(),
+            <span class="prelude-val">Some</span>(spv::Imm::LongStart(..) | spv::Imm::LongCont(..)) =&gt; <span class="macro">unreachable!</span>(),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::NotEnoughImms),
         };
 
@@ -404,10 +397,8 @@
         <span class="kw">use </span>OperandEmitError <span class="kw">as </span>Error;
 
         <span class="kw">for </span>(mode, kind) <span class="kw">in </span>def.all_operands() {
-            <span class="kw">if </span>mode == spec::OperandMode::Optional {
-                <span class="kw">if </span><span class="self">self</span>.is_exhausted() {
-                    <span class="kw">break</span>;
-                }
+            <span class="kw">if </span>mode == spec::OperandMode::Optional &amp;&amp; <span class="self">self</span>.is_exhausted() {
+                <span class="kw">break</span>;
             }
             <span class="self">self</span>.operand(kind)<span class="question-mark">?</span>;
         }
@@ -440,7 +431,7 @@
 </span><span class="kw">fn </span>invalid(reason: <span class="kw-2">&amp;</span>str) -&gt; io::Error {
     io::Error::new(
         io::ErrorKind::InvalidData,
-        <span class="macro">format!</span>(<span class="string">&quot;malformed SPIR-V ({})&quot;</span>, reason),
+        <span class="macro">format!</span>(<span class="string">&quot;malformed SPIR-V ({reason})&quot;</span>),
     )
 }
 
@@ -455,7 +446,7 @@
     <span class="comment">// FIXME(eddyb) sanity-check the operands against the definition of `inst.opcode`.
     </span><span class="kw">pub fn </span>push_inst(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inst: <span class="kw-2">&amp;</span>spv::InstWithIds) -&gt; io::Result&lt;()&gt; {
         <span class="kw">let </span>(inst_name, def) = inst.opcode.name_and_def();
-        <span class="kw">let </span>invalid = |msg: <span class="kw-2">&amp;</span>str| invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;in {}: {}&quot;</span>, inst_name, msg));
+        <span class="kw">let </span>invalid = |msg: <span class="kw-2">&amp;</span>str| invalid(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;in {inst_name}: {msg}&quot;</span>));
 
         <span class="comment">// FIXME(eddyb) make these errors clearer (or turn them into asserts?).
         </span><span class="kw">if </span>inst.result_type_id.is_some() != def.has_result_type_id {
@@ -474,11 +465,10 @@
         <span class="self">self</span>.words.reserve(total_word_count);
         <span class="kw">let </span>expected_final_pos = <span class="self">self</span>.words.len() + total_word_count;
 
-        <span class="kw">let </span>opcode =
-            u32::from(inst.opcode.as_u16())
-                | u32::from(u16::try_from(total_word_count).map_err(|<span class="kw">_</span>| {
-                    invalid(<span class="string">&quot;word count of SPIR-V instruction doesn&#39;t fit in 16 bits&quot;</span>)
-                })<span class="question-mark">?</span>) &lt;&lt; <span class="number">16</span>;
+        <span class="kw">let </span>opcode = u32::from(inst.opcode.as_u16())
+            | u32::from(u16::try_from(total_word_count).ok().ok_or_else(|| {
+                invalid(<span class="string">&quot;word count of SPIR-V instruction doesn&#39;t fit in 16 bits&quot;</span>)
+            })<span class="question-mark">?</span>) &lt;&lt; <span class="number">16</span>;
         <span class="self">self</span>.words.extend(
             iter::once(opcode)
                 .chain(inst.result_type_id.map(|id| id.get()))
