@@ -31,40 +31,46 @@ There are two main ways to setup your shader project locally.
    flags in your cargo configuration to enable you to run `cargo build` in your
    shader crate.
 
-
 ### Using `spirv-builder`
 If you're writing a bigger application and you want to integrate SPIR-V shader
 crates to display, it's recommended to use `spirv-builder` in a build script.
 
 1. Copy the [`rust-toolchain`] file to your project. (You must use the same
-   version of Rust as `rust-gpu`.)
+   version of Rust as `rust-gpu`. Utimately, the build will fail with a nice
+   error message when you don't use the exact same version)
 2. Reference `spirv-builder` in your Cargo.toml:
     ```toml
     [build-dependencies]
-    spirv-builder = { git = "https://github.com/EmbarkStudios/rust-gpu" }
+    spirv-builder = "0.4"
     ```
-    (we currently do not publish spirv-builder on crates.io)
+    All dependent crates are published on [crates.io](https://crates.io).
 3. Create a `build.rs` in your project root.
 
 #### `build.rs`
-Paste the following into the `main` for your build script.
+Paste the following into `build.rs`
 
 ```rust,no_run
-SpirvBuilder::new(path_to_shader, target)
-        .print_metadata(MetadataPrintout::Full)
-        .build()?;
+use spirv_builder::{MetadataPrintout, SpirvBuilder};
+
+fn main() {
+    SpirvBuilder::new(shader_crate, target)
+    .print_metadata(MetadataPrintout::Full)
+    .build()
+    .unwrap(); 
+}
 ```
 
-The values available for the `target` parameter are available
+Substituting `shader_crate` with a relative path to your shader crate. The values available for the `target` parameter are available
 [here](./platform-support.md).  For example, if building for vulkan 1.1, use
 `"spirv-unknown-vulkan1.1"`.
 
 The `SpirvBuilder` struct has numerous configuration options available, see
-rustdoc for documentation.
+[documentation](https://embarkstudios.github.io/rust-gpu/api/spirv_builder/struct.SpirvBuilder.html).
 
 #### `main.rs`
+The following will directly include the shader module binary into your application.
 ```rust,no_run
-const SHADER: &[u8] = include_bytes!(env!("<shader_name>.spv"));
+const SHADER: &[u8] = include_bytes!(env!("<shader_crate>.spv"));
 ```
 
 > **Note** If your shader name contains hyphens, the name of environment variable will be the name with hyphens changed to underscores.
@@ -100,7 +106,7 @@ necessary flags. Before you can do that however you need to do a couple of steps
 first to build the compiler backend.
 
 1. Clone the `rust-gpu` repository
-3. `cargo build --release` in `rust-gpu`.
+2. `cargo build --release` in `rust-gpu`.
 
 Now you should have a `librustc_codegen_spirv` dynamic library available in
 `target/release`. You'll need to keep this somewhere stable that you can
@@ -134,3 +140,26 @@ Now you should have `<project_name>.spv` SPIR-V file in `target/debug` that you
 can give to a renderer.
 
 [`rust-toolchain`]: https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain
+
+## Writing your first shader
+
+Configure your shader crate as a `"dylib"` type crate, and add `spirv-std` to its dependencies. The following example also enables the `glam` vector library.
+
+```toml
+[dependencies]
+spirv-std = { version = "0.4", features = ["glam"] }
+```
+
+Make sure your shader code uses the `no_std` attribute and makes the `spirv` attribute visibile in the global scope. Then, you're ready to write your first shader. Here's a very simple fragment shader called `main_fs` as an example that outputs the color red:
+
+```rust,norun
+#![no_std]
+
+use spirv_std::spirv;
+use spirv_std::glam::{vec4, Vec4};
+
+#[spirv(fragment)]
+pub fn main_fs(output: &mut Vec4) {
+    *output = vec4(1.0, 0.0, 0.0, 1.0);
+}
+```
