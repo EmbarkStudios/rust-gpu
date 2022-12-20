@@ -10,7 +10,7 @@ As of `0.4.0-alpha.16`, your shaders will require a different preamble. See [thi
 
 ## Example
 
-![Sky shader](https://github.com/EmbarkStudios/rust-gpu/raw/main/docs/assets/sky.jpg)
+![Sky shader](https://github.com/EmbarkStudios/rust-gpu/raw/b12a2f3f6a54bc841d05a9224bc577909d519228/docs/assets/sky.jpg)
 
 ```rust
 use spirv_std::spirv;
