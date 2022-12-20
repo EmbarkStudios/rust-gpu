@@ -14,7 +14,7 @@ As of `0.4.0-alpha.16`, your shaders will require a different preamble. See [thi
 
 Here is a small excerpt to see what a shader would look like. See [source][source] for full details of the shader that generates above image.
 
-```rust,norun
+```rust,no_run
 use spirv_std::spirv;
 use glam::{Vec3, Vec4, vec2, vec3};
 
