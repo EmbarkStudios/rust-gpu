@@ -646,14 +646,6 @@
 <span id="646">646</span>
 <span id="647">647</span>
 <span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
 </pre><pre class="rust"><code><span class="comment">// BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;
@@ -1195,22 +1187,14 @@
     // (or &quot;default&quot;) `--target-dir`, to append `/spirv-builder` to it.
     </span><span class="kw">let </span>target_dir = outer_target_dir.map(|outer| outer.join(<span class="string">&quot;spirv-builder&quot;</span>));
     <span class="kw">if let </span><span class="prelude-val">Some</span>(target_dir) = target_dir {
-        <span class="comment">// HACK(eddyb) Cargo caches some information it got from `rustc` in
-        // `.rustc_info.json`, and assumes it only depends on the `rustc`
-        // binary, but in our case, `rustc_codegen_spirv` changes are also
-        // relevant - so we remove the cache file if it may be out of date.
-        </span><span class="kw">let </span>mtime = |path| std::fs::metadata(path)<span class="question-mark">?</span>.modified();
-        <span class="kw">let </span>rustc_info = target_dir.join(<span class="string">&quot;.rustc_info.json&quot;</span>);
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(rustc_info_mtime) = mtime(<span class="kw-2">&amp;</span>rustc_info) {
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(rustc_codegen_spirv_mtime) = mtime(<span class="kw-2">&amp;</span>rustc_codegen_spirv) {
-                <span class="kw">if </span>rustc_codegen_spirv_mtime &gt; rustc_info_mtime {
-                    <span class="kw">let _ </span>= std::fs::remove_file(rustc_info);
-                }
-            }
-        }
-
         cargo.arg(<span class="string">&quot;--target-dir&quot;</span>).arg(target_dir);
     }
+
+    <span class="comment">// NOTE(eddyb) Cargo caches some information it got from `rustc` in
+    // `.rustc_info.json`, and assumes it only depends on the `rustc` binary,
+    // but in our case, `rustc_codegen_spirv` changes are also relevant,
+    // so we turn off that caching with an env var, just to avoid any issues.
+    </span>cargo.env(<span class="string">&quot;CARGO_CACHE_RUSTC_INFO&quot;</span>, <span class="string">&quot;0&quot;</span>);
 
     <span class="kw">for </span>(key, <span class="kw">_</span>) <span class="kw">in </span>env::vars_os() {
         <span class="kw">let </span>remove = key.to_str().map_or(<span class="bool-val">false</span>, |s| {
