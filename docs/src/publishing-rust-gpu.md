@@ -24,7 +24,7 @@ These are the steps:
 4. Pull the merged `main` branch.
 5. Tag `main` with the version: `git tag v0.4.0`
 6. Push the tag: `git push origin v0.4.0`
-7. Publish the crates: `cd [crate] && cargo publish` in the order of the list aboven (make sure
+7. Publish the crates: `cd [crate] && cargo publish` in the order of the list above (make sure
    `.cargo/credentials` is set to embark's token). The crates.io index might take some seconds to update
    causing an error if the crates are published in quick succession. Wait a couple of seconds and try
    again 🙂.
