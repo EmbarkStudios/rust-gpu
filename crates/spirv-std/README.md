@@ -12,7 +12,9 @@ As of `0.4.0-alpha.16`, your shaders will require a different preamble. See [thi
 
 ![Sky shader](https://github.com/EmbarkStudios/rust-gpu/raw/b12a2f3f6a54bc841d05a9224bc577909d519228/docs/assets/sky.jpg)
 
-```rust
+Here is a small excerpt to see what a shader would look like. See [source][source] for full details of the shader that generates above image.
+
+```rust,norun
 use spirv_std::spirv;
 use glam::{Vec3, Vec4, vec2, vec3};
 
@@ -37,8 +39,6 @@ pub fn main(
     *output = tonemap(color).extend(1.0)
 }
 ```
-
-See [source][source] for full details.
 
 ## Getting started
 
