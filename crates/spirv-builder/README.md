@@ -15,9 +15,9 @@ use spirv_builder::{MetadataPrintout, SpirvBuilder};
 
 fn main() {
     SpirvBuilder::new("my_shaders", "spirv-unknown-vulkan1.1")
-    .print_metadata(MetadataPrintout::Full)
-    .build()
-    .unwrap(); 
+        .print_metadata(MetadataPrintout::Full)
+        .build()
+        .unwrap(); 
 }
 ```
 
