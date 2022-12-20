@@ -46,7 +46,7 @@ Check out [The `rust-gpu` Dev Guide][gpu-guide] for information on how to get st
 
 Experiment with rust-gpu shaders in-browser at [SHADERed][shadered].
 
-[migration]: https://github.com/EmbarkStudios/rust-gpu/blob/main/docs/src/migration-to-register-tool.md
-[source]: https://github.com/EmbarkStudios/rust-gpu/blob/main/examples/shaders/sky-shader/src/lib.rs
+[migration]: https://github.com/EmbarkStudios/rust-gpu/blob/097ba40bedd74eeaa296e719ef7e41f2d3d76c23/docs/src/migration-to-register-tool.md
+[source]: https://github.com/EmbarkStudios/rust-gpu/blob/69cb69d28f1e64420ee31ade5e7dffb7c5621e89/examples/shaders/sky-shader/src/lib.rs
 [gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
 [shadered]: https://shadered.org/shaders?language=rust&sort=hot
