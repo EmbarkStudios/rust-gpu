@@ -1,15 +1,15 @@
 # Summary
 
 - [Introduction](./introduction.md)
-- Contributing to Rust-GPU
-    - [Building](./building-rust-gpu.md)
-    - [Testing](./testing.md)
-    - ["Codegen args" (flags/options) supported by the Rust-GPU codegen backend](./codegen-args.md)
-    - [Minimizing bugs in SPIR-V](./spirv-minimization.md)
-    - [Publishing Rust-GPU on crates.io](./publishing-rust-gpu.md)
+- [Contributing to Rust-GPU]()
+  - [Building](./building-rust-gpu.md)
+  - [Testing](./testing.md)
+  - ["Codegen args" (flags/options) supported by the Rust-GPU codegen backend](./codegen-args.md)
+  - [Minimizing bugs in SPIR-V](./spirv-minimization.md)
+  - [Publishing Rust-GPU on crates.io](./publishing-rust-gpu.md)
 - [Platform Support](./platform-support.md)
 - [Writing Shader Crates](./writing-shader-crates.md)
-- Features
-    - [Attribute syntax](./attributes.md)
-    - [Inline Assembly](./inline-asm.md)
-    - [Image type syntax](./image.md)
+- [Features]()
+  - [Attribute syntax](./attributes.md)
+  - [Inline Assembly](./inline-asm.md)
+  - [Image type syntax](./image.md)
