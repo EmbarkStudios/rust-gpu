@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="codegen-args.html"><strong aria-hidden="true">2.3.</strong> "Codegen args" (flags/options) supported by the Rust-GPU codegen backend</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.4.</strong> Minimizing bugs in SPIR-V</a></li><li class="chapter-item expanded "><a href="publishing-rust-gpu.html" class="active"><strong aria-hidden="true">2.5.</strong> Publishing Rust-GPU on crates.io</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="image.html"><strong aria-hidden="true">5.3.</strong> Image type syntax</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> 001. Resource Binding Syntax</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="codegen-args.html"><strong aria-hidden="true">2.3.</strong> "Codegen args" (flags/options) supported by the Rust-GPU codegen backend</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.4.</strong> Minimizing bugs in SPIR-V</a></li><li class="chapter-item expanded "><a href="publishing-rust-gpu.html" class="active"><strong aria-hidden="true">2.5.</strong> Publishing Rust-GPU on crates.io</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="image.html"><strong aria-hidden="true">5.3.</strong> Image type syntax</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -143,23 +143,33 @@
                     <main>
                         <h1 id="publishing-rust-gpu-on-cratesio"><a class="header" href="#publishing-rust-gpu-on-cratesio">Publishing rust-gpu on crates.io</a></h1>
 <p>This is a task list for the maintainers of rust-gpu to remember to do when publishing a new version
-of rust-gpu (probably not useful for contributors without access to embark's crates.io account :P)</p>
+of rust-gpu (probably not useful for contributors without access to embark's crates.io account 😋)</p>
+<p>The published crates and their relative locations are:</p>
 <ol>
-<li>Bump all the versions in rust-gpu to the next one. I've found this command to be useful:
-<code>rg --files-with-matches alpha | xargs sed -i 's/0.4.0-alpha.10/0.4.0-alpha.12/g'</code> (replacing with
-whatever versions are relevant)</li>
+<li><code>spirv-std-types</code> (<code>crates/spirv-std/shared</code>)</li>
+<li><code>spirv-std-macros</code> (<code>crates/spirv-std/macros</code>)</li>
+<li><code>spirv-std</code> (<code>crates/spirv-std</code>)</li>
+<li><code>rustc_codegen_spirv-types</code> (<code>crates/rustc_codegen_spirv-types</code>)</li>
+<li><code>rustc_codegen_spirv</code> (<code>crates/rustc_codegen_spirv</code>)</li>
+<li><code>spirv-builder</code> (<code>crates/spirv-builder</code>)</li>
+</ol>
+<p>Publishing the crates in above order prevents dependency issues.
+These are the steps: </p>
+<ol>
+<li>Bump all the versions to the next one in the workspace's <code>Cargo.toml</code>. This project uses workspace
+inheritance, so this is the only place you'll find these actual versions. Make sure to pin the
+rust-gpu dependencies to their <em>exact</em> versions using the <code>=</code>-notation, such as: <code>=0.4.0</code>. All crates
+are built and published in tandem so you're not expected to be able to mix and match between versions.</li>
+<li>Add this new version to the table in <code>crates/spirv-builder/README.md</code> and make sure the correct
+nightly version is listed there as well.</li>
 <li>Create a PR with that change. Wait for CI and a review, and merge it.</li>
 <li>Pull the merged <code>main</code> branch.</li>
-<li>Tag <code>main</code> with the version: <code>git tag v0.4.0-alpha.12</code></li>
-<li>Push the tag: <code>git push origin v0.4.0-alpha.12</code></li>
-<li>Publish the crates: <code>cd [crate] &amp;&amp; cargo publish</code> (make sure <code>.cargo/credentials</code> is set to
-embark's token) - crates to be published, in order:
-<ol>
-<li>crates/spirv-std/shared</li>
-<li>crates/spirv-std/macros</li>
-<li>crates/spirv-std</li>
-</ol>
-</li>
+<li>Tag <code>main</code> with the version: <code>git tag v0.4.0</code></li>
+<li>Push the tag: <code>git push origin v0.4.0</code></li>
+<li>Publish the crates: <code>cd [crate] &amp;&amp; cargo publish</code> in the order of the list above (make sure
+<code>.cargo/credentials</code> is set to embark's token). The crates.io index might take some seconds to update
+causing an error if the crates are published in quick succession. Wait a couple of seconds and try
+again 🙂.</li>
 </ol>
 
                     </main>

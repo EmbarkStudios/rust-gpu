@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="codegen-args.html"><strong aria-hidden="true">2.3.</strong> "Codegen args" (flags/options) supported by the Rust-GPU codegen backend</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.4.</strong> Minimizing bugs in SPIR-V</a></li><li class="chapter-item expanded "><a href="publishing-rust-gpu.html"><strong aria-hidden="true">2.5.</strong> Publishing Rust-GPU on crates.io</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="image.html"><strong aria-hidden="true">5.3.</strong> Image type syntax</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> 001. Resource Binding Syntax</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="codegen-args.html"><strong aria-hidden="true">2.3.</strong> "Codegen args" (flags/options) supported by the Rust-GPU codegen backend</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.4.</strong> Minimizing bugs in SPIR-V</a></li><li class="chapter-item expanded "><a href="publishing-rust-gpu.html"><strong aria-hidden="true">2.5.</strong> Publishing Rust-GPU on crates.io</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="image.html"><strong aria-hidden="true">5.3.</strong> Image type syntax</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -367,23 +367,33 @@ OpFunctionEnd
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="publishing-rust-gpu-on-cratesio"><a class="header" href="#publishing-rust-gpu-on-cratesio">Publishing rust-gpu on crates.io</a></h1>
 <p>This is a task list for the maintainers of rust-gpu to remember to do when publishing a new version
-of rust-gpu (probably not useful for contributors without access to embark's crates.io account :P)</p>
+of rust-gpu (probably not useful for contributors without access to embark's crates.io account 😋)</p>
+<p>The published crates and their relative locations are:</p>
 <ol>
-<li>Bump all the versions in rust-gpu to the next one. I've found this command to be useful:
-<code>rg --files-with-matches alpha | xargs sed -i 's/0.4.0-alpha.10/0.4.0-alpha.12/g'</code> (replacing with
-whatever versions are relevant)</li>
+<li><code>spirv-std-types</code> (<code>crates/spirv-std/shared</code>)</li>
+<li><code>spirv-std-macros</code> (<code>crates/spirv-std/macros</code>)</li>
+<li><code>spirv-std</code> (<code>crates/spirv-std</code>)</li>
+<li><code>rustc_codegen_spirv-types</code> (<code>crates/rustc_codegen_spirv-types</code>)</li>
+<li><code>rustc_codegen_spirv</code> (<code>crates/rustc_codegen_spirv</code>)</li>
+<li><code>spirv-builder</code> (<code>crates/spirv-builder</code>)</li>
+</ol>
+<p>Publishing the crates in above order prevents dependency issues.
+These are the steps: </p>
+<ol>
+<li>Bump all the versions to the next one in the workspace's <code>Cargo.toml</code>. This project uses workspace
+inheritance, so this is the only place you'll find these actual versions. Make sure to pin the
+rust-gpu dependencies to their <em>exact</em> versions using the <code>=</code>-notation, such as: <code>=0.4.0</code>. All crates
+are built and published in tandem so you're not expected to be able to mix and match between versions.</li>
+<li>Add this new version to the table in <code>crates/spirv-builder/README.md</code> and make sure the correct
+nightly version is listed there as well.</li>
 <li>Create a PR with that change. Wait for CI and a review, and merge it.</li>
 <li>Pull the merged <code>main</code> branch.</li>
-<li>Tag <code>main</code> with the version: <code>git tag v0.4.0-alpha.12</code></li>
-<li>Push the tag: <code>git push origin v0.4.0-alpha.12</code></li>
-<li>Publish the crates: <code>cd [crate] &amp;&amp; cargo publish</code> (make sure <code>.cargo/credentials</code> is set to
-embark's token) - crates to be published, in order:
-<ol>
-<li>crates/spirv-std/shared</li>
-<li>crates/spirv-std/macros</li>
-<li>crates/spirv-std</li>
-</ol>
-</li>
+<li>Tag <code>main</code> with the version: <code>git tag v0.4.0</code></li>
+<li>Push the tag: <code>git push origin v0.4.0</code></li>
+<li>Publish the crates: <code>cd [crate] &amp;&amp; cargo publish</code> in the order of the list above (make sure
+<code>.cargo/credentials</code> is set to embark's token). The crates.io index might take some seconds to update
+causing an error if the crates are published in quick succession. Wait a couple of seconds and try
+again 🙂.</li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="platform-support"><a class="header" href="#platform-support">Platform Support</a></h1>
 <p>The <code>rust-gpu</code> project currently supports a limited number of platforms and graphics APIs. Right now we're not distributing build artifacts and we're primarily focused on the development of the project, so this is based on the current <code>main</code> branch. There are a lot of different configurations and hardware out there to support, this document is intended to document what is currently supported, what we intend to support, and what isn't supported. Over time as the project stabilises and our CI improves, more platforms and APIs will be supported and tested. Currently support for each topic is divided into the following three categories.</p>
@@ -486,31 +496,35 @@ shader crate.</li>
 crates to display, it's recommended to use <code>spirv-builder</code> in a build script.</p>
 <ol>
 <li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain"><code>rust-toolchain</code></a> file to your project. (You must use the same
-version of Rust as <code>rust-gpu</code>.)</li>
+version of Rust as <code>rust-gpu</code>. Utimately, the build will fail with a nice
+error message when you don't use the exact same version)</li>
 <li>Reference <code>spirv-builder</code> in your Cargo.toml:
 <pre><code class="language-toml">[build-dependencies]
-spirv-builder = { git = &quot;https://github.com/EmbarkStudios/rust-gpu&quot; }
+spirv-builder = &quot;0.4&quot;
 </code></pre>
-(we currently do not publish spirv-builder on crates.io)</li>
+All dependent crates are published on <a href="https://crates.io">crates.io</a>.</li>
 <li>Create a <code>build.rs</code> in your project root.</li>
 </ol>
 <h4 id="buildrs"><a class="header" href="#buildrs"><code>build.rs</code></a></h4>
-<p>Paste the following into the <code>main</code> for your build script.</p>
-<pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>SpirvBuilder::new(path_to_shader, target)
+<p>Paste the following into <code>build.rs</code></p>
+<pre><pre class="playground"><code class="language-rust no_run">use spirv_builder::{MetadataPrintout, SpirvBuilder};
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    SpirvBuilder::new(shader_crate, target)
         .print_metadata(MetadataPrintout::Full)
         .build()?;
-<span class="boring">}</span></code></pre></pre>
-<p>The values available for the <code>target</code> parameter are available
+    Ok(())
+}</code></pre></pre>
+<p>Substituting <code>shader_crate</code> with a relative path to your shader crate. The values available for the <code>target</code> parameter are available
 <a href="./platform-support.html">here</a>.  For example, if building for vulkan 1.1, use
 <code>&quot;spirv-unknown-vulkan1.1&quot;</code>.</p>
 <p>The <code>SpirvBuilder</code> struct has numerous configuration options available, see
-rustdoc for documentation.</p>
+<a href="https://embarkstudios.github.io/rust-gpu/api/spirv_builder/struct.SpirvBuilder.html">documentation</a>.</p>
 <h4 id="mainrs"><a class="header" href="#mainrs"><code>main.rs</code></a></h4>
+<p>The following will directly include the shader module binary into your application.</p>
 <pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>const SHADER: &amp;[u8] = include_bytes!(env!(&quot;&lt;shader_name&gt;.spv&quot;));
+</span>const SHADER: &amp;[u8] = include_bytes!(env!(&quot;&lt;shader_crate&gt;.spv&quot;));
 <span class="boring">}</span></code></pre></pre>
 <blockquote>
 <p><strong>Note</strong> If your shader name contains hyphens, the name of environment variable will be the name with hyphens changed to underscores.</p>
@@ -568,6 +582,21 @@ build-std-features=[&quot;compiler-builtins-mem&quot;]
 </code></pre>
 <p>Now you should have <code>&lt;project_name&gt;.spv</code> SPIR-V file in <code>target/debug</code> that you
 can give to a renderer.</p>
+<h2 id="writing-your-first-shader"><a class="header" href="#writing-your-first-shader">Writing your first shader</a></h2>
+<p>Configure your shader crate as a <code>&quot;dylib&quot;</code> type crate, and add <code>spirv-std</code> to its dependencies. The following example also enables the <code>glam</code> vector library.</p>
+<pre><code class="language-toml">[dependencies]
+spirv-std = { version = &quot;0.4&quot;, features = [&quot;glam&quot;] }
+</code></pre>
+<p>Make sure your shader code uses the <code>no_std</code> attribute and makes the <code>spirv</code> attribute visibile in the global scope. Then, you're ready to write your first shader. Here's a very simple fragment shader called <code>main_fs</code> as an example that outputs the color red:</p>
+<pre><pre class="playground"><code class="language-rust norun">#![no_std]
+
+use spirv_std::spirv;
+use spirv_std::glam::{vec4, Vec4};
+
+#[spirv(fragment)]
+pub fn main_fs(output: &amp;mut Vec4) {
+    *output = vec4(1.0, 0.0, 0.0, 1.0);
+}</code></pre></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="attribute-syntax"><a class="header" href="#attribute-syntax">Attribute syntax</a></h1>
 <p>rust-gpu introduces a number of SPIR-V related attributes to express behavior specific to SPIR-V not exposed in the base rust language.</p>
 <p>Before you'll able to use these attributes, make sure you import the attribute from the <code>spirv-std</code> crate:</p>
@@ -707,196 +736,6 @@ and is likely what you want if you want a regular old sampled texture.</p>
 </span><span class="boring">fn main() {
 </span>type Image2d = Image!(2D, type=f32, sampled);
 <span class="boring">}</span></code></pre></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="summary"><a class="header" href="#summary">Summary</a></h1>
-<p>We aught to discuss how we want resource binding to work on a language syntax level.</p>
-<h1 id="explanation"><a class="header" href="#explanation">Explanation</a></h1>
-<details>
-<summary>Small overview of descriptors</summary>
-Historically resources such as buffers, textures and samplers have been special in hardware where they were bound to specific slots on the shader core. Usually a limited number of such slots existed, leading to platform and vendor specific limits.
-<h3 id="directx"><a class="header" href="#directx">DirectX</a></h3>
-<p>In recent years most Desktop platforms have switched to loading resource descriptors from GPU memory instead, this has the major advantage that there is no real limit on the amount of Textures, Buffers and other resource anymore because they all can come from memory. In DirectX12 hardware is divided up into several Tiers which each denominate the amount of descriptors available.</p>
-<div class="table-wrapper"><table><thead><tr><th>Resources Available to the Pipeline</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th></tr></thead><tbody>
-<tr><td>Feature levels</td><td>11.0+</td><td>11.0+</td><td>11.1+</td></tr>
-<tr><td>Maximum number of descriptors in a Constant Buffer View (CBV), Shader Resource View (SRV), or Unordered  Access View(UAV) heap used for rendering</td><td>1,000,000</td><td>1,000,000</td><td>1,000,000+</td></tr>
-<tr><td>Maximum number of Constant Buffer Views in all descriptor tables per shader stage</td><td>14</td><td>14</td><td>full heap</td></tr>
-<tr><td>Maximum number of Shader Resource Views in all descriptor tables per shader stage</td><td>128</td><td>full heap</td><td>full heap</td></tr>
-<tr><td>Maximum number of Unordered Access Views in all descriptor tables across all stages</td><td>64 for feature levels 11.1+ or 8 for feature level</td><td>64</td><td>full heap</td></tr>
-<tr><td>Maximum number of Samplers in all descriptor tables per shader stage</td><td>16</td><td>full heap</td><td>full heap</td></tr>
-</tbody></table>
-</div>
-<h3 id="vulkan"><a class="header" href="#vulkan">Vulkan</a></h3>
-<p>On the other hand in Vulkan resource descriptor binding is designed in such a way that it can accomodate hardware that still relies on descriptor slots instead of memory, because still a lot of such hardware exists in the wild. Especially in the Mobile space.</p>
-<p>There are some constraints that currently exist when it comes to binding resources to shaders that we may need to take into account, Vulkan has <code>maxBoundDescriptorSets</code> for example (between 4 and 32). However for the sake of argument we'll ignore these practical limitations for now.</p>
-</details>
-<h1 id="goal"><a class="header" href="#goal">Goal</a></h1>
-<p>Ideally what one would do is have a group of bindings collected together logically for each rendering system; where the bindings are set up (semi-)automatically on both the GPU and CPU.</p>
-<p>One thing we'd like to avoid is having a set of names or numbers that manually need to match up between GPU and CPU. </p>
-<ol>
-<li>Manual numbers (or strings) aren't type-safe.</li>
-<li>They make refactoring more difficult (need to change both CPU and GPU side).</li>
-<li>They can clash, especially in large code bases where it's difficult to keep track.</li>
-</ol>
-<h1 id="overview"><a class="header" href="#overview">Overview</a></h1>
-<p>I would like us to have an easy way to connect bindings on the GPU and CPU side together, in a way that's as ergonomic to use as possible.</p>
-<h2 id="globals"><a class="header" href="#globals">Globals</a></h2>
-<details>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span>#![feature(const_generics)]
-#![feature(const_fn)]
-<span class="boring">fn main() {
-</span>use core::marker::PhantomData;
-
-struct Texture&lt;T: Default, const SET: u32, const SLOT: u32&gt; {
-    d: PhantomData&lt;T&gt;
-}
-
-impl&lt;T: Default, const SET: u32, const SLOT: u32&gt; Texture&lt;T, SET, SLOT&gt; {
-    const fn new() -&gt; Self {
-        Self {
-            d: PhantomData
-        }
-    }
-    
-    fn sample(&amp;self, _u: f32, _v: f32) -&gt; T {
-        T::default()
-    }
-}
-<span class="boring">}</span></code></pre></pre>
-</details>
-<p>This is a more traditional example that's closer to how HLSL or GLSL would do bindings, they have a few generic parameters and it relies on <code>const_generic</code> to function. If we mirror this in existing Rust syntax we'll get something like this:</p>
-<pre><pre class="playground"><code class="language-rust">static ALBEDO : Texture::&lt;f32, 0, 0&gt; = Texture::new();
-static NORMAL_MAP : Texture::&lt;f32, 0, 1&gt; = Texture::new();
-static SMOOTHNESS : Texture::&lt;f32, 0, 2&gt; = Texture::new();
-static LIGHTMAP : Texture::&lt;f32, 0, 3&gt; = Texture::new();
-
-fn main() {
-    // functions can access the globals directly
-    let mut T = brdf();
-    T += gi();
-}</code></pre></pre>
-<p>This seems to have a few downsides:</p>
-<ul>
-<li>All caps for the variable/buffer name.</li>
-<li>Right now a constructor call is required, and it should be const.</li>
-<li>Need to ensure no overlap between sets &amp; slots.</li>
-<li>In big code-bases, the dependencies on shaders become very blurred and one needs to inveriable figure out which bindings don't get DCE'd, and more importantly which bindings are actually being used.</li>
-<li>If you're using a crate authored by a 3rd-party, it quickly becomes non-obvious which resources need to be bound.</li>
-<li>Unclear which downstream call-sites end up requiring more bindings to your SPIR-V blob.</li>
-</ul>
-<p>And a few upsides:</p>
-<ul>
-<li>Globals can be accessed anywhere in the program, easily.</li>
-</ul>
-<p>Alternative would be to remove the <code>const_generic</code> parameters potentially by moving them into the constructor.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>static ALBEDO : Texture::&lt;f32&gt; = Texture::new(0, 0);
-static NORMAL_MAP : Texture::&lt;f32&gt; = Texture::new(0, 1);
-static SMOOTHNESS : Texture::&lt;f32&gt; = Texture::new(0, 2);
-static LIGHTMAP : Texture::&lt;f32&gt; = Texture::new(0, 3);
-<span class="boring">}</span></code></pre></pre>
-<p>This would make it easier to pass textures to functions (even if they're in different slots) because you'd get something like this:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>fn some_system(tex: &amp;Texture::&lt;f32&gt;) {
-    let v = tex.sample(0.0, 0.0);
-}
-<span class="boring">}</span></code></pre></pre>
-<p>Instead of this, which would tightly couple the whole downstream system to have a texture bound to a specific set and slot. This would make changing the bindings later on a nightmare, and wouldn't allow you to conditionally invoke <code>some_system</code> with textures bound to different locations.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>fn some_system(tex: &amp;Texture::&lt;f32, 0, 0&gt;) {
-    let v = tex.sample(0.0, 0.0);
-}
-<span class="boring">}</span></code></pre></pre>
-<h2 id="arguments-to-main"><a class="header" href="#arguments-to-main">Arguments to <code>main</code></a></h2>
-<p>Most compute-only languages tend to prefer this along with positional binding. This makes &quot;invoking a shader&quot; look much more like a function call and uses existing and familiar semantics.</p>
-<pre><pre class="playground"><code class="language-rust">fn main(albedo: Texture::&lt;f32&gt;, normal_map: Texture::&lt;f32&gt;, smoothness: Texture::&lt;f32&gt;, lightmap: Texture&lt;f32&gt;) {
-    let mut T = brdf(&amp;albedo, &amp;normal_map, &amp;smoothness);
-    T += gi(&amp;lightmap);
-}</code></pre></pre>
-<p>Doing this straight up has a few downsides:</p>
-<ul>
-<li>Big kernels/shader can have lots of buffers and textures bound making this list potentially large.</li>
-<li>Need to pass down all bindings all the way to leaf-node systems.</li>
-</ul>
-<p>Some upsides:</p>
-<ul>
-<li>No clashes for sets/slots since the language takes care of this.</li>
-<li>It's clear from the get-go which bindings are being used.</li>
-</ul>
-<p>A much nicer and more ergonomic approach would be to store texture bindings in structs:</p>
-<pre><pre class="playground"><code class="language-rust">struct ShadingInputs {
-    albedo: Texture::&lt;f32&gt;,
-    normal_map: Texture::&lt;f32&gt;,
-    smoothness: Texture::&lt;f32&gt;,
-}
-
-struct IndirectLighting {
-    lightmap: Texture&lt;f32&gt;,
-}
-
-fn main(inputs: &amp;ShadingInputs, indirect_lighting: &amp;IndirectLighting) {
-    let mut T = brdf(&amp;inputs);
-    T += gi(&amp;indirect_lighting);
-}</code></pre></pre>
-<h1 id="suggestion"><a class="header" href="#suggestion">Suggestion</a></h1>
-<p>I think the most ergonomic and future proof binding method would be to have descriptors in structs, bound to the entrypoint. This allows us some nice, even more ergonomic upsides later on (when support is more widely available) where we can put data members in these structs as well. And along with this, we can have very egonomic CPU side code as well, where we can keep shader invocation looking like a function call for a large part, instead of having to manually bind to slots again.</p>
-<h1 id="prior-art"><a class="header" href="#prior-art">Prior art</a></h1>
-<details>
-<h2 id="metal"><a class="header" href="#metal">Metal</a></h2>
-<p>Metal has argument buffers, best described here: https://developer.apple.com/documentation/metal/buffers/about_argument_buffers</p>
-<h2 id="hlsl"><a class="header" href="#hlsl">HLSL</a></h2>
-<p>Resource binding in HLSL is done by declaring a set of special case globals that make up resource descriptors on the GPU. </p>
-<pre><code class="language-hlsl">Texture2D&lt;float4&gt; tex0          : register(t5,  space0);
-Texture2D&lt;float4&gt; tex1[][5][3]  : register(t10, space0);
-Texture2D&lt;float4&gt; tex2[8]       : register(t0,  space1);
-SamplerState samp0              : register(s5, space0);
-ConstantBuffer&lt;myConstants&gt;   c[10000] : register(b0);
-</code></pre>
-<p>In DirectX12 the feature of Root Signatures got added that is essentially a new domain specific language to set up the layout / calling convention of the shader; specified in a string.</p>
-<p>Note the the two examples don't match necessarily. </p>
-<pre><code class="language-hlsl">#define MyRS1 &quot;RootFlags( ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | &quot; \
-                         &quot;DENY_VERTEX_SHADER_ROOT_ACCESS), &quot; \
-              &quot;CBV(b0, space = 1, flags = DATA_STATIC), &quot; \
-              &quot;SRV(t0), &quot; \
-              &quot;UAV(u0), &quot; \
-              &quot;DescriptorTable( CBV(b1), &quot; \
-                               &quot;SRV(t1, numDescriptors = 8, &quot; \
-                               &quot;        flags = DESCRIPTORS_VOLATILE), &quot; \
-                               &quot;UAV(u1, numDescriptors = unbounded, &quot; \
-                               &quot;        flags = DESCRIPTORS_VOLATILE)), &quot; \
-              &quot;DescriptorTable(Sampler(s0, space=1, numDescriptors = 4)), &quot; \
-              &quot;RootConstants(num32BitConstants=3, b10), &quot; \
-              &quot;StaticSampler(s1),&quot; \
-              &quot;StaticSampler(s2, &quot; \
-                             &quot;addressU = TEXTURE_ADDRESS_CLAMP, &quot; \
-                             &quot;filter = FILTER_MIN_MAG_MIP_LINEAR )&quot;
-</code></pre>
-<h2 id="glsl"><a class="header" href="#glsl">GLSL</a></h2>
-<pre><code class="language-glsl">uniform texture2D inputTex;
-uniform restrict writeonly uimage2D outputTex;
-
-layout(std430) buffer mesh_color_buf {
-    vec4 colors[];
-};
-
-layout(std430) buffer mesh_vertex_buf {
-    VertexPacked vertices[];
-};
-</code></pre>
-<h2 id="cuda"><a class="header" href="#cuda">CUDA</a></h2>
-<p>In CUDA most resources are bound to the kernel's entry point - e.g. buffers are just passed as pointers etc. </p>
-<h2 id="opencl"><a class="header" href="#opencl">OpenCL</a></h2>
-<p>In OpenCL resources are marked up with their address spaces and also passed as function arguments to the executing kernel. Resources like buffers look like pointers but a lot of compiler magic is going on to turn them from resource descriptors (such as the GCN V#) into something that can emulate pointers.</p>
-<h2 id="rlsl"><a class="header" href="#rlsl">RLSL</a></h2>
-<p>RLSL also passes resource bindings as arguments to the kernel, with two template parameters. One for the <code>set</code> and one for the <code>space</code>.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[spirv(compute)]
-fn compute(compute: Compute, buffer: Buffer&lt;N0, N0, RuntimeArray&lt;f32&gt;&gt;)
-<span class="boring">}</span></code></pre></pre>
-</details>
 
                     </main>
 

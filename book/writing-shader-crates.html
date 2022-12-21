@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="codegen-args.html"><strong aria-hidden="true">2.3.</strong> "Codegen args" (flags/options) supported by the Rust-GPU codegen backend</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.4.</strong> Minimizing bugs in SPIR-V</a></li><li class="chapter-item expanded "><a href="publishing-rust-gpu.html"><strong aria-hidden="true">2.5.</strong> Publishing Rust-GPU on crates.io</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html" class="active"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="image.html"><strong aria-hidden="true">5.3.</strong> Image type syntax</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> 001. Resource Binding Syntax</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="codegen-args.html"><strong aria-hidden="true">2.3.</strong> "Codegen args" (flags/options) supported by the Rust-GPU codegen backend</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.4.</strong> Minimizing bugs in SPIR-V</a></li><li class="chapter-item expanded "><a href="publishing-rust-gpu.html"><strong aria-hidden="true">2.5.</strong> Publishing Rust-GPU on crates.io</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html" class="active"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="image.html"><strong aria-hidden="true">5.3.</strong> Image type syntax</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -172,31 +172,35 @@ shader crate.</li>
 crates to display, it's recommended to use <code>spirv-builder</code> in a build script.</p>
 <ol>
 <li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain"><code>rust-toolchain</code></a> file to your project. (You must use the same
-version of Rust as <code>rust-gpu</code>.)</li>
+version of Rust as <code>rust-gpu</code>. Utimately, the build will fail with a nice
+error message when you don't use the exact same version)</li>
 <li>Reference <code>spirv-builder</code> in your Cargo.toml:
 <pre><code class="language-toml">[build-dependencies]
-spirv-builder = { git = &quot;https://github.com/EmbarkStudios/rust-gpu&quot; }
+spirv-builder = &quot;0.4&quot;
 </code></pre>
-(we currently do not publish spirv-builder on crates.io)</li>
+All dependent crates are published on <a href="https://crates.io">crates.io</a>.</li>
 <li>Create a <code>build.rs</code> in your project root.</li>
 </ol>
 <h4 id="buildrs"><a class="header" href="#buildrs"><code>build.rs</code></a></h4>
-<p>Paste the following into the <code>main</code> for your build script.</p>
-<pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>SpirvBuilder::new(path_to_shader, target)
+<p>Paste the following into <code>build.rs</code></p>
+<pre><pre class="playground"><code class="language-rust no_run">use spirv_builder::{MetadataPrintout, SpirvBuilder};
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    SpirvBuilder::new(shader_crate, target)
         .print_metadata(MetadataPrintout::Full)
         .build()?;
-<span class="boring">}</span></code></pre></pre>
-<p>The values available for the <code>target</code> parameter are available
+    Ok(())
+}</code></pre></pre>
+<p>Substituting <code>shader_crate</code> with a relative path to your shader crate. The values available for the <code>target</code> parameter are available
 <a href="./platform-support.html">here</a>.  For example, if building for vulkan 1.1, use
 <code>&quot;spirv-unknown-vulkan1.1&quot;</code>.</p>
 <p>The <code>SpirvBuilder</code> struct has numerous configuration options available, see
-rustdoc for documentation.</p>
+<a href="https://embarkstudios.github.io/rust-gpu/api/spirv_builder/struct.SpirvBuilder.html">documentation</a>.</p>
 <h4 id="mainrs"><a class="header" href="#mainrs"><code>main.rs</code></a></h4>
+<p>The following will directly include the shader module binary into your application.</p>
 <pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>const SHADER: &amp;[u8] = include_bytes!(env!(&quot;&lt;shader_name&gt;.spv&quot;));
+</span>const SHADER: &amp;[u8] = include_bytes!(env!(&quot;&lt;shader_crate&gt;.spv&quot;));
 <span class="boring">}</span></code></pre></pre>
 <blockquote>
 <p><strong>Note</strong> If your shader name contains hyphens, the name of environment variable will be the name with hyphens changed to underscores.</p>
@@ -254,6 +258,21 @@ build-std-features=[&quot;compiler-builtins-mem&quot;]
 </code></pre>
 <p>Now you should have <code>&lt;project_name&gt;.spv</code> SPIR-V file in <code>target/debug</code> that you
 can give to a renderer.</p>
+<h2 id="writing-your-first-shader"><a class="header" href="#writing-your-first-shader">Writing your first shader</a></h2>
+<p>Configure your shader crate as a <code>&quot;dylib&quot;</code> type crate, and add <code>spirv-std</code> to its dependencies. The following example also enables the <code>glam</code> vector library.</p>
+<pre><code class="language-toml">[dependencies]
+spirv-std = { version = &quot;0.4&quot;, features = [&quot;glam&quot;] }
+</code></pre>
+<p>Make sure your shader code uses the <code>no_std</code> attribute and makes the <code>spirv</code> attribute visibile in the global scope. Then, you're ready to write your first shader. Here's a very simple fragment shader called <code>main_fs</code> as an example that outputs the color red:</p>
+<pre><pre class="playground"><code class="language-rust norun">#![no_std]
+
+use spirv_std::spirv;
+use spirv_std::glam::{vec4, Vec4};
+
+#[spirv(fragment)]
+pub fn main_fs(output: &amp;mut Vec4) {
+    *output = vec4(1.0, 0.0, 0.0, 1.0);
+}</code></pre></pre>
 
                     </main>
 
