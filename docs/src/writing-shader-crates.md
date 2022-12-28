@@ -116,14 +116,17 @@ Now we need to add our `.cargo/config` file. This is a configuration file that
 tells cargo how to build for SPIR-V. You need provide the target you're
 compiling for (see [platform support](./platform-support.md)) and provide a path
 to your built `rustc_codegen_spirv` dynamic library. We have to also provide
-`-Zbuild-std`.
+some additional options.
 
 ```toml
 [build]
 target = "spirv-unknown-spv1.3"
 rustflags = [
-   "-Zcodegen-backend=<path_to_librustc_codegen_spirv>",
-   "-Csymbol-mangling-version=v0"
+    "-Zcodegen-backend=<path_to_librustc_codegen_spirv>",
+    "-Zbinary-dep-depinfo",
+    "-Csymbol-mangling-version=v0",
+    "-Zcrate-attr=feature(register_tool)",
+    "-Zcrate-attr=register_tool(rust_gpu)"
 ]
 
 [unstable]
