@@ -63,7 +63,7 @@ fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
 
             return Err(Box::<dyn Error>::from(format!(
                 r#"error: wrong toolchain detected (found commit hash `{current_hash}`, expected `{required_hash}`).
-Make sure your `rust_toolchain` file contains the following:
+Make sure your `rust-toolchain` file contains the following:
 -------------
 {stripped_toolchain}
 -------------"#
