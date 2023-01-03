@@ -565,12 +565,15 @@ reference from your shader project.</p>
 tells cargo how to build for SPIR-V. You need provide the target you're
 compiling for (see <a href="./platform-support.html">platform support</a>) and provide a path
 to your built <code>rustc_codegen_spirv</code> dynamic library. We have to also provide
-<code>-Zbuild-std</code>.</p>
+some additional options.</p>
 <pre><code class="language-toml">[build]
 target = &quot;spirv-unknown-spv1.3&quot;
 rustflags = [
-   &quot;-Zcodegen-backend=&lt;path_to_librustc_codegen_spirv&gt;&quot;,
-   &quot;-Csymbol-mangling-version=v0&quot;
+    &quot;-Zcodegen-backend=&lt;path_to_librustc_codegen_spirv&gt;&quot;,
+    &quot;-Zbinary-dep-depinfo&quot;,
+    &quot;-Csymbol-mangling-version=v0&quot;,
+    &quot;-Zcrate-attr=feature(register_tool)&quot;,
+    &quot;-Zcrate-attr=register_tool(rust_gpu)&quot;
 ]
 
 [unstable]
