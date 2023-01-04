@@ -461,7 +461,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
     }
 
     fn visit_variant(&mut self, variant: &'tcx hir::Variant<'tcx>) {
-        self.check_spirv_attributes(variant.id, Target::Variant);
+        self.check_spirv_attributes(variant.hir_id, Target::Variant);
         intravisit::walk_variant(self, variant);
     }
 

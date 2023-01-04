@@ -94,7 +94,7 @@ pub(crate) fn provide(providers: &mut Providers) {
 
     // FIXME(eddyb) remove this by deriving `Clone` for `LayoutS` upstream.
     // FIXME(eddyb) the `S` suffix is a naming antipattern, rename upstream.
-    fn clone_layout<'a>(layout: &LayoutS<'a>) -> LayoutS<'a> {
+    fn clone_layout<V: Idx>(layout: &LayoutS<V>) -> LayoutS<V> {
         let LayoutS {
             ref fields,
             ref variants,

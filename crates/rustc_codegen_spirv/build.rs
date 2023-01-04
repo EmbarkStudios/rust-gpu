@@ -10,9 +10,9 @@ use std::process::{Command, ExitCode};
 /// `cargo publish`. We need to figure out a way to do this properly, but let's hardcode it for now :/
 //const REQUIRED_RUST_TOOLCHAIN: &str = include_str!("../../rust-toolchain");
 const REQUIRED_RUST_TOOLCHAIN: &str = r#"[toolchain]
-channel = "nightly-2022-11-14"
+channel = "nightly-2022-11-28"
 components = ["rust-src", "rustc-dev", "llvm-tools-preview"]
-# commit_hash = e631891f7ad40eac3ef58ec3c2b57ecd81e40615"#;
+# commit_hash = 1eb62b1235fd77200e6bd967d70e83c0f2497233"#;
 
 fn get_rustc_commit_hash() -> Result<String, Box<dyn Error>> {
     let rustc = std::env::var("RUSTC").unwrap_or_else(|_| String::from("rustc"));

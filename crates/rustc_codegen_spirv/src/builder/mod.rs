@@ -35,7 +35,7 @@ use rustc_span::source_map::Span;
 use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
-use std::ops::Deref;
+use std::ops::{Deref, Range};
 
 pub struct Builder<'a, 'tcx> {
     cx: &'a CodegenCx<'tcx>,
@@ -294,6 +294,7 @@ impl<'a, 'tcx> DebugInfoBuilderMethods for Builder<'a, 'tcx> {
         _direct_offset: Size,
         // NB: each offset implies a deref (i.e. they're steps in a pointer chain).
         _indirect_offsets: &[Size],
+        _fragment: Option<Range<Size>>,
     ) {
         todo!()
     }
