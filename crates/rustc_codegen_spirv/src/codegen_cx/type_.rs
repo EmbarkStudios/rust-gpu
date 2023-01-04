@@ -177,6 +177,14 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
         SpirvType::Float(64).def(DUMMY_SP, self)
     }
 
+    fn type_array(&self, ty: Self::Type, len: u64) -> Self::Type {
+        SpirvType::Array {
+            element: ty,
+            count: self.constant_u64(DUMMY_SP, len),
+        }
+        .def(DUMMY_SP, self)
+    }
+
     fn type_func(&self, args: &[Self::Type], ret: Self::Type) -> Self::Type {
         SpirvType::Function {
             return_type: ret,

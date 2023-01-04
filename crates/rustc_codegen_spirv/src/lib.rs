@@ -389,7 +389,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         _: TyCtxt<'tcx>,
         _: &str,
         _: AllocatorKind,
-        _: bool,
+        _: AllocatorKind,
     ) -> Self::Module {
         todo!()
     }
