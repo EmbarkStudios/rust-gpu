@@ -158,6 +158,7 @@ fn link_with_linker_opts(
                     false,
                     None,
                     false,
+                    false,
                 );
 
                 rustc_errors::Handler::with_emitter_and_flags(
