@@ -18,6 +18,7 @@ use rustc_session::config::{CrateType, DebugInfo, Lto, OptLevel, OutputFilenames
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
+use rustc_span::Symbol;
 use std::collections::BTreeMap;
 use std::ffi::{CString, OsStr};
 use std::fs::File;
@@ -58,7 +59,7 @@ pub fn link<'a>(
         }
 
         if outputs.outputs.should_codegen() {
-            let out_filename = out_filename(sess, crate_type, outputs, crate_name);
+            let out_filename = out_filename(sess, crate_type, outputs, Symbol::intern(crate_name));
             match crate_type {
                 CrateType::Rlib => {
                     link_rlib(sess, codegen_results, &out_filename);

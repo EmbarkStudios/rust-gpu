@@ -1,7 +1,7 @@
 use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
-use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
+use rustc_ast::ast::{AttrKind, Attribute, LitIntType, LitKind, MetaItemLit, NestedMetaItem};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
@@ -500,7 +500,7 @@ fn parse_attr_int_value(arg: &NestedMetaItem) -> Result<u32, ParseAttrError> {
         None => return Err((arg.span(), "attribute must have value".to_string())),
     };
     match arg.name_value_literal() {
-        Some(&Lit {
+        Some(&MetaItemLit {
             kind: LitKind::Int(x, LitIntType::Unsuffixed),
             ..
         }) if x <= u32::MAX as u128 => Ok(x as u32),
@@ -517,11 +517,11 @@ fn parse_local_size_attr(arg: &NestedMetaItem) -> Result<[u32; 3], ParseAttrErro
         Some(tuple) if !tuple.is_empty() && tuple.len() < 4 => {
             let mut local_size = [1; 3];
             for (idx, lit) in tuple.iter().enumerate() {
-                match lit.literal() {
-                    Some(&Lit {
+                match lit {
+                    NestedMetaItem::Lit(MetaItemLit {
                         kind: LitKind::Int(x, LitIntType::Unsuffixed),
                         ..
-                    }) if x <= u32::MAX as u128 => local_size[idx] = x as u32,
+                    }) if *x <= u32::MAX as u128 => local_size[idx] = *x as u32,
                     _ => return Err((lit.span(), "must be a u32 literal".to_string())),
                 }
             }
