@@ -1126,13 +1126,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     /// Called for `Rvalue::Repeat` when the elem is neither a ZST nor optimizable using memset.
     fn write_operand_repeatedly(
-        mut self,
+        &mut self,
         cg_elem: OperandRef<'tcx, Self::Value>,
         count: u64,
         dest: PlaceRef<'tcx, Self::Value>,
-    ) -> Self {
+    ) {
         let zero = self.const_usize(0);
-        let start = dest.project_index(&mut self, zero).llval;
+        let start = dest.project_index(self, zero).llval;
 
         let elem_layout = dest.layout.field(self.cx(), 0);
         let elem_ty = elem_layout.spirv_type(self.span(), &self);
@@ -1141,12 +1141,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         for i in 0..count {
             let current = self.inbounds_gep(elem_ty, start, &[self.const_usize(i)]);
             cg_elem.val.store(
-                &mut self,
+                self,
                 PlaceRef::new_sized_aligned(current, cg_elem.layout, align),
             );
         }
-
-        self
     }
 
     fn range_metadata(&mut self, _load: Self::Value, _range: WrappingRange) {
