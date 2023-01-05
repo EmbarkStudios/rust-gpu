@@ -319,7 +319,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
         idx: &mut usize,
         dst: PlaceRef<'tcx, Self::Value>,
     ) {
-        fn next<'a, 'tcx>(bx: &mut Builder<'a, 'tcx>, idx: &mut usize) -> SpirvValue {
+        fn next(bx: &mut Builder<'_, '_>, idx: &mut usize) -> SpirvValue {
             let val = bx.function_parameter_values.borrow()[&bx.current_fn.def(bx)][*idx];
             *idx += 1;
             val

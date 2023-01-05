@@ -27,8 +27,8 @@ use std::iter;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-pub fn link<'a>(
-    sess: &'a Session,
+pub fn link(
+    sess: &Session,
     codegen_results: &CodegenResults,
     outputs: &OutputFilenames,
     crate_name: &str,
@@ -380,9 +380,9 @@ fn do_spirv_val(
     }
 }
 
-fn link_local_crate_native_libs_and_dependent_crate_libs<'a>(
+fn link_local_crate_native_libs_and_dependent_crate_libs(
     rlibs: &mut Vec<PathBuf>,
-    sess: &'a Session,
+    sess: &Session,
     crate_type: CrateType,
     codegen_results: &CodegenResults,
 ) {
