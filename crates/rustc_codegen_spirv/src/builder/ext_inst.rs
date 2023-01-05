@@ -13,7 +13,7 @@ pub struct ExtInst {
 }
 
 impl ExtInst {
-    pub fn import_glsl<'a, 'tcx>(&mut self, bx: &Builder<'a, 'tcx>) -> Word {
+    pub fn import_glsl(&mut self, bx: &Builder<'_, '_>) -> Word {
         if let Some(id) = self.glsl {
             id
         } else {
@@ -23,11 +23,7 @@ impl ExtInst {
         }
     }
 
-    pub fn require_integer_functions_2_intel<'a, 'tcx>(
-        &mut self,
-        bx: &Builder<'a, 'tcx>,
-        to_zombie: Word,
-    ) {
+    pub fn require_integer_functions_2_intel(&mut self, bx: &Builder<'_, '_>, to_zombie: Word) {
         if !self.integer_functions_2_intel {
             self.integer_functions_2_intel = true;
             if !bx

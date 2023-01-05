@@ -114,11 +114,7 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 
-fn dump_mir<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    mono_items: &[(MonoItem<'_>, (Linkage, Visibility))],
-    path: &Path,
-) {
+fn dump_mir(tcx: TyCtxt<'_>, mono_items: &[(MonoItem<'_>, (Linkage, Visibility))], path: &Path) {
     create_dir_all(path.parent().unwrap()).unwrap();
     let mut file = File::create(path).unwrap();
     for &(mono_item, (_, _)) in mono_items {
@@ -384,9 +380,9 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 }
 
 impl ExtraBackendMethods for SpirvCodegenBackend {
-    fn codegen_allocator<'tcx>(
+    fn codegen_allocator(
         &self,
-        _: TyCtxt<'tcx>,
+        _: TyCtxt<'_>,
         _: &str,
         _: AllocatorKind,
         _: AllocatorKind,

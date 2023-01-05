@@ -628,8 +628,8 @@ impl fmt::Display for SpirvTypePrinter<'_, '_> {
 
 impl SpirvTypePrinter<'_, '_> {
     fn display(&self, stack: &mut Vec<Word>, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fn ty<'tcx>(
-            cx: &CodegenCx<'tcx>,
+        fn ty(
+            cx: &CodegenCx<'_>,
             stack: &mut Vec<Word>,
             f: &mut fmt::Formatter<'_>,
             ty: Word,

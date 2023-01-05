@@ -662,8 +662,8 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
 }
 
 // returns (field_offsets, size, align)
-pub fn auto_struct_layout<'tcx>(
-    cx: &CodegenCx<'tcx>,
+pub fn auto_struct_layout(
+    cx: &CodegenCx<'_>,
     field_types: &[Word],
 ) -> (Vec<Size>, Option<Size>, Align) {
     // FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
