@@ -2065,11 +2065,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     // These are used by everyone except msvc
-    fn cleanup_landing_pad(&mut self, _ty: Self::Type, _pers_fn: Self::Value) -> Self::Value {
+    fn cleanup_landing_pad(&mut self, _pers_fn: Self::Value) -> (Self::Value, Self::Value) {
         todo!()
     }
 
-    fn resume(&mut self, _exn: Self::Value) {
+    fn resume(&mut self, _exn0: Self::Value, _exn1: Self::Value) {
         todo!()
     }
 
