@@ -483,7 +483,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
 
             let mut has_precision = false;
 
-            while matches!(ch, '0'..='9') {
+            while ch.is_ascii_digit() {
                 ch = match chars.next() {
                     Some(ch) => ch,
                     None => {
@@ -508,7 +508,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                     }
                 };
 
-                while matches!(ch, '0'..='9') {
+                while ch.is_ascii_digit() {
                     ch = match chars.next() {
                         Some(ch) => ch,
                         None => return parsing_error(
@@ -525,7 +525,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                     Some('3') => 3,
                     Some('4') => 4,
                     Some(ch) => {
-                        return parsing_error(&format!("Invalid width for vector: {}", ch), span)
+                        return parsing_error(&format!("Invalid width for vector: {ch}"), span)
                     }
                     None => return parsing_error("Missing vector dimensions specifier", span),
                 };
@@ -539,7 +539,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                     Some(ty) => ty,
                     _ => {
                         return parsing_error(
-                            &format!("Unrecognised vector type specifier: '{}'", ch),
+                            &format!("Unrecognised vector type specifier: '{ch}'"),
                             span,
                         )
                     }
@@ -551,7 +551,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                     Some(ty) => ty,
                     _ => {
                         return parsing_error(
-                            &format!("Unrecognised format specifier: '{}'", ch),
+                            &format!("Unrecognised format specifier: '{ch}'"),
                             span,
                         )
                     }
@@ -583,7 +583,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     {
         let ident = quote::format_ident!("_{}", i);
 
-        let _ = write!(variable_idents, "%{} ", ident);
+        let _ = write!(variable_idents, "%{ident} ");
 
         let assert_fn = match format_argument {
             FormatType::Scalar { ty } => {
@@ -598,7 +598,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
             #ident = in(reg) &#assert_fn(#variable),
         });
 
-        let op_load = format!("%{ident} = OpLoad _ {{{ident}}}", ident = ident);
+        let op_load = format!("%{ident} = OpLoad _ {{{ident}}}");
 
         op_loads.push(quote::quote! {
             #op_load,
@@ -610,7 +610,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         .collect::<proc_macro2::TokenStream>();
     let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
 
-    let op_string = format!("%string = OpString {:?}", format_string);
+    let op_string = format!("%string = OpString {format_string:?}");
 
     let output = quote::quote! {
         ::core::arch::asm!(

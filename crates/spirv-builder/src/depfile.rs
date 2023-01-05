@@ -16,7 +16,7 @@ pub fn read_deps_file(
     f: impl FnMut(RawString, Vec<RawString>) -> Result<(), Error>,
 ) -> Result<(), Error> {
     let file = File::open(file_name)
-        .map_err(|e| Error::new(e.kind(), format!("Unable to read {:?}: {}", file_name, e)))?;
+        .map_err(|e| Error::new(e.kind(), format!("Unable to read {file_name:?}: {e}")))?;
     read_deps_file_from(file, f)
 }
 

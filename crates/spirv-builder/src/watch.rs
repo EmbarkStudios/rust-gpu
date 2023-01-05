@@ -38,7 +38,7 @@ impl SpirvBuilder {
                             let _ = tx.try_send(());
                         }
                     },
-                    Err(e) => println!("notify error: {:?}", e),
+                    Err(e) => println!("notify error: {e:?}"),
                 })
                 .expect("Could create watcher");
             // This is likely to notice changes in the `target` dir, however, given that `cargo watch` doesn't seem to handle that,
@@ -71,7 +71,7 @@ impl SpirvBuilder {
                             let _ = tx.try_send(());
                         }
                     },
-                    Err(e) => println!("notify error: {:?}", e),
+                    Err(e) => println!("notify error: {e:?}"),
                 })
                 .expect("Could create watcher");
             leaf_deps(&metadata_file, |it| {

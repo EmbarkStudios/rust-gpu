@@ -217,7 +217,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                 other => self
                     .tcx
                     .sess
-                    .fatal(format!("Invalid float width in type_kind: {}", other)),
+                    .fatal(format!("Invalid float width in type_kind: {other}")),
             },
             SpirvType::Adt { .. } | SpirvType::InterfaceBlock { .. } => {
                 TypeKind::Struct
@@ -247,8 +247,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             SpirvType::Pointer { pointee } => pointee,
             SpirvType::Vector { element, .. } => element,
             spirv_type => self.tcx.sess.fatal(format!(
-                "element_type called on invalid type: {:?}",
-                spirv_type
+                "element_type called on invalid type: {spirv_type:?}"
             )),
         }
     }
@@ -260,7 +259,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             ty => self
                 .tcx
                 .sess
-                .fatal(format!("vector_length called on non-vector type: {:?}", ty)),
+                .fatal(format!("vector_length called on non-vector type: {ty:?}")),
         }
     }
 
@@ -270,7 +269,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             ty => self
                 .tcx
                 .sess
-                .fatal(format!("float_width called on non-float type: {:?}", ty)),
+                .fatal(format!("float_width called on non-float type: {ty:?}")),
         }
     }
 
@@ -281,7 +280,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             ty => self
                 .tcx
                 .sess
-                .fatal(format!("int_width called on non-integer type: {:?}", ty)),
+                .fatal(format!("int_width called on non-integer type: {ty:?}")),
         }
     }
 

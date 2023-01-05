@@ -82,7 +82,7 @@ pub fn link(
                     );
                 }
                 other => {
-                    sess.err(format!("CrateType {:?} not supported yet", other));
+                    sess.err(format!("CrateType {other:?} not supported yet"));
                 }
             }
         }
@@ -116,8 +116,7 @@ fn link_rlib(sess: &Session, codegen_results: &CodegenResults, out_filename: &Pa
         }
         if let Some(name) = lib.name {
             sess.err(format!(
-                "Adding native library to rlib not supported yet: {}",
-                name
+                "Adding native library to rlib not supported yet: {name}"
             ));
         }
     }
@@ -264,12 +263,11 @@ fn post_link_single_module(
         } else {
             let reason = match (sess.opts.optimize, sess.opts.debuginfo == DebugInfo::None) {
                 (OptLevel::No, true) => "debuginfo=None".to_string(),
-                (optlevel, false) => format!("optlevel={:?}", optlevel),
-                (optlevel, true) => format!("optlevel={:?}, debuginfo=None", optlevel),
+                (optlevel, false) => format!("optlevel={optlevel:?}"),
+                (optlevel, true) => format!("optlevel={optlevel:?}, debuginfo=None"),
             };
             sess.warn(format!(
-                "`spirv-opt` should have ran ({}) but was disabled by `--no-spirv-opt`",
-                reason
+                "`spirv-opt` should have ran ({reason}) but was disabled by `--no-spirv-opt`"
             ));
             spv_binary
         }
@@ -287,7 +285,7 @@ fn post_link_single_module(
         {
             let mut err = sess.struct_err("failed to serialize spirv-binary to disk");
             err.note(&format!("module `{}`", out_filename.display()));
-            err.note(&format!("I/O error: {:#}", e));
+            err.note(&format!("I/O error: {e:#}"));
             err.emit();
         }
 
@@ -452,12 +450,10 @@ fn add_upstream_native_libraries(
             }
             match lib.kind {
                 NativeLibKind::Dylib { .. } | NativeLibKind::Unspecified => sess.fatal(format!(
-                    "TODO: dylib nativelibkind not supported yet: {}",
-                    name
+                    "TODO: dylib nativelibkind not supported yet: {name}"
                 )),
                 NativeLibKind::Framework { .. } => sess.fatal(format!(
-                    "TODO: framework nativelibkind not supported yet: {}",
-                    name
+                    "TODO: framework nativelibkind not supported yet: {name}"
                 )),
                 NativeLibKind::Static {
                     bundle: Some(false),
@@ -465,8 +461,7 @@ fn add_upstream_native_libraries(
                 } => {
                     if data[cnum.as_usize() - 1] == Linkage::Static {
                         sess.fatal(format!(
-                            "TODO: staticnobundle nativelibkind not supported yet: {}",
-                            name
+                            "TODO: staticnobundle nativelibkind not supported yet: {name}"
                         ))
                     }
                 }
@@ -475,11 +470,10 @@ fn add_upstream_native_libraries(
                     ..
                 } => {}
                 NativeLibKind::RawDylib => {
-                    sess.fatal(format!("raw_dylib feature not yet implemented: {}", name))
+                    sess.fatal(format!("raw_dylib feature not yet implemented: {name}"))
                 }
                 NativeLibKind::LinkArg => sess.fatal(format!(
-                    "TODO: linkarg nativelibkind not supported yet: {}",
-                    name
+                    "TODO: linkarg nativelibkind not supported yet: {name}"
                 )),
             }
         }

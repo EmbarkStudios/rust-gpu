@@ -16,7 +16,7 @@ impl std::str::FromStr for TargetFeature {
             Ok(Self::Extension(Symbol::intern(input)))
         } else {
             Ok(Self::Capability(input.parse().map_err(|_err| {
-                format!("Invalid Capability: `{}`", input)
+                format!("Invalid Capability: `{input}`")
             })?))
         }
     }

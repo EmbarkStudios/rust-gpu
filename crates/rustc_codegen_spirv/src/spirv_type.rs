@@ -123,7 +123,7 @@ impl SpirvType<'_> {
                     other => cx.zombie_with_span(
                         result,
                         def_span,
-                        &format!("Integer width {} invalid for spir-v", other),
+                        &format!("Integer width {other} invalid for spir-v"),
                     ),
                 };
                 result
@@ -141,7 +141,7 @@ impl SpirvType<'_> {
                     other => cx.zombie_with_span(
                         result,
                         def_span,
-                        &format!("Float width {} invalid for spir-v", other),
+                        &format!("Float width {other} invalid for spir-v"),
                     ),
                 };
                 result
@@ -304,7 +304,7 @@ impl SpirvType<'_> {
             ref other => cx
                 .tcx
                 .sess
-                .fatal(format!("def_with_id invalid for type {:?}", other)),
+                .fatal(format!("def_with_id invalid for type {other:?}")),
         };
         cx.type_cache_def(result, self.tcx_arena_alloc_slices(cx), def_span);
         result
@@ -648,9 +648,9 @@ impl SpirvTypePrinter<'_, '_> {
             SpirvType::Bool => f.write_str("bool"),
             SpirvType::Integer(width, signedness) => {
                 let prefix = if signedness { "i" } else { "u" };
-                write!(f, "{}{}", prefix, width)
+                write!(f, "{prefix}{width}")
             }
-            SpirvType::Float(width) => write!(f, "f{}", width),
+            SpirvType::Float(width) => write!(f, "f{width}"),
             SpirvType::Adt {
                 def_id: _,
                 align: _,
@@ -674,7 +674,7 @@ impl SpirvTypePrinter<'_, '_> {
                 };
 
                 if let Some(name) = first_name {
-                    write!(f, " {}", name)?;
+                    write!(f, " {name}")?;
                 }
 
                 f.write_str(" { ")?;
@@ -688,20 +688,20 @@ impl SpirvTypePrinter<'_, '_> {
                         write!(f, "{}: ", field_names[index])?;
                     }
                     ty(self.cx, stack, f, field)?;
-                    write!(f, "{}", suffix)?;
+                    write!(f, "{suffix}")?;
                 }
                 f.write_str(" }")
             }
             SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => {
                 ty(self.cx, stack, f, element)?;
-                write!(f, "x{}", count)
+                write!(f, "x{count}")
             }
             SpirvType::Array { element, count } => {
                 let len = self.cx.builder.lookup_const_u64(count);
                 let len = len.expect("Array type has invalid count value");
                 f.write_str("[")?;
                 ty(self.cx, stack, f, element)?;
-                write!(f, "; {}]", len)
+                write!(f, "; {len}]")
             }
             SpirvType::RuntimeArray { element } => {
                 f.write_str("[")?;
@@ -724,7 +724,7 @@ impl SpirvTypePrinter<'_, '_> {
                         ", "
                     };
                     ty(self.cx, stack, f, arg)?;
-                    write!(f, "{}", suffix)?;
+                    write!(f, "{suffix}")?;
                 }
                 f.write_str(") -> ")?;
                 ty(self.cx, stack, f, return_type)

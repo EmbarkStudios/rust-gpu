@@ -665,8 +665,7 @@ impl<'tcx> BuilderSpirv<'tcx> {
         assert_eq!(
             inst.operands.len(),
             1,
-            "global already has initializer defined: {}",
-            global
+            "global already has initializer defined: {global}"
         );
         inst.operands.push(Operand::IdRef(initializer));
         module.types_global_values.push(inst);

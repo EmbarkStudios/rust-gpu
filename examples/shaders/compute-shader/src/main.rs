@@ -19,14 +19,14 @@ fn main() {
             Some(out) if out > max => {
                 max = out;
                 // Should produce <https://oeis.org/A006877>
-                println!("{}: {}", src, out);
+                println!("{src}: {out}");
             }
             Some(_) => (),
             None => {
-                println!("{}: overflowed", src);
+                println!("{src}: overflowed");
                 break;
             }
         }
     }
-    println!("Took: {:?}", took);
+    println!("Took: {took:?}");
 }

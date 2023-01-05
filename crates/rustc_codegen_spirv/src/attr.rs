@@ -158,7 +158,7 @@ impl AggregatedSpirvAttributes {
                 }) => {
                     cx.tcx
                         .sess
-                        .delay_span_bug(span, format!("multiple {} attributes", category));
+                        .delay_span_bug(span, format!("multiple {category} attributes"));
                 }
             }
         }
@@ -333,7 +333,7 @@ impl CheckSpirvAttrVisitor<'_> {
                                 if let Err(msg) = valid {
                                     self.tcx.sess.span_err(
                                         span,
-                                        format!("`{:?}` storage class {}", storage_class, msg),
+                                        format!("`{storage_class:?}` storage class {msg}"),
                                     );
                                 }
                             }
@@ -355,8 +355,7 @@ impl CheckSpirvAttrVisitor<'_> {
                     self.tcx.sess.span_err(
                         span,
                         format!(
-                            "attribute is only valid on a {}, not on a {}",
-                            expected_target, target
+                            "attribute is only valid on a {expected_target}, not on a {target}"
                         ),
                     );
                 }
@@ -371,11 +370,10 @@ impl CheckSpirvAttrVisitor<'_> {
                             .struct_span_err(
                                 span,
                                 &format!(
-                                    "only one {} attribute is allowed on a {}",
-                                    category, target
+                                    "only one {category} attribute is allowed on a {target}"
                                 ),
                             )
-                            .span_note(prev_span, &format!("previous {} attribute", category))
+                            .span_note(prev_span, &format!("previous {category} attribute"))
                             .emit();
                     }
                 },

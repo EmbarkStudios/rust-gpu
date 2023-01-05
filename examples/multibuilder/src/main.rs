@@ -9,5 +9,5 @@ fn main() {
     .multimodule(true)
     .build()
     .unwrap();
-    println!("{:#?}", result);
+    println!("{result:#?}");
 }

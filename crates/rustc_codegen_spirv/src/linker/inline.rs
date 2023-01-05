@@ -125,8 +125,7 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
                 let current_name = get_name(&names, module.functions[current].def_id().unwrap());
                 let next_name = get_name(&names, module.functions[next].def_id().unwrap());
                 *has_recursion = Some(sess.err(format!(
-                    "module has recursion, which is not allowed: `{}` calls `{}`",
-                    current_name, next_name
+                    "module has recursion, which is not allowed: `{current_name}` calls `{next_name}`"
                 )));
                 break;
             }

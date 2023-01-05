@@ -78,7 +78,7 @@ fn main() -> ExitCode {
     match check_toolchain_version() {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
-            eprint!("{}", e);
+            eprint!("{e}");
             ExitCode::FAILURE
         }
     }

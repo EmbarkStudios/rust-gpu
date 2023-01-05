@@ -142,8 +142,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     }
                     None => {
                         self.tcx.sess.err(format!(
-                            "missing libm intrinsic {}, which is {}",
-                            symbol_name, instance
+                            "missing libm intrinsic {symbol_name}, which is {instance}"
                         ));
                     }
                 }
@@ -215,8 +214,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             Linkage::Internal => None,
             other => {
                 self.tcx.sess.err(format!(
-                    "TODO: Linkage type {:?} not supported yet for static var symbol {}",
-                    other, symbol_name
+                    "TODO: Linkage type {other:?} not supported yet for static var symbol {symbol_name}"
                 ));
                 None
             }
@@ -245,8 +243,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             Linkage::Internal => None,
             other => {
                 self.tcx.sess.err(format!(
-                    "TODO: Linkage type {:?} not supported yet for function symbol {}",
-                    other, symbol_name
+                    "TODO: Linkage type {other:?} not supported yet for function symbol {symbol_name}"
                 ));
                 None
             }

@@ -312,7 +312,7 @@ impl SpirvBuilder {
         match self.print_metadata {
             MetadataPrintout::Full | MetadataPrintout::DependencyOnly => {
                 leaf_deps(&metadata_file, |artifact| {
-                    println!("cargo:rerun-if-changed={}", artifact);
+                    println!("cargo:rerun-if-changed={artifact}");
                 })
                 // Close enough
                 .map_err(SpirvBuilderError::MetadataFileMissing)?;
@@ -488,8 +488,8 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     }
 
     let mut target_features = vec![];
-    target_features.extend(builder.capabilities.iter().map(|cap| format!("+{:?}", cap)));
-    target_features.extend(builder.extensions.iter().map(|ext| format!("+ext:{}", ext)));
+    target_features.extend(builder.capabilities.iter().map(|cap| format!("+{cap:?}")));
+    target_features.extend(builder.extensions.iter().map(|ext| format!("+ext:{ext}")));
     let target_features = join_checking_for_separators(target_features, ",");
     if !target_features.is_empty() {
         rustflags.push(["-Ctarget-feature=", &target_features].concat());
@@ -600,7 +600,7 @@ fn get_sole_artifact(out: &str) -> Option<PathBuf> {
                 Some(line)
             } else {
                 // Pass through invalid lines
-                println!("{}", line);
+                println!("{line}");
                 None
             }
         })
