@@ -137,8 +137,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 pointee
             }
             other_type => self.fatal(&format!(
-                "GEP first deref not implemented for type {:?}",
-                other_type
+                "GEP first deref not implemented for type {other_type:?}"
             )),
         };
         for index in indices.iter().cloned().skip(1) {

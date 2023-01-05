@@ -66,7 +66,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 _ => self
                     .tcx
                     .sess
-                    .fatal(format!("Invalid constant value for bool: {}", val)),
+                    .fatal(format!("Invalid constant value for bool: {val}")),
             },
             SpirvType::Integer(128, _) => {
                 let result = self.undef(ty);
@@ -233,7 +233,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             _ => self
                                 .tcx
                                 .sess
-                                .fatal(format!("Invalid constant value for bool: {}", data)),
+                                .fatal(format!("Invalid constant value for bool: {data}")),
                         },
                         other => self.tcx.sess.fatal(format!(
                             "scalar_to_backend Primitive::Int not supported on type {}",
@@ -426,7 +426,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             other => {
                                 self.tcx
                                     .sess
-                                    .fatal(format!("invalid size for integer: {}", other));
+                                    .fatal(format!("invalid size for integer: {other}"));
                             }
                         };
                         Primitive::Int(integer, int_signedness)
@@ -437,7 +437,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         other => {
                             self.tcx
                                 .sess
-                                .fatal(format!("invalid size for float: {}", other));
+                                .fatal(format!("invalid size for float: {other}"));
                         }
                     },
                     SpirvType::Pointer { .. } => Primitive::Pointer,

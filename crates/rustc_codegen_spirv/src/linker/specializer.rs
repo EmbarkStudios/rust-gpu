@@ -208,7 +208,7 @@ pub fn specialize(
             replacements.to_concrete(&[], |instance| expander.alloc_instance_id(instance))
         {
             if debug {
-                eprintln!("        {} -> {:?}", operand, loc);
+                eprintln!("        {operand} -> {loc:?}");
             }
             func.index_set(loc, operand.into());
         }
@@ -259,8 +259,8 @@ impl From<CopyOperand> for Operand {
 impl fmt::Display for CopyOperand {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::IdRef(id) => write!(f, "%{}", id),
-            Self::StorageClass(s) => write!(f, "{:?}", s),
+            Self::IdRef(id) => write!(f, "%{id}"),
+            Self::StorageClass(s) => write!(f, "{s:?}"),
         }
     }
 }
@@ -349,12 +349,12 @@ impl<GA> Instance<GA> {
         } = self;
         let generic_args_iter = f(generic_args);
         FmtBy(move |f| {
-            write!(f, "%{}<", generic_id)?;
+            write!(f, "%{generic_id}<")?;
             for (i, arg) in generic_args_iter.clone().enumerate() {
                 if i != 0 {
                     write!(f, ", ")?;
                 }
-                write!(f, "{}", arg)?;
+                write!(f, "{arg}")?;
             }
             write!(f, ">")
         })
@@ -793,18 +793,18 @@ impl InferOperand {
         FmtBy(move |f| {
             let var_with_value = |v| {
                 FmtBy(move |f| {
-                    write!(f, "{}", v)?;
+                    write!(f, "{v}")?;
                     match infer_var_value(v) {
                         Value::Unknown => Ok(()),
-                        Value::Known(o) => write!(f, " = {}", o),
-                        Value::SameAs(v) => write!(f, " = {}", v),
+                        Value::Known(o) => write!(f, " = {o}"),
+                        Value::SameAs(v) => write!(f, " = {v}"),
                     }
                 })
             };
             match self {
                 Self::Unknown => write!(f, "_"),
                 Self::Var(v) => write!(f, "{}", var_with_value(*v)),
-                Self::Concrete(o) => write!(f, "{}", o),
+                Self::Concrete(o) => write!(f, "{o}"),
                 Self::Instance(instance) => write!(
                     f,
                     "{}",
@@ -1136,7 +1136,7 @@ impl<'a> Match<'a> {
                         let mut found = found.iter().map(display);
                         write!(f, "{}", found.next().unwrap())?;
                         for x in found {
-                            write!(f, " = {}", x)?;
+                            write!(f, " = {x}")?;
                         }
                         Ok(())
                     })
@@ -1192,8 +1192,8 @@ impl<'a> Match<'a> {
                                     _ => None,
                                 };
                                 match maybe_idx {
-                                    Some(idx) => write!(f, ".{}", idx)?,
-                                    None => write!(f, "[{}]", operand)?,
+                                    Some(idx) => write!(f, ".{idx}")?,
+                                    None => write!(f, "[{operand}]")?,
                                 }
                             }
                             write!(f, " = {}", leaf.display_with_infer_cx(cx))
@@ -1503,13 +1503,13 @@ impl InferError {
         // FIXME(eddyb) better error reporting than this.
         match self {
             Self::Conflict(a, b) => {
-                eprintln!("inference conflict: {:?} vs {:?}", a, b);
+                eprintln!("inference conflict: {a:?} vs {b:?}");
             }
         }
         eprint!("    in ");
         // FIXME(eddyb) deduplicate this with other instruction printing logic.
         if let Some(result_id) = inst.result_id {
-            eprint!("%{} = ", result_id);
+            eprint!("%{result_id} = ");
         }
         eprint!("Op{:?}", inst.class.opcode);
         for operand in inst
@@ -1518,7 +1518,7 @@ impl InferError {
             .iter()
             .chain(inst.operands.iter())
         {
-            eprint!(" {}", operand);
+            eprint!(" {operand}");
         }
         eprintln!();
 
@@ -1950,9 +1950,9 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                 if inst_loc != InstructionLocation::Module {
                     eprint!("    ");
                 }
-                eprint!("{}", prefix);
+                eprint!("{prefix}");
                 if let Some(result_id) = inst.result_id {
-                    eprint!("%{} = ", result_id);
+                    eprint!("%{result_id} = ");
                 }
                 eprint!("Op{:?}", inst.class.opcode);
                 for operand in result_type.into_iter().chain(inputs.iter(cx)) {
@@ -2025,9 +2025,9 @@ impl<'a, S: Specialization> InferCx<'a, S> {
 
         if self.specializer.debug {
             eprintln!();
-            eprint!("specializer::instantiate_function(%{}", func_id);
+            eprint!("specializer::instantiate_function(%{func_id}");
             if let Some(name) = self.specializer.debug_names.get(&func_id) {
-                eprint!(" {}", name);
+                eprint!(" {name}");
             }
             eprintln!("):");
         }
@@ -2482,7 +2482,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
         // FIXME(eddyb) maybe dump (transitive) dependencies? could use a def-use graph.
         for (&generic_id, generic) in &self.specializer.generics {
             if let Some(name) = self.specializer.debug_names.get(&generic_id) {
-                writeln!(w, "; {}", name)?;
+                writeln!(w, "; {name}")?;
             }
 
             write!(
@@ -2525,7 +2525,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
                 } else if needed == 1 {
                     write!(w, "{}", params.start)?;
                 } else {
-                    write!(w, "{}", operand)?;
+                    write!(w, "{operand}")?;
                 }
             }
             writeln!(w)?;
@@ -2536,8 +2536,8 @@ impl<'a, S: Specialization> Expander<'a, S> {
                     let p = Param(i as u32);
                     match v {
                         Value::Unknown => {}
-                        Value::Known(o) => write!(w, " {} = {},", p, o)?,
-                        Value::SameAs(q) => write!(w, " {} = {},", p, q)?,
+                        Value::Known(o) => write!(w, " {p} = {o},")?,
+                        Value::SameAs(q) => write!(w, " {p} = {q},")?,
                     }
                 }
                 writeln!(w)?;

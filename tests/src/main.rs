@@ -50,7 +50,7 @@ impl DepKind {
 
     fn target_dir_suffix(self, target: &str) -> String {
         match self {
-            Self::SpirvLib => format!("{}/debug/deps", target),
+            Self::SpirvLib => format!("{target}/debug/deps"),
             Self::ProcMacro => "debug/deps".into(),
         }
     }
@@ -136,7 +136,7 @@ impl Runner {
             // which offer `// only-S` and `// ignore-S` for any stage ID `S`.
             let stage_id = if spirt { "spirt" } else { "not_spirt" };
 
-            let target = format!("{}{}", TARGET_PREFIX, env);
+            let target = format!("{TARGET_PREFIX}{env}");
             let libs = build_deps(&self.deps_target_dir, &self.codegen_backend_path, &target);
             let mut flags = test_rustc_flags(
                 &self.codegen_backend_path,
@@ -188,7 +188,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
             "compiletests-deps-helper",
             "-Zbuild-std=core",
             "-Zbuild-std-features=compiler-builtins-mem",
-            &*format!("--target={}", target),
+            &*format!("--target={target}"),
         ])
         .arg("--target-dir")
         .arg(deps_target_dir)

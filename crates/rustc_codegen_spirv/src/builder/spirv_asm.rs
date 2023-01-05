@@ -65,8 +65,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         let unsupported_options = options & !SUPPORTED_OPTIONS;
         if !unsupported_options.is_empty() {
             self.err(&format!(
-                "asm flags not supported: {:?}",
-                unsupported_options
+                "asm flags not supported: {unsupported_options:?}"
             ));
         }
         // vec of lines, and each line is vec of tokens
@@ -105,7 +104,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                     if let Some(modifier) = modifier {
                         self.tcx.sess.span_err(
                             span,
-                            format!("asm modifiers are not supported: {}", modifier),
+                            format!("asm modifiers are not supported: {modifier}"),
                         );
                     }
                     let line = tokens.last_mut().unwrap();
@@ -167,14 +166,13 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
             (false, AsmBlock::Open) => (),
             (false, AsmBlock::End(terminator)) => {
                 self.err(&format!(
-                    "trailing terminator {:?} requires `options(noreturn)`",
-                    terminator
+                    "trailing terminator {terminator:?} requires `options(noreturn)`"
                 ));
             }
         }
         for (id, num) in id_map {
             if !defined_ids.contains(&num) {
-                self.err(&format!("%{} is used but not defined", id));
+                self.err(&format!("%{id} is used but not defined"));
             }
         }
     }
@@ -237,7 +235,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                                     Some('\'') => '\'',
                                     Some('"') => '"',
                                     Some(escape) => {
-                                        self.err(&format!("invalid escape '\\{}'", escape));
+                                        self.err(&format!("invalid escape '\\{escape}'"));
                                         return None;
                                     }
                                 };
@@ -312,12 +310,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 if storage_class != StorageClass::Generic {
                     self.struct_err("TypePointer in asm! requires `Generic` storage class")
                         .note(&format!(
-                            "`{:?}` storage class was specified",
-                            storage_class
+                            "`{storage_class:?}` storage class was specified"
                         ))
                         .help(&format!(
-                            "the storage class will be inferred automatically (e.g. to `{:?}`)",
-                            storage_class
+                            "the storage class will be inferred automatically (e.g. to `{storage_class:?}`)"
                         ))
                         .emit();
                 }
@@ -378,8 +374,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     AsmBlock::End(terminator) => {
                         if op != Op::Label {
                             self.err(&format!(
-                                "expected OpLabel after terminator {:?}",
-                                terminator
+                                "expected OpLabel after terminator {terminator:?}"
                             ));
                         }
 
@@ -461,7 +456,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         let inst_class = if let Some(inst) = inst_class {
             inst
         } else {
-            self.err(&format!("unknown spirv instruction {}", inst_name));
+            self.err(&format!("unknown spirv instruction {inst_name}"));
             return;
         };
         let result_id = match out_register {
@@ -792,7 +787,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             _ => {
                 self.tcx
                     .sess
-                    .span_err(span, format!("invalid register: {}", reg));
+                    .span_err(span, format!("invalid register: {reg}"));
             }
         }
     }
@@ -809,7 +804,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     Some(OutRegister::Regular({
                         let num = *id_map.entry(id).or_insert_with(|| self.emit().id());
                         if !defined_ids.insert(num) {
-                            self.err(&format!("%{} is defined more than once", id));
+                            self.err(&format!("%{id} is defined more than once"));
                         }
                         num
                     }))
@@ -1071,7 +1066,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
             (OperandKind::LiteralInteger, Some(word)) => match word.parse() {
                 Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
-                Err(e) => self.err(&format!("invalid integer: {}", e)),
+                Err(e) => self.err(&format!("invalid integer: {e}")),
             },
             (OperandKind::LiteralString, _) => {
                 if let Token::String(value) = token {
@@ -1126,7 +1121,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             }
             (OperandKind::LiteralExtInstInteger, Some(word)) => match word.parse() {
                 Ok(v) => inst.operands.push(dr::Operand::LiteralExtInstInteger(v)),
-                Err(e) => self.err(&format!("invalid integer: {}", e)),
+                Err(e) => self.err(&format!("invalid integer: {e}")),
             },
             (OperandKind::LiteralSpecConstantOpInteger, Some(word)) => {
                 match self.instruction_table.table.get(word) {
@@ -1147,25 +1142,24 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         Some(Token::Word(word)) => match word.parse() {
                             Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
                             Err(e) => {
-                                self.err(&format!("invalid integer: {}", e));
+                                self.err(&format!("invalid integer: {e}"));
                             }
                         },
                         Some(Token::String(_)) => {
                             self.err(&format!(
-                                "expected a literal, not a string for a {:?}",
-                                kind
+                                "expected a literal, not a string for a {kind:?}"
                             ));
                         }
                         Some(Token::Placeholder(_, span)) => {
                             self.tcx.sess.span_err(
                                 span,
-                                format!("expected a literal, not a dynamic value for a {:?}", kind),
+                                format!("expected a literal, not a dynamic value for a {kind:?}"),
                             );
                         }
                         Some(Token::Typeof(_, span, _)) => {
                             self.tcx.sess.span_err(
                                 span,
-                                format!("expected a literal, not a type for a {:?}", kind),
+                                format!("expected a literal, not a type for a {kind:?}"),
                             );
                         }
                         None => {
@@ -1191,163 +1185,162 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             (OperandKind::ImageOperands, Some(word)) => {
                 match parse_bitflags_operand(IMAGE_OPERANDS, word) {
                     Some(x) => inst.operands.push(dr::Operand::ImageOperands(x)),
-                    None => self.err(&format!("Unknown ImageOperands {}", word)),
+                    None => self.err(&format!("Unknown ImageOperands {word}")),
                 }
             }
             (OperandKind::FPFastMathMode, Some(word)) => {
                 match parse_bitflags_operand(FP_FAST_MATH_MODE, word) {
                     Some(x) => inst.operands.push(dr::Operand::FPFastMathMode(x)),
-                    None => self.err(&format!("Unknown FPFastMathMode {}", word)),
+                    None => self.err(&format!("Unknown FPFastMathMode {word}")),
                 }
             }
             (OperandKind::SelectionControl, Some(word)) => {
                 match parse_bitflags_operand(SELECTION_CONTROL, word) {
                     Some(x) => inst.operands.push(dr::Operand::SelectionControl(x)),
-                    None => self.err(&format!("Unknown SelectionControl {}", word)),
+                    None => self.err(&format!("Unknown SelectionControl {word}")),
                 }
             }
             (OperandKind::LoopControl, Some(word)) => {
                 match parse_bitflags_operand(LOOP_CONTROL, word) {
                     Some(x) => inst.operands.push(dr::Operand::LoopControl(x)),
-                    None => self.err(&format!("Unknown LoopControl {}", word)),
+                    None => self.err(&format!("Unknown LoopControl {word}")),
                 }
             }
             (OperandKind::FunctionControl, Some(word)) => {
                 match parse_bitflags_operand(FUNCTION_CONTROL, word) {
                     Some(x) => inst.operands.push(dr::Operand::FunctionControl(x)),
-                    None => self.err(&format!("Unknown FunctionControl {}", word)),
+                    None => self.err(&format!("Unknown FunctionControl {word}")),
                 }
             }
             (OperandKind::MemorySemantics, Some(word)) => {
                 match parse_bitflags_operand(MEMORY_SEMANTICS, word) {
                     Some(x) => inst.operands.push(dr::Operand::MemorySemantics(x)),
-                    None => self.err(&format!("Unknown MemorySemantics {}", word)),
+                    None => self.err(&format!("Unknown MemorySemantics {word}")),
                 }
             }
             (OperandKind::MemoryAccess, Some(word)) => {
                 match parse_bitflags_operand(MEMORY_ACCESS, word) {
                     Some(x) => inst.operands.push(dr::Operand::MemoryAccess(x)),
-                    None => self.err(&format!("Unknown MemoryAccess {}", word)),
+                    None => self.err(&format!("Unknown MemoryAccess {word}")),
                 }
             }
             (OperandKind::KernelProfilingInfo, Some(word)) => {
                 match parse_bitflags_operand(KERNEL_PROFILING_INFO, word) {
                     Some(x) => inst.operands.push(dr::Operand::KernelProfilingInfo(x)),
-                    None => self.err(&format!("Unknown KernelProfilingInfo {}", word)),
+                    None => self.err(&format!("Unknown KernelProfilingInfo {word}")),
                 }
             }
             (OperandKind::RayFlags, Some(word)) => match parse_bitflags_operand(RAY_FLAGS, word) {
                 Some(x) => inst.operands.push(dr::Operand::RayFlags(x)),
-                None => self.err(&format!("Unknown RayFlags {}", word)),
+                None => self.err(&format!("Unknown RayFlags {word}")),
             },
             (OperandKind::FragmentShadingRate, Some(word)) => {
                 match parse_bitflags_operand(FRAGMENT_SHADING_RATE, word) {
                     Some(x) => inst.operands.push(dr::Operand::FragmentShadingRate(x)),
-                    None => self.err(&format!("Unknown FragmentShadingRate {}", word)),
+                    None => self.err(&format!("Unknown FragmentShadingRate {word}")),
                 }
             }
 
             (OperandKind::SourceLanguage, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::SourceLanguage(x)),
-                Err(()) => self.err(&format!("Unknown SourceLanguage {}", word)),
+                Err(()) => self.err(&format!("Unknown SourceLanguage {word}")),
             },
             (OperandKind::ExecutionModel, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::ExecutionModel(x)),
-                Err(()) => self.err(&format!("unknown ExecutionModel {}", word)),
+                Err(()) => self.err(&format!("unknown ExecutionModel {word}")),
             },
             (OperandKind::AddressingModel, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::AddressingModel(x)),
-                Err(()) => self.err(&format!("unknown AddressingModel {}", word)),
+                Err(()) => self.err(&format!("unknown AddressingModel {word}")),
             },
             (OperandKind::MemoryModel, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::MemoryModel(x)),
-                Err(()) => self.err(&format!("unknown MemoryModel {}", word)),
+                Err(()) => self.err(&format!("unknown MemoryModel {word}")),
             },
             (OperandKind::ExecutionMode, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::ExecutionMode(x)),
-                Err(()) => self.err(&format!("unknown ExecutionMode {}", word)),
+                Err(()) => self.err(&format!("unknown ExecutionMode {word}")),
             },
             (OperandKind::StorageClass, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::StorageClass(x)),
-                Err(()) => self.err(&format!("unknown StorageClass {}", word)),
+                Err(()) => self.err(&format!("unknown StorageClass {word}")),
             },
             (OperandKind::Dim, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::Dim(x)),
-                Err(()) => self.err(&format!("unknown Dim {}", word)),
+                Err(()) => self.err(&format!("unknown Dim {word}")),
             },
             (OperandKind::SamplerAddressingMode, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::SamplerAddressingMode(x)),
-                Err(()) => self.err(&format!("unknown SamplerAddressingMode {}", word)),
+                Err(()) => self.err(&format!("unknown SamplerAddressingMode {word}")),
             },
             (OperandKind::SamplerFilterMode, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::SamplerFilterMode(x)),
-                Err(()) => self.err(&format!("unknown SamplerFilterMode {}", word)),
+                Err(()) => self.err(&format!("unknown SamplerFilterMode {word}")),
             },
             (OperandKind::ImageFormat, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::ImageFormat(x)),
-                Err(()) => self.err(&format!("unknown ImageFormat {}", word)),
+                Err(()) => self.err(&format!("unknown ImageFormat {word}")),
             },
             (OperandKind::ImageChannelOrder, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::ImageChannelOrder(x)),
-                Err(()) => self.err(&format!("unknown ImageChannelOrder {}", word)),
+                Err(()) => self.err(&format!("unknown ImageChannelOrder {word}")),
             },
             (OperandKind::ImageChannelDataType, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::ImageChannelDataType(x)),
-                Err(()) => self.err(&format!("unknown ImageChannelDataType {}", word)),
+                Err(()) => self.err(&format!("unknown ImageChannelDataType {word}")),
             },
             (OperandKind::FPRoundingMode, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::FPRoundingMode(x)),
-                Err(()) => self.err(&format!("unknown FPRoundingMode {}", word)),
+                Err(()) => self.err(&format!("unknown FPRoundingMode {word}")),
             },
             (OperandKind::LinkageType, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::LinkageType(x)),
-                Err(()) => self.err(&format!("unknown LinkageType {}", word)),
+                Err(()) => self.err(&format!("unknown LinkageType {word}")),
             },
             (OperandKind::AccessQualifier, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::AccessQualifier(x)),
-                Err(()) => self.err(&format!("unknown AccessQualifier {}", word)),
+                Err(()) => self.err(&format!("unknown AccessQualifier {word}")),
             },
             (OperandKind::FunctionParameterAttribute, Some(word)) => match word.parse() {
                 Ok(x) => inst
                     .operands
                     .push(dr::Operand::FunctionParameterAttribute(x)),
-                Err(()) => self.err(&format!("unknown FunctionParameterAttribute {}", word)),
+                Err(()) => self.err(&format!("unknown FunctionParameterAttribute {word}")),
             },
             (OperandKind::Decoration, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::Decoration(x)),
-                Err(()) => self.err(&format!("unknown Decoration {}", word)),
+                Err(()) => self.err(&format!("unknown Decoration {word}")),
             },
             (OperandKind::BuiltIn, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::BuiltIn(x)),
-                Err(()) => self.err(&format!("unknown BuiltIn {}", word)),
+                Err(()) => self.err(&format!("unknown BuiltIn {word}")),
             },
             (OperandKind::Scope, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::Scope(x)),
-                Err(()) => self.err(&format!("unknown Scope {}", word)),
+                Err(()) => self.err(&format!("unknown Scope {word}")),
             },
             (OperandKind::GroupOperation, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::GroupOperation(x)),
-                Err(()) => self.err(&format!("unknown GroupOperation {}", word)),
+                Err(()) => self.err(&format!("unknown GroupOperation {word}")),
             },
             (OperandKind::KernelEnqueueFlags, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::KernelEnqueueFlags(x)),
-                Err(()) => self.err(&format!("unknown KernelEnqueueFlags {}", word)),
+                Err(()) => self.err(&format!("unknown KernelEnqueueFlags {word}")),
             },
             (OperandKind::Capability, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::Capability(x)),
-                Err(()) => self.err(&format!("unknown Capability {}", word)),
+                Err(()) => self.err(&format!("unknown Capability {word}")),
             },
             (OperandKind::RayQueryIntersection, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::RayQueryIntersection(x)),
-                Err(()) => self.err(&format!("unknown RayQueryIntersection {}", word)),
+                Err(()) => self.err(&format!("unknown RayQueryIntersection {word}")),
             },
             (OperandKind::RayQueryCommittedIntersectionType, Some(word)) => match word.parse() {
                 Ok(x) => inst
                     .operands
                     .push(dr::Operand::RayQueryCommittedIntersectionType(x)),
                 Err(()) => self.err(&format!(
-                    "unknown RayQueryCommittedIntersectionType {}",
-                    word
+                    "unknown RayQueryCommittedIntersectionType {word}"
                 )),
             },
             (OperandKind::RayQueryCandidateIntersectionType, Some(word)) => match word.parse() {
@@ -1355,28 +1348,26 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     .operands
                     .push(dr::Operand::RayQueryCandidateIntersectionType(x)),
                 Err(()) => self.err(&format!(
-                    "unknown RayQueryCandidateIntersectionType {}",
-                    word
+                    "unknown RayQueryCandidateIntersectionType {word}"
                 )),
             },
             (kind, None) => match token {
                 Token::Word(_) => bug!(),
                 Token::String(_) => {
                     self.err(&format!(
-                        "expected a literal, not a string for a {:?}",
-                        kind
+                        "expected a literal, not a string for a {kind:?}"
                     ));
                 }
                 Token::Placeholder(_, span) => {
                     self.tcx.sess.span_err(
                         span,
-                        format!("expected a literal, not a dynamic value for a {:?}", kind),
+                        format!("expected a literal, not a dynamic value for a {kind:?}"),
                     );
                 }
                 Token::Typeof(_, span, _) => {
                     self.tcx.sess.span_err(
                         span,
-                        format!("expected a literal, not a type for a {:?}", kind),
+                        format!("expected a literal, not a type for a {kind:?}"),
                     );
                 }
             },

@@ -74,7 +74,7 @@ impl<'a> Trie<'a> {
             let full_child_name = if full_name.is_empty() {
                 (*child_name).to_string()
             } else {
-                format!("{}::{}", full_name, child_name)
+                format!("{full_name}::{child_name}")
             };
             if child.present {
                 assert!(child.children.is_empty());

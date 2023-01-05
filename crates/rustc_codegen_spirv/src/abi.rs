@@ -270,7 +270,7 @@ impl fmt::Display for PointeeTy<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PointeeTy::Ty(ty) => write!(f, "{}", ty.ty),
-            PointeeTy::Fn(ty) => write!(f, "{}", ty),
+            PointeeTy::Fn(ty) => write!(f, "{ty}"),
         }
     }
 }
@@ -577,8 +577,7 @@ fn dig_scalar_pointee<'tcx>(
                 Some(old_pointee) if old_pointee != new_pointee => {
                     cx.tcx.sess.fatal(format!(
                         "dig_scalar_pointee: unsupported Pointer with different \
-                         pointee types ({:?} vs {:?}) at offset {:?} in {:#?}",
-                        old_pointee, new_pointee, offset, layout
+                         pointee types ({old_pointee:?} vs {new_pointee:?}) at offset {offset:?} in {layout:#?}"
                     ));
                 }
                 _ => pointee = Some(new_pointee),
@@ -860,7 +859,7 @@ fn trans_intrinsic_type<'tcx>(
                     None => Err(cx
                         .tcx
                         .sess
-                        .err(format!("Invalid value for Image const generic: {}", value))),
+                        .err(format!("Invalid value for Image const generic: {value}"))),
                 }
             }
 

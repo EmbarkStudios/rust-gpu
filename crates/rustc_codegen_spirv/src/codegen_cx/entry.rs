@@ -38,7 +38,7 @@ impl<'tcx> CodegenCx<'tcx> {
             } else {
                 self.tcx
                     .sess
-                    .span_err(span, format!("Cannot declare {} as an entry point", name));
+                    .span_err(span, format!("Cannot declare {name} as an entry point"));
                 return;
             };
             let body = self
@@ -253,17 +253,16 @@ impl<'tcx> CodegenCx<'tcx> {
                         .struct_span_err(hir_param.span, "storage class mismatch")
                         .span_label(
                             storage_class_attr.span,
-                            format!("{:?} specified in attribute", storage_class),
+                            format!("{storage_class:?} specified in attribute"),
                         )
                         .span_label(
                             hir_param.ty_span,
-                            format!("{:?} inferred from type", inferred),
+                            format!("{inferred:?} inferred from type"),
                         )
                         .span_help(
                             storage_class_attr.span,
                             &format!(
-                                "remove storage class attribute to use {:?} as storage class",
-                                inferred
+                                "remove storage class attribute to use {inferred:?} as storage class"
                             ),
                         )
                         .emit();
@@ -405,8 +404,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     self.tcx.sess.span_fatal(
                         hir_param.ty_span,
                         format!(
-                            "unsized types are not supported for storage class {:?}",
-                            storage_class
+                            "unsized types are not supported for storage class {storage_class:?}"
                         ),
                     );
                 }

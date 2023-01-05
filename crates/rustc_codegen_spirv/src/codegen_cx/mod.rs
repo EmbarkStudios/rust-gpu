@@ -281,7 +281,7 @@ impl CodegenArgs {
     pub fn from_session(sess: &Session) -> Self {
         match CodegenArgs::parse(&sess.opts.cg.llvm_args) {
             Ok(ok) => ok,
-            Err(err) => sess.fatal(format!("Unable to parse llvm-args: {}", err)),
+            Err(err) => sess.fatal(format!("Unable to parse llvm-args: {err}")),
         }
     }
 

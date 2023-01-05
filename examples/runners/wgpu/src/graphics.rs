@@ -158,7 +158,7 @@ async fn run(
                     let output = match surface.get_current_texture() {
                         Ok(surface) => surface,
                         Err(err) => {
-                            eprintln!("get_current_texture error: {:?}", err);
+                            eprintln!("get_current_texture error: {err:?}");
                             match err {
                                 wgpu::SurfaceError::Lost => {
                                     surface.configure(&device, &surface_config);

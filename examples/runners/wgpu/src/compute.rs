@@ -173,12 +173,12 @@ pub async fn start_internal(
         let mut max = 0;
         for (src, out) in src_range.zip(result.iter().copied()) {
             if out == u32::MAX {
-                println!("{}: overflowed", src);
+                println!("{src}: overflowed");
                 break;
             } else if out > max {
                 max = out;
                 // Should produce <https://oeis.org/A006877>
-                println!("{}: {}", src, out);
+                println!("{src}: {out}");
             }
         }
         println!(
