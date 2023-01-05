@@ -369,9 +369,7 @@ impl CheckSpirvAttrVisitor<'_> {
                             .sess
                             .struct_span_err(
                                 span,
-                                &format!(
-                                    "only one {category} attribute is allowed on a {target}"
-                                ),
+                                &format!("only one {category} attribute is allowed on a {target}"),
                             )
                             .span_note(prev_span, &format!("previous {category} attribute"))
                             .emit();

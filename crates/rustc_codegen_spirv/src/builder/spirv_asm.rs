@@ -64,9 +64,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         const SUPPORTED_OPTIONS: InlineAsmOptions = InlineAsmOptions::NORETURN;
         let unsupported_options = options & !SUPPORTED_OPTIONS;
         if !unsupported_options.is_empty() {
-            self.err(&format!(
-                "asm flags not supported: {unsupported_options:?}"
-            ));
+            self.err(&format!("asm flags not supported: {unsupported_options:?}"));
         }
         // vec of lines, and each line is vec of tokens
         let mut tokens = vec![vec![]];
@@ -102,10 +100,9 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                     span,
                 } => {
                     if let Some(modifier) = modifier {
-                        self.tcx.sess.span_err(
-                            span,
-                            format!("asm modifiers are not supported: {modifier}"),
-                        );
+                        self.tcx
+                            .sess
+                            .span_err(span, format!("asm modifiers are not supported: {modifier}"));
                     }
                     let line = tokens.last_mut().unwrap();
                     let typeof_kind = line.last().and_then(|prev| match prev {
@@ -373,9 +370,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     }
                     AsmBlock::End(terminator) => {
                         if op != Op::Label {
-                            self.err(&format!(
-                                "expected OpLabel after terminator {terminator:?}"
-                            ));
+                            self.err(&format!("expected OpLabel after terminator {terminator:?}"));
                         }
 
                         AsmBlock::Open
@@ -1146,9 +1141,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                             }
                         },
                         Some(Token::String(_)) => {
-                            self.err(&format!(
-                                "expected a literal, not a string for a {kind:?}"
-                            ));
+                            self.err(&format!("expected a literal, not a string for a {kind:?}"));
                         }
                         Some(Token::Placeholder(_, span)) => {
                             self.tcx.sess.span_err(
@@ -1339,24 +1332,18 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Ok(x) => inst
                     .operands
                     .push(dr::Operand::RayQueryCommittedIntersectionType(x)),
-                Err(()) => self.err(&format!(
-                    "unknown RayQueryCommittedIntersectionType {word}"
-                )),
+                Err(()) => self.err(&format!("unknown RayQueryCommittedIntersectionType {word}")),
             },
             (OperandKind::RayQueryCandidateIntersectionType, Some(word)) => match word.parse() {
                 Ok(x) => inst
                     .operands
                     .push(dr::Operand::RayQueryCandidateIntersectionType(x)),
-                Err(()) => self.err(&format!(
-                    "unknown RayQueryCandidateIntersectionType {word}"
-                )),
+                Err(()) => self.err(&format!("unknown RayQueryCandidateIntersectionType {word}")),
             },
             (kind, None) => match token {
                 Token::Word(_) => bug!(),
                 Token::String(_) => {
-                    self.err(&format!(
-                        "expected a literal, not a string for a {kind:?}"
-                    ));
+                    self.err(&format!("expected a literal, not a string for a {kind:?}"));
                 }
                 Token::Placeholder(_, span) => {
                     self.tcx.sess.span_err(

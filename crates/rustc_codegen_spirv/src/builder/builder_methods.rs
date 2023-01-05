@@ -1179,9 +1179,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         flags: MemFlags,
     ) -> Self::Value {
         if flags != MemFlags::empty() {
-            self.err(&format!(
-                "store_with_flags is not supported yet: {flags:?}"
-            ));
+            self.err(&format!("store_with_flags is not supported yet: {flags:?}"));
         }
         self.store(val, ptr, align)
     }
