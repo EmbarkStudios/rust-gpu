@@ -700,7 +700,11 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         };
                         ty = match cx.lookup_type(ty) {
                             SpirvType::Array { element, .. }
-                            | SpirvType::RuntimeArray { element } => element,
+                            | SpirvType::RuntimeArray { element }
+                            // HACK(eddyb) this is pretty bad because it's not
+                            // checking that the index is an `OpConstant 0`, but
+                            // there's no other valid choice anyway.
+                            | SpirvType::InterfaceBlock { inner_type: element } => element,
 
                             SpirvType::Adt { field_types, .. } => *index_to_usize()
                                 .and_then(|i| field_types.get(i))

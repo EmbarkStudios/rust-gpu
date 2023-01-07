@@ -65,6 +65,7 @@ pub enum IntrinsicType {
     SampledImage,
     RayQueryKhr,
     RuntimeArray,
+    TypedBuffer,
     Matrix,
 }
 

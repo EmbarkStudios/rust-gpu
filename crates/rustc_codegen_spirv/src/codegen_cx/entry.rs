@@ -495,71 +495,98 @@ impl<'tcx> CodegenCx<'tcx> {
                 .dcx()
                 .span_fatal(hir_param.ty_span, "pair type not supported yet")
         }
-        let var_ptr_spirv_type;
-        let (value_ptr, value_len) = match storage_class {
-            Ok(
-                StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer,
-            ) => {
-                let var_spirv_type = SpirvType::InterfaceBlock {
-                    inner_type: value_spirv_type,
-                }
-                .def(hir_param.span, self);
-                var_ptr_spirv_type = self.type_ptr_to(var_spirv_type);
-
-                let zero_u32 = self.constant_u32(hir_param.span, 0).def_cx(self);
-                let value_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
-                let value_ptr = bx
-                    .emit()
-                    .in_bounds_access_chain(
-                        value_ptr_spirv_type,
-                        None,
-                        var_id.unwrap(),
-                        [zero_u32].iter().cloned(),
-                    )
-                    .unwrap()
-                    .with_type(value_ptr_spirv_type);
-
-                let value_len = if is_unsized_with_len {
-                    match self.lookup_type(value_spirv_type) {
-                        SpirvType::RuntimeArray { .. } => {}
-                        _ => {
-                            self.tcx.dcx().span_err(
-                                hir_param.ty_span,
-                                "only plain slices are supported as unsized types",
-                            );
-                        }
+        // FIXME(eddyb) should this talk about "typed buffers" instead of "interface blocks"?
+        // FIXME(eddyb) should we talk about "descriptor indexing" or
+        // actually use more reasonable terms like "resource arrays"?
+        let needs_interface_block_and_supports_descriptor_indexing = matches!(
+            storage_class,
+            Ok(StorageClass::Uniform | StorageClass::StorageBuffer)
+        );
+        let needs_interface_block = needs_interface_block_and_supports_descriptor_indexing
+            || storage_class == Ok(StorageClass::PushConstant);
+        // NOTE(eddyb) `#[spirv(typed_buffer)]` adds `SpirvType::InterfaceBlock`s
+        // which must bypass the automated ones (i.e. the user is taking control).
+        let has_explicit_interface_block = needs_interface_block_and_supports_descriptor_indexing
+            && {
+                // Peel off arrays first (used for "descriptor indexing").
+                let outermost_or_array_element = match self.lookup_type(value_spirv_type) {
+                    SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } => {
+                        element
                     }
-
-                    // FIXME(eddyb) shouldn't this be `usize`?
-                    let len_spirv_type = self.type_isize();
-                    let len = bx
-                        .emit()
-                        .array_length(len_spirv_type, None, var_id.unwrap(), 0)
-                        .unwrap();
-
-                    Some(len.with_type(len_spirv_type))
-                } else {
-                    if is_unsized {
-                        // It's OK to use a RuntimeArray<u32> and not have a length parameter, but
-                        // it's just nicer ergonomics to use a slice.
-                        self.tcx
-                            .dcx()
-                            .span_warn(hir_param.ty_span, "use &[T] instead of &RuntimeArray<T>");
-                    }
-                    None
+                    _ => value_spirv_type,
                 };
-
-                (Ok(value_ptr), value_len)
+                matches!(
+                    self.lookup_type(outermost_or_array_element),
+                    SpirvType::InterfaceBlock { .. }
+                )
+            };
+        let var_ptr_spirv_type;
+        let (value_ptr, value_len) = if needs_interface_block && !has_explicit_interface_block {
+            let var_spirv_type = SpirvType::InterfaceBlock {
+                inner_type: value_spirv_type,
             }
-            Ok(StorageClass::UniformConstant) => {
-                var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+            .def(hir_param.span, self);
+            var_ptr_spirv_type = self.type_ptr_to(var_spirv_type);
 
+            let zero_u32 = self.constant_u32(hir_param.span, 0).def_cx(self);
+            let value_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+            let value_ptr = bx
+                .emit()
+                .in_bounds_access_chain(
+                    value_ptr_spirv_type,
+                    None,
+                    var_id.unwrap(),
+                    [zero_u32].iter().cloned(),
+                )
+                .unwrap()
+                .with_type(value_ptr_spirv_type);
+
+            let value_len = if is_unsized_with_len {
+                match self.lookup_type(value_spirv_type) {
+                    SpirvType::RuntimeArray { .. } => {}
+                    _ => {
+                        self.tcx.dcx().span_err(
+                            hir_param.ty_span,
+                            "only plain slices are supported as unsized types",
+                        );
+                    }
+                }
+
+                // FIXME(eddyb) shouldn't this be `usize`?
+                let len_spirv_type = self.type_isize();
+                let len = bx
+                    .emit()
+                    .array_length(len_spirv_type, None, var_id.unwrap(), 0)
+                    .unwrap();
+
+                Some(len.with_type(len_spirv_type))
+            } else {
+                if is_unsized {
+                    // It's OK to use a RuntimeArray<u32> and not have a length parameter, but
+                    // it's just nicer ergonomics to use a slice.
+                    self.tcx
+                        .dcx()
+                        .span_warn(hir_param.ty_span, "use &[T] instead of &RuntimeArray<T>");
+                }
+                None
+            };
+
+            (Ok(value_ptr), value_len)
+        } else {
+            var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+
+            // FIXME(eddyb) should we talk about "descriptor indexing" or
+            // actually use more reasonable terms like "resource arrays"?
+            let unsized_is_descriptor_indexing =
+                needs_interface_block_and_supports_descriptor_indexing
+                    || storage_class == Ok(StorageClass::UniformConstant);
+            if unsized_is_descriptor_indexing {
                 match self.lookup_type(value_spirv_type) {
                     SpirvType::RuntimeArray { .. } => {
                         if is_unsized_with_len {
                             self.tcx.dcx().span_err(
                                 hir_param.ty_span,
-                                "uniform_constant must use &RuntimeArray<T>, not &[T]",
+                                "descriptor indexing must use &RuntimeArray<T>, not &[T]",
                             );
                         }
                     }
@@ -567,24 +594,15 @@ impl<'tcx> CodegenCx<'tcx> {
                         if is_unsized {
                             self.tcx.dcx().span_err(
                                 hir_param.ty_span,
-                                "only plain slices are supported as unsized types",
+                                "only RuntimeArray is supported, not other unsized types",
                             );
                         }
                     }
                 }
-
-                let value_len = if is_pair {
-                    // We've already emitted an error, fill in a placeholder value
-                    Some(bx.undef(self.type_isize()))
-                } else {
-                    None
-                };
-
-                (Ok(var_id.unwrap().with_type(var_ptr_spirv_type)), value_len)
-            }
-            _ => {
-                var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
-
+            } else {
+                // FIXME(eddyb) determine, based on the type, what kind of type
+                // this is, to narrow it further to e.g. "buffer in a non-buffer
+                // storage class" or "storage class expects fixed data sizes".
                 if is_unsized {
                     self.tcx.dcx().span_fatal(
                         hir_param.ty_span,
@@ -597,12 +615,19 @@ impl<'tcx> CodegenCx<'tcx> {
                         ),
                     );
                 }
-
-                (
-                    var_id.map(|var_id| var_id.with_type(var_ptr_spirv_type)),
-                    None,
-                )
             }
+
+            let value_len = if is_pair {
+                // We've already emitted an error, fill in a placeholder value
+                Some(bx.undef(self.type_isize()))
+            } else {
+                None
+            };
+
+            (
+                var_id.map(|var_id| var_id.with_type(var_ptr_spirv_type)),
+                value_len,
+            )
         };
 
         // Compute call argument(s) to match what the Rust entry `fn` expects,

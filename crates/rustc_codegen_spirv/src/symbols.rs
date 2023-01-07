@@ -341,6 +341,10 @@ impl Symbols {
                 SpirvAttribute::IntrinsicType(IntrinsicType::RuntimeArray),
             ),
             (
+                "typed_buffer",
+                SpirvAttribute::IntrinsicType(IntrinsicType::TypedBuffer),
+            ),
+            (
                 "matrix",
                 SpirvAttribute::IntrinsicType(IntrinsicType::Matrix),
             ),
