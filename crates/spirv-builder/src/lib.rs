@@ -396,7 +396,7 @@ fn find_rustc_codegen_spirv() -> PathBuf {
             return path;
         }
     }
-    panic!("Could not find {} in library path", filename);
+    panic!("Could not find {filename} in library path");
 }
 
 /// Joins strings together while ensuring none of the strings contain the separator.
@@ -404,12 +404,7 @@ fn find_rustc_codegen_spirv() -> PathBuf {
 fn join_checking_for_separators(strings: Vec<impl Borrow<str>>, sep: &str) -> String {
     for s in &strings {
         let s = s.borrow();
-        assert!(
-            !s.contains(sep),
-            "{:?} may not contain separator {:?}",
-            s,
-            sep
-        );
+        assert!(!s.contains(sep), "{s:?} may not contain separator {sep:?}");
     }
     strings.join(sep)
 }
@@ -575,8 +570,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         get_sole_artifact(&stdout).ok_or_else(|| {
             eprintln!("--- build output ---\n{stdout}");
             panic!(
-                "`{}` artifact not found in (supposedly successful) build output (see above)",
-                ARTIFACT_SUFFIX
+                "`{ARTIFACT_SUFFIX}` artifact not found in (supposedly successful) build output (see above)"
             );
         })
     } else {

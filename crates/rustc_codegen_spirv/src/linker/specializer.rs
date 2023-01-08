@@ -2308,8 +2308,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
             let func_id = inst.operands[1].unwrap_id_ref();
             assert!(
                 !self.specializer.generics.contains_key(&func_id),
-                "entry-point %{} shouldn't be \"generic\"",
-                func_id
+                "entry-point %{func_id} shouldn't be \"generic\""
             );
 
             for interface_operand in &mut inst.operands[3..] {

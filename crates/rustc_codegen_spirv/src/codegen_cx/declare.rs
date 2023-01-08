@@ -181,8 +181,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .contains_key(&MonoItem::Static(def_id));
         assert!(
             !defined_in_current_codegen_unit,
-            "get_static() should always hit the cache for statics defined in the same CGU, but did not for `{:?}`",
-            def_id
+            "get_static() should always hit the cache for statics defined in the same CGU, but did not for `{def_id:?}`"
         );
 
         let ty = instance.ty(self.tcx, ParamEnv::reveal_all());

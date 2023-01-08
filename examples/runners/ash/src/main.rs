@@ -880,7 +880,7 @@ impl RenderCtx {
                     self.recreate_swapchain();
                     return;
                 }
-                Err(err) => panic!("failed to acquire next image: {:?}", err),
+                Err(err) => panic!("failed to acquire next image: {err:?}"),
             }
         };
 
@@ -912,7 +912,7 @@ impl RenderCtx {
             {
                 Err(vk::Result::ERROR_OUT_OF_DATE_KHR) | Ok(true) => self.recreate_swapchain(),
                 Ok(false) => {}
-                Err(err) => panic!("failed to present queue: {:?}", err),
+                Err(err) => panic!("failed to present queue: {err:?}"),
             };
         }
     }

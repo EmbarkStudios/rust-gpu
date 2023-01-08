@@ -612,7 +612,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
             ty
         ),
         FieldsShape::Union(_) => {
-            assert!(!ty.is_unsized(), "{:#?}", ty);
+            assert!(!ty.is_unsized(), "{ty:#?}");
             if ty.size.bytes() == 0 {
                 create_zst(cx, span, ty)
             } else {

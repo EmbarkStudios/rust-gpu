@@ -395,5 +395,5 @@ fn find_rustc_codegen_spirv() -> PathBuf {
             return path;
         }
     }
-    panic!("Could not find {} in library path", filename);
+    panic!("Could not find {filename} in library path");
 }

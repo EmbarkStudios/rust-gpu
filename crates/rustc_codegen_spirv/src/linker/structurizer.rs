@@ -226,7 +226,7 @@ impl Structurizer<'_> {
 
                     self.selection_merge_regions(block, &child_regions)
                 }
-                _ => panic!("Invalid block terminator: {:?}", terminator),
+                _ => panic!("Invalid block terminator: {terminator:?}"),
             };
 
             // Peel off deferred exits which have all their edges accounted for
