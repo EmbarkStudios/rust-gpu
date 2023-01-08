@@ -95,7 +95,7 @@ pub fn outgoing_edges(block: &Block) -> impl Iterator<Item = Word> + '_ {
         | Op::Unreachable
         | Op::IgnoreIntersectionKHR
         | Op::TerminateRayKHR => (0..0).step_by(1),
-        _ => panic!("Invalid block terminator: {:?}", terminator),
+        _ => panic!("Invalid block terminator: {terminator:?}"),
     };
     operand_indices.map(move |i| terminator.operands[i].unwrap_id_ref())
 }
