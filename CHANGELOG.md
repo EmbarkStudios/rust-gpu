@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed 🛠️
+- [PR#982](https://github.com/EmbarkStudios/rust-gpu/pull/982) updated toolchain to `nightly-2022-12-18`
+
+## [0.4.0]
+
 ### Added ⭐
 - [PR#959](https://github.com/EmbarkStudios/rust-gpu/pull/959) added two `spirv-builder` environment variables to customize *only* the `rustc` invocations for shader crates and their dependencies:
   - `RUSTGPU_RUSTFLAGS="..."` for shader `RUSTFLAGS="..."`
