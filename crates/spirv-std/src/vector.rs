@@ -22,9 +22,20 @@ pub unsafe trait Vector<T: crate::scalar::Scalar, const N: usize>: Default {
 /// wants to return a `Vector<f32,3>` of the same library of implementations, it can find it the
 /// concrete vector type by doing:
 ///     `<T::VectorTypeLib as VectorTypeRef<f32,3>>::Vector`
+/// Alternatively, using the `VectorFromVector!` macro:
+///     `VectorFromVector!(T, f32, 3)`
 pub trait VectorTypeRef<T: crate::scalar::Scalar, const N: usize> {
     /// Concrete type that implements the vector type with these generic parameters
     type Vector: Vector<T, N, VectorTypeLib = Self>;
+}
+
+/// Helper macro that allows you to find a vector type with certain generic parameters
+/// from the same 'vector type library' as another vector type.
+#[macro_export]
+macro_rules! VectorFromVector {
+    ($vec: ty, $comp: ty, $dim: expr) => {
+        <<$vec>::VectorTypeLib as VectorTypeRef<$comp, $dim>>::Vector
+    };
 }
 
 /// Glam vector type library. It implements all relevant VectorTypeRef<T,N>s

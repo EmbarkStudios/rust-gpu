@@ -18,7 +18,7 @@ use crate::{
     float::Float,
     integer::Integer,
     vector::{Vector, VectorTypeRef},
-    Sampler,
+    Sampler, VectorFromVector,
 };
 
 /// Re-export of primitive types to ensure the `Image` proc macro always points
@@ -124,10 +124,8 @@ impl<
     /// Fetch a single texel with a sampler set at compile time
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageFetch")]
-    pub fn fetch<I, C, const N: usize>(
-        &self,
-        coordinate: C,
-    ) -> <<C>::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    pub fn fetch<I, C, const N: usize>(&self, coordinate: C) -> VectorFromVector!(C, SampledType, 4)
+    //<<C>::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
     where
         I: Integer,
         C: ImageCoordinate<I, DIM, ARRAYED> + Vector<I, N>,
@@ -168,7 +166,7 @@ impl<
         sampler: Sampler,
         coordinate: C,
         component: u32,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         Self: HasGather,
         F: Float,
@@ -201,7 +199,7 @@ impl<
         &self,
         sampler: Sampler,
         coord: C,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         F: Float,
         C: ImageCoordinate<F, DIM, ARRAYED> + Vector<F, N>,
@@ -234,7 +232,7 @@ impl<
         sampler: Sampler,
         coord: C,
         bias: f32,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         F: Float,
         C: ImageCoordinate<F, DIM, ARRAYED> + Vector<F, N>,
@@ -269,7 +267,7 @@ impl<
         sampler: Sampler,
         coordinate: C,
         lod: f32,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         F: Float,
         C: ImageCoordinate<F, DIM, ARRAYED> + Vector<F, N>,
@@ -304,7 +302,7 @@ impl<
         coordinate: C,
         gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
         gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         F: Float,
         C: ImageCoordinate<F, DIM, ARRAYED> + Vector<F, N>,
@@ -463,7 +461,7 @@ impl<
         &self,
         sampler: Sampler,
         project_coordinate: C,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         F: Float,
         C: ImageCoordinate<F, DIM, { Arrayed::True as u32 }> + Vector<F, N>,
@@ -495,7 +493,7 @@ impl<
         sampler: Sampler,
         project_coordinate: C,
         lod: f32,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         F: Float,
         C: ImageCoordinate<F, DIM, { Arrayed::True as u32 }> + Vector<F, N>,
@@ -530,7 +528,7 @@ impl<
         project_coordinate: C,
         gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
         gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         F: Float,
         C: ImageCoordinate<F, DIM, { Arrayed::True as u32 }> + Vector<F, N>,
@@ -677,10 +675,7 @@ impl<
     /// Read a texel from an image without a sampler.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageRead")]
-    pub fn read<I, C, const N: usize>(
-        &self,
-        coordinate: C,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    pub fn read<I, C, const N: usize>(&self, coordinate: C) -> VectorFromVector!(C, SampledType, 4)
     where
         I: Integer,
         C: ImageCoordinate<I, DIM, ARRAYED> + Vector<I, N>,
@@ -737,10 +732,7 @@ impl<
     /// Read a texel from an image without a sampler.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageRead")]
-    pub fn read<I, C, const N: usize>(
-        &self,
-        coordinate: C,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    pub fn read<I, C, const N: usize>(&self, coordinate: C) -> VectorFromVector!(C, SampledType, 4)
     where
         I: Integer,
         C: ImageCoordinate<I, DIM, ARRAYED> + Vector<I, N>,
@@ -809,7 +801,7 @@ impl<
     pub fn read_subpass<I, C, const N: usize>(
         &self,
         coordinate: C,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         I: Integer,
         C: ImageCoordinateSubpassData<I, ARRAYED> + Vector<I, N>,
@@ -872,7 +864,7 @@ impl<
         &self,
         sampler: Sampler,
         coord: C,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 2>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 2)
     where
         Self: HasQueryLevels,
         C: ImageCoordinate<f32, DIM, { Arrayed::False as u32 }> + Vector<f32, N>,
@@ -1023,7 +1015,7 @@ impl<
     pub unsafe fn sample<F, C, const N: usize>(
         &self,
         coord: C,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         F: Float,
         C: ImageCoordinate<F, DIM, ARRAYED> + Vector<F, N>,
@@ -1052,7 +1044,7 @@ impl<
         &self,
         coord: C,
         lod: f32,
-    ) -> <C::VectorTypeLib as VectorTypeRef<SampledType, 4>>::Vector
+    ) -> VectorFromVector!(C, SampledType, 4)
     where
         F: Float,
         C: ImageCoordinate<F, DIM, ARRAYED> + Vector<F, N>,
