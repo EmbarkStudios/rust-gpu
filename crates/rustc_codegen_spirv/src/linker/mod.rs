@@ -13,6 +13,7 @@ mod param_weakening;
 mod peephole_opts;
 mod simple_passes;
 mod specializer;
+mod spirt_passes;
 mod structurizer;
 mod zombies;
 
@@ -38,6 +39,7 @@ pub struct Options {
     pub dce: bool,
     pub structurize: bool,
     pub spirt: bool,
+    pub spirt_passes: Vec<String>,
 
     pub emit_multiple_modules: bool,
     pub spirv_metadata: SpirvMetadata,
@@ -396,6 +398,18 @@ pub fn link(
             after_pass("structurize_func_cfgs", &module);
         }
 
+        if !opts.spirt_passes.is_empty() {
+            spirt_passes::run_func_passes(
+                &mut module,
+                &opts.spirt_passes,
+                |name, _module| sess.timer(name),
+                |name, module, timer| {
+                    drop(timer);
+                    after_pass(name, module);
+                },
+            );
+        }
+
         // NOTE(eddyb) this should be *before* `lift_to_spv` below,
         // so if that fails, the dump could be used to debug it.
         if let Some(dump_dir) = &opts.dump_spirt_passes {
@@ -413,13 +427,21 @@ pub fn link(
 
             // FIXME(eddyb) don't allocate whole `String`s here.
             std::fs::write(&dump_spirt_file_path, pretty.to_string()).unwrap();
-            std::fs::write(
-                dump_spirt_file_path.with_extension("spirt.html"),
-                pretty
+            std::fs::write(dump_spirt_file_path.with_extension("spirt.html"), {
+                let mut html = pretty
                     .render_to_html()
                     .with_dark_mode_support()
-                    .to_html_doc(),
-            )
+                    .to_html_doc();
+                // HACK(eddyb) this should be in `spirt::pretty` itself,
+                // but its need didn't become obvious until more recently.
+                html += "
+                        <style>
+                            pre.spirt-90c2056d-5b38-4644-824a-b4be1c82f14d sub {
+                                line-height: 0;
+                            }
+                        </style>";
+                html
+            })
             .unwrap();
         }
 

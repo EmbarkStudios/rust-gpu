@@ -149,6 +149,12 @@ Enables using the experimental [`SPIR-🇹` shader IR framework](https://github.
 
 For more information, also see [the `SPIR-🇹` repository](https://github.com/EmbarkStudios/spirt).
 
+### `--spirt-passes PASSES`
+
+Enable additional `SPIR-🇹` passes, as listed in `PASSES` (comma-separated).
+_Note: passes that are not already enabled by default are considered experimental
+and likely not ready for production use, this flag exists primarily for testing.*
+
 ### `--dump-spirt-passes DIR`
 
 Dump the `SPIR-🇹` module across passes (i.e. all of the versions before/after each pass), as a combined report, to a pair of files (`.spirt` and `.spirt.html`) in `DIR`.  

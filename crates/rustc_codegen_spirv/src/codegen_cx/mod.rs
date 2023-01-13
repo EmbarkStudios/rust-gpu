@@ -364,6 +364,12 @@ impl CodegenArgs {
                 "spirt",
                 "use SPIR-T for legalization (see also `docs/src/codegen-args.md`)",
             );
+            opts.optmulti(
+                "",
+                "spirt-passes",
+                "enable additional SPIR-T passes (comma-separated)",
+                "PASSES",
+            );
 
             // NOTE(eddyb) these are debugging options that used to be env vars
             // (for more information see `docs/src/codegen-args.md`).
@@ -532,6 +538,12 @@ impl CodegenArgs {
             compact_ids: !matches.opt_present("no-compact-ids"),
             structurize: !matches.opt_present("no-structurize"),
             spirt: matches.opt_present("spirt"),
+            spirt_passes: matches
+                .opt_strs("spirt-passes")
+                .iter()
+                .flat_map(|s| s.split(','))
+                .map(|s| s.to_string())
+                .collect(),
 
             // FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
             emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,
