@@ -116,6 +116,13 @@ pub use runtime_array::*;
 #[cfg(feature = "glam")]
 pub use glam;
 
+// HACK(shesp) As we removed support for generic user-configurable vector types in the Image API,
+// glam is now required. In the future we might want to add other popular vector math libraries,
+// so we keep the "glam" feature toggle intact for now. As the code won't currently compile
+// without it, present the user with a somewhat friendly error message.
+#[cfg(not(feature = "glam"))]
+compile_error!("`spriv-std` now requires the use of `glam`. Make sure the "glam" feature is specified for `spirv-std` in `Cargo.toml`");
+
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo<'_>) -> ! {

@@ -119,12 +119,11 @@ impl<
     /// Fetch a single texel with a sampler set at compile time
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageFetch")]
-    pub fn fetch<V, I>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> V
+    pub fn fetch<I>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> SampledType::Vec4
     where
-        V: Vector<SampledType, 4>,
         I: Integer,
     {
-        let mut result = V::default();
+        let mut result = Default::default();
         unsafe {
             asm! {
                 "%image = OpLoad _ {this}",
@@ -154,18 +153,17 @@ impl<
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageGather")]
     #[inline]
-    pub fn gather<F, V>(
+    pub fn gather<F>(
         &self,
         sampler: Sampler,
         coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
         component: u32,
-    ) -> V
+    ) -> SampledType::Vec4
     where
         Self: HasGather,
         F: Float,
-        V: Vector<SampledType, 4>,
     {
-        let mut result = V::default();
+        let mut result = Default::default();
         unsafe {
             asm! {
                 "%typeSampledImage = OpTypeSampledImage typeof*{this}",
@@ -187,10 +185,13 @@ impl<
 
     /// Sample texels at `coord` from the image using `sampler`.
     #[crate::macros::gpu_only]
-    pub fn sample<F, V>(&self, sampler: Sampler, coord: impl ImageCoordinate<F, DIM, ARRAYED>) -> V
+    pub fn sample<F>(
+        &self,
+        sampler: Sampler,
+        coord: impl ImageCoordinate<F, DIM, ARRAYED>,
+    ) -> SampledType::Vec4
     where
         F: Float,
-        V: Vector<SampledType, 4>,
     {
         unsafe {
             let mut result = Default::default();
@@ -214,15 +215,14 @@ impl<
     /// Sample texels at `coord` from the image using `sampler`, after adding the input bias to the
     /// implicit level of detail.
     #[crate::macros::gpu_only]
-    pub fn sample_bias<F, V>(
+    pub fn sample_bias<F>(
         &self,
         sampler: Sampler,
         coord: impl ImageCoordinate<F, DIM, ARRAYED>,
         bias: f32,
-    ) -> V
+    ) -> SampledType::Vec4
     where
         F: Float,
-        V: Vector<SampledType, 4>,
     {
         unsafe {
             let mut result = Default::default();
@@ -248,15 +248,14 @@ impl<
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageSampleExplicitLod")]
     /// Sample the image at a coordinate by a lod
-    pub fn sample_by_lod<F, V>(
+    pub fn sample_by_lod<F>(
         &self,
         sampler: Sampler,
         coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
         lod: f32,
-    ) -> V
+    ) -> SampledType::Vec4
     where
         F: Float,
-        V: Vector<SampledType, 4>,
     {
         let mut result = Default::default();
         unsafe {
@@ -281,16 +280,15 @@ impl<
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageSampleExplicitLod")]
     /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
-    pub fn sample_by_gradient<F, V>(
+    pub fn sample_by_gradient<F>(
         &self,
         sampler: Sampler,
         coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
         gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
         gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
-    ) -> V
+    ) -> SampledType::Vec4
     where
         F: Float,
-        V: Vector<SampledType, 4>,
     {
         let mut result = Default::default();
         unsafe {
@@ -441,14 +439,13 @@ impl<
     /// Sample the image with a project coordinate
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageSampleProjImplicitLod")]
-    pub fn sample_with_project_coordinate<F, V>(
+    pub fn sample_with_project_coordinate<F>(
         &self,
         sampler: Sampler,
         project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
-    ) -> V
+    ) -> SampledType::Vec4
     where
         F: Float,
-        V: Vector<SampledType, 4>,
     {
         unsafe {
             let mut result = Default::default();
@@ -471,15 +468,14 @@ impl<
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageSampleProjExplicitLod")]
     /// Sample the image with a project coordinate by a lod
-    pub fn sample_with_project_coordinate_by_lod<F, V>(
+    pub fn sample_with_project_coordinate_by_lod<F>(
         &self,
         sampler: Sampler,
         project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
         lod: f32,
-    ) -> V
+    ) -> SampledType::Vec4
     where
         F: Float,
-        V: Vector<SampledType, 4>,
     {
         let mut result = Default::default();
         unsafe {
@@ -504,16 +500,15 @@ impl<
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageSampleProjExplicitLod")]
     /// Sample the image with a project coordinate based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
-    pub fn sample_with_project_coordinate_by_gradient<F, V>(
+    pub fn sample_with_project_coordinate_by_gradient<F>(
         &self,
         sampler: Sampler,
         project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
         gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
         gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
-    ) -> V
+    ) -> SampledType::Vec4
     where
         F: Float,
-        V: Vector<SampledType, 4>,
     {
         let mut result = Default::default();
         unsafe {
@@ -656,12 +651,11 @@ impl<
     /// Read a texel from an image without a sampler.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageRead")]
-    pub fn read<I, V, const N: usize>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> V
+    pub fn read<I>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> SampledType::Vec4
     where
         I: Integer,
-        V: Vector<SampledType, N>,
     {
-        let mut result = V::default();
+        let mut result = Default::default();
 
         unsafe {
             asm! {
@@ -712,12 +706,11 @@ impl<
     /// Read a texel from an image without a sampler.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageRead")]
-    pub fn read<I, V, const N: usize>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> V
+    pub fn read<I>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> SampledType::Vec4
     where
         I: Integer,
-        V: Vector<SampledType, N>,
     {
-        let mut result = V::default();
+        let mut result = Default::default();
 
         unsafe {
             asm! {
@@ -777,15 +770,14 @@ impl<
     /// Note: Vulkan only allows the read if the first two components of the coordinate are zero.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageRead")]
-    pub fn read_subpass<I, V, const N: usize>(
+    pub fn read_subpass<I>(
         &self,
         coordinate: impl ImageCoordinateSubpassData<I, ARRAYED>,
-    ) -> V
+    ) -> SampledType::Vec4
     where
         I: Integer,
-        V: Vector<SampledType, N>,
     {
-        let mut result = V::default();
+        let mut result = Default::default();
 
         unsafe {
             asm! {
@@ -838,11 +830,11 @@ impl<
     /// detail relative to the base level.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageQueryLod")]
-    pub fn query_lod<V: Vector<f32, 2>>(
+    pub fn query_lod(
         &self,
         sampler: Sampler,
         coord: impl ImageCoordinate<f32, DIM, { Arrayed::False as u32 }>,
-    ) -> V
+    ) -> SampledType::Vec2
     where
         Self: HasQueryLevels,
     {
@@ -988,10 +980,12 @@ impl<
     /// Sampling with a type (`S`) that doesn't match the image's image format
     /// will result in undefined behaviour.
     #[crate::macros::gpu_only]
-    pub unsafe fn sample<F, V>(&self, coord: impl ImageCoordinate<F, DIM, ARRAYED>) -> V
+    pub unsafe fn sample<F>(
+        &self,
+        coord: impl ImageCoordinate<F, DIM, ARRAYED>,
+    ) -> SampledType::Vec4
     where
         F: Float,
-        V: Vector<SampledType, 4>,
     {
         let mut result = Default::default();
         asm!(
@@ -1012,14 +1006,13 @@ impl<
     /// Sampling with a type (`S`) that doesn't match the image's image format
     /// will result in undefined behaviour.
     #[crate::macros::gpu_only]
-    pub unsafe fn sample_by_lod<F, V>(
+    pub unsafe fn sample_by_lod<F>(
         &self,
         coord: impl ImageCoordinate<F, DIM, ARRAYED>,
         lod: f32,
-    ) -> V
+    ) -> SampledType::Vec4
     where
         F: Float,
-        V: Vector<SampledType, 4>,
     {
         let mut result = Default::default();
         asm!(
