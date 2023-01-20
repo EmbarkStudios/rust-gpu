@@ -1,5 +1,6 @@
 //! SPIR-T pass infrastructure and supporting utilities.
 
+mod fuse_selects;
 mod reduce;
 
 use lazy_static::lazy_static;
@@ -121,6 +122,10 @@ pub(super) fn run_func_passes<P>(
         let name = name.as_ref();
         let (full_name, pass_fn): (_, fn(_, &mut _)) = match name {
             "reduce" => ("spirt_passes::reduce", reduce::reduce_in_func),
+            "fuse_selects" => (
+                "spirt_passes::fuse_selects",
+                fuse_selects::fuse_selects_in_func,
+            ),
             _ => panic!("unknown `--spirt-passes={}`", name),
         };
 
