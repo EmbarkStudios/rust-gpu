@@ -126,7 +126,7 @@ pub(super) fn run_func_passes<P>(
                 "spirt_passes::fuse_selects",
                 fuse_selects::fuse_selects_in_func,
             ),
-            _ => panic!("unknown `--spirt-passes={}`", name),
+            _ => panic!("unknown `--spirt-passes={name}`"),
         };
 
         let profiler = before_pass(full_name, module);
