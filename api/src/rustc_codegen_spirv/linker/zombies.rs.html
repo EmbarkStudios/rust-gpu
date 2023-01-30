@@ -222,12 +222,24 @@
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
 <a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
 </pre><pre class="rust"><code><span class="doccomment">//! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
 </span><span class="kw">use super</span>::{get_name, get_names};
 <span class="kw">use </span><span class="kw">crate</span>::decorations::{CustomDecoration, ZombieDecoration};
 <span class="kw">use </span>rspirv::dr::{Instruction, Module};
-<span class="kw">use </span>rspirv::spirv::Word;
+<span class="kw">use </span>rspirv::spirv::{Op, Word};
 <span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
 <span class="kw">use </span>rustc_session::Session;
 <span class="kw">use </span>rustc_span::{Span, DUMMY_SP};
@@ -308,6 +320,8 @@
     <span class="comment">// No need to zombie defs within a function: If any def within a function is zombied, then the
     // whole function is zombied. But, we don&#39;t have to mark the defs within a function as zombie,
     // because the defs can&#39;t escape the function.
+    // HACK(eddyb) one exception to this is function-local variables, which may
+    // be unused and as such cannot be allowed to always zombie the function.
     </span><span class="kw">for </span>func <span class="kw">in </span><span class="kw-2">&amp;</span>module.functions {
         <span class="kw">let </span>func_id = func.def_id().unwrap();
         <span class="comment">// Can&#39;t use zombie.entry() here, due to using the map in contains_zombie
@@ -315,13 +329,23 @@
             <span class="comment">// Func is already zombie, no need to scan it again.
             </span><span class="kw">continue</span>;
         }
-        <span class="kw">let </span>func_is_zombie = func
-            .all_inst_iter()
-            .find_map(|inst| is_or_contains_zombie(inst, zombie));
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(reason) = func_is_zombie {
-            <span class="kw">let </span>pushed_reason = reason.push_stack(func_id);
-            zombie.insert(func_id, pushed_reason);
-            any = <span class="bool-val">true</span>;
+        <span class="kw">for </span>inst <span class="kw">in </span>func.all_inst_iter() {
+            <span class="kw">if </span>inst.class.opcode == Op::Variable {
+                <span class="kw">let </span>result_id = inst.result_id.unwrap();
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(reason) = contains_zombie(inst, zombie) {
+                    <span class="kw">if </span>zombie.contains_key(<span class="kw-2">&amp;</span>result_id) {
+                        <span class="kw">continue</span>;
+                    }
+                    <span class="kw">let </span>reason = reason.clone();
+                    zombie.insert(result_id, reason);
+                    any = <span class="bool-val">true</span>;
+                }
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(reason) = is_or_contains_zombie(inst, zombie) {
+                <span class="kw">let </span>pushed_reason = reason.push_stack(func_id);
+                zombie.insert(func_id, pushed_reason);
+                any = <span class="bool-val">true</span>;
+                <span class="kw">break</span>;
+            }
         }
     }
     any

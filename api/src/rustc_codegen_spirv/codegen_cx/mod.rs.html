@@ -888,6 +888,14 @@
 <a href="#888" id="888">888</a>
 <a href="#889" id="889">889</a>
 <a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
 </pre><pre class="rust"><code><span class="kw">mod </span>constant;
 <span class="kw">mod </span>declare;
 <span class="kw">mod </span>entry;
@@ -908,7 +916,7 @@
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, GlobalAsmOperandRef,
     MiscMethods,
 };
-<span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
+<span class="kw">use </span>rustc_data_structures::fx::{FxHashMap, FxHashSet};
 <span class="kw">use </span>rustc_middle::mir::mono::CodegenUnit;
 <span class="kw">use </span>rustc_middle::mir::Body;
 <span class="kw">use </span>rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
@@ -920,7 +928,7 @@
 <span class="kw">use </span>rustc_target::abi::call::{FnAbi, PassMode};
 <span class="kw">use </span>rustc_target::abi::{HasDataLayout, TargetDataLayout};
 <span class="kw">use </span>rustc_target::spec::{HasTargetSpec, Target};
-<span class="kw">use </span>std::cell::{Cell, RefCell};
+<span class="kw">use </span>std::cell::RefCell;
 <span class="kw">use </span>std::collections::BTreeSet;
 <span class="kw">use </span>std::iter::once;
 <span class="kw">use </span>std::path::{Path, PathBuf};
@@ -949,14 +957,22 @@
     <span class="kw">pub </span>instruction_table: InstructionTable,
     <span class="kw">pub </span>libm_intrinsics: RefCell&lt;FxHashMap&lt;Word, <span class="kw">super</span>::builder::libm_intrinsics::LibmIntrinsic&gt;&gt;,
 
-    <span class="doccomment">/// Simple `panic!(&quot;...&quot;)` and builtin panics (from MIR `Assert`s) call `#[lang = &quot;panic&quot;]`.
-    </span><span class="kw">pub </span>panic_fn_id: Cell&lt;<span class="prelude-ty">Option</span>&lt;Word&gt;&gt;,
+    <span class="doccomment">/// All `panic!(...)`s and builtin panics (from MIR `Assert`s) call into one
+    /// of these lang items, which we always replace with an &quot;abort&quot;, erasing
+    /// anything passed in (and that &quot;abort&quot; is just an infinite loop for now).
+    </span><span class="comment">//
+    // FIXME(eddyb) we should not erase anywhere near as much, but `format_args!`
+    // is not representable due to containg Rust slices, and Rust 2021 has made
+    // it mandatory even for `panic!(&quot;...&quot;)` (that were previously separate).
+    </span><span class="kw">pub </span>panic_entry_point_ids: RefCell&lt;FxHashSet&lt;Word&gt;&gt;,
+
+    <span class="doccomment">/// `core::fmt::Arguments::new_v1` instances (for Rust 2021 panics).
+    </span><span class="kw">pub </span>fmt_args_new_fn_ids: RefCell&lt;FxHashSet&lt;Word&gt;&gt;,
+
     <span class="doccomment">/// Intrinsic for loading a &lt;T&gt; from a &amp;[u32]. The PassMode is the mode of the &lt;T&gt;.
     </span><span class="kw">pub </span>buffer_load_intrinsic_fn_id: RefCell&lt;FxHashMap&lt;Word, <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx </span>PassMode&gt;&gt;,
     <span class="doccomment">/// Intrinsic for storing a &lt;T&gt; into a &amp;[u32]. The PassMode is the mode of the &lt;T&gt;.
     </span><span class="kw">pub </span>buffer_store_intrinsic_fn_id: RefCell&lt;FxHashMap&lt;Word, <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx </span>PassMode&gt;&gt;,
-    <span class="doccomment">/// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = &quot;panic_bounds_check&quot;]`.
-    </span><span class="kw">pub </span>panic_bounds_check_fn_id: Cell&lt;<span class="prelude-ty">Option</span>&lt;Word&gt;&gt;,
 
     <span class="doccomment">/// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it&#39;s allowed by the spec.
     /// This enables/disables them.
@@ -1010,10 +1026,10 @@
             sym,
             instruction_table: InstructionTable::new(),
             libm_intrinsics: Default::default(),
-            panic_fn_id: Default::default(),
+            panic_entry_point_ids: Default::default(),
+            fmt_args_new_fn_ids: Default::default(),
             buffer_load_intrinsic_fn_id: Default::default(),
             buffer_store_intrinsic_fn_id: Default::default(),
-            panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: <span class="bool-val">false</span>,
             codegen_args,
         }
