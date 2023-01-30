@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added ⭐
+- [PR#988](https://github.com/EmbarkStudios/rust-gpu/pull/988) added a couple of (highly experimental)
+  `SPIR-🇹` optimization passes, and `--spirt-passes=...` codegen args as a way to enable them  
+  (see also [the `--spirt-passes` codegen args docs](docs/src/codegen-args.md#--spirt-passes-PASSES))
+
 ### Changed 🛠️
 - [PR#982](https://github.com/EmbarkStudios/rust-gpu/pull/982) updated toolchain to `nightly-2022-12-18`
 - [PR#953](https://github.com/EmbarkStudios/rust-gpu/pull/953) migrated to the Rust 2021 edition, and fixed Rust 2021 support for shader crates to be on par with Rust 2018 (discrepancies having been limited to/caused by `panic!` changes in Rust 2021)
