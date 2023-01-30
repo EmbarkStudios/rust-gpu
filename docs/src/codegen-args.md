@@ -151,9 +151,10 @@ For more information, also see [the `SPIR-🇹` repository](https://github.com/E
 
 ### `--spirt-passes PASSES`
 
-Enable additional `SPIR-🇹` passes, as listed in `PASSES` (comma-separated).
-_Note: passes that are not already enabled by default are considered experimental
-and likely not ready for production use, this flag exists primarily for testing.*
+Enable additional `SPIR-🇹` passes, as listed in `PASSES` (comma-separated).  
+Their implementation can be found in [`rustc_codegen_spirv::linker::spirt_passes`](../../crates/rustc_codegen_spirv/src/linker/spirt_passes).
+
+_Note: passes that are not already enabled by default are considered experimental and likely not ready for production use, this flag exists primarily for testing._
 
 ### `--dump-spirt-passes DIR`
 
