@@ -896,6 +896,18 @@
 <a href="#896" id="896">896</a>
 <a href="#897" id="897">897</a>
 <a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
 </pre><pre class="rust"><code><span class="kw">mod </span>constant;
 <span class="kw">mod </span>declare;
 <span class="kw">mod </span>entry;
@@ -1262,6 +1274,12 @@
                 <span class="string">&quot;spirt&quot;</span>,
                 <span class="string">&quot;use SPIR-T for legalization (see also `docs/src/codegen-args.md`)&quot;</span>,
             );
+            opts.optmulti(
+                <span class="string">&quot;&quot;</span>,
+                <span class="string">&quot;spirt-passes&quot;</span>,
+                <span class="string">&quot;enable additional SPIR-T passes (comma-separated)&quot;</span>,
+                <span class="string">&quot;PASSES&quot;</span>,
+            );
 
             <span class="comment">// NOTE(eddyb) these are debugging options that used to be env vars
             // (for more information see `docs/src/codegen-args.md`).
@@ -1430,6 +1448,12 @@
             compact_ids: !matches.opt_present(<span class="string">&quot;no-compact-ids&quot;</span>),
             structurize: !matches.opt_present(<span class="string">&quot;no-structurize&quot;</span>),
             spirt: matches.opt_present(<span class="string">&quot;spirt&quot;</span>),
+            spirt_passes: matches
+                .opt_strs(<span class="string">&quot;spirt-passes&quot;</span>)
+                .iter()
+                .flat_map(|s| s.split(<span class="string">&#39;,&#39;</span>))
+                .map(|s| s.to_string())
+                .collect(),
 
             <span class="comment">// FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
             </span>emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,
