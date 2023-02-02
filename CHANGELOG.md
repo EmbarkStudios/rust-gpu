@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -->
 
-## [Unreleased]
+## [0.5.0]
 
 ### Added ⭐
 - [PR#988](https://github.com/EmbarkStudios/rust-gpu/pull/988) added a couple of (highly experimental)

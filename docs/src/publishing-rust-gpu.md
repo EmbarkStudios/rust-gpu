@@ -12,7 +12,7 @@ The published crates and their relative locations are:
 6. `spirv-builder` (`crates/spirv-builder`)
 
 Publishing the crates in above order prevents dependency issues.
-These are the steps: 
+These are the steps:
 
 1. Bump all the versions to the next one in the workspace's `Cargo.toml`. This project uses workspace
    inheritance, so this is the only place you'll find these actual versions. Make sure to pin the
