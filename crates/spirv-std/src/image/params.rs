@@ -15,7 +15,7 @@ pub trait SampleType<const FORMAT: u32>: Scalar {
 }
 
 /// Helper macro to implement `SampleType` of various formats for various scalar types.
-macro_rules! sampletype_impls {
+macro_rules! sample_type_impls {
     ($($fmt:ident : $s:ty => ($v2:ty, $v3:ty, $v4:ty)),+ $(,)?) => {
         $(
             impl SampleType<{ ImageFormat::$fmt as u32 }> for $s {
@@ -28,7 +28,7 @@ macro_rules! sampletype_impls {
 }
 
 #[cfg(feature = "glam")]
-sampletype_impls! {
+sample_type_impls! {
     Unknown: i8 => (glam::IVec2, glam::IVec3, glam::IVec4),
     Unknown: i16 => (glam::IVec2, glam::IVec3, glam::IVec4),
     Unknown: i32 => (glam::IVec2, glam::IVec3, glam::IVec4),
