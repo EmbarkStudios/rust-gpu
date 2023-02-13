@@ -121,7 +121,9 @@ pub use glam;
 // so we keep the "glam" feature toggle intact for now. As the code won't currently compile
 // without it, present the user with a somewhat friendly error message.
 #[cfg(not(feature = "glam"))]
-compile_error!("`spriv-std` now requires the use of `glam`. Make sure the "glam" feature is specified for `spirv-std` in `Cargo.toml`");
+compile_error!(
+    r#"`spriv-std` now requires the use of `glam`. Make sure the "glam" feature is specified for `spirv-std` in `Cargo.toml`"#
+);
 
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[panic_handler]
