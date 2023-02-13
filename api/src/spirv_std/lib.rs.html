@@ -146,6 +146,15 @@
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
 </pre><pre class="rust"><code><span class="attr">#![no_std]
 #![cfg_attr(
     target_arch = <span class="string">&quot;spirv&quot;</span>,
@@ -263,6 +272,15 @@
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;glam&quot;</span>)]
 </span><span class="kw">pub use </span>glam;
+
+<span class="comment">// HACK(shesp) As we removed support for generic user-configurable vector types in the Image API,
+// glam is now required. In the future we might want to add other popular vector math libraries,
+// so we keep the &quot;glam&quot; feature toggle intact for now. As the code won&#39;t currently compile
+// without it, present the user with a somewhat friendly error message.
+</span><span class="attr">#[cfg(not(feature = <span class="string">&quot;glam&quot;</span>))]
+</span><span class="macro">compile_error!</span>(
+    <span class="string">r#&quot;`spriv-std` now requires the use of `glam`. Make sure the &quot;glam&quot; feature is specified for `spirv-std` in `Cargo.toml`&quot;#
+</span>);
 
 <span class="attr">#[cfg(all(not(test), target_arch = <span class="string">&quot;spirv&quot;</span>))]
 #[panic_handler]

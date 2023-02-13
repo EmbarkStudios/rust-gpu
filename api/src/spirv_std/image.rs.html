@@ -1471,13 +1471,6 @@
 <a href="#1471" id="1471">1471</a>
 <a href="#1472" id="1472">1472</a>
 <a href="#1473" id="1473">1473</a>
-<a href="#1474" id="1474">1474</a>
-<a href="#1475" id="1475">1475</a>
-<a href="#1476" id="1476">1476</a>
-<a href="#1477" id="1477">1477</a>
-<a href="#1478" id="1478">1478</a>
-<a href="#1479" id="1479">1479</a>
-<a href="#1480" id="1480">1480</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Image types
 
 </span><span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
@@ -1599,12 +1592,11 @@
     <span class="doccomment">/// Fetch a single texel with a sampler set at compile time
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageFetch&quot;</span>)]
-    </span><span class="kw">pub fn </span>fetch&lt;V, I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;) -&gt; V
+    </span><span class="kw">pub fn </span>fetch&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;) -&gt; SampledType::Vec4
     <span class="kw">where
-        </span>V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
-        I: Integer,
+        </span>I: Integer,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = V::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
@@ -1634,18 +1626,17 @@
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageGather&quot;</span>)]
     #[inline]
-    </span><span class="kw">pub fn </span>gather&lt;F, V&gt;(
+    </span><span class="kw">pub fn </span>gather&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
         component: u32,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span><span class="self">Self</span>: HasGather,
         F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = V::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
                 <span class="string">&quot;%typeSampledImage = OpTypeSampledImage typeof*{this}&quot;</span>,
@@ -1667,10 +1658,13 @@
 
     <span class="doccomment">/// Sample texels at `coord` from the image using `sampler`.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
-    </span><span class="kw">pub fn </span>sample&lt;F, V&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, sampler: Sampler, coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;) -&gt; V
+    </span><span class="kw">pub fn </span>sample&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
@@ -1694,15 +1688,14 @@
     <span class="doccomment">/// Sample texels at `coord` from the image using `sampler`, after adding the input bias to the
     /// implicit level of detail.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
-    </span><span class="kw">pub fn </span>sample_bias&lt;F, V&gt;(
+    </span><span class="kw">pub fn </span>sample_bias&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
         bias: f32,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
@@ -1728,15 +1721,14 @@
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageSampleExplicitLod&quot;</span>)]
     </span><span class="doccomment">/// Sample the image at a coordinate by a lod
-    </span><span class="kw">pub fn </span>sample_by_lod&lt;F, V&gt;(
+    </span><span class="kw">pub fn </span>sample_by_lod&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
         lod: f32,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
         <span class="kw">unsafe </span>{
@@ -1761,16 +1753,15 @@
     <span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageSampleExplicitLod&quot;</span>)]
     </span><span class="doccomment">/// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
-    </span><span class="kw">pub fn </span>sample_by_gradient&lt;F, V&gt;(
+    </span><span class="kw">pub fn </span>sample_by_gradient&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
         gradient_dx: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::False <span class="kw">as </span>u32 }&gt;,
         gradient_dy: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::False <span class="kw">as </span>u32 }&gt;,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
         <span class="kw">unsafe </span>{
@@ -1921,14 +1912,13 @@
     <span class="doccomment">/// Sample the image with a project coordinate
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageSampleProjImplicitLod&quot;</span>)]
-    </span><span class="kw">pub fn </span>sample_with_project_coordinate&lt;F, V&gt;(
+    </span><span class="kw">pub fn </span>sample_with_project_coordinate&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         project_coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::True <span class="kw">as </span>u32 }&gt;,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
@@ -1951,15 +1941,14 @@
     <span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageSampleProjExplicitLod&quot;</span>)]
     </span><span class="doccomment">/// Sample the image with a project coordinate by a lod
-    </span><span class="kw">pub fn </span>sample_with_project_coordinate_by_lod&lt;F, V&gt;(
+    </span><span class="kw">pub fn </span>sample_with_project_coordinate_by_lod&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         project_coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::True <span class="kw">as </span>u32 }&gt;,
         lod: f32,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
         <span class="kw">unsafe </span>{
@@ -1984,16 +1973,15 @@
     <span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageSampleProjExplicitLod&quot;</span>)]
     </span><span class="doccomment">/// Sample the image with a project coordinate based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
-    </span><span class="kw">pub fn </span>sample_with_project_coordinate_by_gradient&lt;F, V&gt;(
+    </span><span class="kw">pub fn </span>sample_with_project_coordinate_by_gradient&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         project_coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::True <span class="kw">as </span>u32 }&gt;,
         gradient_dx: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::False <span class="kw">as </span>u32 }&gt;,
         gradient_dy: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::False <span class="kw">as </span>u32 }&gt;,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
         <span class="kw">unsafe </span>{
@@ -2136,12 +2124,11 @@
     <span class="doccomment">/// Read a texel from an image without a sampler.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageRead&quot;</span>)]
-    </span><span class="kw">pub fn </span>read&lt;I, V, <span class="kw">const </span>N: usize&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;) -&gt; V
+    </span><span class="kw">pub fn </span>read&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>I: Integer,
-        V: Vector&lt;SampledType, N&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = V::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
 
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
@@ -2192,12 +2179,11 @@
     <span class="doccomment">/// Read a texel from an image without a sampler.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageRead&quot;</span>)]
-    </span><span class="kw">pub fn </span>read&lt;I, V, <span class="kw">const </span>N: usize&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;) -&gt; V
+    </span><span class="kw">pub fn </span>read&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>I: Integer,
-        V: Vector&lt;SampledType, N&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = V::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
 
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
@@ -2257,15 +2243,14 @@
     /// Note: Vulkan only allows the read if the first two components of the coordinate are zero.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageRead&quot;</span>)]
-    </span><span class="kw">pub fn </span>read_subpass&lt;I, V, <span class="kw">const </span>N: usize&gt;(
+    </span><span class="kw">pub fn </span>read_subpass&lt;I&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         coordinate: <span class="kw">impl </span>ImageCoordinateSubpassData&lt;I, ARRAYED&gt;,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>I: Integer,
-        V: Vector&lt;SampledType, N&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = V::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
 
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
@@ -2318,11 +2303,11 @@
     /// detail relative to the base level.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageQueryLod&quot;</span>)]
-    </span><span class="kw">pub fn </span>query_lod&lt;V: Vector&lt;f32, <span class="number">2</span>&gt;&gt;(
+    </span><span class="kw">pub fn </span>query_lod(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         coord: <span class="kw">impl </span>ImageCoordinate&lt;f32, DIM, { Arrayed::False <span class="kw">as </span>u32 }&gt;,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec2
     <span class="kw">where
         </span><span class="self">Self</span>: HasQueryLevels,
     {
@@ -2468,10 +2453,12 @@
     /// Sampling with a type (`S`) that doesn&#39;t match the image&#39;s image format
     /// will result in undefined behaviour.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
-    </span><span class="kw">pub unsafe fn </span>sample&lt;F, V&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;) -&gt; V
+    </span><span class="kw">pub unsafe fn </span>sample&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
         <span class="macro">asm!</span>(
@@ -2492,14 +2479,13 @@
     /// Sampling with a type (`S`) that doesn&#39;t match the image&#39;s image format
     /// will result in undefined behaviour.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
-    </span><span class="kw">pub unsafe fn </span>sample_by_lod&lt;F, V&gt;(
+    </span><span class="kw">pub unsafe fn </span>sample_by_lod&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
         lod: f32,
-    ) -&gt; V
+    ) -&gt; SampledType::Vec4
     <span class="kw">where
         </span>F: Float,
-        V: Vector&lt;SampledType, <span class="number">4</span>&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
         <span class="macro">asm!</span>(

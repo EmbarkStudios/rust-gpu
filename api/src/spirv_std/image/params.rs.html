@@ -107,64 +107,114 @@
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::{Arrayed, Dimensionality, ImageFormat};
 <span class="kw">use crate</span>::{integer::Integer, scalar::Scalar, vector::Vector};
 
 <span class="doccomment">/// Marker trait for arguments that accept single scalar values or vectors
-/// of scalars.
-</span><span class="kw">pub trait </span>SampleType&lt;<span class="kw">const </span>FORMAT: u32&gt;: Scalar {}
+/// of scalars. Defines 2-, 3- and 4-component vector types based on the sample type.
+</span><span class="kw">pub trait </span>SampleType&lt;<span class="kw">const </span>FORMAT: u32&gt;: Scalar {
+    <span class="doccomment">/// A 2-component vector of this sample type
+    </span><span class="kw">type </span>Vec2: Default;
 
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i8 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i16 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i64 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u8 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u16 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u64 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Unknown <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f64 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba32f <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba16f <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R32f <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba8 <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba8Snorm <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg32f <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg16f <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R11fG11fB10f <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R16f <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba16 <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgb10A2 <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg16 <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg8 <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R16 <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R8 <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba16Snorm <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg16Snorm <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg8Snorm <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R16Snorm <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R8Snorm <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>f32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba32i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba16i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba8i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R32i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg32i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg16i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg8i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R16i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R8i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba32ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba16ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgba8ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R32ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rgb10A2ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg32ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg16ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::Rg8ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R16ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R8ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u32 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R64ui <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>u64 {}
-<span class="kw">impl </span>SampleType&lt;{ ImageFormat::R64i <span class="kw">as </span>u32 }&gt; <span class="kw">for </span>i64 {}
+    <span class="doccomment">/// A 3-component vector of this sample type
+    </span><span class="kw">type </span>Vec3: Default;
+
+    <span class="doccomment">/// A 4-component vector of this sample type
+    </span><span class="kw">type </span>Vec4: Default;
+}
+
+<span class="doccomment">/// Helper macro to implement `SampleType` of various formats for various scalar types.
+</span><span class="macro">macro_rules! </span>sample_type_impls {
+    ($(<span class="macro-nonterminal">$fmt</span>:ident : <span class="macro-nonterminal">$s</span>:ty =&gt; (<span class="macro-nonterminal">$v2</span>:ty, <span class="macro-nonterminal">$v3</span>:ty, <span class="macro-nonterminal">$v4</span>:ty)),+ $(,)<span class="question-mark">?</span>) =&gt; {
+        $(
+            <span class="kw">impl </span>SampleType&lt;{ ImageFormat::<span class="macro-nonterminal">$fmt </span><span class="kw">as </span>u32 }&gt; <span class="kw">for </span><span class="macro-nonterminal">$s </span>{
+                <span class="kw">type </span>Vec2 = <span class="macro-nonterminal">$v2</span>;
+                <span class="kw">type </span>Vec3 = <span class="macro-nonterminal">$v3</span>;
+                <span class="kw">type </span>Vec4 = <span class="macro-nonterminal">$v4</span>;
+            }
+        )+
+    }
+}
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;glam&quot;</span>)]
+</span><span class="macro">sample_type_impls! </span>{
+    Unknown: i8 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Unknown: i16 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Unknown: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Unknown: i64 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Unknown: u8 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Unknown: u16 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Unknown: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Unknown: u64 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Unknown: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Unknown: f64 =&gt; (glam::DVec2, glam::DVec3, glam::DVec4),
+    Rgba32f: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rgba16f: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    R32f: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rgba8: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rgba8Snorm: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rg32f: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rg16f: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    R11fG11fB10f: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    R16f: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rgba16: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rgb10A2: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rg16: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rg8: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    R16: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    R8: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rgba16Snorm: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rg16Snorm: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rg8Snorm: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    R16Snorm: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    R8Snorm: f32 =&gt; (glam::Vec2, glam::Vec3, glam::Vec4),
+    Rgba32i: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Rgba16i: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Rgba8i: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    R32i: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Rg32i: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Rg16i: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Rg8i: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    R16i: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    R8i: i32 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+    Rgba32ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Rgba16ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Rgba8ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    R32ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Rgb10A2ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Rg32ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Rg16ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    Rg8ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    R16ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    R8ui: u32 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    R64ui: u64 =&gt; (glam::UVec2, glam::UVec3, glam::UVec4),
+    R64i: i64 =&gt; (glam::IVec2, glam::IVec3, glam::IVec4),
+}
 
 <span class="doccomment">/// Marker trait for arguments that accept a coordinate for an [`crate::Image`].
 </span><span class="kw">pub trait </span>ImageCoordinate&lt;T, <span class="kw">const </span>DIM: u32, <span class="kw">const </span>ARRAYED: u32&gt; {}
