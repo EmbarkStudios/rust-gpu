@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed 🛠
+- [PR#991](https://github.com/EmbarkStudios/rust-gpu/pull/991) Updated toolchain to `nightly-2023-01-21`.
 - [PR#990](https://github.com/EmbarkStudios/rust-gpu/pull/990) Removed return type inference from `Image` API and made `glam` usage mandatory.
 
 ## [0.5.0]
