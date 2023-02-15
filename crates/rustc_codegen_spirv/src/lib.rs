@@ -142,7 +142,8 @@ fn is_blocklisted_fn<'tcx>(
                 Some(assoc) if assoc.ident(tcx).name == sym::fmt => match assoc.container {
                     ty::ImplContainer => {
                         let impl_def_id = assoc.container_id(tcx);
-                        tcx.impl_trait_ref(impl_def_id).map(|tr| tr.def_id)
+                        tcx.impl_trait_ref(impl_def_id)
+                            .map(|tr| tr.subst_identity().def_id)
                             == Some(debug_trait_def_id)
                     }
                     ty::TraitContainer => false,

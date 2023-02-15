@@ -2,6 +2,8 @@ use super::{link, LinkResult};
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
 use rustc_errors::registry::Registry;
+use rustc_session::{config::Input, CompilerIO};
+use rustc_span::FileName;
 use std::io::Read;
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
@@ -130,7 +132,15 @@ fn link_with_linker_opts(
         rustc_span::create_session_globals_then(sopts.edition, || {
             let mut sess = rustc_session::build_session(
                 sopts,
-                None,
+                CompilerIO {
+                    input: Input::Str {
+                        name: FileName::Custom(String::new()),
+                        input: String::new(),
+                    },
+                    output_dir: None,
+                    output_file: None,
+                    temps_dir: None,
+                },
                 None,
                 Registry::new(&[]),
                 Default::default(),
