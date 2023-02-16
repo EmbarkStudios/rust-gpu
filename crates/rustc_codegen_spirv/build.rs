@@ -5,8 +5,8 @@
 use std::error::Error;
 use std::process::{Command, ExitCode};
 
-/// Current `rust-toolchain` file
-/// Unfortunately, directly including the actual workspace `rust-toolchain` doesn't work together with
+/// Current `rust-toolchain.toml` file
+/// Unfortunately, directly including the actual workspace `rust-toolchain.toml` doesn't work together with
 /// `cargo publish`. We need to figure out a way to do this properly, but let's hardcode it for now :/
 //const REQUIRED_RUST_TOOLCHAIN: &str = include_str!("../../rust-toolchain");
 const REQUIRED_RUST_TOOLCHAIN: &str = r#"[toolchain]
@@ -28,21 +28,21 @@ fn get_required_commit_hash() -> Result<String, Box<dyn Error>> {
         .lines()
         .find_map(|l| l.strip_prefix("# commit_hash = "))
         .map(|s| s.to_string())
-        .ok_or_else(|| Box::<dyn Error>::from("`commit_hash` not found in `rust-toolchain`"))
+        .ok_or_else(|| Box::<dyn Error>::from("`commit_hash` not found in `rust-toolchain.toml`"))
 }
 
 fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
     // make sure we rebuild if RUSTGPU_SKIP_TOOLCHAIN_CHECK env var changes
     println!("cargo:rerun-if-env-changed=RUSTGPU_SKIP_TOOLCHAIN_CHECK");
 
-    // if we're building from local source, check if REQUIRED_RUST_TOOLCHAIN matches ../../rust-toolchain
+    // if we're building from local source, check if REQUIRED_RUST_TOOLCHAIN matches ../../rust-toolchain.toml
     if std::env::current_dir()?.ends_with("crates/rustc_codegen_spirv") {
-        let current_toolchain = std::fs::read_to_string("../../rust-toolchain")?;
+        let current_toolchain = std::fs::read_to_string("../../rust-toolchain.toml")?;
         if !current_toolchain.contains(REQUIRED_RUST_TOOLCHAIN) {
             return Err(Box::<dyn Error>::from(format!(
                 "error: building from local source while `REQUIRED_RUST_TOOLCHAIN` (defined in `{}`) doesn't match `{}`",
                 file!(),
-                std::path::Path::new("../../rust-toolchain").canonicalize()?.display()
+                std::path::Path::new("../../rust-toolchain.toml").canonicalize()?.display()
             )));
         }
     }
