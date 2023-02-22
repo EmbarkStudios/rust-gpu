@@ -27,7 +27,7 @@ $ file postlink/*
 postlink/module: Khronos SPIR-V binary, little-endian, version 0x010300, generator 0x1b0000
 ```
 
-Notable, `RUSTGPU_CODEGEN_ARGS="--help"` can be used to see a "usage" message (which lists all the flags/options, including onesn not listed in this document), via e.g. running a Cargo build that relies on `spirv-builder`.
+Notably, `RUSTGPU_CODEGEN_ARGS="--help"` can be used to see a "usage" message (which lists all the flags/options, including ones not listed in this document), via e.g. running a Cargo build that relies on `spirv-builder`.
 
 However, it's only a convenient alias for for `RUSTGPU_RUSTFLAGS=-Cllvm-args="..."` (without having to expose the fact that LLVM's name is still attached to `rustc`'s interface for this functionality), and if in direct control of `rustc`, you can still pass such "codegen args" flags/options wrapped in `-C llvm-args="..."`.
 
