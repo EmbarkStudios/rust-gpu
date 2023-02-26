@@ -598,7 +598,7 @@ pub unsafe fn atomic_f_add<F: Float, const SCOPE: u32, const SEMANTICS: u32>(
         "%scope = OpConstant %u32 {scope}",
         "%semantics = OpConstant %u32 {semantics}",
         "%value = OpLoad _ {value}",
-        "%old = OpAtomicFMaxEXT _ {ptr} %scope %semantics %value",
+        "%old = OpAtomicFAddEXT _ {ptr} %scope %semantics %value",
         "OpStore {old} %old",
         scope = const SCOPE,
         semantics = const SEMANTICS,
