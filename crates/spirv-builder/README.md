@@ -2,7 +2,7 @@
 <!-- markdownlint-disable-file MD033 -->
 # `spirv-builder`
 
-![Rust version](https://img.shields.io/badge/rust-nightly--2022--12--18-purple.svg)
+![Rust version](https://img.shields.io/badge/rust-nightly--2023--01--21-purple.svg)
 
 This crate gives you `SpirvBuilder`, a tool to build shaders using [rust-gpu][rustgpu].
 
@@ -31,12 +31,13 @@ const SHADER: &[u8] = include_bytes!(env!("my_shaders.spv"));
 
 Because of its nature, `rustc_codegen_spirv`, and therefore `spirv-builder` by extension, require the use of a very specific nightly toolchain of Rust.
 
-**The current toolchain is: `nightly-2022-10-29`.**
+**The current toolchain is: `nightly-2023-01-21`.**
 
 Toolchains for previous versions of `spirv-builder`:
 
 |Version|Toolchain|
 |-:|-|
+|`0.6.0`|`nightly-2023-01-21`|
 |`0.5.0`|`nightly-2022-12-18`|
 |`0.4.0`|`nightly-2022-10-29`|
 |`0.4.0-alpha.16` - `0.4.0-alpha.17`|`nightly-2022-10-01`|

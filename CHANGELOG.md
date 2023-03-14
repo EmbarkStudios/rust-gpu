@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -->
 
-## [Unreleased]
+## [0.6.0]
 
 ### Added ⭐
 - [PR#998](https://github.com/EmbarkStudios/rust-gpu/pull/998) added `extra_arg()` SpirvBuilder API to be able to set codegen args otherwise not supported by the API (for example, to set `--spirv-passes`).
