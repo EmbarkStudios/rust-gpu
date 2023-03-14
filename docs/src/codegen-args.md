@@ -139,7 +139,9 @@ anyway, be careful).
 
 Disables CFG structurization. Probably results in invalid modules.
 
-### `--spirt`
+### `--spirt` <sub>_(until 0.6.0)_</sub>
+
+Note: as of `rust-gpu 0.6.0`, `SPIR-🇹` is enabled by default. Use `--no-spirt` to disable.
 
 Enables using the experimental [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) in the linker - more specifically, this:
 - adds a `SPIR-V -> SPIR-🇹 -> SPIR-V` roundtrip  
@@ -148,6 +150,9 @@ Enables using the experimental [`SPIR-🇹` shader IR framework](https://github.
 - runs some existing `SPIR-V` legalization/optimization passes (`mem2reg`) *before* inlining, instead of *only after* (as the `OpPhi`s they would produce are no longer an issue for structurization)
 
 For more information, also see [the `SPIR-🇹` repository](https://github.com/EmbarkStudios/spirt).
+
+### `--no-spirt` <sub>_(0.6.0)_</sup>
+Disables the [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) in the linker.
 
 ### `--spirt-passes PASSES`
 
