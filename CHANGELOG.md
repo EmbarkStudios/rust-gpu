@@ -29,10 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added ⭐
+- [PR#998](https://github.com/EmbarkStudios/rust-gpu/pull/998) added `extra_arg()` SpirvBuilder API to be able to set codegen args otherwise not supported by the API (for example, to set `--spirv-passes`).
+
 ### Changed 🛠
-- [PR#992](https://github.com/EmbarkStudios/rust-gpu/pull/992) Renamed `rust-toolchain` to `rust-toolchain.toml`.
-- [PR#991](https://github.com/EmbarkStudios/rust-gpu/pull/991) Updated toolchain to `nightly-2023-01-21`.
-- [PR#990](https://github.com/EmbarkStudios/rust-gpu/pull/990) Removed return type inference from `Image` API and made `glam` usage mandatory.
+- [PR#992](https://github.com/EmbarkStudios/rust-gpu/pull/992) renamed `rust-toolchain` to `rust-toolchain.toml`.
+- [PR#991](https://github.com/EmbarkStudios/rust-gpu/pull/991) updated toolchain to `nightly-2023-01-21`.
+- [PR#990](https://github.com/EmbarkStudios/rust-gpu/pull/990) removed return type inference from `Image` API and made `glam` usage mandatory.
 
 ## [0.5.0]
 
