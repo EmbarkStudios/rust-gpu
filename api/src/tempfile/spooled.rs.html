@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/tempfile-3.2.0/src/spooled.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spooled.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tempfile/index.html">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/tempfile-3.4.0/src/spooled.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spooled.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://www.rust-lang.org/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tempfile/index.html">
                         <img src="https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -151,12 +151,22 @@
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
 <a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::file::tempfile;
 <span class="kw">use </span>std::fs::File;
 <span class="kw">use </span>std::io::{<span class="self">self</span>, Cursor, Read, Seek, SeekFrom, Write};
 
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">enum </span>SpooledInner {
+<span class="doccomment">/// A wrapper for the two states of a `SpooledTempFile`.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub enum </span>SpooledData {
     InMemory(Cursor&lt;Vec&lt;u8&gt;&gt;),
     OnDisk(File),
 }
@@ -168,7 +178,7 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>SpooledTempFile {
     max_size: usize,
-    inner: SpooledInner,
+    inner: SpooledData,
 }
 
 <span class="doccomment">/// Create a new spooled temporary file.
@@ -216,18 +226,20 @@
 }
 
 <span class="kw">impl </span>SpooledTempFile {
-    <span class="kw">pub fn </span>new(max_size: usize) -&gt; SpooledTempFile {
+    <span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>new(max_size: usize) -&gt; SpooledTempFile {
         SpooledTempFile {
-            max_size: max_size,
-            inner: SpooledInner::InMemory(Cursor::new(Vec::new())),
+            max_size,
+            inner: SpooledData::InMemory(Cursor::new(Vec::new())),
         }
     }
 
     <span class="doccomment">/// Returns true if the file has been rolled over to disk.
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>is_rolled(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">match </span><span class="self">self</span>.inner {
-            SpooledInner::InMemory(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
-            SpooledInner::OnDisk(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+            SpooledData::InMemory(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
+            SpooledData::OnDisk(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
         }
     }
 
@@ -236,11 +248,11 @@
     </span><span class="kw">pub fn </span>roll(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;()&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.is_rolled() {
             <span class="kw">let </span><span class="kw-2">mut </span>file = tempfile()<span class="question-mark">?</span>;
-            <span class="kw">if let </span>SpooledInner::InMemory(<span class="kw-2">ref mut </span>cursor) = <span class="self">self</span>.inner {
+            <span class="kw">if let </span>SpooledData::InMemory(<span class="kw-2">ref mut </span>cursor) = <span class="self">self</span>.inner {
                 file.write_all(cursor.get_ref())<span class="question-mark">?</span>;
                 file.seek(SeekFrom::Start(cursor.position()))<span class="question-mark">?</span>;
             }
-            <span class="self">self</span>.inner = SpooledInner::OnDisk(file);
+            <span class="self">self</span>.inner = SpooledData::OnDisk(file);
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -250,20 +262,26 @@
             <span class="self">self</span>.roll()<span class="question-mark">?</span>; <span class="comment">// does nothing if already rolled over
         </span>}
         <span class="kw">match </span><span class="self">self</span>.inner {
-            SpooledInner::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; {
+            SpooledData::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; {
                 cursor.get_mut().resize(size <span class="kw">as </span>usize, <span class="number">0</span>);
                 <span class="prelude-val">Ok</span>(())
             }
-            SpooledInner::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.set_len(size),
+            SpooledData::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.set_len(size),
         }
+    }
+
+    <span class="doccomment">/// Consumes and returns the inner `SpooledData` type.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>into_inner(<span class="self">self</span>) -&gt; SpooledData {
+        <span class="self">self</span>.inner
     }
 }
 
 <span class="kw">impl </span>Read <span class="kw">for </span>SpooledTempFile {
     <span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; io::Result&lt;usize&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner {
-            SpooledInner::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; cursor.read(buf),
-            SpooledInner::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.read(buf),
+            SpooledData::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; cursor.read(buf),
+            SpooledData::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.read(buf),
         }
     }
 }
@@ -272,7 +290,7 @@
     <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; io::Result&lt;usize&gt; {
         <span class="comment">// roll over to file if necessary
         </span><span class="kw">let </span><span class="kw-2">mut </span>rolling = <span class="bool-val">false</span>;
-        <span class="kw">if let </span>SpooledInner::InMemory(<span class="kw-2">ref mut </span>cursor) = <span class="self">self</span>.inner {
+        <span class="kw">if let </span>SpooledData::InMemory(<span class="kw-2">ref mut </span>cursor) = <span class="self">self</span>.inner {
             rolling = cursor.position() <span class="kw">as </span>usize + buf.len() &gt; <span class="self">self</span>.max_size;
         }
         <span class="kw">if </span>rolling {
@@ -281,16 +299,16 @@
 
         <span class="comment">// write the bytes
         </span><span class="kw">match </span><span class="self">self</span>.inner {
-            SpooledInner::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; cursor.write(buf),
-            SpooledInner::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.write(buf),
+            SpooledData::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; cursor.write(buf),
+            SpooledData::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.write(buf),
         }
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner {
-            SpooledInner::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; cursor.flush(),
-            SpooledInner::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.flush(),
+            SpooledData::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; cursor.flush(),
+            SpooledData::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.flush(),
         }
     }
 }
@@ -298,8 +316,8 @@
 <span class="kw">impl </span>Seek <span class="kw">for </span>SpooledTempFile {
     <span class="kw">fn </span>seek(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pos: SeekFrom) -&gt; io::Result&lt;u64&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner {
-            SpooledInner::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; cursor.seek(pos),
-            SpooledInner::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.seek(pos),
+            SpooledData::InMemory(<span class="kw-2">ref mut </span>cursor) =&gt; cursor.seek(pos),
+            SpooledData::OnDisk(<span class="kw-2">ref mut </span>file) =&gt; file.seek(pos),
         }
     }
 }
