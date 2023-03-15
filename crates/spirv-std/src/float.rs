@@ -82,7 +82,6 @@ pub fn f32_to_f16(float: f32) -> u32 {
 
 /// Converts an f16 (half) into an f32 (float). The parameter is a u32, due to GPU support for u16
 /// not being universal - the upper 16 bits are ignored.
-#[cfg(feature = "glam")]
 #[spirv_std_macros::gpu_only]
 pub fn f16_to_f32(packed: u32) -> f32 {
     f16x2_to_vec2::<F32x2>(packed).x
