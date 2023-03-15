@@ -27,7 +27,6 @@ macro_rules! sample_type_impls {
     }
 }
 
-#[cfg(feature = "glam")]
 sample_type_impls! {
     Unknown: i8 => (glam::IVec2, glam::IVec3, glam::IVec4),
     Unknown: i16 => (glam::IVec2, glam::IVec3, glam::IVec4),
