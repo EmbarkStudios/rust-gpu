@@ -362,7 +362,7 @@ impl CodegenArgs {
             opts.optflag(
                 "",
                 "no-spirt",
-                "disable SPIR-T for legalization (see also `docs/src/codegen-args.md`)",
+                "disable using SPIR-T for legalization (see also `docs/src/codegen-args.md`)",
             );
             opts.optmulti(
                 "",
