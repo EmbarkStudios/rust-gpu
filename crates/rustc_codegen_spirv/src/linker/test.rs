@@ -1,7 +1,7 @@
 use super::{link, LinkResult};
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
-use rustc_errors::registry::Registry;
+use rustc_errors::{registry::Registry, TerminalUrl};
 use rustc_session::{config::Input, CompilerIO};
 use rustc_span::FileName;
 use std::io::Read;
@@ -169,6 +169,7 @@ fn link_with_linker_opts(
                     None,
                     false,
                     false,
+                    TerminalUrl::No,
                 );
 
                 rustc_errors::Handler::with_emitter_and_flags(
