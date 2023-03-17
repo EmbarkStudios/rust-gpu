@@ -7,8 +7,12 @@ use core::arch::asm;
 /// acceleration structure handle as defined in the client API specification.
 #[spirv(acceleration_structure)]
 #[derive(Copy, Clone)]
+// HACK(eddyb) avoids "transparent newtype of `_anti_zst_padding`" misinterpretation.
+#[repr(C)]
 pub struct AccelerationStructure {
-    pub(crate) _private: u32,
+    // HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(acceleration_structure)]` can special-case it).
+    _anti_zst_padding: core::mem::MaybeUninit<u32>,
 }
 
 impl AccelerationStructure {
@@ -186,8 +190,12 @@ pub enum CommittedIntersection {
 
 /// A ray query type which is an opaque object representing a ray traversal.
 #[spirv(ray_query)]
+// HACK(eddyb) avoids "transparent newtype of `_anti_zst_padding`" misinterpretation.
+#[repr(C)]
 pub struct RayQuery {
-    _private: u32,
+    // HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(ray_query)]` can special-case it).
+    _anti_zst_padding: core::mem::MaybeUninit<u32>,
 }
 
 /// Constructs an uninitialized ray query variable. Using the syntax

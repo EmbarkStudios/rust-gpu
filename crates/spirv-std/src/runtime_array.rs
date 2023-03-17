@@ -7,9 +7,12 @@ use core::marker::PhantomData;
 /// Hence, this type represents something very similar to a slice, but with no way of knowing its
 /// length.
 #[spirv(runtime_array)]
+// HACK(eddyb) avoids "transparent newtype of `_anti_zst_padding`" misinterpretation.
+#[repr(C)]
 pub struct RuntimeArray<T> {
-    // spooky! this field does not exist, so if it's referenced in rust code, things will explode
-    _do_not_touch: u32,
+    // HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(runtime_array)]` can special-case it).
+    _anti_zst_padding: core::mem::MaybeUninit<u32>,
     _phantom: PhantomData<T>,
 }
 
