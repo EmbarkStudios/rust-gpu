@@ -250,15 +250,18 @@ pub trait IndexUnchecked<T> {
 impl<T> IndexUnchecked<T> for [T] {
     #[cfg(target_arch = "spirv")]
     unsafe fn index_unchecked(&self, index: usize) -> &T {
-        asm!(
+        // FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        let mut result_slot = core::mem::MaybeUninit::uninit();
+        asm! {
             "%slice_ptr = OpLoad _ {slice_ptr_ptr}",
             "%data_ptr = OpCompositeExtract _ %slice_ptr 0",
-            "%val_ptr = OpAccessChain _ %data_ptr {index}",
-            "OpReturnValue %val_ptr",
+            "%result = OpAccessChain _ %data_ptr {index}",
+            "OpStore {result_slot} %result",
             slice_ptr_ptr = in(reg) &self,
             index = in(reg) index,
-            options(noreturn)
-        )
+            result_slot = in(reg) result_slot.as_mut_ptr(),
+        }
+        result_slot.assume_init()
     }
 
     #[cfg(not(target_arch = "spirv"))]
@@ -268,15 +271,18 @@ impl<T> IndexUnchecked<T> for [T] {
 
     #[cfg(target_arch = "spirv")]
     unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
-        asm!(
+        // FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        let mut result_slot = core::mem::MaybeUninit::uninit();
+        asm! {
             "%slice_ptr = OpLoad _ {slice_ptr_ptr}",
             "%data_ptr = OpCompositeExtract _ %slice_ptr 0",
-            "%val_ptr = OpAccessChain _ %data_ptr {index}",
-            "OpReturnValue %val_ptr",
+            "%result = OpAccessChain _ %data_ptr {index}",
+            "OpStore {result_slot} %result",
             slice_ptr_ptr = in(reg) &self,
             index = in(reg) index,
-            options(noreturn)
-        )
+            result_slot = in(reg) result_slot.as_mut_ptr(),
+        }
+        result_slot.assume_init()
     }
 
     #[cfg(not(target_arch = "spirv"))]
@@ -288,13 +294,16 @@ impl<T> IndexUnchecked<T> for [T] {
 impl<T, const N: usize> IndexUnchecked<T> for [T; N] {
     #[cfg(target_arch = "spirv")]
     unsafe fn index_unchecked(&self, index: usize) -> &T {
-        asm!(
-            "%val_ptr = OpAccessChain _ {array_ptr} {index}",
-            "OpReturnValue %val_ptr",
+        // FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        let mut result_slot = core::mem::MaybeUninit::uninit();
+        asm! {
+            "%result = OpAccessChain _ {array_ptr} {index}",
+            "OpStore {result_slot} %result",
             array_ptr = in(reg) self,
             index = in(reg) index,
-            options(noreturn)
-        )
+            result_slot = in(reg) result_slot.as_mut_ptr(),
+        }
+        result_slot.assume_init()
     }
 
     #[cfg(not(target_arch = "spirv"))]
@@ -304,13 +313,16 @@ impl<T, const N: usize> IndexUnchecked<T> for [T; N] {
 
     #[cfg(target_arch = "spirv")]
     unsafe fn index_unchecked_mut(&mut self, index: usize) -> &mut T {
-        asm!(
-            "%val_ptr = OpAccessChain _ {array_ptr} {index}",
-            "OpReturnValue %val_ptr",
+        // FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        let mut result_slot = core::mem::MaybeUninit::uninit();
+        asm! {
+            "%result = OpAccessChain _ {array_ptr} {index}",
+            "OpStore {result_slot} %result",
             array_ptr = in(reg) self,
             index = in(reg) index,
-            options(noreturn)
-        )
+            result_slot = in(reg) result_slot.as_mut_ptr(),
+        }
+        result_slot.assume_init()
     }
 
     #[cfg(not(target_arch = "spirv"))]

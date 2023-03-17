@@ -23,16 +23,16 @@ impl AccelerationStructure {
     #[doc(alias = "OpConvertUToAccelerationStructureKHR")]
     #[inline]
     pub unsafe fn from_u64(id: u64) -> AccelerationStructure {
-        // Since we can't represent an uninitalized opaque type in Rust at the
-        // moment, we need to create and return the acceleration structure entirely
-        // in assembly.
+        // FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        let mut result_slot = core::mem::MaybeUninit::uninit();
         asm! {
             "%ret = OpTypeAccelerationStructureKHR",
             "%result = OpConvertUToAccelerationStructureKHR %ret {id}",
-            "OpReturnValue %result",
+            "OpStore {result_slot} %result",
             id = in(reg) id,
-            options(noreturn)
+            result_slot = in(reg) result_slot.as_mut_ptr(),
         }
+        result_slot.assume_init()
     }
 
     /// Converts a vector of two 32 bit integers into an [`AccelerationStructure`].
@@ -42,17 +42,17 @@ impl AccelerationStructure {
     #[doc(alias = "OpConvertUToAccelerationStructureKHR")]
     #[inline]
     pub unsafe fn from_vec(id: impl Vector<u32, 2>) -> AccelerationStructure {
-        // Since we can't represent an uninitalized opaque type in Rust at the
-        // moment, we need to create and return the acceleration structure entirely
-        // in assembly.
+        // FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        let mut result_slot = core::mem::MaybeUninit::uninit();
         asm! {
             "%ret = OpTypeAccelerationStructureKHR",
             "%id = OpLoad _ {id}",
             "%result = OpConvertUToAccelerationStructureKHR %ret %id",
-            "OpReturnValue %result",
+            "OpStore {result_slot} %result",
             id = in(reg) &id,
-            options(noreturn),
+            result_slot = in(reg) result_slot.as_mut_ptr(),
         }
+        result_slot.assume_init()
     }
 
     #[spirv_std_macros::gpu_only]
