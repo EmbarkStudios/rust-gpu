@@ -144,6 +144,7 @@ fn link_with_linker_opts(
                 None,
                 Registry::new(&[]),
                 Default::default(),
+                Default::default(),
                 None,
                 None,
             );
@@ -154,7 +155,7 @@ fn link_with_linker_opts(
                 let fallback_bundle = {
                     extern crate rustc_error_messages;
                     rustc_error_messages::fallback_fluent_bundle(
-                        rustc_errors::DEFAULT_LOCALE_RESOURCES,
+                        Vec::new(),
                         sess.opts.unstable_opts.translate_directionality_markers,
                     )
                 };

@@ -34,7 +34,7 @@ pub fn main(
     let newtype_slice = Newtype(slice);
     *out = newtype_slice.get()[0];
     *out += newtype_slice.slice_get()[1];
-    *out += newtype_slice.deref_index(2);
+    *out += *newtype_slice.deref_index(2);
 
     let newtype_custom_pair = Newtype(CustomPair(*out, *out + 1));
     *out += newtype_custom_pair.get().0;

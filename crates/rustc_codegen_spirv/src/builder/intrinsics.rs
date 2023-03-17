@@ -314,7 +314,14 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         let res3 = self.or(res3, res4);
                         self.or(res1, res3)
                     }
-                    other => self.fatal(&format!("bswap not implemented for int width {other}")),
+                    other => {
+                        let undef = self.undef(ret_ty);
+                        self.zombie(
+                            undef.def(self),
+                            &format!("bswap not implemented for int width {other}"),
+                        );
+                        undef
+                    }
                 }
             }
 

@@ -96,7 +96,7 @@ pub(crate) fn provide(providers: &mut Providers) {
 
     // FIXME(eddyb) remove this by deriving `Clone` for `LayoutS` upstream.
     // FIXME(eddyb) the `S` suffix is a naming antipattern, rename upstream.
-    fn clone_layout<V: Idx>(layout: &LayoutS<V>) -> LayoutS<V> {
+    fn clone_layout(layout: &LayoutS) -> LayoutS {
         let LayoutS {
             ref fields,
             ref variants,
@@ -160,7 +160,7 @@ pub(crate) fn provide(providers: &mut Providers) {
         };
 
         if hide_niche {
-            layout = tcx.intern_layout(LayoutS {
+            layout = tcx.mk_layout(LayoutS {
                 largest_niche: None,
                 ..clone_layout(layout.0 .0)
             });

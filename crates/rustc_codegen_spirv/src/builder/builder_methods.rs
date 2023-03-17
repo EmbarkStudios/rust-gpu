@@ -940,7 +940,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             OverflowOp::Mul => (self.mul(lhs, rhs), fals),
         };
         self.zombie(
-            result.0.def(self),
+            result.1.def(self),
             match oop {
                 OverflowOp::Add => "checked add is not supported yet",
                 OverflowOp::Sub => "checked sub is not supported yet",
