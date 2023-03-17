@@ -250,7 +250,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         assert_eq!(res.ty, ty);
                         res
                     }
-                    Primitive::Pointer => {
+                    Primitive::Pointer(_) => {
                         if data == 0 {
                             self.constant_null(ty)
                         } else {
@@ -317,14 +317,13 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     // let offset = self.constant_u64(ptr.offset.bytes());
                     // self.gep(base_addr, once(offset))
                 };
-                if layout.primitive() != Primitive::Pointer {
+                if let Primitive::Pointer(_) = layout.primitive() {
+                    assert_ty_eq!(self, value.ty, ty);
+                    value
+                } else {
                     self.tcx
                         .sess
                         .fatal("Non-pointer-typed scalar_to_backend Scalar::Ptr not supported");
-                // unsafe { llvm::LLVMConstPtrToInt(llval, llty) }
-                } else {
-                    assert_ty_eq!(self, value.ty, ty);
-                    value
                 }
             }
         }
@@ -440,7 +439,7 @@ impl<'tcx> CodegenCx<'tcx> {
                                 .fatal(format!("invalid size for float: {other}"));
                         }
                     },
-                    SpirvType::Pointer { .. } => Primitive::Pointer,
+                    SpirvType::Pointer { .. } => Primitive::Pointer(AddressSpace::DATA),
                     unsupported_spirv_type => bug!(
                         "invalid spirv type internal to create_alloc_const2: {:?}",
                         unsupported_spirv_type
@@ -454,7 +453,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 let value = match alloc.inner().read_scalar(
                     self,
                     alloc_range(*offset, size),
-                    primitive.is_ptr(),
+                    matches!(primitive, Primitive::Pointer(_)),
                 ) {
                     Ok(scalar) => {
                         self.scalar_to_backend(scalar, self.primitive_to_scalar(primitive), ty)
