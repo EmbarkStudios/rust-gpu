@@ -284,6 +284,7 @@ impl CodegenBackend for SpirvCodegenBackend {
 impl WriteBackendMethods for SpirvCodegenBackend {
     type Module = Vec<u32>;
     type TargetMachine = ();
+    type TargetMachineError = String;
     type ModuleBuffer = SpirvModuleBuffer;
     type ThinData = ();
     type ThinBuffer = SpirvThinBuffer;
