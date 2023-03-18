@@ -975,6 +975,14 @@
 <a href="#975" id="975">975</a>
 <a href="#976" id="976">976</a>
 <a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
 </pre><pre class="rust"><code><span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s
 //! surprisingly difficult.
 
@@ -1570,7 +1578,9 @@
     })
 }
 
-<span class="kw">fn </span>trans_aggregate&lt;<span class="lifetime">&#39;tcx</span>&gt;(cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;, span: Span, ty: TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; Word {
+<span class="comment">// FIXME(eddyb) all `ty: TyAndLayout` variables should be `layout: TyAndLayout`,
+// the type is really more &quot;Layout with Ty&quot; (`.ty` field + `Deref`s to `Layout`).
+</span><span class="kw">fn </span>trans_aggregate&lt;<span class="lifetime">&#39;tcx</span>&gt;(cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;, span: Span, ty: TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; Word {
     <span class="kw">fn </span>create_zst&lt;<span class="lifetime">&#39;tcx</span>&gt;(cx: <span class="kw-2">&amp;</span>CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt;, span: Span, ty: TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt;) -&gt; Word {
         SpirvType::Adt {
             def_id: def_id_for_spirv_type_adt(ty),
@@ -1590,16 +1600,22 @@
         ),
         FieldsShape::Union(<span class="kw">_</span>) =&gt; {
             <span class="macro">assert!</span>(!ty.is_unsized(), <span class="string">&quot;{ty:#?}&quot;</span>);
-            <span class="kw">if </span>ty.size.bytes() == <span class="number">0 </span>{
-                create_zst(cx, span, ty)
+
+            <span class="comment">// Represent the `union` with its largest case, which should work
+            // for at least `MaybeUninit&lt;T&gt;` (which is between `T` and `()`),
+            // but also potentially some other ones as well.
+            // NOTE(eddyb) even if long-term this may become a byte array, that
+            // only works for &quot;data types&quot; and not &quot;opaque handles&quot; (images etc.).
+            </span><span class="kw">let </span>largest_case = (<span class="number">0</span>..ty.fields.count())
+                .map(|i| ty.field(cx, i))
+                .max_by_key(|case| case.size);
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(case) = largest_case {
+                <span class="macro">assert_eq!</span>(ty.size, case.size);
+                case.spirv_type(span, cx)
             } <span class="kw">else </span>{
-                <span class="kw">let </span>byte = SpirvType::Integer(<span class="number">8</span>, <span class="bool-val">false</span>).def(span, cx);
-                <span class="kw">let </span>count = cx.constant_u32(span, ty.size.bytes() <span class="kw">as </span>u32);
-                SpirvType::Array {
-                    element: byte,
-                    count,
-                }
-                .def(span, cx)
+                <span class="macro">assert_eq!</span>(ty.size, Size::ZERO);
+                create_zst(cx, span, ty)
             }
         }
         FieldsShape::Array { stride, count } =&gt; {

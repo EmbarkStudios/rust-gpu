@@ -5,12 +5,20 @@
 <a href="#5" id="5">5</a>
 <a href="#6" id="6">6</a>
 <a href="#7" id="7">7</a>
+<a href="#8" id="8">8</a>
+<a href="#9" id="9">9</a>
+<a href="#10" id="10">10</a>
+<a href="#11" id="11">11</a>
 </pre><pre class="rust"><code><span class="doccomment">/// An opaque reference to settings that describe how to access, filter, or
 /// sample an image.
 </span><span class="attr">#[spirv(sampler)]
 #[derive(Copy, Clone)]
+</span><span class="comment">// HACK(eddyb) avoids &quot;transparent newtype of `_anti_zst_padding`&quot; misinterpretation.
+</span><span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>Sampler {
-    _x: u32,
+    <span class="comment">// HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(sampler)]` can special-case it).
+    </span>_anti_zst_padding: core::mem::MaybeUninit&lt;u32&gt;,
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="spirv_std" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (5ce39f42b 2023-01-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>

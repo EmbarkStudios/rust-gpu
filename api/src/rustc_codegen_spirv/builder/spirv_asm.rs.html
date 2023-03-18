@@ -1528,6 +1528,21 @@
 <a href="#1528" id="1528">1528</a>
 <a href="#1529" id="1529">1529</a>
 <a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{BuilderCursor, SpirvValue};
 <span class="kw">use </span><span class="kw">crate</span>::codegen_cx::CodegenCx;
@@ -1693,7 +1708,7 @@
             (<span class="bool-val">false</span>, AsmBlock::Open) =&gt; (),
             (<span class="bool-val">false</span>, AsmBlock::End(terminator)) =&gt; {
                 <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">&quot;trailing terminator {terminator:?} requires `options(noreturn)`&quot;
+                    <span class="string">&quot;trailing terminator `Op{terminator:?}` requires `options(noreturn)`&quot;
                 </span>));
             }
         }
@@ -1886,6 +1901,19 @@
             }
 
             op =&gt; {
+                <span class="comment">// NOTE(eddyb) allowing the instruction to be added below avoids
+                // spurious &quot;`noreturn` requires a terminator at the end&quot; errors.
+                </span><span class="kw">if let </span>Op::Return | Op::ReturnValue = op {
+                    <span class="self">self</span>.struct_err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                        <span class="string">&quot;using `Op{op:?}` to return from within `asm!` is disallowed&quot;
+                    </span>))
+                    .note(
+                        <span class="string">&quot;resuming execution, without falling through the end \
+                        of the `asm!` block, is always undefined behavior&quot;</span>,
+                    )
+                    .emit();
+                }
+
                 <span class="self">self</span>.emit()
                     .insert_into_block(dr::InsertPoint::End, inst)
                     .unwrap();
@@ -1900,7 +1928,9 @@
                     }
                     AsmBlock::End(terminator) =&gt; {
                         <span class="kw">if </span>op != Op::Label {
-                            <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;expected OpLabel after terminator {terminator:?}&quot;</span>));
+                            <span class="self">self</span>.err(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                                <span class="string">&quot;expected `OpLabel` after terminator `Op{terminator:?}`&quot;
+                            </span>));
                         }
 
                         AsmBlock::Open

@@ -318,6 +318,18 @@
 <a href="#318" id="318">318</a>
 <a href="#319" id="319">319</a>
 <a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
 </pre><pre class="rust"><code><span class="doccomment">//! SPIR-V Instrinics
 //!
 //! This module is intended as a low level abstraction over SPIR-V instructions.
@@ -570,15 +582,18 @@
 <span class="kw">impl</span>&lt;T&gt; IndexUnchecked&lt;T&gt; <span class="kw">for </span>[T] {
     <span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
     </span><span class="kw">unsafe fn </span>index_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span>T {
-        <span class="macro">asm!</span>(
+        <span class="comment">// FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result_slot = core::mem::MaybeUninit::uninit();
+        <span class="macro">asm! </span>{
             <span class="string">&quot;%slice_ptr = OpLoad _ {slice_ptr_ptr}&quot;</span>,
             <span class="string">&quot;%data_ptr = OpCompositeExtract _ %slice_ptr 0&quot;</span>,
-            <span class="string">&quot;%val_ptr = OpAccessChain _ %data_ptr {index}&quot;</span>,
-            <span class="string">&quot;OpReturnValue %val_ptr&quot;</span>,
+            <span class="string">&quot;%result = OpAccessChain _ %data_ptr {index}&quot;</span>,
+            <span class="string">&quot;OpStore {result_slot} %result&quot;</span>,
             slice_ptr_ptr = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span><span class="self">self</span>,
             index = <span class="kw">in</span>(reg) index,
-            options(noreturn)
-        )
+            result_slot = <span class="kw">in</span>(reg) result_slot.as_mut_ptr(),
+        }
+        result_slot.assume_init()
     }
 
     <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;spirv&quot;</span>))]
@@ -588,15 +603,18 @@
 
     <span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
     </span><span class="kw">unsafe fn </span>index_unchecked_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;mut </span>T {
-        <span class="macro">asm!</span>(
+        <span class="comment">// FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result_slot = core::mem::MaybeUninit::uninit();
+        <span class="macro">asm! </span>{
             <span class="string">&quot;%slice_ptr = OpLoad _ {slice_ptr_ptr}&quot;</span>,
             <span class="string">&quot;%data_ptr = OpCompositeExtract _ %slice_ptr 0&quot;</span>,
-            <span class="string">&quot;%val_ptr = OpAccessChain _ %data_ptr {index}&quot;</span>,
-            <span class="string">&quot;OpReturnValue %val_ptr&quot;</span>,
+            <span class="string">&quot;%result = OpAccessChain _ %data_ptr {index}&quot;</span>,
+            <span class="string">&quot;OpStore {result_slot} %result&quot;</span>,
             slice_ptr_ptr = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span><span class="self">self</span>,
             index = <span class="kw">in</span>(reg) index,
-            options(noreturn)
-        )
+            result_slot = <span class="kw">in</span>(reg) result_slot.as_mut_ptr(),
+        }
+        result_slot.assume_init()
     }
 
     <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;spirv&quot;</span>))]
@@ -608,13 +626,16 @@
 <span class="kw">impl</span>&lt;T, <span class="kw">const </span>N: usize&gt; IndexUnchecked&lt;T&gt; <span class="kw">for </span>[T; N] {
     <span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
     </span><span class="kw">unsafe fn </span>index_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span>T {
-        <span class="macro">asm!</span>(
-            <span class="string">&quot;%val_ptr = OpAccessChain _ {array_ptr} {index}&quot;</span>,
-            <span class="string">&quot;OpReturnValue %val_ptr&quot;</span>,
+        <span class="comment">// FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result_slot = core::mem::MaybeUninit::uninit();
+        <span class="macro">asm! </span>{
+            <span class="string">&quot;%result = OpAccessChain _ {array_ptr} {index}&quot;</span>,
+            <span class="string">&quot;OpStore {result_slot} %result&quot;</span>,
             array_ptr = <span class="kw">in</span>(reg) <span class="self">self</span>,
             index = <span class="kw">in</span>(reg) index,
-            options(noreturn)
-        )
+            result_slot = <span class="kw">in</span>(reg) result_slot.as_mut_ptr(),
+        }
+        result_slot.assume_init()
     }
 
     <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;spirv&quot;</span>))]
@@ -624,13 +645,16 @@
 
     <span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
     </span><span class="kw">unsafe fn </span>index_unchecked_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;mut </span>T {
-        <span class="macro">asm!</span>(
-            <span class="string">&quot;%val_ptr = OpAccessChain _ {array_ptr} {index}&quot;</span>,
-            <span class="string">&quot;OpReturnValue %val_ptr&quot;</span>,
+        <span class="comment">// FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result_slot = core::mem::MaybeUninit::uninit();
+        <span class="macro">asm! </span>{
+            <span class="string">&quot;%result = OpAccessChain _ {array_ptr} {index}&quot;</span>,
+            <span class="string">&quot;OpStore {result_slot} %result&quot;</span>,
             array_ptr = <span class="kw">in</span>(reg) <span class="self">self</span>,
             index = <span class="kw">in</span>(reg) index,
-            options(noreturn)
-        )
+            result_slot = <span class="kw">in</span>(reg) result_slot.as_mut_ptr(),
+        }
+        result_slot.assume_init()
     }
 
     <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;spirv&quot;</span>))]

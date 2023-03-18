@@ -978,6 +978,14 @@
 <a href="#978" id="978">978</a>
 <a href="#979" id="979">979</a>
 <a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Ray-tracing data types
 </span><span class="kw">use </span><span class="kw">crate</span>::vector::Vector;
 <span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
@@ -987,8 +995,12 @@
 /// acceleration structure handle as defined in the client API specification.
 </span><span class="attr">#[spirv(acceleration_structure)]
 #[derive(Copy, Clone)]
+</span><span class="comment">// HACK(eddyb) avoids &quot;transparent newtype of `_anti_zst_padding`&quot; misinterpretation.
+</span><span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>AccelerationStructure {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) _private: u32,
+    <span class="comment">// HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(acceleration_structure)]` can special-case it).
+    </span>_anti_zst_padding: core::mem::MaybeUninit&lt;u32&gt;,
 }
 
 <span class="kw">impl </span>AccelerationStructure {
@@ -999,16 +1011,16 @@
     #[doc(alias = <span class="string">&quot;OpConvertUToAccelerationStructureKHR&quot;</span>)]
     #[inline]
     </span><span class="kw">pub unsafe fn </span>from_u64(id: u64) -&gt; AccelerationStructure {
-        <span class="comment">// Since we can&#39;t represent an uninitalized opaque type in Rust at the
-        // moment, we need to create and return the acceleration structure entirely
-        // in assembly.
-        </span><span class="macro">asm! </span>{
+        <span class="comment">// FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result_slot = core::mem::MaybeUninit::uninit();
+        <span class="macro">asm! </span>{
             <span class="string">&quot;%ret = OpTypeAccelerationStructureKHR&quot;</span>,
             <span class="string">&quot;%result = OpConvertUToAccelerationStructureKHR %ret {id}&quot;</span>,
-            <span class="string">&quot;OpReturnValue %result&quot;</span>,
+            <span class="string">&quot;OpStore {result_slot} %result&quot;</span>,
             id = <span class="kw">in</span>(reg) id,
-            options(noreturn)
+            result_slot = <span class="kw">in</span>(reg) result_slot.as_mut_ptr(),
         }
+        result_slot.assume_init()
     }
 
     <span class="doccomment">/// Converts a vector of two 32 bit integers into an [`AccelerationStructure`].
@@ -1018,17 +1030,17 @@
     #[doc(alias = <span class="string">&quot;OpConvertUToAccelerationStructureKHR&quot;</span>)]
     #[inline]
     </span><span class="kw">pub unsafe fn </span>from_vec(id: <span class="kw">impl </span>Vector&lt;u32, <span class="number">2</span>&gt;) -&gt; AccelerationStructure {
-        <span class="comment">// Since we can&#39;t represent an uninitalized opaque type in Rust at the
-        // moment, we need to create and return the acceleration structure entirely
-        // in assembly.
-        </span><span class="macro">asm! </span>{
+        <span class="comment">// FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result_slot = core::mem::MaybeUninit::uninit();
+        <span class="macro">asm! </span>{
             <span class="string">&quot;%ret = OpTypeAccelerationStructureKHR&quot;</span>,
             <span class="string">&quot;%id = OpLoad _ {id}&quot;</span>,
             <span class="string">&quot;%result = OpConvertUToAccelerationStructureKHR %ret %id&quot;</span>,
-            <span class="string">&quot;OpReturnValue %result&quot;</span>,
+            <span class="string">&quot;OpStore {result_slot} %result&quot;</span>,
             id = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>id,
-            options(noreturn),
+            result_slot = <span class="kw">in</span>(reg) result_slot.as_mut_ptr(),
         }
+        result_slot.assume_init()
     }
 
     <span class="attr">#[spirv_std_macros::gpu_only]
@@ -1166,8 +1178,12 @@
 
 <span class="doccomment">/// A ray query type which is an opaque object representing a ray traversal.
 </span><span class="attr">#[spirv(ray_query)]
+</span><span class="comment">// HACK(eddyb) avoids &quot;transparent newtype of `_anti_zst_padding`&quot; misinterpretation.
+</span><span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>RayQuery {
-    _private: u32,
+    <span class="comment">// HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(ray_query)]` can special-case it).
+    </span>_anti_zst_padding: core::mem::MaybeUninit&lt;u32&gt;,
 }
 
 <span class="doccomment">/// Constructs an uninitialized ray query variable. Using the syntax

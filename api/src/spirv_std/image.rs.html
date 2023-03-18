@@ -1471,6 +1471,10 @@
 <a href="#1471" id="1471">1471</a>
 <a href="#1472" id="1472">1472</a>
 <a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Image types
 
 </span><span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
@@ -1567,6 +1571,8 @@
 /// See SPIR-V OpTypeImage specification for the meaning of integer parameters.
 </span><span class="attr">#[spirv(generic_image_type)]
 #[derive(Copy, Clone)]
+</span><span class="comment">// HACK(eddyb) avoids &quot;transparent newtype of `_anti_zst_padding`&quot; misinterpretation.
+</span><span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>Image&lt;
     SampledType: SampleType&lt;FORMAT&gt;,
     <span class="kw">const </span>DIM: u32,          <span class="comment">// Dimensionality,
@@ -1576,7 +1582,9 @@
     </span><span class="kw">const </span>SAMPLED: u32,      <span class="comment">// Sampled,
     </span><span class="kw">const </span>FORMAT: u32,       <span class="comment">// ImageFormat,
 </span>&gt; {
-    _x: u32,
+    <span class="comment">// HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(generic_image_type)]` can special-case it).
+    </span>_anti_zst_padding: core::mem::MaybeUninit&lt;u32&gt;,
     _marker: core::marker::PhantomData&lt;SampledType&gt;,
 }
 

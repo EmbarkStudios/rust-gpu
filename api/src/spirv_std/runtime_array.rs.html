@@ -52,6 +52,15 @@
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
 </pre><pre class="rust"><code><span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
 </span><span class="kw">use </span>core::arch::asm;
 <span class="kw">use </span>core::marker::PhantomData;
@@ -61,9 +70,12 @@
 /// Hence, this type represents something very similar to a slice, but with no way of knowing its
 /// length.
 </span><span class="attr">#[spirv(runtime_array)]
+</span><span class="comment">// HACK(eddyb) avoids &quot;transparent newtype of `_anti_zst_padding`&quot; misinterpretation.
+</span><span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>RuntimeArray&lt;T&gt; {
-    <span class="comment">// spooky! this field does not exist, so if it&#39;s referenced in rust code, things will explode
-    </span>_do_not_touch: u32,
+    <span class="comment">// HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(runtime_array)]` can special-case it).
+    </span>_anti_zst_padding: core::mem::MaybeUninit&lt;u32&gt;,
     _phantom: PhantomData&lt;T&gt;,
 }
 
@@ -79,13 +91,16 @@
     /// and lead to UB.
     </span><span class="attr">#[spirv_std_macros::gpu_only]
     </span><span class="kw">pub unsafe fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span>T {
+        <span class="comment">// FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result_slot = core::mem::MaybeUninit::uninit();
         <span class="macro">asm! </span>{
             <span class="string">&quot;%result = OpAccessChain _ {arr} {index}&quot;</span>,
-            <span class="string">&quot;OpReturnValue %result&quot;</span>,
+            <span class="string">&quot;OpStore {result_slot} %result&quot;</span>,
             arr = <span class="kw">in</span>(reg) <span class="self">self</span>,
             index = <span class="kw">in</span>(reg) index,
-            options(noreturn),
+            result_slot = <span class="kw">in</span>(reg) result_slot.as_mut_ptr(),
         }
+        result_slot.assume_init()
     }
 
     <span class="doccomment">/// Index the array, returning a mutable reference to an element. Unfortunately, because the
@@ -97,13 +112,16 @@
     /// and lead to UB.
     </span><span class="attr">#[spirv_std_macros::gpu_only]
     </span><span class="kw">pub unsafe fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;mut </span>T {
+        <span class="comment">// FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result_slot = core::mem::MaybeUninit::uninit();
         <span class="macro">asm! </span>{
             <span class="string">&quot;%result = OpAccessChain _ {arr} {index}&quot;</span>,
-            <span class="string">&quot;OpReturnValue %result&quot;</span>,
+            <span class="string">&quot;OpStore {result_slot} %result&quot;</span>,
             arr = <span class="kw">in</span>(reg) <span class="self">self</span>,
             index = <span class="kw">in</span>(reg) index,
-            options(noreturn),
+            result_slot = <span class="kw">in</span>(reg) result_slot.as_mut_ptr(),
         }
+        result_slot.assume_init()
     }
 }
 </code></pre></div>
