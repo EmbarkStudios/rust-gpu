@@ -19,6 +19,30 @@ use rustc_span::Span;
 use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use std::assert_matches::assert_matches;
 
+/// Various information about an entry-point parameter, which can only be deduced
+/// (and/or checked) in all cases by using the original reference/value Rust type
+/// (e.g. `&mut T` vs `&T` vs `T`).
+///
+/// This is in contrast to other information about "shader interface variables",
+/// that can rely on merely the SPIR-V type and/or `#[spirv(...)]` attributes.
+///
+/// See also `entry_param_deduce_from_rust_ref_or_value` (which computes this).
+struct EntryParamDeducedFromRustRefOrValue<'tcx> {
+    /// The type/layout for the data to pass onto the entry-point parameter,
+    /// either by-value (only for `Input`) or behind some kind of reference.
+    ///
+    /// That is, the original parameter type is (given `T = value_layout.ty`):
+    /// * `T` (iff `storage_class` is `Input`)
+    /// * `&T` (all shader interface storage classes other than `Input`/`Output`)
+    /// * `&mut T` (only writable storage classes)
+    value_layout: TyAndLayout<'tcx>,
+
+    /// The SPIR-V storage class to declare the shader interface variable in,
+    /// either deduced from the type (e.g. opaque handles use `UniformConstant`),
+    /// provided via `#[spirv(...)]` attributes, or an `Input`/`Output` default.
+    storage_class: StorageClass,
+}
+
 impl<'tcx> CodegenCx<'tcx> {
     // Entry points declare their "interface" (all uniforms, inputs, outputs, etc.) as parameters.
     // spir-v uses globals to declare the interface. So, we need to generate a lil stub for the
@@ -174,20 +198,24 @@ impl<'tcx> CodegenCx<'tcx> {
         stub_fn_id
     }
 
-    fn infer_param_ty_and_storage_class(
+    /// Attempt to compute `EntryParamDeducedFromRustRefOrValue` (see its docs)
+    /// from `ref_or_value_layout` (and potentially some of `attrs`).
+    ///
+    // FIXME(eddyb) document this by itself.
+    fn entry_param_deduce_from_rust_ref_or_value(
         &self,
-        layout: TyAndLayout<'tcx>,
+        ref_or_value_layout: TyAndLayout<'tcx>,
         hir_param: &hir::Param<'tcx>,
         attrs: &AggregatedSpirvAttributes,
-    ) -> (Word, StorageClass) {
+    ) -> EntryParamDeducedFromRustRefOrValue<'tcx> {
         // FIXME(eddyb) attribute validation should be done ahead of time.
         // FIXME(eddyb) also check the type for compatibility with being
         // part of the interface, including potentially `Sync`ness etc.
         // FIXME(eddyb) really need to require `T: Sync` for references
         // (especially relevant with interior mutability!).
-        let (value_ty, explicit_mutbl, is_ref) = match *layout.ty.kind() {
-            ty::Ref(_, pointee_ty, mutbl) => (pointee_ty, mutbl, true),
-            _ => (layout.ty, hir::Mutability::Not, false),
+        let (value_layout, explicit_mutbl, is_ref) = match *ref_or_value_layout.ty.kind() {
+            ty::Ref(_, pointee_ty, mutbl) => (self.layout_of(pointee_ty), mutbl, true),
+            _ => (ref_or_value_layout, hir::Mutability::Not, false),
         };
         let effective_mutbl = match explicit_mutbl {
             // NOTE(eddyb) `T: !Freeze` used to detect "`T` has interior mutability"
@@ -195,7 +223,10 @@ impl<'tcx> CodegenCx<'tcx> {
             // containing `UnsafeCell` (but not behind any indirection), which
             // includes many safe abstractions (e.g. `Cell`, `RefCell`, `Atomic*`).
             hir::Mutability::Not
-                if is_ref && !value_ty.is_freeze(self.tcx, ty::ParamEnv::reveal_all()) =>
+                if is_ref
+                    && !value_layout
+                        .ty
+                        .is_freeze(self.tcx, ty::ParamEnv::reveal_all()) =>
             {
                 hir::Mutability::Mut
             }
@@ -213,15 +244,15 @@ impl<'tcx> CodegenCx<'tcx> {
             // can be per-lane-owning `&mut T`.
             _ => hir::Mutability::Mut,
         };
-        let spirv_ty = self.layout_of(value_ty).spirv_type(hir_param.ty_span, self);
+        let value_spirv_type = value_layout.spirv_type(hir_param.ty_span, self);
         // Some types automatically specify a storage class. Compute that here.
-        let element_ty = match self.lookup_type(spirv_ty) {
+        let element_ty = match self.lookup_type(value_spirv_type) {
             SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } => {
                 self.lookup_type(element)
             }
             ty => ty,
         };
-        let inferred_storage_class_from_ty = match element_ty {
+        let deduced_storage_class_from_ty = match element_ty {
             SpirvType::Image { .. }
             | SpirvType::Sampler
             | SpirvType::SampledImage { .. }
@@ -233,7 +264,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         hir_param.ty_span,
                         format!(
                             "entry parameter type must be by-reference: `&{}`",
-                            layout.ty,
+                            value_layout.ty,
                         ),
                     );
                     None
@@ -249,36 +280,35 @@ impl<'tcx> CodegenCx<'tcx> {
                 self.tcx.sess.span_fatal(
                     hir_param.ty_span,
                     format!(
-                        "invalid entry param type `{}` for storage class `{:?}` \
+                        "invalid entry param type `{}` for storage class `{storage_class:?}` \
                          (expected `&{}T`)",
-                        layout.ty,
-                        storage_class,
+                        value_layout.ty,
                         expected_mutbl_for(storage_class).prefix_str()
                     ),
                 )
             }
 
-            match inferred_storage_class_from_ty {
-                Some(inferred) if storage_class == inferred => self.tcx.sess.span_warn(
+            match deduced_storage_class_from_ty {
+                Some(deduced) if storage_class == deduced => self.tcx.sess.span_warn(
                     storage_class_attr.span,
-                    "redundant storage class specifier, storage class is inferred from type",
+                    "redundant storage class attribute, storage class is deduced from type",
                 ),
-                Some(inferred) => {
+                Some(deduced) => {
                     self.tcx
                         .sess
                         .struct_span_err(hir_param.span, "storage class mismatch")
                         .span_label(
                             storage_class_attr.span,
-                            format!("{storage_class:?} specified in attribute"),
+                            format!("`{storage_class:?}` specified in attribute"),
                         )
                         .span_label(
                             hir_param.ty_span,
-                            format!("{inferred:?} inferred from type"),
+                            format!("`{deduced:?}` deduced from type"),
                         )
                         .span_help(
                             storage_class_attr.span,
                             &format!(
-                                "remove storage class attribute to use {inferred:?} as storage class"
+                                "remove storage class attribute to use `{deduced:?}` as storage class"
                             ),
                         )
                         .emit();
@@ -288,8 +318,8 @@ impl<'tcx> CodegenCx<'tcx> {
 
             storage_class
         });
-        // If storage class was not inferred nor specified, compute the default (i.e. input/output)
-        let storage_class = inferred_storage_class_from_ty
+        // If storage class was not deduced nor specified, compute the default (i.e. input/output)
+        let storage_class = deduced_storage_class_from_ty
             .or(attr_storage_class)
             .unwrap_or_else(|| match (is_ref, explicit_mutbl) {
                 (false, _) => StorageClass::Input,
@@ -298,7 +328,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     hir_param.ty_span,
                     format!(
                         "invalid entry param type `{}` (expected `{}` or `&mut {1}`)",
-                        layout.ty, value_ty
+                        ref_or_value_layout.ty, value_layout.ty
                     ),
                 ),
             });
@@ -332,7 +362,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         } else {
                             (
                                 hir_param.ty_span,
-                                format!("`{storage_class:?}` implied by type"),
+                                format!("`{storage_class:?}` deduced from type"),
                             )
                         };
                     // HACK(eddyb) have to use `MultiSpan` directly for labels,
@@ -345,7 +375,10 @@ impl<'tcx> CodegenCx<'tcx> {
             }
         }
 
-        (spirv_ty, storage_class)
+        EntryParamDeducedFromRustRefOrValue {
+            value_layout,
+            storage_class,
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -364,8 +397,11 @@ impl<'tcx> CodegenCx<'tcx> {
         // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
         let var = self.emit_global().id();
 
-        let (value_spirv_type, storage_class) =
-            self.infer_param_ty_and_storage_class(entry_arg_abi.layout, hir_param, &attrs);
+        let EntryParamDeducedFromRustRefOrValue {
+            value_layout,
+            storage_class,
+        } = self.entry_param_deduce_from_rust_ref_or_value(entry_arg_abi.layout, hir_param, &attrs);
+        let value_spirv_type = value_layout.spirv_type(hir_param.ty_span, self);
 
         // Certain storage classes require an `OpTypeStruct` decorated with `Block`,
         // which we represent with `SpirvType::InterfaceBlock` (see its doc comment).
@@ -373,6 +409,16 @@ impl<'tcx> CodegenCx<'tcx> {
         let is_unsized = self.lookup_type(value_spirv_type).sizeof(self).is_none();
         let is_pair = matches!(entry_arg_abi.mode, PassMode::Pair(..));
         let is_unsized_with_len = is_pair && is_unsized;
+        // HACK(eddyb) sanity check because we get the same information in two
+        // very different ways, and going out of sync could cause subtle issues.
+        assert_eq!(
+            is_unsized_with_len,
+            value_layout.is_unsized(),
+            "`{}` param mismatch in call ABI (is_pair={is_pair}) + \
+             SPIR-V type (is_unsized={is_unsized}) \
+             vs layout:\n{value_layout:#?}",
+            entry_arg_abi.layout.ty
+        );
         if is_pair && !is_unsized {
             // If PassMode is Pair, then we need to fill in the second part of the pair with a
             // value. We currently only do that with unsized types, so if a type is a pair for some
