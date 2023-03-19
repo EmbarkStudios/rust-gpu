@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed 🛠
+- [PR#1011](https://github.com/EmbarkStudios/rust-gpu/pull/1011) made `NonWritable` all read-only storage buffers (i.e. those typed `&T`, where `T` doesn't have interior mutability)
+
 ### Fixed 🩹
 - [PR#1009](https://github.com/EmbarkStudios/rust-gpu/pull/1009) fixed [#1008](https://github.com/EmbarkStudios/rust-gpu/issues/1008) by reinstating mutability checks for entry-point parameters pointing into read-only storage classes (e.g. `#[spirv(uniform)] x: &mut u32` is now again an error)
 - [PR#995](https://github.com/EmbarkStudios/rust-gpu/pull/995) fixed [#994](https://github.com/EmbarkStudios/rust-gpu/issues/994) by using `OpAtomicFAddEXT` instead of `OpAtomicFMaxEXT` in `atomic_f_add`.

@@ -41,6 +41,13 @@ struct EntryParamDeducedFromRustRefOrValue<'tcx> {
     /// either deduced from the type (e.g. opaque handles use `UniformConstant`),
     /// provided via `#[spirv(...)]` attributes, or an `Input`/`Output` default.
     storage_class: StorageClass,
+
+    /// Whether this entry-point parameter doesn't allow writes to the underlying
+    /// shader interface variable (i.e. is by-value, or `&T` where `T: Freeze`).
+    ///
+    /// For some storage classes, this can be mapped to `NonWritable` decorations
+    /// (only `StorageBuffer` for now, with few others, if any, plausible at all).
+    read_only: bool,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -334,9 +341,10 @@ impl<'tcx> CodegenCx<'tcx> {
             });
 
         // Validate reference mutability against the *final* storage class.
+        let read_only = effective_mutbl == hir::Mutability::Not;
         if is_ref {
-            // FIXME(eddyb) booleans make the condition a bit more readable.
-            let ref_is_read_only = effective_mutbl == hir::Mutability::Not;
+            // FIXME(eddyb) named booleans make uses a bit more readable.
+            let ref_is_read_only = read_only;
             let storage_class_requires_read_only =
                 expected_mutbl_for(storage_class) == hir::Mutability::Not;
             if !ref_is_read_only && storage_class_requires_read_only {
@@ -378,6 +386,7 @@ impl<'tcx> CodegenCx<'tcx> {
         EntryParamDeducedFromRustRefOrValue {
             value_layout,
             storage_class,
+            read_only,
         }
     }
 
@@ -400,8 +409,20 @@ impl<'tcx> CodegenCx<'tcx> {
         let EntryParamDeducedFromRustRefOrValue {
             value_layout,
             storage_class,
+            read_only,
         } = self.entry_param_deduce_from_rust_ref_or_value(entry_arg_abi.layout, hir_param, &attrs);
         let value_spirv_type = value_layout.spirv_type(hir_param.ty_span, self);
+
+        // Emit decorations deduced from the reference/value Rust type.
+        if read_only {
+            // NOTE(eddyb) it appears only `StorageBuffer`s simultaneously:
+            // - allow `NonWritable` decorations on shader interface variables
+            // - default to writable (i.e. the decoration actually has an effect)
+            if storage_class == StorageClass::StorageBuffer {
+                self.emit_global()
+                    .decorate(var, Decoration::NonWritable, []);
+            }
+        }
 
         // Certain storage classes require an `OpTypeStruct` decorated with `Block`,
         // which we represent with `SpirvType::InterfaceBlock` (see its doc comment).
