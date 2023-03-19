@@ -10,6 +10,7 @@ use rspirv::spirv::{
 };
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 use rustc_data_structures::fx::FxHashMap;
+use rustc_errors::MultiSpan;
 use rustc_hir as hir;
 use rustc_middle::span_bug;
 use rustc_middle::ty::layout::{LayoutOf, TyAndLayout};
@@ -180,13 +181,37 @@ impl<'tcx> CodegenCx<'tcx> {
         attrs: &AggregatedSpirvAttributes,
     ) -> (Word, StorageClass) {
         // FIXME(eddyb) attribute validation should be done ahead of time.
-        // FIXME(eddyb) also take into account `&T` interior mutability,
-        // i.e. it's only immutable if `T: Freeze`, which we should check.
         // FIXME(eddyb) also check the type for compatibility with being
         // part of the interface, including potentially `Sync`ness etc.
-        let (value_ty, mutbl, is_ref) = match *layout.ty.kind() {
+        // FIXME(eddyb) really need to require `T: Sync` for references
+        // (especially relevant with interior mutability!).
+        let (value_ty, explicit_mutbl, is_ref) = match *layout.ty.kind() {
             ty::Ref(_, pointee_ty, mutbl) => (pointee_ty, mutbl, true),
             _ => (layout.ty, hir::Mutability::Not, false),
+        };
+        let effective_mutbl = match explicit_mutbl {
+            // NOTE(eddyb) `T: !Freeze` used to detect "`T` has interior mutability"
+            // (i.e. "`&T` is a shared+mutable reference"), more specifically `T`
+            // containing `UnsafeCell` (but not behind any indirection), which
+            // includes many safe abstractions (e.g. `Cell`, `RefCell`, `Atomic*`).
+            hir::Mutability::Not
+                if is_ref && !value_ty.is_freeze(self.tcx, ty::ParamEnv::reveal_all()) =>
+            {
+                hir::Mutability::Mut
+            }
+            _ => explicit_mutbl,
+        };
+        // FIXME(eddyb) this should maybe be an extension method on `StorageClass`?
+        let expected_mutbl_for = |storage_class| match storage_class {
+            StorageClass::UniformConstant
+            | StorageClass::Input
+            | StorageClass::Uniform
+            | StorageClass::PushConstant => hir::Mutability::Not,
+
+            // FIXME(eddyb) further categorize this by which want interior
+            // mutability (+`Sync`!), likely almost all of them, and which
+            // can be per-lane-owning `&mut T`.
+            _ => hir::Mutability::Mut,
         };
         let spirv_ty = self.layout_of(value_ty).spirv_type(hir_param.ty_span, self);
         // Some types automatically specify a storage class. Compute that here.
@@ -220,15 +245,6 @@ impl<'tcx> CodegenCx<'tcx> {
         let attr_storage_class = attrs.storage_class.map(|storage_class_attr| {
             let storage_class = storage_class_attr.value;
 
-            let expected_mutbl = match storage_class {
-                StorageClass::UniformConstant
-                | StorageClass::Input
-                | StorageClass::Uniform
-                | StorageClass::PushConstant => hir::Mutability::Not,
-
-                _ => hir::Mutability::Mut,
-            };
-
             if !is_ref {
                 self.tcx.sess.span_fatal(
                     hir_param.ty_span,
@@ -237,7 +253,7 @@ impl<'tcx> CodegenCx<'tcx> {
                          (expected `&{}T`)",
                         layout.ty,
                         storage_class,
-                        expected_mutbl.prefix_str()
+                        expected_mutbl_for(storage_class).prefix_str()
                     ),
                 )
             }
@@ -275,7 +291,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // If storage class was not inferred nor specified, compute the default (i.e. input/output)
         let storage_class = inferred_storage_class_from_ty
             .or(attr_storage_class)
-            .unwrap_or_else(|| match (is_ref, mutbl) {
+            .unwrap_or_else(|| match (is_ref, explicit_mutbl) {
                 (false, _) => StorageClass::Input,
                 (true, hir::Mutability::Mut) => StorageClass::Output,
                 (true, hir::Mutability::Not) => self.tcx.sess.span_fatal(
@@ -286,6 +302,48 @@ impl<'tcx> CodegenCx<'tcx> {
                     ),
                 ),
             });
+
+        // Validate reference mutability against the *final* storage class.
+        if is_ref {
+            // FIXME(eddyb) booleans make the condition a bit more readable.
+            let ref_is_read_only = effective_mutbl == hir::Mutability::Not;
+            let storage_class_requires_read_only =
+                expected_mutbl_for(storage_class) == hir::Mutability::Not;
+            if !ref_is_read_only && storage_class_requires_read_only {
+                let mut err = self.tcx.sess.struct_span_err(
+                    hir_param.ty_span,
+                    format!(
+                        "entry-point requires {}...",
+                        match explicit_mutbl {
+                            hir::Mutability::Not => "interior mutability",
+                            hir::Mutability::Mut => "a mutable reference",
+                        }
+                    ),
+                );
+                {
+                    let note_message =
+                        format!("...but storage class `{storage_class:?}` is read-only");
+                    let (note_label_span, note_label) =
+                        if let Some(storage_class_attr) = attrs.storage_class {
+                            (
+                                storage_class_attr.span,
+                                format!("`{storage_class:?}` specified in attribute"),
+                            )
+                        } else {
+                            (
+                                hir_param.ty_span,
+                                format!("`{storage_class:?}` implied by type"),
+                            )
+                        };
+                    // HACK(eddyb) have to use `MultiSpan` directly for labels,
+                    // as there's no `span_label` equivalent for `span_note`s.
+                    let mut note_multi_span: MultiSpan = vec![note_label_span].into();
+                    note_multi_span.push_span_label(note_label_span, note_label);
+                    err.span_note(note_multi_span, note_message);
+                }
+                err.emit();
+            }
+        }
 
         (spirv_ty, storage_class)
     }
