@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -->
 
-## [Unreleased]
+## [0.6.1]
 
 ### Fixed 🩹
 - [PR#1006](https://github.com/EmbarkStudios/rust-gpu/pull/1006) fixed [#1002](https://github.com/EmbarkStudios/rust-gpu/issues/1002) by rewriting away all `spirv-std` uses of `asm!("OpReturnValue %result")` and disallowing `OpReturn`/`OpReturnValue` from inline `asm!` (as it's always UB to leave `asm!` blocks in any way other than falling through their end)
