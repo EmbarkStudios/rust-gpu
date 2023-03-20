@@ -37,7 +37,7 @@ Toolchains for previous versions of `spirv-builder`:
 
 |Version|Toolchain|
 |-:|-|
-|`0.6.0`|`nightly-2023-01-21`|
+|`0.6.*`|`nightly-2023-01-21`|
 |`0.5.0`|`nightly-2022-12-18`|
 |`0.4.0`|`nightly-2022-10-29`|
 |`0.4.0-alpha.16` - `0.4.0-alpha.17`|`nightly-2022-10-01`|
