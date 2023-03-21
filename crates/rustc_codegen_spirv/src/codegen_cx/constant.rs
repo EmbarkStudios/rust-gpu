@@ -324,6 +324,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     self.tcx
                         .sess
                         .fatal("Non-pointer-typed scalar_to_backend Scalar::Ptr not supported");
+                    // unsafe { llvm::LLVMConstPtrToInt(llval, llty) }
                 }
             }
         }
