@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_derive-1.0.132/src/ser.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../serde_derive/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_derive-1.0.156/src/ser.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../serde_derive/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1336,6 +1336,8 @@
 <a href="#1336" id="1336">1336</a>
 <a href="#1337" id="1337">1337</a>
 <a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
 </pre><pre class="rust"><code><span class="kw">use </span>proc_macro2::{Span, TokenStream};
 <span class="kw">use </span>syn::spanned::Spanned;
 <span class="kw">use </span>syn::{<span class="self">self</span>, Ident, Index, Member};
@@ -1346,6 +1348,7 @@
 <span class="kw">use </span>internals::ast::{Container, Data, Field, Style, Variant};
 <span class="kw">use </span>internals::{attr, replace_receiver, Ctxt, Derive};
 <span class="kw">use </span>pretend;
+<span class="kw">use </span>this;
 
 <span class="kw">pub fn </span>expand_derive_serialize(
     input: <span class="kw-2">&amp;mut </span>syn::DeriveInput,
@@ -1420,9 +1423,13 @@
     </span>self_var: Ident,
 
     <span class="doccomment">/// Path to the type the impl is for. Either a single `Ident` for local
-    /// types or `some::remote::Ident` for remote types. Does not include
-    /// generic parameters.
-    </span>this: syn::Path,
+    /// types (does not include generic parameters) or `some::remote::Path` for
+    /// remote types.
+    </span>this_type: syn::Path,
+
+    <span class="doccomment">/// Same as `this_type` but using `::&lt;T&gt;` for generic parameters for use in
+    /// expression position.
+    </span>this_value: syn::Path,
 
     <span class="doccomment">/// Generics including any explicit and inferred bounds for the impl.
     </span>generics: syn::Generics,
@@ -1443,18 +1450,15 @@
             Ident::new(<span class="string">&quot;self&quot;</span>, Span::call_site())
         };
 
-        <span class="kw">let </span>this = <span class="kw">match </span>cont.attrs.remote() {
-            <span class="prelude-val">Some</span>(remote) =&gt; remote.clone(),
-            <span class="prelude-val">None </span>=&gt; cont.ident.clone().into(),
-        };
-
+        <span class="kw">let </span>this_type = this::this_type(cont);
+        <span class="kw">let </span>this_value = this::this_value(cont);
         <span class="kw">let </span>is_packed = cont.attrs.is_packed();
-
         <span class="kw">let </span>generics = build_generics(cont);
 
         Parameters {
             self_var,
-            this,
+            this_type,
+            this_value,
             generics,
             is_remote,
             is_packed,
@@ -1464,7 +1468,7 @@
     <span class="doccomment">/// Type name to use in error messages and `&amp;&#39;static str` arguments to
     /// various Serializer methods.
     </span><span class="kw">fn </span>type_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        <span class="self">self</span>.this.segments.last().unwrap().ident.to_string()
+        <span class="self">self</span>.this_type.segments.last().unwrap().ident.to_string()
     }
 }
 
@@ -1765,7 +1769,7 @@
     variant_index: u32,
     cattrs: <span class="kw-2">&amp;</span>attr::Container,
 ) -&gt; TokenStream {
-    <span class="kw">let </span>this = <span class="kw-2">&amp;</span>params.this;
+    <span class="kw">let </span>this_value = <span class="kw-2">&amp;</span>params.this_value;
     <span class="kw">let </span>variant_ident = <span class="kw-2">&amp;</span>variant.ident;
 
     <span class="kw">if </span>variant.attrs.skip_serializing() {
@@ -1783,32 +1787,32 @@
             Style::Struct =&gt; <span class="macro">quote!</span>({ .. }),
         };
         <span class="macro">quote! </span>{
-            #this::#variant_ident #fields_pat =&gt; #skipped_err,
+            #this_value::#variant_ident #fields_pat =&gt; #skipped_err,
         }
     } <span class="kw">else </span>{
         <span class="comment">// variant wasn&#39;t skipped
         </span><span class="kw">let </span>case = <span class="kw">match </span>variant.style {
             Style::Unit =&gt; {
                 <span class="macro">quote! </span>{
-                    #this::#variant_ident
+                    #this_value::#variant_ident
                 }
             }
             Style::Newtype =&gt; {
                 <span class="macro">quote! </span>{
-                    #this::#variant_ident(<span class="kw-2">ref </span>__field0)
+                    #this_value::#variant_ident(<span class="kw-2">ref </span>__field0)
                 }
             }
             Style::Tuple =&gt; {
                 <span class="kw">let </span>field_names = (<span class="number">0</span>..variant.fields.len())
                     .map(|i| Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;__field{}&quot;</span>, i), Span::call_site()));
                 <span class="macro">quote! </span>{
-                    #this::#variant_ident(#(<span class="kw-2">ref </span>#field_names),<span class="kw-2">*</span>)
+                    #this_value::#variant_ident(#(<span class="kw-2">ref </span>#field_names),<span class="kw-2">*</span>)
                 }
             }
             Style::Struct =&gt; {
                 <span class="kw">let </span>members = variant.fields.iter().map(|f| <span class="kw-2">&amp;</span>f.member);
                 <span class="macro">quote! </span>{
-                    #this::#variant_ident { #(<span class="kw-2">ref </span>#members),* }
+                    #this_value::#variant_ident { #(<span class="kw-2">ref </span>#members),* }
                 }
             }
         };
@@ -1978,7 +1982,7 @@
     tag: <span class="kw-2">&amp;</span>str,
     content: <span class="kw-2">&amp;</span>str,
 ) -&gt; Fragment {
-    <span class="kw">let </span>this = <span class="kw-2">&amp;</span>params.this;
+    <span class="kw">let </span>this_type = <span class="kw-2">&amp;</span>params.this_type;
     <span class="kw">let </span>type_name = cattrs.name().serialize_name();
     <span class="kw">let </span>variant_name = variant.attrs.name().serialize_name();
 
@@ -2057,7 +2061,7 @@
     <span class="macro">quote_block! </span>{
         <span class="kw">struct </span>__AdjacentlyTagged #wrapper_generics #where_clause {
             data: (#(<span class="kw-2">&amp;</span><span class="lifetime">&#39;__a </span>#fields_ty,)<span class="kw-2">*</span>),
-            phantom: _serde::__private::PhantomData&lt;#this #ty_generics&gt;,
+            phantom: _serde::__private::PhantomData&lt;#this_type #ty_generics&gt;,
         }
 
         <span class="kw">impl </span>#wrapper_impl_generics _serde::Serialize <span class="kw">for </span>__AdjacentlyTagged #wrapper_ty_generics #where_clause {
@@ -2079,7 +2083,7 @@
         <span class="macro">try!</span>(_serde::ser::SerializeStruct::serialize_field(
             <span class="kw-2">&amp;mut </span>__struct, #content, <span class="kw-2">&amp;</span>__AdjacentlyTagged {
                 data: (#(#fields_ident,)<span class="kw-2">*</span>),
-                phantom: _serde::__private::PhantomData::&lt;#this #ty_generics&gt;,
+                phantom: _serde::__private::PhantomData::&lt;#this_type #ty_generics&gt;,
             }));
         _serde::ser::SerializeStruct::end(__struct)
     }
@@ -2204,8 +2208,8 @@
     Untagged,
 }
 
-<span class="kw">fn </span>serialize_struct_variant&lt;<span class="lifetime">&#39;a</span>&gt;(
-    context: StructVariant&lt;<span class="lifetime">&#39;a</span>&gt;,
+<span class="kw">fn </span>serialize_struct_variant(
+    context: StructVariant,
     params: <span class="kw-2">&amp;</span>Parameters,
     fields: <span class="kw-2">&amp;</span>[Field],
     name: <span class="kw-2">&amp;</span>str,
@@ -2288,8 +2292,8 @@
     }
 }
 
-<span class="kw">fn </span>serialize_struct_variant_with_flatten&lt;<span class="lifetime">&#39;a</span>&gt;(
-    context: StructVariant&lt;<span class="lifetime">&#39;a</span>&gt;,
+<span class="kw">fn </span>serialize_struct_variant_with_flatten(
+    context: StructVariant,
     params: <span class="kw-2">&amp;</span>Parameters,
     fields: <span class="kw-2">&amp;</span>[Field],
     name: <span class="kw-2">&amp;</span>str,
@@ -2309,7 +2313,7 @@
             variant_index,
             variant_name,
         } =&gt; {
-            <span class="kw">let </span>this = <span class="kw-2">&amp;</span>params.this;
+            <span class="kw">let </span>this_type = <span class="kw-2">&amp;</span>params.this_type;
             <span class="kw">let </span>fields_ty = fields.iter().map(|f| <span class="kw-2">&amp;</span>f.ty);
             <span class="kw">let </span>members = <span class="kw-2">&amp;</span>fields.iter().map(|f| <span class="kw-2">&amp;</span>f.member).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
@@ -2320,7 +2324,7 @@
             <span class="macro">quote_block! </span>{
                 <span class="kw">struct </span>__EnumFlatten #wrapper_generics #where_clause {
                     data: (#(<span class="kw-2">&amp;</span><span class="lifetime">&#39;__a </span>#fields_ty,)<span class="kw-2">*</span>),
-                    phantom: _serde::__private::PhantomData&lt;#this #ty_generics&gt;,
+                    phantom: _serde::__private::PhantomData&lt;#this_type #ty_generics&gt;,
                 }
 
                 <span class="kw">impl </span>#wrapper_impl_generics _serde::Serialize <span class="kw">for </span>__EnumFlatten #wrapper_ty_generics #where_clause {
@@ -2344,7 +2348,7 @@
                     #variant_name,
                     <span class="kw-2">&amp;</span>__EnumFlatten {
                         data: (#(#members,)<span class="kw-2">*</span>),
-                        phantom: _serde::__private::PhantomData::&lt;#this #ty_generics&gt;,
+                        phantom: _serde::__private::PhantomData::&lt;#this_type #ty_generics&gt;,
                     })
             }
         }
@@ -2530,7 +2534,7 @@
     field_tys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>syn::Type],
     field_exprs: <span class="kw-2">&amp;</span>[TokenStream],
 ) -&gt; TokenStream {
-    <span class="kw">let </span>this = <span class="kw-2">&amp;</span>params.this;
+    <span class="kw">let </span>this_type = <span class="kw-2">&amp;</span>params.this_type;
     <span class="kw">let </span>(<span class="kw">_</span>, ty_generics, where_clause) = params.generics.split_for_impl();
 
     <span class="kw">let </span>wrapper_generics = <span class="kw">if </span>field_exprs.is_empty() {
@@ -2550,7 +2554,7 @@
     <span class="macro">quote!</span>({
         <span class="kw">struct </span>__SerializeWith #wrapper_impl_generics #where_clause {
             values: (#(<span class="kw-2">&amp;</span><span class="lifetime">&#39;__a </span>#field_tys, )<span class="kw-2">*</span>),
-            phantom: _serde::__private::PhantomData&lt;#this #ty_generics&gt;,
+            phantom: _serde::__private::PhantomData&lt;#this_type #ty_generics&gt;,
         }
 
         <span class="kw">impl </span>#wrapper_impl_generics _serde::Serialize <span class="kw">for </span>__SerializeWith #wrapper_ty_generics #where_clause {
@@ -2564,7 +2568,7 @@
 
         <span class="kw-2">&amp;</span>__SerializeWith {
             values: (#(#field_exprs, )<span class="kw-2">*</span>),
-            phantom: _serde::__private::PhantomData::&lt;#this #ty_generics&gt;,
+            phantom: _serde::__private::PhantomData::&lt;#this_type #ty_generics&gt;,
         }
     })
 }

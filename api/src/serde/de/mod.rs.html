@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.132/src/de/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.156/src/de/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2273,6 +2273,30 @@
 <a href="#2273" id="2273">2273</a>
 <a href="#2274" id="2274">2274</a>
 <a href="#2275" id="2275">2275</a>
+<a href="#2276" id="2276">2276</a>
+<a href="#2277" id="2277">2277</a>
+<a href="#2278" id="2278">2278</a>
+<a href="#2279" id="2279">2279</a>
+<a href="#2280" id="2280">2280</a>
+<a href="#2281" id="2281">2281</a>
+<a href="#2282" id="2282">2282</a>
+<a href="#2283" id="2283">2283</a>
+<a href="#2284" id="2284">2284</a>
+<a href="#2285" id="2285">2285</a>
+<a href="#2286" id="2286">2286</a>
+<a href="#2287" id="2287">2287</a>
+<a href="#2288" id="2288">2288</a>
+<a href="#2289" id="2289">2289</a>
+<a href="#2290" id="2290">2290</a>
+<a href="#2291" id="2291">2291</a>
+<a href="#2292" id="2292">2292</a>
+<a href="#2293" id="2293">2293</a>
+<a href="#2294" id="2294">2294</a>
+<a href="#2295" id="2295">2295</a>
+<a href="#2296" id="2296">2296</a>
+<a href="#2297" id="2297">2297</a>
+<a href="#2298" id="2298">2298</a>
+<a href="#2299" id="2299">2299</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Generic data structure deserialization framework.
 //!
 //! The two most important traits in this module are [`Deserialize`] and
@@ -2305,7 +2329,7 @@
 //! # The Deserializer trait
 //!
 //! [`Deserializer`] implementations are provided by third-party crates, for
-//! example [`serde_json`], [`serde_yaml`] and [`bincode`].
+//! example [`serde_json`], [`serde_yaml`] and [`postcard`].
 //!
 //! A partial list of well-maintained formats is given on the [Serde
 //! website][data formats].
@@ -2379,7 +2403,7 @@
 //! [`Deserialize`]: ../trait.Deserialize.html
 //! [`Deserializer`]: ../trait.Deserializer.html
 //! [`LinkedHashMap&lt;K, V&gt;`]: https://docs.rs/linked-hash-map/*/linked_hash_map/struct.LinkedHashMap.html
-//! [`bincode`]: https://github.com/servo/bincode
+//! [`postcard`]: https://github.com/jamesmunns/postcard
 //! [`linked-hash-map`]: https://crates.io/crates/linked-hash-map
 //! [`serde_derive`]: https://crates.io/crates/serde_derive
 //! [`serde_json`]: https://github.com/serde-rs/json
@@ -2393,6 +2417,8 @@
 
 </span><span class="kw">pub mod </span>value;
 
+<span class="attr">#[cfg(not(no_integer128))]
+</span><span class="kw">mod </span>format;
 <span class="kw">mod </span>ignored_any;
 <span class="kw">mod </span>impls;
 <span class="kw">mod </span>utf8;
@@ -2774,8 +2800,8 @@
 /// by Serde.
 ///
 /// Serde provides `Deserialize` implementations for many Rust primitive and
-/// standard library types. The complete list is [here][de]. All of these can
-/// be deserialized using Serde out of the box.
+/// standard library types. The complete list is [here][crate::de]. All of these
+/// can be deserialized using Serde out of the box.
 ///
 /// Additionally, Serde provides a procedural macro called `serde_derive` to
 /// automatically generate `Deserialize` implementations for structs and enums
@@ -2791,7 +2817,6 @@
 /// `LinkedHashMap&lt;K, V&gt;` type that is deserializable by Serde because the crate
 /// provides an implementation of `Deserialize` for it.
 ///
-/// [de]: https://docs.serde.rs/serde/de/index.html
 /// [derive]: https://serde.rs/derive.html
 /// [impl-deserialize]: https://serde.rs/impl-deserialize.html
 ///
@@ -2838,7 +2863,7 @@
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
         <span class="comment">// Default implementation just delegates to `deserialize` impl.
-        </span><span class="kw-2">*</span>place = Deserialize::deserialize(deserializer)<span class="question-mark">?</span>;
+        </span><span class="kw-2">*</span>place = <span class="macro">try!</span>(Deserialize::deserialize(deserializer));
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -2981,6 +3006,11 @@
 ///             where
 ///                 A: SeqAccess&lt;&#39;de&gt;,
 ///             {
+///                 // Decrease the number of reallocations if there are many elements
+///                 if let Some(size_hint) = seq.size_hint() {
+///                    self.0.reserve(size_hint);
+///                 }
+///
 ///                 // Visit each element in the inner array and push it onto
 ///                 // the existing vector.
 ///                 while let Some(elem) = seq.next_element()? {
@@ -3130,10 +3160,10 @@
 /// The `Deserializer` trait supports two entry point styles which enables
 /// different kinds of deserialization.
 ///
-/// 1. The `deserialize` method. Self-describing data formats like JSON are able
-///    to look at the serialized data and tell what it represents. For example
-///    the JSON deserializer may see an opening curly brace (`{`) and know that
-///    it is seeing a map. If the data format supports
+/// 1. The `deserialize_any` method. Self-describing data formats like JSON are
+///    able to look at the serialized data and tell what it represents. For
+///    example the JSON deserializer may see an opening curly brace (`{`) and
+///    know that it is seeing a map. If the data format supports
 ///    `Deserializer::deserialize_any`, it will drive the Visitor using whatever
 ///    type it sees in the input. JSON uses this approach when deserializing
 ///    `serde_json::Value` which is an enum that can represent any JSON
@@ -3142,7 +3172,7 @@
 ///    `Deserializer::deserialize_any`.
 ///
 /// 2. The various `deserialize_*` methods. Non-self-describing formats like
-///    Bincode need to be told what is in the input in order to deserialize it.
+///    Postcard need to be told what is in the input in order to deserialize it.
 ///    The `deserialize_*` methods are hints to the deserializer for how to
 ///    interpret the next piece of input. Non-self-describing formats are not
 ///    able to deserialize something like `serde_json::Value` which relies on
@@ -3152,7 +3182,7 @@
 /// `Deserializer::deserialize_any` unless you need to be told by the
 /// Deserializer what type is in the input. Know that relying on
 /// `Deserializer::deserialize_any` means your data type will be able to
-/// deserialize from self-describing formats only, ruling out Bincode and many
+/// deserialize from self-describing formats only, ruling out Postcard and many
 /// others.
 ///
 /// [Serde data model]: https://serde.rs/data-model.html
@@ -3183,7 +3213,7 @@
     /// `Deserializer::deserialize_any` unless you need to be told by the
     /// Deserializer what type is in the input. Know that relying on
     /// `Deserializer::deserialize_any` means your data type will be able to
-    /// deserialize from self-describing formats only, ruling out Bincode and
+    /// deserialize from self-describing formats only, ruling out Postcard and
     /// many others.
     </span><span class="kw">fn </span>deserialize_any&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
@@ -3424,7 +3454,7 @@
     /// Some types have a human-readable form that may be somewhat expensive to
     /// construct, as well as a binary form that is compact and efficient.
     /// Generally text-based formats like JSON and YAML will prefer to use the
-    /// human-readable one and binary formats like Bincode will prefer the
+    /// human-readable one and binary formats like Postcard will prefer the
     /// compact one.
     ///
     /// ```edition2018
@@ -3488,6 +3518,20 @@
     </span><span class="kw">fn </span>is_human_readable(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">true
     </span>}
+
+    <span class="comment">// Not public API.
+    </span><span class="attr">#[cfg(all(not(no_serde_derive), any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+    #[doc(hidden)]
+    </span><span class="kw">fn </span>__deserialize_content&lt;V&gt;(
+        <span class="self">self</span>,
+        <span class="kw">_</span>: ::actually_private::T,
+        visitor: V,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;::private::de::Content&lt;<span class="lifetime">&#39;de</span>&gt;, <span class="self">Self</span>::Error&gt;
+    <span class="kw">where
+        </span>V: Visitor&lt;<span class="lifetime">&#39;de</span>, Value = ::private::de::Content&lt;<span class="lifetime">&#39;de</span>&gt;&gt;,
+    {
+        <span class="self">self</span>.deserialize_any(visitor)
+    }
 }
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
@@ -3627,8 +3671,10 @@
         <span class="kw">where
             </span>E: Error,
         {
-            <span class="kw">let _ </span>= v;
-            <span class="prelude-val">Err</span>(Error::invalid_type(Unexpected::Other(<span class="string">&quot;i128&quot;</span>), <span class="kw-2">&amp;</span><span class="self">self</span>))
+            <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">58</span>];
+            <span class="kw">let </span><span class="kw-2">mut </span>writer = format::Buf::new(<span class="kw-2">&amp;mut </span>buf);
+            fmt::Write::write_fmt(<span class="kw-2">&amp;mut </span>writer, <span class="macro">format_args!</span>(<span class="string">&quot;integer `{}` as i128&quot;</span>, v)).unwrap();
+            <span class="prelude-val">Err</span>(Error::invalid_type(Unexpected::Other(writer.as_str()), <span class="kw-2">&amp;</span><span class="self">self</span>))
         }
     }
 
@@ -3687,8 +3733,10 @@
         <span class="kw">where
             </span>E: Error,
         {
-            <span class="kw">let _ </span>= v;
-            <span class="prelude-val">Err</span>(Error::invalid_type(Unexpected::Other(<span class="string">&quot;u128&quot;</span>), <span class="kw-2">&amp;</span><span class="self">self</span>))
+            <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">57</span>];
+            <span class="kw">let </span><span class="kw-2">mut </span>writer = format::Buf::new(<span class="kw-2">&amp;mut </span>buf);
+            fmt::Write::write_fmt(<span class="kw-2">&amp;mut </span>writer, <span class="macro">format_args!</span>(<span class="string">&quot;integer `{}` as u128&quot;</span>, v)).unwrap();
+            <span class="prelude-val">Err</span>(Error::invalid_type(Unexpected::Other(writer.as_str()), <span class="kw-2">&amp;</span><span class="self">self</span>))
         }
     }
 
@@ -3810,7 +3858,7 @@
     /// `Deserializer`.
     ///
     /// This enables zero-copy deserialization of bytes in some formats. For
-    /// example Bincode data containing bytes can be deserialized with zero
+    /// example Postcard data containing bytes can be deserialized with zero
     /// copying into a `&amp;&#39;a [u8]` as long as the input data outlives `&#39;a`.
     ///
     /// The default implementation forwards to `visit_bytes`.

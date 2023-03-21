@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.132/src/de/impls.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>impls.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.156/src/de/impls.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>impls.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2662,13 +2662,85 @@
 <a href="#2662" id="2662">2662</a>
 <a href="#2663" id="2663">2663</a>
 <a href="#2664" id="2664">2664</a>
+<a href="#2665" id="2665">2665</a>
+<a href="#2666" id="2666">2666</a>
+<a href="#2667" id="2667">2667</a>
+<a href="#2668" id="2668">2668</a>
+<a href="#2669" id="2669">2669</a>
+<a href="#2670" id="2670">2670</a>
+<a href="#2671" id="2671">2671</a>
+<a href="#2672" id="2672">2672</a>
+<a href="#2673" id="2673">2673</a>
+<a href="#2674" id="2674">2674</a>
+<a href="#2675" id="2675">2675</a>
+<a href="#2676" id="2676">2676</a>
+<a href="#2677" id="2677">2677</a>
+<a href="#2678" id="2678">2678</a>
+<a href="#2679" id="2679">2679</a>
+<a href="#2680" id="2680">2680</a>
+<a href="#2681" id="2681">2681</a>
+<a href="#2682" id="2682">2682</a>
+<a href="#2683" id="2683">2683</a>
+<a href="#2684" id="2684">2684</a>
+<a href="#2685" id="2685">2685</a>
+<a href="#2686" id="2686">2686</a>
+<a href="#2687" id="2687">2687</a>
+<a href="#2688" id="2688">2688</a>
+<a href="#2689" id="2689">2689</a>
+<a href="#2690" id="2690">2690</a>
+<a href="#2691" id="2691">2691</a>
+<a href="#2692" id="2692">2692</a>
+<a href="#2693" id="2693">2693</a>
+<a href="#2694" id="2694">2694</a>
+<a href="#2695" id="2695">2695</a>
+<a href="#2696" id="2696">2696</a>
+<a href="#2697" id="2697">2697</a>
+<a href="#2698" id="2698">2698</a>
+<a href="#2699" id="2699">2699</a>
+<a href="#2700" id="2700">2700</a>
+<a href="#2701" id="2701">2701</a>
+<a href="#2702" id="2702">2702</a>
+<a href="#2703" id="2703">2703</a>
+<a href="#2704" id="2704">2704</a>
+<a href="#2705" id="2705">2705</a>
+<a href="#2706" id="2706">2706</a>
+<a href="#2707" id="2707">2707</a>
+<a href="#2708" id="2708">2708</a>
+<a href="#2709" id="2709">2709</a>
+<a href="#2710" id="2710">2710</a>
+<a href="#2711" id="2711">2711</a>
+<a href="#2712" id="2712">2712</a>
+<a href="#2713" id="2713">2713</a>
+<a href="#2714" id="2714">2714</a>
+<a href="#2715" id="2715">2715</a>
+<a href="#2716" id="2716">2716</a>
+<a href="#2717" id="2717">2717</a>
+<a href="#2718" id="2718">2718</a>
+<a href="#2719" id="2719">2719</a>
+<a href="#2720" id="2720">2720</a>
+<a href="#2721" id="2721">2721</a>
+<a href="#2722" id="2722">2722</a>
+<a href="#2723" id="2723">2723</a>
+<a href="#2724" id="2724">2724</a>
+<a href="#2725" id="2725">2725</a>
+<a href="#2726" id="2726">2726</a>
+<a href="#2727" id="2727">2727</a>
+<a href="#2728" id="2728">2728</a>
+<a href="#2729" id="2729">2729</a>
+<a href="#2730" id="2730">2730</a>
+<a href="#2731" id="2731">2731</a>
+<a href="#2732" id="2732">2732</a>
+<a href="#2733" id="2733">2733</a>
+<a href="#2734" id="2734">2734</a>
+<a href="#2735" id="2735">2735</a>
+<a href="#2736" id="2736">2736</a>
 </pre><pre class="rust"><code><span class="kw">use </span>lib::<span class="kw-2">*</span>;
 
 <span class="kw">use </span>de::{
     Deserialize, Deserializer, EnumAccess, Error, SeqAccess, Unexpected, VariantAccess, Visitor,
 };
 
-<span class="attr">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>, not(no_core_duration)))]
 </span><span class="kw">use </span>de::MapAccess;
 
 <span class="kw">use </span>seed::InPlaceSeed;
@@ -2745,8 +2817,34 @@
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
 </span><span class="macro">macro_rules! </span>impl_deserialize_num {
-    (<span class="macro-nonterminal">$ty</span>:ident, <span class="macro-nonterminal">$deserialize</span>:ident $(<span class="macro-nonterminal">$methods</span>:tt)<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
+    (<span class="macro-nonterminal">$primitive</span>:ident, <span class="macro-nonterminal">$nonzero</span>:ident $(cfg($(<span class="macro-nonterminal">$cfg</span>:tt)<span class="kw-2">*</span>))<span class="kw-2">*</span>, <span class="macro-nonterminal">$deserialize</span>:ident $(<span class="macro-nonterminal">$method</span>:<span class="macro">ident!</span>($(<span class="macro-nonterminal">$val</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>);)<span class="kw-2">*</span>) =&gt; {
+        <span class="macro">impl_deserialize_num!</span>(<span class="macro-nonterminal">$primitive</span>, <span class="macro-nonterminal">$deserialize </span>$(<span class="macro-nonterminal">$</span><span class="macro">method!</span>($(<span class="macro-nonterminal">$val </span>: <span class="macro-nonterminal">$visit</span>)<span class="kw-2">*</span>);)<span class="kw-2">*</span>);
+
+        <span class="attr">#[cfg(all(not(no_num_nonzero), $($(<span class="macro-nonterminal">$cfg</span>)<span class="kw-2">*</span>)<span class="kw-2">*</span>))]
+        </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>num::<span class="macro-nonterminal">$nonzero </span>{
+            <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+            <span class="kw">where
+                </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+            {
+                <span class="kw">struct </span>NonZeroVisitor;
+
+                <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>NonZeroVisitor {
+                    <span class="kw">type </span>Value = num::<span class="macro-nonterminal">$nonzero</span>;
+
+                    <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+                        formatter.write_str(<span class="macro">concat!</span>(<span class="string">&quot;a nonzero &quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$primitive</span>)))
+                    }
+
+                    $($(<span class="macro-nonterminal">$</span><span class="macro">method!</span>(<span class="macro-nonterminal">nonzero $primitive $val </span>: <span class="macro-nonterminal">$visit</span>);)<span class="kw-2">*</span>)*
+                }
+
+                deserializer.<span class="macro-nonterminal">$deserialize</span>(NonZeroVisitor)
+            }
+        }
+    };
+
+    (<span class="macro-nonterminal">$primitive</span>:ident, <span class="macro-nonterminal">$deserialize</span>:ident $(<span class="macro-nonterminal">$method</span>:<span class="macro">ident!</span>($(<span class="macro-nonterminal">$val</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>);)<span class="kw-2">*</span>) =&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$primitive </span>{
             <span class="attr">#[inline]
             </span><span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
             <span class="kw">where
@@ -2755,13 +2853,13 @@
                 <span class="kw">struct </span>PrimitiveVisitor;
 
                 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>PrimitiveVisitor {
-                    <span class="kw">type </span>Value = <span class="macro-nonterminal">$ty</span>;
+                    <span class="kw">type </span>Value = <span class="macro-nonterminal">$primitive</span>;
 
                     <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
-                        formatter.write_str(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$ty</span>))
+                        formatter.write_str(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$primitive</span>))
                     }
 
-                    $(<span class="macro-nonterminal">$methods</span>)*
+                    $($(<span class="macro-nonterminal">$</span><span class="macro">method!</span>(<span class="macro-nonterminal">$val </span>: <span class="macro-nonterminal">$visit</span>);)<span class="kw-2">*</span>)*
                 }
 
                 deserializer.<span class="macro-nonterminal">$deserialize</span>(PrimitiveVisitor)
@@ -2780,85 +2878,149 @@
             <span class="prelude-val">Ok</span>(v)
         }
     };
+
+    (nonzero <span class="macro-nonterminal">$primitive</span>:ident <span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+        <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="kw">where
+            </span>E: Error,
+        {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(nonzero) = <span class="self">Self</span>::Value::new(v) {
+                <span class="prelude-val">Ok</span>(nonzero)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Unsigned(<span class="number">0</span>), <span class="kw-2">&amp;</span><span class="self">self</span>))
+            }
+        }
+    };
 }
 
 <span class="macro">macro_rules! </span>num_as_self {
-    ($(<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>) =&gt; {
-        $(
-            <span class="attr">#[inline]
-            </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
-            <span class="kw">where
-                </span>E: Error,
-            {
-                <span class="prelude-val">Ok</span>(v <span class="kw">as </span><span class="self">Self</span>::Value)
+    (<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="kw">where
+            </span>E: Error,
+        {
+            <span class="prelude-val">Ok</span>(v <span class="kw">as </span><span class="self">Self</span>::Value)
+        }
+    };
+
+    (nonzero <span class="macro-nonterminal">$primitive</span>:ident <span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+        <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="kw">where
+            </span>E: Error,
+        {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(nonzero) = <span class="self">Self</span>::Value::new(v <span class="kw">as </span><span class="macro-nonterminal">$primitive</span>) {
+                <span class="prelude-val">Ok</span>(nonzero)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Unsigned(<span class="number">0</span>), <span class="kw-2">&amp;</span><span class="self">self</span>))
             }
-        )*
+        }
     };
 }
 
 <span class="macro">macro_rules! </span>int_to_int {
-    ($(<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>) =&gt; {
-        $(
-            <span class="attr">#[inline]
-            </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
-            <span class="kw">where
-                </span>E: Error,
+    (<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="kw">where
+            </span>E: Error,
+        {
+            <span class="kw">if </span><span class="self">Self</span>::Value::min_value() <span class="kw">as </span>i64 &lt;= v <span class="kw">as </span>i64
+                &amp;&amp; v <span class="kw">as </span>i64 &lt;= <span class="self">Self</span>::Value::max_value() <span class="kw">as </span>i64
             {
-                <span class="kw">if </span><span class="self">Self</span>::Value::min_value() <span class="kw">as </span>i64 &lt;= v <span class="kw">as </span>i64 &amp;&amp; v <span class="kw">as </span>i64 &lt;= <span class="self">Self</span>::Value::max_value() <span class="kw">as </span>i64 {
-                    <span class="prelude-val">Ok</span>(v <span class="kw">as </span><span class="self">Self</span>::Value)
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Signed(v <span class="kw">as </span>i64), <span class="kw-2">&amp;</span><span class="self">self</span>))
+                <span class="prelude-val">Ok</span>(v <span class="kw">as </span><span class="self">Self</span>::Value)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Signed(v <span class="kw">as </span>i64), <span class="kw-2">&amp;</span><span class="self">self</span>))
+            }
+        }
+    };
+
+    (nonzero <span class="macro-nonterminal">$primitive</span>:ident <span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+        <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="kw">where
+            </span>E: Error,
+        {
+            <span class="kw">if </span><span class="macro-nonterminal">$primitive::min_value</span>() <span class="kw">as </span>i64 &lt;= v <span class="kw">as </span>i64
+                &amp;&amp; v <span class="kw">as </span>i64 &lt;= <span class="macro-nonterminal">$primitive::max_value</span>() <span class="kw">as </span>i64
+            {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(nonzero) = <span class="self">Self</span>::Value::new(v <span class="kw">as </span><span class="macro-nonterminal">$primitive</span>) {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(nonzero);
                 }
             }
-        )*
+            <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Signed(v <span class="kw">as </span>i64), <span class="kw-2">&amp;</span><span class="self">self</span>))
+        }
     };
 }
 
 <span class="macro">macro_rules! </span>int_to_uint {
-    ($(<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>) =&gt; {
-        $(
-            <span class="attr">#[inline]
-            </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
-            <span class="kw">where
-                </span>E: Error,
-            {
-                <span class="kw">if </span><span class="number">0 </span>&lt;= v &amp;&amp; v <span class="kw">as </span>u64 &lt;= <span class="self">Self</span>::Value::max_value() <span class="kw">as </span>u64 {
-                    <span class="prelude-val">Ok</span>(v <span class="kw">as </span><span class="self">Self</span>::Value)
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Signed(v <span class="kw">as </span>i64), <span class="kw-2">&amp;</span><span class="self">self</span>))
+    (<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="kw">where
+            </span>E: Error,
+        {
+            <span class="kw">if </span><span class="number">0 </span>&lt;= v &amp;&amp; v <span class="kw">as </span>u64 &lt;= <span class="self">Self</span>::Value::max_value() <span class="kw">as </span>u64 {
+                <span class="prelude-val">Ok</span>(v <span class="kw">as </span><span class="self">Self</span>::Value)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Signed(v <span class="kw">as </span>i64), <span class="kw-2">&amp;</span><span class="self">self</span>))
+            }
+        }
+    };
+
+    (nonzero <span class="macro-nonterminal">$primitive</span>:ident <span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+        <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="kw">where
+            </span>E: Error,
+        {
+            <span class="kw">if </span><span class="number">0 </span>&lt; v &amp;&amp; v <span class="kw">as </span>u64 &lt;= <span class="macro-nonterminal">$primitive::max_value</span>() <span class="kw">as </span>u64 {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(nonzero) = <span class="self">Self</span>::Value::new(v <span class="kw">as </span><span class="macro-nonterminal">$primitive</span>) {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(nonzero);
                 }
             }
-        )*
+            <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Signed(v <span class="kw">as </span>i64), <span class="kw-2">&amp;</span><span class="self">self</span>))
+        }
     };
 }
 
 <span class="macro">macro_rules! </span>uint_to_self {
-    ($(<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>) =&gt; {
-        $(
-            <span class="attr">#[inline]
-            </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
-            <span class="kw">where
-                </span>E: Error,
-            {
-                <span class="kw">if </span>v <span class="kw">as </span>u64 &lt;= <span class="self">Self</span>::Value::max_value() <span class="kw">as </span>u64 {
-                    <span class="prelude-val">Ok</span>(v <span class="kw">as </span><span class="self">Self</span>::Value)
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Unsigned(v <span class="kw">as </span>u64), <span class="kw-2">&amp;</span><span class="self">self</span>))
+    (<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+        <span class="attr">#[inline]
+        </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="kw">where
+            </span>E: Error,
+        {
+            <span class="kw">if </span>v <span class="kw">as </span>u64 &lt;= <span class="self">Self</span>::Value::max_value() <span class="kw">as </span>u64 {
+                <span class="prelude-val">Ok</span>(v <span class="kw">as </span><span class="self">Self</span>::Value)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Unsigned(v <span class="kw">as </span>u64), <span class="kw-2">&amp;</span><span class="self">self</span>))
+            }
+        }
+    };
+
+    (nonzero <span class="macro-nonterminal">$primitive</span>:ident <span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+        <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="kw">where
+            </span>E: Error,
+        {
+            <span class="kw">if </span>v <span class="kw">as </span>u64 &lt;= <span class="macro-nonterminal">$primitive::max_value</span>() <span class="kw">as </span>u64 {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(nonzero) = <span class="self">Self</span>::Value::new(v <span class="kw">as </span><span class="macro-nonterminal">$primitive</span>) {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(nonzero);
                 }
             }
-        )*
+            <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Unsigned(v <span class="kw">as </span>u64), <span class="kw-2">&amp;</span><span class="self">self</span>))
+        }
     };
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    i8, deserialize_i8
+    i8, NonZeroI8 cfg(not(no_num_nonzero_signed)), deserialize_i8
     <span class="macro">num_self!</span>(i8:visit_i8);
     <span class="macro">int_to_int!</span>(i16:visit_i16 i32:visit_i32 i64:visit_i64);
     <span class="macro">uint_to_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    i16, deserialize_i16
+    i16, NonZeroI16 cfg(not(no_num_nonzero_signed)), deserialize_i16
     <span class="macro">num_self!</span>(i16:visit_i16);
     <span class="macro">num_as_self!</span>(i8:visit_i8);
     <span class="macro">int_to_int!</span>(i32:visit_i32 i64:visit_i64);
@@ -2866,7 +3028,7 @@
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    i32, deserialize_i32
+    i32, NonZeroI32 cfg(not(no_num_nonzero_signed)), deserialize_i32
     <span class="macro">num_self!</span>(i32:visit_i32);
     <span class="macro">num_as_self!</span>(i8:visit_i8 i16:visit_i16);
     <span class="macro">int_to_int!</span>(i64:visit_i64);
@@ -2874,28 +3036,28 @@
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    i64, deserialize_i64
+    i64, NonZeroI64 cfg(not(no_num_nonzero_signed)), deserialize_i64
     <span class="macro">num_self!</span>(i64:visit_i64);
     <span class="macro">num_as_self!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32);
     <span class="macro">uint_to_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    isize, deserialize_i64
+    isize, NonZeroIsize cfg(not(no_num_nonzero_signed)), deserialize_i64
     <span class="macro">num_as_self!</span>(i8:visit_i8 i16:visit_i16);
     <span class="macro">int_to_int!</span>(i32:visit_i32 i64:visit_i64);
     <span class="macro">uint_to_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    u8, deserialize_u8
+    u8, NonZeroU8, deserialize_u8
     <span class="macro">num_self!</span>(u8:visit_u8);
     <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
     <span class="macro">uint_to_self!</span>(u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    u16, deserialize_u16
+    u16, NonZeroU16, deserialize_u16
     <span class="macro">num_self!</span>(u16:visit_u16);
     <span class="macro">num_as_self!</span>(u8:visit_u8);
     <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
@@ -2903,7 +3065,7 @@
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    u32, deserialize_u32
+    u32, NonZeroU32, deserialize_u32
     <span class="macro">num_self!</span>(u32:visit_u32);
     <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16);
     <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
@@ -2911,14 +3073,14 @@
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    u64, deserialize_u64
+    u64, NonZeroU64, deserialize_u64
     <span class="macro">num_self!</span>(u64:visit_u64);
     <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32);
     <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
 }
 
 <span class="macro">impl_deserialize_num! </span>{
-    usize, deserialize_u64
+    usize, NonZeroUsize, deserialize_u64
     <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16);
     <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
     <span class="macro">uint_to_self!</span>(u32:visit_u32 u64:visit_u64);
@@ -2941,42 +3103,62 @@
 }
 
 <span class="macro">serde_if_integer128! </span>{
-    <span class="macro">impl_deserialize_num! </span>{
-        i128, deserialize_i128
-        <span class="macro">num_self!</span>(i128:visit_i128);
-        <span class="macro">num_as_self!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
-        <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
-
-        <span class="attr">#[inline]
-        </span><span class="kw">fn </span>visit_u128&lt;E&gt;(<span class="self">self</span>, v: u128) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
-        <span class="kw">where
-            </span>E: Error,
-        {
-            <span class="kw">if </span>v &lt;= i128::max_value() <span class="kw">as </span>u128 {
-                <span class="prelude-val">Ok</span>(v <span class="kw">as </span>i128)
-            } <span class="kw">else </span>{
-                <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Other(<span class="string">&quot;u128&quot;</span>), <span class="kw-2">&amp;</span><span class="self">self</span>))
+    <span class="macro">macro_rules! </span>num_128 {
+        (<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+            <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+            <span class="kw">where
+                </span>E: Error,
+            {
+                <span class="kw">if </span>v <span class="kw">as </span>i128 &gt;= <span class="self">Self</span>::Value::min_value() <span class="kw">as </span>i128
+                    &amp;&amp; v <span class="kw">as </span>u128 &lt;= <span class="self">Self</span>::Value::max_value() <span class="kw">as </span>u128
+                {
+                    <span class="prelude-val">Ok</span>(v <span class="kw">as </span><span class="self">Self</span>::Value)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Err</span>(Error::invalid_value(
+                        Unexpected::Other(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$ty</span>)),
+                        <span class="kw-2">&amp;</span><span class="self">self</span>,
+                    ))
+                }
             }
-        }
+        };
+
+        (nonzero <span class="macro-nonterminal">$primitive</span>:ident <span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
+            <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+            <span class="kw">where
+                </span>E: Error,
+            {
+                <span class="kw">if </span>v <span class="kw">as </span>i128 &gt;= <span class="macro-nonterminal">$primitive::min_value</span>() <span class="kw">as </span>i128
+                    &amp;&amp; v <span class="kw">as </span>u128 &lt;= <span class="macro-nonterminal">$primitive::max_value</span>() <span class="kw">as </span>u128
+                {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(nonzero) = <span class="self">Self</span>::Value::new(v <span class="kw">as </span><span class="macro-nonterminal">$primitive</span>) {
+                        <span class="prelude-val">Ok</span>(nonzero)
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Unsigned(<span class="number">0</span>), <span class="kw-2">&amp;</span><span class="self">self</span>))
+                    }
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Err</span>(Error::invalid_value(
+                        Unexpected::Other(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$ty</span>)),
+                        <span class="kw-2">&amp;</span><span class="self">self</span>,
+                    ))
+                }
+            }
+        };
     }
 
     <span class="macro">impl_deserialize_num! </span>{
-        u128, deserialize_u128
+        i128, NonZeroI128 cfg(not(no_num_nonzero_signed)), deserialize_i128
+        <span class="macro">num_self!</span>(i128:visit_i128);
+        <span class="macro">num_as_self!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
+        <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
+        <span class="macro">num_128!</span>(u128:visit_u128);
+    }
+
+    <span class="macro">impl_deserialize_num! </span>{
+        u128, NonZeroU128, deserialize_u128
         <span class="macro">num_self!</span>(u128:visit_u128);
         <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
         <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
-
-        <span class="attr">#[inline]
-        </span><span class="kw">fn </span>visit_i128&lt;E&gt;(<span class="self">self</span>, v: i128) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
-        <span class="kw">where
-            </span>E: Error,
-        {
-            <span class="kw">if </span><span class="number">0 </span>&lt;= v {
-                <span class="prelude-val">Ok</span>(v <span class="kw">as </span>u128)
-            } <span class="kw">else </span>{
-                <span class="prelude-val">Err</span>(Error::invalid_value(Unexpected::Other(<span class="string">&quot;i128&quot;</span>), <span class="kw-2">&amp;</span><span class="self">self</span>))
-            }
-        }
+        <span class="macro">num_128!</span>(i128:visit_i128);
     }
 }
 
@@ -3220,10 +3402,10 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, all(not(no_core_cstr), feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="kw">struct </span>CStringVisitor;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, all(not(no_core_cstr), feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>CStringVisitor {
     <span class="kw">type </span>Value = CString;
 
@@ -3274,7 +3456,7 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, all(not(no_core_cstr), feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>CString {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
@@ -3287,7 +3469,7 @@
 <span class="macro">macro_rules! </span>forwarded_impl {
     (
         $(<span class="attr">#[doc = <span class="macro-nonterminal">$doc</span>:tt]</span>)*
-        ( $(<span class="macro-nonterminal">$id</span>: ident),* ), <span class="macro-nonterminal">$ty</span>: ty, <span class="macro-nonterminal">$func</span>: expr
+        ($(<span class="macro-nonterminal">$id</span>:ident),<span class="kw-2">*</span>), <span class="macro-nonterminal">$ty</span>:ty, <span class="macro-nonterminal">$func</span>:expr
     ) =&gt; {
         $(<span class="attr">#[doc = <span class="macro-nonterminal">$doc</span>]</span>)*
         <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de </span>$(, <span class="macro-nonterminal">$id </span>: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,)<span class="kw-2">*</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
@@ -3301,10 +3483,13 @@
     }
 }
 
-<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, de_boxed_c_str))]
+<span class="attr">#[cfg(all(
+    any(feature = <span class="string">&quot;std&quot;</span>, all(not(no_core_cstr), feature = <span class="string">&quot;alloc&quot;</span>)),
+    not(no_de_boxed_c_str)
+))]
 </span><span class="macro">forwarded_impl!</span>((), Box&lt;CStr&gt;, CString::into_boxed_c_str);
 
-<span class="attr">#[cfg(core_reverse)]
+<span class="attr">#[cfg(not(no_core_reverse))]
 </span><span class="macro">forwarded_impl!</span>((T), Reverse&lt;T&gt;, Reverse);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
@@ -3347,8 +3532,7 @@
         T::deserialize(deserializer).map(<span class="prelude-val">Some</span>)
     }
 
-    <span class="attr">#[doc(hidden)]
-    </span><span class="kw">fn </span>__private_visit_untagged_option&lt;D&gt;(<span class="self">self</span>, deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, ()&gt;
+    <span class="kw">fn </span>__private_visit_untagged_option&lt;D&gt;(<span class="self">self</span>, deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, ()&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
@@ -3415,7 +3599,7 @@
 </span><span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">macro_rules! </span>seq_impl {
     (
-        <span class="macro-nonterminal">$ty</span>:ident &lt; T $(: <span class="macro-nonterminal">$tbound1</span>:ident $(+ <span class="macro-nonterminal">$tbound2</span>:ident)<span class="kw-2">*</span>)* $(, <span class="macro-nonterminal">$typaram</span>:ident : <span class="macro-nonterminal">$bound1</span>:ident $(+ <span class="macro-nonterminal">$bound2</span>:ident)<span class="kw-2">*</span>)* &gt;,
+        <span class="macro-nonterminal">$ty</span>:ident &lt;T $(: <span class="macro-nonterminal">$tbound1</span>:ident $(+ <span class="macro-nonterminal">$tbound2</span>:ident)<span class="kw-2">*</span>)* $(, <span class="macro-nonterminal">$typaram</span>:ident : <span class="macro-nonterminal">$bound1</span>:ident $(+ <span class="macro-nonterminal">$bound2</span>:ident)<span class="kw-2">*</span>)<span class="kw-2">*</span>&gt;,
         <span class="macro-nonterminal">$access</span>:ident,
         <span class="macro-nonterminal">$clear</span>:expr,
         <span class="macro-nonterminal">$with_capacity</span>:expr,
@@ -3908,7 +4092,7 @@
 </span><span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">macro_rules! </span>map_impl {
     (
-        <span class="macro-nonterminal">$ty</span>:ident &lt; K $(: <span class="macro-nonterminal">$kbound1</span>:ident $(+ <span class="macro-nonterminal">$kbound2</span>:ident)<span class="kw-2">*</span>)<span class="kw-2">*</span>, V $(, <span class="macro-nonterminal">$typaram</span>:ident : <span class="macro-nonterminal">$bound1</span>:ident $(+ <span class="macro-nonterminal">$bound2</span>:ident)<span class="kw-2">*</span>)* &gt;,
+        <span class="macro-nonterminal">$ty</span>:ident &lt;K $(: <span class="macro-nonterminal">$kbound1</span>:ident $(+ <span class="macro-nonterminal">$kbound2</span>:ident)<span class="kw-2">*</span>)<span class="kw-2">*</span>, V $(, <span class="macro-nonterminal">$typaram</span>:ident : <span class="macro-nonterminal">$bound1</span>:ident $(+ <span class="macro-nonterminal">$bound2</span>:ident)<span class="kw-2">*</span>)<span class="kw-2">*</span>&gt;,
         <span class="macro-nonterminal">$access</span>:ident,
         <span class="macro-nonterminal">$with_capacity</span>:expr
     ) =&gt; {
@@ -3995,15 +4179,15 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="macro">macro_rules! </span>variant_identifier {
     (
-        <span class="macro-nonterminal">$name_kind</span>: ident ( $(<span class="macro-nonterminal">$variant</span>: ident; <span class="macro-nonterminal">$bytes</span>: expr; <span class="macro-nonterminal">$index</span>: expr),* )
-        <span class="macro-nonterminal">$expecting_message</span>: expr,
-        <span class="macro-nonterminal">$variants_name</span>: ident
+        <span class="macro-nonterminal">$name_kind</span>:ident ($(<span class="macro-nonterminal">$variant</span>:ident; <span class="macro-nonterminal">$bytes</span>:expr; <span class="macro-nonterminal">$index</span>:expr),<span class="kw-2">*</span>)
+        <span class="macro-nonterminal">$expecting_message</span>:expr,
+        <span class="macro-nonterminal">$variants_name</span>:ident
     ) =&gt; {
         <span class="kw">enum </span><span class="macro-nonterminal">$name_kind </span>{
-            $( <span class="macro-nonterminal">$variant </span>),*
+            $(<span class="macro-nonterminal">$variant</span>),*
         }
 
-        <span class="kw">static </span><span class="macro-nonterminal">$variants_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str] = <span class="kw-2">&amp;</span>[ $( <span class="macro">stringify!</span>(<span class="macro-nonterminal">$variant</span>) ),<span class="kw-2">*</span>];
+        <span class="kw">static </span><span class="macro-nonterminal">$variants_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str] = <span class="kw-2">&amp;</span>[$(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$variant</span>)),<span class="kw-2">*</span>];
 
         <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name_kind </span>{
             <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
@@ -4070,12 +4254,12 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="macro">macro_rules! </span>deserialize_enum {
     (
-        <span class="macro-nonterminal">$name</span>: ident <span class="macro-nonterminal">$name_kind</span>: ident ( $(<span class="macro-nonterminal">$variant</span>: ident; <span class="macro-nonterminal">$bytes</span>: expr; <span class="macro-nonterminal">$index</span>: expr),* )
-        <span class="macro-nonterminal">$expecting_message</span>: expr,
-        <span class="macro-nonterminal">$deserializer</span>: expr
+        <span class="macro-nonterminal">$name</span>:ident <span class="macro-nonterminal">$name_kind</span>:ident ($(<span class="macro-nonterminal">$variant</span>:ident; <span class="macro-nonterminal">$bytes</span>:expr; <span class="macro-nonterminal">$index</span>:expr),<span class="kw-2">*</span>)
+        <span class="macro-nonterminal">$expecting_message</span>:expr,
+        <span class="macro-nonterminal">$deserializer</span>:expr
     ) =&gt; {
-        <span class="macro">variant_identifier!</span>{
-            <span class="macro-nonterminal">$name_kind </span>( $(<span class="macro-nonterminal">$variant</span>; <span class="macro-nonterminal">$bytes</span>; <span class="macro-nonterminal">$index</span>),* )
+        <span class="macro">variant_identifier! </span>{
+            <span class="macro-nonterminal">$name_kind </span>($(<span class="macro-nonterminal">$variant</span>; <span class="macro-nonterminal">$bytes</span>; <span class="macro-nonterminal">$index</span>),<span class="kw-2">*</span>)
             <span class="macro-nonterminal">$expecting_message</span>,
             VARIANTS
         }
@@ -4268,7 +4452,7 @@
     }
 }
 
-<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, de_boxed_path))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, not(no_de_boxed_path)))]
 </span><span class="macro">forwarded_impl!</span>((), Box&lt;Path&gt;, PathBuf::into_boxed_path);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
@@ -4349,11 +4533,7 @@
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">forwarded_impl!</span>((), Box&lt;str&gt;, String::into_boxed_str);
 
-<span class="attr">#[cfg(all(
-    not(de_rc_dst),
-    feature = <span class="string">&quot;rc&quot;</span>,
-    any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)
-))]
+<span class="attr">#[cfg(all(no_de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="macro">forwarded_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
@@ -4365,11 +4545,7 @@
     </span>(T), Arc&lt;T&gt;, Arc::new
 }
 
-<span class="attr">#[cfg(all(
-    not(de_rc_dst),
-    feature = <span class="string">&quot;rc&quot;</span>,
-    any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)
-))]
+<span class="attr">#[cfg(all(no_de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="macro">forwarded_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
@@ -4436,7 +4612,11 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attr">#[cfg(all(de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="attr">#[cfg(all(
+    not(no_de_rc_dst),
+    feature = <span class="string">&quot;rc&quot;</span>,
+    any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)
+))]
 </span><span class="macro">macro_rules! </span>box_forwarded_impl {
     (
         $(<span class="attr">#[doc = <span class="macro-nonterminal">$doc</span>:tt]</span>)*
@@ -4457,7 +4637,11 @@
     };
 }
 
-<span class="attr">#[cfg(all(de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+<span class="attr">#[cfg(all(
+    not(no_de_rc_dst),
+    feature = <span class="string">&quot;rc&quot;</span>,
+    any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)
+))]
 </span><span class="macro">box_forwarded_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
@@ -4469,7 +4653,11 @@
     </span>Rc
 }
 
-<span class="attr">#[cfg(all(de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+<span class="attr">#[cfg(all(
+    not(no_de_rc_dst),
+    feature = <span class="string">&quot;rc&quot;</span>,
+    any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)
+))]
 </span><span class="macro">box_forwarded_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
@@ -4513,7 +4701,7 @@
 //         secs: u64,
 //         nanos: u32,
 //     }
-</span><span class="attr">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>))]
+</span><span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, not(no_core_duration)))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Duration {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
@@ -4562,7 +4750,7 @@
                             <span class="string">b&quot;nanos&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Field::Nanos),
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">let </span>value = ::__private::from_utf8_lossy(value);
-                                <span class="prelude-val">Err</span>(Error::unknown_field(<span class="kw-2">&amp;</span>value, FIELDS))
+                                <span class="prelude-val">Err</span>(Error::unknown_field(<span class="kw-2">&amp;*</span>value, FIELDS))
                             }
                         }
                     }
@@ -4791,11 +4979,11 @@
 
         <span class="kw">const </span>FIELDS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str] = <span class="kw-2">&amp;</span>[<span class="string">&quot;secs_since_epoch&quot;</span>, <span class="string">&quot;nanos_since_epoch&quot;</span>];
         <span class="kw">let </span>duration = <span class="macro">try!</span>(deserializer.deserialize_struct(<span class="string">&quot;SystemTime&quot;</span>, FIELDS, DurationVisitor));
-        <span class="attr">#[cfg(systemtime_checked_add)]
+        <span class="attr">#[cfg(not(no_systemtime_checked_add))]
         </span><span class="kw">let </span>ret = UNIX_EPOCH
             .checked_add(duration)
             .ok_or_else(|| D::Error::custom(<span class="string">&quot;overflow deserializing SystemTime&quot;</span>));
-        <span class="attr">#[cfg(not(systemtime_checked_add))]
+        <span class="attr">#[cfg(no_systemtime_checked_add)]
         </span><span class="kw">let </span>ret = <span class="prelude-val">Ok</span>(UNIX_EPOCH + duration);
         ret
     }
@@ -4819,19 +5007,19 @@
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">let </span>(start, end) = deserializer.deserialize_struct(
+        <span class="kw">let </span>(start, end) = <span class="macro">try!</span>(deserializer.deserialize_struct(
             <span class="string">&quot;Range&quot;</span>,
             range::FIELDS,
             range::RangeVisitor {
                 expecting: <span class="string">&quot;struct Range&quot;</span>,
                 phantom: PhantomData,
             },
-        )<span class="question-mark">?</span>;
+        ));
         <span class="prelude-val">Ok</span>(start..end)
     }
 }
 
-<span class="attr">#[cfg(range_inclusive)]
+<span class="attr">#[cfg(not(no_range_inclusive))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, Idx&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>RangeInclusive&lt;Idx&gt;
 <span class="kw">where
     </span>Idx: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4840,14 +5028,14 @@
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">let </span>(start, end) = deserializer.deserialize_struct(
+        <span class="kw">let </span>(start, end) = <span class="macro">try!</span>(deserializer.deserialize_struct(
             <span class="string">&quot;RangeInclusive&quot;</span>,
             range::FIELDS,
             range::RangeVisitor {
                 expecting: <span class="string">&quot;struct RangeInclusive&quot;</span>,
                 phantom: PhantomData,
             },
-        )<span class="question-mark">?</span>;
+        ));
         <span class="prelude-val">Ok</span>(RangeInclusive::new(start, end))
     }
 }
@@ -4902,7 +5090,7 @@
                         <span class="string">b&quot;end&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Field::End),
                         <span class="kw">_ </span>=&gt; {
                             <span class="kw">let </span>value = ::__private::from_utf8_lossy(value);
-                            <span class="prelude-val">Err</span>(Error::unknown_field(<span class="kw-2">&amp;</span>value, FIELDS))
+                            <span class="prelude-val">Err</span>(Error::unknown_field(<span class="kw-2">&amp;*</span>value, FIELDS))
                         }
                     }
                 }
@@ -4983,7 +5171,7 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attr">#[cfg(any(ops_bound, collections_bound))]
+</span><span class="attr">#[cfg(any(not(no_ops_bound), all(feature = <span class="string">&quot;std&quot;</span>, not(no_collections_bound))))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Bound&lt;T&gt;
 <span class="kw">where
     </span>T: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -5086,58 +5274,6 @@
         <span class="kw">const </span>VARIANTS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str] = <span class="kw-2">&amp;</span>[<span class="string">&quot;Unbounded&quot;</span>, <span class="string">&quot;Included&quot;</span>, <span class="string">&quot;Excluded&quot;</span>];
 
         deserializer.deserialize_enum(<span class="string">&quot;Bound&quot;</span>, VARIANTS, BoundVisitor(PhantomData))
-    }
-}
-
-<span class="comment">////////////////////////////////////////////////////////////////////////////////
-
-</span><span class="macro">macro_rules! </span>nonzero_integers {
-    ( $( <span class="macro-nonterminal">$T</span>: ident, )+ ) =&gt; {
-        $(
-            <span class="attr">#[cfg(num_nonzero)]
-            </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>num::<span class="macro-nonterminal">$T </span>{
-                <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
-                <span class="kw">where
-                    </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
-                {
-                    <span class="kw">let </span>value = <span class="macro">try!</span>(Deserialize::deserialize(deserializer));
-                    <span class="kw">match </span>&lt;num::<span class="macro-nonterminal">$T</span>&gt;::new(value) {
-                        <span class="prelude-val">Some</span>(nonzero) =&gt; <span class="prelude-val">Ok</span>(nonzero),
-                        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::custom(<span class="string">&quot;expected a non-zero value&quot;</span>)),
-                    }
-                }
-            }
-        )+
-    };
-}
-
-<span class="macro">nonzero_integers! </span>{
-    NonZeroU8,
-    NonZeroU16,
-    NonZeroU32,
-    NonZeroU64,
-    NonZeroUsize,
-}
-
-<span class="attr">#[cfg(num_nonzero_signed)]
-</span><span class="macro">nonzero_integers! </span>{
-    NonZeroI8,
-    NonZeroI16,
-    NonZeroI32,
-    NonZeroI64,
-    NonZeroIsize,
-}
-
-<span class="comment">// Currently 128-bit integers do not work on Emscripten targets so we need an
-// additional `#[cfg]`
-</span><span class="macro">serde_if_integer128! </span>{
-    <span class="macro">nonzero_integers! </span>{
-        NonZeroU128,
-    }
-
-    <span class="attr">#[cfg(num_nonzero_signed)]
-    </span><span class="macro">nonzero_integers! </span>{
-        NonZeroI128,
     }
 }
 
@@ -5263,11 +5399,12 @@
     }
 }
 
-<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, not(no_std_atomic)))]
 </span><span class="macro">macro_rules! </span>atomic_impl {
-    ($(<span class="macro-nonterminal">$ty</span>:ident)<span class="kw-2">*</span>) =&gt; {
+    ($(<span class="macro-nonterminal">$ty</span>:ident <span class="macro-nonterminal">$size</span>:expr)<span class="kw-2">*</span>) =&gt; {
         $(
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
+            <span class="attr">#[cfg(any(no_target_has_atomic, target_has_atomic = <span class="macro-nonterminal">$size</span>))]
+            </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
                 <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
                 <span class="kw">where
                     </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -5279,17 +5416,24 @@
     };
 }
 
-<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, not(no_std_atomic)))]
 </span><span class="macro">atomic_impl! </span>{
-    AtomicBool
-    AtomicI8 AtomicI16 AtomicI32 AtomicIsize
-    AtomicU8 AtomicU16 AtomicU32 AtomicUsize
-}
+    AtomicBool <span class="string">&quot;8&quot;
+    </span>AtomicI8 <span class="string">&quot;8&quot;
+    </span>AtomicI16 <span class="string">&quot;16&quot;
+    </span>AtomicI32 <span class="string">&quot;32&quot;
+    </span>AtomicIsize <span class="string">&quot;ptr&quot;
+    </span>AtomicU8 <span class="string">&quot;8&quot;
+    </span>AtomicU16 <span class="string">&quot;16&quot;
+    </span>AtomicU32 <span class="string">&quot;32&quot;
+    </span>AtomicUsize <span class="string">&quot;ptr&quot;
+</span>}
 
-<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic64))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, not(no_std_atomic64)))]
 </span><span class="macro">atomic_impl! </span>{
-    AtomicI64 AtomicU64
-}
+    AtomicI64 <span class="string">&quot;64&quot;
+    </span>AtomicU64 <span class="string">&quot;64&quot;
+</span>}
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">struct </span>FromStrVisitor&lt;T&gt; {

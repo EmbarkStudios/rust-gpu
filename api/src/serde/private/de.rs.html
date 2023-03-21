@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.132/src/private/de.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>de.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.156/src/private/de.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>de.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2957,6 +2957,42 @@
 <a href="#2957" id="2957">2957</a>
 <a href="#2958" id="2958">2958</a>
 <a href="#2959" id="2959">2959</a>
+<a href="#2960" id="2960">2960</a>
+<a href="#2961" id="2961">2961</a>
+<a href="#2962" id="2962">2962</a>
+<a href="#2963" id="2963">2963</a>
+<a href="#2964" id="2964">2964</a>
+<a href="#2965" id="2965">2965</a>
+<a href="#2966" id="2966">2966</a>
+<a href="#2967" id="2967">2967</a>
+<a href="#2968" id="2968">2968</a>
+<a href="#2969" id="2969">2969</a>
+<a href="#2970" id="2970">2970</a>
+<a href="#2971" id="2971">2971</a>
+<a href="#2972" id="2972">2972</a>
+<a href="#2973" id="2973">2973</a>
+<a href="#2974" id="2974">2974</a>
+<a href="#2975" id="2975">2975</a>
+<a href="#2976" id="2976">2976</a>
+<a href="#2977" id="2977">2977</a>
+<a href="#2978" id="2978">2978</a>
+<a href="#2979" id="2979">2979</a>
+<a href="#2980" id="2980">2980</a>
+<a href="#2981" id="2981">2981</a>
+<a href="#2982" id="2982">2982</a>
+<a href="#2983" id="2983">2983</a>
+<a href="#2984" id="2984">2984</a>
+<a href="#2985" id="2985">2985</a>
+<a href="#2986" id="2986">2986</a>
+<a href="#2987" id="2987">2987</a>
+<a href="#2988" id="2988">2988</a>
+<a href="#2989" id="2989">2989</a>
+<a href="#2990" id="2990">2990</a>
+<a href="#2991" id="2991">2991</a>
+<a href="#2992" id="2992">2992</a>
+<a href="#2993" id="2993">2993</a>
+<a href="#2994" id="2994">2994</a>
+<a href="#2995" id="2995">2995</a>
 </pre><pre class="rust"><code><span class="kw">use </span>lib::<span class="kw-2">*</span>;
 
 <span class="kw">use </span>de::value::{BorrowedBytesDeserializer, BytesDeserializer};
@@ -3165,6 +3201,7 @@
     </span><span class="kw">use </span>lib::<span class="kw-2">*</span>;
 
     <span class="kw">use </span>__private::size_hint;
+    <span class="kw">use </span>actually_private;
     <span class="kw">use </span>de::{
         <span class="self">self</span>, Deserialize, DeserializeSeed, Deserializer, EnumAccess, Expected, IgnoredAny,
         MapAccess, SeqAccess, Unexpected, Visitor,
@@ -3174,7 +3211,7 @@
     /// deserializing untagged enums and internally tagged enums.
     ///
     /// Not public API. Use serde-value instead.
-    </span><span class="attr">#[derive(Debug)]
+    </span><span class="attr">#[derive(Debug, Clone)]
     </span><span class="kw">pub enum </span>Content&lt;<span class="lifetime">&#39;de</span>&gt; {
         Bool(bool),
 
@@ -3253,7 +3290,7 @@
             <span class="comment">// Untagged and internally tagged enums are only supported in
             // self-describing formats.
             </span><span class="kw">let </span>visitor = ContentVisitor { value: PhantomData };
-            deserializer.deserialize_any(visitor)
+            deserializer.__deserialize_content(actually_private::T, visitor)
         }
     }
 
@@ -4220,6 +4257,17 @@
         {
             <span class="kw">match </span><span class="self">self</span>.content {
                 Content::Unit =&gt; visitor.visit_unit(),
+
+                <span class="comment">// Allow deserializing newtype variant containing unit.
+                //
+                //     #[derive(Deserialize)]
+                //     #[serde(tag = &quot;result&quot;)]
+                //     enum Response&lt;T&gt; {
+                //         Success(T),
+                //     }
+                //
+                // We want {&quot;result&quot;:&quot;Success&quot;} to deserialize into Response&lt;()&gt;.
+                </span>Content::Map(<span class="kw-2">ref </span>v) <span class="kw">if </span>v.is_empty() =&gt; visitor.visit_unit(),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="self">self</span>.invalid_type(<span class="kw-2">&amp;</span>visitor)),
             }
         }
@@ -4385,6 +4433,18 @@
         {
             drop(<span class="self">self</span>);
             visitor.visit_unit()
+        }
+
+        <span class="kw">fn </span>__deserialize_content&lt;V&gt;(
+            <span class="self">self</span>,
+            <span class="kw">_</span>: actually_private::T,
+            visitor: V,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;Content&lt;<span class="lifetime">&#39;de</span>&gt;, <span class="self">Self</span>::Error&gt;
+        <span class="kw">where
+            </span>V: Visitor&lt;<span class="lifetime">&#39;de</span>, Value = Content&lt;<span class="lifetime">&#39;de</span>&gt;&gt;,
+        {
+            <span class="kw">let _ </span>= visitor;
+            <span class="prelude-val">Ok</span>(<span class="self">self</span>.content)
         }
     }
 
@@ -4745,7 +4805,7 @@
         </span>V: Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
         E: de::Error,
     {
-        <span class="kw">let </span>map = content.iter().map(|<span class="kw-2">&amp;</span>(<span class="kw-2">ref </span>k, <span class="kw-2">ref </span>v)| {
+        <span class="kw">let </span>map = content.iter().map(|(k, v)| {
             (
                 ContentRefDeserializer::new(k),
                 ContentRefDeserializer::new(v),
@@ -5042,7 +5102,7 @@
             <span class="kw">let </span>(variant, value) = <span class="kw">match </span><span class="kw-2">*</span><span class="self">self</span>.content {
                 Content::Map(<span class="kw-2">ref </span>value) =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>iter = value.iter();
-                    <span class="kw">let </span><span class="kw-2">&amp;</span>(<span class="kw-2">ref </span>variant, <span class="kw-2">ref </span>value) = <span class="kw">match </span>iter.next() {
+                    <span class="kw">let </span>(variant, value) = <span class="kw">match </span>iter.next() {
                         <span class="prelude-val">Some</span>(v) =&gt; v,
                         <span class="prelude-val">None </span>=&gt; {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(de::Error::invalid_value(
@@ -5096,6 +5156,18 @@
             </span>V: Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
         {
             visitor.visit_unit()
+        }
+
+        <span class="kw">fn </span>__deserialize_content&lt;V&gt;(
+            <span class="self">self</span>,
+            <span class="kw">_</span>: actually_private::T,
+            visitor: V,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;Content&lt;<span class="lifetime">&#39;de</span>&gt;, <span class="self">Self</span>::Error&gt;
+        <span class="kw">where
+            </span>V: Visitor&lt;<span class="lifetime">&#39;de</span>, Value = Content&lt;<span class="lifetime">&#39;de</span>&gt;&gt;,
+        {
+            <span class="kw">let _ </span>= visitor;
+            <span class="prelude-val">Ok</span>(<span class="self">self</span>.content.clone())
         }
     }
 
@@ -5177,7 +5249,7 @@
             </span>V: de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
         {
             <span class="kw">match </span><span class="self">self</span>.value {
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Content::Seq(<span class="kw-2">ref </span>v)) =&gt; {
+                <span class="prelude-val">Some</span>(Content::Seq(v)) =&gt; {
                     de::Deserializer::deserialize_any(SeqRefDeserializer::new(v), visitor)
                 }
                 <span class="prelude-val">Some</span>(other) =&gt; <span class="prelude-val">Err</span>(de::Error::invalid_type(
@@ -5200,10 +5272,10 @@
             </span>V: de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
         {
             <span class="kw">match </span><span class="self">self</span>.value {
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Content::Map(<span class="kw-2">ref </span>v)) =&gt; {
+                <span class="prelude-val">Some</span>(Content::Map(v)) =&gt; {
                     de::Deserializer::deserialize_any(MapRefDeserializer::new(v), visitor)
                 }
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Content::Seq(<span class="kw-2">ref </span>v)) =&gt; {
+                <span class="prelude-val">Some</span>(Content::Seq(v)) =&gt; {
                     de::Deserializer::deserialize_any(SeqRefDeserializer::new(v), visitor)
                 }
                 <span class="prelude-val">Some</span>(other) =&gt; <span class="prelude-val">Err</span>(de::Error::invalid_type(
@@ -5326,7 +5398,7 @@
             </span>T: de::DeserializeSeed&lt;<span class="lifetime">&#39;de</span>&gt;,
         {
             <span class="kw">match </span><span class="self">self</span>.iter.next() {
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="kw-2">ref </span>key, <span class="kw-2">ref </span>value)) =&gt; {
+                <span class="prelude-val">Some</span>((key, value)) =&gt; {
                     <span class="self">self</span>.value = <span class="prelude-val">Some</span>(value);
                     seed.deserialize(ContentRefDeserializer::new(key)).map(<span class="prelude-val">Some</span>)
                 }
@@ -5631,7 +5703,7 @@
 
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">macro_rules! </span>forward_to_deserialize_other {
-    ($(<span class="macro-nonterminal">$func</span>:ident ( $(<span class="macro-nonterminal">$arg</span>:ty),* ))<span class="kw-2">*</span>) =&gt; {
+    ($(<span class="macro-nonterminal">$func</span>:ident ($(<span class="macro-nonterminal">$arg</span>:ty),<span class="kw-2">*</span>))<span class="kw-2">*</span>) =&gt; {
         $(
             <span class="kw">fn </span><span class="macro-nonterminal">$func</span>&lt;V&gt;(<span class="self">self</span>, $(<span class="kw">_</span>: <span class="macro-nonterminal">$arg</span>,)* _visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
             <span class="kw">where

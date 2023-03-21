@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.132/src/de/value.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>value.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.156/src/de/value.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>value.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1633,6 +1633,85 @@
 <a href="#1633" id="1633">1633</a>
 <a href="#1634" id="1634">1634</a>
 <a href="#1635" id="1635">1635</a>
+<a href="#1636" id="1636">1636</a>
+<a href="#1637" id="1637">1637</a>
+<a href="#1638" id="1638">1638</a>
+<a href="#1639" id="1639">1639</a>
+<a href="#1640" id="1640">1640</a>
+<a href="#1641" id="1641">1641</a>
+<a href="#1642" id="1642">1642</a>
+<a href="#1643" id="1643">1643</a>
+<a href="#1644" id="1644">1644</a>
+<a href="#1645" id="1645">1645</a>
+<a href="#1646" id="1646">1646</a>
+<a href="#1647" id="1647">1647</a>
+<a href="#1648" id="1648">1648</a>
+<a href="#1649" id="1649">1649</a>
+<a href="#1650" id="1650">1650</a>
+<a href="#1651" id="1651">1651</a>
+<a href="#1652" id="1652">1652</a>
+<a href="#1653" id="1653">1653</a>
+<a href="#1654" id="1654">1654</a>
+<a href="#1655" id="1655">1655</a>
+<a href="#1656" id="1656">1656</a>
+<a href="#1657" id="1657">1657</a>
+<a href="#1658" id="1658">1658</a>
+<a href="#1659" id="1659">1659</a>
+<a href="#1660" id="1660">1660</a>
+<a href="#1661" id="1661">1661</a>
+<a href="#1662" id="1662">1662</a>
+<a href="#1663" id="1663">1663</a>
+<a href="#1664" id="1664">1664</a>
+<a href="#1665" id="1665">1665</a>
+<a href="#1666" id="1666">1666</a>
+<a href="#1667" id="1667">1667</a>
+<a href="#1668" id="1668">1668</a>
+<a href="#1669" id="1669">1669</a>
+<a href="#1670" id="1670">1670</a>
+<a href="#1671" id="1671">1671</a>
+<a href="#1672" id="1672">1672</a>
+<a href="#1673" id="1673">1673</a>
+<a href="#1674" id="1674">1674</a>
+<a href="#1675" id="1675">1675</a>
+<a href="#1676" id="1676">1676</a>
+<a href="#1677" id="1677">1677</a>
+<a href="#1678" id="1678">1678</a>
+<a href="#1679" id="1679">1679</a>
+<a href="#1680" id="1680">1680</a>
+<a href="#1681" id="1681">1681</a>
+<a href="#1682" id="1682">1682</a>
+<a href="#1683" id="1683">1683</a>
+<a href="#1684" id="1684">1684</a>
+<a href="#1685" id="1685">1685</a>
+<a href="#1686" id="1686">1686</a>
+<a href="#1687" id="1687">1687</a>
+<a href="#1688" id="1688">1688</a>
+<a href="#1689" id="1689">1689</a>
+<a href="#1690" id="1690">1690</a>
+<a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
+<a href="#1704" id="1704">1704</a>
+<a href="#1705" id="1705">1705</a>
+<a href="#1706" id="1706">1706</a>
+<a href="#1707" id="1707">1707</a>
+<a href="#1708" id="1708">1708</a>
+<a href="#1709" id="1709">1709</a>
+<a href="#1710" id="1710">1710</a>
+<a href="#1711" id="1711">1711</a>
+<a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Building blocks for deserializing basic values using the `IntoDeserializer`
 //! trait.
 //!
@@ -1763,9 +1842,7 @@
     <span class="kw">type </span>Deserializer = UnitDeserializer&lt;E&gt;;
 
     <span class="kw">fn </span>into_deserializer(<span class="self">self</span>) -&gt; UnitDeserializer&lt;E&gt; {
-        UnitDeserializer {
-            marker: PhantomData,
-        }
+        UnitDeserializer::new()
     }
 }
 
@@ -1775,6 +1852,15 @@
 }
 
 <span class="macro">impl_copy_clone!</span>(UnitDeserializer);
+
+<span class="kw">impl</span>&lt;E&gt; UnitDeserializer&lt;E&gt; {
+    <span class="attr">#[allow(missing_docs)]
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        UnitDeserializer {
+            marker: PhantomData,
+        }
+    }
+}
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, E&gt; de::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>UnitDeserializer&lt;E&gt;
 <span class="kw">where
@@ -1871,8 +1957,15 @@
             <span class="kw">type </span>Deserializer = <span class="macro-nonterminal">$name</span>&lt;E&gt;;
 
             <span class="kw">fn </span>into_deserializer(<span class="self">self</span>) -&gt; <span class="macro-nonterminal">$name</span>&lt;E&gt; {
+                <span class="macro-nonterminal">$name::new</span>(<span class="self">self</span>)
+            }
+        }
+
+        <span class="kw">impl</span>&lt;E&gt; <span class="macro-nonterminal">$name</span>&lt;E&gt; {
+            <span class="attr">#[allow(missing_docs)]
+            </span><span class="kw">pub fn </span>new(value: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="self">Self </span>{
                 <span class="macro-nonterminal">$name </span>{
-                    value: <span class="self">self</span>,
+                    value: value,
                     marker: PhantomData,
                 }
             }
@@ -1943,8 +2036,15 @@
     <span class="kw">type </span>Deserializer = U32Deserializer&lt;E&gt;;
 
     <span class="kw">fn </span>into_deserializer(<span class="self">self</span>) -&gt; U32Deserializer&lt;E&gt; {
+        U32Deserializer::new(<span class="self">self</span>)
+    }
+}
+
+<span class="kw">impl</span>&lt;E&gt; U32Deserializer&lt;E&gt; {
+    <span class="attr">#[allow(missing_docs)]
+    </span><span class="kw">pub fn </span>new(value: u32) -&gt; <span class="self">Self </span>{
         U32Deserializer {
-            value: <span class="self">self</span>,
+            value: value,
             marker: PhantomData,
         }
     }
@@ -2025,8 +2125,15 @@
     <span class="kw">type </span>Deserializer = StrDeserializer&lt;<span class="lifetime">&#39;a</span>, E&gt;;
 
     <span class="kw">fn </span>into_deserializer(<span class="self">self</span>) -&gt; StrDeserializer&lt;<span class="lifetime">&#39;a</span>, E&gt; {
+        StrDeserializer::new(<span class="self">self</span>)
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, E&gt; StrDeserializer&lt;<span class="lifetime">&#39;a</span>, E&gt; {
+    <span class="attr">#[allow(missing_docs)]
+    </span><span class="kw">pub fn </span>new(value: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; <span class="self">Self </span>{
         StrDeserializer {
-            value: <span class="self">self</span>,
+            value: value,
             marker: PhantomData,
         }
     }
@@ -2196,8 +2303,16 @@
     <span class="kw">type </span>Deserializer = StringDeserializer&lt;E&gt;;
 
     <span class="kw">fn </span>into_deserializer(<span class="self">self</span>) -&gt; StringDeserializer&lt;E&gt; {
+        StringDeserializer::new(<span class="self">self</span>)
+    }
+}
+
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl</span>&lt;E&gt; StringDeserializer&lt;E&gt; {
+    <span class="attr">#[allow(missing_docs)]
+    </span><span class="kw">pub fn </span>new(value: String) -&gt; <span class="self">Self </span>{
         StringDeserializer {
-            value: <span class="self">self</span>,
+            value: value,
             marker: PhantomData,
         }
     }
@@ -2239,7 +2354,7 @@
 }
 
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span>, E&gt; de::EnumAccess&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>StringDeserializer&lt;E&gt;
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, E&gt; de::EnumAccess&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>StringDeserializer&lt;E&gt;
 <span class="kw">where
     </span>E: de::Error,
 {
@@ -2291,8 +2406,16 @@
     <span class="kw">type </span>Deserializer = CowStrDeserializer&lt;<span class="lifetime">&#39;a</span>, E&gt;;
 
     <span class="kw">fn </span>into_deserializer(<span class="self">self</span>) -&gt; CowStrDeserializer&lt;<span class="lifetime">&#39;a</span>, E&gt; {
+        CowStrDeserializer::new(<span class="self">self</span>)
+    }
+}
+
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, E&gt; CowStrDeserializer&lt;<span class="lifetime">&#39;a</span>, E&gt; {
+    <span class="attr">#[allow(missing_docs)]
+    </span><span class="kw">pub fn </span>new(value: Cow&lt;<span class="lifetime">&#39;a</span>, str&gt;) -&gt; <span class="self">Self </span>{
         CowStrDeserializer {
-            value: <span class="self">self</span>,
+            value: value,
             marker: PhantomData,
         }
     }
@@ -3092,10 +3215,45 @@
     <span class="kw">where
         </span>T: de::DeserializeSeed&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">match </span><span class="self">self</span>.map.next_key_seed(seed)<span class="question-mark">? </span>{
+        <span class="kw">match </span><span class="macro">try!</span>(<span class="self">self</span>.map.next_key_seed(seed)) {
             <span class="prelude-val">Some</span>(key) =&gt; <span class="prelude-val">Ok</span>((key, private::map_as_enum(<span class="self">self</span>.map))),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(de::Error::invalid_type(de::Unexpected::Map, <span class="kw-2">&amp;</span><span class="string">&quot;enum&quot;</span>)),
         }
+    }
+}
+
+<span class="comment">////////////////////////////////////////////////////////////////////////////////
+
+</span><span class="doccomment">/// A deserializer holding an `EnumAccess`.
+</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>EnumAccessDeserializer&lt;A&gt; {
+    access: A,
+}
+
+<span class="kw">impl</span>&lt;A&gt; EnumAccessDeserializer&lt;A&gt; {
+    <span class="doccomment">/// Construct a new `EnumAccessDeserializer&lt;A&gt;`.
+    </span><span class="kw">pub fn </span>new(access: A) -&gt; <span class="self">Self </span>{
+        EnumAccessDeserializer { access: access }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, A&gt; de::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>EnumAccessDeserializer&lt;A&gt;
+<span class="kw">where
+    </span>A: de::EnumAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
+{
+    <span class="kw">type </span>Error = A::Error;
+
+    <span class="kw">fn </span>deserialize_any&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
+    <span class="kw">where
+        </span>V: de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
+    {
+        visitor.visit_enum(<span class="self">self</span>.access)
+    }
+
+    <span class="macro">forward_to_deserialize_any! </span>{
+        bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
+        bytes byte_buf option unit unit_struct newtype_struct seq tuple
+        tuple_struct map <span class="kw">struct enum </span>identifier ignored_any
     }
 }
 

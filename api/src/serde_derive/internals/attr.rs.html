@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_derive-1.0.132/src/internals/attr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>attr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde_derive/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_derive-1.0.156/src/internals/attr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>attr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../serde_derive/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1904,67 +1904,19 @@
 <a href="#1904" id="1904">1904</a>
 <a href="#1905" id="1905">1905</a>
 <a href="#1906" id="1906">1906</a>
-<a href="#1907" id="1907">1907</a>
-<a href="#1908" id="1908">1908</a>
-<a href="#1909" id="1909">1909</a>
-<a href="#1910" id="1910">1910</a>
-<a href="#1911" id="1911">1911</a>
-<a href="#1912" id="1912">1912</a>
-<a href="#1913" id="1913">1913</a>
-<a href="#1914" id="1914">1914</a>
-<a href="#1915" id="1915">1915</a>
-<a href="#1916" id="1916">1916</a>
-<a href="#1917" id="1917">1917</a>
-<a href="#1918" id="1918">1918</a>
-<a href="#1919" id="1919">1919</a>
-<a href="#1920" id="1920">1920</a>
-<a href="#1921" id="1921">1921</a>
-<a href="#1922" id="1922">1922</a>
-<a href="#1923" id="1923">1923</a>
-<a href="#1924" id="1924">1924</a>
-<a href="#1925" id="1925">1925</a>
-<a href="#1926" id="1926">1926</a>
-<a href="#1927" id="1927">1927</a>
-<a href="#1928" id="1928">1928</a>
-<a href="#1929" id="1929">1929</a>
-<a href="#1930" id="1930">1930</a>
-<a href="#1931" id="1931">1931</a>
-<a href="#1932" id="1932">1932</a>
-<a href="#1933" id="1933">1933</a>
-<a href="#1934" id="1934">1934</a>
-<a href="#1935" id="1935">1935</a>
-<a href="#1936" id="1936">1936</a>
-<a href="#1937" id="1937">1937</a>
-<a href="#1938" id="1938">1938</a>
-<a href="#1939" id="1939">1939</a>
-<a href="#1940" id="1940">1940</a>
-<a href="#1941" id="1941">1941</a>
-<a href="#1942" id="1942">1942</a>
-<a href="#1943" id="1943">1943</a>
-<a href="#1944" id="1944">1944</a>
-<a href="#1945" id="1945">1945</a>
-<a href="#1946" id="1946">1946</a>
-<a href="#1947" id="1947">1947</a>
-<a href="#1948" id="1948">1948</a>
-<a href="#1949" id="1949">1949</a>
-<a href="#1950" id="1950">1950</a>
-<a href="#1951" id="1951">1951</a>
-<a href="#1952" id="1952">1952</a>
-<a href="#1953" id="1953">1953</a>
-<a href="#1954" id="1954">1954</a>
-</pre><pre class="rust"><code><span class="kw">use </span>internals::respan::respan;
-<span class="kw">use </span>internals::symbol::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>internals::symbol::<span class="kw-2">*</span>;
 <span class="kw">use </span>internals::{ungroup, Ctxt};
 <span class="kw">use </span>proc_macro2::{Spacing, Span, TokenStream, TokenTree};
 <span class="kw">use </span>quote::ToTokens;
 <span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::collections::BTreeSet;
+<span class="kw">use </span>std::iter::FromIterator;
 <span class="kw">use </span>syn;
-<span class="kw">use </span>syn::parse::{<span class="self">self</span>, Parse, ParseStream};
+<span class="kw">use </span>syn::parse::ParseStream;
 <span class="kw">use </span>syn::punctuated::Punctuated;
-<span class="kw">use </span>syn::Ident;
 <span class="kw">use </span>syn::Meta::{List, NameValue, Path};
 <span class="kw">use </span>syn::NestedMeta::{Lit, Meta};
+<span class="kw">use </span>syn::{Ident, Lifetime};
 
 <span class="comment">// This module handles parsing of `#[serde(...)]` attributes. The entrypoints
 // are `attr::Container::from_ast`, `attr::Variant::from_ast`, and
@@ -2095,12 +2047,8 @@
     deserialize_aliases: Vec&lt;String&gt;,
 }
 
-<span class="attr">#[allow(deprecated)]
-</span><span class="kw">fn </span>unraw(ident: <span class="kw-2">&amp;</span>Ident) -&gt; String {
-    <span class="comment">// str::trim_start_matches was added in 1.30, trim_left_matches deprecated
-    // in 1.33. We currently support rustc back to 1.15 so we need to continue
-    // to use the deprecated one.
-    </span>ident.to_string().trim_left_matches(<span class="string">&quot;r#&quot;</span>).to_owned()
+<span class="kw">fn </span>unraw(ident: <span class="kw-2">&amp;</span>Ident) -&gt; String {
+    ident.to_string().trim_start_matches(<span class="string">&quot;r#&quot;</span>).to_owned()
 }
 
 <span class="kw">impl </span>Name {
@@ -2333,48 +2281,43 @@
                         syn::Fields::Named(<span class="kw">_</span>) =&gt; {
                             default.set(word, Default::Default);
                         }
-                        syn::Fields::Unnamed(<span class="kw">_</span>) | syn::Fields::Unit =&gt; cx.error_spanned_by(
-                            fields,
-                            <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>,
-                        ),
+                        syn::Fields::Unnamed(<span class="kw">_</span>) | syn::Fields::Unit =&gt; {
+                            <span class="kw">let </span>msg =
+                                <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>;
+                            cx.error_spanned_by(fields, msg);
+                        }
                     },
-                    syn::Data::Enum(syn::DataEnum { enum_token, .. }) =&gt; cx.error_spanned_by(
-                        enum_token,
-                        <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>,
-                    ),
-                    syn::Data::Union(syn::DataUnion { union_token, .. }) =&gt; cx.error_spanned_by(
-                        union_token,
-                        <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>,
-                    ),
+                    syn::Data::Enum(syn::DataEnum { enum_token, .. }) =&gt; {
+                        <span class="kw">let </span>msg = <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>;
+                        cx.error_spanned_by(enum_token, msg);
+                    }
+                    syn::Data::Union(syn::DataUnion { union_token, .. }) =&gt; {
+                        <span class="kw">let </span>msg = <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>;
+                        cx.error_spanned_by(union_token, msg);
+                    }
                 },
 
                 <span class="comment">// Parse `#[serde(default = &quot;...&quot;)]`
                 </span>Meta(NameValue(m)) <span class="kw">if </span>m.path == DEFAULT =&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Ok</span>(path) = parse_lit_into_expr_path(cx, DEFAULT, <span class="kw-2">&amp;</span>m.lit) {
                         <span class="kw">match </span><span class="kw-2">&amp;</span>item.data {
-                            syn::Data::Struct(syn::DataStruct { fields, .. }) =&gt; {
-                                <span class="kw">match </span>fields {
-                                    syn::Fields::Named(<span class="kw">_</span>) =&gt; {
-                                        default.set(<span class="kw-2">&amp;</span>m.path, Default::Path(path));
-                                    }
-                                    syn::Fields::Unnamed(<span class="kw">_</span>) | syn::Fields::Unit =&gt; cx
-                                        .error_spanned_by(
-                                            fields,
-                                            <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>,
-                                        ),
+                            syn::Data::Struct(syn::DataStruct { fields, .. }) =&gt; <span class="kw">match </span>fields {
+                                syn::Fields::Named(<span class="kw">_</span>) =&gt; {
+                                    default.set(<span class="kw-2">&amp;</span>m.path, Default::Path(path));
                                 }
+                                syn::Fields::Unnamed(<span class="kw">_</span>) | syn::Fields::Unit =&gt; {
+                                    <span class="kw">let </span>msg = <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>;
+                                    cx.error_spanned_by(fields, msg);
+                                }
+                            },
+                            syn::Data::Enum(syn::DataEnum { enum_token, .. }) =&gt; {
+                                <span class="kw">let </span>msg = <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>;
+                                cx.error_spanned_by(enum_token, msg);
                             }
-                            syn::Data::Enum(syn::DataEnum { enum_token, .. }) =&gt; cx
-                                .error_spanned_by(
-                                    enum_token,
-                                    <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>,
-                                ),
-                            syn::Data::Union(syn::DataUnion {
-                                union_token, ..
-                            }) =&gt; cx.error_spanned_by(
-                                union_token,
-                                <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>,
-                            ),
+                            syn::Data::Union(syn::DataUnion { union_token, .. }) =&gt; {
+                                <span class="kw">let </span>msg = <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>;
+                                cx.error_spanned_by(union_token, msg);
+                            }
                         }
                     }
                 }
@@ -2401,16 +2344,12 @@
                         untagged.set_true(word);
                     }
                     syn::Data::Struct(syn::DataStruct { struct_token, .. }) =&gt; {
-                        cx.error_spanned_by(
-                            struct_token,
-                            <span class="string">&quot;#[serde(untagged)] can only be used on enums&quot;</span>,
-                        );
+                        <span class="kw">let </span>msg = <span class="string">&quot;#[serde(untagged)] can only be used on enums&quot;</span>;
+                        cx.error_spanned_by(struct_token, msg);
                     }
                     syn::Data::Union(syn::DataUnion { union_token, .. }) =&gt; {
-                        cx.error_spanned_by(
-                            union_token,
-                            <span class="string">&quot;#[serde(untagged)] can only be used on enums&quot;</span>,
-                        );
+                        <span class="kw">let </span>msg = <span class="string">&quot;#[serde(untagged)] can only be used on enums&quot;</span>;
+                        cx.error_spanned_by(union_token, msg);
                     }
                 },
 
@@ -2426,17 +2365,13 @@
                                     internal_tag.set(<span class="kw-2">&amp;</span>m.path, s.value());
                                 }
                                 syn::Fields::Unnamed(<span class="kw">_</span>) | syn::Fields::Unit =&gt; {
-                                    cx.error_spanned_by(
-                                            fields,
-                                            <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] can only be used on enums and structs with named fields&quot;</span>,
-                                        );
+                                    <span class="kw">let </span>msg = <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] can only be used on enums and structs with named fields&quot;</span>;
+                                    cx.error_spanned_by(fields, msg);
                                 }
                             },
                             syn::Data::Union(syn::DataUnion { union_token, .. }) =&gt; {
-                                cx.error_spanned_by(
-                                    union_token,
-                                    <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] can only be used on enums and structs with named fields&quot;</span>,
-                                );
+                                <span class="kw">let </span>msg = <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] can only be used on enums and structs with named fields&quot;</span>;
+                                cx.error_spanned_by(union_token, msg);
                             }
                         }
                     }
@@ -2450,36 +2385,32 @@
                                 content.set(<span class="kw-2">&amp;</span>m.path, s.value());
                             }
                             syn::Data::Struct(syn::DataStruct { struct_token, .. }) =&gt; {
-                                cx.error_spanned_by(
-                                    struct_token,
-                                    <span class="string">&quot;#[serde(content = \&quot;...\&quot;)] can only be used on enums&quot;</span>,
-                                );
+                                <span class="kw">let </span>msg = <span class="string">&quot;#[serde(content = \&quot;...\&quot;)] can only be used on enums&quot;</span>;
+                                cx.error_spanned_by(struct_token, msg);
                             }
                             syn::Data::Union(syn::DataUnion { union_token, .. }) =&gt; {
-                                cx.error_spanned_by(
-                                    union_token,
-                                    <span class="string">&quot;#[serde(content = \&quot;...\&quot;)] can only be used on enums&quot;</span>,
-                                );
+                                <span class="kw">let </span>msg = <span class="string">&quot;#[serde(content = \&quot;...\&quot;)] can only be used on enums&quot;</span>;
+                                cx.error_spanned_by(union_token, msg);
                             }
                         }
                     }
                 }
 
-                <span class="comment">// Parse `#[serde(from = &quot;Type&quot;)]
+                <span class="comment">// Parse `#[serde(from = &quot;Type&quot;)]`
                 </span>Meta(NameValue(m)) <span class="kw">if </span>m.path == FROM =&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Ok</span>(from_ty) = parse_lit_into_ty(cx, FROM, <span class="kw-2">&amp;</span>m.lit) {
                         type_from.set_opt(<span class="kw-2">&amp;</span>m.path, <span class="prelude-val">Some</span>(from_ty));
                     }
                 }
 
-                <span class="comment">// Parse `#[serde(try_from = &quot;Type&quot;)]
+                <span class="comment">// Parse `#[serde(try_from = &quot;Type&quot;)]`
                 </span>Meta(NameValue(m)) <span class="kw">if </span>m.path == TRY_FROM =&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Ok</span>(try_from_ty) = parse_lit_into_ty(cx, TRY_FROM, <span class="kw-2">&amp;</span>m.lit) {
                         type_try_from.set_opt(<span class="kw-2">&amp;</span>m.path, <span class="prelude-val">Some</span>(try_from_ty));
                     }
                 }
 
-                <span class="comment">// Parse `#[serde(into = &quot;Type&quot;)]
+                <span class="comment">// Parse `#[serde(into = &quot;Type&quot;)]`
                 </span>Meta(NameValue(m)) <span class="kw">if </span>m.path == INTO =&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Ok</span>(into_ty) = parse_lit_into_ty(cx, INTO, <span class="kw-2">&amp;</span>m.lit) {
                         type_into.set_opt(<span class="kw-2">&amp;</span>m.path, <span class="prelude-val">Some</span>(into_ty));
@@ -2527,21 +2458,20 @@
                         .into_token_stream()
                         .to_string()
                         .replace(<span class="string">&#39; &#39;</span>, <span class="string">&quot;&quot;</span>);
-                    cx.error_spanned_by(
-                        meta_item.path(),
-                        <span class="macro">format!</span>(<span class="string">&quot;unknown serde container attribute `{}`&quot;</span>, path),
-                    );
+                    <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;unknown serde container attribute `{}`&quot;</span>, path);
+                    cx.error_spanned_by(meta_item.path(), msg);
                 }
 
                 Lit(lit) =&gt; {
-                    cx.error_spanned_by(lit, <span class="string">&quot;unexpected literal in serde container attribute&quot;</span>);
+                    <span class="kw">let </span>msg = <span class="string">&quot;unexpected literal in serde container attribute&quot;</span>;
+                    cx.error_spanned_by(lit, msg);
                 }
             }
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>is_packed = <span class="bool-val">false</span>;
         <span class="kw">for </span>attr <span class="kw">in </span><span class="kw-2">&amp;</span>item.attrs {
-            <span class="kw">if </span>attr.path.is_ident(<span class="string">&quot;repr&quot;</span>) {
+            <span class="kw">if </span>attr.path == REPR {
                 <span class="kw">let _ </span>= attr.parse_args_with(|input: ParseStream| {
                     <span class="kw">while let </span><span class="prelude-val">Some</span>(token) = input.parse()<span class="question-mark">? </span>{
                         <span class="kw">if let </span>TokenTree::Ident(ident) = token {
@@ -2679,10 +2609,9 @@
                         syn::Fields::Named(<span class="kw">_</span>) | syn::Fields::Unit =&gt; {}
                         syn::Fields::Unnamed(fields) =&gt; {
                             <span class="kw">if </span>fields.unnamed.len() != <span class="number">1 </span>{
-                                cx.error_spanned_by(
-                                    variant,
-                                    <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] cannot be used with tuple variants&quot;</span>,
-                                );
+                                <span class="kw">let </span>msg =
+                                    <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] cannot be used with tuple variants&quot;</span>;
+                                cx.error_spanned_by(variant, msg);
                                 <span class="kw">break</span>;
                             }
                         }
@@ -2692,48 +2621,28 @@
             TagType::Internal { tag }
         }
         (<span class="prelude-val">Some</span>((untagged_tokens, <span class="kw">_</span>)), <span class="prelude-val">Some</span>((tag_tokens, <span class="kw">_</span>)), <span class="prelude-val">None</span>) =&gt; {
-            cx.error_spanned_by(
-                untagged_tokens,
-                <span class="string">&quot;enum cannot be both untagged and internally tagged&quot;</span>,
-            );
-            cx.error_spanned_by(
-                tag_tokens,
-                <span class="string">&quot;enum cannot be both untagged and internally tagged&quot;</span>,
-            );
+            <span class="kw">let </span>msg = <span class="string">&quot;enum cannot be both untagged and internally tagged&quot;</span>;
+            cx.error_spanned_by(untagged_tokens, msg);
+            cx.error_spanned_by(tag_tokens, msg);
             TagType::External <span class="comment">// doesn&#39;t matter, will error
         </span>}
         (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>((content_tokens, <span class="kw">_</span>))) =&gt; {
-            cx.error_spanned_by(
-                content_tokens,
-                <span class="string">&quot;#[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)] must be used together&quot;</span>,
-            );
+            <span class="kw">let </span>msg = <span class="string">&quot;#[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)] must be used together&quot;</span>;
+            cx.error_spanned_by(content_tokens, msg);
             TagType::External
         }
         (<span class="prelude-val">Some</span>((untagged_tokens, <span class="kw">_</span>)), <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>((content_tokens, <span class="kw">_</span>))) =&gt; {
-            cx.error_spanned_by(
-                untagged_tokens,
-                <span class="string">&quot;untagged enum cannot have #[serde(content = \&quot;...\&quot;)]&quot;</span>,
-            );
-            cx.error_spanned_by(
-                content_tokens,
-                <span class="string">&quot;untagged enum cannot have #[serde(content = \&quot;...\&quot;)]&quot;</span>,
-            );
+            <span class="kw">let </span>msg = <span class="string">&quot;untagged enum cannot have #[serde(content = \&quot;...\&quot;)]&quot;</span>;
+            cx.error_spanned_by(untagged_tokens, msg);
+            cx.error_spanned_by(content_tokens, msg);
             TagType::External
         }
         (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>((<span class="kw">_</span>, tag)), <span class="prelude-val">Some</span>((<span class="kw">_</span>, content))) =&gt; TagType::Adjacent { tag, content },
         (<span class="prelude-val">Some</span>((untagged_tokens, <span class="kw">_</span>)), <span class="prelude-val">Some</span>((tag_tokens, <span class="kw">_</span>)), <span class="prelude-val">Some</span>((content_tokens, <span class="kw">_</span>))) =&gt; {
-            cx.error_spanned_by(
-                untagged_tokens,
-                <span class="string">&quot;untagged enum cannot have #[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)]&quot;</span>,
-            );
-            cx.error_spanned_by(
-                tag_tokens,
-                <span class="string">&quot;untagged enum cannot have #[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)]&quot;</span>,
-            );
-            cx.error_spanned_by(
-                content_tokens,
-                <span class="string">&quot;untagged enum cannot have #[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)]&quot;</span>,
-            );
+            <span class="kw">let </span>msg = <span class="string">&quot;untagged enum cannot have #[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)]&quot;</span>;
+            cx.error_spanned_by(untagged_tokens, msg);
+            cx.error_spanned_by(tag_tokens, msg);
+            cx.error_spanned_by(content_tokens, msg);
             TagType::External
         }
     }
@@ -2752,44 +2661,32 @@
     ) {
         (<span class="kw">_</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; Identifier::No,
         (<span class="kw">_</span>, <span class="prelude-val">Some</span>((field_identifier_tokens, <span class="kw">_</span>)), <span class="prelude-val">Some</span>((variant_identifier_tokens, <span class="kw">_</span>))) =&gt; {
-            cx.error_spanned_by(
-                field_identifier_tokens,
-                <span class="string">&quot;#[serde(field_identifier)] and #[serde(variant_identifier)] cannot both be set&quot;</span>,
-            );
-            cx.error_spanned_by(
-                variant_identifier_tokens,
-                <span class="string">&quot;#[serde(field_identifier)] and #[serde(variant_identifier)] cannot both be set&quot;</span>,
-            );
+            <span class="kw">let </span>msg =
+                <span class="string">&quot;#[serde(field_identifier)] and #[serde(variant_identifier)] cannot both be set&quot;</span>;
+            cx.error_spanned_by(field_identifier_tokens, msg);
+            cx.error_spanned_by(variant_identifier_tokens, msg);
             Identifier::No
         }
         (syn::Data::Enum(<span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; Identifier::Field,
         (syn::Data::Enum(<span class="kw">_</span>), <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Identifier::Variant,
         (syn::Data::Struct(syn::DataStruct { struct_token, .. }), <span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; {
-            cx.error_spanned_by(
-                struct_token,
-                <span class="string">&quot;#[serde(field_identifier)] can only be used on an enum&quot;</span>,
-            );
+            <span class="kw">let </span>msg = <span class="string">&quot;#[serde(field_identifier)] can only be used on an enum&quot;</span>;
+            cx.error_spanned_by(struct_token, msg);
             Identifier::No
         }
         (syn::Data::Union(syn::DataUnion { union_token, .. }), <span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; {
-            cx.error_spanned_by(
-                union_token,
-                <span class="string">&quot;#[serde(field_identifier)] can only be used on an enum&quot;</span>,
-            );
+            <span class="kw">let </span>msg = <span class="string">&quot;#[serde(field_identifier)] can only be used on an enum&quot;</span>;
+            cx.error_spanned_by(union_token, msg);
             Identifier::No
         }
         (syn::Data::Struct(syn::DataStruct { struct_token, .. }), <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; {
-            cx.error_spanned_by(
-                struct_token,
-                <span class="string">&quot;#[serde(variant_identifier)] can only be used on an enum&quot;</span>,
-            );
+            <span class="kw">let </span>msg = <span class="string">&quot;#[serde(variant_identifier)] can only be used on an enum&quot;</span>;
+            cx.error_spanned_by(struct_token, msg);
             Identifier::No
         }
         (syn::Data::Union(syn::DataUnion { union_token, .. }), <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; {
-            cx.error_spanned_by(
-                union_token,
-                <span class="string">&quot;#[serde(variant_identifier)] can only be used on an enum&quot;</span>,
-            );
+            <span class="kw">let </span>msg = <span class="string">&quot;#[serde(variant_identifier)] can only be used on an enum&quot;</span>;
+            cx.error_spanned_by(union_token, msg);
             Identifier::No
         }
     }
@@ -2806,7 +2703,12 @@
     other: bool,
     serialize_with: <span class="prelude-ty">Option</span>&lt;syn::ExprPath&gt;,
     deserialize_with: <span class="prelude-ty">Option</span>&lt;syn::ExprPath&gt;,
-    borrow: <span class="prelude-ty">Option</span>&lt;syn::Meta&gt;,
+    borrow: <span class="prelude-ty">Option</span>&lt;BorrowAttribute&gt;,
+}
+
+<span class="kw">struct </span>BorrowAttribute {
+    path: syn::Path,
+    lifetimes: <span class="prelude-ty">Option</span>&lt;BTreeSet&lt;syn::Lifetime&gt;&gt;,
 }
 
 <span class="kw">impl </span>Variant {
@@ -2959,16 +2861,39 @@
                     }
                 }
 
-                <span class="comment">// Defer `#[serde(borrow)]` and `#[serde(borrow = &quot;&#39;a + &#39;b&quot;)]`
-                </span>Meta(m) <span class="kw">if </span>m.path() == BORROW =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>variant.fields {
+                <span class="comment">// Parse `#[serde(borrow)]`
+                </span>Meta(Path(word)) <span class="kw">if </span>word == BORROW =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>variant.fields {
                     syn::Fields::Unnamed(fields) <span class="kw">if </span>fields.unnamed.len() == <span class="number">1 </span>=&gt; {
-                        borrow.set(m.path(), m.clone());
+                        borrow.set(
+                            word,
+                            BorrowAttribute {
+                                path: word.clone(),
+                                lifetimes: <span class="prelude-val">None</span>,
+                            },
+                        );
                     }
                     <span class="kw">_ </span>=&gt; {
-                        cx.error_spanned_by(
-                            variant,
-                            <span class="string">&quot;#[serde(borrow)] may only be used on newtype variants&quot;</span>,
-                        );
+                        <span class="kw">let </span>msg = <span class="string">&quot;#[serde(borrow)] may only be used on newtype variants&quot;</span>;
+                        cx.error_spanned_by(variant, msg);
+                    }
+                },
+
+                <span class="comment">// Parse `#[serde(borrow = &quot;&#39;a + &#39;b&quot;)]`
+                </span>Meta(NameValue(m)) <span class="kw">if </span>m.path == BORROW =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>variant.fields {
+                    syn::Fields::Unnamed(fields) <span class="kw">if </span>fields.unnamed.len() == <span class="number">1 </span>=&gt; {
+                        <span class="kw">if let </span><span class="prelude-val">Ok</span>(lifetimes) = parse_lit_into_lifetimes(cx, <span class="kw-2">&amp;</span>m.lit) {
+                            borrow.set(
+                                <span class="kw-2">&amp;</span>m.path,
+                                BorrowAttribute {
+                                    path: m.path.clone(),
+                                    lifetimes: <span class="prelude-val">Some</span>(lifetimes),
+                                },
+                            );
+                        }
+                    }
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="kw">let </span>msg = <span class="string">&quot;#[serde(borrow)] may only be used on newtype variants&quot;</span>;
+                        cx.error_spanned_by(variant, msg);
                     }
                 },
 
@@ -2978,14 +2903,13 @@
                         .into_token_stream()
                         .to_string()
                         .replace(<span class="string">&#39; &#39;</span>, <span class="string">&quot;&quot;</span>);
-                    cx.error_spanned_by(
-                        meta_item.path(),
-                        <span class="macro">format!</span>(<span class="string">&quot;unknown serde variant attribute `{}`&quot;</span>, path),
-                    );
+                    <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;unknown serde variant attribute `{}`&quot;</span>, path);
+                    cx.error_spanned_by(meta_item.path(), msg);
                 }
 
                 Lit(lit) =&gt; {
-                    cx.error_spanned_by(lit, <span class="string">&quot;unexpected literal in serde variant attribute&quot;</span>);
+                    <span class="kw">let </span>msg = <span class="string">&quot;unexpected literal in serde variant attribute&quot;</span>;
+                    cx.error_spanned_by(lit, msg);
                 }
             }
         }
@@ -3122,16 +3046,28 @@
             <span class="prelude-val">None </span>=&gt; index.to_string(),
         };
 
-        <span class="kw">let </span>variant_borrow = attrs
-            .and_then(|variant| variant.borrow.as_ref())
-            .map(|borrow| Meta(borrow.clone()));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(borrow_attribute) = attrs.and_then(|variant| variant.borrow.as_ref()) {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(borrowable) = borrowable_lifetimes(cx, <span class="kw-2">&amp;</span>ident, field) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lifetimes) = <span class="kw-2">&amp;</span>borrow_attribute.lifetimes {
+                    <span class="kw">for </span>lifetime <span class="kw">in </span>lifetimes {
+                        <span class="kw">if </span>!borrowable.contains(lifetime) {
+                            <span class="kw">let </span>msg =
+                                <span class="macro">format!</span>(<span class="string">&quot;field `{}` does not have lifetime {}&quot;</span>, ident, lifetime);
+                            cx.error_spanned_by(field, msg);
+                        }
+                    }
+                    borrowed_lifetimes.set(<span class="kw-2">&amp;</span>borrow_attribute.path, lifetimes.clone());
+                } <span class="kw">else </span>{
+                    borrowed_lifetimes.set(<span class="kw-2">&amp;</span>borrow_attribute.path, borrowable);
+                }
+            }
+        }
 
         <span class="kw">for </span>meta_item <span class="kw">in </span>field
             .attrs
             .iter()
             .flat_map(|attr| get_serde_meta_items(cx, attr))
             .flatten()
-            .chain(variant_borrow)
         {
             <span class="kw">match </span><span class="kw-2">&amp;</span>meta_item {
                 <span class="comment">// Parse `#[serde(rename = &quot;foo&quot;)]`
@@ -3253,17 +3189,15 @@
 
                 <span class="comment">// Parse `#[serde(borrow = &quot;&#39;a + &#39;b&quot;)]`
                 </span>Meta(NameValue(m)) <span class="kw">if </span>m.path == BORROW =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(lifetimes) = parse_lit_into_lifetimes(cx, BORROW, <span class="kw-2">&amp;</span>m.lit) {
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(lifetimes) = parse_lit_into_lifetimes(cx, <span class="kw-2">&amp;</span>m.lit) {
                         <span class="kw">if let </span><span class="prelude-val">Ok</span>(borrowable) = borrowable_lifetimes(cx, <span class="kw-2">&amp;</span>ident, field) {
                             <span class="kw">for </span>lifetime <span class="kw">in </span><span class="kw-2">&amp;</span>lifetimes {
                                 <span class="kw">if </span>!borrowable.contains(lifetime) {
-                                    cx.error_spanned_by(
-                                        field,
-                                        <span class="macro">format!</span>(
-                                            <span class="string">&quot;field `{}` does not have lifetime {}&quot;</span>,
-                                            ident, lifetime
-                                        ),
+                                    <span class="kw">let </span>msg = <span class="macro">format!</span>(
+                                        <span class="string">&quot;field `{}` does not have lifetime {}&quot;</span>,
+                                        ident, lifetime,
                                     );
+                                    cx.error_spanned_by(field, msg);
                                 }
                             }
                             borrowed_lifetimes.set(<span class="kw-2">&amp;</span>m.path, lifetimes);
@@ -3289,14 +3223,13 @@
                         .into_token_stream()
                         .to_string()
                         .replace(<span class="string">&#39; &#39;</span>, <span class="string">&quot;&quot;</span>);
-                    cx.error_spanned_by(
-                        meta_item.path(),
-                        <span class="macro">format!</span>(<span class="string">&quot;unknown serde field attribute `{}`&quot;</span>, path),
-                    );
+                    <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;unknown serde field attribute `{}`&quot;</span>, path);
+                    cx.error_spanned_by(meta_item.path(), msg);
                 }
 
                 Lit(lit) =&gt; {
-                    cx.error_spanned_by(lit, <span class="string">&quot;unexpected literal in serde field attribute&quot;</span>);
+                    <span class="kw">let </span>msg = <span class="string">&quot;unexpected literal in serde field attribute&quot;</span>;
+                    cx.error_spanned_by(lit, msg);
                 }
             }
         }
@@ -3479,13 +3412,11 @@
             }
 
             <span class="kw">_ </span>=&gt; {
-                cx.error_spanned_by(
-                    meta,
-                    <span class="macro">format!</span>(
-                        <span class="string">&quot;malformed {0} attribute, expected `{0}(serialize = ..., deserialize = ...)`&quot;</span>,
-                        attr_name
-                    ),
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(
+                    <span class="string">&quot;malformed {0} attribute, expected `{0}(serialize = ..., deserialize = ...)`&quot;</span>,
+                    attr_name,
                 );
+                cx.error_spanned_by(meta, msg);
                 <span class="kw">return </span><span class="prelude-val">Err</span>(());
             }
         }
@@ -3549,21 +3480,20 @@
     <span class="kw">if let </span>syn::Lit::Str(lit) = lit {
         <span class="prelude-val">Ok</span>(lit)
     } <span class="kw">else </span>{
-        cx.error_spanned_by(
-            lit,
-            <span class="macro">format!</span>(
-                <span class="string">&quot;expected serde {} attribute to be a string: `{} = \&quot;...\&quot;`&quot;</span>,
-                attr_name, meta_item_name
-            ),
+        <span class="kw">let </span>msg = <span class="macro">format!</span>(
+            <span class="string">&quot;expected serde {} attribute to be a string: `{} = \&quot;...\&quot;`&quot;</span>,
+            attr_name, meta_item_name,
         );
+        cx.error_spanned_by(lit, msg);
         <span class="prelude-val">Err</span>(())
     }
 }
 
 <span class="kw">fn </span>parse_lit_into_path(cx: <span class="kw-2">&amp;</span>Ctxt, attr_name: Symbol, lit: <span class="kw-2">&amp;</span>syn::Lit) -&gt; <span class="prelude-ty">Result</span>&lt;syn::Path, ()&gt; {
     <span class="kw">let </span>string = get_lit_str(cx, attr_name, lit)<span class="question-mark">?</span>;
-    parse_lit_str(string).map_err(|<span class="kw">_</span>| {
-        cx.error_spanned_by(lit, <span class="macro">format!</span>(<span class="string">&quot;failed to parse path: {:?}&quot;</span>, string.value()));
+    string.parse().map_err(|<span class="kw">_</span>| {
+        <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;failed to parse path: {:?}&quot;</span>, string.value());
+        cx.error_spanned_by(lit, msg);
     })
 }
 
@@ -3573,8 +3503,9 @@
     lit: <span class="kw-2">&amp;</span>syn::Lit,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;syn::ExprPath, ()&gt; {
     <span class="kw">let </span>string = get_lit_str(cx, attr_name, lit)<span class="question-mark">?</span>;
-    parse_lit_str(string).map_err(|<span class="kw">_</span>| {
-        cx.error_spanned_by(lit, <span class="macro">format!</span>(<span class="string">&quot;failed to parse path: {:?}&quot;</span>, string.value()));
+    string.parse().map_err(|<span class="kw">_</span>| {
+        <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;failed to parse path: {:?}&quot;</span>, string.value());
+        cx.error_spanned_by(lit, msg);
     })
 }
 
@@ -3585,63 +3516,53 @@
     lit: <span class="kw-2">&amp;</span>syn::Lit,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;syn::WherePredicate&gt;, ()&gt; {
     <span class="kw">let </span>string = get_lit_str2(cx, attr_name, meta_item_name, lit)<span class="question-mark">?</span>;
-    <span class="kw">if </span>string.value().is_empty() {
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
-    }
 
-    <span class="kw">let </span>where_string = syn::LitStr::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;where {}&quot;</span>, string.value()), string.span());
-
-    parse_lit_str::&lt;syn::WhereClause&gt;(<span class="kw-2">&amp;</span>where_string)
-        .map(|wh| wh.predicates.into_iter().collect())
+    string
+        .parse_with(Punctuated::&lt;syn::WherePredicate, <span class="macro">Token!</span>[,]&gt;::parse_terminated)
+        .map(Vec::from_iter)
         .map_err(|err| cx.error_spanned_by(lit, err))
 }
 
 <span class="kw">fn </span>parse_lit_into_ty(cx: <span class="kw-2">&amp;</span>Ctxt, attr_name: Symbol, lit: <span class="kw-2">&amp;</span>syn::Lit) -&gt; <span class="prelude-ty">Result</span>&lt;syn::Type, ()&gt; {
     <span class="kw">let </span>string = get_lit_str(cx, attr_name, lit)<span class="question-mark">?</span>;
 
-    parse_lit_str(string).map_err(|<span class="kw">_</span>| {
-        cx.error_spanned_by(
-            lit,
-            <span class="macro">format!</span>(<span class="string">&quot;failed to parse type: {} = {:?}&quot;</span>, attr_name, string.value()),
-        );
+    string.parse().map_err(|<span class="kw">_</span>| {
+        <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;failed to parse type: {} = {:?}&quot;</span>, attr_name, string.value());
+        cx.error_spanned_by(lit, msg);
     })
 }
 
 <span class="comment">// Parses a string literal like &quot;&#39;a + &#39;b + &#39;c&quot; containing a nonempty list of
 // lifetimes separated by `+`.
-</span><span class="kw">fn </span>parse_lit_into_lifetimes(
-    cx: <span class="kw-2">&amp;</span>Ctxt,
-    attr_name: Symbol,
-    lit: <span class="kw-2">&amp;</span>syn::Lit,
-) -&gt; <span class="prelude-ty">Result</span>&lt;BTreeSet&lt;syn::Lifetime&gt;, ()&gt; {
-    <span class="kw">let </span>string = get_lit_str(cx, attr_name, lit)<span class="question-mark">?</span>;
-    <span class="kw">if </span>string.value().is_empty() {
-        cx.error_spanned_by(lit, <span class="string">&quot;at least one lifetime must be borrowed&quot;</span>);
-        <span class="kw">return </span><span class="prelude-val">Err</span>(());
-    }
+</span><span class="kw">fn </span>parse_lit_into_lifetimes(cx: <span class="kw-2">&amp;</span>Ctxt, lit: <span class="kw-2">&amp;</span>syn::Lit) -&gt; <span class="prelude-ty">Result</span>&lt;BTreeSet&lt;syn::Lifetime&gt;, ()&gt; {
+    <span class="kw">let </span>string = get_lit_str(cx, BORROW, lit)<span class="question-mark">?</span>;
 
-    <span class="kw">struct </span>BorrowedLifetimes(Punctuated&lt;syn::Lifetime, <span class="macro">Token!</span>[+]&gt;);
-
-    <span class="kw">impl </span>Parse <span class="kw">for </span>BorrowedLifetimes {
-        <span class="kw">fn </span>parse(input: ParseStream) -&gt; parse::Result&lt;<span class="self">Self</span>&gt; {
-            Punctuated::parse_separated_nonempty(input).map(BorrowedLifetimes)
-        }
-    }
-
-    <span class="kw">if let </span><span class="prelude-val">Ok</span>(BorrowedLifetimes(lifetimes)) = parse_lit_str(string) {
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(lifetimes) = string.parse_with(|input: ParseStream| {
         <span class="kw">let </span><span class="kw-2">mut </span>set = BTreeSet::new();
-        <span class="kw">for </span>lifetime <span class="kw">in </span>lifetimes {
+        <span class="kw">while </span>!input.is_empty() {
+            <span class="kw">let </span>lifetime: Lifetime = input.parse()<span class="question-mark">?</span>;
             <span class="kw">if </span>!set.insert(lifetime.clone()) {
-                cx.error_spanned_by(lit, <span class="macro">format!</span>(<span class="string">&quot;duplicate borrowed lifetime `{}`&quot;</span>, lifetime));
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;duplicate borrowed lifetime `{}`&quot;</span>, lifetime);
+                cx.error_spanned_by(lit, msg);
             }
+            <span class="kw">if </span>input.is_empty() {
+                <span class="kw">break</span>;
+            }
+            input.parse::&lt;<span class="macro">Token!</span>[+]&gt;()<span class="question-mark">?</span>;
         }
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(set);
+        <span class="prelude-val">Ok</span>(set)
+    }) {
+        <span class="kw">return if </span>lifetimes.is_empty() {
+            <span class="kw">let </span>msg = <span class="string">&quot;at least one lifetime must be borrowed&quot;</span>;
+            cx.error_spanned_by(lit, msg);
+            <span class="prelude-val">Err</span>(())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(lifetimes)
+        };
     }
 
-    cx.error_spanned_by(
-        lit,
-        <span class="macro">format!</span>(<span class="string">&quot;failed to parse borrowed lifetimes: {:?}&quot;</span>, string.value()),
-    );
+    <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;failed to parse borrowed lifetimes: {:?}&quot;</span>, string.value());
+    cx.error_spanned_by(lit, msg);
     <span class="prelude-val">Err</span>(())
 }
 
@@ -3796,10 +3717,8 @@
     <span class="kw">let </span><span class="kw-2">mut </span>lifetimes = BTreeSet::new();
     collect_lifetimes(<span class="kw-2">&amp;</span>field.ty, <span class="kw-2">&amp;mut </span>lifetimes);
     <span class="kw">if </span>lifetimes.is_empty() {
-        cx.error_spanned_by(
-            field,
-            <span class="macro">format!</span>(<span class="string">&quot;field `{}` has no lifetimes to borrow&quot;</span>, name),
-        );
+        <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;field `{}` has no lifetimes to borrow&quot;</span>, name);
+        cx.error_spanned_by(field, msg);
         <span class="prelude-val">Err</span>(())
     } <span class="kw">else </span>{
         <span class="prelude-val">Ok</span>(lifetimes)
@@ -3866,9 +3785,7 @@
         | syn::Type::Infer(<span class="kw">_</span>)
         | syn::Type::Verbatim(<span class="kw">_</span>) =&gt; {}
 
-        <span class="attr">#[cfg(test)]
-        </span>syn::Type::__TestExhaustive(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-        <span class="attr">#[cfg(not(test))]
+        <span class="attr">#[cfg_attr(all(test, exhaustive), deny(non_exhaustive_omitted_patterns))]
         </span><span class="kw">_ </span>=&gt; {}
     }
 }
@@ -3892,19 +3809,6 @@
             <span class="kw">_ </span>=&gt; {}
         }
     }
-}
-
-<span class="kw">fn </span>parse_lit_str&lt;T&gt;(s: <span class="kw-2">&amp;</span>syn::LitStr) -&gt; parse::Result&lt;T&gt;
-<span class="kw">where
-    </span>T: Parse,
-{
-    <span class="kw">let </span>tokens = spanned_tokens(s)<span class="question-mark">?</span>;
-    syn::parse2(tokens)
-}
-
-<span class="kw">fn </span>spanned_tokens(s: <span class="kw-2">&amp;</span>syn::LitStr) -&gt; parse::Result&lt;TokenStream&gt; {
-    <span class="kw">let </span>stream = syn::parse_str(<span class="kw-2">&amp;</span>s.value())<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(respan(stream, s.span()))
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="serde_derive" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (5ce39f42b 2023-01-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>
