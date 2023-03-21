@@ -4,16 +4,16 @@ in with pkgs; stdenv.mkDerivation rec {
   name = "rust-gpu";
 
   # Workaround for https://github.com/NixOS/nixpkgs/issues/60919.
+  # NOTE(eddyb) needed only in debug mode (warnings about needing optimizations
+  # turn into errors due to `-Werror`, for at least `spirv-tools-sys`).
   hardeningDisable = [ "fortify" ];
 
-  # Allow cargo to download crates.
+  # Allow cargo to download crates (even inside `nix-shell --pure`).
   SSL_CERT_FILE = "${cacert}/etc/ssl/certs/ca-bundle.crt";
 
-  buildInputs = [
-    pkgconfig rustup xlibsWrapper libxkbcommon
-  ];
+  nativeBuildInputs = [ rustup ];
 
-  # Runtime dependencies.
+  # Runtime dependencies (for the example runners).
   LD_LIBRARY_PATH = with xorg; lib.makeLibraryPath [
     vulkan-loader
 
