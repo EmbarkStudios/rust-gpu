@@ -369,17 +369,41 @@ fn create_pipeline(
 }
 
 #[allow(clippy::match_wild_err_arm)]
-pub fn start(options: &Options) {
+pub fn start(
+    #[cfg(target_os = "android")] android_app: winit::platform::android::activity::AndroidApp,
+    options: &Options,
+) {
+    let mut event_loop_builder = EventLoopBuilder::with_user_event();
+    cfg_if::cfg_if! {
+        if #[cfg(target_os = "android")] {
+            android_logger::init_once(
+                android_logger::Config::default()
+                    .with_min_level("info".parse().unwrap()),
+            );
+
+            use winit::platform::android::EventLoopBuilderExtAndroid;
+            event_loop_builder.with_android_app(android_app);
+        } else if #[cfg(target_arch = "wasm32")] {
+            std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+            console_log::init().expect("could not initialize logger");
+        } else {
+            env_logger::init();
+        }
+    }
+    let event_loop = event_loop_builder.build();
+
     // Build the shader before we pop open a window, since it might take a while.
-    let event_loop = EventLoopBuilder::with_user_event().build();
-    let proxy = event_loop.create_proxy();
     let initial_shader = maybe_watch(
         options.shader,
-        Some(Box::new(move |res| match proxy.send_event(res) {
-            Ok(it) => it,
-            // ShaderModuleDescriptor is not `Debug`, so can't use unwrap/expect
-            Err(_err) => panic!("Event loop dead"),
-        })),
+        #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+        {
+            let proxy = event_loop.create_proxy();
+            Some(Box::new(move |res| match proxy.send_event(res) {
+                Ok(it) => it,
+                // ShaderModuleDescriptor is not `Debug`, so can't use unwrap/expect
+                Err(_err) => panic!("Event loop dead"),
+            }))
+        },
     );
 
     let window = winit::window::WindowBuilder::new()
@@ -390,8 +414,6 @@ pub fn start(options: &Options) {
 
     cfg_if::cfg_if! {
         if #[cfg(target_arch = "wasm32")] {
-            std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-            console_log::init().expect("could not initialize logger");
             use winit::platform::web::WindowExtWebSys;
             // On wasm, append the canvas to the document body
             web_sys::window()
