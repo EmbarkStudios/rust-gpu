@@ -593,6 +593,8 @@ fn dig_scalar_pointee<'tcx>(
     })
 }
 
+// FIXME(eddyb) all `ty: TyAndLayout` variables should be `layout: TyAndLayout`,
+// the type is really more "Layout with Ty" (`.ty` field + `Deref`s to `Layout`).
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
     fn create_zst<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
         SpirvType::Adt {
@@ -613,16 +615,22 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
         ),
         FieldsShape::Union(_) => {
             assert!(!ty.is_unsized(), "{ty:#?}");
-            if ty.size.bytes() == 0 {
-                create_zst(cx, span, ty)
+
+            // Represent the `union` with its largest case, which should work
+            // for at least `MaybeUninit<T>` (which is between `T` and `()`),
+            // but also potentially some other ones as well.
+            // NOTE(eddyb) even if long-term this may become a byte array, that
+            // only works for "data types" and not "opaque handles" (images etc.).
+            let largest_case = (0..ty.fields.count())
+                .map(|i| ty.field(cx, i))
+                .max_by_key(|case| case.size);
+
+            if let Some(case) = largest_case {
+                assert_eq!(ty.size, case.size);
+                case.spirv_type(span, cx)
             } else {
-                let byte = SpirvType::Integer(8, false).def(span, cx);
-                let count = cx.constant_u32(span, ty.size.bytes() as u32);
-                SpirvType::Array {
-                    element: byte,
-                    count,
-                }
-                .def(span, cx)
+                assert_eq!(ty.size, Size::ZERO);
+                create_zst(cx, span, ty)
             }
         }
         FieldsShape::Array { stride, count } => {

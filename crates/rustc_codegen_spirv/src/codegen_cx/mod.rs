@@ -361,8 +361,8 @@ impl CodegenArgs {
 
             opts.optflag(
                 "",
-                "spirt",
-                "use SPIR-T for legalization (see also `docs/src/codegen-args.md`)",
+                "no-spirt",
+                "disable using SPIR-T for legalization (see also `docs/src/codegen-args.md`)",
             );
             opts.optmulti(
                 "",
@@ -537,7 +537,7 @@ impl CodegenArgs {
             dce: !matches.opt_present("no-dce"),
             compact_ids: !matches.opt_present("no-compact-ids"),
             structurize: !matches.opt_present("no-structurize"),
-            spirt: matches.opt_present("spirt"),
+            spirt: !matches.opt_present("no-spirt"),
             spirt_passes: matches
                 .opt_strs("spirt-passes")
                 .iter()

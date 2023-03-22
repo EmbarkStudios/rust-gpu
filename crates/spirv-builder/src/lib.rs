@@ -159,6 +159,7 @@ pub struct SpirvBuilder {
     spirv_metadata: SpirvMetadata,
     capabilities: Vec<Capability>,
     extensions: Vec<String>,
+    extra_args: Vec<String>,
 
     // spirv-val flags
     pub relax_struct_store: bool,
@@ -184,6 +185,7 @@ impl SpirvBuilder {
             spirv_metadata: SpirvMetadata::None,
             capabilities: Vec::new(),
             extensions: Vec::new(),
+            extra_args: Vec::new(),
 
             relax_struct_store: false,
             relax_logical_pointer: false,
@@ -301,6 +303,14 @@ impl SpirvBuilder {
     #[must_use]
     pub fn preserve_bindings(mut self, v: bool) -> Self {
         self.preserve_bindings = v;
+        self
+    }
+
+    /// Set additional "codegen arg". Note: the `RUSTGPU_CODEGEN_ARGS` environment variable
+    /// takes precedence over any set arguments using this function.
+    #[must_use]
+    pub fn extra_arg(mut self, arg: impl Into<String>) -> Self {
+        self.extra_args.push(arg.into());
         self
     }
 
@@ -475,6 +485,8 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     if let Ok(extra_codegen_args) = tracked_env_var_get("RUSTGPU_CODEGEN_ARGS") {
         llvm_args.extend(extra_codegen_args.split_whitespace().map(|s| s.to_string()));
+    } else {
+        llvm_args.extend(builder.extra_args.iter().cloned());
     }
 
     let llvm_args = join_checking_for_separators(llvm_args, " ");

@@ -1,0 +1,45 @@
+error: using `OpReturn` to return from within `asm!` is disallowed
+ --> $DIR/issue-1002.rs:9:9
+  |
+9 |         asm!("OpReturn", options(noreturn));
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: resuming execution, without falling through the end of the `asm!` block, is always undefined behavior
+
+error: using `OpReturnValue` to return from within `asm!` is disallowed
+  --> $DIR/issue-1002.rs:15:9
+   |
+15 | /         asm!(
+16 | |             "OpReturnValue {x}",
+17 | |             x = in(reg) x,
+18 | |             options(noreturn),
+19 | |         );
+   | |_________^
+   |
+   = note: resuming execution, without falling through the end of the `asm!` block, is always undefined behavior
+
+error: using `OpReturn` to return from within `asm!` is disallowed
+  --> $DIR/issue-1002.rs:25:9
+   |
+25 | /         asm!(
+26 | |             "OpReturn",          // close active block
+27 | |             "%unused = OpLabel", // open new block
+28 | |         );
+   | |_________^
+   |
+   = note: resuming execution, without falling through the end of the `asm!` block, is always undefined behavior
+
+error: using `OpReturnValue` to return from within `asm!` is disallowed
+  --> $DIR/issue-1002.rs:34:9
+   |
+34 | /         asm!(
+35 | |             "OpReturnValue {x}", // close active block
+36 | |             "%unused = OpLabel", // open new block
+37 | |             x = in(reg) x
+38 | |         );
+   | |_________^
+   |
+   = note: resuming execution, without falling through the end of the `asm!` block, is always undefined behavior
+
+error: aborting due to 4 previous errors
+

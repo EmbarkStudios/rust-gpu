@@ -7,9 +7,12 @@ use core::marker::PhantomData;
 /// Hence, this type represents something very similar to a slice, but with no way of knowing its
 /// length.
 #[spirv(runtime_array)]
+// HACK(eddyb) avoids "transparent newtype of `_anti_zst_padding`" misinterpretation.
+#[repr(C)]
 pub struct RuntimeArray<T> {
-    // spooky! this field does not exist, so if it's referenced in rust code, things will explode
-    _do_not_touch: u32,
+    // HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(runtime_array)]` can special-case it).
+    _anti_zst_padding: core::mem::MaybeUninit<u32>,
     _phantom: PhantomData<T>,
 }
 
@@ -25,13 +28,16 @@ impl<T> RuntimeArray<T> {
     /// and lead to UB.
     #[spirv_std_macros::gpu_only]
     pub unsafe fn index(&self, index: usize) -> &T {
+        // FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        let mut result_slot = core::mem::MaybeUninit::uninit();
         asm! {
             "%result = OpAccessChain _ {arr} {index}",
-            "OpReturnValue %result",
+            "OpStore {result_slot} %result",
             arr = in(reg) self,
             index = in(reg) index,
-            options(noreturn),
+            result_slot = in(reg) result_slot.as_mut_ptr(),
         }
+        result_slot.assume_init()
     }
 
     /// Index the array, returning a mutable reference to an element. Unfortunately, because the
@@ -43,12 +49,15 @@ impl<T> RuntimeArray<T> {
     /// and lead to UB.
     #[spirv_std_macros::gpu_only]
     pub unsafe fn index_mut(&mut self, index: usize) -> &mut T {
+        // FIXME(eddyb) `let mut result = T::default()` uses (for `asm!`), with this.
+        let mut result_slot = core::mem::MaybeUninit::uninit();
         asm! {
             "%result = OpAccessChain _ {arr} {index}",
-            "OpReturnValue %result",
+            "OpStore {result_slot} %result",
             arr = in(reg) self,
             index = in(reg) index,
-            options(noreturn),
+            result_slot = in(reg) result_slot.as_mut_ptr(),
         }
+        result_slot.assume_init()
     }
 }

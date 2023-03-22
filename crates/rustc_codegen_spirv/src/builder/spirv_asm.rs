@@ -163,7 +163,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
             (false, AsmBlock::Open) => (),
             (false, AsmBlock::End(terminator)) => {
                 self.err(&format!(
-                    "trailing terminator {terminator:?} requires `options(noreturn)`"
+                    "trailing terminator `Op{terminator:?}` requires `options(noreturn)`"
                 ));
             }
         }
@@ -356,6 +356,19 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             }
 
             op => {
+                // NOTE(eddyb) allowing the instruction to be added below avoids
+                // spurious "`noreturn` requires a terminator at the end" errors.
+                if let Op::Return | Op::ReturnValue = op {
+                    self.struct_err(&format!(
+                        "using `Op{op:?}` to return from within `asm!` is disallowed"
+                    ))
+                    .note(
+                        "resuming execution, without falling through the end \
+                        of the `asm!` block, is always undefined behavior",
+                    )
+                    .emit();
+                }
+
                 self.emit()
                     .insert_into_block(dr::InsertPoint::End, inst)
                     .unwrap();
@@ -370,7 +383,9 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     }
                     AsmBlock::End(terminator) => {
                         if op != Op::Label {
-                            self.err(&format!("expected OpLabel after terminator {terminator:?}"));
+                            self.err(&format!(
+                                "expected `OpLabel` after terminator `Op{terminator:?}`"
+                            ));
                         }
 
                         AsmBlock::Open

@@ -94,6 +94,8 @@ pub type Cubemap = crate::Image!(cube, type=f32, sampled, __crate_root=crate);
 /// See SPIR-V OpTypeImage specification for the meaning of integer parameters.
 #[spirv(generic_image_type)]
 #[derive(Copy, Clone)]
+// HACK(eddyb) avoids "transparent newtype of `_anti_zst_padding`" misinterpretation.
+#[repr(C)]
 pub struct Image<
     SampledType: SampleType<FORMAT>,
     const DIM: u32,          // Dimensionality,
@@ -103,7 +105,9 @@ pub struct Image<
     const SAMPLED: u32,      // Sampled,
     const FORMAT: u32,       // ImageFormat,
 > {
-    _x: u32,
+    // HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
+    // or another, before `#[spirv(generic_image_type)]` can special-case it).
+    _anti_zst_padding: core::mem::MaybeUninit<u32>,
     _marker: core::marker::PhantomData<SampledType>,
 }
 

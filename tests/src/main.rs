@@ -150,8 +150,8 @@ impl Runner {
                         .join(DepKind::ProcMacro.target_dir_suffix(&target)),
                 ],
             );
-            if spirt {
-                flags += " -Cllvm-args=--spirt";
+            if !spirt {
+                flags += " -Cllvm-args=--no-spirt";
             }
 
             let config = compiletest::Config {

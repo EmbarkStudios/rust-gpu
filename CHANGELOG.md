@@ -27,12 +27,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -->
 
-## [Unreleased]
+## [0.6.1]
+
+### Fixed 🩹
+- [PR#1006](https://github.com/EmbarkStudios/rust-gpu/pull/1006) fixed [#1002](https://github.com/EmbarkStudios/rust-gpu/issues/1002) by rewriting away all `spirv-std` uses of `asm!("OpReturnValue %result")` and disallowing `OpReturn`/`OpReturnValue` from inline `asm!` (as it's always UB to leave `asm!` blocks in any way other than falling through their end)
+
+## [0.6.0]
+
+### Added ⭐
+- [PR#998](https://github.com/EmbarkStudios/rust-gpu/pull/998) added `extra_arg()` SpirvBuilder API to be able to set codegen args otherwise not supported by the API (for example, to set `--spirv-passes`).
 
 ### Changed 🛠
-- [PR#992](https://github.com/EmbarkStudios/rust-gpu/pull/992) Renamed `rust-toolchain` to `rust-toolchain.toml`.
-- [PR#991](https://github.com/EmbarkStudios/rust-gpu/pull/991) Updated toolchain to `nightly-2023-01-21`.
-- [PR#990](https://github.com/EmbarkStudios/rust-gpu/pull/990) Removed return type inference from `Image` API and made `glam` usage mandatory.
+- [PR#999](https://github.com/EmbarkStudios/rust-gpu/pull/999) Made the [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) the default. You can opt-out using `--no-spirt` codegen arg.
+- [PR#992](https://github.com/EmbarkStudios/rust-gpu/pull/992) renamed `rust-toolchain` to `rust-toolchain.toml`.
+- [PR#991](https://github.com/EmbarkStudios/rust-gpu/pull/991) updated toolchain to `nightly-2023-01-21`.
+- [PR#990](https://github.com/EmbarkStudios/rust-gpu/pull/990) removed return type inference from `Image` API and made `glam` usage mandatory.
 
 ## [0.5.0]
 
