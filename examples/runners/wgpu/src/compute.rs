@@ -1,22 +1,14 @@
 use wgpu::util::DeviceExt;
 
 use super::Options;
-use std::{convert::TryInto, future::Future, time::Duration};
-
-fn block_on<T>(future: impl Future<Output = T>) -> T {
-    cfg_if::cfg_if! {
-        if #[cfg(target_arch = "wasm32")] {
-            wasm_bindgen_futures::spawn_local(future)
-        } else {
-            futures::executor::block_on(future)
-        }
-    }
-}
+use std::{convert::TryInto, time::Duration};
 
 pub fn start(options: &Options) {
+    env_logger::init();
+
     let shader_binary = crate::maybe_watch(options.shader, None);
 
-    block_on(start_internal(options, shader_binary));
+    futures::executor::block_on(start_internal(options, shader_binary));
 }
 
 pub async fn start_internal(

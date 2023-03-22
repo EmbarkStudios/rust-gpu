@@ -73,7 +73,10 @@
 use structopt::StructOpt;
 use strum::{Display, EnumString};
 
+// NOTE(eddyb) while this could theoretically work on the web, it needs more work.
+#[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
 mod compute;
+
 mod graphics;
 
 #[derive(EnumString, Display, PartialEq, Eq, Copy, Clone)]
@@ -86,7 +89,9 @@ pub enum RustGPUShader {
 
 fn maybe_watch(
     shader: RustGPUShader,
-    on_watch: Option<Box<dyn FnMut(wgpu::ShaderModuleDescriptor<'static>) + Send + 'static>>,
+    #[cfg(not(any(target_os = "android", target_arch = "wasm32")))] on_watch: Option<
+        Box<dyn FnMut(wgpu::ShaderModuleDescriptor<'static>) + Send + 'static>,
+    >,
 ) -> wgpu::ShaderModuleDescriptor<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
@@ -145,10 +150,6 @@ fn maybe_watch(
     }
 }
 
-fn is_compute_shader(shader: RustGPUShader) -> bool {
-    shader == RustGPUShader::Compute
-}
-
 #[derive(StructOpt)]
 #[structopt(name = "example-runner-wgpu")]
 pub struct Options {
@@ -156,14 +157,20 @@ pub struct Options {
     shader: RustGPUShader,
 }
 
-#[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
-pub fn main() {
-    env_logger::init();
+#[cfg_attr(target_os = "android", export_name = "android_main")]
+pub fn main(
+    #[cfg(target_os = "android")] android_app: winit::platform::android::activity::AndroidApp,
+) {
     let options: Options = Options::from_args();
 
-    if is_compute_shader(options.shader) {
-        compute::start(&options);
-    } else {
-        graphics::start(&options);
+    #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+    if options.shader == RustGPUShader::Compute {
+        return compute::start(&options);
     }
+
+    graphics::start(
+        #[cfg(target_os = "android")]
+        android_app,
+        &options,
+    );
 }

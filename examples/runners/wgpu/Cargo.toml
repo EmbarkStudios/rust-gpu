@@ -22,19 +22,19 @@ shared = { path = "../../shaders/shared" }
 futures = { version = "0.3", default-features = false, features = ["std", "executor"] }
 # Vulkan SDK or MoltenVK needs to be installed for `vulkan-portability` to work on macOS
 wgpu = { git = "https://github.com/gfx-rs/wgpu", features = ["spirv", "vulkan-portability"] }
-winit = "0.28.3"
+winit = { version = "0.28.3", features = ["android-native-activity"] }
 structopt = "0.3"
 strum = { version = "0.23.0", default_features = false, features = ["std", "derive"] }
 bytemuck = "1.6.3"
 
 [target.'cfg(not(any(target_os = "android", target_arch = "wasm32")))'.dependencies]
+env_logger = "0.10.0"
 spirv-builder = { workspace = true, features = ["watch"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
-ndk-glue = "0.7.0"
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger = "0.9.0"
+android_logger = "0.11.0"
+# NOTE(eddyb) `winit` feature `android-native-activity` is always enabled above,
+# to avoid specifying the dependency twice, but only applies to android builds.
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = "0.3.60"
