@@ -22,6 +22,53 @@ mod shaders {
     include!(concat!(env!("OUT_DIR"), "/entry_points.rs"));
 }
 
+/// Abstraction for getting timestamps even when `std::time` isn't supported.
+enum PortableInstant {
+    #[cfg(not(target_arch = "wasm32"))]
+    Native(std::time::Instant),
+
+    #[cfg(target_arch = "wasm32")]
+    Web {
+        performance_timestamp_ms: f64,
+
+        // HACK(eddyb) cached `window().performance()` to speed up/simplify `elapsed`.
+        cached_window_performance: web_sys::Performance,
+    },
+}
+
+impl PortableInstant {
+    fn now() -> Self {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            Self::Native(std::time::Instant::now())
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let performance = web_sys::window()
+                .expect("missing window")
+                .performance()
+                .expect("missing window.performance");
+            Self::Web {
+                performance_timestamp_ms: performance.now(),
+                cached_window_performance: performance,
+            }
+        }
+    }
+
+    fn elapsed_secs_f32(&self) -> f32 {
+        match self {
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::Native(instant) => instant.elapsed().as_secs_f32(),
+
+            #[cfg(target_arch = "wasm32")]
+            Self::Web {
+                performance_timestamp_ms,
+                cached_window_performance,
+            } => ((cached_window_performance.now() - performance_timestamp_ms) / 1000.0) as f32,
+        }
+    }
+}
+
 fn mouse_button_index(button: MouseButton) -> usize {
     match button {
         MouseButton::Left => 0,
@@ -137,7 +184,7 @@ async fn run(
         compiled_shader_modules,
     );
 
-    let start = std::time::Instant::now();
+    let start = PortableInstant::now();
 
     let (mut cursor_x, mut cursor_y) = (0.0, 0.0);
     let (mut drag_start_x, mut drag_start_y) = (0.0, 0.0);
@@ -232,7 +279,7 @@ async fn run(
                             depth_stencil_attachment: None,
                         });
 
-                        let time = start.elapsed().as_secs_f32();
+                        let time = start.elapsed_secs_f32();
                         for (i, press_time) in mouse_button_press_time.iter_mut().enumerate() {
                             if (mouse_button_press_since_last_frame & (1 << i)) != 0 {
                                 *press_time = time;
