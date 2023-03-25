@@ -271,7 +271,7 @@ fn standard() {
         OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Export
         %2 = OpTypeFloat 32
-        %3 = OpConstant %2 42.0
+        %3 = OpConstant %2 42
         %1 = OpVariable %2 Uniform %3"#;
 
     without_header_eq(result, expect);

@@ -725,9 +725,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 ))
             } else if signed {
                 // this cast chain can probably be collapsed, but, whatever, be safe
-                Operand::LiteralInt32(v as u8 as i8 as i32 as u32)
+                Operand::LiteralBit32(v as u8 as i8 as i32 as u32)
             } else {
-                Operand::LiteralInt32(v as u8 as u32)
+                Operand::LiteralBit32(v as u8 as u32)
             }
         }
         fn construct_16(self_: &Builder<'_, '_>, signed: bool, v: u128) -> Operand {
@@ -736,9 +736,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     "Switches to values above u16::MAX not supported: {v:?}"
                 ))
             } else if signed {
-                Operand::LiteralInt32(v as u16 as i16 as i32 as u32)
+                Operand::LiteralBit32(v as u16 as i16 as i32 as u32)
             } else {
-                Operand::LiteralInt32(v as u16 as u32)
+                Operand::LiteralBit32(v as u16 as u32)
             }
         }
         fn construct_32(self_: &Builder<'_, '_>, _signed: bool, v: u128) -> Operand {
@@ -747,7 +747,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     "Switches to values above u32::MAX not supported: {v:?}"
                 ))
             } else {
-                Operand::LiteralInt32(v as u32)
+                Operand::LiteralBit32(v as u32)
             }
         }
         fn construct_64(self_: &Builder<'_, '_>, _signed: bool, v: u128) -> Operand {
@@ -756,7 +756,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     "Switches to values above u64::MAX not supported: {v:?}"
                 ))
             } else {
-                Operand::LiteralInt64(v as u64)
+                Operand::LiteralBit64(v as u64)
             }
         }
         // pass in signed into the closure to be able to unify closure types
