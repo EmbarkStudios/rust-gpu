@@ -335,6 +335,11 @@ impl CodegenArgs {
                 "no-early-report-zombies",
                 "delays reporting zombies (to allow more legalization)",
             );
+            opts.optflag(
+                "",
+                "no-infer-storage-classes",
+                "disables SPIR-V Storage Class inference",
+            );
             opts.optflag("", "no-structurize", "disables CFG structurization");
 
             opts.optflag(
@@ -515,6 +520,7 @@ impl CodegenArgs {
             dce: !matches.opt_present("no-dce"),
             compact_ids: !matches.opt_present("no-compact-ids"),
             early_report_zombies: !matches.opt_present("no-early-report-zombies"),
+            infer_storage_classes: !matches.opt_present("no-infer-storage-classes"),
             structurize: !matches.opt_present("no-structurize"),
             spirt: !matches.opt_present("no-spirt"),
             spirt_passes: matches

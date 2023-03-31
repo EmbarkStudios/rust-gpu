@@ -30,7 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added ⭐
-- [PR#1039](https://github.com/EmbarkStudios/rust-gpu/pull/1039) added new experimental `sample_with` to `Image` API to set additional image operands.
+- [PR#1020](https://github.com/EmbarkStudios/rust-gpu/pull/1020) added SPIR-T `qptr`
+  support in the form of `--spirt-passes=qptr`, a way to turn off "Storage Class inference",
+  and reporting for SPIR-T diagnostics - to test `qptr` fully, you can use:  
+  `RUSTGPU_CODEGEN_ARGS="--no-infer-storage-classes --spirt-passes=qptr"`  
+  (see also [the SPIR-T `qptr` PR](https://github.com/EmbarkStudios/spirt/pull/24) for more details about the `qptr` experiment)
+- [PR#1039](https://github.com/EmbarkStudios/rust-gpu/pull/1039) added new experimental `sample_with` to `Image` API to set additional image operands
 - [PR#1031](https://github.com/EmbarkStudios/rust-gpu/pull/1031) added `Components` generic parameter to `Image` type, allowing images to return lower dimensional vectors and even scalars from the sampling API
 
 ### Changed 🛠
