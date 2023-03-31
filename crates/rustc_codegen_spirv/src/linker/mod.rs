@@ -39,6 +39,7 @@ pub struct Options {
     pub compact_ids: bool,
     pub dce: bool,
     pub early_report_zombies: bool,
+    pub infer_storage_classes: bool,
     pub structurize: bool,
     pub spirt: bool,
     pub spirt_passes: Vec<String>,
@@ -228,7 +229,7 @@ pub fn link(
         zombies::report_and_remove_zombies(sess, opts, &mut output)?;
     }
 
-    {
+    if opts.infer_storage_classes {
         // HACK(eddyb) this is not the best approach, but storage class inference
         // can still fail in entirely legitimate ways (i.e. mismatches in zombies).
         if !opts.early_report_zombies {
@@ -408,6 +409,7 @@ pub fn link(
         }
 
         if !opts.spirt_passes.is_empty() {
+            // FIXME(eddyb) why does this focus on functions, it could just be module passes??
             spirt_passes::run_func_passes(
                 &mut module,
                 &opts.spirt_passes,
@@ -441,21 +443,13 @@ pub fn link(
 
             // FIXME(eddyb) don't allocate whole `String`s here.
             std::fs::write(&dump_spirt_file_path, pretty.to_string()).unwrap();
-            std::fs::write(dump_spirt_file_path.with_extension("spirt.html"), {
-                let mut html = pretty
+            std::fs::write(
+                dump_spirt_file_path.with_extension("spirt.html"),
+                pretty
                     .render_to_html()
                     .with_dark_mode_support()
-                    .to_html_doc();
-                // HACK(eddyb) this should be in `spirt::pretty` itself,
-                // but its need didn't become obvious until more recently.
-                html += "
-                        <style>
-                            pre.spirt-90c2056d-5b38-4644-824a-b4be1c82f14d sub {
-                                line-height: 0;
-                            }
-                        </style>";
-                html
-            })
+                    .to_html_doc(),
+            )
             .unwrap();
         }
 

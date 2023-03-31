@@ -1,13 +1,13 @@
 use crate::decorations::{CustomDecoration, SpanRegenerator, SrcLocDecoration, ZombieDecoration};
 use rustc_data_structures::fx::FxIndexSet;
-use rustc_errors::{DiagnosticBuilder, ErrorGuaranteed};
+use rustc_errors::DiagnosticBuilder;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
 use smallvec::SmallVec;
 use spirt::visit::{InnerVisit, Visitor};
 use spirt::{
-    spv, Attr, AttrSet, AttrSetDef, Const, Context, DataInstDef, DataInstKind, ExportKey, Exportee,
-    Func, GlobalVar, Module, Type,
+    spv, Attr, AttrSet, AttrSetDef, Const, Context, DataInstDef, DataInstKind, Diag, DiagLevel,
+    ExportKey, Exportee, Func, GlobalVar, Module, Type,
 };
 use std::marker::PhantomData;
 use std::{mem, str};
@@ -35,6 +35,7 @@ pub(crate) fn report_diagnostics(
         use_stack: SmallVec::new(),
         span_regen: SpanRegenerator::new_spirt(sess.source_map(), module),
         overall_result: Ok(()),
+        any_spirt_bugs: false,
     };
     for (export_key, &exportee) in &module.exports {
         assert_eq!(reporter.use_stack.len(), 0);
@@ -56,6 +57,28 @@ pub(crate) fn report_diagnostics(
         export_key.inner_visit_with(&mut reporter);
         exportee.inner_visit_with(&mut reporter);
     }
+
+    if reporter.any_spirt_bugs {
+        let mut note = sess.struct_note_without_error("SPIR-T bugs were reported");
+        match &linker_options.dump_spirt_passes {
+            Some(dump_dir) => {
+                note.help(format!(
+                    "pretty-printed SPIR-T will be saved to `{}`, as `.spirt.html` files",
+                    dump_dir.display()
+                ));
+            }
+            None => {
+                // FIXME(eddyb) maybe just always generate the files in a tmpdir?
+                note.help(
+                    "re-run with `RUSTGPU_CODEGEN_ARGS=\"--dump-spirt-passes=$PWD\"` to \
+                     get pretty-printed SPIR-T (`.spirt.html`)",
+                );
+            }
+        }
+        note.note("pretty-printed SPIR-T is preferred when reporting Rust-GPU issues")
+            .emit();
+    }
+
     reporter.overall_result
 }
 
@@ -81,8 +104,7 @@ fn decode_spv_lit_str_with<R>(imms: &[spv::Imm], f: impl FnOnce(&str) -> R) -> R
     let words = imms.iter().enumerate().map(|(i, &imm)| match (i, imm) {
         (0, spirt::spv::Imm::Short(k, w) | spirt::spv::Imm::LongStart(k, w))
         | (1.., spirt::spv::Imm::LongCont(k, w)) => {
-            // FIXME(eddyb) use `assert_eq!` after updating to latest SPIR-T.
-            assert!(k == wk.LiteralString);
+            assert_eq!(k, wk.LiteralString);
             w
         }
         _ => unreachable!(),
@@ -138,6 +160,7 @@ struct DiagnosticReporter<'a> {
     use_stack: SmallVec<[UseOrigin<'a>; 8]>,
     span_regen: SpanRegenerator<'a>,
     overall_result: crate::linker::Result<()>,
+    any_spirt_bugs: bool,
 }
 
 enum UseOrigin<'a> {
@@ -198,7 +221,7 @@ impl UseOrigin<'_> {
         &self,
         cx: &Context,
         span_regen: &mut SpanRegenerator<'_>,
-        err: &mut DiagnosticBuilder<'_, ErrorGuaranteed>,
+        err: &mut DiagnosticBuilder<'_, impl rustc_errors::EmissionGuarantee>,
     ) {
         let wk = &super::SpvSpecWithExtras::get().well_known;
 
@@ -231,8 +254,7 @@ impl UseOrigin<'_> {
                         &ExportKey::LinkName(name) => format!("function export `{}`", &cx[name]),
                         ExportKey::SpvEntryPoint { imms, .. } => match imms[..] {
                             [em @ spv::Imm::Short(em_kind, _), ref name_imms @ ..] => {
-                                // FIXME(eddyb) use `assert_eq!` after updating to latest SPIR-T.
-                                assert!(em_kind == wk.ExecutionModel);
+                                assert_eq!(em_kind, wk.ExecutionModel);
                                 let em = spv::print::operand_from_imms([em]).concat_to_plain_text();
                                 decode_spv_lit_str_with(name_imms, |name| {
                                     format!(
@@ -298,6 +320,57 @@ impl DiagnosticReporter<'_> {
                 }
                 self.overall_result = Err(err.emit());
             }
+        }
+
+        let diags = attrs_def.attrs.iter().flat_map(|attr| match attr {
+            Attr::Diagnostics(diags) => diags.0.iter(),
+            _ => [].iter(),
+        });
+        for diag in diags {
+            let Diag { level, message } = diag;
+
+            let prefix = match level {
+                DiagLevel::Bug(location) => {
+                    let location = location.to_string();
+                    let location = match location.split_once("/src/") {
+                        Some((_path_prefix, intra_src)) => intra_src,
+                        None => &location,
+                    };
+                    format!("SPIR-T BUG [{location}] ")
+                }
+                DiagLevel::Error | DiagLevel::Warning => "".to_string(),
+            };
+            let (deps, msg) = spirt::print::Plan::for_root(self.cx, message)
+                .pretty_print_deps_and_root_separately();
+
+            let deps = deps.to_string();
+            let suffix = if !deps.is_empty() {
+                format!("\n  where\n    {}", deps.replace('\n', "\n    "))
+            } else {
+                "".to_string()
+            };
+
+            let def_span = current_def
+                .and_then(|def| def.to_rustc_span(self.cx, &mut self.span_regen))
+                .unwrap_or(DUMMY_SP);
+
+            let msg = [prefix, msg.to_string(), suffix].concat();
+            match level {
+                DiagLevel::Bug(_) | DiagLevel::Error => {
+                    let mut err = self.sess.struct_span_err(def_span, msg);
+                    for use_origin in use_stack_for_def.iter().rev() {
+                        use_origin.note(self.cx, &mut self.span_regen, &mut err);
+                    }
+                    self.overall_result = Err(err.emit());
+                }
+                DiagLevel::Warning => {
+                    let mut warn = self.sess.struct_span_warn(def_span, msg);
+                    for use_origin in use_stack_for_def.iter().rev() {
+                        use_origin.note(self.cx, &mut self.span_regen, &mut warn);
+                    }
+                }
+            }
+            self.any_spirt_bugs = matches!(level, DiagLevel::Bug(_));
         }
     }
 }
