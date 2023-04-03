@@ -27,7 +27,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         .iter()
         .map(|f| (f.def_id().unwrap(), f.clone()))
         .collect();
-    let relevant_globals = gather_relevant_globals(module);
+    let legal_globals = LegalGlobal::gather_from_module(module);
     let void = module
         .types_global_values
         .iter()
@@ -38,7 +38,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     let mut dropped_ids = FxHashSet::default();
     let mut inlined_dont_inlines = Vec::new();
     module.functions.retain(|f| {
-        if should_inline(&relevant_globals, f) {
+        if should_inline(&legal_globals, f) {
             if has_dont_inline(f) {
                 inlined_dont_inlines.push(f.def_id().unwrap());
             }
@@ -72,7 +72,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         types_global_values: &mut module.types_global_values,
         void,
         functions: &functions,
-        relevant_globals: &relevant_globals,
+        legal_globals: &legal_globals,
     };
     for function in &mut module.functions {
         inliner.inline_fn(function);
@@ -164,99 +164,84 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
     }
 }
 
-/// Any global types/variables, relevant to the inliner (mostly pointer-related).
-enum Global {
-    Type {
-        // FIXME(eddyb) rewrite these to variants of `Global`.
-        illegal_pointee: bool,
-        illegal_fn_param: bool,
-        illegal_fn_ret: bool,
-    },
+/// Any type/const/global variable, which is "legal" (i.e. can be kept in SPIR-V).
+///
+/// For the purposes of the inliner, a legal global cannot:
+/// - refer to any illegal globals
+/// - (if a type) refer to any pointer types
+///   - this rules out both pointers in composites, and pointers to pointers
+///     (the latter itself *also* rules out variables containing pointers)
+enum LegalGlobal {
+    TypePointer(StorageClass),
+    TypeNonPointer,
+    Const,
+    Variable,
 }
 
-impl Global {
-    // FIXME(eddyb) these are negative checks, but should really be positive
-    // (which would require gathering *all* types as `Global`s).
-    fn illegal_as_pointee_ty(&self) -> bool {
-        match *self {
-            Self::Type {
-                illegal_pointee, ..
-            } => illegal_pointee,
-        }
-    }
-    fn illegal_as_fn_param_ty(&self) -> bool {
-        match *self {
-            Self::Type {
-                illegal_fn_param, ..
-            } => illegal_fn_param,
-        }
-    }
-    fn illegal_as_fn_ret_ty(&self) -> bool {
-        match *self {
-            Self::Type { illegal_fn_ret, .. } => illegal_fn_ret,
-        }
-    }
-}
+impl LegalGlobal {
+    fn gather_from_module(module: &Module) -> FxHashMap<Word, Self> {
+        let mut legal_globals = FxHashMap::<_, Self>::default();
+        for inst in &module.types_global_values {
+            let global = match inst.class.opcode {
+                Op::TypePointer => Self::TypePointer(inst.operands[0].unwrap_storage_class()),
+                Op::Variable => Self::Variable,
+                op if rspirv::grammar::reflect::is_type(op) => Self::TypeNonPointer,
+                op if rspirv::grammar::reflect::is_constant(op) => Self::Const,
 
-fn gather_relevant_globals(module: &Module) -> FxHashMap<Word, Global> {
-    let allowed_argument_storage_classes = &[
-        StorageClass::UniformConstant,
-        StorageClass::Function,
-        StorageClass::Private,
-        StorageClass::Workgroup,
-        StorageClass::AtomicCounter,
-    ];
-    let mut relevant_globals = FxHashMap::<_, Global>::default();
-    for inst in &module.types_global_values {
-        match inst.class.opcode {
-            Op::TypePointer => {
-                let storage_class = inst.operands[0].unwrap_storage_class();
-                let pointee = inst.operands[1].unwrap_id_ref();
-                let illegal_fn_param = !allowed_argument_storage_classes.contains(&storage_class)
-                    || relevant_globals.get(&pointee).map_or(false, |pointee| {
-                        pointee.illegal_as_pointee_ty() || pointee.illegal_as_fn_param_ty()
-                    });
+                // FIXME(eddyb) should this be `unreachable!()`?
+                _ => continue,
+            };
+            let legal_result_type = match inst.result_type {
+                Some(result_type_id) => matches!(
+                    (&global, legal_globals.get(&result_type_id)),
+                    (Self::Variable, Some(Self::TypePointer(_)))
+                        | (Self::Const, Some(Self::TypeNonPointer))
+                ),
+                None => matches!(global, Self::TypePointer(_) | Self::TypeNonPointer),
+            };
+            let legal_operands = inst.operands.iter().all(|operand| match operand {
+                Operand::IdRef(id) => matches!(
+                    legal_globals.get(id),
+                    Some(Self::TypeNonPointer | Self::Const)
+                ),
 
-                relevant_globals.insert(
-                    inst.result_id.unwrap(),
-                    Global::Type {
-                        illegal_pointee: true,
-                        illegal_fn_param,
-                        illegal_fn_ret: true,
-                    },
-                );
+                // NOTE(eddyb) this assumes non-ID operands are always legal.
+                _ => operand.id_ref_any().is_none(),
+            });
+            if legal_result_type && legal_operands {
+                legal_globals.insert(inst.result_id.unwrap(), global);
             }
-            Op::TypeStruct | Op::TypeArray | Op::TypeRuntimeArray | Op::TypeVector => {
-                let mut illegal_pointee = false;
-                let mut illegal_fn_param = false;
-                let mut illegal_fn_ret = false;
-                let component_tys = if inst.class.opcode == Op::TypeStruct {
-                    &inst.operands
-                } else {
-                    &inst.operands[..1]
-                };
-                for ty in component_tys {
-                    if let Some(ty) = relevant_globals.get(&ty.id_ref_any().unwrap()) {
-                        illegal_pointee |= ty.illegal_as_pointee_ty();
-                        illegal_fn_param |= ty.illegal_as_fn_param_ty();
-                        illegal_fn_ret |= ty.illegal_as_fn_ret_ty();
-                    }
-                }
-                if illegal_pointee || illegal_fn_param || illegal_fn_ret {
-                    relevant_globals.insert(
-                        inst.result_id.unwrap(),
-                        Global::Type {
-                            illegal_pointee,
-                            illegal_fn_param,
-                            illegal_fn_ret,
-                        },
-                    );
-                }
-            }
-            _ => {}
+        }
+        legal_globals
+    }
+
+    fn legal_as_fn_param_ty(&self) -> bool {
+        match *self {
+            Self::TypePointer(storage_class) => matches!(
+                storage_class,
+                StorageClass::UniformConstant
+                    | StorageClass::Function
+                    | StorageClass::Private
+                    | StorageClass::Workgroup
+                    | StorageClass::AtomicCounter
+            ),
+            Self::TypeNonPointer => true,
+
+            // FIXME(eddyb) should this be an `unreachable!()`?
+            Self::Const | Self::Variable => false,
         }
     }
-    relevant_globals
+
+    fn legal_as_fn_ret_ty(&self) -> bool {
+        #[allow(clippy::match_same_arms)]
+        match *self {
+            Self::TypePointer(_) => false,
+            Self::TypeNonPointer => true,
+
+            // FIXME(eddyb) should this be an `unreachable!()`?
+            Self::Const | Self::Variable => false,
+        }
+    }
 }
 
 fn has_dont_inline(function: &Function) -> bool {
@@ -265,18 +250,18 @@ fn has_dont_inline(function: &Function) -> bool {
     control.contains(FunctionControl::DONT_INLINE)
 }
 
-fn should_inline(relevant_globals: &FxHashMap<Word, Global>, function: &Function) -> bool {
+fn should_inline(legal_globals: &FxHashMap<Word, LegalGlobal>, function: &Function) -> bool {
     let def = function.def.as_ref().unwrap();
     let control = def.operands[0].unwrap_function_control();
     control.contains(FunctionControl::INLINE)
-        || function.parameters.iter().any(|inst| {
-            relevant_globals
+        || !function.parameters.iter().all(|inst| {
+            legal_globals
                 .get(inst.result_type.as_ref().unwrap())
-                .map_or(false, |param_ty| param_ty.illegal_as_fn_param_ty())
+                .map_or(false, |param_ty| param_ty.legal_as_fn_param_ty())
         })
-        || relevant_globals
+        || !legal_globals
             .get(&function.def.as_ref().unwrap().result_type.unwrap())
-            .map_or(false, |ret_ty| ret_ty.illegal_as_fn_ret_ty())
+            .map_or(false, |ret_ty| ret_ty.legal_as_fn_ret_ty())
 }
 
 // This should be more general, but a very common problem is passing an OpAccessChain to an
@@ -309,7 +294,7 @@ struct Inliner<'m, 'map> {
     types_global_values: &'m mut Vec<Instruction>,
     void: Word,
     functions: &'map FunctionMap,
-    relevant_globals: &'map FxHashMap<Word, Global>,
+    legal_globals: &'map FxHashMap<Word, LegalGlobal>,
     // rewrite_rules: FxHashMap<Word, Word>,
 }
 
@@ -372,7 +357,7 @@ impl Inliner<'_, '_> {
                 )
             })
             .find(|(_, inst, f)| {
-                should_inline(self.relevant_globals, f) || args_invalid(caller, inst)
+                should_inline(self.legal_globals, f) || args_invalid(caller, inst)
             });
         let (call_index, call_inst, callee) = match call {
             None => return false,
