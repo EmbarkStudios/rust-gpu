@@ -38,7 +38,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     let mut dropped_ids = FxHashSet::default();
     let mut inlined_dont_inlines = Vec::new();
     module.functions.retain(|f| {
-        if should_inline(&legal_globals, f) {
+        if should_inline(&legal_globals, f, None) {
             if has_dont_inline(f) {
                 inlined_dont_inlines.push(f.def_id().unwrap());
             }
@@ -244,43 +244,47 @@ impl LegalGlobal {
     }
 }
 
+/// Helper type which encapsulates all the information about one specific call.
+#[derive(Copy, Clone)]
+struct CallSite<'a> {
+    caller: &'a Function,
+    call_inst: &'a Instruction,
+}
+
 fn has_dont_inline(function: &Function) -> bool {
     let def = function.def.as_ref().unwrap();
     let control = def.operands[0].unwrap_function_control();
     control.contains(FunctionControl::DONT_INLINE)
 }
 
-fn should_inline(legal_globals: &FxHashMap<Word, LegalGlobal>, function: &Function) -> bool {
-    let def = function.def.as_ref().unwrap();
-    let control = def.operands[0].unwrap_function_control();
+fn should_inline(
+    legal_globals: &FxHashMap<Word, LegalGlobal>,
+    callee: &Function,
+    call_site: Option<CallSite<'_>>,
+) -> bool {
+    let callee_def = callee.def.as_ref().unwrap();
+    let control = callee_def.operands[0].unwrap_function_control();
     control.contains(FunctionControl::INLINE)
-        || !function.parameters.iter().all(|inst| {
+        || !callee.parameters.iter().all(|inst| {
             legal_globals
                 .get(inst.result_type.as_ref().unwrap())
                 .map_or(false, |param_ty| param_ty.legal_as_fn_param_ty())
         })
         || !legal_globals
-            .get(&function.def.as_ref().unwrap().result_type.unwrap())
+            .get(&callee_def.result_type.unwrap())
             .map_or(false, |ret_ty| ret_ty.legal_as_fn_ret_ty())
-}
-
-// This should be more general, but a very common problem is passing an OpAccessChain to an
-// OpFunctionCall (i.e. `f(&s.x)`, or more commonly, `s.x.f()` where `f` takes `&self`), so detect
-// that case and inline the call.
-fn args_invalid(function: &Function, call: &Instruction) -> bool {
-    for inst in function.all_inst_iter() {
-        if inst.class.opcode == Op::AccessChain {
-            let inst_result = inst.result_id.unwrap();
-            if call
-                .operands
-                .iter()
-                .any(|op| *op == Operand::IdRef(inst_result))
-            {
-                return true;
-            }
-        }
-    }
-    false
+        || call_site.map_or(false, |call_site| {
+            // This should be more general, but a very common problem is passing an OpAccessChain to an
+            // OpFunctionCall (i.e. `f(&s.x)`, or more commonly, `s.x.f()` where `f` takes `&self`), so detect
+            // that case and inline the call.
+            call_site.caller.all_inst_iter().any(|inst| {
+                inst.class.opcode == Op::AccessChain
+                    && call_site
+                        .call_inst
+                        .operands
+                        .contains(&Operand::IdRef(inst.result_id.unwrap()))
+            })
+        })
 }
 
 // Steps:
@@ -357,7 +361,14 @@ impl Inliner<'_, '_> {
                 )
             })
             .find(|(_, inst, f)| {
-                should_inline(self.legal_globals, f) || args_invalid(caller, inst)
+                should_inline(
+                    self.legal_globals,
+                    f,
+                    Some(CallSite {
+                        caller,
+                        call_inst: inst,
+                    }),
+                )
             });
         let (call_index, call_inst, callee) = match call {
             None => return false,
