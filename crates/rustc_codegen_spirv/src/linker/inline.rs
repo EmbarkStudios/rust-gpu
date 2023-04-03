@@ -36,11 +36,12 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
     let mut dropped_ids = FxHashSet::default();
-    let mut inlined_dont_inlines = Vec::new();
+    let mut inlined_to_legalize_dont_inlines = Vec::new();
     module.functions.retain(|f| {
-        if should_inline(&legal_globals, f, None) {
-            if has_dont_inline(f) {
-                inlined_dont_inlines.push(f.def_id().unwrap());
+        let should_inline_f = should_inline(&legal_globals, f, None);
+        if should_inline_f != Ok(false) {
+            if should_inline_f == Err(MustInlineToLegalize) && has_dont_inline(f) {
+                inlined_to_legalize_dont_inlines.push(f.def_id().unwrap());
             }
             // TODO: We should insert all defined IDs in this function.
             dropped_ids.insert(f.def_id().unwrap());
@@ -49,9 +50,9 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
             true
         }
     });
-    if !inlined_dont_inlines.is_empty() {
+    if !inlined_to_legalize_dont_inlines.is_empty() {
         let names = get_names(module);
-        for f in inlined_dont_inlines {
+        for f in inlined_to_legalize_dont_inlines {
             sess.warn(format!(
                 "`#[inline(never)]` function `{}` needs to be inlined \
                  because it has illegal argument or return types",
@@ -257,34 +258,74 @@ fn has_dont_inline(function: &Function) -> bool {
     control.contains(FunctionControl::DONT_INLINE)
 }
 
+/// Helper error type for `should_inline` (see its doc comment).
+#[derive(Copy, Clone, PartialEq, Eq)]
+struct MustInlineToLegalize;
+
+/// Returns `Ok(true)`/`Err(MustInlineToLegalize)` if `callee` should/must be
+/// inlined (either in general, or specifically from `call_site`, if provided).
+///
+/// The distinction made is that `Err(MustInlineToLegalize)` is not a heuristic,
+/// and inlining is *mandatory* due to an illegal signature/arguments.
 fn should_inline(
     legal_globals: &FxHashMap<Word, LegalGlobal>,
     callee: &Function,
     call_site: Option<CallSite<'_>>,
-) -> bool {
+) -> Result<bool, MustInlineToLegalize> {
     let callee_def = callee.def.as_ref().unwrap();
-    let control = callee_def.operands[0].unwrap_function_control();
-    control.contains(FunctionControl::INLINE)
-        || !callee.parameters.iter().all(|inst| {
-            legal_globals
-                .get(inst.result_type.as_ref().unwrap())
-                .map_or(false, |param_ty| param_ty.legal_as_fn_param_ty())
-        })
-        || !legal_globals
-            .get(&callee_def.result_type.unwrap())
-            .map_or(false, |ret_ty| ret_ty.legal_as_fn_ret_ty())
-        || call_site.map_or(false, |call_site| {
-            // This should be more general, but a very common problem is passing an OpAccessChain to an
-            // OpFunctionCall (i.e. `f(&s.x)`, or more commonly, `s.x.f()` where `f` takes `&self`), so detect
-            // that case and inline the call.
-            call_site.caller.all_inst_iter().any(|inst| {
-                inst.class.opcode == Op::AccessChain
-                    && call_site
-                        .call_inst
-                        .operands
-                        .contains(&Operand::IdRef(inst.result_id.unwrap()))
-            })
-        })
+    let callee_control = callee_def.operands[0].unwrap_function_control();
+
+    let ret_ty = legal_globals
+        .get(&callee_def.result_type.unwrap())
+        .ok_or(MustInlineToLegalize)?;
+    if !ret_ty.legal_as_fn_ret_ty() {
+        return Err(MustInlineToLegalize);
+    }
+
+    for (i, param) in callee.parameters.iter().enumerate() {
+        let param_ty = legal_globals
+            .get(param.result_type.as_ref().unwrap())
+            .ok_or(MustInlineToLegalize)?;
+        if !param_ty.legal_as_fn_param_ty() {
+            return Err(MustInlineToLegalize);
+        }
+
+        // If the call isn't passing a legal pointer argument (a "memory object",
+        // i.e. an `OpVariable` or one of the caller's `OpFunctionParameters),
+        // then inlining is required to have a chance at producing legal SPIR-V.
+        //
+        // FIXME(eddyb) rewriting away the pointer could be another alternative.
+        if let (LegalGlobal::TypePointer(_), Some(call_site)) = (param_ty, call_site) {
+            let ptr_arg = call_site.call_inst.operands[i + 1].unwrap_id_ref();
+            match legal_globals.get(&ptr_arg) {
+                Some(LegalGlobal::Variable) => {}
+
+                // FIXME(eddyb) should some constants (undef/null) be allowed?
+                Some(_) => return Err(MustInlineToLegalize),
+
+                None => {
+                    let mut caller_param_and_var_ids = call_site
+                        .caller
+                        .parameters
+                        .iter()
+                        .chain(
+                            // TODO: OpLine handling
+                            call_site.caller.blocks[0]
+                                .instructions
+                                .iter()
+                                .take_while(|caller_inst| caller_inst.class.opcode == Op::Variable),
+                        )
+                        .map(|caller_inst| caller_inst.result_id.unwrap());
+
+                    if !caller_param_and_var_ids.any(|id| ptr_arg == id) {
+                        return Err(MustInlineToLegalize);
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(callee_control.contains(FunctionControl::INLINE))
 }
 
 // Steps:
@@ -361,14 +402,14 @@ impl Inliner<'_, '_> {
                 )
             })
             .find(|(_, inst, f)| {
-                should_inline(
-                    self.legal_globals,
-                    f,
-                    Some(CallSite {
-                        caller,
-                        call_inst: inst,
-                    }),
-                )
+                let call_site = CallSite {
+                    caller,
+                    call_inst: inst,
+                };
+                match should_inline(self.legal_globals, f, Some(call_site)) {
+                    Ok(inline) => inline,
+                    Err(MustInlineToLegalize) => true,
+                }
             });
         let (call_index, call_inst, callee) = match call {
             None => return false,
