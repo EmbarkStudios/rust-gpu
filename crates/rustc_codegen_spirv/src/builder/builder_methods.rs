@@ -933,11 +933,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         lhs: Self::Value,
         rhs: Self::Value,
     ) -> (Self::Value, Self::Value) {
-        let fals = self.constant_bool(self.span(), false);
+        // NOTE(eddyb) this needs to be `undef`, not `false`/`true`, because
+        // we don't want the user's boolean constants to keep the zombie alive.
+        let bool = SpirvType::Bool.def(self.span(), self);
+        let overflowed = self.undef(bool);
         let result = match oop {
-            OverflowOp::Add => (self.add(lhs, rhs), fals),
-            OverflowOp::Sub => (self.sub(lhs, rhs), fals),
-            OverflowOp::Mul => (self.mul(lhs, rhs), fals),
+            OverflowOp::Add => (self.add(lhs, rhs), overflowed),
+            OverflowOp::Sub => (self.sub(lhs, rhs), overflowed),
+            OverflowOp::Mul => (self.mul(lhs, rhs), overflowed),
         };
         self.zombie(
             result.1.def(self),

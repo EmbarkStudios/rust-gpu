@@ -33,9 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [PR#1011](https://github.com/EmbarkStudios/rust-gpu/pull/1011) made `NonWritable` all read-only storage buffers (i.e. those typed `&T`, where `T` doesn't have interior mutability)
 
 ### Fixed 🩹
+- [PR#1025](https://github.com/EmbarkStudios/rust-gpu/pull/1025) fixed [#1024](https://github.com/EmbarkStudios/rust-gpu/issues/1024) by keeping checked arithmetic "zombie" `bool`s disjoint from normal `bool` (`false`) consts
 - [PR#1023](https://github.com/EmbarkStudios/rust-gpu/pull/1023) fixed [#1021](https://github.com/EmbarkStudios/rust-gpu/issues/1021) by always inlining calls with "not obviously legal" pointer args (instead of only inlining calls with "obviously illegal" pointer args)
 - [PR#1009](https://github.com/EmbarkStudios/rust-gpu/pull/1009) fixed [#1008](https://github.com/EmbarkStudios/rust-gpu/issues/1008) by reinstating mutability checks for entry-point parameters pointing into read-only storage classes (e.g. `#[spirv(uniform)] x: &mut u32` is now again an error)
-- [PR#995](https://github.com/EmbarkStudios/rust-gpu/pull/995) fixed [#994](https://github.com/EmbarkStudios/rust-gpu/issues/994) by using `OpAtomicFAddEXT` instead of `OpAtomicFMaxEXT` in `atomic_f_add`.
+- [PR#995](https://github.com/EmbarkStudios/rust-gpu/pull/995) fixed [#994](https://github.com/EmbarkStudios/rust-gpu/issues/994) by using `OpAtomicFAddEXT` instead of `OpAtomicFMaxEXT` in `atomic_f_add`
 
 ## [0.6.1]
 
@@ -45,13 +46,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0]
 
 ### Added ⭐
-- [PR#998](https://github.com/EmbarkStudios/rust-gpu/pull/998) added `extra_arg()` SpirvBuilder API to be able to set codegen args otherwise not supported by the API (for example, to set `--spirv-passes`).
+- [PR#998](https://github.com/EmbarkStudios/rust-gpu/pull/998) added `extra_arg()` SpirvBuilder API to be able to set codegen args otherwise not supported by the API (for example, to set `--spirv-passes`)
 
 ### Changed 🛠
-- [PR#999](https://github.com/EmbarkStudios/rust-gpu/pull/999) Made the [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) the default. You can opt-out using `--no-spirt` codegen arg.
-- [PR#992](https://github.com/EmbarkStudios/rust-gpu/pull/992) renamed `rust-toolchain` to `rust-toolchain.toml`.
-- [PR#991](https://github.com/EmbarkStudios/rust-gpu/pull/991) updated toolchain to `nightly-2023-01-21`.
-- [PR#990](https://github.com/EmbarkStudios/rust-gpu/pull/990) removed return type inference from `Image` API and made `glam` usage mandatory.
+- [PR#999](https://github.com/EmbarkStudios/rust-gpu/pull/999) made the [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) the default (you can opt out via `RUSTGPU_CODEGEN_ARGS=--no-spirt`)
+- [PR#992](https://github.com/EmbarkStudios/rust-gpu/pull/992) renamed `rust-toolchain` to `rust-toolchain.toml`
+- [PR#991](https://github.com/EmbarkStudios/rust-gpu/pull/991) updated toolchain to `nightly-2023-01-21`
+- [PR#990](https://github.com/EmbarkStudios/rust-gpu/pull/990) removed return type inference from `Image` API and made `glam` usage mandatory
 
 ## [0.5.0]
 
