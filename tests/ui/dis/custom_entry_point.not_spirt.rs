@@ -1,5 +1,6 @@
 // HACK(eddyb) duplicate of custom_entry_point.spirt.rs because only-/ignore- do not work with revisions.
 // only-not_spirt
+#![crate_name = "custom_entry_point"]
 
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-globals
