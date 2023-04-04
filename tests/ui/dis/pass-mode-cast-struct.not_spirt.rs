@@ -1,5 +1,6 @@
 // HACK(eddyb) duplicate of pass-mode-cast-struct.spirt.rs because only-/ignore- do not work with revisions.
 // only-not_spirt
+#![crate_name = "pass_mode_cast_struct"]
 
 // Test that a small enough `struct` doesn't generate unsupported pointer casts.
 // (Just like `issue-373`, the problem was the use of `PassMode::Cast`, through

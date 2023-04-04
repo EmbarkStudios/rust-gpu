@@ -1,6 +1,7 @@
 // HACK(eddyb) duplicate of generic-fn-op-name.not_spirt.rs because only-/ignore- do not work with revisions.
 // only-spirt
-
+#![crate_name = "generic_fn_op_name"]
+//
 // Test that generic functions' `OpName` correctly include generic arguments.
 
 // build-pass
@@ -8,7 +9,6 @@
 // normalize-stderr-test "OpCapability VulkanMemoryModel\n" -> ""
 // normalize-stderr-test "OpExtension .SPV_KHR_vulkan_memory_model.\n" -> ""
 // normalize-stderr-test "OpMemoryModel Logical Vulkan" -> "OpMemoryModel Logical Simple"
-
 #![feature(adt_const_params)]
 #![allow(incomplete_features)]
 
