@@ -174,6 +174,7 @@ const STORAGE_CLASSES: &[(&str, StorageClass)] = {
         ("incoming_ray_payload", StorageClass::IncomingRayPayloadKHR),
         ("shader_record_buffer", StorageClass::ShaderRecordBufferKHR),
         ("physical_storage_buffer", PhysicalStorageBuffer),
+        ("task_payload_workgroup_ext", TaskPayloadWorkgroupEXT),
     ]
 };
 
