@@ -1,4 +1,4 @@
-// Tests that storage class inference fails correctly
+// Tests that storage class deduction (from entry-point signature) fails correctly
 // build-fail
 
 use spirv_std::{spirv, Image};

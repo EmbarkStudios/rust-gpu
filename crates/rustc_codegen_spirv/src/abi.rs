@@ -42,11 +42,13 @@ pub(crate) fn provide(providers: &mut Providers) {
         // We can't capture the old fn_sig and just call that, because fn_sig is a `fn`, not a `Fn`, i.e. it can't
         // capture variables. Fortunately, the defaults are exposed (thanks rustdoc), so use that instead.
         let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
-        result.map_bound(|mut inner| {
-            if let SpecAbi::C { .. } = inner.abi {
-                inner.abi = SpecAbi::Unadjusted;
-            }
-            inner
+        result.map_bound(|outer| {
+            outer.map_bound(|mut inner| {
+                if let SpecAbi::C { .. } = inner.abi {
+                    inner.abi = SpecAbi::Unadjusted;
+                }
+                inner
+            })
         })
     };
 
@@ -92,7 +94,7 @@ pub(crate) fn provide(providers: &mut Providers) {
 
     // FIXME(eddyb) remove this by deriving `Clone` for `LayoutS` upstream.
     // FIXME(eddyb) the `S` suffix is a naming antipattern, rename upstream.
-    fn clone_layout<V: Idx>(layout: &LayoutS<V>) -> LayoutS<V> {
+    fn clone_layout(layout: &LayoutS) -> LayoutS {
         let LayoutS {
             ref fields,
             ref variants,
@@ -156,7 +158,7 @@ pub(crate) fn provide(providers: &mut Providers) {
         };
 
         if hide_niche {
-            layout = tcx.intern_layout(LayoutS {
+            layout = tcx.mk_layout(LayoutS {
                 largest_niche: None,
                 ..clone_layout(layout.0 .0)
             });
@@ -500,7 +502,7 @@ fn trans_scalar<'tcx>(
         }
         Primitive::F32 => SpirvType::Float(32).def(span, cx),
         Primitive::F64 => SpirvType::Float(64).def(span, cx),
-        Primitive::Pointer => {
+        Primitive::Pointer(_) => {
             let pointee_ty = dig_scalar_pointee(cx, ty, offset);
             // Pointers can be recursive. So, record what we're currently translating, and if we're already translating
             // the same type, emit an OpTypeForwardPointer and use that ID.

@@ -27,8 +27,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         .iter()
         .map(|f| (f.def_id().unwrap(), f.clone()))
         .collect();
-    let (disallowed_argument_types, disallowed_return_types) =
-        compute_disallowed_argument_and_return_types(module);
+    let legal_globals = LegalGlobal::gather_from_module(module);
     let void = module
         .types_global_values
         .iter()
@@ -37,11 +36,12 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
     let mut dropped_ids = FxHashSet::default();
-    let mut inlined_dont_inlines = Vec::new();
+    let mut inlined_to_legalize_dont_inlines = Vec::new();
     module.functions.retain(|f| {
-        if should_inline(&disallowed_argument_types, &disallowed_return_types, f) {
-            if has_dont_inline(f) {
-                inlined_dont_inlines.push(f.def_id().unwrap());
+        let should_inline_f = should_inline(&legal_globals, f, None);
+        if should_inline_f != Ok(false) {
+            if should_inline_f == Err(MustInlineToLegalize) && has_dont_inline(f) {
+                inlined_to_legalize_dont_inlines.push(f.def_id().unwrap());
             }
             // TODO: We should insert all defined IDs in this function.
             dropped_ids.insert(f.def_id().unwrap());
@@ -50,9 +50,9 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
             true
         }
     });
-    if !inlined_dont_inlines.is_empty() {
+    if !inlined_to_legalize_dont_inlines.is_empty() {
         let names = get_names(module);
-        for f in inlined_dont_inlines {
+        for f in inlined_to_legalize_dont_inlines {
             sess.warn(format!(
                 "`#[inline(never)]` function `{}` needs to be inlined \
                  because it has illegal argument or return types",
@@ -73,8 +73,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         types_global_values: &mut module.types_global_values,
         void,
         functions: &functions,
-        disallowed_argument_types: &disallowed_argument_types,
-        disallowed_return_types: &disallowed_return_types,
+        legal_globals: &legal_globals,
     };
     for function in &mut module.functions {
         inliner.inline_fn(function);
@@ -166,58 +165,91 @@ fn deny_recursion_in_module(sess: &Session, module: &Module) -> super::Result<()
     }
 }
 
-fn compute_disallowed_argument_and_return_types(
-    module: &Module,
-) -> (FxHashSet<Word>, FxHashSet<Word>) {
-    let allowed_argument_storage_classes = &[
-        StorageClass::UniformConstant,
-        StorageClass::Function,
-        StorageClass::Private,
-        StorageClass::Workgroup,
-        StorageClass::AtomicCounter,
-    ];
-    let mut disallowed_argument_types = FxHashSet::default();
-    let mut disallowed_pointees = FxHashSet::default();
-    let mut disallowed_return_types = FxHashSet::default();
-    for inst in &module.types_global_values {
-        match inst.class.opcode {
-            Op::TypePointer => {
-                let storage_class = inst.operands[0].unwrap_storage_class();
-                let pointee = inst.operands[1].unwrap_id_ref();
-                if !allowed_argument_storage_classes.contains(&storage_class)
-                    || disallowed_pointees.contains(&pointee)
-                    || disallowed_argument_types.contains(&pointee)
-                {
-                    disallowed_argument_types.insert(inst.result_id.unwrap());
-                }
-                disallowed_pointees.insert(inst.result_id.unwrap());
-                disallowed_return_types.insert(inst.result_id.unwrap());
+/// Any type/const/global variable, which is "legal" (i.e. can be kept in SPIR-V).
+///
+/// For the purposes of the inliner, a legal global cannot:
+/// - refer to any illegal globals
+/// - (if a type) refer to any pointer types
+///   - this rules out both pointers in composites, and pointers to pointers
+///     (the latter itself *also* rules out variables containing pointers)
+enum LegalGlobal {
+    TypePointer(StorageClass),
+    TypeNonPointer,
+    Const,
+    Variable,
+}
+
+impl LegalGlobal {
+    fn gather_from_module(module: &Module) -> FxHashMap<Word, Self> {
+        let mut legal_globals = FxHashMap::<_, Self>::default();
+        for inst in &module.types_global_values {
+            let global = match inst.class.opcode {
+                Op::TypePointer => Self::TypePointer(inst.operands[0].unwrap_storage_class()),
+                Op::Variable => Self::Variable,
+                op if rspirv::grammar::reflect::is_type(op) => Self::TypeNonPointer,
+                op if rspirv::grammar::reflect::is_constant(op) => Self::Const,
+
+                // FIXME(eddyb) should this be `unreachable!()`?
+                _ => continue,
+            };
+            let legal_result_type = match inst.result_type {
+                Some(result_type_id) => matches!(
+                    (&global, legal_globals.get(&result_type_id)),
+                    (Self::Variable, Some(Self::TypePointer(_)))
+                        | (Self::Const, Some(Self::TypeNonPointer))
+                ),
+                None => matches!(global, Self::TypePointer(_) | Self::TypeNonPointer),
+            };
+            let legal_operands = inst.operands.iter().all(|operand| match operand {
+                Operand::IdRef(id) => matches!(
+                    legal_globals.get(id),
+                    Some(Self::TypeNonPointer | Self::Const)
+                ),
+
+                // NOTE(eddyb) this assumes non-ID operands are always legal.
+                _ => operand.id_ref_any().is_none(),
+            });
+            if legal_result_type && legal_operands {
+                legal_globals.insert(inst.result_id.unwrap(), global);
             }
-            Op::TypeStruct => {
-                let fields = || inst.operands.iter().map(|op| op.id_ref_any().unwrap());
-                if fields().any(|id| disallowed_argument_types.contains(&id)) {
-                    disallowed_argument_types.insert(inst.result_id.unwrap());
-                }
-                if fields().any(|id| disallowed_pointees.contains(&id)) {
-                    disallowed_pointees.insert(inst.result_id.unwrap());
-                }
-                if fields().any(|id| disallowed_return_types.contains(&id)) {
-                    disallowed_return_types.insert(inst.result_id.unwrap());
-                }
-            }
-            Op::TypeArray | Op::TypeRuntimeArray | Op::TypeVector => {
-                let id = inst.operands[0].id_ref_any().unwrap();
-                if disallowed_argument_types.contains(&id) {
-                    disallowed_argument_types.insert(inst.result_id.unwrap());
-                }
-                if disallowed_pointees.contains(&id) {
-                    disallowed_pointees.insert(inst.result_id.unwrap());
-                }
-            }
-            _ => {}
+        }
+        legal_globals
+    }
+
+    fn legal_as_fn_param_ty(&self) -> bool {
+        match *self {
+            Self::TypePointer(storage_class) => matches!(
+                storage_class,
+                StorageClass::UniformConstant
+                    | StorageClass::Function
+                    | StorageClass::Private
+                    | StorageClass::Workgroup
+                    | StorageClass::AtomicCounter
+            ),
+            Self::TypeNonPointer => true,
+
+            // FIXME(eddyb) should this be an `unreachable!()`?
+            Self::Const | Self::Variable => false,
         }
     }
-    (disallowed_argument_types, disallowed_return_types)
+
+    fn legal_as_fn_ret_ty(&self) -> bool {
+        #[allow(clippy::match_same_arms)]
+        match *self {
+            Self::TypePointer(_) => false,
+            Self::TypeNonPointer => true,
+
+            // FIXME(eddyb) should this be an `unreachable!()`?
+            Self::Const | Self::Variable => false,
+        }
+    }
+}
+
+/// Helper type which encapsulates all the information about one specific call.
+#[derive(Copy, Clone)]
+struct CallSite<'a> {
+    caller: &'a Function,
+    call_inst: &'a Instruction,
 }
 
 fn has_dont_inline(function: &Function) -> bool {
@@ -226,38 +258,74 @@ fn has_dont_inline(function: &Function) -> bool {
     control.contains(FunctionControl::DONT_INLINE)
 }
 
-fn should_inline(
-    disallowed_argument_types: &FxHashSet<Word>,
-    disallowed_return_types: &FxHashSet<Word>,
-    function: &Function,
-) -> bool {
-    let def = function.def.as_ref().unwrap();
-    let control = def.operands[0].unwrap_function_control();
-    control.contains(FunctionControl::INLINE)
-        || function
-            .parameters
-            .iter()
-            .any(|inst| disallowed_argument_types.contains(inst.result_type.as_ref().unwrap()))
-        || disallowed_return_types.contains(&function.def.as_ref().unwrap().result_type.unwrap())
-}
+/// Helper error type for `should_inline` (see its doc comment).
+#[derive(Copy, Clone, PartialEq, Eq)]
+struct MustInlineToLegalize;
 
-// This should be more general, but a very common problem is passing an OpAccessChain to an
-// OpFunctionCall (i.e. `f(&s.x)`, or more commonly, `s.x.f()` where `f` takes `&self`), so detect
-// that case and inline the call.
-fn args_invalid(function: &Function, call: &Instruction) -> bool {
-    for inst in function.all_inst_iter() {
-        if inst.class.opcode == Op::AccessChain {
-            let inst_result = inst.result_id.unwrap();
-            if call
-                .operands
-                .iter()
-                .any(|op| *op == Operand::IdRef(inst_result))
-            {
-                return true;
+/// Returns `Ok(true)`/`Err(MustInlineToLegalize)` if `callee` should/must be
+/// inlined (either in general, or specifically from `call_site`, if provided).
+///
+/// The distinction made is that `Err(MustInlineToLegalize)` is not a heuristic,
+/// and inlining is *mandatory* due to an illegal signature/arguments.
+fn should_inline(
+    legal_globals: &FxHashMap<Word, LegalGlobal>,
+    callee: &Function,
+    call_site: Option<CallSite<'_>>,
+) -> Result<bool, MustInlineToLegalize> {
+    let callee_def = callee.def.as_ref().unwrap();
+    let callee_control = callee_def.operands[0].unwrap_function_control();
+
+    let ret_ty = legal_globals
+        .get(&callee_def.result_type.unwrap())
+        .ok_or(MustInlineToLegalize)?;
+    if !ret_ty.legal_as_fn_ret_ty() {
+        return Err(MustInlineToLegalize);
+    }
+
+    for (i, param) in callee.parameters.iter().enumerate() {
+        let param_ty = legal_globals
+            .get(param.result_type.as_ref().unwrap())
+            .ok_or(MustInlineToLegalize)?;
+        if !param_ty.legal_as_fn_param_ty() {
+            return Err(MustInlineToLegalize);
+        }
+
+        // If the call isn't passing a legal pointer argument (a "memory object",
+        // i.e. an `OpVariable` or one of the caller's `OpFunctionParameters),
+        // then inlining is required to have a chance at producing legal SPIR-V.
+        //
+        // FIXME(eddyb) rewriting away the pointer could be another alternative.
+        if let (LegalGlobal::TypePointer(_), Some(call_site)) = (param_ty, call_site) {
+            let ptr_arg = call_site.call_inst.operands[i + 1].unwrap_id_ref();
+            match legal_globals.get(&ptr_arg) {
+                Some(LegalGlobal::Variable) => {}
+
+                // FIXME(eddyb) should some constants (undef/null) be allowed?
+                Some(_) => return Err(MustInlineToLegalize),
+
+                None => {
+                    let mut caller_param_and_var_ids = call_site
+                        .caller
+                        .parameters
+                        .iter()
+                        .chain(
+                            // TODO: OpLine handling
+                            call_site.caller.blocks[0]
+                                .instructions
+                                .iter()
+                                .take_while(|caller_inst| caller_inst.class.opcode == Op::Variable),
+                        )
+                        .map(|caller_inst| caller_inst.result_id.unwrap());
+
+                    if !caller_param_and_var_ids.any(|id| ptr_arg == id) {
+                        return Err(MustInlineToLegalize);
+                    }
+                }
             }
         }
     }
-    false
+
+    Ok(callee_control.contains(FunctionControl::INLINE))
 }
 
 // Steps:
@@ -271,8 +339,7 @@ struct Inliner<'m, 'map> {
     types_global_values: &'m mut Vec<Instruction>,
     void: Word,
     functions: &'map FunctionMap,
-    disallowed_argument_types: &'map FxHashSet<Word>,
-    disallowed_return_types: &'map FxHashSet<Word>,
+    legal_globals: &'map FxHashMap<Word, LegalGlobal>,
     // rewrite_rules: FxHashMap<Word, Word>,
 }
 
@@ -335,11 +402,14 @@ impl Inliner<'_, '_> {
                 )
             })
             .find(|(_, inst, f)| {
-                should_inline(
-                    self.disallowed_argument_types,
-                    self.disallowed_return_types,
-                    f,
-                ) || args_invalid(caller, inst)
+                let call_site = CallSite {
+                    caller,
+                    call_inst: inst,
+                };
+                match should_inline(self.legal_globals, f, Some(call_site)) {
+                    Ok(inline) => inline,
+                    Err(MustInlineToLegalize) => true,
+                }
             });
         let (call_index, call_inst, callee) = match call {
             None => return false,

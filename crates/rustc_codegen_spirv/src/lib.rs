@@ -190,6 +190,10 @@ impl ThinBufferMethods for SpirvThinBuffer {
 struct SpirvCodegenBackend;
 
 impl CodegenBackend for SpirvCodegenBackend {
+    fn locale_resource(&self) -> &'static str {
+        rustc_errors::DEFAULT_LOCALE_RESOURCE
+    }
+
     fn target_features(&self, sess: &Session, _allow_unstable: bool) -> Vec<Symbol> {
         let cmdline = sess.opts.cg.target_feature.split(',');
         let cfg = sess.target.options.features.split(',');
@@ -284,6 +288,7 @@ impl CodegenBackend for SpirvCodegenBackend {
 impl WriteBackendMethods for SpirvCodegenBackend {
     type Module = Vec<u32>;
     type TargetMachine = ();
+    type TargetMachineError = String;
     type ModuleBuffer = SpirvModuleBuffer;
     type ThinData = ();
     type ThinBuffer = SpirvThinBuffer;

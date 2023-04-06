@@ -455,7 +455,7 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                                 "unknown `rust_gpu` attribute, expected `rust_gpu::spirv`"
                                     .to_string(),
                             ))),
-                            Vec::new(),
+                            Default::default(),
                         )
                     } else if let Some(args) = attr.meta_item_list() {
                         // #[rust_gpu::spirv(...)]
@@ -468,15 +468,15 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                                 "#[rust_gpu::spirv(..)] attribute must have at least one argument"
                                     .to_string(),
                             ))),
-                            Vec::new(),
+                            Default::default(),
                         )
                     }
                 } else {
                     // #[...] but not #[rust_gpu ...]
-                    (None, Vec::new())
+                    (None, Default::default())
                 }
             }
-            AttrKind::DocComment(..) => (None, Vec::new()), // doccomment
+            AttrKind::DocComment(..) => (None, Default::default()), // doccomment
         };
 
         whole_attr_error

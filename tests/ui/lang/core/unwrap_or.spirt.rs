@@ -1,5 +1,6 @@
 // HACK(eddyb) duplicate of unwrap_or.not_spirt.rs because only-/ignore- do not work with revisions.
 // only-spirt
+#![crate_name = "unwrap_or"]
 
 // unwrap_or generates some memory-bools (as u8). Test to make sure they're fused away.
 // OpINotEqual, as well as %bool, should not appear in the output.

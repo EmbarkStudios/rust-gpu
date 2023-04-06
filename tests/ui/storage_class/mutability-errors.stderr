@@ -1,0 +1,80 @@
+error: entry-point requires a mutable reference...
+  --> $DIR/mutability-errors.rs:10:78
+   |
+10 |     #[spirv(descriptor_set = 0, binding = 0)] implicit_uniform_constant_mut: &mut Image2d,
+   |                                                                              ^^^^^^^^^^^^
+   |
+note: ...but storage class `UniformConstant` is read-only
+  --> $DIR/mutability-errors.rs:10:78
+   |
+10 |     #[spirv(descriptor_set = 0, binding = 0)] implicit_uniform_constant_mut: &mut Image2d,
+   |                                                                              ^^^^^^^^^^^^ `UniformConstant` deduced from type
+
+warning: redundant storage class attribute, storage class is deduced from type
+  --> $DIR/mutability-errors.rs:11:13
+   |
+11 |     #[spirv(uniform_constant, descriptor_set = 0, binding = 0)] uniform_constant_mut: &mut Image2d,
+   |             ^^^^^^^^^^^^^^^^
+
+error: entry-point requires a mutable reference...
+  --> $DIR/mutability-errors.rs:11:87
+   |
+11 |     #[spirv(uniform_constant, descriptor_set = 0, binding = 0)] uniform_constant_mut: &mut Image2d,
+   |                                                                                       ^^^^^^^^^^^^
+   |
+note: ...but storage class `UniformConstant` is read-only
+  --> $DIR/mutability-errors.rs:11:13
+   |
+11 |     #[spirv(uniform_constant, descriptor_set = 0, binding = 0)] uniform_constant_mut: &mut Image2d,
+   |             ^^^^^^^^^^^^^^^^ `UniformConstant` specified in attribute
+
+error: entry-point requires a mutable reference...
+  --> $DIR/mutability-errors.rs:12:69
+   |
+12 |     #[spirv(uniform, descriptor_set = 0, binding = 0)] uniform_mut: &mut u32,
+   |                                                                     ^^^^^^^^
+   |
+note: ...but storage class `Uniform` is read-only
+  --> $DIR/mutability-errors.rs:12:13
+   |
+12 |     #[spirv(uniform, descriptor_set = 0, binding = 0)] uniform_mut: &mut u32,
+   |             ^^^^^^^ `Uniform` specified in attribute
+
+error: entry-point requires interior mutability...
+  --> $DIR/mutability-errors.rs:13:78
+   |
+13 |     #[spirv(uniform, descriptor_set = 0, binding = 0)] uniform_interior_mut: &AtomicU32,
+   |                                                                              ^^^^^^^^^^
+   |
+note: ...but storage class `Uniform` is read-only
+  --> $DIR/mutability-errors.rs:13:13
+   |
+13 |     #[spirv(uniform, descriptor_set = 0, binding = 0)] uniform_interior_mut: &AtomicU32,
+   |             ^^^^^^^ `Uniform` specified in attribute
+
+error: entry-point requires a mutable reference...
+  --> $DIR/mutability-errors.rs:14:48
+   |
+14 |     #[spirv(push_constant)] push_constant_mut: &mut u32,
+   |                                                ^^^^^^^^
+   |
+note: ...but storage class `PushConstant` is read-only
+  --> $DIR/mutability-errors.rs:14:13
+   |
+14 |     #[spirv(push_constant)] push_constant_mut: &mut u32,
+   |             ^^^^^^^^^^^^^ `PushConstant` specified in attribute
+
+error: entry-point requires interior mutability...
+  --> $DIR/mutability-errors.rs:15:57
+   |
+15 |     #[spirv(push_constant)] push_constant_interior_mut: &AtomicU32,
+   |                                                         ^^^^^^^^^^
+   |
+note: ...but storage class `PushConstant` is read-only
+  --> $DIR/mutability-errors.rs:15:13
+   |
+15 |     #[spirv(push_constant)] push_constant_interior_mut: &AtomicU32,
+   |             ^^^^^^^^^^^^^ `PushConstant` specified in attribute
+
+error: aborting due to 6 previous errors; 1 warning emitted
+

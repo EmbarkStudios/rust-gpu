@@ -1,7 +1,7 @@
 use super::{link, LinkResult};
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
-use rustc_errors::registry::Registry;
+use rustc_errors::{registry::Registry, TerminalUrl};
 use rustc_session::{config::Input, CompilerIO};
 use rustc_span::FileName;
 use std::io::Read;
@@ -144,6 +144,7 @@ fn link_with_linker_opts(
                 None,
                 Registry::new(&[]),
                 Default::default(),
+                Default::default(),
                 None,
                 None,
             );
@@ -154,7 +155,7 @@ fn link_with_linker_opts(
                 let fallback_bundle = {
                     extern crate rustc_error_messages;
                     rustc_error_messages::fallback_fluent_bundle(
-                        rustc_errors::DEFAULT_LOCALE_RESOURCES,
+                        Vec::new(),
                         sess.opts.unstable_opts.translate_directionality_markers,
                     )
                 };
@@ -169,6 +170,7 @@ fn link_with_linker_opts(
                     None,
                     false,
                     false,
+                    TerminalUrl::No,
                 );
 
                 rustc_errors::Handler::with_emitter_and_flags(

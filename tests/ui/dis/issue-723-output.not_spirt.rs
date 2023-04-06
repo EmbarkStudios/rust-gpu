@@ -1,5 +1,6 @@
 // HACK(eddyb) duplicate of issue-723-output.spirt.rs because only-/ignore- do not work with revisions.
 // only-not_spirt
+#![crate_name = "issue_723_output"]
 
 // Test that interface (global) `OpVariable`s mentioned by `OpEntryPoint` don't
 // have to be used by the shader, for storage class inference to succeed.
