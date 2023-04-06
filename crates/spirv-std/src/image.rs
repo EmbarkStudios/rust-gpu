@@ -979,38 +979,29 @@ impl<
     >
 {
     /// Sample texels at `coord` from the sampled image with an implicit lod.
-    ///
-    /// # Safety
-    /// Sampling with a type (`S`) that doesn't match the image's image format
-    /// will result in undefined behaviour.
     #[crate::macros::gpu_only]
-    pub unsafe fn sample<F>(
-        &self,
-        coord: impl ImageCoordinate<F, DIM, ARRAYED>,
-    ) -> SampledType::Vec4
+    pub fn sample<F>(&self, coord: impl ImageCoordinate<F, DIM, ARRAYED>) -> SampledType::Vec4
     where
         F: Float,
     {
         let mut result = Default::default();
-        asm!(
-            "%sampledImage = OpLoad typeof*{1} {1}",
-            "%coord = OpLoad typeof*{2} {2}",
-            "%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord",
-            "OpStore {0} %result",
-            in(reg) &mut result,
-            in(reg) self,
-            in(reg) &coord
-        );
+        unsafe {
+            asm!(
+                "%sampledImage = OpLoad typeof*{1} {1}",
+                "%coord = OpLoad typeof*{2} {2}",
+                "%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord",
+                "OpStore {0} %result",
+                in(reg) &mut result,
+                in(reg) self,
+                in(reg) &coord
+            );
+        }
         result
     }
 
     /// Sample texels at `coord` from the sampled image with an explicit lod.
-    ///
-    /// # Safety
-    /// Sampling with a type (`S`) that doesn't match the image's image format
-    /// will result in undefined behaviour.
     #[crate::macros::gpu_only]
-    pub unsafe fn sample_by_lod<F>(
+    pub fn sample_by_lod<F>(
         &self,
         coord: impl ImageCoordinate<F, DIM, ARRAYED>,
         lod: f32,
@@ -1019,17 +1010,19 @@ impl<
         F: Float,
     {
         let mut result = Default::default();
-        asm!(
-            "%sampledImage = OpLoad typeof*{1} {1}",
-            "%coord = OpLoad typeof*{2} {2}",
-            "%lod = OpLoad typeof*{3} {3}",
-            "%result = OpImageSampleExplicitLod typeof*{0} %sampledImage %coord Lod %lod",
-            "OpStore {0} %result",
-            in(reg) &mut result,
-            in(reg) self,
-            in(reg) &coord,
-            in(reg) &lod,
-        );
+        unsafe {
+            asm!(
+                "%sampledImage = OpLoad typeof*{1} {1}",
+                "%coord = OpLoad typeof*{2} {2}",
+                "%lod = OpLoad typeof*{3} {3}",
+                "%result = OpImageSampleExplicitLod typeof*{0} %sampledImage %coord Lod %lod",
+                "OpStore {0} %result",
+                in(reg) &mut result,
+                in(reg) self,
+                in(reg) &coord,
+                in(reg) &lod,
+            );
+        }
         result
     }
 }
