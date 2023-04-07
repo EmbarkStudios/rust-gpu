@@ -9,50 +9,17 @@ use core::arch::asm;
 /// # Safety
 /// Implementing this trait on non-primitive-float types breaks assumptions of other unsafe code,
 /// and should not be done.
-pub unsafe trait Float: num_traits::Float + crate::scalar::Scalar {
+pub unsafe trait Float: num_traits::Float + crate::scalar::Scalar + Default {
     /// Width of the float, in bits.
     const WIDTH: usize;
 }
 
-/// Abstract trait representing a SPIR-V floating point type. It may also be a vector type.
-///
-/// # Safety
-/// Implementing this trait on non-primitive-float types breaks assumptions of other unsafe code,
-/// and should not be done.
-pub unsafe trait FloatVector: crate::scalar::ScalarVector {
-    /// Width of the float, in bits.
-    const WIDTH: usize;
+unsafe impl Float for f32 {
+    const WIDTH: usize = 32;
 }
 
-macro_rules! impl_floats {
-    (unsafe impl Float for $($typ:ty)*;) => {
-        $(
-            unsafe impl Float for $typ {
-                const WIDTH: usize = core::mem::size_of::<$typ>() * 8;
-            }
-
-            unsafe impl FloatVector for $typ {
-                const WIDTH: usize = core::mem::size_of::<$typ>() * 8;
-            }
-        )*
-    };
-
-    (unsafe impl FloatVector for $($typ:ty)*;) => {
-        $(
-            unsafe impl FloatVector for $typ {
-                const WIDTH: usize = core::mem::size_of::<$typ>() * 8;
-            }
-        )*
-    };
-
-    ($(unsafe impl $trait:ident for $($typ:ty)*;)+) => {
-        $(impl_floats!(unsafe impl $trait for $($typ)*;);)+
-    };
-}
-
-impl_floats! {
-    unsafe impl Float for f32 f64;
-    unsafe impl FloatVector for glam::Vec2 glam::Vec3 glam::Vec4 glam::DVec2 glam::DVec3 glam::DVec4;
+unsafe impl Float for f64 {
+    const WIDTH: usize = 64;
 }
 
 /// Converts two f32 values (floats) into two f16 values (halfs). The result is a u32, with the low
