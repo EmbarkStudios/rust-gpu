@@ -33,6 +33,7 @@ pub struct ImageType {
     multisampled: Multisampled,
     sampled: Sampled,
     sampled_type: SampledType,
+    components: u32,
 }
 
 impl Parse for ImageType {
@@ -45,6 +46,7 @@ impl Parse for ImageType {
         let mut multisampled = None;
         let mut sampled: Option<Sampled> = None;
         let mut crate_root = None;
+        let mut components = None;
 
         let starting_span = input.span();
 
@@ -137,6 +139,27 @@ impl Parse for ImageType {
                     }
 
                     format = value.ok();
+                } else if ident == "components" {
+                    let value = peek_and_eat_value!(syn::LitInt);
+
+                    if value.is_none() {
+                        return Err(syn::Error::new(
+                            ident.span(),
+                            "Expected argument for `components`.",
+                        ));
+                    }
+
+                    let value = value.unwrap();
+                    set_unique!(
+                        components = match value.base10_parse() {
+                            Ok(n) if n >= 1 && n <= 4 => n,
+                            _ =>
+                                return Err(syn::Error::new(
+                                    value.span(),
+                                    "Unexpected integer for `components`."
+                                )),
+                        }
+                    );
                 } else if ident == "__crate_root" {
                     input.parse::<syn::Token![=]>()?;
                     crate_root = Some(input.parse::<syn::Path>()?);
@@ -216,17 +239,23 @@ impl Parse for ImageType {
             )
         })?;
 
-        if format.is_some() && sampled_type.is_some() {
-            if format != Some(ImageFormat::Unknown) {
+        if format.is_some() && format != Some(ImageFormat::Unknown) {
+            if sampled_type.is_some() {
                 return Err(syn::Error::new(
                     starting_span,
                     "Can't specify `type` with a known image format. Either \
                         specify just the `format` or use `format=unknown`.",
                 ));
             }
-        } else if sampled_type.is_some() {
-            format = Some(ImageFormat::Unknown);
-        } else if let Some(format) = &format {
+            if components.is_some() {
+                return Err(syn::Error::new(
+                    starting_span,
+                    "Can't specify `components` with a known image format. Either \
+                        specify just the `format` or use `format=unknown`.",
+                ));
+            }
+
+            let format = format.as_ref().unwrap();
             sampled_type = Some(match format {
                 ImageFormat::Rgba32f
                 | ImageFormat::Rgba16f
@@ -276,6 +305,57 @@ impl Parse for ImageType {
 
                 ImageFormat::Unknown => unreachable!(),
             });
+
+            components = Some(match format {
+                ImageFormat::Rgba32f
+                | ImageFormat::Rgba16f
+                | ImageFormat::Rgba8
+                | ImageFormat::Rgba8Snorm
+                | ImageFormat::Rgba16
+                | ImageFormat::Rgb10A2
+                | ImageFormat::Rgba16Snorm
+                | ImageFormat::Rgba32i
+                | ImageFormat::Rgba16i
+                | ImageFormat::Rgba8i
+                | ImageFormat::Rgba32ui
+                | ImageFormat::Rgba16ui
+                | ImageFormat::Rgba8ui
+                | ImageFormat::Rgb10A2ui => 4,
+
+                ImageFormat::R11fG11fB10f => 3,
+
+                ImageFormat::Rg32f
+                | ImageFormat::Rg16f
+                | ImageFormat::Rg16
+                | ImageFormat::Rg8
+                | ImageFormat::Rg16Snorm
+                | ImageFormat::Rg8Snorm
+                | ImageFormat::Rg32i
+                | ImageFormat::Rg16i
+                | ImageFormat::Rg8i
+                | ImageFormat::Rg32ui
+                | ImageFormat::Rg16ui
+                | ImageFormat::Rg8ui => 2,
+
+                ImageFormat::R32f
+                | ImageFormat::R16f
+                | ImageFormat::R16
+                | ImageFormat::R8
+                | ImageFormat::R16Snorm
+                | ImageFormat::R8Snorm
+                | ImageFormat::R32i
+                | ImageFormat::R16i
+                | ImageFormat::R8i
+                | ImageFormat::R32ui
+                | ImageFormat::R16ui
+                | ImageFormat::R8ui
+                | ImageFormat::R64ui
+                | ImageFormat::R64i => 1,
+
+                ImageFormat::Unknown => unreachable!(),
+            });
+        } else if sampled_type.is_some() {
+            format = Some(ImageFormat::Unknown);
         }
 
         let sampled_type =
@@ -285,6 +365,7 @@ impl Parse for ImageType {
         let arrayed = arrayed.unwrap_or(Arrayed::False);
         let multisampled = multisampled.unwrap_or(Multisampled::False);
         let sampled = sampled.unwrap_or(Sampled::Unknown);
+        let components = components.unwrap_or(4);
 
         Ok(Self {
             arrayed,
@@ -295,6 +376,7 @@ impl Parse for ImageType {
             multisampled,
             sampled,
             sampled_type,
+            components,
         })
     }
 }
@@ -317,6 +399,7 @@ impl quote::ToTokens for ImageType {
         let multisampled = params::multisampled_to_tokens(&self.multisampled);
         let sampled = params::sampled_to_tokens(&self.sampled);
         let sampled_type = &self.sampled_type;
+        let components = self.components;
 
         tokens.append_all(quote::quote! {
             #crate_root::image::Image<
@@ -327,6 +410,7 @@ impl quote::ToTokens for ImageType {
                 { #crate_root::image::#multisampled as u32 },
                 { #crate_root::image::#sampled as u32 },
                 { #crate_root::image::#format as u32 },
+                { #components as u32 },
             >
         });
     }
