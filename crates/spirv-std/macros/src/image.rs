@@ -152,7 +152,7 @@ impl Parse for ImageType {
                     let value = value.unwrap();
                     set_unique!(
                         components = match value.base10_parse() {
-                            Ok(n) if n >= 1 && n <= 4 => n,
+                            Ok(n) if (1..=4).contains(&n) => n,
                             _ =>
                                 return Err(syn::Error::new(
                                     value.span(),

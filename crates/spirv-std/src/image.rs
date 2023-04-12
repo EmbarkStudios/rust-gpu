@@ -1,6 +1,8 @@
 //! Image types
 
 #[cfg(target_arch = "spirv")]
+use crate::vector::VectorTruncateInto;
+#[cfg(target_arch = "spirv")]
 use core::arch::asm;
 
 // Rustfmt formats long marker trait impls over multiple lines which makes them
@@ -14,12 +16,7 @@ pub use spirv_std_types::image_params::{
     AccessQualifier, Arrayed, Dimensionality, ImageDepth, ImageFormat, Multisampled, Sampled,
 };
 
-use crate::{
-    float::Float,
-    integer::Integer,
-    vector::{Vector, VectorTruncateInto},
-    Sampler,
-};
+use crate::{float::Float, integer::Integer, vector::Vector, Sampler};
 
 /// Re-export of primitive types to ensure the `Image` proc macro always points
 /// to the right type.
