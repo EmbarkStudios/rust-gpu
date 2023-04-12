@@ -14,7 +14,12 @@ pub use spirv_std_types::image_params::{
     AccessQualifier, Arrayed, Dimensionality, ImageDepth, ImageFormat, Multisampled, Sampled,
 };
 
-use crate::{float::Float, integer::Integer, vector::Vector, Sampler};
+use crate::{
+    float::Float,
+    integer::Integer,
+    vector::{Vector, VectorTruncateInto},
+    Sampler,
+};
 
 /// Re-export of primitive types to ensure the `Image` proc macro always points
 /// to the right type.
@@ -97,13 +102,14 @@ pub type Cubemap = crate::Image!(cube, type=f32, sampled, __crate_root=crate);
 // HACK(eddyb) avoids "transparent newtype of `_anti_zst_padding`" misinterpretation.
 #[repr(C)]
 pub struct Image<
-    SampledType: SampleType<FORMAT>,
+    SampledType: SampleType<FORMAT, COMPONENTS>,
     const DIM: u32,          // Dimensionality,
     const DEPTH: u32,        // ImageDepth,
     const ARRAYED: u32,      // Arrayed,
     const MULTISAMPLED: u32, // Multisampled,
     const SAMPLED: u32,      // Sampled,
     const FORMAT: u32,       // ImageFormat,
+    const COMPONENTS: u32,   // NumberOfComponents,
 > {
     // HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
     // or another, before `#[spirv(generic_image_type)]` can special-case it).
@@ -112,22 +118,36 @@ pub struct Image<
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DIM: u32,
         const DEPTH: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const FORMAT: u32,
-    > Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, { Sampled::Yes as u32 }, FORMAT>
+        const COMPONENTS: u32,
+    >
+    Image<
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        { Sampled::Yes as u32 },
+        FORMAT,
+        COMPONENTS,
+    >
 {
     /// Fetch a single texel with a sampler set at compile time
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageFetch")]
-    pub fn fetch<I>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> SampledType::Vec4
+    pub fn fetch<I>(
+        &self,
+        coordinate: impl ImageCoordinate<I, DIM, ARRAYED>,
+    ) -> SampledType::SampleResult
     where
         I: Integer,
     {
-        let mut result = Default::default();
+        let mut result = SampledType::Vec4::default();
         unsafe {
             asm! {
                 "%image = OpLoad _ {this}",
@@ -139,18 +159,29 @@ impl<
                 coordinate = in(reg) &coordinate,
             }
         }
-        result
+        result.truncate_into()
     }
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DIM: u32,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
-    > Image<SampledType, DIM, DEPTH, ARRAYED, { Multisampled::False as u32 }, SAMPLED, FORMAT>
+        const COMPONENTS: u32,
+    >
+    Image<
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False as u32 },
+        SAMPLED,
+        FORMAT,
+        COMPONENTS,
+    >
 {
     // Note: #[inline] is needed because in vulkan, the component must be a constant expression.
     /// Gathers the requested component from four texels.
@@ -162,12 +193,12 @@ impl<
         sampler: Sampler,
         coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
         component: u32,
-    ) -> SampledType::Vec4
+    ) -> SampledType::SampleResult
     where
         Self: HasGather,
         F: Float,
     {
-        let mut result = Default::default();
+        let mut result = SampledType::Vec4::default();
         unsafe {
             asm! {
                 "%typeSampledImage = OpTypeSampledImage typeof*{this}",
@@ -184,7 +215,7 @@ impl<
                 component = in(reg) component,
             }
         }
-        result
+        result.truncate_into()
     }
 
     /// Sample texels at `coord` from the image using `sampler`.
@@ -193,12 +224,12 @@ impl<
         &self,
         sampler: Sampler,
         coord: impl ImageCoordinate<F, DIM, ARRAYED>,
-    ) -> SampledType::Vec4
+    ) -> SampledType::SampleResult
     where
         F: Float,
     {
         unsafe {
-            let mut result = Default::default();
+            let mut result = SampledType::Vec4::default();
             asm!(
                 "%typeSampledImage = OpTypeSampledImage typeof*{1}",
                 "%image = OpLoad typeof*{1} {1}",
@@ -212,7 +243,7 @@ impl<
                 in(reg) &sampler,
                 in(reg) &coord
             );
-            result
+            result.truncate_into()
         }
     }
 
@@ -224,12 +255,13 @@ impl<
         sampler: Sampler,
         coord: impl ImageCoordinate<F, DIM, ARRAYED>,
         bias: f32,
-    ) -> SampledType::Vec4
+    ) -> SampledType::SampleResult
     where
         F: Float,
     {
         unsafe {
-            let mut result = Default::default();
+            let mut result = SampledType::Vec4::default();
+
             asm!(
                 "%typeSampledImage = OpTypeSampledImage typeof*{1}",
                 "%image = OpLoad typeof*{1} {1}",
@@ -244,7 +276,7 @@ impl<
                 in(reg) &coord,
                 in(reg) bias,
             );
-            result
+            result.truncate_into()
         }
     }
 
@@ -257,11 +289,11 @@ impl<
         sampler: Sampler,
         coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
         lod: f32,
-    ) -> SampledType::Vec4
+    ) -> SampledType::SampleResult
     where
         F: Float,
     {
-        let mut result = Default::default();
+        let mut result = SampledType::Vec4::default();
         unsafe {
             asm!(
                 "%image = OpLoad _ {this}",
@@ -278,7 +310,7 @@ impl<
                 lod = in(reg) &lod
             );
         }
-        result
+        result.truncate_into()
     }
 
     #[crate::macros::gpu_only]
@@ -290,11 +322,11 @@ impl<
         coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
         gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
         gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
-    ) -> SampledType::Vec4
+    ) -> SampledType::SampleResult
     where
         F: Float,
     {
-        let mut result = Default::default();
+        let mut result = SampledType::Vec4::default();
         unsafe {
             asm!(
                 "%image = OpLoad _ {this}",
@@ -313,7 +345,7 @@ impl<
                 gradient_dy = in(reg) &gradient_dy,
             );
         }
-        result
+        result.truncate_into()
     }
 
     #[crate::macros::gpu_only]
@@ -424,11 +456,12 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DIM: u32,
         const DEPTH: u32,
         const SAMPLED: u32,
         const FORMAT: u32,
+        const COMPONENTS: u32,
     >
     Image<
         SampledType,
@@ -438,6 +471,7 @@ impl<
         { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
     /// Sample the image with a project coordinate
@@ -447,12 +481,12 @@ impl<
         &self,
         sampler: Sampler,
         project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
-    ) -> SampledType::Vec4
+    ) -> SampledType::SampleResult
     where
         F: Float,
     {
         unsafe {
-            let mut result = Default::default();
+            let mut result = SampledType::Vec4::default();
             asm!(
                 "%image = OpLoad _ {this}",
                 "%sampler = OpLoad _ {sampler}",
@@ -465,7 +499,7 @@ impl<
                 sampler = in(reg) &sampler,
                 project_coordinate = in(reg) &project_coordinate,
             );
-            result
+            result.truncate_into()
         }
     }
 
@@ -644,22 +678,36 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DIM: u32,
         const DEPTH: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const FORMAT: u32,
-    > Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, { Sampled::No as u32 }, FORMAT>
+        const COMPONENTS: u32,
+    >
+    Image<
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        { Sampled::No as u32 },
+        FORMAT,
+        COMPONENTS,
+    >
 {
     /// Read a texel from an image without a sampler.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageRead")]
-    pub fn read<I>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> SampledType::Vec4
+    pub fn read<I>(
+        &self,
+        coordinate: impl ImageCoordinate<I, DIM, ARRAYED>,
+    ) -> SampledType::SampleResult
     where
         I: Integer,
     {
-        let mut result = Default::default();
+        let mut result = SampledType::Vec4::default();
 
         unsafe {
             asm! {
@@ -673,7 +721,7 @@ impl<
             }
         }
 
-        result
+        result.truncate_into()
     }
 
     /// Write a texel to an image without a sampler.
@@ -699,22 +747,36 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DIM: u32,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
-    > Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, { Sampled::Unknown as u32 }, FORMAT>
+        const COMPONENTS: u32,
+    >
+    Image<
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        { Sampled::Unknown as u32 },
+        FORMAT,
+        COMPONENTS,
+    >
 {
     /// Read a texel from an image without a sampler.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageRead")]
-    pub fn read<I>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> SampledType::Vec4
+    pub fn read<I>(
+        &self,
+        coordinate: impl ImageCoordinate<I, DIM, ARRAYED>,
+    ) -> SampledType::SampleResult
     where
         I: Integer,
     {
-        let mut result = Default::default();
+        let mut result = SampledType::Vec4::default();
 
         unsafe {
             asm! {
@@ -728,7 +790,7 @@ impl<
             }
         }
 
-        result
+        result.truncate_into()
     }
 
     /// Write a texel to an image without a sampler.
@@ -754,11 +816,12 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const FORMAT: u32,
+        const COMPONENTS: u32,
     >
     Image<
         SampledType,
@@ -768,6 +831,7 @@ impl<
         MULTISAMPLED,
         { Sampled::No as u32 },
         FORMAT,
+        COMPONENTS,
     >
 {
     /// Read a texel from subpass input attachment.
@@ -777,11 +841,11 @@ impl<
     pub fn read_subpass<I>(
         &self,
         coordinate: impl ImageCoordinateSubpassData<I, ARRAYED>,
-    ) -> SampledType::Vec4
+    ) -> SampledType::SampleResult
     where
         I: Integer,
     {
-        let mut result = Default::default();
+        let mut result = SampledType::Vec4::default();
 
         unsafe {
             asm! {
@@ -795,19 +859,20 @@ impl<
             }
         }
 
-        result
+        result.truncate_into()
     }
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DIM: u32,
         const DEPTH: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const SAMPLED: u32,
         const FORMAT: u32,
-    > Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT>
+        const COMPONENTS: u32,
+    > Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, COMPONENTS>
 {
     /// Query the number of mipmap levels.
     #[crate::macros::gpu_only]
@@ -888,13 +953,24 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DIM: u32,
         const DEPTH: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
         const FORMAT: u32,
-    > Image<SampledType, DIM, DEPTH, ARRAYED, { Multisampled::False as u32 }, SAMPLED, FORMAT>
+        const COMPONENTS: u32,
+    >
+    Image<
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False as u32 },
+        SAMPLED,
+        FORMAT,
+        COMPONENTS,
+    >
 {
     /// Query the dimensions of Image, with no level of detail.
     #[crate::macros::gpu_only]
@@ -922,11 +998,12 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
         const FORMAT: u32,
+        const COMPONENTS: u32,
     >
     Image<
         SampledType,
@@ -936,6 +1013,7 @@ impl<
         { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
     /// Query the number of samples available per texel fetch in a multisample image.
@@ -967,24 +1045,37 @@ pub struct SampledImage<I> {
 }
 
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DIM: u32,
         const DEPTH: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
         const FORMAT: u32,
+        const COMPONENTS: u32,
     >
     SampledImage<
-        Image<SampledType, DIM, DEPTH, ARRAYED, { Multisampled::False as u32 }, SAMPLED, FORMAT>,
+        Image<
+            SampledType,
+            DIM,
+            DEPTH,
+            ARRAYED,
+            { Multisampled::False as u32 },
+            SAMPLED,
+            FORMAT,
+            COMPONENTS,
+        >,
     >
 {
     /// Sample texels at `coord` from the sampled image with an implicit lod.
     #[crate::macros::gpu_only]
-    pub fn sample<F>(&self, coord: impl ImageCoordinate<F, DIM, ARRAYED>) -> SampledType::Vec4
+    pub fn sample<F>(
+        &self,
+        coord: impl ImageCoordinate<F, DIM, ARRAYED>,
+    ) -> SampledType::SampleResult
     where
         F: Float,
     {
-        let mut result = Default::default();
+        let mut result = SampledType::Vec4::default();
         unsafe {
             asm!(
                 "%sampledImage = OpLoad typeof*{1} {1}",
@@ -996,7 +1087,7 @@ impl<
                 in(reg) &coord
             );
         }
-        result
+        result.truncate_into()
     }
 
     /// Sample texels at `coord` from the sampled image with an explicit lod.
@@ -1005,11 +1096,11 @@ impl<
         &self,
         coord: impl ImageCoordinate<F, DIM, ARRAYED>,
         lod: f32,
-    ) -> SampledType::Vec4
+    ) -> SampledType::SampleResult
     where
         F: Float,
     {
-        let mut result = Default::default();
+        let mut result = SampledType::Vec4::default();
         unsafe {
             asm!(
                 "%sampledImage = OpLoad typeof*{1} {1}",
@@ -1023,7 +1114,7 @@ impl<
                 in(reg) &lod,
             );
         }
-        result
+        result.truncate_into()
     }
 }
 
@@ -1034,11 +1125,12 @@ impl<
 /// `OpTypeImage` must be 0."
 pub trait HasGather {}
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasGather
     for Image<
         SampledType,
@@ -1048,15 +1140,17 @@ impl<
         { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasGather
     for Image<
         SampledType,
@@ -1066,15 +1160,17 @@ impl<
         { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasGather
     for Image<
         SampledType,
@@ -1084,6 +1180,7 @@ impl<
         { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
@@ -1094,12 +1191,13 @@ impl<
 /// "Its Dim operand must be one of 1D, 2D, 3D, or Cube."
 pub trait HasQueryLevels {}
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQueryLevels
     for Image<
         SampledType,
@@ -1109,16 +1207,18 @@ impl<
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQueryLevels
     for Image<
         SampledType,
@@ -1128,16 +1228,18 @@ impl<
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQueryLevels
     for Image<
         SampledType,
@@ -1147,16 +1249,18 @@ impl<
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQueryLevels
     for Image<
         SampledType,
@@ -1166,6 +1270,7 @@ impl<
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
@@ -1177,11 +1282,12 @@ impl<
 /// 3D, or Cube, it must also have either an MS of 1 or a Sampled of 0 or 2."
 pub trait HasQuerySize {}
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySize
     for Image<
         SampledType,
@@ -1191,11 +1297,17 @@ impl<
         { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
-impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const ARRAYED: u32>
-    HasQuerySize
+impl<
+        SampledType: SampleType<FORMAT, COMPONENTS>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const COMPONENTS: u32,
+    > HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::OneD as u32 },
@@ -1204,11 +1316,17 @@ impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const
         { Multisampled::False as u32 },
         { Sampled::Unknown as u32 },
         FORMAT,
+        COMPONENTS,
     >
 {
 }
-impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const ARRAYED: u32>
-    HasQuerySize
+impl<
+        SampledType: SampleType<FORMAT, COMPONENTS>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const COMPONENTS: u32,
+    > HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::OneD as u32 },
@@ -1217,15 +1335,17 @@ impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const
         { Multisampled::False as u32 },
         { Sampled::No as u32 },
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySize
     for Image<
         SampledType,
@@ -1235,11 +1355,17 @@ impl<
         { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
-impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const ARRAYED: u32>
-    HasQuerySize
+impl<
+        SampledType: SampleType<FORMAT, COMPONENTS>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const COMPONENTS: u32,
+    > HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::TwoD as u32 },
@@ -1248,11 +1374,17 @@ impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const
         { Multisampled::False as u32 },
         { Sampled::Unknown as u32 },
         FORMAT,
+        COMPONENTS,
     >
 {
 }
-impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const ARRAYED: u32>
-    HasQuerySize
+impl<
+        SampledType: SampleType<FORMAT, COMPONENTS>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const COMPONENTS: u32,
+    > HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::TwoD as u32 },
@@ -1261,15 +1393,17 @@ impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const
         { Multisampled::False as u32 },
         { Sampled::No as u32 },
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySize
     for Image<
         SampledType,
@@ -1279,11 +1413,17 @@ impl<
         { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
-impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const ARRAYED: u32>
-    HasQuerySize
+impl<
+        SampledType: SampleType<FORMAT, COMPONENTS>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const COMPONENTS: u32,
+    > HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::ThreeD as u32 },
@@ -1292,11 +1432,17 @@ impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const
         { Multisampled::False as u32 },
         { Sampled::Unknown as u32 },
         FORMAT,
+        COMPONENTS,
     >
 {
 }
-impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const ARRAYED: u32>
-    HasQuerySize
+impl<
+        SampledType: SampleType<FORMAT, COMPONENTS>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const COMPONENTS: u32,
+    > HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::ThreeD as u32 },
@@ -1305,15 +1451,17 @@ impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const
         { Multisampled::False as u32 },
         { Sampled::No as u32 },
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySize
     for Image<
         SampledType,
@@ -1323,11 +1471,17 @@ impl<
         { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
-impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const ARRAYED: u32>
-    HasQuerySize
+impl<
+        SampledType: SampleType<FORMAT, COMPONENTS>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const COMPONENTS: u32,
+    > HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::Cube as u32 },
@@ -1336,11 +1490,17 @@ impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const
         { Multisampled::False as u32 },
         { Sampled::Unknown as u32 },
         FORMAT,
+        COMPONENTS,
     >
 {
 }
-impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const ARRAYED: u32>
-    HasQuerySize
+impl<
+        SampledType: SampleType<FORMAT, COMPONENTS>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const COMPONENTS: u32,
+    > HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::Cube as u32 },
@@ -1349,16 +1509,18 @@ impl<SampledType: SampleType<FORMAT>, const DEPTH: u32, const FORMAT: u32, const
         { Multisampled::False as u32 },
         { Sampled::No as u32 },
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySize
     for Image<
         SampledType,
@@ -1368,16 +1530,18 @@ impl<
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const MULTISAMPLED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySize
     for Image<
         SampledType,
@@ -1387,6 +1551,7 @@ impl<
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
@@ -1397,11 +1562,12 @@ impl<
 /// "Its Dim operand must be one of 1D, 2D, 3D, or Cube, and its MS must be 0."
 pub trait HasQuerySizeLod {}
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySizeLod
     for Image<
         SampledType,
@@ -1411,15 +1577,17 @@ impl<
         { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySizeLod
     for Image<
         SampledType,
@@ -1429,15 +1597,17 @@ impl<
         { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySizeLod
     for Image<
         SampledType,
@@ -1447,15 +1617,17 @@ impl<
         { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
 impl<
-        SampledType: SampleType<FORMAT>,
+        SampledType: SampleType<FORMAT, COMPONENTS>,
         const DEPTH: u32,
         const FORMAT: u32,
         const ARRAYED: u32,
         const SAMPLED: u32,
+        const COMPONENTS: u32,
     > HasQuerySizeLod
     for Image<
         SampledType,
@@ -1465,6 +1637,7 @@ impl<
         { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     >
 {
 }
