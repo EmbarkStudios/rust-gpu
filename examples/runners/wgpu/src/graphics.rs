@@ -378,7 +378,7 @@ pub fn start(
         if #[cfg(target_os = "android")] {
             android_logger::init_once(
                 android_logger::Config::default()
-                    .with_min_level("info".parse().unwrap()),
+                    .with_max_level("info".parse().unwrap()),
             );
 
             use winit::platform::android::EventLoopBuilderExtAndroid;
