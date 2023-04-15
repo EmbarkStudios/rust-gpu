@@ -214,7 +214,7 @@ fn maybe_watch(
 #[derive(StructOpt, Clone)]
 #[structopt(name = "example-runner-wgpu")]
 pub struct Options {
-    #[structopt(short, long, default_value = "Sky")]
+    #[structopt(short, long, default_value = "Mouse")]
     shader: RustGPUShader,
 
     #[structopt(long)]
