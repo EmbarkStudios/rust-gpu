@@ -29,8 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added ⭐
+- [PR#1031](https://github.com/EmbarkStudios/rust-gpu/pull/1031) added `Components` generic parameter to `Image` type, allowing images to return lower dimensional vectors and even scalars from the sampling API
+
 ### Changed 🛠
-- [PR#1031](https://github.com/EmbarkStudios/rust-gpu/pull/1031) Added `Components` generic parameter to `Image` type, allowing images to return lower dimensional vectors and even scalars from the sampling API.
+- [PR#1035](https://github.com/EmbarkStudios/rust-gpu/pull/1035) reduced the number of CGUs ("codegen units") used by `spirv-builder` to just `1`
 - [PR#1011](https://github.com/EmbarkStudios/rust-gpu/pull/1011) made `NonWritable` all read-only storage buffers (i.e. those typed `&T`, where `T` doesn't have interior mutability)
 - [PR#1029](https://github.com/EmbarkStudios/rust-gpu/pull/1029) fixed SampledImage::sample() fns being unnecessarily marked as unsafe
 

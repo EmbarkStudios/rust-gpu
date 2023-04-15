@@ -578,6 +578,16 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         join_checking_for_separators(rustflags, "\x1f"),
     );
 
+    let profile_in_env_var = profile.replace('-', "_").to_ascii_uppercase();
+
+    // NOTE(eddyb) there's no parallelism to take advantage of multiple CGUs,
+    // and inter-CGU duplication can be wasteful, so this forces 1 CGU for now.
+    let num_cgus = 1;
+    cargo.env(
+        format!("CARGO_PROFILE_{profile_in_env_var}_CODEGEN_UNITS"),
+        num_cgus.to_string(),
+    );
+
     let build = cargo
         .stderr(Stdio::inherit())
         .current_dir(&builder.path_to_crate)
