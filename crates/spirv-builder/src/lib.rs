@@ -510,27 +510,12 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         rustflags.extend(extra_rustflags.split_whitespace().map(|s| s.to_string()));
     }
 
-    let mut cargo = Command::new("cargo");
-    cargo.args([
-        "build",
-        "--lib",
-        "--message-format=json-render-diagnostics",
-        "-Zbuild-std=core",
-        "-Zbuild-std-features=compiler-builtins-mem",
-        "--target",
-        &*builder.target,
-    ]);
-
-    if builder.release {
-        cargo.arg("--release");
-    }
-
     // If we're nested in `cargo` invocation, use a different `--target-dir`,
     // to avoid waiting on the same lock (which effectively dead-locks us).
     let outer_target_dir = match (env::var("PROFILE"), env::var_os("OUT_DIR")) {
-        (Ok(profile), Some(dir)) => {
-            // Strip `$profile/build/*/out`.
-            [&profile, "build", "*", "out"].iter().rev().try_fold(
+        (Ok(outer_profile), Some(dir)) => {
+            // Strip `$outer_profile/build/*/out`.
+            [&outer_profile, "build", "*", "out"].iter().rev().try_fold(
                 PathBuf::from(dir),
                 |mut dir, &filter| {
                     if (filter == "*" || dir.ends_with(filter)) && dir.pop() {
@@ -546,16 +531,30 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // FIXME(eddyb) use `crate metadata` to always be able to get the "outer"
     // (or "default") `--target-dir`, to append `/spirv-builder` to it.
     let target_dir = outer_target_dir.map(|outer| outer.join("spirv-builder"));
+
+    let profile = if builder.release { "release" } else { "dev" };
+
+    let mut cargo = Command::new("cargo");
+    cargo.args([
+        "build",
+        "--lib",
+        "--message-format=json-render-diagnostics",
+        "-Zbuild-std=core",
+        "-Zbuild-std-features=compiler-builtins-mem",
+        "--profile",
+        profile,
+        "--target",
+        &*builder.target,
+    ]);
+
+    // NOTE(eddyb) see above how this is computed and why it might be missing.
     if let Some(target_dir) = target_dir {
         cargo.arg("--target-dir").arg(target_dir);
     }
 
-    // NOTE(eddyb) Cargo caches some information it got from `rustc` in
-    // `.rustc_info.json`, and assumes it only depends on the `rustc` binary,
-    // but in our case, `rustc_codegen_spirv` changes are also relevant,
-    // so we turn off that caching with an env var, just to avoid any issues.
-    cargo.env("CARGO_CACHE_RUSTC_INFO", "0");
-
+    // Clear Cargo environment variables that we don't want to leak into the
+    // inner invocation of Cargo (because e.g. build scripts might read them),
+    // before we set any of our own below.
     for (key, _) in env::vars_os() {
         let remove = key.to_str().map_or(false, |s| {
             s.starts_with("CARGO_FEATURES_") || s.starts_with("CARGO_CFG_")
@@ -565,12 +564,23 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         }
     }
 
-    let cargo_encoded_rustflags = join_checking_for_separators(rustflags, "\x1f");
+    // NOTE(eddyb) Cargo caches some information it got from `rustc` in
+    // `.rustc_info.json`, and assumes it only depends on the `rustc` binary,
+    // but in our case, `rustc_codegen_spirv` changes are also relevant,
+    // so we turn off that caching with an env var, just to avoid any issues.
+    cargo.env("CARGO_CACHE_RUSTC_INFO", "0");
+
+    // NOTE(eddyb) this used to be just `RUSTFLAGS` but at some point Cargo
+    // added a separate environment variable using `\x1f` instead of spaces,
+    // which allows us to have spaces within individual `rustc` flags.
+    cargo.env(
+        "CARGO_ENCODED_RUSTFLAGS",
+        join_checking_for_separators(rustflags, "\x1f"),
+    );
 
     let build = cargo
         .stderr(Stdio::inherit())
         .current_dir(&builder.path_to_crate)
-        .env("CARGO_ENCODED_RUSTFLAGS", cargo_encoded_rustflags)
         .output()
         .expect("failed to execute cargo build");
 
