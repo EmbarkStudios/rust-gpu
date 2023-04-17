@@ -657,11 +657,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn set_span(&mut self, span: Span) {
         self.current_span = Some(span);
         let loc = self.cx.tcx.sess.source_map().lookup_char_pos(span.lo());
-        let file = self
-            .builder
-            .def_string(format!("{}", loc.file.name.prefer_remapped()));
-        self.emit()
-            .line(file, loc.line as u32, loc.col_display as u32);
+        let file = self.builder.def_debug_file(loc.file);
+        self.emit().line(
+            file.file_name_op_string_id,
+            loc.line as u32,
+            loc.col_display as u32,
+        );
     }
 
     // FIXME(eddyb) change `Self::Function` to be more like a function index.

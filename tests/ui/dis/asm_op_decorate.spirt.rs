@@ -6,6 +6,7 @@
 // compile-flags: -C target-feature=+RuntimeDescriptorArray,+ext:SPV_EXT_descriptor_indexing
 // compile-flags: -C llvm-args=--disassemble-globals
 // normalize-stderr-test "OpCapability VulkanMemoryModel\n" -> ""
+// normalize-stderr-test "OpSource .*\n" -> ""
 // normalize-stderr-test "OpExtension .SPV_KHR_vulkan_memory_model.\n" -> ""
 // normalize-stderr-test "OpMemoryModel Logical Vulkan" -> "OpMemoryModel Logical Simple"
 

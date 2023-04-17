@@ -117,7 +117,7 @@ impl<'tcx> CodegenCx<'tcx> {
         Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(&sym, &target, &features),
+            builder: BuilderSpirv::new(tcx.sess.source_map(), &sym, &target, &features),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
