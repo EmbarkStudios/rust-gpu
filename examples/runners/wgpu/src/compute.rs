@@ -12,8 +12,8 @@ pub fn start(options: &Options) {
 }
 
 pub async fn start_internal(
-    _options: &Options,
-    shader_binary: wgpu::ShaderModuleDescriptor<'static>,
+    options: &Options,
+    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
 ) {
     let backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::PRIMARY);
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
@@ -24,11 +24,16 @@ pub async fn start_internal(
         .await
         .expect("Failed to find an appropriate adapter");
 
+    let mut features = wgpu::Features::TIMESTAMP_QUERY;
+    if options.force_spirv_passthru {
+        features |= wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
+    }
+
     let (device, queue) = adapter
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features: wgpu::Features::TIMESTAMP_QUERY,
+                features,
                 limits: wgpu::Limits::default(),
             },
             None,
@@ -40,8 +45,16 @@ pub async fn start_internal(
 
     let timestamp_period = queue.get_timestamp_period();
 
-    // Load the shaders from disk
-    let module = device.create_shader_module(shader_binary);
+    // FIXME(eddyb) automate this decision by default.
+    let module = if options.force_spirv_passthru {
+        unsafe { device.create_shader_module_spirv(&shader_binary) }
+    } else {
+        let wgpu::ShaderModuleDescriptorSpirV { label, source } = shader_binary;
+        device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label,
+            source: wgpu::ShaderSource::SpirV(source),
+        })
+    };
 
     let top = 2u32.pow(20);
     let src_range = 1..top;

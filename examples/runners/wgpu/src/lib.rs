@@ -90,9 +90,9 @@ pub enum RustGPUShader {
 fn maybe_watch(
     shader: RustGPUShader,
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))] on_watch: Option<
-        Box<dyn FnMut(wgpu::ShaderModuleDescriptor<'static>) + Send + 'static>,
+        Box<dyn FnMut(wgpu::ShaderModuleDescriptorSpirV<'static>) + Send + 'static>,
     >,
-) -> wgpu::ShaderModuleDescriptor<'static> {
+) -> wgpu::ShaderModuleDescriptorSpirV<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
         use spirv_builder::{CompileResult, MetadataPrintout, SpirvBuilder};
@@ -128,13 +128,15 @@ fn maybe_watch(
         };
         fn handle_compile_result(
             compile_result: CompileResult,
-        ) -> wgpu::ShaderModuleDescriptor<'static> {
+        ) -> wgpu::ShaderModuleDescriptorSpirV<'static> {
             let module_path = compile_result.module.unwrap_single();
             let data = std::fs::read(module_path).unwrap();
+            // FIXME(eddyb) this reallocates all the data pointlessly, there is
+            // not a good reason to use `ShaderModuleDescriptorSpirV` specifically.
             let spirv = Cow::Owned(wgpu::util::make_spirv_raw(&data).into_owned());
-            wgpu::ShaderModuleDescriptor {
+            wgpu::ShaderModuleDescriptorSpirV {
                 label: None,
-                source: wgpu::ShaderSource::SpirV(spirv),
+                source: spirv,
             }
         }
         handle_compile_result(initial_result)
@@ -142,19 +144,22 @@ fn maybe_watch(
     #[cfg(any(target_os = "android", target_arch = "wasm32"))]
     {
         match shader {
-            RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),
-            RustGPUShader::Sky => wgpu::include_spirv!(env!("sky_shader.spv")),
-            RustGPUShader::Compute => wgpu::include_spirv!(env!("compute_shader.spv")),
-            RustGPUShader::Mouse => wgpu::include_spirv!(env!("mouse_shader.spv")),
+            RustGPUShader::Simplest => wgpu::include_spirv_raw!(env!("simplest_shader.spv")),
+            RustGPUShader::Sky => wgpu::include_spirv_raw!(env!("sky_shader.spv")),
+            RustGPUShader::Compute => wgpu::include_spirv_raw!(env!("compute_shader.spv")),
+            RustGPUShader::Mouse => wgpu::include_spirv_raw!(env!("mouse_shader.spv")),
         }
     }
 }
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Clone)]
 #[structopt(name = "example-runner-wgpu")]
 pub struct Options {
     #[structopt(short, long, default_value = "Sky")]
     shader: RustGPUShader,
+
+    #[structopt(long)]
+    force_spirv_passthru: bool,
 }
 
 #[cfg_attr(target_os = "android", export_name = "android_main")]
