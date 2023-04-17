@@ -5,6 +5,9 @@ use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::bug;
 use std::collections::hash_map;
 
+// FIXME(eddyb) consider deduplicating the `OpString` and `OpSource` created for
+// file-level debuginfo (but using SPIR-T for linking might be better?).
+
 pub fn remove_duplicate_extensions(module: &mut Module) {
     let mut set = FxHashSet::default();
 
