@@ -33,9 +33,10 @@ fn mouse_button_index(button: MouseButton) -> usize {
 }
 
 async fn run(
-    event_loop: EventLoop<wgpu::ShaderModuleDescriptor<'static>>,
+    options: Options,
+    event_loop: EventLoop<wgpu::ShaderModuleDescriptorSpirV<'static>>,
     window: Window,
-    shader_binary: wgpu::ShaderModuleDescriptor<'static>,
+    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
 ) {
     let backends = wgpu::util::backend_bits_from_env()
         .unwrap_or(wgpu::Backends::VULKAN | wgpu::Backends::METAL);
@@ -69,7 +70,10 @@ async fn run(
     .await
     .expect("Failed to find an appropriate adapter");
 
-    let features = wgpu::Features::PUSH_CONSTANTS;
+    let mut features = wgpu::Features::PUSH_CONSTANTS;
+    if options.force_spirv_passthru {
+        features |= wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
+    }
     let limits = wgpu::Limits {
         max_push_constant_size: 128,
         ..Default::default()
@@ -124,6 +128,7 @@ async fn run(
     });
 
     let mut render_pipeline = create_pipeline(
+        &options,
         &device,
         &pipeline_layout,
         surface_with_config.as_ref().map_or_else(
@@ -309,6 +314,7 @@ async fn run(
             }
             Event::UserEvent(new_module) => {
                 *render_pipeline = create_pipeline(
+                    &options,
                     &device,
                     &pipeline_layout,
                     surface_with_config.as_ref().map_or_else(
@@ -326,12 +332,22 @@ async fn run(
 }
 
 fn create_pipeline(
+    options: &Options,
     device: &wgpu::Device,
     pipeline_layout: &wgpu::PipelineLayout,
     surface_format: wgpu::TextureFormat,
-    shader_binary: wgpu::ShaderModuleDescriptor<'_>,
+    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'_>,
 ) -> wgpu::RenderPipeline {
-    let module = device.create_shader_module(shader_binary);
+    // FIXME(eddyb) automate this decision by default.
+    let module = if options.force_spirv_passthru {
+        unsafe { device.create_shader_module_spirv(&shader_binary) }
+    } else {
+        let wgpu::ShaderModuleDescriptorSpirV { label, source } = shader_binary;
+        device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label,
+            source: wgpu::ShaderSource::SpirV(source),
+        })
+    };
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(pipeline_layout),
@@ -425,16 +441,17 @@ pub fn start(
                 })
                 .expect("couldn't append canvas to document body");
             wasm_bindgen_futures::spawn_local(run(
+                options.clone(),
                 event_loop,
                 window,
                 initial_shader,
             ));
         } else {
             futures::executor::block_on(run(
+                options.clone(),
                 event_loop,
                 window,
                 initial_shader,
-
             ));
         }
     }
