@@ -5,7 +5,7 @@ mod type_;
 
 use crate::builder::{ExtInst, InstructionTable};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvConst, SpirvValue, SpirvValueKind};
-use crate::decorations::{CustomDecoration, SerializedSpan, ZombieDecoration};
+use crate::decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use crate::target::SpirvTarget;
@@ -50,10 +50,11 @@ pub struct CodegenCx<'tcx> {
     /// Cache generated vtables
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
     pub ext_inst: RefCell<ExtInst>,
-    /// Invalid spir-v IDs that should be stripped from the final binary,
+    /// Invalid SPIR-V IDs that should be stripped from the final binary,
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
-    zombie_decorations: RefCell<FxHashMap<Word, ZombieDecoration<'tcx>>>,
+    zombie_decorations:
+        RefCell<FxHashMap<Word, (ZombieDecoration<'tcx>, Option<SrcLocDecoration<'tcx>>)>>,
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
@@ -187,12 +188,14 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn zombie_even_in_user_code(&self, word: Word, span: Span, reason: &str) {
         self.zombie_decorations.borrow_mut().insert(
             word,
-            ZombieDecoration {
-                // FIXME(eddyb) this could take advantage of `Cow` and use
-                // either `&'static str` or `String`, on a case-by-case basis.
-                reason: reason.to_string().into(),
-                span: SerializedSpan::from_rustc(span, &self.builder),
-            },
+            (
+                ZombieDecoration {
+                    // FIXME(eddyb) this could take advantage of `Cow` and use
+                    // either `&'static str` or `String`, on a case-by-case basis.
+                    reason: reason.to_string().into(),
+                },
+                SrcLocDecoration::from_rustc_span(span, &self.builder),
+            ),
         );
     }
 
@@ -224,12 +227,15 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
-        result.annotations.extend(
-            self.zombie_decorations
-                .into_inner()
-                .into_iter()
-                .map(|(id, zombie)| zombie.encode(id)),
-        );
+        result
+            .annotations
+            .extend(self.zombie_decorations.into_inner().into_iter().flat_map(
+                |(id, (zombie, src_loc))| {
+                    [zombie.encode(id)]
+                        .into_iter()
+                        .chain(src_loc.map(|src_loc| src_loc.encode(id)))
+                },
+            ));
         result
     }
 

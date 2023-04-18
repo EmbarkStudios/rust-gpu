@@ -656,8 +656,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn set_span(&mut self, span: Span) {
         self.current_span = Some(span);
-        let (file, line, col) = self.builder.file_line_col_for_op_line(span);
-        self.emit().line(file.file_name_op_string_id, line, col);
+
+        // We may not always have valid spans.
+        // FIXME(eddyb) reduce the sources of this as much as possible.
+        if span.is_dummy() {
+            self.emit().no_line();
+        } else {
+            let (file, line, col) = self.builder.file_line_col_for_op_line(span);
+            self.emit().line(file.file_name_op_string_id, line, col);
+        }
     }
 
     // FIXME(eddyb) change `Self::Function` to be more like a function index.
