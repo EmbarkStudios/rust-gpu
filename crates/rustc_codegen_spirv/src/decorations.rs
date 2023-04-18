@@ -2,16 +2,18 @@
 //! the original codegen of a crate, and consumed by the `linker`.
 
 use crate::builder_spirv::BuilderSpirv;
+use itertools::Itertools;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Decoration, Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxIndexMap};
 use rustc_data_structures::sync::Lrc;
-use rustc_span::{source_map::SourceMap, Pos, Span};
+use rustc_span::{source_map::SourceMap, Span};
 use rustc_span::{FileName, SourceFile};
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use std::borrow::Cow;
 use std::marker::PhantomData;
+use std::ops::Range;
 use std::path::PathBuf;
 use std::{iter, slice};
 
@@ -139,12 +141,15 @@ impl CustomDecoration for ZombieDecoration<'_> {
 
 /// Representation of a `rustc` `Span` that can be turned into a `Span` again
 /// in another compilation, by regenerating the `rustc` `SourceFile`.
+//
+// FIXME(eddyb) encode/decode this using a `file:line:col` string format.
 #[derive(Deserialize, Serialize)]
 pub struct SerializedSpan<'a> {
     file_name: Cow<'a, str>,
-    // NOTE(eddyb) by keeping `lo` but not `hi`, we mimick `OpLine` limitations
+    // NOTE(eddyb) by keeping `line`+`col`, we mimick `OpLine` limitations
     // (which could be lifted in the future using custom SPIR-T debuginfo).
-    lo: u32,
+    line: u32,
+    col: u32,
 }
 
 impl<'tcx> SerializedSpan<'tcx> {
@@ -155,20 +160,12 @@ impl<'tcx> SerializedSpan<'tcx> {
             return None;
         }
 
-        let lo = span.lo();
-
-        let sf = builder.source_map.lookup_source_file(lo);
-        if !(sf.start_pos..=sf.end_pos).contains(&lo) {
-            // FIXME(eddyb) broken `Span` - potentially turn this into an assert?
-            return None;
-        }
-
-        // NOTE(eddyb) this emits necessary `OpString`/`OpSource` instructions.
-        let file = builder.def_debug_file(sf.clone());
+        let (file, line, col) = builder.file_line_col_for_op_line(span);
 
         Some(Self {
             file_name: file.file_name.into(),
-            lo: (lo - sf.start_pos).to_u32(),
+            line,
+            col,
         })
     }
 }
@@ -293,11 +290,60 @@ impl<'a> SpanRegenerator<'a> {
     pub fn serialized_span_to_rustc(&mut self, span: &SerializedSpan<'_>) -> Option<Span> {
         let file = self.regenerate_rustc_source_file(&span.file_name[..])?;
 
-        // Sanity check - assuming `SerializedSpan` isn't corrupted, this assert
-        // could only ever fail because of the file name being ambiguous.
-        assert!(span.lo <= (file.end_pos.0 - file.start_pos.0));
+        let line_bpos_range = file.line_bounds(span.line.checked_sub(1)? as usize);
 
-        let lo = file.start_pos + Pos::from_u32(span.lo);
-        Some(Span::with_root_ctxt(lo, lo))
+        // Find the special cases (`MultiByteChar`s/`NonNarrowChar`s) in the line.
+        let multibyte_chars = {
+            let find = |bpos| {
+                file.multibyte_chars
+                    .binary_search_by_key(&bpos, |mbc| mbc.pos)
+                    .unwrap_or_else(|x| x)
+            };
+            let Range { start, end } = line_bpos_range;
+            file.multibyte_chars[find(start)..find(end)].iter()
+        };
+        let non_narrow_chars = {
+            let find = |bpos| {
+                file.non_narrow_chars
+                    .binary_search_by_key(&bpos, |nnc| nnc.pos())
+                    .unwrap_or_else(|x| x)
+            };
+            let Range { start, end } = line_bpos_range;
+            file.non_narrow_chars[find(start)..find(end)].iter()
+        };
+        let mut special_chars = multibyte_chars
+            .merge_join_by(non_narrow_chars, |mbc, nnc| mbc.pos.cmp(&nnc.pos()))
+            .peekable();
+
+        // Increment the `BytePos` until we reach the right `col_display`, using
+        // `MultiByteChar`s/`NonNarrowChar`s to track non-trivial contributions
+        // (this may look inefficient, but lines tend to be short, and `rustc`
+        // itself is even worse than this, when it comes to `BytePos` lookups).
+        let (mut cur_bpos, mut cur_col_display) = (line_bpos_range.start, 0);
+        while cur_bpos < line_bpos_range.end && cur_col_display < span.col {
+            let next_special_bpos = special_chars.peek().map(|special| {
+                special
+                    .as_ref()
+                    .map_any(|mbc| mbc.pos, |nnc| nnc.pos())
+                    .reduce(|x, _| x)
+            });
+
+            // Batch trivial chars (i.e. chars 1:1 wrt `BytePos` vs `col_display`).
+            let following_trivial_chars =
+                next_special_bpos.unwrap_or(line_bpos_range.end).0 - cur_bpos.0;
+            if following_trivial_chars > 0 {
+                let wanted_trivial_chars = following_trivial_chars.min(span.col - cur_col_display);
+                cur_bpos.0 += wanted_trivial_chars;
+                cur_col_display += wanted_trivial_chars;
+                continue;
+            }
+
+            // Add a special char's `BytePos` and `col_display` contributions.
+            let mbc_nnc = special_chars.next().unwrap();
+            cur_bpos.0 += mbc_nnc.as_ref().left().map_or(1, |mbc| mbc.bytes as u32);
+            cur_col_display += mbc_nnc.as_ref().right().map_or(1, |nnc| nnc.width() as u32);
+        }
+
+        Some(Span::with_root_ctxt(cur_bpos, cur_bpos))
     }
 }
