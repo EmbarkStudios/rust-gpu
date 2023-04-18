@@ -12,7 +12,7 @@ use std::iter::once;
 // FIXME(eddyb) change this to chain through IDs instead of wasting allocations.
 #[derive(Clone)]
 struct ZombieInfo<'a> {
-    serialized: &'a LazilyDeserialized<'static, ZombieDecoration>,
+    serialized: &'a LazilyDeserialized<'static, ZombieDecoration<'a>>,
     stack: Vec<Word>,
 }
 

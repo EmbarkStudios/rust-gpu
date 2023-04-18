@@ -53,7 +53,7 @@ pub struct CodegenCx<'tcx> {
     /// Invalid spir-v IDs that should be stripped from the final binary,
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
-    zombie_decorations: RefCell<FxHashMap<Word, ZombieDecoration>>,
+    zombie_decorations: RefCell<FxHashMap<Word, ZombieDecoration<'tcx>>>,
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
@@ -117,7 +117,7 @@ impl<'tcx> CodegenCx<'tcx> {
         Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(tcx.sess.source_map(), &sym, &target, &features),
+            builder: BuilderSpirv::new(tcx, &sym, &target, &features),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
@@ -188,7 +188,9 @@ impl<'tcx> CodegenCx<'tcx> {
         self.zombie_decorations.borrow_mut().insert(
             word,
             ZombieDecoration {
-                reason: reason.to_string(),
+                // FIXME(eddyb) this could take advantage of `Cow` and use
+                // either `&'static str` or `String`, on a case-by-case basis.
+                reason: reason.to_string().into(),
                 span: SerializedSpan::from_rustc(span, &self.builder),
             },
         );

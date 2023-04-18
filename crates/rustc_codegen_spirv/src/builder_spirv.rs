@@ -9,16 +9,19 @@ use rspirv::spirv::{
     AddressingModel, Capability, MemoryModel, Op, SourceLanguage, StorageClass, Word,
 };
 use rspirv::{binary::Assemble, binary::Disassemble};
+use rustc_arena::DroplessArena;
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_data_structures::sync::Lrc;
 use rustc_middle::bug;
+use rustc_middle::ty::TyCtxt;
 use rustc_span::source_map::SourceMap;
 use rustc_span::symbol::Symbol;
-use rustc_span::{SourceFile, Span, DUMMY_SP};
+use rustc_span::{FileName, FileNameDisplayPreference, SourceFile, Span, DUMMY_SP};
 use std::assert_matches::assert_matches;
 use std::cell::{RefCell, RefMut};
 use std::hash::{Hash, Hasher};
 use std::iter;
+use std::str;
 use std::{fs::File, io::Write, path::Path};
 
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -354,9 +357,11 @@ impl Hash for DebugFileKey {
 }
 
 #[derive(Copy, Clone)]
-pub struct DebugFileSpirv {
+pub struct DebugFileSpirv<'tcx> {
+    pub file_name: &'tcx str,
+
     /// The SPIR-V ID for the result of the `OpString` instruction containing
-    /// the file name - this is what e.g. `OpLine` uses to identify the file.
+    /// `file_name` - this is what e.g. `OpLine` uses to identify the file.
     ///
     /// All other details about the file are also attached to this ID, using
     /// other instructions that don't produce their own IDs (e.g. `OpSource`).
@@ -395,6 +400,7 @@ pub struct BuilderCursor {
 pub struct BuilderSpirv<'tcx> {
     // HACK(eddyb) public only for `decorations`.
     pub(crate) source_map: &'tcx SourceMap,
+    dropless_arena: &'tcx DroplessArena,
 
     builder: RefCell<Builder>,
 
@@ -405,7 +411,7 @@ pub struct BuilderSpirv<'tcx> {
     const_to_id: RefCell<FxHashMap<WithType<SpirvConst<'tcx>>, WithConstLegality<Word>>>,
     id_to_const: RefCell<FxHashMap<Word, WithConstLegality<SpirvConst<'tcx>>>>,
 
-    debug_file_cache: RefCell<FxHashMap<DebugFileKey, DebugFileSpirv>>,
+    debug_file_cache: RefCell<FxHashMap<DebugFileKey, DebugFileSpirv<'tcx>>>,
 
     enabled_capabilities: FxHashSet<Capability>,
     enabled_extensions: FxHashSet<Symbol>,
@@ -413,7 +419,7 @@ pub struct BuilderSpirv<'tcx> {
 
 impl<'tcx> BuilderSpirv<'tcx> {
     pub fn new(
-        source_map: &'tcx SourceMap,
+        tcx: TyCtxt<'tcx>,
         sym: &Symbols,
         target: &SpirvTarget,
         features: &[TargetFeature],
@@ -478,7 +484,8 @@ impl<'tcx> BuilderSpirv<'tcx> {
         builder.memory_model(AddressingModel::Logical, memory_model);
 
         Self {
-            source_map,
+            source_map: tcx.sess.source_map(),
+            dropless_arena: &tcx.arena.dropless,
             builder: RefCell::new(builder),
             const_to_id: Default::default(),
             id_to_const: Default::default(),
@@ -689,7 +696,17 @@ impl<'tcx> BuilderSpirv<'tcx> {
         }
     }
 
-    pub fn def_debug_file(&self, sf: Lrc<SourceFile>) -> DebugFileSpirv {
+    pub fn file_line_col_for_op_line(&self, span: Span) -> (DebugFileSpirv<'tcx>, u32, u32) {
+        let loc = self.source_map.lookup_char_pos(span.lo());
+        (
+            self.def_debug_file(loc.file),
+            loc.line as u32,
+            loc.col_display as u32,
+        )
+    }
+
+    // HACK(eddyb) public only for `decorations`.
+    pub(crate) fn def_debug_file(&self, sf: Lrc<SourceFile>) -> DebugFileSpirv<'tcx> {
         *self
             .debug_file_cache
             .borrow_mut()
@@ -697,7 +714,34 @@ impl<'tcx> BuilderSpirv<'tcx> {
             .or_insert_with_key(|DebugFileKey(sf)| {
                 let mut builder = self.builder(Default::default());
 
-                let file_name_op_string_id = builder.string(sf.name.prefer_remapped().to_string());
+                // FIXME(eddyb) it would be nicer if we could just rely on
+                // `RealFileName::to_string_lossy` returning `Cow<'_, str>`,
+                // but sadly that `'_` is the lifetime of the temporary `Lrc`,
+                // not `'tcx`, so we have to arena-allocate to get `&'tcx str`.
+                let file_name = match &sf.name {
+                    FileName::Real(name) => {
+                        name.to_string_lossy(FileNameDisplayPreference::Remapped)
+                    }
+                    _ => sf.name.prefer_remapped().to_string().into(),
+                };
+                let file_name = {
+                    // FIXME(eddyb) it should be possible to arena-allocate a
+                    // `&str` directly, but it would require upstream changes,
+                    // and strings are handled by string interning in `rustc`.
+                    fn arena_alloc_slice<'tcx, T: Copy>(
+                        dropless_arena: &'tcx DroplessArena,
+                        xs: &[T],
+                    ) -> &'tcx [T] {
+                        if xs.is_empty() {
+                            &[]
+                        } else {
+                            dropless_arena.alloc_slice(xs)
+                        }
+                    }
+                    str::from_utf8(arena_alloc_slice(self.dropless_arena, file_name.as_bytes()))
+                        .unwrap()
+                };
+                let file_name_op_string_id = builder.string(file_name.to_owned());
 
                 let file_contents = self
                     .source_map
@@ -752,6 +796,7 @@ impl<'tcx> BuilderSpirv<'tcx> {
                 }
 
                 DebugFileSpirv {
+                    file_name,
                     file_name_op_string_id,
                 }
             })
