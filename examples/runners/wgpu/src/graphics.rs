@@ -1,6 +1,7 @@
 use crate::{maybe_watch, CompiledShaderModules, Options};
 
 use shared::ShaderConstants;
+use std::slice;
 use winit::{
     event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopBuilder},
@@ -168,15 +169,60 @@ async fn run(
     let mut surface_with_config = initial_surface
         .map(|surface| auto_configure_surface(&adapter, &device, surface, window.inner_size()));
 
-    // Load the shaders from disk
+    // Describe the pipeline layout and build the initial pipeline.
+    let push_constants_or_rossbo_emulation = {
+        const PUSH_CONSTANTS_SIZE: usize = std::mem::size_of::<ShaderConstants>();
+        let stages = wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT;
 
+        if !options.emulate_push_constants_with_storage_buffer {
+            Ok(wgpu::PushConstantRange {
+                stages,
+                range: 0..PUSH_CONSTANTS_SIZE as u32,
+            })
+        } else {
+            let buffer = device.create_buffer(&wgpu::BufferDescriptor {
+                label: None,
+                size: PUSH_CONSTANTS_SIZE as u64,
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+            let binding0 = wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: stages,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: Some((PUSH_CONSTANTS_SIZE as u64).try_into().unwrap()),
+                },
+                count: None,
+            };
+            let bind_group_layout =
+                device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    label: None,
+                    entries: &[binding0],
+                });
+            let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &bind_group_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: buffer.as_entire_binding(),
+                }],
+            });
+            Err((buffer, bind_group_layout, bind_group))
+        }
+    };
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
-        bind_group_layouts: &[],
-        push_constant_ranges: &[wgpu::PushConstantRange {
-            stages: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-            range: 0..std::mem::size_of::<ShaderConstants>() as u32,
-        }],
+        bind_group_layouts: push_constants_or_rossbo_emulation
+            .as_ref()
+            .err()
+            .map(|(_, layout, _)| layout)
+            .as_ref()
+            .map_or(&[], slice::from_ref),
+        push_constant_ranges: push_constants_or_rossbo_emulation
+            .as_ref()
+            .map_or(&[], slice::from_ref),
     });
 
     let mut render_pipeline = create_pipeline(
@@ -309,11 +355,23 @@ async fn run(
                         };
 
                         rpass.set_pipeline(render_pipeline);
-                        rpass.set_push_constants(
-                            wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                            0,
-                            bytemuck::bytes_of(&push_constants),
-                        );
+                        let (push_constant_offset, push_constant_bytes) =
+                            (0, bytemuck::bytes_of(&push_constants));
+                        match &push_constants_or_rossbo_emulation {
+                            Ok(_) => rpass.set_push_constants(
+                                wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                                push_constant_offset as u32,
+                                push_constant_bytes,
+                            ),
+                            Err((buffer, _, bind_group)) => {
+                                queue.write_buffer(
+                                    buffer,
+                                    push_constant_offset,
+                                    push_constant_bytes,
+                                );
+                                rpass.set_bind_group(0, bind_group, &[]);
+                            }
+                        }
                         rpass.draw(0..3, 0..1);
                     }
 
@@ -389,8 +447,39 @@ fn create_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &wgpu::PipelineLayout,
     surface_format: wgpu::TextureFormat,
-    compiled_shader_modules: CompiledShaderModules,
+    mut compiled_shader_modules: CompiledShaderModules,
 ) -> wgpu::RenderPipeline {
+    if options.emulate_push_constants_with_storage_buffer {
+        let (ds, b) = (0, 0);
+
+        for (_, shader_module_descr) in &mut compiled_shader_modules.named_spv_modules {
+            let w = shader_module_descr.source.to_mut();
+            assert_eq!((w[0], w[4]), (0x07230203, 0));
+            let mut last_op_decorate_start = None;
+            let mut i = 5;
+            while i < w.len() {
+                let (op, len) = (w[i] & 0xffff, w[i] >> 16);
+                match op {
+                    71 => last_op_decorate_start = Some(i),
+                    32 if w[i + 2] == 9 => w[i + 2] = 12,
+                    59 if w[i + 3] == 9 => {
+                        w[i + 3] = 12;
+                        let id = w[i + 2];
+                        let j = last_op_decorate_start.expect("no OpDecorate?");
+                        w.splice(
+                            j..j,
+                            [0x4_0047, id, 34, ds, 0x4_0047, id, 33, b, 0x3_0047, id, 24],
+                        );
+                        i += 11;
+                    }
+                    54 => break,
+                    _ => {}
+                }
+                i += len as usize;
+            }
+        }
+    }
+
     // FIXME(eddyb) automate this decision by default.
     let create_module = |module| {
         if options.force_spirv_passthru {
