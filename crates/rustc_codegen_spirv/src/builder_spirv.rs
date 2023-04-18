@@ -398,8 +398,7 @@ pub struct BuilderCursor {
 }
 
 pub struct BuilderSpirv<'tcx> {
-    // HACK(eddyb) public only for `decorations`.
-    pub(crate) source_map: &'tcx SourceMap,
+    source_map: &'tcx SourceMap,
     dropless_arena: &'tcx DroplessArena,
 
     builder: RefCell<Builder>,
@@ -705,8 +704,7 @@ impl<'tcx> BuilderSpirv<'tcx> {
         )
     }
 
-    // HACK(eddyb) public only for `decorations`.
-    pub(crate) fn def_debug_file(&self, sf: Lrc<SourceFile>) -> DebugFileSpirv<'tcx> {
+    fn def_debug_file(&self, sf: Lrc<SourceFile>) -> DebugFileSpirv<'tcx> {
         *self
             .debug_file_cache
             .borrow_mut()
