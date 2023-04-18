@@ -139,8 +139,9 @@ impl CustomDecoration for ZombieDecoration {
 #[derive(Deserialize, Serialize)]
 pub struct SerializedSpan {
     file_name: String,
+    // NOTE(eddyb) by keeping `lo` but not `hi`, we mimick `OpLine` limitations
+    // (which could be lifted in the future using custom SPIR-T debuginfo).
     lo: u32,
-    hi: u32,
 }
 
 impl SerializedSpan {
@@ -151,14 +152,10 @@ impl SerializedSpan {
             return None;
         }
 
-        let (lo, hi) = (span.lo(), span.hi());
-        if lo > hi {
-            // FIXME(eddyb) broken `Span` - potentially turn this into an assert?
-            return None;
-        }
+        let lo = span.lo();
 
         let file = builder.source_map.lookup_source_file(lo);
-        if !(file.start_pos <= lo && hi <= file.end_pos) {
+        if !(file.start_pos..=file.end_pos).contains(&lo) {
             // FIXME(eddyb) broken `Span` - potentially turn this into an assert?
             return None;
         }
@@ -169,7 +166,6 @@ impl SerializedSpan {
         Some(Self {
             file_name: file.name.prefer_remapped().to_string(),
             lo: (lo - file.start_pos).to_u32(),
-            hi: (hi - file.start_pos).to_u32(),
         })
     }
 }
@@ -296,11 +292,9 @@ impl<'a> SpanRegenerator<'a> {
 
         // Sanity check - assuming `SerializedSpan` isn't corrupted, this assert
         // could only ever fail because of the file name being ambiguous.
-        assert!(span.lo <= span.hi && span.hi <= (file.end_pos.0 - file.start_pos.0));
+        assert!(span.lo <= (file.end_pos.0 - file.start_pos.0));
 
-        Some(Span::with_root_ctxt(
-            file.start_pos + Pos::from_u32(span.lo),
-            file.start_pos + Pos::from_u32(span.hi),
-        ))
+        let lo = file.start_pos + Pos::from_u32(span.lo);
+        Some(Span::with_root_ctxt(lo, lo))
     }
 }
