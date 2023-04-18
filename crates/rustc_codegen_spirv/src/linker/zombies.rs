@@ -1,7 +1,7 @@
 //! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
 use super::{get_name, get_names};
-use crate::decorations::{CustomDecoration, LazilyDeserialized, SpanRegenerator, ZombieDecoration};
+use crate::decorations::{CustomDecoration, SpanRegenerator, ZombieDecoration};
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Op, Word};
 use rustc_data_structures::fx::FxHashMap;
@@ -11,64 +11,61 @@ use std::iter::once;
 
 // FIXME(eddyb) change this to chain through IDs instead of wasting allocations.
 #[derive(Clone)]
-struct ZombieInfo<'a> {
-    serialized: &'a LazilyDeserialized<'static, ZombieDecoration<'a>>,
+struct Zombie {
+    leaf_id: Word,
     stack: Vec<Word>,
 }
 
-impl<'a> ZombieInfo<'a> {
+impl Zombie {
     fn push_stack(&self, word: Word) -> Self {
         Self {
-            serialized: self.serialized,
+            leaf_id: self.leaf_id,
             stack: self.stack.iter().cloned().chain(once(word)).collect(),
         }
     }
 }
 
-fn contains_zombie<'h, 'a>(
+fn contains_zombie<'h>(
     inst: &Instruction,
-    zombie: &'h FxHashMap<Word, ZombieInfo<'a>>,
-) -> Option<&'h ZombieInfo<'a>> {
+    zombies: &'h FxHashMap<Word, Zombie>,
+) -> Option<&'h Zombie> {
     if let Some(result_type) = inst.result_type {
-        if let Some(reason) = zombie.get(&result_type) {
+        if let Some(reason) = zombies.get(&result_type) {
             return Some(reason);
         }
     }
     inst.operands
         .iter()
-        .find_map(|op| op.id_ref_any().and_then(|w| zombie.get(&w)))
+        .find_map(|op| op.id_ref_any().and_then(|w| zombies.get(&w)))
 }
 
-fn is_zombie<'h, 'a>(
-    inst: &Instruction,
-    zombie: &'h FxHashMap<Word, ZombieInfo<'a>>,
-) -> Option<&'h ZombieInfo<'a>> {
+fn is_zombie<'h>(inst: &Instruction, zombies: &'h FxHashMap<Word, Zombie>) -> Option<&'h Zombie> {
     if let Some(result_id) = inst.result_id {
-        zombie.get(&result_id)
+        zombies.get(&result_id)
     } else {
-        contains_zombie(inst, zombie)
+        contains_zombie(inst, zombies)
     }
 }
 
-fn is_or_contains_zombie<'h, 'a>(
+fn is_or_contains_zombie<'h>(
     inst: &Instruction,
-    zombie: &'h FxHashMap<Word, ZombieInfo<'a>>,
-) -> Option<&'h ZombieInfo<'a>> {
-    let result_zombie = inst.result_id.and_then(|result_id| zombie.get(&result_id));
-    result_zombie.or_else(|| contains_zombie(inst, zombie))
+    zombies: &'h FxHashMap<Word, Zombie>,
+) -> Option<&'h Zombie> {
+    let result_zombie = inst.result_id.and_then(|result_id| zombies.get(&result_id));
+    result_zombie.or_else(|| contains_zombie(inst, zombies))
 }
 
-fn spread_zombie(module: &Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_>>) -> bool {
+fn spread_zombie(module: &Module, zombies: &mut FxHashMap<Word, Zombie>) -> bool {
     let mut any = false;
     // globals are easy
     for inst in module.global_inst_iter() {
         if let Some(result_id) = inst.result_id {
-            if let Some(reason) = contains_zombie(inst, zombie) {
-                if zombie.contains_key(&result_id) {
+            if let Some(reason) = contains_zombie(inst, zombies) {
+                if zombies.contains_key(&result_id) {
                     continue;
                 }
                 let reason = reason.clone();
-                zombie.insert(result_id, reason);
+                zombies.insert(result_id, reason);
                 any = true;
             }
         }
@@ -81,24 +78,24 @@ fn spread_zombie(module: &Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_>>) 
     for func in &module.functions {
         let func_id = func.def_id().unwrap();
         // Can't use zombie.entry() here, due to using the map in contains_zombie
-        if zombie.contains_key(&func_id) {
+        if zombies.contains_key(&func_id) {
             // Func is already zombie, no need to scan it again.
             continue;
         }
         for inst in func.all_inst_iter() {
             if inst.class.opcode == Op::Variable {
                 let result_id = inst.result_id.unwrap();
-                if let Some(reason) = contains_zombie(inst, zombie) {
-                    if zombie.contains_key(&result_id) {
+                if let Some(reason) = contains_zombie(inst, zombies) {
+                    if zombies.contains_key(&result_id) {
                         continue;
                     }
                     let reason = reason.clone();
-                    zombie.insert(result_id, reason);
+                    zombies.insert(result_id, reason);
                     any = true;
                 }
-            } else if let Some(reason) = is_or_contains_zombie(inst, zombie) {
+            } else if let Some(reason) = is_or_contains_zombie(inst, zombies) {
                 let pushed_reason = reason.push_stack(func_id);
-                zombie.insert(func_id, pushed_reason);
+                zombies.insert(func_id, pushed_reason);
                 any = true;
                 break;
             }
@@ -113,20 +110,21 @@ fn spread_zombie(module: &Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_>>) 
 fn report_error_zombies(
     sess: &Session,
     module: &Module,
-    zombie: &FxHashMap<Word, ZombieInfo<'_>>,
+    zombies: &FxHashMap<Word, Zombie>,
 ) -> super::Result<()> {
     let mut span_regen = SpanRegenerator::new(sess.source_map(), module);
 
     let mut result = Ok(());
     let mut names = None;
     for root in super::dce::collect_roots(module) {
-        if let Some(zombie_info) = zombie.get(&root) {
-            let ZombieDecoration { reason, span } = zombie_info.serialized.deserialize();
-            let span = span
-                .and_then(|span| span_regen.serialized_span_to_rustc(&span))
+        if let Some(zombie) = zombies.get(&root) {
+            let reason = span_regen.zombie_for_id(zombie.leaf_id).unwrap().reason;
+            let span = span_regen
+                .src_loc_for_id(zombie.leaf_id)
+                .and_then(|src_loc| span_regen.src_loc_to_rustc(&src_loc))
                 .unwrap_or(DUMMY_SP);
             let names = names.get_or_insert_with(|| get_names(module));
-            let stack = zombie_info
+            let stack = zombie
                 .stack
                 .iter()
                 .map(|&s| get_name(names, s).into_owned());
@@ -145,20 +143,12 @@ pub fn remove_zombies(
     opts: &super::Options,
     module: &mut Module,
 ) -> super::Result<()> {
-    // FIXME(eddyb) combine these two steps to take the original strings,
-    // instead of effectively cloning them (via `.into_owned()`).
-    let zombies_owned = ZombieDecoration::decode_all(module)
-        .map(|(id, zombie)| (id, zombie.into_owned()))
-        .collect::<Vec<_>>();
-    ZombieDecoration::remove_all(module);
-
-    let mut zombies = zombies_owned
-        .iter()
-        .map(|(id, serialized)| {
+    let mut zombies = ZombieDecoration::decode_all(module)
+        .map(|(id, _)| {
             (
-                *id,
-                ZombieInfo {
-                    serialized,
+                id,
+                Zombie {
+                    leaf_id: id,
                     stack: vec![],
                 },
             )
@@ -171,31 +161,25 @@ pub fn remove_zombies(
 
     // FIXME(eddyb) use `log`/`tracing` instead.
     if opts.print_all_zombie {
-        for (&zombie_id, zombie_info) in &zombies {
-            let orig = if zombies_owned.iter().any(|&(z, _)| z == zombie_id) {
-                "original"
-            } else {
-                "infected"
-            };
-            println!(
-                "zombie'd {} because {} ({})",
-                zombie_id,
-                zombie_info.serialized.deserialize().reason,
-                orig
-            );
+        let mut span_regen = SpanRegenerator::new(sess.source_map(), module);
+        for (&zombie_id, zombie) in &zombies {
+            let reason = span_regen.zombie_for_id(zombie.leaf_id).unwrap().reason;
+            eprint!("zombie'd %{zombie_id} because {reason}");
+            if zombie_id != zombie.leaf_id {
+                eprint!(" (infected by %{})", zombie.leaf_id);
+            }
+            eprintln!();
         }
     }
 
     if opts.print_zombie {
+        let mut span_regen = SpanRegenerator::new(sess.source_map(), module);
         let names = get_names(module);
         for f in &module.functions {
-            if let Some(zombie_info) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
+            if let Some(zombie) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
                 let name = get_name(&names, f.def_id().unwrap());
-                println!(
-                    "Function removed {:?} because {:?}",
-                    name,
-                    zombie_info.serialized.deserialize().reason
-                );
+                let reason = span_regen.zombie_for_id(zombie.leaf_id).unwrap().reason;
+                eprintln!("function removed {name:?} because {reason:?}");
             }
         }
     }

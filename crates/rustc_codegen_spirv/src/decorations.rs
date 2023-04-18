@@ -64,7 +64,7 @@ pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
             Some((
                 id,
                 LazilyDeserialized {
-                    json: json.into(),
+                    json,
                     _marker: PhantomData,
                 },
             ))
@@ -96,65 +96,44 @@ type DecodeAllIter<'a, D> = iter::FilterMap<
 
 /// Helper allowing full deserialization to be avoided where possible.
 pub struct LazilyDeserialized<'a, D> {
-    json: Cow<'a, str>,
+    json: &'a str,
     _marker: PhantomData<D>,
 }
 
-impl<D> Clone for LazilyDeserialized<'_, D> {
-    fn clone(&self) -> Self {
-        let Self { ref json, _marker } = *self;
-        Self {
-            json: json.clone(),
-            _marker,
-        }
-    }
-}
-
-impl<D> LazilyDeserialized<'_, D> {
-    pub fn deserialize<'a>(&'a self) -> D
-    where
-        D: Deserialize<'a>,
-    {
-        serde_json::from_str(&self.json).unwrap()
-    }
-
-    pub fn into_owned(self) -> LazilyDeserialized<'static, D> {
-        let Self { json, _marker } = self;
-        LazilyDeserialized {
-            json: json.into_owned().into(),
-            _marker,
-        }
+impl<'a, D: Deserialize<'a>> LazilyDeserialized<'a, D> {
+    pub fn deserialize(&self) -> D {
+        serde_json::from_str(self.json).unwrap()
     }
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct ZombieDecoration<'a> {
     pub reason: Cow<'a, str>,
-
-    #[serde(flatten)]
-    pub span: Option<SerializedSpan<'a>>,
 }
 
 impl CustomDecoration for ZombieDecoration<'_> {
     const ENCODING_PREFIX: &'static str = "Z";
 }
 
-/// Representation of a `rustc` `Span` that can be turned into a `Span` again
-/// in another compilation, by regenerating the `rustc` `SourceFile`.
+/// Equivalent of `OpLine`, for the places where `rspirv` currently doesn't let
+/// us actually emit a real `OpLine`, the way generating SPIR-T directly might.
 //
-// FIXME(eddyb) encode/decode this using a `file:line:col` string format.
+// NOTE(eddyb) by keeping `line`+`col`, we mimick `OpLine` limitations
+// (which could be lifted in the future using custom SPIR-T debuginfo).
 #[derive(Deserialize, Serialize)]
-pub struct SerializedSpan<'a> {
+pub struct SrcLocDecoration<'a> {
     file_name: Cow<'a, str>,
-    // NOTE(eddyb) by keeping `line`+`col`, we mimick `OpLine` limitations
-    // (which could be lifted in the future using custom SPIR-T debuginfo).
     line: u32,
     col: u32,
 }
 
-impl<'tcx> SerializedSpan<'tcx> {
-    pub fn from_rustc(span: Span, builder: &BuilderSpirv<'tcx>) -> Option<Self> {
-        // Decorations may not always have valid spans.
+impl CustomDecoration for SrcLocDecoration<'_> {
+    const ENCODING_PREFIX: &'static str = "L";
+}
+
+impl<'tcx> SrcLocDecoration<'tcx> {
+    pub fn from_rustc_span(span: Span, builder: &BuilderSpirv<'tcx>) -> Option<Self> {
+        // We may not always have valid spans.
         // FIXME(eddyb) reduce the sources of this as much as possible.
         if span.is_dummy() {
             return None;
@@ -170,11 +149,17 @@ impl<'tcx> SerializedSpan<'tcx> {
     }
 }
 
-/// Helper type to delay most of the work necessary to turn a `SerializedSpan`
+/// Helper type to delay most of the work necessary to turn a `SrcLocDecoration`
 /// back into an usable `Span`, until it's actually needed (i.e. for an error).
 pub struct SpanRegenerator<'a> {
     source_map: &'a SourceMap,
     module: &'a Module,
+
+    src_loc_decorations: Option<FxIndexMap<Word, LazilyDeserialized<'a, SrcLocDecoration<'a>>>>,
+
+    // HACK(eddyb) this has no really good reason to belong here, but it's easier
+    // to handle it together with `SrcLocDecoration`, than separately.
+    zombie_decorations: Option<FxIndexMap<Word, LazilyDeserialized<'a, ZombieDecoration<'a>>>>,
 
     // HACK(eddyb) this is mostly replicating SPIR-T's module-level debuginfo.
     spv_debug_files: Option<FxIndexMap<&'a str, SpvDebugFile<'a>>>,
@@ -194,8 +179,28 @@ impl<'a> SpanRegenerator<'a> {
         Self {
             source_map,
             module,
+
+            src_loc_decorations: None,
+            zombie_decorations: None,
+
             spv_debug_files: None,
         }
+    }
+
+    pub fn src_loc_for_id(&mut self, id: Word) -> Option<SrcLocDecoration<'a>> {
+        self.src_loc_decorations
+            .get_or_insert_with(|| SrcLocDecoration::decode_all(self.module).collect())
+            .get(&id)
+            .map(|src_loc| src_loc.deserialize())
+    }
+
+    // HACK(eddyb) this has no really good reason to belong here, but it's easier
+    // to handle it together with `SrcLocDecoration`, than separately.
+    pub(crate) fn zombie_for_id(&mut self, id: Word) -> Option<ZombieDecoration<'a>> {
+        self.zombie_decorations
+            .get_or_insert_with(|| ZombieDecoration::decode_all(self.module).collect())
+            .get(&id)
+            .map(|zombie| zombie.deserialize())
     }
 
     fn regenerate_rustc_source_file(&mut self, file_name: &str) -> Option<&SourceFile> {
@@ -287,10 +292,16 @@ impl<'a> SpanRegenerator<'a> {
         file.as_deref()
     }
 
-    pub fn serialized_span_to_rustc(&mut self, span: &SerializedSpan<'_>) -> Option<Span> {
-        let file = self.regenerate_rustc_source_file(&span.file_name[..])?;
+    pub fn src_loc_to_rustc(&mut self, src_loc: &SrcLocDecoration<'_>) -> Option<Span> {
+        let SrcLocDecoration {
+            ref file_name,
+            line,
+            col,
+        } = *src_loc;
 
-        let line_bpos_range = file.line_bounds(span.line.checked_sub(1)? as usize);
+        let file = self.regenerate_rustc_source_file(file_name)?;
+
+        let line_bpos_range = file.line_bounds(line.checked_sub(1)? as usize);
 
         // Find the special cases (`MultiByteChar`s/`NonNarrowChar`s) in the line.
         let multibyte_chars = {
@@ -320,7 +331,7 @@ impl<'a> SpanRegenerator<'a> {
         // (this may look inefficient, but lines tend to be short, and `rustc`
         // itself is even worse than this, when it comes to `BytePos` lookups).
         let (mut cur_bpos, mut cur_col_display) = (line_bpos_range.start, 0);
-        while cur_bpos < line_bpos_range.end && cur_col_display < span.col {
+        while cur_bpos < line_bpos_range.end && cur_col_display < col {
             let next_special_bpos = special_chars.peek().map(|special| {
                 special
                     .as_ref()
@@ -332,7 +343,7 @@ impl<'a> SpanRegenerator<'a> {
             let following_trivial_chars =
                 next_special_bpos.unwrap_or(line_bpos_range.end).0 - cur_bpos.0;
             if following_trivial_chars > 0 {
-                let wanted_trivial_chars = following_trivial_chars.min(span.col - cur_col_display);
+                let wanted_trivial_chars = following_trivial_chars.min(col - cur_col_display);
                 cur_bpos.0 += wanted_trivial_chars;
                 cur_col_display += wanted_trivial_chars;
                 continue;

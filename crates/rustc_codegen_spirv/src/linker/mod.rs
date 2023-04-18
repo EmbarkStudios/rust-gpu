@@ -20,6 +20,7 @@ mod zombies;
 use std::borrow::Cow;
 
 use crate::codegen_cx::SpirvMetadata;
+use crate::decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
 use either::Either;
 use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
@@ -572,6 +573,14 @@ pub fn link(
             // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
             output.header.as_mut().unwrap().bound = simple_passes::compact_ids(output);
         };
+
+        // FIXME(eddyb) convert these into actual `OpLine`s with a SPIR-T pass,
+        // but that'd require keeping the modules in SPIR-T form (once lowered),
+        // and never loading them back into `rspirv` once lifted back to SPIR-V.
+        SrcLocDecoration::remove_all(output);
+
+        // FIXME(eddyb) might make more sense to rewrite these away on SPIR-T.
+        ZombieDecoration::remove_all(output);
     }
 
     Ok(output)
