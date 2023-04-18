@@ -121,7 +121,7 @@ fn report_error_zombies(
             let reason = span_regen.zombie_for_id(zombie.leaf_id).unwrap().reason;
             let span = span_regen
                 .src_loc_for_id(zombie.leaf_id)
-                .and_then(|src_loc| span_regen.src_loc_to_rustc(&src_loc))
+                .and_then(|src_loc| span_regen.src_loc_to_rustc(src_loc))
                 .unwrap_or(DUMMY_SP);
             let names = names.get_or_insert_with(|| get_names(module));
             let stack = zombie

@@ -231,9 +231,9 @@ impl<'tcx> CodegenCx<'tcx> {
             .annotations
             .extend(self.zombie_decorations.into_inner().into_iter().flat_map(
                 |(id, (zombie, src_loc))| {
-                    [zombie.encode(id)]
+                    [zombie.encode_to_inst(id)]
                         .into_iter()
-                        .chain(src_loc.map(|src_loc| src_loc.encode(id)))
+                        .chain(src_loc.map(|src_loc| src_loc.encode_to_inst(id)))
                 },
             ));
         result

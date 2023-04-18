@@ -9,17 +9,16 @@ use rustc_data_structures::fx::{FxHashMap, FxIndexMap};
 use rustc_data_structures::sync::Lrc;
 use rustc_span::{source_map::SourceMap, Span};
 use rustc_span::{FileName, SourceFile};
-use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use std::borrow::Cow;
 use std::marker::PhantomData;
 use std::ops::Range;
 use std::path::PathBuf;
-use std::{iter, slice};
+use std::{fmt, iter, slice};
 
 /// Decorations not native to SPIR-V require some form of encoding into existing
 /// SPIR-V constructs, for which we use `OpDecorateString` with decoration type
-/// `UserTypeGOOGLE` and a JSON-encoded Rust value as the decoration string.
+/// `UserTypeGOOGLE` and some encoded Rust value as the decoration string.
 ///
 /// Each decoration type has to implement this trait, and use a different
 /// `ENCODING_PREFIX` from any other decoration type, to disambiguate them.
@@ -30,16 +29,15 @@ use std::{iter, slice};
 ///
 /// TODO: uses `non_semantic` instead of piggybacking off of `UserTypeGOOGLE`
 /// <https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_non_semantic_info.html>
-pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
+pub trait CustomDecoration<'a>: Sized {
     const ENCODING_PREFIX: &'static str;
 
-    fn encode(self, id: Word) -> Instruction {
-        // FIXME(eddyb) this allocates twice, because there is no functionality
-        // in `serde_json` for writing to something that impls `fmt::Write`,
-        // only for `io::Write`, which would require performing redundant UTF-8
-        // (re)validation, or relying on `unsafe` code, to use with `String`.
-        let json = serde_json::to_string(&self).unwrap();
-        let encoded = [Self::ENCODING_PREFIX, &json].concat();
+    fn encode(self, w: &mut impl fmt::Write) -> fmt::Result;
+    fn decode(s: &'a str) -> Self;
+
+    fn encode_to_inst(self, id: Word) -> Instruction {
+        let mut encoded = Self::ENCODING_PREFIX.to_string();
+        self.encode(&mut encoded).unwrap();
 
         Instruction::new(
             Op::DecorateString,
@@ -53,18 +51,18 @@ pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
         )
     }
 
-    fn try_decode(inst: &Instruction) -> Option<(Word, LazilyDeserialized<'_, Self>)> {
+    fn try_decode_from_inst(inst: &Instruction) -> Option<(Word, LazilyDecoded<'_, Self>)> {
         if inst.class.opcode == Op::DecorateString
             && inst.operands[1].unwrap_decoration() == Decoration::UserTypeGOOGLE
         {
             let id = inst.operands[0].unwrap_id_ref();
-            let encoded = inst.operands[2].unwrap_literal_string();
-            let json = encoded.strip_prefix(Self::ENCODING_PREFIX)?;
+            let prefixed_encoded = inst.operands[2].unwrap_literal_string();
+            let encoded = prefixed_encoded.strip_prefix(Self::ENCODING_PREFIX)?;
 
             Some((
                 id,
-                LazilyDeserialized {
-                    json,
+                LazilyDecoded {
+                    encoded,
                     _marker: PhantomData,
                 },
             ))
@@ -77,42 +75,51 @@ pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
         module
             .annotations
             .iter()
-            .filter_map(Self::try_decode as fn(_) -> _)
+            .filter_map(Self::try_decode_from_inst as fn(_) -> _)
     }
 
     fn remove_all(module: &mut Module) {
         module
             .annotations
-            .retain(|inst| Self::try_decode(inst).is_none());
+            .retain(|inst| Self::try_decode_from_inst(inst).is_none());
     }
 }
 
 // HACK(eddyb) return type of `CustomDecoration::decode_all`, in lieu of
-// `-> impl Iterator<Item = (Word, LazilyDeserialized<'_, Self>)` in the trait.
+// `-> impl Iterator<Item = (Word, LazilyDecoded<'_, Self>)` in the trait.
 type DecodeAllIter<'a, D> = iter::FilterMap<
     slice::Iter<'a, Instruction>,
-    fn(&'a Instruction) -> Option<(Word, LazilyDeserialized<'a, D>)>,
+    fn(&'a Instruction) -> Option<(Word, LazilyDecoded<'a, D>)>,
 >;
 
-/// Helper allowing full deserialization to be avoided where possible.
-pub struct LazilyDeserialized<'a, D> {
-    json: &'a str,
+/// Helper allowing full decoding to be avoided where possible.
+//
+// FIXME(eddyb) is this even needed? (decoding impls are now much cheaper)
+pub struct LazilyDecoded<'a, D> {
+    encoded: &'a str,
     _marker: PhantomData<D>,
 }
 
-impl<'a, D: Deserialize<'a>> LazilyDeserialized<'a, D> {
-    pub fn deserialize(&self) -> D {
-        serde_json::from_str(self.json).unwrap()
+impl<'a, D: CustomDecoration<'a>> LazilyDecoded<'a, D> {
+    pub fn decode(&self) -> D {
+        D::decode(self.encoded)
     }
 }
 
-#[derive(Deserialize, Serialize)]
 pub struct ZombieDecoration<'a> {
     pub reason: Cow<'a, str>,
 }
 
-impl CustomDecoration for ZombieDecoration<'_> {
+impl<'a> CustomDecoration<'a> for ZombieDecoration<'a> {
     const ENCODING_PREFIX: &'static str = "Z";
+
+    fn encode(self, w: &mut impl fmt::Write) -> fmt::Result {
+        let Self { reason } = self;
+        w.write_str(&reason)
+    }
+    fn decode(s: &'a str) -> Self {
+        Self { reason: s.into() }
+    }
 }
 
 /// Equivalent of `OpLine`, for the places where `rspirv` currently doesn't let
@@ -120,15 +127,39 @@ impl CustomDecoration for ZombieDecoration<'_> {
 //
 // NOTE(eddyb) by keeping `line`+`col`, we mimick `OpLine` limitations
 // (which could be lifted in the future using custom SPIR-T debuginfo).
-#[derive(Deserialize, Serialize)]
+#[derive(Copy, Clone)]
 pub struct SrcLocDecoration<'a> {
-    file_name: Cow<'a, str>,
+    file_name: &'a str,
     line: u32,
     col: u32,
 }
 
-impl CustomDecoration for SrcLocDecoration<'_> {
+impl<'a> CustomDecoration<'a> for SrcLocDecoration<'a> {
     const ENCODING_PREFIX: &'static str = "L";
+
+    fn encode(self, w: &mut impl fmt::Write) -> fmt::Result {
+        let Self {
+            file_name,
+            line,
+            col,
+        } = self;
+        write!(w, "{file_name}:{line}:{col}")
+    }
+    fn decode(s: &'a str) -> Self {
+        #[derive(Copy, Clone, Debug)]
+        struct InvalidSrcLoc<'a>(&'a str);
+        let err = InvalidSrcLoc(s);
+
+        let (s, col) = s.rsplit_once(':').ok_or(err).unwrap();
+        let (s, line) = s.rsplit_once(':').ok_or(err).unwrap();
+        let file_name = s;
+
+        Self {
+            file_name,
+            line: line.parse().unwrap(),
+            col: col.parse().unwrap(),
+        }
+    }
 }
 
 impl<'tcx> SrcLocDecoration<'tcx> {
@@ -142,7 +173,7 @@ impl<'tcx> SrcLocDecoration<'tcx> {
         let (file, line, col) = builder.file_line_col_for_op_line(span);
 
         Some(Self {
-            file_name: file.file_name.into(),
+            file_name: file.file_name,
             line,
             col,
         })
@@ -155,11 +186,11 @@ pub struct SpanRegenerator<'a> {
     source_map: &'a SourceMap,
     module: &'a Module,
 
-    src_loc_decorations: Option<FxIndexMap<Word, LazilyDeserialized<'a, SrcLocDecoration<'a>>>>,
+    src_loc_decorations: Option<FxIndexMap<Word, LazilyDecoded<'a, SrcLocDecoration<'a>>>>,
 
     // HACK(eddyb) this has no really good reason to belong here, but it's easier
     // to handle it together with `SrcLocDecoration`, than separately.
-    zombie_decorations: Option<FxIndexMap<Word, LazilyDeserialized<'a, ZombieDecoration<'a>>>>,
+    zombie_decorations: Option<FxIndexMap<Word, LazilyDecoded<'a, ZombieDecoration<'a>>>>,
 
     // HACK(eddyb) this is mostly replicating SPIR-T's module-level debuginfo.
     spv_debug_files: Option<FxIndexMap<&'a str, SpvDebugFile<'a>>>,
@@ -191,7 +222,7 @@ impl<'a> SpanRegenerator<'a> {
         self.src_loc_decorations
             .get_or_insert_with(|| SrcLocDecoration::decode_all(self.module).collect())
             .get(&id)
-            .map(|src_loc| src_loc.deserialize())
+            .map(|src_loc| src_loc.decode())
     }
 
     // HACK(eddyb) this has no really good reason to belong here, but it's easier
@@ -200,7 +231,7 @@ impl<'a> SpanRegenerator<'a> {
         self.zombie_decorations
             .get_or_insert_with(|| ZombieDecoration::decode_all(self.module).collect())
             .get(&id)
-            .map(|zombie| zombie.deserialize())
+            .map(|zombie| zombie.decode())
     }
 
     fn regenerate_rustc_source_file(&mut self, file_name: &str) -> Option<&SourceFile> {
@@ -292,12 +323,12 @@ impl<'a> SpanRegenerator<'a> {
         file.as_deref()
     }
 
-    pub fn src_loc_to_rustc(&mut self, src_loc: &SrcLocDecoration<'_>) -> Option<Span> {
+    pub fn src_loc_to_rustc(&mut self, src_loc: SrcLocDecoration<'_>) -> Option<Span> {
         let SrcLocDecoration {
-            ref file_name,
+            file_name,
             line,
             col,
-        } = *src_loc;
+        } = src_loc;
 
         let file = self.regenerate_rustc_source_file(file_name)?;
 
