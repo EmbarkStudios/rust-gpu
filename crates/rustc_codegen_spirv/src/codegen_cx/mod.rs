@@ -189,7 +189,7 @@ impl<'tcx> CodegenCx<'tcx> {
             word,
             ZombieDecoration {
                 reason: reason.to_string(),
-                span: SerializedSpan::from_rustc(span, self.tcx.sess.source_map()),
+                span: SerializedSpan::from_rustc(span, &self.builder),
             },
         );
     }
