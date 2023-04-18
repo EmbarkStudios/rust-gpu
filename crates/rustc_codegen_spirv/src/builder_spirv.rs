@@ -393,7 +393,8 @@ pub struct BuilderCursor {
 }
 
 pub struct BuilderSpirv<'tcx> {
-    source_map: &'tcx SourceMap,
+    // HACK(eddyb) public only for `decorations`.
+    pub(crate) source_map: &'tcx SourceMap,
 
     builder: RefCell<Builder>,
 
@@ -696,9 +697,6 @@ impl<'tcx> BuilderSpirv<'tcx> {
             .or_insert_with_key(|DebugFileKey(sf)| {
                 let mut builder = self.builder(Default::default());
 
-                // FIXME(eddyb) remapping might be really bad for being able to
-                // load the sources the later, maybe it should be done at the
-                // very end? (just before linking outputting the final SPIR-V)
                 let file_name_op_string_id = builder.string(sf.name.prefer_remapped().to_string());
 
                 let file_contents = self

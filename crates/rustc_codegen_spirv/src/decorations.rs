@@ -1,10 +1,16 @@
 //! SPIR-V decorations specific to `rustc_codegen_spirv`, produced during
 //! the original codegen of a crate, and consumed by the `linker`.
 
+use crate::builder_spirv::BuilderSpirv;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Decoration, Op, Word};
-use rustc_span::{source_map::SourceMap, FileName, Pos, Span};
+use rustc_data_structures::fx::{FxHashMap, FxIndexMap};
+use rustc_data_structures::sync::Lrc;
+use rustc_span::{source_map::SourceMap, Pos, Span};
+use rustc_span::{FileName, SourceFile};
 use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
+use std::borrow::Cow;
 use std::marker::PhantomData;
 use std::path::PathBuf;
 use std::{iter, slice};
@@ -56,7 +62,7 @@ pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
             Some((
                 id,
                 LazilyDeserialized {
-                    json,
+                    json: json.into(),
                     _marker: PhantomData,
                 },
             ))
@@ -87,15 +93,32 @@ type DecodeAllIter<'a, D> = iter::FilterMap<
 >;
 
 /// Helper allowing full deserialization to be avoided where possible.
-#[derive(Copy, Clone)]
 pub struct LazilyDeserialized<'a, D> {
-    json: &'a str,
+    json: Cow<'a, str>,
     _marker: PhantomData<D>,
 }
 
-impl<'a, D: Deserialize<'a>> LazilyDeserialized<'a, D> {
-    pub fn deserialize(self) -> D {
-        serde_json::from_str(self.json).unwrap()
+impl<D> Clone for LazilyDeserialized<'_, D> {
+    fn clone(&self) -> Self {
+        let Self { ref json, _marker } = *self;
+        Self {
+            json: json.clone(),
+            _marker,
+        }
+    }
+}
+
+impl<D: for<'a> Deserialize<'a>> LazilyDeserialized<'_, D> {
+    pub fn deserialize(&self) -> D {
+        serde_json::from_str(&self.json).unwrap()
+    }
+
+    pub fn into_owned(self) -> LazilyDeserialized<'static, D> {
+        let Self { json, _marker } = self;
+        LazilyDeserialized {
+            json: json.into_owned().into(),
+            _marker,
+        }
     }
 }
 
@@ -112,59 +135,16 @@ impl CustomDecoration for ZombieDecoration {
 }
 
 /// Representation of a `rustc` `Span` that can be turned into a `Span` again
-/// in another compilation, by reloading the file. However, note that this will
-/// fail if the file changed since, which is detected using the serialized `hash`.
+/// in another compilation, by regenerating the `rustc` `SourceFile`.
 #[derive(Deserialize, Serialize)]
 pub struct SerializedSpan {
-    file: PathBuf,
-    hash: serde_adapters::SourceFileHash,
+    file_name: String,
     lo: u32,
     hi: u32,
 }
 
-// HACK(eddyb) `rustc_span` types implement only `rustc_serialize` traits, but
-// not `serde` traits, and the easiest workaround is to have our own types.
-mod serde_adapters {
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Copy, Clone, PartialEq, Eq, Deserialize, Serialize)]
-    pub enum SourceFileHashAlgorithm {
-        Md5,
-        Sha1,
-        Sha256,
-    }
-
-    impl From<rustc_span::SourceFileHashAlgorithm> for SourceFileHashAlgorithm {
-        fn from(kind: rustc_span::SourceFileHashAlgorithm) -> Self {
-            match kind {
-                rustc_span::SourceFileHashAlgorithm::Md5 => Self::Md5,
-                rustc_span::SourceFileHashAlgorithm::Sha1 => Self::Sha1,
-                rustc_span::SourceFileHashAlgorithm::Sha256 => Self::Sha256,
-            }
-        }
-    }
-
-    #[derive(Copy, Clone, PartialEq, Eq, Deserialize, Serialize)]
-    pub struct SourceFileHash {
-        kind: SourceFileHashAlgorithm,
-        value: [u8; 32],
-    }
-
-    impl From<rustc_span::SourceFileHash> for SourceFileHash {
-        fn from(hash: rustc_span::SourceFileHash) -> Self {
-            let bytes = hash.hash_bytes();
-            let mut hash = Self {
-                kind: hash.kind.into(),
-                value: Default::default(),
-            };
-            hash.value[..bytes.len()].copy_from_slice(bytes);
-            hash
-        }
-    }
-}
-
 impl SerializedSpan {
-    pub fn from_rustc(span: Span, source_map: &SourceMap) -> Option<Self> {
+    pub fn from_rustc(span: Span, builder: &BuilderSpirv<'_>) -> Option<Self> {
         // Decorations may not always have valid spans.
         // FIXME(eddyb) reduce the sources of this as much as possible.
         if span.is_dummy() {
@@ -177,42 +157,150 @@ impl SerializedSpan {
             return None;
         }
 
-        let file = source_map.lookup_source_file(lo);
+        let file = builder.source_map.lookup_source_file(lo);
         if !(file.start_pos <= lo && hi <= file.end_pos) {
             // FIXME(eddyb) broken `Span` - potentially turn this into an assert?
             return None;
         }
 
+        // NOTE(eddyb) this emits necessary `OpString`/`OpSource` instructions.
+        builder.def_debug_file(file.clone());
+
         Some(Self {
-            file: match &file.name {
-                // We can only support real files, not "synthetic" ones (which
-                // are almost never exposed to the compiler backend anyway).
-                FileName::Real(real_name) => real_name.local_path()?.to_path_buf(),
-                _ => return None,
-            },
-            hash: file.src_hash.into(),
+            file_name: file.name.prefer_remapped().to_string(),
             lo: (lo - file.start_pos).to_u32(),
             hi: (hi - file.start_pos).to_u32(),
         })
     }
+}
 
-    pub fn to_rustc(&self, source_map: &SourceMap) -> Option<Span> {
-        let file = source_map.load_file(&self.file).ok()?;
+/// Helper type to delay most of the work necessary to turn a `SerializedSpan`
+/// back into an usable `Span`, until it's actually needed (i.e. for an error).
+pub struct SpanRegenerator<'a> {
+    source_map: &'a SourceMap,
+    module: &'a Module,
 
-        // If the file has changed since serializing, there's not much we can do,
-        // other than avoid creating invalid/confusing `Span`s.
-        // FIXME(eddyb) we could still indicate some of this to the user.
-        if self.hash != file.src_hash.into() {
-            return None;
+    // HACK(eddyb) this is mostly replicating SPIR-T's module-level debuginfo.
+    spv_debug_files: Option<FxIndexMap<&'a str, SpvDebugFile<'a>>>,
+}
+
+// HACK(eddyb) this is mostly replicating SPIR-T's module-level debuginfo.
+#[derive(Default)]
+struct SpvDebugFile<'a> {
+    /// Source strings from one `OpSource`, and any number of `OpSourceContinued`.
+    op_source_parts: SmallVec<[&'a str; 1]>,
+
+    regenerated_rustc_source_file: Option<Lrc<SourceFile>>,
+}
+
+impl<'a> SpanRegenerator<'a> {
+    pub fn new(source_map: &'a SourceMap, module: &'a Module) -> Self {
+        Self {
+            source_map,
+            module,
+            spv_debug_files: None,
         }
+    }
+
+    fn regenerate_rustc_source_file(&mut self, file_name: &str) -> Option<&SourceFile> {
+        let spv_debug_files = self.spv_debug_files.get_or_insert_with(|| {
+            let mut op_string_by_id = FxHashMap::default();
+            let mut spv_debug_files = FxIndexMap::default();
+            let mut insts = self.module.debug_string_source.iter().peekable();
+            while let Some(inst) = insts.next() {
+                match inst.class.opcode {
+                    Op::String => {
+                        op_string_by_id.insert(
+                            inst.result_id.unwrap(),
+                            inst.operands[0].unwrap_literal_string(),
+                        );
+                    }
+                    Op::Source if inst.operands.len() == 4 => {
+                        let file_name_id = inst.operands[2].unwrap_id_ref();
+                        if let Some(&file_name) = op_string_by_id.get(&file_name_id) {
+                            let mut file = SpvDebugFile::default();
+                            file.op_source_parts
+                                .push(inst.operands[3].unwrap_literal_string());
+                            while let Some(&next_inst) = insts.peek() {
+                                if next_inst.class.opcode != Op::SourceContinued {
+                                    break;
+                                }
+                                insts.next();
+
+                                file.op_source_parts
+                                    .push(next_inst.operands[0].unwrap_literal_string());
+                            }
+
+                            // FIXME(eddyb) what if the file is already present,
+                            // should it be considered ambiguous overall?
+                            spv_debug_files.insert(file_name, file);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            spv_debug_files
+        });
+        let spv_debug_file = spv_debug_files.get_mut(file_name)?;
+
+        let file = &mut spv_debug_file.regenerated_rustc_source_file;
+        if file.is_none() {
+            // FIXME(eddyb) reduce allocations here by checking if the file is
+            // already loaded, and not allocating just to compare the source,
+            // but at least it's cheap when `OpSourceContinued` isn't used.
+            let src = match &spv_debug_file.op_source_parts[..] {
+                &[part] => Cow::Borrowed(part),
+                parts => parts.concat().into(),
+            };
+
+            // HACK(eddyb) in case the file has changed, and because `SourceMap`
+            // is strictly monotonic, we need to come up with some other name.
+            let mut sm_file_name_candidates = [PathBuf::from(file_name).into()]
+                .into_iter()
+                .chain((0..).map(|i| FileName::Custom(format!("outdated({i}) {file_name}"))));
+
+            *file = sm_file_name_candidates.find_map(|sm_file_name_candidate| {
+                let sf = self
+                    .source_map
+                    .new_source_file(sm_file_name_candidate, src.clone().into_owned());
+
+                // Only use this `FileName` candidate if we either:
+                // 1. reused a `SourceFile` with the right `src`/`external_src`
+                // 2. allocated a new `SourceFile` with our choice of `src`
+                self.source_map
+                    .ensure_source_file_source_present(sf.clone());
+                let sf_src_matches = sf
+                    .src
+                    .as_ref()
+                    .map(|sf_src| sf_src[..] == src[..])
+                    .or_else(|| {
+                        sf.external_src
+                            .borrow()
+                            .get_source()
+                            .map(|sf_src| sf_src[..] == src[..])
+                    })
+                    .unwrap_or(false);
+
+                if sf_src_matches {
+                    Some(sf)
+                } else {
+                    None
+                }
+            });
+        }
+        file.as_deref()
+    }
+
+    pub fn serialized_span_to_rustc(&mut self, span: &SerializedSpan) -> Option<Span> {
+        let file = self.regenerate_rustc_source_file(&span.file_name[..])?;
 
         // Sanity check - assuming `SerializedSpan` isn't corrupted, this assert
-        // could only ever fail because of a hash collision.
-        assert!(self.lo <= self.hi && self.hi <= (file.end_pos.0 - file.start_pos.0));
+        // could only ever fail because of the file name being ambiguous.
+        assert!(span.lo <= span.hi && span.hi <= (file.end_pos.0 - file.start_pos.0));
 
         Some(Span::with_root_ctxt(
-            file.start_pos + Pos::from_u32(self.lo),
-            file.start_pos + Pos::from_u32(self.hi),
+            file.start_pos + Pos::from_u32(span.lo),
+            file.start_pos + Pos::from_u32(span.hi),
         ))
     }
 }

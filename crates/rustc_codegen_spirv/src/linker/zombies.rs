@@ -1,33 +1,25 @@
 //! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
 use super::{get_name, get_names};
-use crate::decorations::{CustomDecoration, ZombieDecoration};
+use crate::decorations::{CustomDecoration, LazilyDeserialized, SpanRegenerator, ZombieDecoration};
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Op, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_session::Session;
-use rustc_span::{Span, DUMMY_SP};
+use rustc_span::DUMMY_SP;
 use std::iter::once;
 
+// FIXME(eddyb) change this to chain through IDs instead of wasting allocations.
 #[derive(Clone)]
 struct ZombieInfo<'a> {
-    reason: &'a str,
-    span: Span,
+    serialized: &'a LazilyDeserialized<'static, ZombieDecoration>,
     stack: Vec<Word>,
 }
 
 impl<'a> ZombieInfo<'a> {
-    fn new(reason: &'a str, span: Span) -> Self {
-        Self {
-            reason,
-            span,
-            stack: Vec::new(),
-        }
-    }
     fn push_stack(&self, word: Word) -> Self {
         Self {
-            reason: self.reason,
-            span: self.span,
+            serialized: self.serialized,
             stack: self.stack.iter().cloned().chain(once(word)).collect(),
         }
     }
@@ -66,7 +58,7 @@ fn is_or_contains_zombie<'h, 'a>(
     result_zombie.or_else(|| contains_zombie(inst, zombie))
 }
 
-fn spread_zombie(module: &mut Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_>>) -> bool {
+fn spread_zombie(module: &Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_>>) -> bool {
     let mut any = false;
     // globals are easy
     for inst in module.global_inst_iter() {
@@ -123,12 +115,18 @@ fn report_error_zombies(
     module: &Module,
     zombie: &FxHashMap<Word, ZombieInfo<'_>>,
 ) -> super::Result<()> {
+    let mut span_regen = SpanRegenerator::new(sess.source_map(), module);
+
     let mut result = Ok(());
     let mut names = None;
     for root in super::dce::collect_roots(module) {
-        if let Some(reason) = zombie.get(&root) {
+        if let Some(zombie_info) = zombie.get(&root) {
+            let ZombieDecoration { reason, span } = zombie_info.serialized.deserialize();
+            let span = span
+                .and_then(|span| span_regen.serialized_span_to_rustc(&span))
+                .unwrap_or(DUMMY_SP);
             let names = names.get_or_insert_with(|| get_names(module));
-            let stack = reason
+            let stack = zombie_info
                 .stack
                 .iter()
                 .map(|&s| get_name(names, s).into_owned());
@@ -136,10 +134,7 @@ fn report_error_zombies(
                 .chain(stack)
                 .collect::<Vec<_>>()
                 .join("\n");
-            result = Err(sess
-                .struct_span_err(reason.span, reason.reason)
-                .note(&stack_note)
-                .emit());
+            result = Err(sess.struct_span_err(span, reason).note(&stack_note).emit());
         }
     }
     result
@@ -150,20 +145,25 @@ pub fn remove_zombies(
     opts: &super::Options,
     module: &mut Module,
 ) -> super::Result<()> {
+    // FIXME(eddyb) combine these two steps to take the original strings,
+    // instead of effectively cloning them (via `.into_owned()`).
     let zombies_owned = ZombieDecoration::decode_all(module)
-        .map(|(id, zombie)| {
-            let ZombieDecoration { reason, span } = zombie.deserialize();
-            let span = span
-                .and_then(|span| span.to_rustc(sess.source_map()))
-                .unwrap_or(DUMMY_SP);
-            (id, (reason, span))
-        })
+        .map(|(id, zombie)| (id, zombie.into_owned()))
         .collect::<Vec<_>>();
+    ZombieDecoration::remove_all(module);
+
     let mut zombies = zombies_owned
         .iter()
-        .map(|(id, (reason, span))| (*id, ZombieInfo::new(reason, *span)))
+        .map(|(id, serialized)| {
+            (
+                *id,
+                ZombieInfo {
+                    serialized,
+                    stack: vec![],
+                },
+            )
+        })
         .collect();
-    ZombieDecoration::remove_all(module);
     // Note: This is O(n^2).
     while spread_zombie(module, &mut zombies) {}
 
@@ -171,22 +171,31 @@ pub fn remove_zombies(
 
     // FIXME(eddyb) use `log`/`tracing` instead.
     if opts.print_all_zombie {
-        for (&zomb, reason) in &zombies {
-            let orig = if zombies_owned.iter().any(|&(z, _)| z == zomb) {
+        for (&zombie_id, zombie_info) in &zombies {
+            let orig = if zombies_owned.iter().any(|&(z, _)| z == zombie_id) {
                 "original"
             } else {
                 "infected"
             };
-            println!("zombie'd {} because {} ({})", zomb, reason.reason, orig);
+            println!(
+                "zombie'd {} because {} ({})",
+                zombie_id,
+                zombie_info.serialized.deserialize().reason,
+                orig
+            );
         }
     }
 
     if opts.print_zombie {
         let names = get_names(module);
         for f in &module.functions {
-            if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
+            if let Some(zombie_info) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
                 let name = get_name(&names, f.def_id().unwrap());
-                println!("Function removed {:?} because {:?}", name, reason.reason);
+                println!(
+                    "Function removed {:?} because {:?}",
+                    name,
+                    zombie_info.serialized.deserialize().reason
+                );
             }
         }
     }
