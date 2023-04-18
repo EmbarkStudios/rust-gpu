@@ -40,6 +40,7 @@ compile_error!(
 );
 
 extern crate rustc_apfloat;
+extern crate rustc_arena;
 extern crate rustc_ast;
 extern crate rustc_attr;
 extern crate rustc_codegen_ssa;

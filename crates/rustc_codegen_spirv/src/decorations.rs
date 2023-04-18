@@ -108,8 +108,11 @@ impl<D> Clone for LazilyDeserialized<'_, D> {
     }
 }
 
-impl<D: for<'a> Deserialize<'a>> LazilyDeserialized<'_, D> {
-    pub fn deserialize(&self) -> D {
+impl<D> LazilyDeserialized<'_, D> {
+    pub fn deserialize<'a>(&'a self) -> D
+    where
+        D: Deserialize<'a>,
+    {
         serde_json::from_str(&self.json).unwrap()
     }
 
@@ -123,29 +126,29 @@ impl<D: for<'a> Deserialize<'a>> LazilyDeserialized<'_, D> {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct ZombieDecoration {
-    pub reason: String,
+pub struct ZombieDecoration<'a> {
+    pub reason: Cow<'a, str>,
 
     #[serde(flatten)]
-    pub span: Option<SerializedSpan>,
+    pub span: Option<SerializedSpan<'a>>,
 }
 
-impl CustomDecoration for ZombieDecoration {
+impl CustomDecoration for ZombieDecoration<'_> {
     const ENCODING_PREFIX: &'static str = "Z";
 }
 
 /// Representation of a `rustc` `Span` that can be turned into a `Span` again
 /// in another compilation, by regenerating the `rustc` `SourceFile`.
 #[derive(Deserialize, Serialize)]
-pub struct SerializedSpan {
-    file_name: String,
+pub struct SerializedSpan<'a> {
+    file_name: Cow<'a, str>,
     // NOTE(eddyb) by keeping `lo` but not `hi`, we mimick `OpLine` limitations
     // (which could be lifted in the future using custom SPIR-T debuginfo).
     lo: u32,
 }
 
-impl SerializedSpan {
-    pub fn from_rustc(span: Span, builder: &BuilderSpirv<'_>) -> Option<Self> {
+impl<'tcx> SerializedSpan<'tcx> {
+    pub fn from_rustc(span: Span, builder: &BuilderSpirv<'tcx>) -> Option<Self> {
         // Decorations may not always have valid spans.
         // FIXME(eddyb) reduce the sources of this as much as possible.
         if span.is_dummy() {
@@ -154,18 +157,18 @@ impl SerializedSpan {
 
         let lo = span.lo();
 
-        let file = builder.source_map.lookup_source_file(lo);
-        if !(file.start_pos..=file.end_pos).contains(&lo) {
+        let sf = builder.source_map.lookup_source_file(lo);
+        if !(sf.start_pos..=sf.end_pos).contains(&lo) {
             // FIXME(eddyb) broken `Span` - potentially turn this into an assert?
             return None;
         }
 
         // NOTE(eddyb) this emits necessary `OpString`/`OpSource` instructions.
-        builder.def_debug_file(file.clone());
+        let file = builder.def_debug_file(sf.clone());
 
         Some(Self {
-            file_name: file.name.prefer_remapped().to_string(),
-            lo: (lo - file.start_pos).to_u32(),
+            file_name: file.file_name.into(),
+            lo: (lo - sf.start_pos).to_u32(),
         })
     }
 }
@@ -287,7 +290,7 @@ impl<'a> SpanRegenerator<'a> {
         file.as_deref()
     }
 
-    pub fn serialized_span_to_rustc(&mut self, span: &SerializedSpan) -> Option<Span> {
+    pub fn serialized_span_to_rustc(&mut self, span: &SerializedSpan<'_>) -> Option<Span> {
         let file = self.regenerate_rustc_source_file(&span.file_name[..])?;
 
         // Sanity check - assuming `SerializedSpan` isn't corrupted, this assert
