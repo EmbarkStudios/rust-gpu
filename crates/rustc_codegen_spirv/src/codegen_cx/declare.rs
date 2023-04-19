@@ -217,7 +217,8 @@ impl<'tcx> CodegenCx<'tcx> {
             .variable(ptr_ty, None, StorageClass::Private, None)
             .with_type(ptr_ty);
         // TODO: These should be StorageClass::Private, so just zombie for now.
-        self.zombie_with_span(result.def_cx(self), span, "Globals are not supported yet");
+        // FIXME(eddyb) why zombie? this looks like it should just work nowadays.
+        self.zombie_with_span(result.def_cx(self), span, "globals are not supported yet");
         result
     }
 }

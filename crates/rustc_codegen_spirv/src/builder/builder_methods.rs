@@ -171,7 +171,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         if invalid_seq_cst {
             self.zombie(
                 semantics.def(self),
-                "Cannot use AtomicOrdering=SequentiallyConsistent on Vulkan memory model. Check if AcquireRelease fits your needs.",
+                "cannot use AtomicOrdering=SequentiallyConsistent on Vulkan memory model \
+                 (check if AcquireRelease fits your needs)",
             );
         }
         semantics
@@ -352,11 +353,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     fn zombie_convert_ptr_to_u(&self, def: Word) {
-        self.zombie(def, "Cannot convert pointers to integers");
+        self.zombie(def, "cannot convert pointers to integers");
     }
 
     fn zombie_convert_u_to_ptr(&self, def: Word) {
-        self.zombie(def, "Cannot convert integers to pointers");
+        self.zombie(def, "cannot convert integers to pointers");
     }
 
     fn zombie_ptr_equal(&self, def: Word, inst: &str) {
@@ -1453,21 +1454,16 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .with_type(dest_ty);
 
             if val_is_ptr || dest_is_ptr {
-                if self.is_system_crate(self.span()) {
-                    self.zombie(
-                        result.def(self),
-                        &format!(
-                            "Cannot cast between pointer and non-pointer types. From: {}. To: {}.",
-                            self.debug_type(val.ty),
-                            self.debug_type(dest_ty)
-                        ),
-                    );
-                } else {
-                    self.struct_err("Cannot cast between pointer and non-pointer types")
-                        .note(&format!("from: {}", self.debug_type(val.ty)))
-                        .note(&format!("to: {}", self.debug_type(dest_ty)))
-                        .emit();
-                }
+                self.zombie(
+                    result.def(self),
+                    &format!(
+                        "cannot cast between pointer and non-pointer types\
+                         \nfrom `{}`\
+                         \n  to `{}`",
+                        self.debug_type(val.ty),
+                        self.debug_type(dest_ty)
+                    ),
+                );
             }
 
             result
@@ -1884,7 +1880,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     empty(),
                 )
                 .unwrap();
-            self.zombie(dst.def(self), "Cannot memcpy dynamically sized data");
+            self.zombie(dst.def(self), "cannot memcpy dynamically sized data");
         }
     }
 

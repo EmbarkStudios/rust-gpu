@@ -25,7 +25,7 @@ use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 use rustc_session::Session;
 use rustc_span::def_id::DefId;
-use rustc_span::symbol::{sym, Symbol};
+use rustc_span::symbol::Symbol;
 use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::{FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
@@ -164,28 +164,16 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     /// Zombie system:
-    /// When compiling libcore and other system libraries, if something unrepresentable is
-    /// encountered, we don't want to fail the compilation. Instead, we emit something bogus
-    /// (usually it's fairly faithful, though, e.g. u128 emits `OpTypeInt 128`), and then mark the
-    /// resulting ID as a "zombie". We continue compiling the rest of the crate, then, at the very
-    /// end, anything that transtively references a zombie value is stripped from the binary.
     ///
-    /// If an exported function is stripped, then we emit a special "zombie export" item, which is
-    /// consumed by the linker, which continues to infect other values that reference it.
+    /// If something unrepresentable is encountered, we don't want to fail
+    /// the compilation. Instead, we emit something bogus (usually it's fairly
+    /// faithful, though, e.g. `u128` emits `OpTypeInt 128 0`), and then mark the
+    /// resulting ID as a "zombie". We continue compiling the rest of the crate,
+    /// then, at the very end, anything that transitively references a zombie value
+    /// is stripped from the binary.
     ///
-    /// Finally, if *user* code is marked as zombie, then this means that the user tried to do
-    /// something that isn't supported, and should be an error.
+    /// Errors will only be emitted (by `linker::zombies`) for reachable zombies.
     pub fn zombie_with_span(&self, word: Word, span: Span, reason: &str) {
-        if self.is_system_crate(span) {
-            self.zombie_even_in_user_code(word, span, reason);
-        } else {
-            self.tcx.sess.span_err(span, reason);
-        }
-    }
-    pub fn zombie_no_span(&self, word: Word, reason: &str) {
-        self.zombie_with_span(word, DUMMY_SP, reason);
-    }
-    pub fn zombie_even_in_user_code(&self, word: Word, span: Span, reason: &str) {
         self.zombie_decorations.borrow_mut().insert(
             word,
             (
@@ -198,31 +186,8 @@ impl<'tcx> CodegenCx<'tcx> {
             ),
         );
     }
-
-    /// Returns `true` if the originating crate of `span` (which could very well
-    /// be a different crate, e.g. a generic/`#[inline]` function, or a macro),
-    /// is a "system crate", and therefore allowed to have some errors deferred
-    /// as "zombies" (see `zombie_with_span`'s docs above for more details).
-    pub fn is_system_crate(&self, span: Span) -> bool {
-        // HACK(eddyb) this ignores `.lo` vs `.hi` potentially resulting in
-        // different `SourceFile`s (which is likely a bug anyway).
-        let cnum = self
-            .tcx
-            .sess
-            .source_map()
-            .lookup_source_file(span.data().lo)
-            .cnum;
-
-        self.tcx
-            .get_attr(cnum.as_def_id(), sym::compiler_builtins)
-            .is_some()
-            || [
-                sym::core,
-                self.sym.spirv_std,
-                self.sym.libm,
-                self.sym.num_traits,
-            ]
-            .contains(&self.tcx.crate_name(cnum))
+    pub fn zombie_no_span(&self, word: Word, reason: &str) {
+        self.zombie_with_span(word, DUMMY_SP, reason);
     }
 
     pub fn finalize_module(self) -> Module {
@@ -796,11 +761,9 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         }
         .def(span, self);
 
-        if self.is_system_crate(span) {
-            // Create these undefs up front instead of on demand in SpirvValue::def because
-            // SpirvValue::def can't use cx.emit()
-            self.def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
-        }
+        // Create these `OpUndef`s up front, instead of on-demand in `SpirvValue::def`,
+        // because `SpirvValue::def` can't use `cx.emit()`.
+        self.def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
 
         SpirvValue {
             kind: SpirvValueKind::FnAddr {

@@ -70,7 +70,7 @@ impl<'tcx> CodegenCx<'tcx> {
             } else {
                 self.tcx
                     .sess
-                    .span_err(span, format!("Cannot declare {name} as an entry point"));
+                    .span_err(span, format!("cannot declare {name} as an entry point"));
                 return;
             };
             let body = self
