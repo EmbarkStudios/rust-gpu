@@ -5,7 +5,7 @@ use crate::builder_spirv::BuilderSpirv;
 use itertools::Itertools;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Decoration, Op, Word};
-use rustc_data_structures::fx::{FxHashMap, FxIndexMap};
+use rustc_data_structures::fx::FxIndexMap;
 use rustc_data_structures::sync::Lrc;
 use rustc_span::{source_map::SourceMap, Span};
 use rustc_span::{FileName, SourceFile};
@@ -193,7 +193,53 @@ pub struct SpanRegenerator<'a> {
     zombie_decorations: Option<FxIndexMap<Word, LazilyDecoded<'a, ZombieDecoration<'a>>>>,
 
     // HACK(eddyb) this is mostly replicating SPIR-T's module-level debuginfo.
-    spv_debug_files: Option<FxIndexMap<&'a str, SpvDebugFile<'a>>>,
+    spv_debug_info: Option<SpvDebugInfo<'a>>,
+}
+
+#[derive(Default)]
+struct SpvDebugInfo<'a> {
+    id_to_op_string: FxIndexMap<Word, &'a str>,
+    files: FxIndexMap<&'a str, SpvDebugFile<'a>>,
+}
+
+impl<'a> SpvDebugInfo<'a> {
+    fn collect(module: &'a Module) -> Self {
+        let mut this = Self::default();
+        let mut insts = module.debug_string_source.iter().peekable();
+        while let Some(inst) = insts.next() {
+            match inst.class.opcode {
+                Op::String => {
+                    this.id_to_op_string.insert(
+                        inst.result_id.unwrap(),
+                        inst.operands[0].unwrap_literal_string(),
+                    );
+                }
+                Op::Source if inst.operands.len() == 4 => {
+                    let file_name_id = inst.operands[2].unwrap_id_ref();
+                    if let Some(&file_name) = this.id_to_op_string.get(&file_name_id) {
+                        let mut file = SpvDebugFile::default();
+                        file.op_source_parts
+                            .push(inst.operands[3].unwrap_literal_string());
+                        while let Some(&next_inst) = insts.peek() {
+                            if next_inst.class.opcode != Op::SourceContinued {
+                                break;
+                            }
+                            insts.next();
+
+                            file.op_source_parts
+                                .push(next_inst.operands[0].unwrap_literal_string());
+                        }
+
+                        // FIXME(eddyb) what if the file is already present,
+                        // should it be considered ambiguous overall?
+                        this.files.insert(file_name, file);
+                    }
+                }
+                _ => {}
+            }
+        }
+        this
+    }
 }
 
 // HACK(eddyb) this is mostly replicating SPIR-T's module-level debuginfo.
@@ -214,7 +260,7 @@ impl<'a> SpanRegenerator<'a> {
             src_loc_decorations: None,
             zombie_decorations: None,
 
-            spv_debug_files: None,
+            spv_debug_info: None,
         }
     }
 
@@ -234,46 +280,29 @@ impl<'a> SpanRegenerator<'a> {
             .map(|zombie| zombie.decode())
     }
 
+    pub fn src_loc_from_op_line(
+        &mut self,
+        file_id: Word,
+        line: u32,
+        col: u32,
+    ) -> Option<SrcLocDecoration<'a>> {
+        self.spv_debug_info
+            .get_or_insert_with(|| SpvDebugInfo::collect(self.module))
+            .id_to_op_string
+            .get(&file_id)
+            .map(|&file_name| SrcLocDecoration {
+                file_name,
+                line,
+                col,
+            })
+    }
+
     fn regenerate_rustc_source_file(&mut self, file_name: &str) -> Option<&SourceFile> {
-        let spv_debug_files = self.spv_debug_files.get_or_insert_with(|| {
-            let mut op_string_by_id = FxHashMap::default();
-            let mut spv_debug_files = FxIndexMap::default();
-            let mut insts = self.module.debug_string_source.iter().peekable();
-            while let Some(inst) = insts.next() {
-                match inst.class.opcode {
-                    Op::String => {
-                        op_string_by_id.insert(
-                            inst.result_id.unwrap(),
-                            inst.operands[0].unwrap_literal_string(),
-                        );
-                    }
-                    Op::Source if inst.operands.len() == 4 => {
-                        let file_name_id = inst.operands[2].unwrap_id_ref();
-                        if let Some(&file_name) = op_string_by_id.get(&file_name_id) {
-                            let mut file = SpvDebugFile::default();
-                            file.op_source_parts
-                                .push(inst.operands[3].unwrap_literal_string());
-                            while let Some(&next_inst) = insts.peek() {
-                                if next_inst.class.opcode != Op::SourceContinued {
-                                    break;
-                                }
-                                insts.next();
-
-                                file.op_source_parts
-                                    .push(next_inst.operands[0].unwrap_literal_string());
-                            }
-
-                            // FIXME(eddyb) what if the file is already present,
-                            // should it be considered ambiguous overall?
-                            spv_debug_files.insert(file_name, file);
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            spv_debug_files
-        });
-        let spv_debug_file = spv_debug_files.get_mut(file_name)?;
+        let spv_debug_file = self
+            .spv_debug_info
+            .get_or_insert_with(|| SpvDebugInfo::collect(self.module))
+            .files
+            .get_mut(file_name)?;
 
         let file = &mut spv_debug_file.regenerated_rustc_source_file;
         if file.is_none() {

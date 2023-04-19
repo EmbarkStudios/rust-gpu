@@ -2,140 +2,310 @@
 
 use super::{get_name, get_names};
 use crate::decorations::{CustomDecoration, SpanRegenerator, ZombieDecoration};
-use rspirv::dr::{Instruction, Module};
+use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
-use rustc_data_structures::fx::FxHashMap;
+use rustc_data_structures::fx::{FxHashMap, FxIndexMap};
+use rustc_errors::{DiagnosticBuilder, ErrorGuaranteed};
 use rustc_session::Session;
-use rustc_span::DUMMY_SP;
-use std::iter::once;
+use rustc_span::{Span, DUMMY_SP};
+use smallvec::SmallVec;
 
-// FIXME(eddyb) change this to chain through IDs instead of wasting allocations.
-#[derive(Clone)]
-struct Zombie {
-    leaf_id: Word,
-    stack: Vec<Word>,
+#[derive(Copy, Clone)]
+struct Zombie<'a> {
+    id: Word,
+    kind: &'a ZombieKind,
 }
 
-impl Zombie {
-    fn push_stack(&self, word: Word) -> Self {
-        Self {
-            leaf_id: self.leaf_id,
-            stack: self.stack.iter().cloned().chain(once(word)).collect(),
-        }
+enum ZombieKind {
+    /// Definition annotated with `ZombieDecoration`.
+    Leaf,
+
+    /// Transitively zombie'd by using other zombies, from an instruction.
+    Uses(Vec<ZombieUse>),
+}
+
+struct ZombieUse {
+    used_zombie_id: Word,
+
+    /// Operands of the active `OpLine` at the time of the use, if any.
+    use_file_id_line_col: Option<(Word, u32, u32)>,
+
+    origin: UseOrigin,
+}
+
+enum UseOrigin {
+    GlobalOperandOrResultType,
+    IntraFuncOperandOrResultType { parent_func_id: Word },
+    CallCalleeOperand { caller_func_id: Word },
+}
+
+struct Zombies {
+    id_to_zombie_kind: FxIndexMap<Word, ZombieKind>,
+}
+
+impl Zombies {
+    // FIXME(eddyb) rename all the other methods to say `_inst` explicitly.
+    fn get_zombie_by_id(&self, id: Word) -> Option<Zombie<'_>> {
+        self.id_to_zombie_kind
+            .get(&id)
+            .map(|kind| Zombie { id, kind })
     }
-}
 
-fn contains_zombie<'h>(
-    inst: &Instruction,
-    zombies: &'h FxHashMap<Word, Zombie>,
-) -> Option<&'h Zombie> {
-    if let Some(result_type) = inst.result_type {
-        if let Some(reason) = zombies.get(&result_type) {
-            return Some(reason);
-        }
+    fn zombies_used_from_inst<'a>(
+        &'a self,
+        inst: &'a Instruction,
+    ) -> impl Iterator<Item = Zombie<'a>> + 'a {
+        inst.result_type
+            .into_iter()
+            .chain(inst.operands.iter().filter_map(|op| op.id_ref_any()))
+            .filter_map(move |id| self.get_zombie_by_id(id))
     }
-    inst.operands
-        .iter()
-        .find_map(|op| op.id_ref_any().and_then(|w| zombies.get(&w)))
-}
 
-fn is_zombie<'h>(inst: &Instruction, zombies: &'h FxHashMap<Word, Zombie>) -> Option<&'h Zombie> {
-    if let Some(result_id) = inst.result_id {
-        zombies.get(&result_id)
-    } else {
-        contains_zombie(inst, zombies)
-    }
-}
-
-fn is_or_contains_zombie<'h>(
-    inst: &Instruction,
-    zombies: &'h FxHashMap<Word, Zombie>,
-) -> Option<&'h Zombie> {
-    let result_zombie = inst.result_id.and_then(|result_id| zombies.get(&result_id));
-    result_zombie.or_else(|| contains_zombie(inst, zombies))
-}
-
-fn spread_zombie(module: &Module, zombies: &mut FxHashMap<Word, Zombie>) -> bool {
-    let mut any = false;
-    // globals are easy
-    for inst in module.global_inst_iter() {
-        if let Some(result_id) = inst.result_id {
-            if let Some(reason) = contains_zombie(inst, zombies) {
-                if zombies.contains_key(&result_id) {
-                    continue;
+    fn spread(&mut self, module: &Module) -> bool {
+        let mut any = false;
+        // globals are easy
+        {
+            let mut file_id_line_col = None;
+            for inst in module.global_inst_iter() {
+                match inst.class.opcode {
+                    Op::Line => {
+                        file_id_line_col = Some((
+                            inst.operands[0].unwrap_id_ref(),
+                            inst.operands[1].unwrap_literal_int32(),
+                            inst.operands[2].unwrap_literal_int32(),
+                        ));
+                    }
+                    Op::NoLine => file_id_line_col = None,
+                    _ => {}
                 }
-                let reason = reason.clone();
-                zombies.insert(result_id, reason);
-                any = true;
-            }
-        }
-    }
-    // No need to zombie defs within a function: If any def within a function is zombied, then the
-    // whole function is zombied. But, we don't have to mark the defs within a function as zombie,
-    // because the defs can't escape the function.
-    // HACK(eddyb) one exception to this is function-local variables, which may
-    // be unused and as such cannot be allowed to always zombie the function.
-    for func in &module.functions {
-        let func_id = func.def_id().unwrap();
-        // Can't use zombie.entry() here, due to using the map in contains_zombie
-        if zombies.contains_key(&func_id) {
-            // Func is already zombie, no need to scan it again.
-            continue;
-        }
-        for inst in func.all_inst_iter() {
-            if inst.class.opcode == Op::Variable {
-                let result_id = inst.result_id.unwrap();
-                if let Some(reason) = contains_zombie(inst, zombies) {
-                    if zombies.contains_key(&result_id) {
+
+                if let Some(result_id) = inst.result_id {
+                    if self.id_to_zombie_kind.contains_key(&result_id) {
                         continue;
                     }
-                    let reason = reason.clone();
-                    zombies.insert(result_id, reason);
-                    any = true;
+                    let zombie_uses: Vec<_> = self
+                        .zombies_used_from_inst(inst)
+                        .map(|zombie| ZombieUse {
+                            used_zombie_id: zombie.id,
+                            use_file_id_line_col: file_id_line_col,
+                            origin: UseOrigin::GlobalOperandOrResultType,
+                        })
+                        .collect();
+                    if !zombie_uses.is_empty() {
+                        self.id_to_zombie_kind
+                            .insert(result_id, ZombieKind::Uses(zombie_uses));
+                        any = true;
+                    }
                 }
-            } else if let Some(reason) = is_or_contains_zombie(inst, zombies) {
-                let pushed_reason = reason.push_stack(func_id);
-                zombies.insert(func_id, pushed_reason);
-                any = true;
-                break;
             }
         }
+        // No need to zombie defs within a function: If any def within a function is zombied, then the
+        // whole function is zombied. But, we don't have to mark the defs within a function as zombie,
+        // because the defs can't escape the function.
+        // HACK(eddyb) one exception to this is function-local variables, which may
+        // be unused and as such cannot be allowed to always zombie the function.
+        for func in &module.functions {
+            let func_id = func.def_id().unwrap();
+            if self.id_to_zombie_kind.contains_key(&func_id) {
+                // Func is already zombie, no need to scan it again.
+                continue;
+            }
+
+            let mut all_zombie_uses_in_func = vec![];
+            let mut file_id_line_col = None;
+            for inst in func.all_inst_iter() {
+                match inst.class.opcode {
+                    Op::Line => {
+                        file_id_line_col = Some((
+                            inst.operands[0].unwrap_id_ref(),
+                            inst.operands[1].unwrap_literal_int32(),
+                            inst.operands[2].unwrap_literal_int32(),
+                        ));
+                    }
+                    Op::NoLine => file_id_line_col = None,
+                    _ => {}
+                }
+
+                if inst.class.opcode == Op::Variable {
+                    let result_id = inst.result_id.unwrap();
+                    if self.id_to_zombie_kind.contains_key(&result_id) {
+                        continue;
+                    }
+                    let zombie_uses: Vec<_> = self
+                        .zombies_used_from_inst(inst)
+                        .map(|zombie| ZombieUse {
+                            used_zombie_id: zombie.id,
+                            use_file_id_line_col: file_id_line_col,
+                            origin: UseOrigin::IntraFuncOperandOrResultType {
+                                parent_func_id: func_id,
+                            },
+                        })
+                        .collect();
+                    if !zombie_uses.is_empty() {
+                        self.id_to_zombie_kind
+                            .insert(result_id, ZombieKind::Uses(zombie_uses));
+                        any = true;
+                    }
+                    continue;
+                }
+
+                all_zombie_uses_in_func.extend(
+                    inst.result_id
+                        .and_then(|result_id| self.get_zombie_by_id(result_id))
+                        .into_iter()
+                        .chain(self.zombies_used_from_inst(inst))
+                        .map(|zombie| {
+                            let origin = if inst.class.opcode == Op::FunctionCall
+                                && inst.operands[0] == Operand::IdRef(zombie.id)
+                            {
+                                UseOrigin::CallCalleeOperand {
+                                    caller_func_id: func_id,
+                                }
+                            } else {
+                                UseOrigin::IntraFuncOperandOrResultType {
+                                    parent_func_id: func_id,
+                                }
+                            };
+                            ZombieUse {
+                                used_zombie_id: zombie.id,
+                                use_file_id_line_col: file_id_line_col,
+                                origin,
+                            }
+                        }),
+                );
+            }
+            if !all_zombie_uses_in_func.is_empty() {
+                self.id_to_zombie_kind
+                    .insert(func_id, ZombieKind::Uses(all_zombie_uses_in_func));
+                any = true;
+            }
+        }
+        any
     }
-    any
 }
 
-// If an entry point references a zombie'd value, then the entry point would normally get removed.
-// That's an absolutely horrible experience to debug, though, so instead, create a nice error
-// message containing the stack trace of how the entry point got to the zombie value.
-fn report_error_zombies(
-    sess: &Session,
-    module: &Module,
-    zombies: &FxHashMap<Word, Zombie>,
-) -> super::Result<()> {
-    let mut span_regen = SpanRegenerator::new(sess.source_map(), module);
+struct ZombieReporter<'a> {
+    sess: &'a Session,
+    module: &'a Module,
+    zombies: &'a Zombies,
 
-    let mut result = Ok(());
-    let mut names = None;
-    for root in super::dce::collect_roots(module) {
-        if let Some(zombie) = zombies.get(&root) {
-            let reason = span_regen.zombie_for_id(zombie.leaf_id).unwrap().reason;
-            let span = span_regen
-                .src_loc_for_id(zombie.leaf_id)
-                .and_then(|src_loc| span_regen.src_loc_to_rustc(src_loc))
-                .unwrap_or(DUMMY_SP);
-            let names = names.get_or_insert_with(|| get_names(module));
-            let stack = zombie
-                .stack
-                .iter()
-                .map(|&s| get_name(names, s).into_owned());
-            let stack_note = once("Stack:".to_string())
-                .chain(stack)
-                .collect::<Vec<_>>()
-                .join("\n");
-            result = Err(sess.struct_span_err(span, reason).note(&stack_note).emit());
+    id_to_name: Option<FxHashMap<Word, &'a str>>,
+    span_regen: SpanRegenerator<'a>,
+}
+impl<'a> ZombieReporter<'a> {
+    fn new(sess: &'a Session, module: &'a Module, zombies: &'a Zombies) -> Self {
+        Self {
+            sess,
+            module,
+            zombies,
+
+            id_to_name: None,
+            span_regen: SpanRegenerator::new(sess.source_map(), module),
         }
     }
-    result
+
+    // If an entry point references a zombie'd value, then the entry point would normally get removed.
+    // That's an absolutely horrible experience to debug, though, so instead, create a nice error
+    // message containing the stack trace of how the entry point got to the zombie value.
+    fn report_all(mut self) -> super::Result<()> {
+        let mut result = Ok(());
+        // FIXME(eddyb) this loop means that every entry-point can potentially
+        // list out all the leaves, but that shouldn't be a huge issue.
+        for root_id in super::dce::collect_roots(self.module) {
+            if let Some(zombie) = self.zombies.get_zombie_by_id(root_id) {
+                for (_, mut err) in self.build_errors_keyed_by_leaf_id(zombie) {
+                    result = Err(err.emit());
+                }
+            }
+        }
+        result
+    }
+
+    fn add_use_note_to_err(
+        &mut self,
+        err: &mut DiagnosticBuilder<'a, ErrorGuaranteed>,
+        span: Span,
+        zombie: Zombie<'_>,
+        zombie_use: &ZombieUse,
+    ) {
+        let mut id_to_name = |id, kind| {
+            self.id_to_name
+                .get_or_insert_with(|| get_names(self.module))
+                .get(&id)
+                .map_or_else(
+                    || format!("unnamed {kind} (%{id})"),
+                    |&name| format!("`{name}`"),
+                )
+        };
+        let note = match zombie_use.origin {
+            UseOrigin::GlobalOperandOrResultType => {
+                format!("used by {}", id_to_name(zombie.id, "global"))
+            }
+            UseOrigin::IntraFuncOperandOrResultType { parent_func_id } => {
+                format!(
+                    "used from within {}",
+                    id_to_name(parent_func_id, "function")
+                )
+            }
+            UseOrigin::CallCalleeOperand { caller_func_id } => {
+                format!("called by {}", id_to_name(caller_func_id, "function"))
+            }
+        };
+
+        let span = zombie_use
+            .use_file_id_line_col
+            .and_then(|(file_id, line, col)| {
+                self.span_regen.src_loc_from_op_line(file_id, line, col)
+            })
+            .and_then(|src_loc| self.span_regen.src_loc_to_rustc(src_loc))
+            .unwrap_or(span);
+        err.span_note(span, note);
+    }
+
+    fn build_errors_keyed_by_leaf_id(
+        &mut self,
+        zombie: Zombie<'_>,
+    ) -> FxIndexMap<Word, DiagnosticBuilder<'a, ErrorGuaranteed>> {
+        // FIXME(eddyb) this is a bit inefficient, compared to some kind of
+        // "small map", but this is the error path, and being correct is more
+        // important here - in particular, we don't want to ignore *any* leaves.
+        let mut errors_keyed_by_leaf_id = FxIndexMap::default();
+
+        let span = self
+            .span_regen
+            .src_loc_for_id(zombie.id)
+            .and_then(|src_loc| self.span_regen.src_loc_to_rustc(src_loc))
+            .unwrap_or(DUMMY_SP);
+        match zombie.kind {
+            ZombieKind::Leaf => {
+                let reason = self.span_regen.zombie_for_id(zombie.id).unwrap().reason;
+                errors_keyed_by_leaf_id.insert(zombie.id, self.sess.struct_span_err(span, reason));
+            }
+            ZombieKind::Uses(zombie_uses) => {
+                for zombie_use in zombie_uses {
+                    let used_zombie = self
+                        .zombies
+                        .get_zombie_by_id(zombie_use.used_zombie_id)
+                        .unwrap();
+                    for (leaf_id, err) in self.build_errors_keyed_by_leaf_id(used_zombie) {
+                        use rustc_data_structures::fx::IndexEntry as Entry;
+                        match errors_keyed_by_leaf_id.entry(leaf_id) {
+                            Entry::Occupied(_) => err.cancel(),
+                            Entry::Vacant(entry) => {
+                                self.add_use_note_to_err(
+                                    entry.insert(err),
+                                    span,
+                                    zombie,
+                                    zombie_use,
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        errors_keyed_by_leaf_id
+    }
 }
 
 pub fn remove_zombies(
@@ -143,30 +313,35 @@ pub fn remove_zombies(
     opts: &super::Options,
     module: &mut Module,
 ) -> super::Result<()> {
-    let mut zombies = ZombieDecoration::decode_all(module)
-        .map(|(id, _)| {
-            (
-                id,
-                Zombie {
-                    leaf_id: id,
-                    stack: vec![],
-                },
-            )
-        })
-        .collect();
+    let mut zombies = Zombies {
+        id_to_zombie_kind: ZombieDecoration::decode_all(module)
+            .map(|(id, _)| (id, ZombieKind::Leaf))
+            .collect(),
+    };
     // Note: This is O(n^2).
-    while spread_zombie(module, &mut zombies) {}
+    while zombies.spread(module) {}
 
-    let result = report_error_zombies(sess, module, &zombies);
+    let result = ZombieReporter::new(sess, module, &zombies).report_all();
 
     // FIXME(eddyb) use `log`/`tracing` instead.
     if opts.print_all_zombie {
         let mut span_regen = SpanRegenerator::new(sess.source_map(), module);
-        for (&zombie_id, zombie) in &zombies {
-            let reason = span_regen.zombie_for_id(zombie.leaf_id).unwrap().reason;
+        for &zombie_id in zombies.id_to_zombie_kind.keys() {
+            let mut zombie_leaf_id = zombie_id;
+            let mut infection_chain = SmallVec::<[_; 4]>::new();
+            loop {
+                zombie_leaf_id = match zombies.get_zombie_by_id(zombie_leaf_id).unwrap().kind {
+                    ZombieKind::Leaf => break,
+                    // FIXME(eddyb) this is all very lossy and should probably go away.
+                    ZombieKind::Uses(zombie_uses) => zombie_uses[0].used_zombie_id,
+                };
+                infection_chain.push(zombie_leaf_id);
+            }
+
+            let reason = span_regen.zombie_for_id(zombie_leaf_id).unwrap().reason;
             eprint!("zombie'd %{zombie_id} because {reason}");
-            if zombie_id != zombie.leaf_id {
-                eprint!(" (infected by %{})", zombie.leaf_id);
+            if !infection_chain.is_empty() {
+                eprint!(" (infected via {:?})", infection_chain);
             }
             eprintln!();
         }
@@ -176,54 +351,46 @@ pub fn remove_zombies(
         let mut span_regen = SpanRegenerator::new(sess.source_map(), module);
         let names = get_names(module);
         for f in &module.functions {
-            if let Some(zombie) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
+            if let Some(zombie) = zombies.get_zombie_by_id(f.def_id().unwrap()) {
+                let mut zombie_leaf_id = zombie.id;
+                loop {
+                    zombie_leaf_id = match zombies.get_zombie_by_id(zombie_leaf_id).unwrap().kind {
+                        ZombieKind::Leaf => break,
+                        // FIXME(eddyb) this is all very lossy and should probably go away.
+                        ZombieKind::Uses(zombie_uses) => zombie_uses[0].used_zombie_id,
+                    };
+                }
+
                 let name = get_name(&names, f.def_id().unwrap());
-                let reason = span_regen.zombie_for_id(zombie.leaf_id).unwrap().reason;
+                let reason = span_regen.zombie_for_id(zombie_leaf_id).unwrap().reason;
                 eprintln!("function removed {name:?} because {reason:?}");
             }
         }
     }
 
-    module
-        .capabilities
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    module
-        .extensions
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    module
-        .ext_inst_imports
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    if module
-        .memory_model
-        .as_ref()
-        .map_or(false, |inst| is_zombie(inst, &zombies).is_some())
+    // FIXME(eddyb) this should be unnecessary, either something is unused, and
+    // it will get DCE'd *anyway*, or it caused an error.
     {
-        module.memory_model = None;
+        let keep = |inst: &Instruction| {
+            if let Some(result_id) = inst.result_id {
+                zombies.get_zombie_by_id(result_id).is_none()
+            } else {
+                zombies.zombies_used_from_inst(inst).next().is_none()
+            }
+        };
+        module.capabilities.retain(keep);
+        module.extensions.retain(keep);
+        module.ext_inst_imports.retain(keep);
+        module.memory_model = module.memory_model.take().filter(keep);
+        module.entry_points.retain(keep);
+        module.execution_modes.retain(keep);
+        module.debug_string_source.retain(keep);
+        module.debug_names.retain(keep);
+        module.debug_module_processed.retain(keep);
+        module.annotations.retain(keep);
+        module.types_global_values.retain(keep);
+        module.functions.retain(|f| keep(f.def.as_ref().unwrap()));
     }
-    module
-        .entry_points
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    module
-        .execution_modes
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    module
-        .debug_string_source
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    module
-        .debug_names
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    module
-        .debug_module_processed
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    module
-        .annotations
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    module
-        .types_global_values
-        .retain(|inst| is_zombie(inst, &zombies).is_none());
-    module
-        .functions
-        .retain(|f| is_zombie(f.def.as_ref().unwrap(), &zombies).is_none());
 
     result
 }

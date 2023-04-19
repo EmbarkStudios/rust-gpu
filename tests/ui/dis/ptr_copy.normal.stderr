@@ -4,11 +4,26 @@ error: Cannot memcpy dynamically sized data
 2460 |         copy(src, dst, count)
      |         ^
      |
-     = note: Stack:
-             core::intrinsics::copy::<f32>
-             ptr_copy::copy_via_raw_ptr
-             ptr_copy::main
-             main
+note: used from within `core::intrinsics::copy::<f32>`
+    --> $CORE_SRC/intrinsics.rs:2447:21
+     |
+2447 | pub const unsafe fn copy<T>(src: *const T, dst: *mut T, count: usize) {
+     |                     ^
+note: called by `ptr_copy::copy_via_raw_ptr`
+    --> $DIR/ptr_copy.rs:30:18
+     |
+30   |         unsafe { core::ptr::copy(src, dst, 1) }
+     |                  ^
+note: called by `ptr_copy::main`
+    --> $DIR/ptr_copy.rs:35:5
+     |
+35   |     copy_via_raw_ptr(&i, o);
+     |     ^
+note: called by `main`
+    --> $DIR/ptr_copy.rs:33:1
+     |
+33   | #[spirv(fragment)]
+     | ^
 
 error: aborting due to previous error
 
