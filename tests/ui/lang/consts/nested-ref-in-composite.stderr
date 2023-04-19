@@ -4,9 +4,16 @@ error: constant arrays/structs cannot contain pointers to other constants
 20 |     *pair_out = pair_deep_load(&(&123, &3.14));
    |                 ^
    |
-   = note: Stack:
-           nested_ref_in_composite::main_pair
-           main_pair
+note: used from within `nested_ref_in_composite::main_pair`
+  --> $DIR/nested-ref-in-composite.rs:20:17
+   |
+20 |     *pair_out = pair_deep_load(&(&123, &3.14));
+   |                 ^
+note: called by `main_pair`
+  --> $DIR/nested-ref-in-composite.rs:18:1
+   |
+18 | #[spirv(fragment)]
+   | ^
 
 error: constant arrays/structs cannot contain pointers to other constants
   --> $DIR/nested-ref-in-composite.rs:25:19
@@ -14,9 +21,16 @@ error: constant arrays/structs cannot contain pointers to other constants
 25 |     *array3_out = array3_deep_load(&[&0, &1, &2]);
    |                   ^
    |
-   = note: Stack:
-           nested_ref_in_composite::main_array3
-           main_array3
+note: used from within `nested_ref_in_composite::main_array3`
+  --> $DIR/nested-ref-in-composite.rs:25:19
+   |
+25 |     *array3_out = array3_deep_load(&[&0, &1, &2]);
+   |                   ^
+note: called by `main_array3`
+  --> $DIR/nested-ref-in-composite.rs:23:1
+   |
+23 | #[spirv(fragment)]
+   | ^
 
 error: aborting due to 2 previous errors
 

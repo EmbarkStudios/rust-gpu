@@ -2,6 +2,7 @@ use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::attr::AggregatedSpirvAttributes;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
+use crate::decorations::{CustomDecoration, SrcLocDecoration};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
@@ -74,20 +75,36 @@ impl<'tcx> CodegenCx<'tcx> {
             self.zombie_with_span(result.def_cx(self), span, "called blocklisted fn");
             return result;
         }
-        let mut emit = self.emit_global();
-        let fn_id = emit
-            .begin_function(return_type, None, control, function_type)
-            .unwrap();
-        if linkage != Some(LinkageType::Import) {
-            let parameter_values = argument_types
-                .iter()
-                .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
-                .collect::<Vec<_>>();
-            self.function_parameter_values
-                .borrow_mut()
-                .insert(fn_id, parameter_values);
-        }
-        emit.end_function().unwrap();
+        let fn_id = {
+            let mut emit = self.emit_global();
+            let fn_id = emit
+                .begin_function(return_type, None, control, function_type)
+                .unwrap();
+            if linkage != Some(LinkageType::Import) {
+                let parameter_values = argument_types
+                    .iter()
+                    .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
+                    .collect::<Vec<_>>();
+                self.function_parameter_values
+                    .borrow_mut()
+                    .insert(fn_id, parameter_values);
+            }
+            emit.end_function().unwrap();
+            fn_id
+        };
+
+        // HACK(eddyb) this is a temporary workaround due to our use of `rspirv`,
+        // which prevents us from attaching `OpLine`s to `OpFunction` definitions,
+        // but we can use our custom `SrcLocDecoration` instead.
+        let src_loc_inst = SrcLocDecoration::from_rustc_span(
+            self.tcx.def_ident_span(instance.def_id()).unwrap_or(span),
+            &self.builder,
+        )
+        .map(|src_loc| src_loc.encode_to_inst(fn_id));
+        self.emit_global()
+            .module_mut()
+            .annotations
+            .extend(src_loc_inst);
 
         // HACK(eddyb) this is a bit roundabout, but the easiest way to get a
         // fully absolute path that contains at least as much information as
@@ -99,9 +116,8 @@ impl<'tcx> CodegenCx<'tcx> {
         // (as some sort of opt-in, or toggled based on the platform, etc.).
         let symbol_name = self.tcx.symbol_name(instance).name;
         let demangled_symbol_name = format!("{:#}", rustc_demangle::demangle(symbol_name));
-        emit.name(fn_id, &demangled_symbol_name);
+        self.emit_global().name(fn_id, &demangled_symbol_name);
 
-        drop(emit); // set_linkage uses emit
         if let Some(linkage) = linkage {
             self.set_linkage(fn_id, symbol_name.to_owned(), linkage);
         }
