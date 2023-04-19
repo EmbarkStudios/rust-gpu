@@ -103,27 +103,28 @@ impl SpirvType<'_> {
             Self::Bool => cx.emit_global().type_bool_id(id),
             Self::Integer(width, signedness) => {
                 let result = cx.emit_global().type_int_id(id, width, signedness as u32);
+                let u_or_i = if signedness { "i" } else { "u" };
                 match width {
-                    8 if !cx.builder.has_capability(Capability::Int8) => cx
-                        .zombie_even_in_user_code(result, def_span, "u8 without OpCapability Int8"),
-                    16 if !cx.builder.has_capability(Capability::Int16) => cx
-                        .zombie_even_in_user_code(
-                            result,
-                            def_span,
-                            "u16 without OpCapability Int16",
-                        ),
-                    64 if !cx.builder.has_capability(Capability::Int64) => cx
-                        .zombie_even_in_user_code(
-                            result,
-                            def_span,
-                            "u64 without OpCapability Int64",
-                        ),
-                    8 | 16 | 32 | 64 => (),
-                    128 => cx.zombie_with_span(result, def_span, "u128"),
-                    other => cx.zombie_with_span(
+                    8 if !cx.builder.has_capability(Capability::Int8) => cx.zombie_with_span(
                         result,
                         def_span,
-                        &format!("Integer width {other} invalid for spir-v"),
+                        &format!("`{u_or_i}8` without `OpCapability Int8`"),
+                    ),
+                    16 if !cx.builder.has_capability(Capability::Int16) => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        &format!("`{u_or_i}16` without `OpCapability Int16`"),
+                    ),
+                    64 if !cx.builder.has_capability(Capability::Int64) => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        &format!("`{u_or_i}64` without `OpCapability Int64`"),
+                    ),
+                    8 | 16 | 32 | 64 => {}
+                    w => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        &format!("`{u_or_i}{w}` unsupported in SPIR-V"),
                     ),
                 };
                 result
@@ -131,17 +132,16 @@ impl SpirvType<'_> {
             Self::Float(width) => {
                 let result = cx.emit_global().type_float_id(id, width);
                 match width {
-                    64 if !cx.builder.has_capability(Capability::Float64) => cx
-                        .zombie_even_in_user_code(
-                            result,
-                            def_span,
-                            "f64 without OpCapability Float64",
-                        ),
+                    64 if !cx.builder.has_capability(Capability::Float64) => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        "`f64` without `OpCapability Float64`",
+                    ),
                     32 | 64 => (),
                     other => cx.zombie_with_span(
                         result,
                         def_span,
-                        &format!("Float width {other} invalid for spir-v"),
+                        &format!("`f{other}` unsupported in SPIR-V"),
                     ),
                 };
                 result
@@ -217,11 +217,8 @@ impl SpirvType<'_> {
                     .type_pointer(id, StorageClass::Generic, pointee);
                 // no pointers to functions
                 if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
-                    cx.zombie_even_in_user_code(
-                        result,
-                        def_span,
-                        "function pointer types are not allowed",
-                    );
+                    // FIXME(eddyb) use the `SPV_INTEL_function_pointers` extension.
+                    cx.zombie_with_span(result, def_span, "function pointer types are not allowed");
                 }
                 result
             }
@@ -293,11 +290,8 @@ impl SpirvType<'_> {
                         .type_pointer(Some(id), StorageClass::Generic, pointee);
                 // no pointers to functions
                 if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
-                    cx.zombie_even_in_user_code(
-                        result,
-                        def_span,
-                        "function pointer types are not allowed",
-                    );
+                    // FIXME(eddyb) use the `SPV_INTEL_function_pointers` extension.
+                    cx.zombie_with_span(result, def_span, "function pointer types are not allowed");
                 }
                 result
             }

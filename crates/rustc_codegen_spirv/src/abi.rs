@@ -210,7 +210,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                     cx.zombie_with_span(
                         new_id,
                         span,
-                        "Cannot create self-referential types, even through pointers",
+                        "cannot create self-referential types, even through pointers",
                     );
                     Some(new_id)
                 }

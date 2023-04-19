@@ -11,7 +11,7 @@ use rustc_target::abi::{Align, Size};
 impl<'a, 'tcx> Builder<'a, 'tcx> {
     fn load_err(&mut self, original_type: Word, invalid_type: Word) -> SpirvValue {
         let mut err = self.struct_err(&format!(
-            "Cannot load type {} in an untyped buffer load",
+            "cannot load type {} in an untyped buffer load",
             self.debug_type(original_type)
         ));
         if original_type != invalid_type {
@@ -206,7 +206,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
     fn store_err(&mut self, original_type: Word, value: SpirvValue) -> Result<(), ErrorGuaranteed> {
         let mut err = self.struct_err(&format!(
-            "Cannot store type {} in an untyped buffer store",
+            "cannot store type {} in an untyped buffer store",
             self.debug_type(original_type)
         ));
         if original_type != value.ty {

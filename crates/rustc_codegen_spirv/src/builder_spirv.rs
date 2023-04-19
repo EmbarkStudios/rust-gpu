@@ -140,9 +140,7 @@ impl SpirvValue {
                     IllegalConst::Indirect(cause) => cause.message(),
                 };
 
-                // HACK(eddyb) we don't know whether this constant originated
-                // in a system crate, so it's better to always zombie.
-                cx.zombie_even_in_user_code(id, span, msg);
+                cx.zombie_with_span(id, span, msg);
 
                 id
             }
@@ -158,25 +156,15 @@ impl SpirvValue {
             }
 
             SpirvValueKind::FnAddr { .. } => {
-                if cx.is_system_crate(span) {
-                    cx.builder
-                        .const_to_id
-                        .borrow()
-                        .get(&WithType {
-                            ty: self.ty,
-                            val: SpirvConst::ZombieUndefForFnAddr,
-                        })
-                        .expect("FnAddr didn't go through proper undef registration")
-                        .val
-                } else {
-                    cx.tcx.sess.span_err(
-                        span,
-                        "Cannot use this function pointer for anything other than calls",
-                    );
-                    // Because we never get beyond compilation (into e.g. linking),
-                    // emitting an invalid ID reference here is OK.
-                    0
-                }
+                cx.builder
+                    .const_to_id
+                    .borrow()
+                    .get(&WithType {
+                        ty: self.ty,
+                        val: SpirvConst::ZombieUndefForFnAddr,
+                    })
+                    .expect("FnAddr didn't go through proper undef registration")
+                    .val
             }
 
             SpirvValueKind::LogicalPtrCast {
@@ -184,24 +172,17 @@ impl SpirvValue {
                 original_pointee_ty,
                 zombie_target_undef,
             } => {
-                if cx.is_system_crate(span) {
-                    cx.zombie_with_span(
-                        zombie_target_undef,
-                        span,
-                        &format!(
-                            "Cannot cast between pointer types. From: {}. To: {}.",
-                            cx.debug_type(original_pointee_ty),
-                            cx.debug_type(self.ty)
-                        ),
-                    );
-                } else {
-                    cx.tcx
-                        .sess
-                        .struct_span_err(span, "Cannot cast between pointer types")
-                        .note(&format!("from: *{}", cx.debug_type(original_pointee_ty)))
-                        .note(&format!("to: {}", cx.debug_type(self.ty)))
-                        .emit();
-                }
+                cx.zombie_with_span(
+                    zombie_target_undef,
+                    span,
+                    &format!(
+                        "cannot cast between pointer types\
+                         \nfrom `*{}`\
+                         \n  to `{}`",
+                        cx.debug_type(original_pointee_ty),
+                        cx.debug_type(self.ty)
+                    ),
+                );
 
                 zombie_target_undef
             }

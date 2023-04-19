@@ -255,11 +255,8 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             self.constant_null(ty)
                         } else {
                             let result = self.undef(ty);
-                            // HACK(eddyb) we don't know whether this constant originated
-                            // in a system crate, so it's better to always zombie.
-                            self.zombie_even_in_user_code(
+                            self.zombie_no_span(
                                 result.def_cx(self),
-                                DUMMY_SP,
                                 "pointer has non-null integer address",
                             );
                             result
@@ -408,7 +405,7 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Void => self
                 .tcx
                 .sess
-                .fatal("Cannot create const alloc of type void"),
+                .fatal("cannot create const alloc of type void"),
             SpirvType::Bool
             | SpirvType::Integer(..)
             | SpirvType::Float(_)
@@ -552,37 +549,36 @@ impl<'tcx> CodegenCx<'tcx> {
                 *data = *c + asdf->y[*c];
                 }
                 */
-                // HACK(eddyb) we don't know whether this constant originated
-                // in a system crate, so it's better to always zombie.
-                self.zombie_even_in_user_code(
-                    result.def_cx(self),
-                    DUMMY_SP,
-                    "constant runtime array value",
-                );
+                // NOTE(eddyb) the above description is a bit outdated, it's now
+                // clear `OpTypeRuntimeArray` does not belong in user code, and
+                // is only for dynamically-sized SSBOs and descriptor indexing,
+                // and a general solution looks similar to `union` handling, but
+                // for the length of a fixed-length array.
+                self.zombie_no_span(result.def_cx(self), "constant `OpTypeRuntimeArray` value");
                 result
             }
             SpirvType::Function { .. } => self
                 .tcx
                 .sess
                 .fatal("TODO: SpirvType::Function not supported yet in create_const_alloc"),
-            SpirvType::Image { .. } => self.tcx.sess.fatal("Cannot create a constant image value"),
+            SpirvType::Image { .. } => self.tcx.sess.fatal("cannot create a constant image value"),
             SpirvType::Sampler => self
                 .tcx
                 .sess
-                .fatal("Cannot create a constant sampler value"),
+                .fatal("cannot create a constant sampler value"),
             SpirvType::SampledImage { .. } => self
                 .tcx
                 .sess
-                .fatal("Cannot create a constant sampled image value"),
+                .fatal("cannot create a constant sampled image value"),
             SpirvType::InterfaceBlock { .. } => self
                 .tcx
                 .sess
-                .fatal("Cannot create a constant interface block value"),
+                .fatal("cannot create a constant interface block value"),
             SpirvType::AccelerationStructureKhr => self
                 .tcx
                 .sess
-                .fatal("Cannot create a constant acceleration structure"),
-            SpirvType::RayQueryKhr => self.tcx.sess.fatal("Cannot create a constant ray query"),
+                .fatal("cannot create a constant acceleration structure"),
+            SpirvType::RayQueryKhr => self.tcx.sess.fatal("cannot create a constant ray query"),
         }
     }
 }

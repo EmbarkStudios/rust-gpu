@@ -208,7 +208,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             .with_type(result_type);
             self.zombie(
                 result.def(self),
-                "Cannot offset a pointer to an arbitrary element",
+                "cannot offset a pointer to an arbitrary element",
             );
             result
         }
@@ -219,7 +219,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let width = match self.lookup_type(shift.ty) {
             SpirvType::Integer(width, _) => width,
             other => self.fatal(&format!(
-                "Cannot rotate non-integer type: {}",
+                "cannot rotate non-integer type: {}",
                 other.debug(shift.ty, self)
             )),
         };
