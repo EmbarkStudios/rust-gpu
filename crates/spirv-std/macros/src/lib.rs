@@ -76,7 +76,7 @@ mod image;
 use proc_macro::TokenStream;
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenTree};
 
-use syn::{punctuated::Punctuated, spanned::Spanned, ItemFn, Token};
+use syn::{punctuated::Punctuated, spanned::Spanned, visit_mut::VisitMut, ItemFn, Token};
 
 use quote::{quote, ToTokens};
 use std::fmt::Write;
@@ -624,4 +624,133 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     };
 
     output.into()
+}
+
+const SAMPLE_PARAM_COUNT: usize = 3;
+const SAMPLE_PARAM_TYPES: [&str; SAMPLE_PARAM_COUNT] = ["B", "L", "S"];
+const SAMPLE_PARAM_OPERANDS: [&str; SAMPLE_PARAM_COUNT] = ["Bias", "Lod", "Sample"];
+const SAMPLE_PARAM_NAMES: [&str; SAMPLE_PARAM_COUNT] = ["bias", "lod", "sample_index"];
+
+struct SampleFnRewriter(usize);
+
+impl SampleFnRewriter {
+    pub fn rewrite(mask: usize, f: &syn::ItemFn) -> syn::ItemFn {
+        let mut new_f = f.clone();
+        let mut ty = String::from("SampleParams<");
+
+        for i in 0..SAMPLE_PARAM_COUNT {
+            if mask & (1 << i) != 0 {
+                new_f.sig.generics.params.push(syn::GenericParam::Type(
+                    syn::Ident::new(SAMPLE_PARAM_TYPES[i], Span::call_site()).into(),
+                ));
+                ty.push_str(SAMPLE_PARAM_TYPES[i]);
+            } else {
+                ty.push_str("()");
+            }
+            ty.push(',');
+        }
+        ty.push('>');
+        if let Some(syn::FnArg::Typed(p)) = new_f.sig.inputs.last_mut() {
+            *p.ty.as_mut() = syn::parse(ty.parse().unwrap()).unwrap();
+        }
+        SampleFnRewriter(mask).visit_item_fn_mut(&mut new_f);
+        new_f
+    }
+
+    fn get_operands(&self) -> String {
+        let mut op = String::new();
+        for i in 0..SAMPLE_PARAM_COUNT {
+            if self.0 & (1 << i) != 0 {
+                op.push_str(SAMPLE_PARAM_OPERANDS[i]);
+                op.push_str(" %");
+                op.push_str(SAMPLE_PARAM_NAMES[i]);
+                op.push(' ');
+            }
+        }
+        op
+    }
+
+    fn add_loads(&self, t: &mut Vec<TokenTree>) {
+        for i in 0..SAMPLE_PARAM_COUNT {
+            if self.0 & (1 << i) != 0 {
+                let s = format!("%{0} = OpLoad _ {{{0}}}", SAMPLE_PARAM_NAMES[i]);
+                t.push(TokenTree::Literal(proc_macro2::Literal::string(s.as_str())));
+                t.push(TokenTree::Punct(proc_macro2::Punct::new(
+                    ',',
+                    proc_macro2::Spacing::Alone,
+                )))
+            }
+        }
+    }
+
+    fn add_regs(&self, t: &mut Vec<TokenTree>) {
+        for i in 0..SAMPLE_PARAM_COUNT {
+            if self.0 & (1 << i) != 0 {
+                let s = format!("{0} = in(reg) &param.{0}", SAMPLE_PARAM_NAMES[i]);
+                t.push(TokenTree::Literal(proc_macro2::Literal::string(s.as_str())));
+                t.push(TokenTree::Punct(proc_macro2::Punct::new(
+                    ',',
+                    proc_macro2::Spacing::Alone,
+                )))
+            }
+        }
+    }
+}
+
+impl syn::visit_mut::VisitMut for SampleFnRewriter {
+    fn visit_macro_mut(&mut self, m: &mut syn::Macro) {
+        if m.path.is_ident("asm") {
+            let t = m.tokens.clone();
+            let mut new_t = Vec::new();
+            let mut altered = false;
+
+            for tt in t {
+                match tt {
+                    TokenTree::Literal(l) => {
+                        if let Ok(l) = syn::parse::<syn::LitStr>(l.to_token_stream().into()) {
+                            let s = l.value();
+                            if s.contains("$PARAMS") {
+                                altered = true;
+                                self.add_loads(&mut new_t);
+                                let s = s.replace("$PARAMS", &self.get_operands());
+                                new_t.push(TokenTree::Literal(proc_macro2::Literal::string(
+                                    s.as_str(),
+                                )));
+                            } else {
+                                new_t.push(TokenTree::Literal(l.token()));
+                            }
+                        } else {
+                            new_t.push(TokenTree::Literal(l));
+                        }
+                    }
+                    _ => {
+                        new_t.push(tt);
+                    }
+                }
+            }
+
+            if altered {
+                self.add_regs(&mut new_t);
+            }
+
+            m.tokens = new_t.into_iter().collect();
+        }
+    }
+}
+
+/// Generates permutations of a sampling function containing inline assembly with an image
+/// instruction ending with a placeholder `$PARAMS` operand. The last parameter must be named
+/// `params`, its type will be rewritten. Relevant generic arguments are added to the function
+/// signature. See `SAMPLE_PARAM_TYPES` for a list of names you cannot use as generic arguments.
+#[proc_macro_attribute]
+#[doc(hidden)]
+pub fn gen_sample_param_permutations(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let item_fn = syn::parse_macro_input!(item as syn::ItemFn);
+    let mut fns = Vec::new();
+
+    for m in 1..((1 << SAMPLE_PARAM_COUNT) - 1) {
+        fns.push(SampleFnRewriter::rewrite(m, &item_fn));
+    }
+
+    quote! { #(#fns)* }.into()
 }
