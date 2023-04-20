@@ -631,30 +631,42 @@ const SAMPLE_PARAM_TYPES: [&str; SAMPLE_PARAM_COUNT] = ["B", "L", "S"];
 const SAMPLE_PARAM_OPERANDS: [&str; SAMPLE_PARAM_COUNT] = ["Bias", "Lod", "Sample"];
 const SAMPLE_PARAM_NAMES: [&str; SAMPLE_PARAM_COUNT] = ["bias", "lod", "sample_index"];
 
-struct SampleFnRewriter(usize);
+struct SampleImplRewriter(usize, syn::Type);
 
-impl SampleFnRewriter {
-    pub fn rewrite(mask: usize, f: &syn::ItemFn) -> syn::ItemFn {
-        let mut new_f = f.clone();
-        let mut ty = String::from("SampleParams<");
+impl SampleImplRewriter {
+    pub fn rewrite(mask: usize, f: &syn::ItemImpl) -> syn::ItemImpl {
+        let mut new_impl = f.clone();
+        let mut ty_str = String::from("SampleParams<");
 
+        // based on the mask, form a `SampleParams` type string and add the generic parameters to the `impl<>` generics
+        // example type string: `"SampleParams<SomeTy<B>, NoneTy, NoneTy>"`
         for i in 0..SAMPLE_PARAM_COUNT {
             if mask & (1 << i) != 0 {
-                new_f.sig.generics.params.push(syn::GenericParam::Type(
+                new_impl.generics.params.push(syn::GenericParam::Type(
                     syn::Ident::new(SAMPLE_PARAM_TYPES[i], Span::call_site()).into(),
                 ));
-                ty.push_str(SAMPLE_PARAM_TYPES[i]);
+                ty_str.push_str("SomeTy<");
+                ty_str.push_str(SAMPLE_PARAM_TYPES[i]);
+                ty_str.push('>');
             } else {
-                ty.push_str("()");
+                ty_str.push_str("NoneTy");
             }
-            ty.push(',');
+            ty_str.push(',');
         }
-        ty.push('>');
-        if let Some(syn::FnArg::Typed(p)) = new_f.sig.inputs.last_mut() {
-            *p.ty.as_mut() = syn::parse(ty.parse().unwrap()).unwrap();
+        ty_str.push_str(">");
+        let ty: syn::Type = syn::parse(ty_str.parse().unwrap()).unwrap();
+
+        if let Some(t) = &mut new_impl.trait_ {
+            if let syn::PathArguments::AngleBracketed(a) =
+                &mut t.1.segments.last_mut().unwrap().arguments
+            {
+                if let Some(syn::GenericArgument::Type(t)) = a.args.last_mut() {
+                    *t = ty.clone();
+                }
+            }
         }
-        SampleFnRewriter(mask).visit_item_fn_mut(&mut new_f);
-        new_f
+        SampleImplRewriter(mask, ty).visit_item_impl_mut(&mut new_impl);
+        new_impl
     }
 
     fn get_operands(&self) -> String {
@@ -686,18 +698,22 @@ impl SampleFnRewriter {
     fn add_regs(&self, t: &mut Vec<TokenTree>) {
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
-                let s = format!("{0} = in(reg) &param.{0}", SAMPLE_PARAM_NAMES[i]);
-                t.push(TokenTree::Literal(proc_macro2::Literal::string(s.as_str())));
-                t.push(TokenTree::Punct(proc_macro2::Punct::new(
-                    ',',
-                    proc_macro2::Spacing::Alone,
-                )))
+                let s = format!("{0} = in(reg) &param.{0},", SAMPLE_PARAM_NAMES[i]);
+                let ts: proc_macro2::TokenStream = s.parse().unwrap();
+                t.extend(ts);
             }
         }
     }
 }
 
-impl syn::visit_mut::VisitMut for SampleFnRewriter {
+impl VisitMut for SampleImplRewriter {
+    fn visit_impl_item_method_mut(&mut self, item: &mut syn::ImplItemMethod) {
+        if let Some(syn::FnArg::Typed(p)) = item.sig.inputs.last_mut() {
+            *p.ty.as_mut() = self.1.clone();
+        }
+        syn::visit_mut::visit_impl_item_method_mut(self, item);
+    }
+
     fn visit_macro_mut(&mut self, m: &mut syn::Macro) {
         if m.path.is_ident("asm") {
             let t = m.tokens.clone();
@@ -745,12 +761,13 @@ impl syn::visit_mut::VisitMut for SampleFnRewriter {
 #[proc_macro_attribute]
 #[doc(hidden)]
 pub fn gen_sample_param_permutations(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let item_fn = syn::parse_macro_input!(item as syn::ItemFn);
+    let item_impl = syn::parse_macro_input!(item as syn::ItemImpl);
     let mut fns = Vec::new();
 
-    for m in 1..((1 << SAMPLE_PARAM_COUNT) - 1) {
-        fns.push(SampleFnRewriter::rewrite(m, &item_fn));
+    for m in 1..(1 << SAMPLE_PARAM_COUNT) {
+        fns.push(SampleImplRewriter::rewrite(m, &item_impl));
     }
 
+    println!("{}", quote! { #(#fns)* }.to_string());
     quote! { #(#fns)* }.into()
 }

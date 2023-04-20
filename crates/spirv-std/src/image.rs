@@ -10,11 +10,16 @@ use core::arch::asm;
 #[rustfmt::skip]
 mod params;
 
-pub use self::params::{ImageCoordinate, ImageCoordinateSubpassData, SampleParams, SampleType};
+/// Contains extra image operands
+pub mod sample;
+
+pub use self::params::{ImageCoordinate, ImageCoordinateSubpassData, SampleType};
 pub use crate::macros::Image;
 pub use spirv_std_types::image_params::{
     AccessQualifier, Arrayed, Dimensionality, ImageDepth, ImageFormat, Multisampled, Sampled,
 };
+
+use sample::{NoneTy, SampleParams, SomeTy};
 
 use crate::{float::Float, integer::Integer, vector::Vector, Sampler};
 
@@ -150,33 +155,6 @@ impl<
                 "%image = OpLoad _ {this}",
                 "%coordinate = OpLoad _ {coordinate}",
                 "%result = OpImageFetch typeof*{result} %image %coordinate",
-                "OpStore {result} %result",
-                result = in(reg) &mut result,
-                this = in(reg) self,
-                coordinate = in(reg) &coordinate,
-            }
-        }
-        result.truncate_into()
-    }
-
-    #[crate::macros::gen_sample_param_permutations]
-    #[crate::macros::gpu_only]
-    #[doc(alias = "OpImageFetch")]
-    pub fn fetch_with<I>(
-        &self,
-        coordinate: impl ImageCoordinate<I, DIM, ARRAYED>,
-        params: SampleParams,
-    ) -> SampledType::SampleResult
-    where
-        I: Integer,
-        B: Integer,
-    {
-        let mut result = SampledType::Vec4::default();
-        unsafe {
-            asm! {
-                "%image = OpLoad _ {this}",
-                "%coordinate = OpLoad _ {coordinate}",
-                "%result = OpImageFetch typeof*{result} %image %coordinate $PARAMS",
                 "OpStore {result} %result",
                 result = in(reg) &mut result,
                 this = in(reg) self,
@@ -1137,6 +1115,79 @@ impl<
                 in(reg) &coord,
                 in(reg) &lod,
             );
+        }
+        result.truncate_into()
+    }
+}
+
+/// Helper trait that defines all `*_with` methods on an `Image` that use the extra image operands,
+/// such as bias or lod, defined by the `SampleParams` struct.
+pub trait ImageWithMethods<
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const SAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+    Params,
+>
+{
+    /// Fetch a single texel with a sampler set at compile time
+    fn fetch_with<I>(
+        &self,
+        coordinate: impl ImageCoordinate<I, DIM, ARRAYED>,
+        params: Params,
+    ) -> SampledType::SampleResult
+    where
+        I: Integer;
+}
+
+#[crate::macros::gen_sample_param_permutations]
+impl<
+        SampledType: SampleType<FORMAT, COMPONENTS>,
+        const DIM: u32,
+        const DEPTH: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const SAMPLED: u32,
+        const FORMAT: u32,
+        const COMPONENTS: u32,
+    >
+    ImageWithMethods<
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        SAMPLED,
+        FORMAT,
+        COMPONENTS,
+        SampleParams,
+    > for Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, COMPONENTS>
+{
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageFetch")]
+    fn fetch_with<I>(
+        &self,
+        coordinate: impl ImageCoordinate<I, DIM, ARRAYED>,
+        params: SampleParams,
+    ) -> SampledType::SampleResult
+    where
+        I: Integer,
+    {
+        let mut result = SampledType::Vec4::default();
+        unsafe {
+            asm! {
+                "%image = OpLoad _ {this}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%result = OpImageFetch typeof*{result} %image %coordinate $PARAMS",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                coordinate = in(reg) &coordinate,
+            }
         }
         result.truncate_into()
     }
