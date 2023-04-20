@@ -10,7 +10,7 @@ use core::arch::asm;
 #[rustfmt::skip]
 mod params;
 
-pub use self::params::{ImageCoordinate, ImageCoordinateSubpassData, SampleType};
+pub use self::params::{ImageCoordinate, ImageCoordinateSubpassData, SampleParams, SampleType};
 pub use crate::macros::Image;
 pub use spirv_std_types::image_params::{
     AccessQualifier, Arrayed, Dimensionality, ImageDepth, ImageFormat, Multisampled, Sampled,
@@ -150,6 +150,33 @@ impl<
                 "%image = OpLoad _ {this}",
                 "%coordinate = OpLoad _ {coordinate}",
                 "%result = OpImageFetch typeof*{result} %image %coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                coordinate = in(reg) &coordinate,
+            }
+        }
+        result.truncate_into()
+    }
+
+    #[crate::macros::gen_sample_param_permutations]
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageFetch")]
+    pub fn fetch_with<I>(
+        &self,
+        coordinate: impl ImageCoordinate<I, DIM, ARRAYED>,
+        params: SampleParams,
+    ) -> SampledType::SampleResult
+    where
+        I: Integer,
+        B: Integer,
+    {
+        let mut result = SampledType::Vec4::default();
+        unsafe {
+            asm! {
+                "%image = OpLoad _ {this}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%result = OpImageFetch typeof*{result} %image %coordinate $PARAMS",
                 "OpStore {result} %result",
                 result = in(reg) &mut result,
                 this = in(reg) self,
