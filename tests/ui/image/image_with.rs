@@ -13,5 +13,10 @@ pub fn main(
     let t1 = image1.fetch_with(glam::IVec2::new(0, 0), sample_with::sample_index(1));
     let t2 = image2.sample_with(*sampler, glam::Vec2::new(0.5, 0.5), sample_with::bias(1.0));
     let t3 = image2.sample_with(*sampler, glam::Vec2::new(0.5, 0.5), sample_with::lod(2.0));
-    *output = t1 + t2 + t3;
+    let t4 = image2.sample_with(
+        *sampler,
+        glam::Vec2::new(0.5, 0.5),
+        sample_with::grad(glam::Vec2::new(0.5, 0.5), glam::Vec2::new(0.5, 0.5)),
+    );
+    *output = t1 + t2 + t3 + t4;
 }

@@ -18,74 +18,106 @@ pub struct NoneTy;
 pub struct SomeTy<T>(pub T);
 
 /// Helper struct that allows building image operands. Start with a global function that returns this
-/// struct, and then chain additional calls.
-/// Example: `image.sample_with(coords, params::bias(3.0).sample_index(1))`
-pub struct SampleParams<B: OptionTy, L: OptionTy, S: OptionTy> {
+/// struct, and then chain additional calls. No care is taken to avoid stating multiple operands that,
+/// together, make no sense, such as Lod and Grad.
+/// Example: `image.sample_with(coords, sample_with::bias(3.0).sample_index(1))`
+pub struct SampleParams<B: OptionTy, L: OptionTy, G: OptionTy, S: OptionTy> {
     /// 'Bias' image operand
     pub bias: B,
 
     /// 'Lod' image operand
     pub lod: L,
 
-    /// 'Sample' image operand
+    /// 'Grad' image operand
+    pub grad: G,
+
+    /// 'Sample' image operandy
     pub sample_index: S,
 }
 
 /// Sets the 'Bias' image operand
-pub fn bias<B>(bias: B) -> SampleParams<SomeTy<B>, NoneTy, NoneTy> {
+pub fn bias<B>(bias: B) -> SampleParams<SomeTy<B>, NoneTy, NoneTy, NoneTy> {
     SampleParams {
         bias: SomeTy(bias),
         lod: NoneTy,
+        grad: NoneTy,
         sample_index: NoneTy,
     }
 }
 
 /// Sets the 'Lod' image operand
-pub fn lod<L>(lod: L) -> SampleParams<NoneTy, SomeTy<L>, NoneTy> {
+pub fn lod<L>(lod: L) -> SampleParams<NoneTy, SomeTy<L>, NoneTy, NoneTy> {
     SampleParams {
         bias: NoneTy,
         lod: SomeTy(lod),
+        grad: NoneTy,
+        sample_index: NoneTy,
+    }
+}
+
+/// Sets the 'Grad' image operand
+pub fn grad<T>(grad_x: T, grad_y: T) -> SampleParams<NoneTy, NoneTy, SomeTy<(T, T)>, NoneTy> {
+    SampleParams {
+        bias: NoneTy,
+        lod: NoneTy,
+        grad: SomeTy((grad_x, grad_y)),
         sample_index: NoneTy,
     }
 }
 
 /// Sets the 'Sample' image operand
-pub fn sample_index<S>(sample_index: S) -> SampleParams<NoneTy, NoneTy, SomeTy<S>> {
+pub fn sample_index<S>(sample_index: S) -> SampleParams<NoneTy, NoneTy, NoneTy, SomeTy<S>> {
     SampleParams {
         bias: NoneTy,
         lod: NoneTy,
+        grad: NoneTy,
         sample_index: SomeTy(sample_index),
     }
 }
 
-impl<L: OptionTy, S: OptionTy> SampleParams<NoneTy, L, S> {
+impl<L: OptionTy, G: OptionTy, S: OptionTy> SampleParams<NoneTy, L, G, S> {
     /// Sets the 'Bias' image operand
-    pub fn bias<B>(self, bias: B) -> SampleParams<SomeTy<B>, L, S> {
+    pub fn bias<B>(self, bias: B) -> SampleParams<SomeTy<B>, L, G, S> {
         SampleParams {
             bias: SomeTy(bias),
             lod: self.lod,
+            grad: self.grad,
             sample_index: self.sample_index,
         }
     }
 }
 
-impl<B: OptionTy, S: OptionTy> SampleParams<B, NoneTy, S> {
+impl<B: OptionTy, G: OptionTy, S: OptionTy> SampleParams<B, NoneTy, G, S> {
     /// Sets the 'Lod' image operand
-    pub fn lod<L>(self, lod: L) -> SampleParams<B, SomeTy<L>, S> {
+    pub fn lod<L>(self, lod: L) -> SampleParams<B, SomeTy<L>, G, S> {
         SampleParams {
             bias: self.bias,
             lod: SomeTy(lod),
+            grad: self.grad,
             sample_index: self.sample_index,
         }
     }
 }
 
-impl<B: OptionTy, L: OptionTy> SampleParams<B, L, NoneTy> {
-    /// Sets the 'Sample' image operand
-    pub fn sample_index<S>(self, sample_index: S) -> SampleParams<B, L, SomeTy<S>> {
+impl<B: OptionTy, L: OptionTy, S: OptionTy> SampleParams<B, L, NoneTy, S> {
+    /// Sets the 'Lod' image operand
+    pub fn grad<T>(self, grad_x: T, grad_y: T) -> SampleParams<B, L, SomeTy<(T, T)>, S> {
         SampleParams {
             bias: self.bias,
             lod: self.lod,
+            grad: SomeTy((grad_x, grad_y)),
+            sample_index: self.sample_index,
+        }
+    }
+}
+
+impl<B: OptionTy, L: OptionTy, G: OptionTy> SampleParams<B, L, G, NoneTy> {
+    /// Sets the 'Sample' image operand
+    pub fn sample_index<S>(self, sample_index: S) -> SampleParams<B, L, G, SomeTy<S>> {
+        SampleParams {
+            bias: self.bias,
+            lod: self.lod,
+            grad: self.grad,
             sample_index: SomeTy(sample_index),
         }
     }
