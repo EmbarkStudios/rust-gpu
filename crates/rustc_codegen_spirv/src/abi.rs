@@ -4,7 +4,7 @@
 use crate::attr::{AggregatedSpirvAttributes, IntrinsicType};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::{StorageClass, Word};
+use rspirv::spirv::{Dim, ImageFormat, StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorGuaranteed;
 use rustc_index::vec::Idx;
@@ -27,8 +27,6 @@ use rustc_target::spec::abi::Abi as SpecAbi;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::fmt;
-
-use num_traits::cast::FromPrimitive;
 
 pub(crate) fn provide(providers: &mut Providers) {
     // This is a lil weird: so, we obviously don't support C ABIs at all. However, libcore does declare some extern
@@ -858,7 +856,31 @@ fn trans_intrinsic_type<'tcx>(
             // let image_format: spirv::ImageFormat =
             //     type_from_variant_discriminant(cx, substs.const_at(6));
 
-            fn const_int_value<'tcx, P: FromPrimitive>(
+            trait FromU128 {
+                fn from_u128(value: u128) -> Option<Self>
+                where
+                    Self: Sized;
+            }
+
+            impl FromU128 for Dim {
+                fn from_u128(value: u128) -> Option<Self> {
+                    Self::from_u32(value.try_into().ok()?)
+                }
+            }
+
+            impl FromU128 for u32 {
+                fn from_u128(value: u128) -> Option<Self> {
+                    value.try_into().ok()
+                }
+            }
+
+            impl FromU128 for ImageFormat {
+                fn from_u128(value: u128) -> Option<Self> {
+                    Self::from_u32(value.try_into().ok()?)
+                }
+            }
+
+            fn const_int_value<'tcx, P: FromU128>(
                 cx: &CodegenCx<'tcx>,
                 const_: Const<'tcx>,
             ) -> Result<P, ErrorGuaranteed> {

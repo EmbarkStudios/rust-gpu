@@ -586,7 +586,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global().decorate(
                 var,
                 Decoration::DescriptorSet,
-                std::iter::once(Operand::LiteralInt32(index)),
+                std::iter::once(Operand::LiteralBit32(index)),
             );
             decoration_supersedes_location = true;
         }
@@ -594,7 +594,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global().decorate(
                 var,
                 Decoration::Binding,
-                std::iter::once(Operand::LiteralInt32(index)),
+                std::iter::once(Operand::LiteralBit32(index)),
             );
             decoration_supersedes_location = true;
         }
@@ -633,7 +633,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 self.emit_global().decorate(
                     var,
                     Decoration::InputAttachmentIndex,
-                    std::iter::once(Operand::LiteralInt32(attachment_index.value)),
+                    std::iter::once(Operand::LiteralBit32(attachment_index.value)),
                 );
             } else if is_subpass_input {
                 self.tcx
@@ -678,7 +678,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global().decorate(
                 var,
                 Decoration::Location,
-                std::iter::once(Operand::LiteralInt32(*location)),
+                std::iter::once(Operand::LiteralBit32(*location)),
             );
             *location += 1;
         }
