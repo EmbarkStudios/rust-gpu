@@ -1,5 +1,6 @@
 //! SPIR-T pass infrastructure and supporting utilities.
 
+pub(crate) mod diagnostics;
 mod fuse_selects;
 mod reduce;
 
@@ -59,8 +60,17 @@ macro_rules! def_spv_spec_with_extra_well_known {
                         }
 
                         let spv_spec = spv::spec::Spec::get();
+                        let wk = &spv_spec.well_known;
+
+                        let decorations = match &spv_spec.operand_kinds[wk.Decoration] {
+                            spv::spec::OperandKindDef::ValueEnum { variants } => variants,
+                            _ => unreachable!(),
+                        };
+
                         let lookup_fns = PerWellKnownGroup {
                             opcode: |name| spv_spec.instructions.lookup(name).unwrap(),
+                            operand_kind: |name| spv_spec.operand_kinds.lookup(name).unwrap(),
+                            decoration: |name| decorations.lookup(name).unwrap().into(),
                         };
 
                         SpvSpecWithExtras {
@@ -87,6 +97,12 @@ def_spv_spec_with_extra_well_known! {
         OpCompositeInsert,
         OpCompositeExtract,
     ],
+    operand_kind: spv::spec::OperandKind = [
+        ExecutionModel,
+    ],
+    decoration: u32 = [
+        UserTypeGOOGLE,
+    ],
 }
 
 /// Run intra-function passes on all `Func` definitions in the `Module`.
@@ -112,7 +128,8 @@ pub(super) fn run_func_passes<P>(
             seen_global_vars: FxIndexSet::default(),
             seen_funcs: FxIndexSet::default(),
         };
-        for &exportee in module.exports.values() {
+        for (export_key, &exportee) in &module.exports {
+            export_key.inner_visit_with(&mut collector);
             exportee.inner_visit_with(&mut collector);
         }
         collector.seen_funcs

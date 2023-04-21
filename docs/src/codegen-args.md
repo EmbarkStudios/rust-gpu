@@ -135,6 +135,12 @@ Disables compaction of SPIR-V IDs at the end of linking. Causes absolutely ginor
 emitted. Useful if you're println debugging IDs in the linker (although spirv-opt will compact them
 anyway, be careful).
 
+### `--no-early-report-zombies`
+
+Delays reporting zombies (aka "deferred errors") even further, to allow more legalization.
+Currently this also replaces the zombie reporting with a SPIR-T-based version
+(which may become the default in the future).
+
 ### `--no-structurize`
 
 Disables CFG structurization. Probably results in invalid modules.

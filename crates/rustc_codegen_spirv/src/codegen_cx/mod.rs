@@ -330,6 +330,11 @@ impl CodegenArgs {
                 "no-compact-ids",
                 "disables compaction of SPIR-V IDs at the end of linking",
             );
+            opts.optflag(
+                "",
+                "no-early-report-zombies",
+                "delays reporting zombies (to allow more legalization)",
+            );
             opts.optflag("", "no-structurize", "disables CFG structurization");
 
             opts.optflag(
@@ -509,6 +514,7 @@ impl CodegenArgs {
             // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
             dce: !matches.opt_present("no-dce"),
             compact_ids: !matches.opt_present("no-compact-ids"),
+            early_report_zombies: !matches.opt_present("no-early-report-zombies"),
             structurize: !matches.opt_present("no-structurize"),
             spirt: !matches.opt_present("no-spirt"),
             spirt_passes: matches

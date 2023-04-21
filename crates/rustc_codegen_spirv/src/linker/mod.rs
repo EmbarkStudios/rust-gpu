@@ -38,6 +38,7 @@ pub type Result<T> = std::result::Result<T, ErrorGuaranteed>;
 pub struct Options {
     pub compact_ids: bool,
     pub dce: bool,
+    pub early_report_zombies: bool,
     pub structurize: bool,
     pub spirt: bool,
     pub spirt_passes: Vec<String>,
@@ -214,20 +215,27 @@ pub fn link(
         simple_passes::check_fragment_insts(sess, &output)?;
     }
 
-    // HACK(eddyb) this has to run before the `remove_zombies` pass, so that any
-    // zombies that are passed as call arguments, but eventually unused, won't
-    // be (incorrectly) considered used.
+    // HACK(eddyb) this has to run before the `report_and_remove_zombies` pass,
+    // so that any zombies that are passed as call arguments, but eventually unused,
+    // won't be (incorrectly) considered used.
     {
         let _timer = sess.timer("link_remove_unused_params");
         output = param_weakening::remove_unused_params(output);
     }
 
-    {
-        let _timer = sess.timer("link_remove_zombies");
-        zombies::remove_zombies(sess, opts, &mut output)?;
+    if opts.early_report_zombies {
+        let _timer = sess.timer("link_report_and_remove_zombies");
+        zombies::report_and_remove_zombies(sess, opts, &mut output)?;
     }
 
     {
+        // HACK(eddyb) this is not the best approach, but storage class inference
+        // can still fail in entirely legitimate ways (i.e. mismatches in zombies).
+        if !opts.early_report_zombies {
+            let _timer = sess.timer("link_dce-before-specialize_generic_storage_class");
+            dce::dce(&mut output);
+        }
+
         let _timer = sess.timer("specialize_generic_storage_class");
         // HACK(eddyb) `specializer` requires functions' blocks to be in RPO order
         // (i.e. `block_ordering_pass`) - this could be relaxed by using RPO visit
@@ -411,6 +419,11 @@ pub fn link(
             );
         }
 
+        let report_diagnostics_result = {
+            let _timer = sess.timer("spirt_passes::diagnostics::report_diagnostics");
+            spirt_passes::diagnostics::report_diagnostics(sess, opts, &module)
+        };
+
         // NOTE(eddyb) this should be *before* `lift_to_spv` below,
         // so if that fails, the dump could be used to debug it.
         if let Some(dump_dir) = &opts.dump_spirt_passes {
@@ -445,6 +458,11 @@ pub fn link(
             })
             .unwrap();
         }
+
+        // NOTE(eddyb) this is late so that `--dump-spirt-passes` is processed,
+        // even/especially when error were reported, but lifting to SPIR-V is
+        // skipped (since it could very well fail due to reported errors).
+        report_diagnostics_result?;
 
         let spv_words = {
             let _timer = sess.timer("spirt::Module::lift_to_spv_module_emitter");

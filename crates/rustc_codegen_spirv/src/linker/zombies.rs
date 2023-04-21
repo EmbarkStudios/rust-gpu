@@ -308,7 +308,7 @@ impl<'a> ZombieReporter<'a> {
     }
 }
 
-pub fn remove_zombies(
+pub fn report_and_remove_zombies(
     sess: &Session,
     opts: &super::Options,
     module: &mut Module,
