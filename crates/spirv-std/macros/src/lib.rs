@@ -681,6 +681,7 @@ impl SampleImplRewriter {
     }
 
     // generates an operands string for use in the assembly, e.g. "Bias %bias Lod %lod", based on the mask
+    #[allow(clippy::needless_range_loop)]
     fn get_operands(&self) -> String {
         let mut op = String::new();
         for i in 0..SAMPLE_PARAM_COUNT {
@@ -699,6 +700,7 @@ impl SampleImplRewriter {
     }
 
     // generates list of assembly loads for the data, e.g. "%bias = OpLoad _ {bias}", etc.
+    #[allow(clippy::needless_range_loop)]
     fn add_loads(&self, t: &mut Vec<TokenTree>) {
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
@@ -730,6 +732,7 @@ impl SampleImplRewriter {
     }
 
     // generates list of register specifications, e.g. `bias = in(reg) &params.bias.0, ...` as separate tokens
+    #[allow(clippy::needless_range_loop)]
     fn add_regs(&self, t: &mut Vec<TokenTree>) {
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
@@ -823,6 +826,6 @@ pub fn gen_sample_param_permutations(_attr: TokenStream, item: TokenStream) -> T
     }
 
     // uncomment to output generated tokenstream to stdout
-    println!("{}", quote! { #(#fns)* }.to_string());
+    //println!("{}", quote! { #(#fns)* }.to_string());
     quote! { #(#fns)* }.into()
 }
