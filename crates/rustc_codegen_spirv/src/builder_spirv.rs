@@ -59,10 +59,12 @@ pub enum SpirvValueKind {
         /// Pointee type of `original_ptr`.
         original_pointee_ty: Word,
 
-        /// `OpUndef` of the right target pointer type, to attach zombies to.
-        // FIXME(eddyb) we should be using a real `OpBitcast` here, but we can't
-        // emit that on the fly during `SpirvValue::def`, due to builder locking.
-        zombie_target_undef: Word,
+        /// Result ID for the `OpBitcast` instruction representing the cast,
+        /// to attach zombies to.
+        //
+        // HACK(eddyb) having an `OpBitcast` only works by being DCE'd away,
+        // or by being replaced with a noop in `qptr::lower`.
+        bitcast_result_id: Word,
     },
 }
 
@@ -170,10 +172,10 @@ impl SpirvValue {
             SpirvValueKind::LogicalPtrCast {
                 original_ptr: _,
                 original_pointee_ty,
-                zombie_target_undef,
+                bitcast_result_id,
             } => {
                 cx.zombie_with_span(
-                    zombie_target_undef,
+                    bitcast_result_id,
                     span,
                     &format!(
                         "cannot cast between pointer types\
@@ -184,7 +186,7 @@ impl SpirvValue {
                     ),
                 );
 
-                zombie_target_undef
+                bitcast_result_id
             }
         }
     }

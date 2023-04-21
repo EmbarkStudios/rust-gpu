@@ -1267,7 +1267,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if let SpirvValueKind::LogicalPtrCast {
             original_ptr,
             original_pointee_ty,
-            zombie_target_undef: _,
+            bitcast_result_id: _,
         } = ptr.kind
         {
             let offset = match pointee_kind {
@@ -1533,7 +1533,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvValueKind::LogicalPtrCast {
                 original_ptr,
                 original_pointee_ty,
-                zombie_target_undef: _,
+                bitcast_result_id: _,
             } => (
                 original_ptr.with_type(
                     SpirvType::Pointer {
@@ -1572,11 +1572,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .with_type(dest_ty)
         } else {
             // Defer the cast so that it has a chance to be avoided.
+            let original_ptr = val.def(self);
             SpirvValue {
                 kind: SpirvValueKind::LogicalPtrCast {
-                    original_ptr: val.def(self),
+                    original_ptr,
                     original_pointee_ty: val_pointee,
-                    zombie_target_undef: self.undef(dest_ty).def(self),
+                    bitcast_result_id: self.emit().bitcast(dest_ty, None, original_ptr).unwrap(),
                 },
                 ty: dest_ty,
             }
