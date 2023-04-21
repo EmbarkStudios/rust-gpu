@@ -630,6 +630,7 @@ const SAMPLE_PARAM_COUNT: usize = 3;
 const SAMPLE_PARAM_TYPES: [&str; SAMPLE_PARAM_COUNT] = ["B", "L", "S"];
 const SAMPLE_PARAM_OPERANDS: [&str; SAMPLE_PARAM_COUNT] = ["Bias", "Lod", "Sample"];
 const SAMPLE_PARAM_NAMES: [&str; SAMPLE_PARAM_COUNT] = ["bias", "lod", "sample_index"];
+const SAMPLE_PARAM_EXPLICIT_LOD_MASK: usize = 0b010; // which params require the use of ExplicitLod rather than ImplicitLod
 
 struct SampleImplRewriter(usize, syn::Type);
 
@@ -653,9 +654,11 @@ impl SampleImplRewriter {
             }
             ty_str.push(',');
         }
-        ty_str.push_str(">");
+        ty_str.push('>');
         let ty: syn::Type = syn::parse(ty_str.parse().unwrap()).unwrap();
 
+        // use the type to insert it into the generic argument of the trait we're implementing
+        // e.g., `ImageWithMethods<Dummy>` becomes `ImageWithMethods<SampleParams<SomeTy<B>, NoneTy, NoneTy>>`
         if let Some(t) = &mut new_impl.trait_ {
             if let syn::PathArguments::AngleBracketed(a) =
                 &mut t.1.segments.last_mut().unwrap().arguments
@@ -665,10 +668,13 @@ impl SampleImplRewriter {
                 }
             }
         }
+
+        // rewrite the implemented functions
         SampleImplRewriter(mask, ty).visit_item_impl_mut(&mut new_impl);
         new_impl
     }
 
+    // generates an operands string for use in the assembly, e.g. "Bias %bias Lod %lod", based on the mask
     fn get_operands(&self) -> String {
         let mut op = String::new();
         for i in 0..SAMPLE_PARAM_COUNT {
@@ -682,6 +688,7 @@ impl SampleImplRewriter {
         op
     }
 
+    // generates list of assembly loads for the data, e.g. "%bias = OpLoad _ {bias}", etc.
     fn add_loads(&self, t: &mut Vec<TokenTree>) {
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
@@ -695,10 +702,11 @@ impl SampleImplRewriter {
         }
     }
 
+    // generates list of register specifications, e.g. `bias = in(reg) &params.bias.0, ...` as separate tokens
     fn add_regs(&self, t: &mut Vec<TokenTree>) {
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
-                let s = format!("{0} = in(reg) &params.{0},", SAMPLE_PARAM_NAMES[i]);
+                let s = format!("{0} = in(reg) &params.{0}.0,", SAMPLE_PARAM_NAMES[i]);
                 let ts: proc_macro2::TokenStream = s.parse().unwrap();
                 t.extend(ts);
             }
@@ -708,6 +716,7 @@ impl SampleImplRewriter {
 
 impl VisitMut for SampleImplRewriter {
     fn visit_impl_item_method_mut(&mut self, item: &mut syn::ImplItemMethod) {
+        // rewrite the last parameter of this method to be of type `SampleParams<...>` we generated earlier
         if let Some(syn::FnArg::Typed(p)) = item.sig.inputs.last_mut() {
             *p.ty.as_mut() = self.1.clone();
         }
@@ -716,6 +725,7 @@ impl VisitMut for SampleImplRewriter {
 
     fn visit_macro_mut(&mut self, m: &mut syn::Macro) {
         if m.path.is_ident("asm") {
+            // this is where the asm! block is manipulated
             let t = m.tokens.clone();
             let mut new_t = Vec::new();
             let mut altered = false;
@@ -724,11 +734,21 @@ impl VisitMut for SampleImplRewriter {
                 match tt {
                     TokenTree::Literal(l) => {
                         if let Ok(l) = syn::parse::<syn::LitStr>(l.to_token_stream().into()) {
+                            // found a string literal
                             let s = l.value();
                             if s.contains("$PARAMS") {
                                 altered = true;
+                                // add load instructions before the sampling instruction
                                 self.add_loads(&mut new_t);
+                                // and insert image operands
                                 let s = s.replace("$PARAMS", &self.get_operands());
+                                let lod_type = if self.0 & SAMPLE_PARAM_EXPLICIT_LOD_MASK != 0 {
+                                    "ExplicitLod"
+                                } else {
+                                    "ImplicitLod "
+                                };
+                                let s = s.replace("$LOD", lod_type);
+
                                 new_t.push(TokenTree::Literal(proc_macro2::Literal::string(
                                     s.as_str(),
                                 )));
@@ -746,18 +766,21 @@ impl VisitMut for SampleImplRewriter {
             }
 
             if altered {
+                // finally, add register specs
                 self.add_regs(&mut new_t);
             }
 
+            // replace all tokens within the asm! block with our new list
             m.tokens = new_t.into_iter().collect();
         }
     }
 }
 
-/// Generates permutations of a sampling function containing inline assembly with an image
-/// instruction ending with a placeholder `$PARAMS` operand. The last parameter must be named
-/// `params`, its type will be rewritten. Relevant generic arguments are added to the function
-/// signature. See `SAMPLE_PARAM_TYPES` for a list of names you cannot use as generic arguments.
+/// Generates permutations of an `ImageWithMethods` implementation containing sampling functions
+/// that have asm instruction ending with a placeholder `$PARAMS` operand. The last parameter
+/// of each function must be named `params`, its type will be rewritten. Relevant generic
+/// arguments are added to the impl generics.
+/// See `SAMPLE_PARAM_TYPES` for a list of names you cannot use as generic arguments.
 #[proc_macro_attribute]
 #[doc(hidden)]
 pub fn gen_sample_param_permutations(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -768,6 +791,7 @@ pub fn gen_sample_param_permutations(_attr: TokenStream, item: TokenStream) -> T
         fns.push(SampleImplRewriter::rewrite(m, &item_impl));
     }
 
-    println!("{}", quote! { #(#fns)* }.to_string());
+    // uncomment to output generated tokenstream to stdout
+    // println!("{}", quote! { #(#fns)* }.to_string());
     quote! { #(#fns)* }.into()
 }
