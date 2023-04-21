@@ -2,6 +2,7 @@
 //! the original codegen of a crate, and consumed by the `linker`.
 
 use crate::builder_spirv::BuilderSpirv;
+use either::Either;
 use itertools::Itertools;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Decoration, Op, Word};
@@ -14,7 +15,7 @@ use std::borrow::Cow;
 use std::marker::PhantomData;
 use std::ops::Range;
 use std::path::PathBuf;
-use std::{fmt, iter, slice};
+use std::{fmt, iter, slice, str};
 
 /// Decorations not native to SPIR-V require some form of encoding into existing
 /// SPIR-V constructs, for which we use `OpDecorateString` with decoration type
@@ -127,11 +128,13 @@ impl<'a> CustomDecoration<'a> for ZombieDecoration<'a> {
 //
 // NOTE(eddyb) by keeping `line`+`col`, we mimick `OpLine` limitations
 // (which could be lifted in the future using custom SPIR-T debuginfo).
+// NOTE(eddyb) `NonSemantic.Shader.DebugInfo`'s `DebugLine` has both start & end,
+// might be good to invest in SPIR-T being able to use NonSemantic debuginfo.
 #[derive(Copy, Clone)]
 pub struct SrcLocDecoration<'a> {
-    file_name: &'a str,
-    line: u32,
-    col: u32,
+    pub file_name: &'a str,
+    pub line: u32,
+    pub col: u32,
 }
 
 impl<'a> CustomDecoration<'a> for SrcLocDecoration<'a> {
@@ -184,7 +187,7 @@ impl<'tcx> SrcLocDecoration<'tcx> {
 /// back into an usable `Span`, until it's actually needed (i.e. for an error).
 pub struct SpanRegenerator<'a> {
     source_map: &'a SourceMap,
-    module: &'a Module,
+    module: Either<&'a Module, &'a spirt::Module>,
 
     src_loc_decorations: Option<FxIndexMap<Word, LazilyDecoded<'a, SrcLocDecoration<'a>>>>,
 
@@ -203,8 +206,35 @@ struct SpvDebugInfo<'a> {
 }
 
 impl<'a> SpvDebugInfo<'a> {
-    fn collect(module: &'a Module) -> Self {
+    fn collect(module: Either<&'a Module, &'a spirt::Module>) -> Self {
         let mut this = Self::default();
+
+        let module = match module {
+            Either::Left(module) => module,
+
+            // HACK(eddyb) the SPIR-T codepath is simpler, and kind of silly,
+            // but we need the `SpvDebugFile`'s `regenerated_rustc_source_file`
+            // caching, so for now it reuses `SpvDebugInfo` overall.
+            Either::Right(module) => {
+                let cx = module.cx_ref();
+                match &module.debug_info {
+                    spirt::ModuleDebugInfo::Spv(debug_info) => {
+                        for sources in debug_info.source_languages.values() {
+                            for (&file_name, src) in &sources.file_contents {
+                                // FIXME(eddyb) what if the file is already present,
+                                // should it be considered ambiguous overall?
+                                this.files
+                                    .entry(&cx[file_name])
+                                    .or_default()
+                                    .op_source_parts = [&src[..]].into_iter().collect();
+                            }
+                        }
+                    }
+                }
+                return this;
+            }
+        };
+
         let mut insts = module.debug_string_source.iter().peekable();
         while let Some(inst) = insts.next() {
             match inst.class.opcode {
@@ -255,7 +285,19 @@ impl<'a> SpanRegenerator<'a> {
     pub fn new(source_map: &'a SourceMap, module: &'a Module) -> Self {
         Self {
             source_map,
-            module,
+            module: Either::Left(module),
+
+            src_loc_decorations: None,
+            zombie_decorations: None,
+
+            spv_debug_info: None,
+        }
+    }
+
+    pub fn new_spirt(source_map: &'a SourceMap, module: &'a spirt::Module) -> Self {
+        Self {
+            source_map,
+            module: Either::Right(module),
 
             src_loc_decorations: None,
             zombie_decorations: None,
@@ -266,7 +308,9 @@ impl<'a> SpanRegenerator<'a> {
 
     pub fn src_loc_for_id(&mut self, id: Word) -> Option<SrcLocDecoration<'a>> {
         self.src_loc_decorations
-            .get_or_insert_with(|| SrcLocDecoration::decode_all(self.module).collect())
+            .get_or_insert_with(|| {
+                SrcLocDecoration::decode_all(self.module.left().unwrap()).collect()
+            })
             .get(&id)
             .map(|src_loc| src_loc.decode())
     }
@@ -275,7 +319,9 @@ impl<'a> SpanRegenerator<'a> {
     // to handle it together with `SrcLocDecoration`, than separately.
     pub(crate) fn zombie_for_id(&mut self, id: Word) -> Option<ZombieDecoration<'a>> {
         self.zombie_decorations
-            .get_or_insert_with(|| ZombieDecoration::decode_all(self.module).collect())
+            .get_or_insert_with(|| {
+                ZombieDecoration::decode_all(self.module.left().unwrap()).collect()
+            })
             .get(&id)
             .map(|zombie| zombie.decode())
     }
