@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [PR#1029](https://github.com/EmbarkStudios/rust-gpu/pull/1029) fixed SampledImage::sample() fns being unnecessarily marked as unsafe
 
 ### Fixed 🩹
+- [PR#1041](https://github.com/EmbarkStudios/rust-gpu/pull/1041) fixed `Image::gather()` not always returning a `Vec4`.
 - [PR#1025](https://github.com/EmbarkStudios/rust-gpu/pull/1025) fixed [#1024](https://github.com/EmbarkStudios/rust-gpu/issues/1024) by keeping checked arithmetic "zombie" `bool`s disjoint from normal `bool` (`false`) consts
 - [PR#1023](https://github.com/EmbarkStudios/rust-gpu/pull/1023) fixed [#1021](https://github.com/EmbarkStudios/rust-gpu/issues/1021) by always inlining calls with "not obviously legal" pointer args (instead of only inlining calls with "obviously illegal" pointer args)
 - [PR#1009](https://github.com/EmbarkStudios/rust-gpu/pull/1009) fixed [#1008](https://github.com/EmbarkStudios/rust-gpu/issues/1008) by reinstating mutability checks for entry-point parameters pointing into read-only storage classes (e.g. `#[spirv(uniform)] x: &mut u32` is now again an error)

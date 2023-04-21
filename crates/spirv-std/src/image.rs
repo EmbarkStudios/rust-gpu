@@ -190,7 +190,7 @@ impl<
         sampler: Sampler,
         coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
         component: u32,
-    ) -> SampledType::SampleResult
+    ) -> SampledType::Vec4
     where
         Self: HasGather,
         F: Float,
@@ -212,7 +212,7 @@ impl<
                 component = in(reg) component,
             }
         }
-        result.truncate_into()
+        result
     }
 
     /// Sample texels at `coord` from the image using `sampler`.
