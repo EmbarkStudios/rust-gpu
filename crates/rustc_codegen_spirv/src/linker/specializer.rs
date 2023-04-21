@@ -576,24 +576,26 @@ impl<S: Specialization> Specializer<S> {
 
         let mut forward_declared_pointers = FxHashSet::default();
         for inst in types_global_values_and_functions {
-            let result_id = inst.result_id.unwrap_or_else(|| {
-                unreachable!(
-                    "Op{:?} is in `types_global_values` but not have a result ID",
-                    inst.class.opcode
-                );
-            });
-
-            if inst.class.opcode == Op::TypeForwardPointer {
+            let result_id = if inst.class.opcode == Op::TypeForwardPointer {
                 forward_declared_pointers.insert(inst.operands[0].unwrap_id_ref());
-            }
-            if forward_declared_pointers.remove(&result_id) {
-                // HACK(eddyb) this is a forward-declared pointer, pretend
-                // it's not "generic" at all to avoid breaking the rest of
-                // the logic - see module-level docs for how this should be
-                // handled in the future to support recursive data types.
-                assert_eq!(inst.class.opcode, Op::TypePointer);
-                continue;
-            }
+                inst.operands[0].unwrap_id_ref()
+            } else {
+                let result_id = inst.result_id.unwrap_or_else(|| {
+                    unreachable!(
+                        "Op{:?} is in `types_global_values` but not have a result ID",
+                        inst.class.opcode
+                    );
+                });
+                if forward_declared_pointers.remove(&result_id) {
+                    // HACK(eddyb) this is a forward-declared pointer, pretend
+                    // it's not "generic" at all to avoid breaking the rest of
+                    // the logic - see module-level docs for how this should be
+                    // handled in the future to support recursive data types.
+                    assert_eq!(inst.class.opcode, Op::TypePointer);
+                    continue;
+                }
+                result_id
+            };
 
             // Record all integer `OpConstant`s (used for `IndexComposite`).
             if inst.class.opcode == Op::Constant {
@@ -1326,7 +1328,13 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                         }
                     }
                     TyPat::SampledImage(pat) => simple(Op::TypeSampledImage, pat),
-                    TyPat::Struct(fields_pat) => self.match_ty_list_pat(fields_pat, ty_operands),
+                    TyPat::Struct(fields_pat) => {
+                        if generic.def.class.opcode == Op::TypeStruct {
+                            self.match_ty_list_pat(fields_pat, ty_operands)
+                        } else {
+                            Err(Unapplicable)
+                        }
+                    }
                     TyPat::Function(ret_pat, params_pat) => {
                         let (ret_ty, params_ty_list) = ty_operands.split_first(self).unwrap();
                         Ok(self
