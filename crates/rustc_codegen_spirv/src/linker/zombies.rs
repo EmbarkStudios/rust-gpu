@@ -102,8 +102,9 @@ impl Zombies {
         // No need to zombie defs within a function: If any def within a function is zombied, then the
         // whole function is zombied. But, we don't have to mark the defs within a function as zombie,
         // because the defs can't escape the function.
-        // HACK(eddyb) one exception to this is function-local variables, which may
-        // be unused and as such cannot be allowed to always zombie the function.
+        // HACK(eddyb) one exception to this is function-local variables, or the
+        // `OpBitcast`s of pointer casts, either of which which may actually be
+        // unused and as such cannot be allowed to always zombie the function.
         for func in &module.functions {
             let func_id = func.def_id().unwrap();
             if self.id_to_zombie_kind.contains_key(&func_id) {
@@ -126,7 +127,7 @@ impl Zombies {
                     _ => {}
                 }
 
-                if inst.class.opcode == Op::Variable {
+                if [Op::Variable, Op::Bitcast].contains(&inst.class.opcode) {
                     let result_id = inst.result_id.unwrap();
                     if self.id_to_zombie_kind.contains_key(&result_id) {
                         continue;
