@@ -11,7 +11,7 @@ use core::arch::asm;
 mod params;
 
 /// Contains extra image operands
-pub mod sample;
+pub mod sample_with;
 
 pub use self::params::{ImageCoordinate, ImageCoordinateSubpassData, SampleType};
 pub use crate::macros::Image;
@@ -19,7 +19,7 @@ pub use spirv_std_types::image_params::{
     AccessQualifier, Arrayed, Dimensionality, ImageDepth, ImageFormat, Multisampled, Sampled,
 };
 
-use sample::{NoneTy, SampleParams, SomeTy};
+use sample_with::{NoneTy, SampleParams, SomeTy};
 
 use crate::{float::Float, integer::Integer, vector::Vector, Sampler};
 
