@@ -21,9 +21,9 @@ pub struct SomeTy<T>(T);
 /// struct, and then chain additional calls.
 /// Example: `image.sample_with(coords, params::bias(3.0).sample_index(1))`
 pub struct SampleParams<B: OptionTy, L: OptionTy, S: OptionTy> {
-    bias: B,
-    lod: L,
-    sample_index: S,
+    pub bias: B,
+    pub lod: L,
+    pub sample_index: S,
 }
 
 /// Sets the 'Bias' image operand
