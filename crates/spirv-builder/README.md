@@ -2,7 +2,7 @@
 <!-- markdownlint-disable-file MD033 -->
 # `spirv-builder`
 
-![Rust version](https://img.shields.io/badge/rust-nightly--2023--01--21-purple.svg)
+![Rust version](https://img.shields.io/badge/rust-nightly--2023--03--04-purple.svg)
 
 This crate gives you `SpirvBuilder`, a tool to build shaders using [rust-gpu][rustgpu].
 
