@@ -31,12 +31,13 @@ const SHADER: &[u8] = include_bytes!(env!("my_shaders.spv"));
 
 Because of its nature, `rustc_codegen_spirv`, and therefore `spirv-builder` by extension, require the use of a very specific nightly toolchain of Rust.
 
-**The current toolchain is: `nightly-2023-01-21`.**
+**The current toolchain is: `nightly-2023-03-04`.**
 
 Toolchains for previous versions of `spirv-builder`:
 
 |Version|Toolchain|
 |-:|-|
+|`0.7.0`|`nightly-2023-03-04`|
 |`0.6.*`|`nightly-2023-01-21`|
 |`0.5.0`|`nightly-2022-12-18`|
 |`0.4.0`|`nightly-2022-10-29`|
