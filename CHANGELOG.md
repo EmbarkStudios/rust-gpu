@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added ⭐
+- [PR#1039](https://github.com/EmbarkStudios/rust-gpu/pull/1039) added new experimental `sample_with` to `Image` API to set additional image operands.
 - [PR#1031](https://github.com/EmbarkStudios/rust-gpu/pull/1031) added `Components` generic parameter to `Image` type, allowing images to return lower dimensional vectors and even scalars from the sampling API
 
 ### Changed 🛠
