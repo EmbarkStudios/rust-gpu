@@ -698,7 +698,7 @@ impl SampleImplRewriter {
     fn add_regs(&self, t: &mut Vec<TokenTree>) {
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
-                let s = format!("{0} = in(reg) &param.{0},", SAMPLE_PARAM_NAMES[i]);
+                let s = format!("{0} = in(reg) &params.{0},", SAMPLE_PARAM_NAMES[i]);
                 let ts: proc_macro2::TokenStream = s.parse().unwrap();
                 t.extend(ts);
             }
