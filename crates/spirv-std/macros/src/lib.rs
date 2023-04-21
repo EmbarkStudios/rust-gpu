@@ -626,11 +626,17 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     output.into()
 }
 
-const SAMPLE_PARAM_COUNT: usize = 3;
-const SAMPLE_PARAM_TYPES: [&str; SAMPLE_PARAM_COUNT] = ["B", "L", "S"];
-const SAMPLE_PARAM_OPERANDS: [&str; SAMPLE_PARAM_COUNT] = ["Bias", "Lod", "Sample"];
-const SAMPLE_PARAM_NAMES: [&str; SAMPLE_PARAM_COUNT] = ["bias", "lod", "sample_index"];
-const SAMPLE_PARAM_EXPLICIT_LOD_MASK: usize = 0b010; // which params require the use of ExplicitLod rather than ImplicitLod
+const SAMPLE_PARAM_COUNT: usize = 4;
+const SAMPLE_PARAM_GENERICS: [&str; SAMPLE_PARAM_COUNT] = ["B", "L", "G", "S"];
+const SAMPLE_PARAM_TYPES: [&str; SAMPLE_PARAM_COUNT] = ["B", "L", "(G,G)", "S"];
+const SAMPLE_PARAM_OPERANDS: [&str; SAMPLE_PARAM_COUNT] = ["Bias", "Lod", "Grad", "Sample"];
+const SAMPLE_PARAM_NAMES: [&str; SAMPLE_PARAM_COUNT] = ["bias", "lod", "grad", "sample_index"];
+const SAMPLE_PARAM_GRAD_INDEX: usize = 2; // Grad requires some special handling because it uses 2 arguments
+const SAMPLE_PARAM_EXPLICIT_LOD_MASK: usize = 0b0110; // which params require the use of ExplicitLod rather than ImplicitLod
+
+fn is_grad(i: usize) -> bool {
+    i == SAMPLE_PARAM_GRAD_INDEX
+}
 
 struct SampleImplRewriter(usize, syn::Type);
 
@@ -644,7 +650,7 @@ impl SampleImplRewriter {
         for i in 0..SAMPLE_PARAM_COUNT {
             if mask & (1 << i) != 0 {
                 new_impl.generics.params.push(syn::GenericParam::Type(
-                    syn::Ident::new(SAMPLE_PARAM_TYPES[i], Span::call_site()).into(),
+                    syn::Ident::new(SAMPLE_PARAM_GENERICS[i], Span::call_site()).into(),
                 ));
                 ty_str.push_str("SomeTy<");
                 ty_str.push_str(SAMPLE_PARAM_TYPES[i]);
@@ -679,10 +685,14 @@ impl SampleImplRewriter {
         let mut op = String::new();
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
-                op.push_str(SAMPLE_PARAM_OPERANDS[i]);
-                op.push_str(" %");
-                op.push_str(SAMPLE_PARAM_NAMES[i]);
-                op.push(' ');
+                if is_grad(i) {
+                    op.push_str("Grad %grad_x %grad_y ");
+                } else {
+                    op.push_str(SAMPLE_PARAM_OPERANDS[i]);
+                    op.push_str(" %");
+                    op.push_str(SAMPLE_PARAM_NAMES[i]);
+                    op.push(' ');
+                }
             }
         }
         op
@@ -692,12 +702,29 @@ impl SampleImplRewriter {
     fn add_loads(&self, t: &mut Vec<TokenTree>) {
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
-                let s = format!("%{0} = OpLoad _ {{{0}}}", SAMPLE_PARAM_NAMES[i]);
-                t.push(TokenTree::Literal(proc_macro2::Literal::string(s.as_str())));
-                t.push(TokenTree::Punct(proc_macro2::Punct::new(
-                    ',',
-                    proc_macro2::Spacing::Alone,
-                )))
+                if is_grad(i) {
+                    t.push(TokenTree::Literal(proc_macro2::Literal::string(
+                        "%grad_x = OpLoad _ {grad_x}",
+                    )));
+                    t.push(TokenTree::Punct(proc_macro2::Punct::new(
+                        ',',
+                        proc_macro2::Spacing::Alone,
+                    )));
+                    t.push(TokenTree::Literal(proc_macro2::Literal::string(
+                        "%grad_y = OpLoad _ {grad_y}",
+                    )));
+                    t.push(TokenTree::Punct(proc_macro2::Punct::new(
+                        ',',
+                        proc_macro2::Spacing::Alone,
+                    )));
+                } else {
+                    let s = format!("%{0} = OpLoad _ {{{0}}}", SAMPLE_PARAM_NAMES[i]);
+                    t.push(TokenTree::Literal(proc_macro2::Literal::string(s.as_str())));
+                    t.push(TokenTree::Punct(proc_macro2::Punct::new(
+                        ',',
+                        proc_macro2::Spacing::Alone,
+                    )));
+                }
             }
         }
     }
@@ -706,7 +733,11 @@ impl SampleImplRewriter {
     fn add_regs(&self, t: &mut Vec<TokenTree>) {
         for i in 0..SAMPLE_PARAM_COUNT {
             if self.0 & (1 << i) != 0 {
-                let s = format!("{0} = in(reg) &params.{0}.0,", SAMPLE_PARAM_NAMES[i]);
+                let s = if is_grad(i) {
+                    String::from("grad_x=in(reg) &params.grad.0.0,grad_y=in(reg) &params.grad.0.1,")
+                } else {
+                    format!("{0} = in(reg) &params.{0}.0,", SAMPLE_PARAM_NAMES[i])
+                };
                 let ts: proc_macro2::TokenStream = s.parse().unwrap();
                 t.extend(ts);
             }
@@ -780,7 +811,7 @@ impl VisitMut for SampleImplRewriter {
 /// that have asm instruction ending with a placeholder `$PARAMS` operand. The last parameter
 /// of each function must be named `params`, its type will be rewritten. Relevant generic
 /// arguments are added to the impl generics.
-/// See `SAMPLE_PARAM_TYPES` for a list of names you cannot use as generic arguments.
+/// See `SAMPLE_PARAM_GENERICS` for a list of names you cannot use as generic arguments.
 #[proc_macro_attribute]
 #[doc(hidden)]
 pub fn gen_sample_param_permutations(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -792,6 +823,6 @@ pub fn gen_sample_param_permutations(_attr: TokenStream, item: TokenStream) -> T
     }
 
     // uncomment to output generated tokenstream to stdout
-    // println!("{}", quote! { #(#fns)* }.to_string());
+    println!("{}", quote! { #(#fns)* }.to_string());
     quote! { #(#fns)* }.into()
 }
