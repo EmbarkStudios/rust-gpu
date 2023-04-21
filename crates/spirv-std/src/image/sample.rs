@@ -15,14 +15,19 @@ impl<T> OptionTy for SomeTy<T> {
 pub struct NoneTy;
 
 /// Helper struct that denotes that the type does exist and is of type T, analog to `Option::Some(T)`
-pub struct SomeTy<T>(T);
+pub struct SomeTy<T>(pub T);
 
 /// Helper struct that allows building image operands. Start with a global function that returns this
 /// struct, and then chain additional calls.
 /// Example: `image.sample_with(coords, params::bias(3.0).sample_index(1))`
 pub struct SampleParams<B: OptionTy, L: OptionTy, S: OptionTy> {
+    /// 'Bias' image operand
     pub bias: B,
+
+    /// 'Lod' image operand
     pub lod: L,
+
+    /// 'Sample' image operand
     pub sample_index: S,
 }
 
