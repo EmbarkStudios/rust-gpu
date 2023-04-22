@@ -25,25 +25,12 @@ The `rust-gpu` project currently supports a limited number of platforms and grap
 | WGPU | 0.6 | Primary | Uses a translation layer to Metal/DX12
 |  OpenGL | ??? | Tertiary |
 
-### SPIR-V Targets
-
-- `spirv-unknown-spv1.0`
-- `spirv-unknown-spv1.1`
-- `spirv-unknown-spv1.2`
-- `spirv-unknown-spv1.3`
-- `spirv-unknown-spv1.4`
-- `spirv-unknown-spv1.5`
-
 ### Vulkan Targets
 
 - `spirv-unknown-vulkan1.0`
 - `spirv-unknown-vulkan1.1`
 - `spirv-unknown-vulkan1.1spv1.4`
 - `spirv-unknown-vulkan1.2`
-
-### WebGPU Targets
-
-- `spirv-unknown-webgpu0`
 
 ### OpenGL Targets
 
