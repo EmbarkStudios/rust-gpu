@@ -51,6 +51,23 @@ The `rust-gpu` project currently supports a limited number of platforms and grap
 - `spirv-unknown-opencl2.2`
 - `spirv-unknown-opencl2.2embedded`
 
+## Experimental Targets
+
+### Universal SPIR-V Targets
+Use this if you target something that uses neither Graphis APIs or OpenCL bindings but conforms to the SPIRV spec.
+
+- `spirv-unknown-spv1.0`
+- `spirv-unknown-spv1.1`
+- `spirv-unknown-spv1.2`
+- `spirv-unknown-spv1.3`
+- `spirv-unknown-spv1.4`
+- `spirv-unknown-spv1.5`
+
+### WebGPU Targets
+When actually targeting `webgpu` you should target vulkan, this target was meant for pre-WGSL shader compilation.
+
+- `spirv-unknown-webgpu0`
+
 ## GPU
 
 Currently we don't have specific generations of GPUs for support, as long they support Vulkan 1.1+ with the latest officially installed drivers it should be able build and run the examples. You can check your Vulkan version using the [`vulkaninfo`] command from the `vulkan-sdk`.
