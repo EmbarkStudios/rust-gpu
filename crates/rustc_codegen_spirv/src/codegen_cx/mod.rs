@@ -342,11 +342,6 @@ impl CodegenArgs {
             );
             opts.optflag("", "no-structurize", "disables CFG structurization");
 
-            opts.optflag(
-                "",
-                "no-spirt",
-                "disable using SPIR-T for legalization (see also `docs/src/codegen-args.md`)",
-            );
             opts.optmulti(
                 "",
                 "spirt-passes",
@@ -522,7 +517,6 @@ impl CodegenArgs {
             early_report_zombies: !matches.opt_present("no-early-report-zombies"),
             infer_storage_classes: !matches.opt_present("no-infer-storage-classes"),
             structurize: !matches.opt_present("no-structurize"),
-            spirt: !matches.opt_present("no-spirt"),
             spirt_passes: matches
                 .opt_strs("spirt-passes")
                 .iter()

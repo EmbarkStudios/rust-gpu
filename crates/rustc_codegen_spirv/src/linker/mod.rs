@@ -14,7 +14,6 @@ mod peephole_opts;
 mod simple_passes;
 mod specializer;
 mod spirt_passes;
-mod structurizer;
 mod zombies;
 
 use std::borrow::Cow;
@@ -41,7 +40,6 @@ pub struct Options {
     pub early_report_zombies: bool,
     pub infer_storage_classes: bool,
     pub structurize: bool,
-    pub spirt: bool,
     pub spirt_passes: Vec<String>,
 
     pub emit_multiple_modules: bool,
@@ -268,7 +266,7 @@ pub fn link(
     }
 
     // NOTE(eddyb) with SPIR-T, we can do `mem2reg` before inlining, too!
-    if opts.spirt {
+    {
         if opts.dce {
             let _timer = sess.timer("link_dce-before-inlining");
             dce::dce(&mut output);
@@ -322,13 +320,6 @@ pub fn link(
         dce::dce(&mut output);
     }
 
-    let mut output = if opts.structurize && !opts.spirt {
-        let _timer = sess.timer("link_structurize");
-        structurizer::structurize(output)
-    } else {
-        output
-    };
-
     {
         let _timer = sess.timer("link_block_ordering_pass_and_mem2reg-after-inlining");
         let mut pointer_to_pointee = FxHashMap::default();
@@ -368,7 +359,8 @@ pub fn link(
         }
     }
 
-    if opts.spirt {
+    // NOTE(eddyb) SPIR-T pipeline is entirely limited to this block.
+    {
         let mut per_pass_module_for_dumping = vec![];
         let mut after_pass = |pass, module: &spirt::Module| {
             if opts.dump_spirt_passes.is_some() {
@@ -470,6 +462,11 @@ pub fn link(
         };
     }
 
+    // FIXME(eddyb) rewrite these passes to SPIR-T ones, so we don't have to
+    // parse the output of `spirt::spv::lift` back into `rspirv` - also, for
+    // multi-module, it's much simpler with SPIR-T, just replace `module.exports`
+    // with a single-entry map, run `spirt::spv::lift` (or even `spirt::print`)
+    // on `module`, then put back the full original `module.exports` map.
     {
         let _timer = sess.timer("peephole_opts");
         let types = peephole_opts::collect_types(&output);
