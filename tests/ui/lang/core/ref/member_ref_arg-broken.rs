@@ -3,9 +3,9 @@
 // we care more that the error messages do not regress too much.
 
 // build-fail
-// normalize-stderr-not_spirt "36\[%36\]" -> "$$ID[%$$ID]"
-// normalize-stderr-spirt     "38\[%38\]" -> "$$ID[%$$ID]"
-// normalize-stderr-test "(note: module `.*)\.(not_spirt|spirt)`" -> "$1.{not_spirt,spirt}`"
+
+// normalize-stderr-test     "38\[%38\]" -> "$$ID[%$$ID]"
+
 
 use spirv_std::spirv;
 

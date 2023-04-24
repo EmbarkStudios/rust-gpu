@@ -1,5 +1,5 @@
-// HACK(eddyb) duplicate of index_user_dst.not_spirt.rs because only-/ignore- do not work with revisions.
-// only-spirt
+
+
 #![crate_name = "index_user_dst"]
 
 // build-pass

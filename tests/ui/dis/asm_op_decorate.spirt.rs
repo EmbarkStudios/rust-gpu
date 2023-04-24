@@ -1,5 +1,5 @@
-// HACK(eddyb) duplicate of asm_op_decorate.not_spirt.rs because only-/ignore- do not work with revisions.
-// only-spirt
+
+
 #![crate_name = "asm_op_decorate"]
 
 // build-pass

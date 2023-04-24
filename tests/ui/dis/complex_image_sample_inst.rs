@@ -1,4 +1,4 @@
-// normalize-stderr-not_spirt "OpLine %12 60 1" -> "OpNoLine"
+
 
 // build-pass
 // compile-flags: -Ctarget-feature=+RuntimeDescriptorArray,+ext:SPV_EXT_descriptor_indexing

@@ -1,5 +1,5 @@
-// HACK(eddyb) duplicate of generic-fn-op-name.not_spirt.rs because only-/ignore- do not work with revisions.
-// only-spirt
+
+
 #![crate_name = "generic_fn_op_name"]
 //
 // Test that generic functions' `OpName` correctly include generic arguments.

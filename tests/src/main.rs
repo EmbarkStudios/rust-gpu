@@ -125,16 +125,25 @@ impl Runner {
             .join(" ")
         }
 
-        for (env, spirt) in self
+        struct Variation {
+            name: &'static str,
+            extra_flags: &'static str,
+        }
+        const VARIATIONS: &[Variation] = &[Variation {
+            name: "spirt",
+            extra_flags: "",
+        }];
+
+        for (env, variation) in self
             .opt
             .environments()
-            .flat_map(|env| [(env, false), (env, true)])
+            .flat_map(|env| VARIATIONS.iter().map(move |variation| (env, variation)))
         {
             // HACK(eddyb) in order to allow *some* tests to have separate output
-            // with the SPIR-T support enabled (via `--spirt`), while keeping
-            // *most* of the tests unchanged, we take advantage of "stage IDs",
+            // in different testing variations (i.e. experimental features), while
+            // keeping *most* of the tests unchanged, we make use of "stage IDs",
             // which offer `// only-S` and `// ignore-S` for any stage ID `S`.
-            let stage_id = if spirt { "spirt" } else { "not_spirt" };
+            let stage_id = variation.name;
 
             let target = format!("{TARGET_PREFIX}{env}");
             let libs = build_deps(&self.deps_target_dir, &self.codegen_backend_path, &target);
@@ -150,9 +159,7 @@ impl Runner {
                         .join(DepKind::ProcMacro.target_dir_suffix(&target)),
                 ],
             );
-            if !spirt {
-                flags += " -Cllvm-args=--no-spirt";
-            }
+            flags += variation.extra_flags;
 
             let config = compiletest::Config {
                 stage_id: stage_id.to_string(),
