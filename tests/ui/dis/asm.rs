@@ -1,4 +1,4 @@
-// normalize-stderr-not_spirt "OpLine %5 18 1" -> "OpNoLine"
+
 
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=asm::asm

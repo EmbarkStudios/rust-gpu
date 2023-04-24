@@ -1,5 +1,5 @@
-// HACK(eddyb) duplicate of custom_entry_point.not_spirt.rs because only-/ignore- do not work with revisions.
-// only-spirt
+
+
 #![crate_name = "custom_entry_point"]
 
 // build-pass

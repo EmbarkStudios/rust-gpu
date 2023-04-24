@@ -1,4 +1,4 @@
-// normalize-stderr-not_spirt "OpLine %8 11 1" -> "OpNoLine"
+
 
 // build-pass
 // compile-flags: -C target-feature=+VulkanMemoryModelDeviceScopeKHR,+ext:SPV_KHR_vulkan_memory_model

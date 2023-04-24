@@ -1,5 +1,5 @@
-// HACK(eddyb) duplicate of issue-373.not_spirt.rs because only-/ignore- do not work with revisions.
-// only-spirt
+
+
 #![crate_name = "issue_373"]
 
 // Test that returning a single-scalar-field `#[repr(C)] struct` doesn't generate

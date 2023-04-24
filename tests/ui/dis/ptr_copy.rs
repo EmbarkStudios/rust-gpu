@@ -1,4 +1,4 @@
-// normalize-stderr-not_spirt "OpLine %8 32 1" -> "OpNoLine"
+
 
 // revisions: normal via_intrinsic
 //[normal] build-fail
