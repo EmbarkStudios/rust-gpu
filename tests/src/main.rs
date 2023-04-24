@@ -130,7 +130,7 @@ impl Runner {
             extra_flags: &'static str,
         }
         const VARIATIONS: &[Variation] = &[Variation {
-            name: "spirt",
+            name: "default",
             extra_flags: "",
         }];
 
