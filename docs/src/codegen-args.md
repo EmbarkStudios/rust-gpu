@@ -147,7 +147,9 @@ Disables CFG structurization. Probably results in invalid modules.
 
 ### `--spirt` <sub>_(until 0.6.0)_</sub>
 
-Note: as of `rust-gpu 0.6.0`, `SPIR-🇹` is enabled by default. Use `--no-spirt` to disable.
+~~Note: as of `rust-gpu 0.6.0`, `SPIR-🇹` is enabled by default. Use `--no-spirt` to disable.~~
+Note: as of `rust-gpu 0.8.0`, `SPIR-🇹` is always being used and cannot be disabled
+(to reduce the cost of maintenance, testing and further feature development).
 
 Enables using the experimental [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) in the linker - more specifically, this:
 - adds a `SPIR-V -> SPIR-🇹 -> SPIR-V` roundtrip  
@@ -157,7 +159,16 @@ Enables using the experimental [`SPIR-🇹` shader IR framework](https://github.
 
 For more information, also see [the `SPIR-🇹` repository](https://github.com/EmbarkStudios/spirt).
 
-### `--no-spirt` <sub>_(0.6.0)_</sup>
+### `--no-spirt` <sub>_(0.6.0 and 0.7.0)_</sup>
+
+Note: as of `rust-gpu 0.8.0`, `SPIR-🇹` is always being used and cannot be disabled
+(to reduce the cost of maintenance, testing and further feature development).
+
+Note: if you were using `--no-spirt` to work around [`naga` issue #1977](https://github.com/gfx-rs/naga/issues/1977)  
+(valid loops causing `The 'break' is used outside of a 'loop' or 'switch' context`),  
+you may be able to `cargo update -p naga` to update to a fixed `naga` version  
+(`0.11.1` for `wgpu 0.15`, `0.12.1` for `wgpu 0.16`, and any later versions).
+
 Disables the [`SPIR-🇹` shader IR framework](https://github.com/EmbarkStudios/spirt) in the linker.
 
 ### `--spirt-passes PASSES`

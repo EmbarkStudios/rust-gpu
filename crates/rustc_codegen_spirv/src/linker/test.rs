@@ -63,7 +63,6 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, PrettyString> {
             compact_ids: true,
             dce: true,
             keep_link_exports: true,
-            spirt: true,
             ..Default::default()
         },
     )

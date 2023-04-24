@@ -27,6 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -->
 
+## [Unreleased]
+
+### Removed 🔥
+- [PR#1052](https://github.com/EmbarkStudios/rust-gpu/pull/1052) removed `--no-spirt`,
+  committing to SPIR-T as a mandatory part of the Rust-GPU compiler backend,
+  to reduce the cost of maintenance, testing and further feature development  
+  * Note: if you were using `--no-spirt` to work around [`naga` issue #1977](https://github.com/gfx-rs/naga/issues/1977)  
+    (valid loops causing `The 'break' is used outside of a 'loop' or 'switch' context`),  
+    you may be able to `cargo update -p naga` to update to a fixed `naga` version  
+    (`0.11.1` for `wgpu 0.15`, `0.12.1` for `wgpu 0.16`, and any later versions)
+
 ## [0.7.0]
 
 ### Added ⭐
