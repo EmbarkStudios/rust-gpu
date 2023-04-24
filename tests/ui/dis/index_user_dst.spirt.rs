@@ -1,5 +1,3 @@
-
-
 #![crate_name = "index_user_dst"]
 
 // build-pass

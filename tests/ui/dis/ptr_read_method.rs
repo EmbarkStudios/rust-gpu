@@ -1,5 +1,3 @@
-
-
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=ptr_read_method::copy_via_raw_ptr
 

@@ -1,5 +1,3 @@
-
-
 #![crate_name = "asm_op_decorate"]
 
 // build-pass

@@ -1,5 +1,3 @@
-
-
 // revisions: normal via_intrinsic
 //[normal] build-fail
 // normalize-stderr-test "\S*/library/core/src/" -> "$$CORE_SRC/"
