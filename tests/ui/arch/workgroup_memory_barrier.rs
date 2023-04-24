@@ -1,5 +1,3 @@
-
-
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=workgroup_memory_barrier::workgroup_memory_barrier
 

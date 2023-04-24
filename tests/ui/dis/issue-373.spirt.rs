@@ -1,5 +1,3 @@
-
-
 #![crate_name = "issue_373"]
 
 // Test that returning a single-scalar-field `#[repr(C)] struct` doesn't generate

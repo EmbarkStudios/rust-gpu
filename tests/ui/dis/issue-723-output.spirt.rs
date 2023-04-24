@@ -1,5 +1,3 @@
-
-
 #![crate_name = "issue_723_output"]
 
 // Test that interface (global) `OpVariable`s mentioned by `OpEntryPoint` don't

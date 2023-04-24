@@ -6,7 +6,6 @@
 
 // normalize-stderr-test     "38\[%38\]" -> "$$ID[%$$ID]"
 
-
 use spirv_std::spirv;
 
 struct S {

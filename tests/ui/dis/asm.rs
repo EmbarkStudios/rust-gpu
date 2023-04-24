@@ -1,5 +1,3 @@
-
-
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=asm::asm
 

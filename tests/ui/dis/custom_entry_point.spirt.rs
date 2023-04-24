@@ -1,5 +1,3 @@
-
-
 #![crate_name = "custom_entry_point"]
 
 // build-pass

@@ -1,5 +1,3 @@
-
-
 #![crate_name = "unwrap_or"]
 
 // unwrap_or generates some memory-bools (as u8). Test to make sure they're fused away.

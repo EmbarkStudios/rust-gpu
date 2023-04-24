@@ -1,5 +1,3 @@
-
-
 #![crate_name = "pass_mode_cast_struct"]
 
 // Test that a small enough `struct` doesn't generate unsupported pointer casts.

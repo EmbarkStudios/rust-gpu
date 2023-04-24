@@ -1,5 +1,3 @@
-
-
 // build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=asm_add_two_ints::add_two_ints
 
