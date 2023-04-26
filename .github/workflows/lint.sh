@@ -63,3 +63,27 @@ if (
     echo
     exit 1
 fi
+
+# 2. Ensure `spirv-std` & helper crates have necessary dependency versions
+#    listed in their `Cargo.toml` files, by using `cargo -Z minimal-versions`.
+echo 'Testing dependency versions with `cargo -Z minimal-versions`:'
+
+function version_test() {
+    local crate_path="$1"
+    local crate_name="$(basename "$crate_path")"
+    local test_dir="$(mktemp -d --tmpdir "version-test-$crate_name-XXXXXXXXXX")"
+    local test_cargoflags=(
+        -Z minimal-versions
+        --manifest-path "$test_dir/Cargo.toml"
+    )
+
+    echo ::group::"$crate_name (via $test_dir)"
+    cargo init --lib --vcs none --name "version-test-$crate_name" "$test_dir"
+    cargo add "${test_cargoflags[@]}" --path "$crate_path"
+    cargo clippy "${test_cargoflags[@]}" -- -D warnings
+    rm -r "$test_dir"
+    echo ::endgroup::
+}
+# FIXME(eddyb) try to get this working for `spirv-builder`, which has a larger
+# dependency graph, with too much imprecision in upstream `Cargo.toml` files.
+version_test crates/spirv-std
