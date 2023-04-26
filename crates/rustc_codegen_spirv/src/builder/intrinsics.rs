@@ -3,7 +3,7 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::GLOp;
+use rspirv::spirv::{GLOp, MemoryModel};
 use rustc_codegen_ssa::mir::operand::OperandRef;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BuilderMethods, IntrinsicCallMethods};
@@ -345,6 +345,26 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         self.br(abort_loop_bb);
 
         self.switch_to_block(abort_loop_bb);
+        {
+            // Add a barrier to ensure that the loop is not removed by spirv-opt AggressiveDCE
+            // https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#Scope_-id-
+            let invocation = 4;
+            // https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#Memory_Semantics_-id-
+            let relaxed = 0x0;
+            let release = 0x4;
+            let uniform_memory = 0x40;
+            let memory_model = self.cx.target.memory_model();
+            let memory = invocation;
+            let semantics = match memory_model {
+                MemoryModel::Simple | MemoryModel::GLSL450 | MemoryModel::OpenCL => relaxed,
+                MemoryModel::Vulkan => release | uniform_memory,
+            };
+            let mut builder = self.emit();
+            let uint = builder.type_int(32, 0);
+            let memory = builder.constant_u32(uint, memory);
+            let semantics = builder.constant_u32(uint, semantics);
+            builder.memory_barrier(memory, semantics).unwrap()
+        }
         self.br(abort_loop_bb);
 
         self.switch_to_block(abort_continue_bb);
