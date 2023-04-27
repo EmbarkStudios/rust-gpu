@@ -363,7 +363,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             let uint = builder.type_int(32, 0);
             let memory = builder.constant_u32(uint, memory);
             let semantics = builder.constant_u32(uint, semantics);
-            builder.memory_barrier(memory, semantics).unwrap()
+            builder.memory_barrier(memory, semantics).unwrap();
         }
         self.br(abort_loop_bb);
 
