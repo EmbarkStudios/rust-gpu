@@ -11,8 +11,8 @@ use spirt::func_at::FuncAt;
 use spirt::visit::{InnerVisit, Visitor};
 use spirt::{
     spv, Attr, AttrSet, AttrSetDef, Const, ConstCtor, Context, ControlNode, ControlNodeKind,
-    DataInstDef, DataInstKind, Diag, DiagLevel, ExportKey, Exportee, Func, FuncDecl, GlobalVar,
-    InternedStr, Module, Type, Value,
+    DataInstDef, DataInstForm, DataInstKind, Diag, DiagLevel, ExportKey, Exportee, Func, FuncDecl,
+    GlobalVar, InternedStr, Module, Type, Value,
 };
 use std::marker::PhantomData;
 use std::{mem, str};
@@ -251,7 +251,7 @@ impl UseOrigin<'_> {
                     let wk = &super::SpvSpecWithExtras::get().well_known;
 
                     // FIXME(eddyb) deduplicate with `spirt_passes::diagnostics`.
-                    let custom_op = match debug_inst_def.kind {
+                    let custom_op = match cx[debug_inst_def.form].kind {
                         DataInstKind::SpvExtInst {
                             ext_set,
                             inst: ext_inst,
@@ -518,6 +518,11 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
             }
         }
     }
+    fn visit_data_inst_form_use(&mut self, data_inst_form: DataInstForm) {
+        // NOTE(eddyb) this contains no deduplication because each `DataInstDef`
+        // will have any diagnostics reported separately.
+        self.visit_data_inst_form_def(&self.cx[data_inst_form]);
+    }
 
     fn visit_global_var_use(&mut self, gv: GlobalVar) {
         if self.seen_global_vars.insert(gv) {
@@ -617,7 +622,7 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
                 if let DataInstKind::SpvExtInst {
                     ext_set,
                     inst: ext_inst,
-                } = data_inst_def.kind
+                } = self.cx[data_inst_def.form].kind
                 {
                     if ext_set == self.custom_ext_inst_set {
                         match CustomOp::decode(ext_inst) {
@@ -687,7 +692,7 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
             _ => unreachable!(),
         }
 
-        if let DataInstKind::FuncCall(func) = data_inst_def.kind {
+        if let DataInstKind::FuncCall(func) = self.cx[data_inst_def.form].kind {
             // HACK(eddyb) visit `func` early, to control its `use_stack`, with
             // the later visit from `inner_visit_with` ignored as a duplicate.
             let old_origin = replace_origin(self, IntraFuncUseOrigin::CallCallee);
