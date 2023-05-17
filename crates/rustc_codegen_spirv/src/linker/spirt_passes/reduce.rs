@@ -6,8 +6,8 @@ use spirt::visit::InnerVisit;
 use spirt::{
     spv, Const, ConstCtor, ConstDef, Context, ControlNode, ControlNodeDef, ControlNodeKind,
     ControlNodeOutputDecl, ControlRegion, ControlRegionInputDecl, DataInst, DataInstDef,
-    DataInstKind, EntityOrientedDenseMap, FuncDefBody, SelectionKind, Type, TypeCtor, TypeDef,
-    Value,
+    DataInstFormDef, DataInstKind, EntityOrientedDenseMap, FuncDefBody, SelectionKind, Type,
+    TypeCtor, TypeDef, Value,
 };
 use std::collections::hash_map::Entry;
 use std::convert::{TryFrom, TryInto};
@@ -65,7 +65,7 @@ pub(crate) fn reduce_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
                     ..
                 } => {
                     for func_at_inst in func_at_control_node.at(insts) {
-                        if let Ok(redu) = Reducible::try_from(func_at_inst.def()) {
+                        if let Ok(redu) = Reducible::try_from((cx, func_at_inst.def())) {
                             let redu_target = ReductionTarget::DataInst(func_at_inst.position);
                             reduction_queue.push((redu_target, redu));
                         }
@@ -202,10 +202,14 @@ pub(crate) fn reduce_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
 
                         // Replace the reduced `DataInstDef` itself with `OpNop`,
                         // removing the ability to use its "name" as a value.
+                        //
+                        // FIXME(eddyb) cache the interned `OpNop`.
                         *func_def_body.at_mut(inst).def() = DataInstDef {
                             attrs: Default::default(),
-                            kind: DataInstKind::SpvInst(wk.OpNop.into()),
-                            output_type: None,
+                            form: cx.intern(DataInstFormDef {
+                                kind: DataInstKind::SpvInst(wk.OpNop.into()),
+                                output_type: None,
+                            }),
                             inputs: iter::empty().collect(),
                         };
                     }
@@ -499,12 +503,14 @@ impl<V> Reducible<V> {
     }
 }
 
-impl TryFrom<&DataInstDef> for Reducible {
+// FIXME(eddyb) instead of taking a `&Context`, could `Reducible` hold a `DataInstForm`?
+impl TryFrom<(&Context, &DataInstDef)> for Reducible {
     type Error = ();
-    fn try_from(inst_def: &DataInstDef) -> Result<Self, ()> {
-        if let DataInstKind::SpvInst(spv_inst) = &inst_def.kind {
+    fn try_from((cx, inst_def): (&Context, &DataInstDef)) -> Result<Self, ()> {
+        let inst_form_def = &cx[inst_def.form];
+        if let DataInstKind::SpvInst(spv_inst) = &inst_form_def.kind {
             let op = PureOp::try_from(spv_inst)?;
-            let output_type = inst_def.output_type.unwrap();
+            let output_type = inst_form_def.output_type.unwrap();
             if let [input] = inst_def.inputs[..] {
                 return Ok(Self {
                     op,
@@ -517,15 +523,21 @@ impl TryFrom<&DataInstDef> for Reducible {
     }
 }
 
-// HACK(eddyb) `IntToBool` is the only reason this is `TryFrom` not `From`.
-impl TryFrom<Reducible> for DataInstDef {
-    type Error = ();
-    fn try_from(redu: Reducible) -> Result<Self, ()> {
-        Ok(Self {
+impl Reducible {
+    // HACK(eddyb) `IntToBool` is the only reason this can return `None`.
+    fn try_into_inst(self, cx: &Context) -> Option<DataInstDef> {
+        let Self {
+            op,
+            output_type,
+            input,
+        } = self;
+        Some(DataInstDef {
             attrs: Default::default(),
-            kind: DataInstKind::SpvInst(redu.op.try_into()?),
-            output_type: Some(redu.output_type),
-            inputs: iter::once(redu.input).collect(),
+            form: cx.intern(DataInstFormDef {
+                kind: DataInstKind::SpvInst(op.try_into().ok()?),
+                output_type: Some(output_type),
+            }),
+            inputs: iter::once(input).collect(),
         })
     }
 }
@@ -624,11 +636,11 @@ enum ReductionStep {
 
 impl Reducible<&DataInstDef> {
     // FIXME(eddyb) force the input to actually be itself some kind of pure op.
-    fn try_reduce_output_of_data_inst(&self) -> Option<ReductionStep> {
+    fn try_reduce_output_of_data_inst(&self, cx: &Context) -> Option<ReductionStep> {
         let wk = &super::SpvSpecWithExtras::get().well_known;
 
         let input_inst_def = self.input;
-        if let DataInstKind::SpvInst(input_spv_inst) = &input_inst_def.kind {
+        if let DataInstKind::SpvInst(input_spv_inst) = &cx[input_inst_def.form].kind {
             // NOTE(eddyb) do not destroy information left in e.g. comments.
             #[allow(clippy::match_same_arms)]
             match self.op {
@@ -737,8 +749,9 @@ impl Reducible {
                     .try_reduce(cx, func.reborrow(), value_replacements, parent_map, cache)?;
                 // HACK(eddyb) this is here because it can fail, see the comment
                 // on `output_from_updated_state` for what's actually going on.
-                let output_from_updated_state_inst =
-                    DataInstDef::try_from(self.with_input(input_from_updated_state)).ok()?;
+                let output_from_updated_state_inst = self
+                    .with_input(input_from_updated_state)
+                    .try_into_inst(cx)?;
 
                 // Now that the reduction succeeded for the initial state,
                 // we can proceed with augmenting the loop with the extra state.
@@ -874,7 +887,10 @@ impl Reducible {
             }
             Value::DataInstOutput(inst) => {
                 let inst_def = &*func.reborrow().at(inst).def();
-                match self.with_input(inst_def).try_reduce_output_of_data_inst()? {
+                match self
+                    .with_input(inst_def)
+                    .try_reduce_output_of_data_inst(cx)?
+                {
                     ReductionStep::Complete(v) => Some(v),
                     // FIXME(eddyb) actually use a loop instead of recursing here.
                     ReductionStep::Partial(redu) => {

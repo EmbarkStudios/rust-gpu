@@ -13,8 +13,8 @@ use spirt::transform::InnerInPlaceTransform;
 use spirt::visit::{InnerVisit, Visitor};
 use spirt::{
     spv, AttrSet, Const, Context, ControlNode, ControlNodeKind, ControlRegion, DataInstDef,
-    DataInstKind, DeclDef, EntityOrientedDenseMap, Func, FuncDefBody, GlobalVar, Module, Type,
-    Value,
+    DataInstForm, DataInstFormDef, DataInstKind, DeclDef, EntityOrientedDenseMap, Func,
+    FuncDefBody, GlobalVar, Module, Type, Value,
 };
 use std::collections::VecDeque;
 use std::hash::Hash;
@@ -130,6 +130,7 @@ pub(super) fn run_func_passes<P>(
 
             seen_types: FxIndexSet::default(),
             seen_consts: FxIndexSet::default(),
+            seen_data_inst_forms: FxIndexSet::default(),
             seen_global_vars: FxIndexSet::default(),
             seen_funcs: FxIndexSet::default(),
         };
@@ -181,7 +182,7 @@ pub(super) fn run_func_passes<P>(
                 pass_fn(cx, func_def_body);
 
                 // FIXME(eddyb) avoid doing this except where changes occurred.
-                remove_unused_values_in_func(func_def_body);
+                remove_unused_values_in_func(cx, func_def_body);
             }
         }
         after_pass(full_name, module, profiler);
@@ -196,6 +197,7 @@ struct ReachableUseCollector<'a> {
     // FIXME(eddyb) build some automation to avoid ever repeating these.
     seen_types: FxIndexSet<Type>,
     seen_consts: FxIndexSet<Const>,
+    seen_data_inst_forms: FxIndexSet<DataInstForm>,
     seen_global_vars: FxIndexSet<GlobalVar>,
     seen_funcs: FxIndexSet<Func>,
 }
@@ -211,6 +213,11 @@ impl Visitor<'_> for ReachableUseCollector<'_> {
     fn visit_const_use(&mut self, ct: Const) {
         if self.seen_consts.insert(ct) {
             self.visit_const_def(&self.cx[ct]);
+        }
+    }
+    fn visit_data_inst_form_use(&mut self, data_inst_form: DataInstForm) {
+        if self.seen_data_inst_forms.insert(data_inst_form) {
+            self.visit_data_inst_form_def(&self.cx[data_inst_form]);
         }
     }
 
@@ -247,6 +254,7 @@ const _: () = {
         fn visit_attr_set_use(&mut self, _: AttrSet) {}
         fn visit_type_use(&mut self, _: Type) {}
         fn visit_const_use(&mut self, _: Const) {}
+        fn visit_data_inst_form_use(&mut self, _: DataInstForm) {}
         fn visit_global_var_use(&mut self, _: GlobalVar) {}
         fn visit_func_use(&mut self, _: Func) {}
 
@@ -354,7 +362,7 @@ const _: () = {
 /// a function body (both `DataInst`s and `ControlRegion` inputs/outputs).
 //
 // FIXME(eddyb) should this be a dedicated pass?
-fn remove_unused_values_in_func(func_def_body: &mut FuncDefBody) {
+fn remove_unused_values_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
     // Avoid having to support unstructured control-flow.
     if func_def_body.unstructured_cfg.is_some() {
         return;
@@ -473,7 +481,9 @@ fn remove_unused_values_in_func(func_def_body: &mut FuncDefBody) {
                             for func_at_inst in func_at_control_node.at(insts) {
                                 // Ignore pure instructions (i.e. they're only used
                                 // if their output value is used, from somewhere else).
-                                if let DataInstKind::SpvInst(spv_inst) = &func_at_inst.def().kind {
+                                if let DataInstKind::SpvInst(spv_inst) =
+                                    &cx[func_at_inst.def().form].kind
+                                {
                                     // HACK(eddyb) small selection relevant for now,
                                     // but should be extended using e.g. a bitset.
                                     if [wk.OpNop, wk.OpCompositeInsert].contains(&spv_inst.opcode) {
@@ -518,7 +528,9 @@ fn remove_unused_values_in_func(func_def_body: &mut FuncDefBody) {
                 let mut all_nops = true;
                 let mut func_at_inst_iter = func_def_body.at_mut(insts).into_iter();
                 while let Some(mut func_at_inst) = func_at_inst_iter.next() {
-                    if let DataInstKind::SpvInst(spv_inst) = &func_at_inst.reborrow().def().kind {
+                    if let DataInstKind::SpvInst(spv_inst) =
+                        &cx[func_at_inst.reborrow().def().form].kind
+                    {
                         if spv_inst.opcode == wk.OpNop {
                             continue;
                         }
@@ -528,10 +540,14 @@ fn remove_unused_values_in_func(func_def_body: &mut FuncDefBody) {
                     {
                         // Replace the removed `DataInstDef` itself with `OpNop`,
                         // removing the ability to use its "name" as a value.
+                        //
+                        // FIXME(eddyb) cache the interned `OpNop`.
                         *func_at_inst.def() = DataInstDef {
                             attrs: Default::default(),
-                            kind: DataInstKind::SpvInst(wk.OpNop.into()),
-                            output_type: None,
+                            form: cx.intern(DataInstFormDef {
+                                kind: DataInstKind::SpvInst(wk.OpNop.into()),
+                                output_type: None,
+                            }),
                             inputs: iter::empty().collect(),
                         };
                         continue;

@@ -25,6 +25,7 @@ pub fn convert_custom_debuginfo_to_spv(module: &mut Module) {
 
             seen_types: FxIndexSet::default(),
             seen_consts: FxIndexSet::default(),
+            seen_data_inst_forms: FxIndexSet::default(),
             seen_global_vars: FxIndexSet::default(),
             seen_funcs: FxIndexSet::default(),
         };
@@ -82,7 +83,7 @@ impl Transformer for CustomDebuginfoToSpv<'_> {
                 if let DataInstKind::SpvExtInst {
                     ext_set,
                     inst: ext_inst,
-                } = data_inst_def.kind
+                } = self.cx[data_inst_def.form].kind
                 {
                     if ext_set == self.custom_ext_inst_set {
                         let custom_op = CustomOp::decode(ext_inst);
