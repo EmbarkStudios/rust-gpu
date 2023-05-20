@@ -1,4 +1,4 @@
-use crate::decorations::{CustomDecoration, SpanRegenerator, SrcLocDecoration, ZombieDecoration};
+use crate::custom_decorations::{CustomDecoration, SpanRegenerator, SrcLocDecoration, ZombieDecoration};
 use rustc_data_structures::fx::FxIndexSet;
 use rustc_errors::DiagnosticBuilder;
 use rustc_session::Session;

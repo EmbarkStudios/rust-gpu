@@ -1,7 +1,7 @@
 //! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
 use super::{get_name, get_names};
-use crate::decorations::{CustomDecoration, SpanRegenerator, ZombieDecoration};
+use crate::custom_decorations::{CustomDecoration, SpanRegenerator, ZombieDecoration};
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxIndexMap};
