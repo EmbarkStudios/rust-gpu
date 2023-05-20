@@ -72,7 +72,7 @@ mod attr;
 mod builder;
 mod builder_spirv;
 mod codegen_cx;
-mod decorations;
+mod custom_decorations;
 mod link;
 mod linker;
 mod spirv_type;

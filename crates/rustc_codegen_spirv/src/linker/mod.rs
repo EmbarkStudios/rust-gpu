@@ -19,7 +19,7 @@ mod zombies;
 use std::borrow::Cow;
 
 use crate::codegen_cx::SpirvMetadata;
-use crate::decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
+use crate::custom_decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
 use either::Either;
 use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};

@@ -5,7 +5,7 @@ mod type_;
 
 use crate::builder::{ExtInst, InstructionTable};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvConst, SpirvValue, SpirvValueKind};
-use crate::decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
+use crate::custom_decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use crate::target::SpirvTarget;

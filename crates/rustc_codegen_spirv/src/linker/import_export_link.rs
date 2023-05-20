@@ -1,5 +1,5 @@
 use super::Result;
-use crate::decorations::{CustomDecoration, ZombieDecoration};
+use crate::custom_decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
