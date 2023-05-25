@@ -9,7 +9,7 @@
 
 use rspirv::dr::{Function, Instruction, Module, Operand};
 use rspirv::spirv::{Decoration, LinkageType, Op, StorageClass, Word};
-use rustc_data_structures::fx::FxHashSet;
+use rustc_data_structures::fx::FxIndexSet;
 
 pub fn dce(module: &mut Module) {
     let mut rooted = collect_roots(module);
@@ -17,8 +17,8 @@ pub fn dce(module: &mut Module) {
     kill_unrooted(module, &rooted);
 }
 
-pub fn collect_roots(module: &Module) -> FxHashSet<Word> {
-    let mut rooted = FxHashSet::default();
+pub fn collect_roots(module: &Module) -> FxIndexSet<Word> {
+    let mut rooted = FxIndexSet::default();
 
     for inst in &module.entry_points {
         root(inst, &mut rooted);
@@ -53,7 +53,7 @@ fn all_inst_iter(func: &Function) -> impl DoubleEndedIterator<Item = &Instructio
         .chain(func.end.iter())
 }
 
-fn spread_roots(module: &Module, rooted: &mut FxHashSet<Word>) -> bool {
+fn spread_roots(module: &Module, rooted: &mut FxIndexSet<Word>) -> bool {
     let mut any = false;
     for inst in module.global_inst_iter() {
         if let Some(id) = inst.result_id {
@@ -82,7 +82,7 @@ fn spread_roots(module: &Module, rooted: &mut FxHashSet<Word>) -> bool {
     any
 }
 
-fn root(inst: &Instruction, rooted: &mut FxHashSet<Word>) -> bool {
+fn root(inst: &Instruction, rooted: &mut FxIndexSet<Word>) -> bool {
     let mut any = false;
     if let Some(id) = inst.result_type {
         any |= rooted.insert(id);
@@ -95,7 +95,7 @@ fn root(inst: &Instruction, rooted: &mut FxHashSet<Word>) -> bool {
     any
 }
 
-fn is_rooted(inst: &Instruction, rooted: &FxHashSet<Word>) -> bool {
+fn is_rooted(inst: &Instruction, rooted: &FxIndexSet<Word>) -> bool {
     if let Some(result_id) = inst.result_id {
         rooted.contains(&result_id)
     } else {
@@ -107,7 +107,7 @@ fn is_rooted(inst: &Instruction, rooted: &FxHashSet<Word>) -> bool {
     }
 }
 
-fn kill_unrooted(module: &mut Module, rooted: &FxHashSet<Word>) {
+fn kill_unrooted(module: &mut Module, rooted: &FxIndexSet<Word>) {
     module
         .ext_inst_imports
         .retain(|inst| is_rooted(inst, rooted));
@@ -138,7 +138,7 @@ fn kill_unrooted(module: &mut Module, rooted: &FxHashSet<Word>) {
 }
 
 pub fn dce_phi(func: &mut Function) {
-    let mut used = FxHashSet::default();
+    let mut used = FxIndexSet::default();
     loop {
         let mut changed = false;
         for inst in func.all_inst_iter() {
