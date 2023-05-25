@@ -326,12 +326,19 @@ impl<'a> SpanRegenerator<'a> {
             .map(|zombie| zombie.decode())
     }
 
-    pub fn src_loc_from_op_line(
-        &mut self,
-        file_id: Word,
-        line: u32,
-        col: u32,
-    ) -> Option<SrcLocDecoration<'a>> {
+    /// Extract the equivalent `SrcLocDecoration` from a debug instruction that
+    /// specifies some source location (currently only `OpLine` is supported).
+    pub fn src_loc_from_debug_inst(&mut self, inst: &Instruction) -> Option<SrcLocDecoration<'a>> {
+        assert_eq!(inst.class.opcode, Op::Line);
+        let (file_id, line, col) = match inst.class.opcode {
+            Op::Line => (
+                inst.operands[0].unwrap_id_ref(),
+                inst.operands[1].unwrap_literal_int32(),
+                inst.operands[2].unwrap_literal_int32(),
+            ),
+            _ => unreachable!("src_loc_from_debug_inst({inst:?})"),
+        };
+
         self.spv_debug_info
             .get_or_insert_with(|| SpvDebugInfo::collect(self.module))
             .id_to_op_string

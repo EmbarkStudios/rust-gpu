@@ -4,7 +4,7 @@ use super::{get_name, get_names};
 use crate::custom_decorations::{CustomDecoration, SpanRegenerator, ZombieDecoration};
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
-use rustc_data_structures::fx::{FxHashMap, FxIndexMap};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet, FxIndexMap};
 use rustc_errors::{DiagnosticBuilder, ErrorGuaranteed};
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
@@ -13,22 +13,22 @@ use smallvec::SmallVec;
 #[derive(Copy, Clone)]
 struct Zombie<'a> {
     id: Word,
-    kind: &'a ZombieKind,
+    kind: &'a ZombieKind<'a>,
 }
 
-enum ZombieKind {
+enum ZombieKind<'a> {
     /// Definition annotated with `ZombieDecoration`.
     Leaf,
 
     /// Transitively zombie'd by using other zombies, from an instruction.
-    Uses(Vec<ZombieUse>),
+    Uses(Vec<ZombieUse<'a>>),
 }
 
-struct ZombieUse {
+struct ZombieUse<'a> {
     used_zombie_id: Word,
 
-    /// Operands of the active `OpLine` at the time of the use, if any.
-    use_file_id_line_col: Option<(Word, u32, u32)>,
+    /// Active `OpLine` instruction at the time of the use, if any.
+    use_debug_src_loc_inst: Option<&'a Instruction>,
 
     origin: UseOrigin,
 }
@@ -39,11 +39,11 @@ enum UseOrigin {
     CallCalleeOperand { caller_func_id: Word },
 }
 
-struct Zombies {
-    id_to_zombie_kind: FxIndexMap<Word, ZombieKind>,
+struct Zombies<'a> {
+    id_to_zombie_kind: FxIndexMap<Word, ZombieKind<'a>>,
 }
 
-impl Zombies {
+impl<'a> Zombies<'a> {
     // FIXME(eddyb) rename all the other methods to say `_inst` explicitly.
     fn get_zombie_by_id(&self, id: Word) -> Option<Zombie<'_>> {
         self.id_to_zombie_kind
@@ -51,31 +51,25 @@ impl Zombies {
             .map(|kind| Zombie { id, kind })
     }
 
-    fn zombies_used_from_inst<'a>(
-        &'a self,
-        inst: &'a Instruction,
-    ) -> impl Iterator<Item = Zombie<'a>> + 'a {
+    fn zombies_used_from_inst<'b>(
+        &'b self,
+        inst: &'b Instruction,
+    ) -> impl Iterator<Item = Zombie<'b>> + 'b {
         inst.result_type
             .into_iter()
             .chain(inst.operands.iter().filter_map(|op| op.id_ref_any()))
             .filter_map(move |id| self.get_zombie_by_id(id))
     }
 
-    fn spread(&mut self, module: &Module) -> bool {
+    fn spread(&mut self, module: &'a Module) -> bool {
         let mut any = false;
         // globals are easy
         {
-            let mut file_id_line_col = None;
+            let mut debug_src_loc_inst = None;
             for inst in module.global_inst_iter() {
                 match inst.class.opcode {
-                    Op::Line => {
-                        file_id_line_col = Some((
-                            inst.operands[0].unwrap_id_ref(),
-                            inst.operands[1].unwrap_literal_int32(),
-                            inst.operands[2].unwrap_literal_int32(),
-                        ));
-                    }
-                    Op::NoLine => file_id_line_col = None,
+                    Op::Line => debug_src_loc_inst = Some(inst),
+                    Op::NoLine => debug_src_loc_inst = None,
                     _ => {}
                 }
 
@@ -87,7 +81,7 @@ impl Zombies {
                         .zombies_used_from_inst(inst)
                         .map(|zombie| ZombieUse {
                             used_zombie_id: zombie.id,
-                            use_file_id_line_col: file_id_line_col,
+                            use_debug_src_loc_inst: debug_src_loc_inst,
                             origin: UseOrigin::GlobalOperandOrResultType,
                         })
                         .collect();
@@ -113,17 +107,12 @@ impl Zombies {
             }
 
             let mut all_zombie_uses_in_func = vec![];
-            let mut file_id_line_col = None;
+            let mut debug_src_loc_inst = None;
             for inst in func.all_inst_iter() {
                 match inst.class.opcode {
-                    Op::Line => {
-                        file_id_line_col = Some((
-                            inst.operands[0].unwrap_id_ref(),
-                            inst.operands[1].unwrap_literal_int32(),
-                            inst.operands[2].unwrap_literal_int32(),
-                        ));
-                    }
-                    Op::NoLine => file_id_line_col = None,
+                    Op::Line => debug_src_loc_inst = Some(inst),
+                    // NOTE(eddyb) each block starts out with cleared debuginfo.
+                    Op::Label | Op::NoLine => debug_src_loc_inst = None,
                     _ => {}
                 }
 
@@ -136,7 +125,7 @@ impl Zombies {
                         .zombies_used_from_inst(inst)
                         .map(|zombie| ZombieUse {
                             used_zombie_id: zombie.id,
-                            use_file_id_line_col: file_id_line_col,
+                            use_debug_src_loc_inst: debug_src_loc_inst,
                             origin: UseOrigin::IntraFuncOperandOrResultType {
                                 parent_func_id: func_id,
                             },
@@ -169,7 +158,7 @@ impl Zombies {
                             };
                             ZombieUse {
                                 used_zombie_id: zombie.id,
-                                use_file_id_line_col: file_id_line_col,
+                                use_debug_src_loc_inst: debug_src_loc_inst,
                                 origin,
                             }
                         }),
@@ -188,13 +177,13 @@ impl Zombies {
 struct ZombieReporter<'a> {
     sess: &'a Session,
     module: &'a Module,
-    zombies: &'a Zombies,
+    zombies: &'a Zombies<'a>,
 
     id_to_name: Option<FxHashMap<Word, &'a str>>,
     span_regen: SpanRegenerator<'a>,
 }
 impl<'a> ZombieReporter<'a> {
-    fn new(sess: &'a Session, module: &'a Module, zombies: &'a Zombies) -> Self {
+    fn new(sess: &'a Session, module: &'a Module, zombies: &'a Zombies<'a>) -> Self {
         Self {
             sess,
             module,
@@ -227,7 +216,7 @@ impl<'a> ZombieReporter<'a> {
         err: &mut DiagnosticBuilder<'a, ErrorGuaranteed>,
         span: Span,
         zombie: Zombie<'_>,
-        zombie_use: &ZombieUse,
+        zombie_use: &ZombieUse<'_>,
     ) {
         let mut id_to_name = |id, kind| {
             self.id_to_name
@@ -252,12 +241,9 @@ impl<'a> ZombieReporter<'a> {
                 format!("called by {}", id_to_name(caller_func_id, "function"))
             }
         };
-
         let span = zombie_use
-            .use_file_id_line_col
-            .and_then(|(file_id, line, col)| {
-                self.span_regen.src_loc_from_op_line(file_id, line, col)
-            })
+            .use_debug_src_loc_inst
+            .and_then(|inst| self.span_regen.src_loc_from_debug_inst(inst))
             .and_then(|src_loc| self.span_regen.src_loc_to_rustc(src_loc))
             .unwrap_or(span);
         err.span_note(span, note);
@@ -372,11 +358,17 @@ pub fn report_and_remove_zombies(
     // FIXME(eddyb) this should be unnecessary, either something is unused, and
     // it will get DCE'd *anyway*, or it caused an error.
     {
+        // HACK(eddyb) cannot use the original map because it borrows the `Module`.
+        let all_zombies: FxHashSet<_> = zombies.id_to_zombie_kind.into_keys().collect();
         let keep = |inst: &Instruction| {
             if let Some(result_id) = inst.result_id {
-                zombies.get_zombie_by_id(result_id).is_none()
+                !all_zombies.contains(&result_id)
             } else {
-                zombies.zombies_used_from_inst(inst).next().is_none()
+                let mut inst_ids = inst
+                    .result_type
+                    .into_iter()
+                    .chain(inst.operands.iter().filter_map(|op| op.id_ref_any()));
+                !inst_ids.any(|id| all_zombies.contains(&id))
             }
         };
         module.capabilities.retain(keep);
