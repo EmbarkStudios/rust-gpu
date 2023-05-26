@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     (`0.11.1` for `wgpu 0.15`, `0.12.1` for `wgpu 0.16`, and any later versions)
 
 ### Fixed 🩹
-- [PR#1059](https://github.com/EmbarkStudios/rust-gpu/pull/1059) Fix bug where the `inline` pass would not rewrite `OpDecorate` IDs, which would subsequently loose those decorations in later DCE passes.
+- [PR#1059](https://github.com/EmbarkStudios/rust-gpu/pull/1059) fixed the `inline` pass not copying `OpDecorate`s in the callee (which led to their loss).
 
 ## [0.7.0]
 
