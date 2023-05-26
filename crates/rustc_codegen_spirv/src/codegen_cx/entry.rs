@@ -63,7 +63,10 @@ impl<'tcx> CodegenCx<'tcx> {
         name: String,
         entry: Entry,
     ) {
-        let span = self.tcx.def_span(instance.def_id());
+        let span = self
+            .tcx
+            .def_ident_span(instance.def_id())
+            .unwrap_or_else(|| self.tcx.def_span(instance.def_id()));
         let hir_params = {
             let fn_local_def_id = if let Some(id) = instance.def_id().as_local() {
                 id
