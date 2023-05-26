@@ -21,6 +21,7 @@ use std::assert_matches::assert_matches;
 use std::cell::{RefCell, RefMut};
 use std::hash::{Hash, Hasher};
 use std::iter;
+use std::ops::Range;
 use std::str;
 use std::{fs::File, io::Write, path::Path};
 
@@ -678,13 +679,28 @@ impl<'tcx> BuilderSpirv<'tcx> {
         }
     }
 
-    pub fn file_line_col_for_op_line(&self, span: Span) -> (DebugFileSpirv<'tcx>, u32, u32) {
-        let loc = self.source_map.lookup_char_pos(span.lo());
-        (
-            self.def_debug_file(loc.file),
-            loc.line as u32,
-            loc.col_display as u32,
-        )
+    pub fn file_line_col_range_for_debuginfo(
+        &self,
+        span: Span,
+    ) -> (DebugFileSpirv<'tcx>, Range<(u32, u32)>) {
+        let (lo, hi) = (span.lo(), span.hi());
+
+        let lo_loc = self.source_map.lookup_char_pos(lo);
+        let lo_line_col = (lo_loc.line as u32, lo_loc.col_display as u32);
+
+        // Only use `hi` if the span is actually a range within a file.
+        let hi_line_col = if lo <= hi {
+            let hi_loc = self.source_map.lookup_char_pos(hi);
+            if lo_loc.file.start_pos == hi_loc.file.start_pos {
+                (hi_loc.line as u32, hi_loc.col_display as u32)
+            } else {
+                lo_line_col
+            }
+        } else {
+            lo_line_col
+        };
+
+        (self.def_debug_file(lo_loc.file), lo_line_col..hi_line_col)
     }
 
     fn def_debug_file(&self, sf: Lrc<SourceFile>) -> DebugFileSpirv<'tcx> {

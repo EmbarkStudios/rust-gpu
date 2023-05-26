@@ -124,18 +124,20 @@ impl<'a> CustomDecoration<'a> for ZombieDecoration<'a> {
     }
 }
 
-/// Equivalent of `OpLine`, for the places where `rspirv` currently doesn't let
-/// us actually emit a real `OpLine`, the way generating SPIR-T directly might.
+/// Equivalent of `CustomInst::SetDebugSrcLoc` (see `crate::custom_insts`),
+/// for global definitions (i.e. outside functions), where limitations of
+/// `rspirv`/`spirt` prevent us from using anything other than decorations.
 //
-// NOTE(eddyb) by keeping `line`+`col`, we mimick `OpLine` limitations
-// (which could be lifted in the future using custom SPIR-T debuginfo).
-// NOTE(eddyb) `NonSemantic.Shader.DebugInfo`'s `DebugLine` has both start & end,
-// might be good to invest in SPIR-T being able to use NonSemantic debuginfo.
+// NOTE(eddyb) `CustomInst::SetDebugSrcLoc` is modelled after `DebugLine` from
+// `NonSemantic.Shader.DebugInfo`, might be good to invest in SPIR-T being able
+// to use `NonSemantic.Shader.DebugInfo` directly, in all situations.
 #[derive(Copy, Clone)]
 pub struct SrcLocDecoration<'a> {
     pub file_name: &'a str,
-    pub line: u32,
-    pub col: u32,
+    pub line_start: u32,
+    pub line_end: u32,
+    pub col_start: u32,
+    pub col_end: u32,
 }
 
 impl<'a> CustomDecoration<'a> for SrcLocDecoration<'a> {
@@ -144,24 +146,33 @@ impl<'a> CustomDecoration<'a> for SrcLocDecoration<'a> {
     fn encode(self, w: &mut impl fmt::Write) -> fmt::Result {
         let Self {
             file_name,
-            line,
-            col,
+            line_start,
+            line_end,
+            col_start,
+            col_end,
         } = self;
-        write!(w, "{file_name}:{line}:{col}")
+        write!(
+            w,
+            "{file_name}:{line_start}:{col_start}-{line_end}:{col_end}"
+        )
     }
     fn decode(s: &'a str) -> Self {
         #[derive(Copy, Clone, Debug)]
         struct InvalidSrcLoc<'a>(&'a str);
         let err = InvalidSrcLoc(s);
 
-        let (s, col) = s.rsplit_once(':').ok_or(err).unwrap();
-        let (s, line) = s.rsplit_once(':').ok_or(err).unwrap();
+        let (s, col_end) = s.rsplit_once(':').ok_or(err).unwrap();
+        let (s, line_end) = s.rsplit_once('-').ok_or(err).unwrap();
+        let (s, col_start) = s.rsplit_once(':').ok_or(err).unwrap();
+        let (s, line_start) = s.rsplit_once(':').ok_or(err).unwrap();
         let file_name = s;
 
         Self {
             file_name,
-            line: line.parse().unwrap(),
-            col: col.parse().unwrap(),
+            line_start: line_start.parse().unwrap(),
+            line_end: line_end.parse().unwrap(),
+            col_start: col_start.parse().unwrap(),
+            col_end: col_end.parse().unwrap(),
         }
     }
 }
@@ -174,12 +185,16 @@ impl<'tcx> SrcLocDecoration<'tcx> {
             return None;
         }
 
-        let (file, line, col) = builder.file_line_col_for_op_line(span);
+        let (file, line_col_range) = builder.file_line_col_range_for_debuginfo(span);
+        let ((line_start, col_start), (line_end, col_end)) =
+            (line_col_range.start, line_col_range.end);
 
         Some(Self {
             file_name: file.file_name,
-            line,
-            col,
+            line_start,
+            line_end,
+            col_start,
+            col_end,
         })
     }
 }
@@ -361,24 +376,37 @@ impl<'a> SpanRegenerator<'a> {
             .spv_debug_info
             .get_or_insert_with(|| SpvDebugInfo::collect(self.module));
 
-        let (file_id, line, col) = match inst.class.opcode {
-            Op::Line => (
-                inst.operands[0].unwrap_id_ref(),
-                inst.operands[1].unwrap_literal_int32(),
-                inst.operands[2].unwrap_literal_int32(),
-            ),
+        let (file_id, line_start, line_end, col_start, col_end) = match inst.class.opcode {
+            Op::Line => {
+                let file = inst.operands[0].unwrap_id_ref();
+                let line = inst.operands[1].unwrap_literal_int32();
+                let col = inst.operands[2].unwrap_literal_int32();
+                (file, line, line, col, col)
+            }
             Op::ExtInst
                 if Some(inst.operands[0].unwrap_id_ref())
                     == spv_debug_info.custom_ext_inst_set_import =>
             {
                 match CustomInst::decode(inst) {
-                    CustomInst::SetDebugSrcLoc { file, line, col } => (
-                        file.unwrap_id_ref(),
-                        spv_debug_info.id_to_op_constant_operand[&line.unwrap_id_ref()]
-                            .unwrap_literal_int32(),
-                        spv_debug_info.id_to_op_constant_operand[&col.unwrap_id_ref()]
-                            .unwrap_literal_int32(),
-                    ),
+                    CustomInst::SetDebugSrcLoc {
+                        file,
+                        line_start,
+                        line_end,
+                        col_start,
+                        col_end,
+                    } => {
+                        let const_u32 = |operand: Operand| {
+                            spv_debug_info.id_to_op_constant_operand[&operand.unwrap_id_ref()]
+                                .unwrap_literal_int32()
+                        };
+                        (
+                            file.unwrap_id_ref(),
+                            const_u32(line_start),
+                            const_u32(line_end),
+                            const_u32(col_start),
+                            const_u32(col_end),
+                        )
+                    }
                     custom_inst @ CustomInst::ClearDebugSrcLoc => {
                         unreachable!("src_loc_from_debug_inst({inst:?} => {custom_inst:?})")
                     }
@@ -392,8 +420,10 @@ impl<'a> SpanRegenerator<'a> {
             .get(&file_id)
             .map(|&file_name| SrcLocDecoration {
                 file_name,
-                line,
-                col,
+                line_start,
+                line_end,
+                col_start,
+                col_end,
             })
     }
 
@@ -455,66 +485,77 @@ impl<'a> SpanRegenerator<'a> {
     pub fn src_loc_to_rustc(&mut self, src_loc: SrcLocDecoration<'_>) -> Option<Span> {
         let SrcLocDecoration {
             file_name,
-            line,
-            col,
+            line_start,
+            line_end,
+            col_start,
+            col_end,
         } = src_loc;
 
         let file = self.regenerate_rustc_source_file(file_name)?;
 
-        let line_bpos_range = file.line_bounds(line.checked_sub(1)? as usize);
+        // FIXME(eddyb) avoid some of the duplicated work when this closure is
+        // called with `line`/`col` values that are near eachother - thankfully,
+        // this code should only be hit on the error reporting path anyway.
+        let line_col_to_bpos = |line: u32, col: u32| {
+            let line_bpos_range = file.line_bounds(line.checked_sub(1)? as usize);
 
-        // Find the special cases (`MultiByteChar`s/`NonNarrowChar`s) in the line.
-        let multibyte_chars = {
-            let find = |bpos| {
-                file.multibyte_chars
-                    .binary_search_by_key(&bpos, |mbc| mbc.pos)
-                    .unwrap_or_else(|x| x)
+            // Find the special cases (`MultiByteChar`s/`NonNarrowChar`s) in the line.
+            let multibyte_chars = {
+                let find = |bpos| {
+                    file.multibyte_chars
+                        .binary_search_by_key(&bpos, |mbc| mbc.pos)
+                        .unwrap_or_else(|x| x)
+                };
+                let Range { start, end } = line_bpos_range;
+                file.multibyte_chars[find(start)..find(end)].iter()
             };
-            let Range { start, end } = line_bpos_range;
-            file.multibyte_chars[find(start)..find(end)].iter()
-        };
-        let non_narrow_chars = {
-            let find = |bpos| {
-                file.non_narrow_chars
-                    .binary_search_by_key(&bpos, |nnc| nnc.pos())
-                    .unwrap_or_else(|x| x)
+            let non_narrow_chars = {
+                let find = |bpos| {
+                    file.non_narrow_chars
+                        .binary_search_by_key(&bpos, |nnc| nnc.pos())
+                        .unwrap_or_else(|x| x)
+                };
+                let Range { start, end } = line_bpos_range;
+                file.non_narrow_chars[find(start)..find(end)].iter()
             };
-            let Range { start, end } = line_bpos_range;
-            file.non_narrow_chars[find(start)..find(end)].iter()
-        };
-        let mut special_chars = multibyte_chars
-            .merge_join_by(non_narrow_chars, |mbc, nnc| mbc.pos.cmp(&nnc.pos()))
-            .peekable();
+            let mut special_chars = multibyte_chars
+                .merge_join_by(non_narrow_chars, |mbc, nnc| mbc.pos.cmp(&nnc.pos()))
+                .peekable();
 
-        // Increment the `BytePos` until we reach the right `col_display`, using
-        // `MultiByteChar`s/`NonNarrowChar`s to track non-trivial contributions
-        // (this may look inefficient, but lines tend to be short, and `rustc`
-        // itself is even worse than this, when it comes to `BytePos` lookups).
-        let (mut cur_bpos, mut cur_col_display) = (line_bpos_range.start, 0);
-        while cur_bpos < line_bpos_range.end && cur_col_display < col {
-            let next_special_bpos = special_chars.peek().map(|special| {
-                special
-                    .as_ref()
-                    .map_any(|mbc| mbc.pos, |nnc| nnc.pos())
-                    .reduce(|x, _| x)
-            });
+            // Increment the `BytePos` until we reach the right `col_display`, using
+            // `MultiByteChar`s/`NonNarrowChar`s to track non-trivial contributions
+            // (this may look inefficient, but lines tend to be short, and `rustc`
+            // itself is even worse than this, when it comes to `BytePos` lookups).
+            let (mut cur_bpos, mut cur_col_display) = (line_bpos_range.start, 0);
+            while cur_bpos < line_bpos_range.end && cur_col_display < col {
+                let next_special_bpos = special_chars.peek().map(|special| {
+                    special
+                        .as_ref()
+                        .map_any(|mbc| mbc.pos, |nnc| nnc.pos())
+                        .reduce(|x, _| x)
+                });
 
-            // Batch trivial chars (i.e. chars 1:1 wrt `BytePos` vs `col_display`).
-            let following_trivial_chars =
-                next_special_bpos.unwrap_or(line_bpos_range.end).0 - cur_bpos.0;
-            if following_trivial_chars > 0 {
-                let wanted_trivial_chars = following_trivial_chars.min(col - cur_col_display);
-                cur_bpos.0 += wanted_trivial_chars;
-                cur_col_display += wanted_trivial_chars;
-                continue;
+                // Batch trivial chars (i.e. chars 1:1 wrt `BytePos` vs `col_display`).
+                let following_trivial_chars =
+                    next_special_bpos.unwrap_or(line_bpos_range.end).0 - cur_bpos.0;
+                if following_trivial_chars > 0 {
+                    let wanted_trivial_chars = following_trivial_chars.min(col - cur_col_display);
+                    cur_bpos.0 += wanted_trivial_chars;
+                    cur_col_display += wanted_trivial_chars;
+                    continue;
+                }
+
+                // Add a special char's `BytePos` and `col_display` contributions.
+                let mbc_nnc = special_chars.next().unwrap();
+                cur_bpos.0 += mbc_nnc.as_ref().left().map_or(1, |mbc| mbc.bytes as u32);
+                cur_col_display += mbc_nnc.as_ref().right().map_or(1, |nnc| nnc.width() as u32);
             }
+            Some(cur_bpos)
+        };
 
-            // Add a special char's `BytePos` and `col_display` contributions.
-            let mbc_nnc = special_chars.next().unwrap();
-            cur_bpos.0 += mbc_nnc.as_ref().left().map_or(1, |mbc| mbc.bytes as u32);
-            cur_col_display += mbc_nnc.as_ref().right().map_or(1, |nnc| nnc.width() as u32);
-        }
-
-        Some(Span::with_root_ctxt(cur_bpos, cur_bpos))
+        Some(Span::with_root_ctxt(
+            line_col_to_bpos(line_start, col_start)?,
+            line_col_to_bpos(line_end, col_end)?,
+        ))
     }
 }

@@ -680,13 +680,18 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             if span.is_dummy() {
                 self.custom_inst(void_ty, CustomInst::ClearDebugSrcLoc);
             } else {
-                let (file, line, col) = self.builder.file_line_col_for_op_line(span);
+                let (file, line_col_range) = self.builder.file_line_col_range_for_debuginfo(span);
+                let ((line_start, col_start), (line_end, col_end)) =
+                    (line_col_range.start, line_col_range.end);
+
                 self.custom_inst(
                     void_ty,
                     CustomInst::SetDebugSrcLoc {
                         file: Operand::IdRef(file.file_name_op_string_id),
-                        line: Operand::IdRef(self.const_u32(line).def(self)),
-                        col: Operand::IdRef(self.const_u32(col).def(self)),
+                        line_start: Operand::IdRef(self.const_u32(line_start).def(self)),
+                        line_end: Operand::IdRef(self.const_u32(line_end).def(self)),
+                        col_start: Operand::IdRef(self.const_u32(col_start).def(self)),
+                        col_end: Operand::IdRef(self.const_u32(col_end).def(self)),
                     },
                 );
             }
@@ -696,7 +701,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             if span.is_dummy() {
                 self.emit().no_line();
             } else {
-                let (file, line, col) = self.builder.file_line_col_for_op_line(span);
+                let (file, line_col_range) = self.builder.file_line_col_range_for_debuginfo(span);
+                let (line, col) = line_col_range.start;
+
                 self.emit().line(file.file_name_op_string_id, line, col);
             }
         }

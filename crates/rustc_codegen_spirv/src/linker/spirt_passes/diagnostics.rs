@@ -213,8 +213,10 @@ impl UseOrigin<'_> {
                         col,
                     } => span_regen.src_loc_to_rustc(SrcLocDecoration {
                         file_name: &cx[file_path.0],
-                        line,
-                        col,
+                        line_start: line,
+                        line_end: line,
+                        col_start: col,
+                        col_end: col,
                     }),
                     _ => None,
                 })
@@ -251,10 +253,17 @@ impl UseOrigin<'_> {
                         }
                         _ => unreachable!(),
                     };
-                    let (file, line, col) = match custom_op.with_operands(&debug_inst_def.inputs) {
-                        CustomInst::SetDebugSrcLoc { file, line, col } => (file, line, col),
-                        CustomInst::ClearDebugSrcLoc => unreachable!(),
-                    };
+                    let (file, line_start, line_end, col_start, col_end) =
+                        match custom_op.with_operands(&debug_inst_def.inputs) {
+                            CustomInst::SetDebugSrcLoc {
+                                file,
+                                line_start,
+                                line_end,
+                                col_start,
+                                col_end,
+                            } => (file, line_start, line_end, col_start, col_end),
+                            CustomInst::ClearDebugSrcLoc => unreachable!(),
+                        };
                     let const_ctor = |v: Value| match v {
                         Value::Const(ct) => &cx[ct].ctor,
                         _ => unreachable!(),
@@ -276,8 +285,10 @@ impl UseOrigin<'_> {
 
                     span_regen.src_loc_to_rustc(SrcLocDecoration {
                         file_name: &cx[const_str(file)],
-                        line: const_u32(line),
-                        col: const_u32(col),
+                        line_start: const_u32(line_start),
+                        line_end: const_u32(line_end),
+                        col_start: const_u32(col_start),
+                        col_end: const_u32(col_end),
                     })
                 })
                 .or_else(|| from_attrs(func_attrs, span_regen)),
