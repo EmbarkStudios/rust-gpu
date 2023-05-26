@@ -1,6 +1,7 @@
 use super::Builder;
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
+use crate::custom_insts::{CustomInst, CustomOp};
 use crate::rustc_codegen_ssa::traits::BaseTypeMethods;
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
@@ -656,15 +657,48 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn set_span(&mut self, span: Span) {
-        self.current_span = Some(span);
+        let old_span = self.current_span.replace(span);
 
-        // We may not always have valid spans.
-        // FIXME(eddyb) reduce the sources of this as much as possible.
-        if span.is_dummy() {
-            self.emit().no_line();
+        // FIXME(eddyb) enable this once cross-block interactions are figured out
+        // (in particular, every block starts off with no debuginfo active).
+        if false {
+            // Avoid redundant debuginfo.
+            if old_span == Some(span) {
+                return;
+            }
+        }
+
+        // HACK(eddyb) this is only to aid testing (and to not remove the old code).
+        let use_custom_insts = true;
+
+        if use_custom_insts {
+            // FIXME(eddyb) this should be cached more efficiently.
+            let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
+
+            // We may not always have valid spans.
+            // FIXME(eddyb) reduce the sources of this as much as possible.
+            if span.is_dummy() {
+                self.custom_inst(void_ty, CustomInst::ClearDebugSrcLoc);
+            } else {
+                let (file, line, col) = self.builder.file_line_col_for_op_line(span);
+                self.custom_inst(
+                    void_ty,
+                    CustomInst::SetDebugSrcLoc {
+                        file: Operand::IdRef(file.file_name_op_string_id),
+                        line: Operand::IdRef(self.const_u32(line).def(self)),
+                        col: Operand::IdRef(self.const_u32(col).def(self)),
+                    },
+                );
+            }
         } else {
-            let (file, line, col) = self.builder.file_line_col_for_op_line(span);
-            self.emit().line(file.file_name_op_string_id, line, col);
+            // We may not always have valid spans.
+            // FIXME(eddyb) reduce the sources of this as much as possible.
+            if span.is_dummy() {
+                self.emit().no_line();
+            } else {
+                let (file, line, col) = self.builder.file_line_col_for_op_line(span);
+                self.emit().line(file.file_name_op_string_id, line, col);
+            }
         }
     }
 
@@ -2359,6 +2393,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     _ => return None,
                 };
 
+                let custom_ext_inst_set_import = self.ext_inst.borrow_mut().import_custom(self);
+
                 // HACK(eddyb) we can remove SSA instructions even when they have
                 // side-effects, *as long as* they are "local" enough and cannot
                 // be observed from outside this current invocation - because the
@@ -2372,7 +2408,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     .instructions
                     .iter()
                     .enumerate()
-                    .filter(|(_, inst)| ![Op::Line, Op::NoLine].contains(&inst.class.opcode));
+                    .filter(|(_, inst)| {
+                        let is_standard_debug = [Op::Line, Op::NoLine].contains(&inst.class.opcode);
+                        let is_custom_debug = inst.class.opcode == Op::ExtInst
+                            && inst.operands[0].unwrap_id_ref() == custom_ext_inst_set_import
+                            && [CustomOp::SetDebugSrcLoc, CustomOp::ClearDebugSrcLoc]
+                                .contains(&CustomOp::decode_from_ext_inst(inst));
+                        !(is_standard_debug || is_custom_debug)
+                    });
                 let mut relevant_insts_next_back = |expected_op| {
                     non_debug_insts
                         .next_back()

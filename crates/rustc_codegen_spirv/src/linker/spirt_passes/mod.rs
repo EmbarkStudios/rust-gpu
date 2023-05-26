@@ -1,5 +1,6 @@
 //! SPIR-T pass infrastructure and supporting utilities.
 
+pub(crate) mod debuginfo;
 pub(crate) mod diagnostics;
 mod fuse_selects;
 mod reduce;

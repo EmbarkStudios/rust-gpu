@@ -20,6 +20,7 @@ use std::borrow::Cow;
 
 use crate::codegen_cx::SpirvMetadata;
 use crate::custom_decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
+use crate::custom_insts;
 use either::Either;
 use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
@@ -56,6 +57,7 @@ pub struct Options {
     pub dump_post_merge: Option<PathBuf>,
     pub dump_post_split: Option<PathBuf>,
     pub dump_spirt_passes: Option<PathBuf>,
+    pub spirt_keep_custom_debuginfo_in_dumps: bool,
     pub specializer_debug: bool,
     pub specializer_dump_instances: Option<PathBuf>,
     pub print_all_zombie: bool,
@@ -425,6 +427,15 @@ pub fn link(
                 .join(disambiguated_crate_name_for_dumps)
                 .with_extension("spirt");
 
+            // HACK(eddyb) unless requested otherwise, clean up the pretty-printed
+            // SPIR-T output by converting our custom extended instructions, to
+            // standard SPIR-V debuginfo (which SPIR-T knows how to pretty-print).
+            if !opts.spirt_keep_custom_debuginfo_in_dumps {
+                for (_, module) in &mut per_pass_module_for_dumping {
+                    spirt_passes::debuginfo::convert_custom_debuginfo_to_spv(module);
+                }
+            }
+
             let plan = spirt::print::Plan::for_versions(
                 &cx,
                 per_pass_module_for_dumping
@@ -446,9 +457,12 @@ pub fn link(
         }
 
         // NOTE(eddyb) this is late so that `--dump-spirt-passes` is processed,
-        // even/especially when error were reported, but lifting to SPIR-V is
+        // even/especially when errors were reported, but lifting to SPIR-V is
         // skipped (since it could very well fail due to reported errors).
         report_diagnostics_result?;
+
+        // Replace our custom debuginfo instructions just before lifting to SPIR-V.
+        spirt_passes::debuginfo::convert_custom_debuginfo_to_spv(&mut module);
 
         let spv_words = {
             let _timer = sess.timer("spirt::Module::lift_to_spv_module_emitter");
@@ -460,6 +474,26 @@ pub fn link(
             rspirv::binary::parse_words(&spv_words, &mut loader).unwrap();
             loader.module()
         };
+    }
+
+    // Ensure that no references remain, to our custom "extended instruction set".
+    for inst in &output.ext_inst_imports {
+        assert_eq!(inst.class.opcode, Op::ExtInstImport);
+        let ext_inst_set = inst.operands[0].unwrap_literal_string();
+        if ext_inst_set.starts_with(custom_insts::CUSTOM_EXT_INST_SET_PREFIX) {
+            let expected = &custom_insts::CUSTOM_EXT_INST_SET[..];
+            if ext_inst_set == expected {
+                return Err(sess.err(format!(
+                    "`OpExtInstImport {ext_inst_set:?}` should not have been \
+                         left around after SPIR-T passes"
+                )));
+            } else {
+                return Err(sess.err(format!(
+                    "unsupported `OpExtInstImport {ext_inst_set:?}`
+                     (expected {expected:?} name - version mismatch?)"
+                )));
+            }
+        }
     }
 
     // FIXME(eddyb) rewrite these passes to SPIR-T ones, so we don't have to

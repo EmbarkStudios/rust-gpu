@@ -371,6 +371,11 @@ impl CodegenArgs {
             );
             opts.optflag(
                 "",
+                "spirt-keep-custom-debuginfo-in-dumps",
+                "keep custom debuginfo when dumping SPIR-T (instead of lossily prettifying it)",
+            );
+            opts.optflag(
+                "",
                 "specializer-debug",
                 "enable debug logging for the specializer",
             );
@@ -534,6 +539,8 @@ impl CodegenArgs {
             dump_post_merge: matches_opt_dump_dir_path("dump-post-merge"),
             dump_post_split: matches_opt_dump_dir_path("dump-post-split"),
             dump_spirt_passes: matches_opt_dump_dir_path("dump-spirt-passes"),
+            spirt_keep_custom_debuginfo_in_dumps: matches
+                .opt_present("spirt-keep-custom-debuginfo-in-dumps"),
             specializer_debug: matches.opt_present("specializer-debug"),
             specializer_dump_instances: matches_opt_path("specializer-dump-instances"),
             print_all_zombie: matches.opt_present("print-all-zombie"),
