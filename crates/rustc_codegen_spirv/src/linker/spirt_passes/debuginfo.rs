@@ -86,7 +86,13 @@ impl Transformer for CustomDebuginfoToSpv<'_> {
                 {
                     if ext_set == self.custom_ext_inst_set {
                         match CustomOp::decode(ext_inst).with_operands(&data_inst_def.inputs) {
-                            CustomInst::SetDebugSrcLoc { file, line, col } => {
+                            CustomInst::SetDebugSrcLoc {
+                                file,
+                                line_start: line,
+                                line_end: _,
+                                col_start: col,
+                                col_end: _,
+                            } => {
                                 let const_ctor = |v: Value| match v {
                                     Value::Const(ct) => &self.cx[ct].ctor,
                                     _ => unreachable!(),

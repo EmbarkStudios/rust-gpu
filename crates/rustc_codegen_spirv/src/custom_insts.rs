@@ -109,10 +109,11 @@ macro_rules! def_custom_insts {
     }
 }
 
+// NOTE(eddyb) several of these are similar to `NonSemantic.Shader.DebugInfo.100`
+// instructions, but simpler (to aid implementation, for now).
 def_custom_insts! {
-    // `OpLine` equivalent.
-    // FIXME(eddyb) improve on this, by adding more information.
-    0 => SetDebugSrcLoc { file, line, col },
-    // `OpNoLine` equivalent.
+    // Like `DebugLine` (from `NonSemantic.Shader.DebugInfo.100`) or `OpLine`.
+    0 => SetDebugSrcLoc { file, line_start, line_end, col_start, col_end },
+    // Like `DebugNoLine` (from `NonSemantic.Shader.DebugInfo.100`) or `OpNoLine`.
     1 => ClearDebugSrcLoc,
 }
