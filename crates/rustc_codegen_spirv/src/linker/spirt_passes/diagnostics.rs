@@ -1,13 +1,18 @@
-use crate::custom_decorations::{CustomDecoration, SpanRegenerator, SrcLocDecoration, ZombieDecoration};
+use crate::custom_decorations::{
+    CustomDecoration, SpanRegenerator, SrcLocDecoration, ZombieDecoration,
+};
+use crate::custom_insts::{self, CustomInst, CustomOp};
 use rustc_data_structures::fx::FxIndexSet;
 use rustc_errors::DiagnosticBuilder;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
 use smallvec::SmallVec;
+use spirt::func_at::FuncAt;
 use spirt::visit::{InnerVisit, Visitor};
 use spirt::{
-    spv, Attr, AttrSet, AttrSetDef, Const, Context, DataInstDef, DataInstKind, Diag, DiagLevel,
-    ExportKey, Exportee, Func, GlobalVar, Module, Type,
+    spv, Attr, AttrSet, AttrSetDef, Const, ConstCtor, Context, ControlNode, ControlNodeKind,
+    DataInstDef, DataInstKind, Diag, DiagLevel, ExportKey, Exportee, Func, GlobalVar, InternedStr,
+    Module, Type, Value,
 };
 use std::marker::PhantomData;
 use std::{mem, str};
@@ -24,6 +29,8 @@ pub(crate) fn report_diagnostics(
         linker_options,
 
         cx,
+        custom_ext_inst_set: cx.intern(&custom_insts::CUSTOM_EXT_INST_SET[..]),
+
         module,
 
         seen_attrs: FxIndexSet::default(),
@@ -37,14 +44,15 @@ pub(crate) fn report_diagnostics(
         overall_result: Ok(()),
         any_spirt_bugs: false,
     };
-    for (export_key, &exportee) in &module.exports {
+    for (export_key, exportee) in &module.exports {
         assert_eq!(reporter.use_stack.len(), 0);
 
-        if let Exportee::Func(func) = exportee {
+        if let &Exportee::Func(func) = exportee {
             let func_decl = &module.funcs[func];
             reporter.use_stack.push(UseOrigin::IntraFunc {
                 func_attrs: func_decl.attrs,
                 func_export_key: Some(export_key),
+                last_debug_src_loc_inst: None,
                 inst_attrs: AttrSet::default(),
                 origin: IntraFuncUseOrigin::Other,
             });
@@ -149,6 +157,11 @@ struct DiagnosticReporter<'a> {
     linker_options: &'a crate::linker::Options,
 
     cx: &'a Context,
+
+    /// Interned name for our custom "extended instruction set"
+    /// (see `crate::custom_insts` for more details).
+    custom_ext_inst_set: InternedStr,
+
     module: &'a Module,
 
     seen_attrs: FxIndexSet<AttrSet>,
@@ -172,6 +185,10 @@ enum UseOrigin<'a> {
         func_attrs: AttrSet,
         func_export_key: Option<&'a ExportKey>,
 
+        /// Active debug "source location" instruction at the time of the use, if any
+        /// (only `CustomInst::SetDebugSrcLoc` is supported).
+        last_debug_src_loc_inst: Option<&'a DataInstDef>,
+
         inst_attrs: AttrSet,
         origin: IntraFuncUseOrigin,
     },
@@ -184,7 +201,7 @@ enum IntraFuncUseOrigin {
 
 impl UseOrigin<'_> {
     fn to_rustc_span(&self, cx: &Context, span_regen: &mut SpanRegenerator<'_>) -> Option<Span> {
-        let mut from_attrs = |attrs: AttrSet| {
+        let from_attrs = |attrs: AttrSet, span_regen: &mut SpanRegenerator<'_>| {
             let attrs_def = &cx[attrs];
             attrs_def
                 .attrs
@@ -208,12 +225,62 @@ impl UseOrigin<'_> {
                 })
         };
         match *self {
-            Self::Global { attrs, .. } => from_attrs(attrs),
+            Self::Global { attrs, .. } => from_attrs(attrs, span_regen),
             Self::IntraFunc {
                 func_attrs,
+                last_debug_src_loc_inst,
                 inst_attrs,
                 ..
-            } => from_attrs(inst_attrs).or_else(|| from_attrs(func_attrs)),
+            } => from_attrs(inst_attrs, span_regen)
+                .or_else(|| {
+                    let debug_inst_def = last_debug_src_loc_inst?;
+
+                    let wk = &super::SpvSpecWithExtras::get().well_known;
+
+                    // FIXME(eddyb) deduplicate with `spirt_passes::diagnostics`.
+                    let custom_op = match debug_inst_def.kind {
+                        DataInstKind::SpvExtInst {
+                            ext_set,
+                            inst: ext_inst,
+                        } => {
+                            // FIXME(eddyb) inefficient (ideally the `InternedStr`
+                            // shoudl be available), but this is the error case.
+                            assert_eq!(&cx[ext_set], &custom_insts::CUSTOM_EXT_INST_SET[..]);
+
+                            CustomOp::decode(ext_inst)
+                        }
+                        _ => unreachable!(),
+                    };
+                    let (file, line, col) = match custom_op.with_operands(&debug_inst_def.inputs) {
+                        CustomInst::SetDebugSrcLoc { file, line, col } => (file, line, col),
+                        CustomInst::ClearDebugSrcLoc => unreachable!(),
+                    };
+                    let const_ctor = |v: Value| match v {
+                        Value::Const(ct) => &cx[ct].ctor,
+                        _ => unreachable!(),
+                    };
+                    let const_str = |v: Value| match const_ctor(v) {
+                        &ConstCtor::SpvStringLiteralForExtInst(s) => s,
+                        _ => unreachable!(),
+                    };
+                    let const_u32 = |v: Value| match const_ctor(v) {
+                        ConstCtor::SpvInst(spv_inst) => {
+                            assert!(spv_inst.opcode == wk.OpConstant);
+                            match spv_inst.imms[..] {
+                                [spv::Imm::Short(_, x)] => x,
+                                _ => unreachable!(),
+                            }
+                        }
+                        _ => unreachable!(),
+                    };
+
+                    span_regen.src_loc_to_rustc(SrcLocDecoration {
+                        file_name: &cx[const_str(file)],
+                        line: const_u32(line),
+                        col: const_u32(col),
+                    })
+                })
+                .or_else(|| from_attrs(func_attrs, span_regen)),
         }
     }
 
@@ -246,6 +313,7 @@ impl UseOrigin<'_> {
             Self::IntraFunc {
                 func_attrs,
                 func_export_key,
+                last_debug_src_loc_inst: _,
                 inst_attrs: _,
                 origin,
             } => {
@@ -375,7 +443,7 @@ impl DiagnosticReporter<'_> {
     }
 }
 
-impl Visitor<'_> for DiagnosticReporter<'_> {
+impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
     fn visit_attr_set_use(&mut self, attrs: AttrSet) {
         // HACK(eddyb) this avoids reporting the same diagnostics more than once.
         if self.seen_attrs.insert(attrs) {
@@ -424,6 +492,7 @@ impl Visitor<'_> for DiagnosticReporter<'_> {
             self.use_stack.push(UseOrigin::IntraFunc {
                 func_attrs: func_decl.attrs,
                 func_export_key: None,
+                last_debug_src_loc_inst: None,
                 inst_attrs: AttrSet::default(),
                 origin: IntraFuncUseOrigin::Other,
             });
@@ -432,9 +501,54 @@ impl Visitor<'_> for DiagnosticReporter<'_> {
         }
     }
 
-    fn visit_data_inst_def(&mut self, data_inst_def: &DataInstDef) {
+    fn visit_control_node_def(&mut self, func_at_control_node: FuncAt<'a, ControlNode>) {
+        func_at_control_node.inner_visit_with(self);
+
+        // HACK(eddyb) this relies on the fact that `ControlNodeKind::Block` maps
+        // to one original SPIR-V block, which may not necessarily be true, and
+        // steps should be taken elsewhere to explicitly unset debuginfo, instead
+        // of relying on the end of a SPIR-V block implicitly unsetting it all.
+        // NOTE(eddyb) allowing debuginfo to apply *outside* of a `Block` could
+        // be useful in allowing *some* structured control-flow to have debuginfo,
+        // but that would likely require more work on the SPIR-T side.
+        if let ControlNodeKind::Block { .. } = func_at_control_node.def().kind {
+            match self.use_stack.last_mut() {
+                Some(UseOrigin::IntraFunc {
+                    last_debug_src_loc_inst,
+                    ..
+                }) => *last_debug_src_loc_inst = None,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    fn visit_data_inst_def(&mut self, data_inst_def: &'a DataInstDef) {
         match self.use_stack.last_mut() {
-            Some(UseOrigin::IntraFunc { inst_attrs, .. }) => *inst_attrs = data_inst_def.attrs,
+            Some(UseOrigin::IntraFunc {
+                inst_attrs,
+                last_debug_src_loc_inst,
+                ..
+            }) => {
+                *inst_attrs = data_inst_def.attrs;
+
+                // FIXME(eddyb) deduplicate with `spirt_passes::debuginfo`.
+                if let DataInstKind::SpvExtInst {
+                    ext_set,
+                    inst: ext_inst,
+                } = data_inst_def.kind
+                {
+                    if ext_set == self.custom_ext_inst_set {
+                        match CustomOp::decode(ext_inst) {
+                            CustomOp::SetDebugSrcLoc => {
+                                *last_debug_src_loc_inst = Some(data_inst_def);
+                            }
+                            CustomOp::ClearDebugSrcLoc => {
+                                *last_debug_src_loc_inst = None;
+                            }
+                        }
+                    }
+                }
+            }
             _ => unreachable!(),
         }
 

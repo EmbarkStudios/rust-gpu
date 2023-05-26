@@ -2,6 +2,7 @@
 
 use super::{get_name, get_names};
 use crate::custom_decorations::{CustomDecoration, SpanRegenerator, ZombieDecoration};
+use crate::custom_insts::{self, CustomOp};
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet, FxIndexMap};
@@ -27,7 +28,8 @@ enum ZombieKind<'a> {
 struct ZombieUse<'a> {
     used_zombie_id: Word,
 
-    /// Active `OpLine` instruction at the time of the use, if any.
+    /// Active debug "source location" instruction at the time of the use, if any
+    /// (both `OpLine` and `CustomInst::SetDebugSrcLoc` are supported).
     use_debug_src_loc_inst: Option<&'a Instruction>,
 
     origin: UseOrigin,
@@ -40,6 +42,10 @@ enum UseOrigin {
 }
 
 struct Zombies<'a> {
+    /// ID of `OpExtInstImport` for our custom "extended instruction set",
+    /// if present (see `crate::custom_insts` for more details).
+    custom_ext_inst_set_import: Option<Word>,
+
     id_to_zombie_kind: FxIndexMap<Word, ZombieKind<'a>>,
 }
 
@@ -70,6 +76,15 @@ impl<'a> Zombies<'a> {
                 match inst.class.opcode {
                     Op::Line => debug_src_loc_inst = Some(inst),
                     Op::NoLine => debug_src_loc_inst = None,
+                    Op::ExtInst
+                        if Some(inst.operands[0].unwrap_id_ref())
+                            == self.custom_ext_inst_set_import =>
+                    {
+                        match CustomOp::decode_from_ext_inst(inst) {
+                            CustomOp::SetDebugSrcLoc => debug_src_loc_inst = Some(inst),
+                            CustomOp::ClearDebugSrcLoc => debug_src_loc_inst = None,
+                        }
+                    }
                     _ => {}
                 }
 
@@ -113,6 +128,15 @@ impl<'a> Zombies<'a> {
                     Op::Line => debug_src_loc_inst = Some(inst),
                     // NOTE(eddyb) each block starts out with cleared debuginfo.
                     Op::Label | Op::NoLine => debug_src_loc_inst = None,
+                    Op::ExtInst
+                        if Some(inst.operands[0].unwrap_id_ref())
+                            == self.custom_ext_inst_set_import =>
+                    {
+                        match CustomOp::decode_from_ext_inst(inst) {
+                            CustomOp::SetDebugSrcLoc => debug_src_loc_inst = Some(inst),
+                            CustomOp::ClearDebugSrcLoc => debug_src_loc_inst = None,
+                        }
+                    }
                     _ => {}
                 }
 
@@ -301,6 +325,16 @@ pub fn report_and_remove_zombies(
     module: &mut Module,
 ) -> super::Result<()> {
     let mut zombies = Zombies {
+        // FIXME(eddyb) avoid repeating this across different passes/helpers.
+        custom_ext_inst_set_import: module
+            .ext_inst_imports
+            .iter()
+            .find(|inst| {
+                assert_eq!(inst.class.opcode, Op::ExtInstImport);
+                inst.operands[0].unwrap_literal_string() == &custom_insts::CUSTOM_EXT_INST_SET[..]
+            })
+            .map(|inst| inst.result_id.unwrap()),
+
         id_to_zombie_kind: ZombieDecoration::decode_all(module)
             .map(|(id, _)| (id, ZombieKind::Leaf))
             .collect(),

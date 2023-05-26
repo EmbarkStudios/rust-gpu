@@ -143,6 +143,7 @@ pub fn name_variables_pass(module: &mut Module) {
     module
         .debug_names
         .retain(|inst| variables.contains(&inst.operands[0].unwrap_id_ref()));
+    // FIXME(eddyb) why does this remove `OpLine` instructions?
     module
         .types_global_values
         .retain(|inst| inst.class.opcode != Op::Line);

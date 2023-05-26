@@ -2,6 +2,7 @@
 //! the original codegen of a crate, and consumed by the `linker`.
 
 use crate::builder_spirv::BuilderSpirv;
+use crate::custom_insts::{self, CustomInst};
 use either::Either;
 use itertools::Itertools;
 use rspirv::dr::{Instruction, Module, Operand};
@@ -201,6 +202,14 @@ pub struct SpanRegenerator<'a> {
 
 #[derive(Default)]
 struct SpvDebugInfo<'a> {
+    /// ID of `OpExtInstImport` for our custom "extended instruction set",
+    /// if present (see `crate::custom_insts` for more details).
+    custom_ext_inst_set_import: Option<Word>,
+
+    // HACK(eddyb) this is only needed because `OpExtInst`s can't have immediates,
+    // and must resort to referencing `OpConstant`s instead.
+    id_to_op_constant_operand: FxIndexMap<Word, &'a Operand>,
+
     id_to_op_string: FxIndexMap<Word, &'a str>,
     files: FxIndexMap<&'a str, SpvDebugFile<'a>>,
 }
@@ -234,6 +243,24 @@ impl<'a> SpvDebugInfo<'a> {
                 return this;
             }
         };
+
+        // FIXME(eddyb) avoid repeating this across different passes/helpers.
+        this.custom_ext_inst_set_import = module
+            .ext_inst_imports
+            .iter()
+            .find(|inst| {
+                assert_eq!(inst.class.opcode, Op::ExtInstImport);
+                inst.operands[0].unwrap_literal_string() == &custom_insts::CUSTOM_EXT_INST_SET[..]
+            })
+            .map(|inst| inst.result_id.unwrap());
+
+        this.id_to_op_constant_operand.extend(
+            module
+                .types_global_values
+                .iter()
+                .filter(|inst| inst.class.opcode == Op::Constant)
+                .map(|inst| (inst.result_id.unwrap(), &inst.operands[0])),
+        );
 
         let mut insts = module.debug_string_source.iter().peekable();
         while let Some(inst) = insts.next() {
@@ -327,20 +354,40 @@ impl<'a> SpanRegenerator<'a> {
     }
 
     /// Extract the equivalent `SrcLocDecoration` from a debug instruction that
-    /// specifies some source location (currently only `OpLine` is supported).
+    /// specifies some source location (both the standard `OpLine`, and our own
+    /// custom instruction, i.e. `CustomInst::SetDebugSrcLoc`, are supported).
     pub fn src_loc_from_debug_inst(&mut self, inst: &Instruction) -> Option<SrcLocDecoration<'a>> {
-        assert_eq!(inst.class.opcode, Op::Line);
+        let spv_debug_info = self
+            .spv_debug_info
+            .get_or_insert_with(|| SpvDebugInfo::collect(self.module));
+
         let (file_id, line, col) = match inst.class.opcode {
             Op::Line => (
                 inst.operands[0].unwrap_id_ref(),
                 inst.operands[1].unwrap_literal_int32(),
                 inst.operands[2].unwrap_literal_int32(),
             ),
+            Op::ExtInst
+                if Some(inst.operands[0].unwrap_id_ref())
+                    == spv_debug_info.custom_ext_inst_set_import =>
+            {
+                match CustomInst::decode(inst) {
+                    CustomInst::SetDebugSrcLoc { file, line, col } => (
+                        file.unwrap_id_ref(),
+                        spv_debug_info.id_to_op_constant_operand[&line.unwrap_id_ref()]
+                            .unwrap_literal_int32(),
+                        spv_debug_info.id_to_op_constant_operand[&col.unwrap_id_ref()]
+                            .unwrap_literal_int32(),
+                    ),
+                    custom_inst @ CustomInst::ClearDebugSrcLoc => {
+                        unreachable!("src_loc_from_debug_inst({inst:?} => {custom_inst:?})")
+                    }
+                }
+            }
             _ => unreachable!("src_loc_from_debug_inst({inst:?})"),
         };
 
-        self.spv_debug_info
-            .get_or_insert_with(|| SpvDebugInfo::collect(self.module))
+        spv_debug_info
             .id_to_op_string
             .get(&file_id)
             .map(|&file_name| SrcLocDecoration {
