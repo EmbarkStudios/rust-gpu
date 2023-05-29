@@ -35,7 +35,7 @@ There are two main ways to setup your shader project locally.
 If you're writing a bigger application and you want to integrate SPIR-V shader
 crates to display, it's recommended to use `spirv-builder` in a build script.
 
-1. Copy the [`rust-toolchain`] file to your project. (You must use the same
+1. Copy the [`rust-toolchain.toml`] file to your project. (You must use the same
    version of Rust as `rust-gpu`. Utimately, the build will fail with a nice
    error message when you don't use the exact same version)
 2. Reference `spirv-builder` in your Cargo.toml:
@@ -142,13 +142,16 @@ cargo build
 Now you should have `<project_name>.spv` SPIR-V file in `target/debug` that you
 can give to a renderer.
 
-[`rust-toolchain`]: https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain
+[`rust-toolchain.toml`]: https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain.toml
 
 ## Writing your first shader
 
 Configure your shader crate as a `"dylib"` type crate, and add `spirv-std` to its dependencies. The following example also enables the `glam` vector library.
 
 ```toml
+[lib]
+crate-type = ["dylib"]
+
 [dependencies]
 spirv-std = { version = "0.7" }
 ```
