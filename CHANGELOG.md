@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed 🛠
-- [PR#1038](https://github.com/EmbarkStudios/rust-gpu/pull/1038) relaxed glam version requirements (>= 0.23, < 0.25).
+- [PR#1038](https://github.com/EmbarkStudios/rust-gpu/pull/1038) relaxed `glam` version requirements (from only `0.22`, to `>=0.22, <=0.24`)
 
 ### Removed 🔥
 - [PR#1052](https://github.com/EmbarkStudios/rust-gpu/pull/1052) removed `--no-spirt`,
