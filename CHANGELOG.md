@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed 🛠
+- [PR#1038](https://github.com/EmbarkStudios/rust-gpu/pull/1038) relaxed glam version requirements (>= 0.23, < 0.25).
+
 ### Removed 🔥
 - [PR#1052](https://github.com/EmbarkStudios/rust-gpu/pull/1052) removed `--no-spirt`,
   committing to SPIR-T as a mandatory part of the Rust-GPU compiler backend,
