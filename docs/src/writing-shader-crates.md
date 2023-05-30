@@ -146,7 +146,7 @@ can give to a renderer.
 
 ## Writing your first shader
 
-Configure your shader crate as a `"dylib"` type crate, and add `spirv-std` to its dependencies. The following example also enables the `glam` vector library.
+Configure your shader crate as a `"dylib"` type crate, and add `spirv-std` to its dependencies:
 
 ```toml
 [lib]
