@@ -11,8 +11,8 @@ use spirt::func_at::FuncAt;
 use spirt::visit::{InnerVisit, Visitor};
 use spirt::{
     spv, Attr, AttrSet, AttrSetDef, Const, ConstCtor, Context, ControlNode, ControlNodeKind,
-    DataInstDef, DataInstKind, Diag, DiagLevel, ExportKey, Exportee, Func, GlobalVar, InternedStr,
-    Module, Type, Value,
+    DataInstDef, DataInstKind, Diag, DiagLevel, ExportKey, Exportee, Func, FuncDecl, GlobalVar,
+    InternedStr, Module, Type, Value,
 };
 use std::marker::PhantomData;
 use std::{mem, str};
@@ -51,7 +51,7 @@ pub(crate) fn report_diagnostics(
             let func_decl = &module.funcs[func];
             reporter.use_stack.push(UseOrigin::IntraFunc {
                 func_attrs: func_decl.attrs,
-                func_export_key: Some(export_key),
+                special_func: Some(SpecialFunc::Exported(export_key)),
                 last_debug_src_loc_inst: None,
                 inst_attrs: AttrSet::default(),
                 origin: IntraFuncUseOrigin::Other,
@@ -185,7 +185,7 @@ enum UseOrigin<'a> {
     },
     IntraFunc {
         func_attrs: AttrSet,
-        func_export_key: Option<&'a ExportKey>,
+        special_func: Option<SpecialFunc<'a>>,
 
         /// Active debug "source location" instruction at the time of the use, if any
         /// (only `CustomInst::SetDebugSrcLoc` is supported).
@@ -194,6 +194,16 @@ enum UseOrigin<'a> {
         inst_attrs: AttrSet,
         origin: IntraFuncUseOrigin,
     },
+}
+
+#[derive(Copy, Clone)]
+enum SpecialFunc<'a> {
+    /// This function is exported from the `Module` (likely an entry-point).
+    Exported(&'a ExportKey),
+
+    /// This function doesn't have its own `FuncDecl`, but rather is an inlined
+    /// callee (i.e. instructions sandwiched by `{Push,Pop}InlinedCallFrame`).
+    Inlined { callee_name: InternedStr },
 }
 
 enum IntraFuncUseOrigin {
@@ -268,7 +278,7 @@ impl UseOrigin<'_> {
                                 col_start,
                                 col_end,
                             } => (file, line_start, line_end, col_start, col_end),
-                            CustomInst::ClearDebugSrcLoc => unreachable!(),
+                            _ => unreachable!(),
                         };
                     let const_ctor = |v: Value| match v {
                         Value::Const(ct) => &cx[ct].ctor,
@@ -329,26 +339,35 @@ impl UseOrigin<'_> {
             }
             Self::IntraFunc {
                 func_attrs,
-                func_export_key,
+                special_func,
                 last_debug_src_loc_inst: _,
                 inst_attrs: _,
                 origin,
             } => {
-                let func_desc = func_export_key
-                    .map(|export_key| match export_key {
-                        &ExportKey::LinkName(name) => format!("function export `{}`", &cx[name]),
-                        ExportKey::SpvEntryPoint { imms, .. } => match imms[..] {
-                            [em @ spv::Imm::Short(em_kind, _), ref name_imms @ ..] => {
-                                assert_eq!(em_kind, wk.ExecutionModel);
-                                let em = spv::print::operand_from_imms([em]).concat_to_plain_text();
-                                decode_spv_lit_str_with(name_imms, |name| {
-                                    format!(
-                                        "{} entry-point `{name}`",
-                                        em.strip_prefix("ExecutionModel.").unwrap()
-                                    )
-                                })
+                let func_desc = special_func
+                    .map(|special_func| match special_func {
+                        SpecialFunc::Exported(&ExportKey::LinkName(name)) => {
+                            format!("function export `{}`", &cx[name])
+                        }
+                        SpecialFunc::Exported(ExportKey::SpvEntryPoint { imms, .. }) => {
+                            match imms[..] {
+                                [em @ spv::Imm::Short(em_kind, _), ref name_imms @ ..] => {
+                                    assert_eq!(em_kind, wk.ExecutionModel);
+                                    let em =
+                                        spv::print::operand_from_imms([em]).concat_to_plain_text();
+                                    decode_spv_lit_str_with(name_imms, |name| {
+                                        format!(
+                                            "{} entry-point `{name}`",
+                                            em.strip_prefix("ExecutionModel.").unwrap()
+                                        )
+                                    })
+                                }
+                                _ => unreachable!(),
                             }
-                            _ => unreachable!(),
+                        }
+                        SpecialFunc::Inlined { callee_name } => match &cx[callee_name] {
+                            "" => "unnamed function".into(),
+                            callee_name => format!("`{callee_name}`"),
                         },
                     })
                     .unwrap_or_else(|| name_from_attrs(*func_attrs, "function"));
@@ -523,7 +542,7 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
             let func_decl = &self.module.funcs[func];
             self.use_stack.push(UseOrigin::IntraFunc {
                 func_attrs: func_decl.attrs,
-                func_export_key: None,
+                special_func: None,
                 last_debug_src_loc_inst: None,
                 inst_attrs: AttrSet::default(),
                 origin: IntraFuncUseOrigin::Other,
@@ -531,6 +550,31 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
             self.visit_func_decl(func_decl);
             self.use_stack.pop();
         }
+    }
+
+    fn visit_func_decl(&mut self, func_decl: &'a FuncDecl) {
+        // Intra-function the `use_stack` can gather extra entries, and there's
+        // a risk they'd pile up without being popped, so here's a sanity check.
+        let original_use_stack_len = self.use_stack.len();
+
+        func_decl.inner_visit_with(self);
+
+        assert!(self.use_stack.len() >= original_use_stack_len);
+        let extra = self.use_stack.len() - original_use_stack_len;
+        if extra > 0 {
+            // HACK(eddyb) synthesize a diagnostic to report right away.
+            self.report_from_attrs(
+                AttrSet::default().append_diag(
+                    self.cx,
+                    Diag::bug([format!(
+                        "{extra} extraneous `use_stack` frame(s) found \
+                         (missing `PopInlinedCallFrame`?)"
+                    )
+                    .into()]),
+                ),
+            );
+        }
+        self.use_stack.truncate(original_use_stack_len);
     }
 
     fn visit_control_node_def(&mut self, func_at_control_node: FuncAt<'a, ControlNode>) {
@@ -555,6 +599,11 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
     }
 
     fn visit_data_inst_def(&mut self, data_inst_def: &'a DataInstDef) {
+        let replace_origin = |this: &mut Self, new_origin| match this.use_stack.last_mut() {
+            Some(UseOrigin::IntraFunc { origin, .. }) => mem::replace(origin, new_origin),
+            _ => unreachable!(),
+        };
+
         match self.use_stack.last_mut() {
             Some(UseOrigin::IntraFunc {
                 inst_attrs,
@@ -577,6 +626,58 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
                             CustomOp::ClearDebugSrcLoc => {
                                 *last_debug_src_loc_inst = None;
                             }
+                            op => match op.with_operands(&data_inst_def.inputs) {
+                                CustomInst::SetDebugSrcLoc { .. }
+                                | CustomInst::ClearDebugSrcLoc => unreachable!(),
+                                CustomInst::PushInlinedCallFrame { callee_name } => {
+                                    // Treat this like a call, in the caller.
+                                    replace_origin(self, IntraFuncUseOrigin::CallCallee);
+
+                                    let const_ctor = |v: Value| match v {
+                                        Value::Const(ct) => &self.cx[ct].ctor,
+                                        _ => unreachable!(),
+                                    };
+                                    let const_str = |v: Value| match const_ctor(v) {
+                                        &ConstCtor::SpvStringLiteralForExtInst(s) => s,
+                                        _ => unreachable!(),
+                                    };
+                                    self.use_stack.push(UseOrigin::IntraFunc {
+                                        func_attrs: AttrSet::default(),
+                                        special_func: Some(SpecialFunc::Inlined {
+                                            callee_name: const_str(callee_name),
+                                        }),
+                                        last_debug_src_loc_inst: None,
+                                        inst_attrs: AttrSet::default(),
+                                        origin: IntraFuncUseOrigin::Other,
+                                    });
+                                }
+                                CustomInst::PopInlinedCallFrame => {
+                                    match self.use_stack.last() {
+                                        Some(UseOrigin::IntraFunc { special_func, .. }) => {
+                                            if let Some(SpecialFunc::Inlined { .. }) = special_func
+                                            {
+                                                self.use_stack.pop().unwrap();
+                                                // Undo what `PushInlinedCallFrame` did to the
+                                                // original `UseOrigin::IntraFunc`.
+                                                replace_origin(self, IntraFuncUseOrigin::Other);
+                                            } else {
+                                                // HACK(eddyb) synthesize a diagnostic to report right away.
+                                                self.report_from_attrs(
+                                                    AttrSet::default().append_diag(
+                                                        self.cx,
+                                                        Diag::bug([
+                                                            "`PopInlinedCallFrame` without an \
+                                                             inlined call frame in `use_stack`"
+                                                                .into(),
+                                                        ]),
+                                                    ),
+                                                );
+                                            }
+                                        }
+                                        _ => unreachable!(),
+                                    }
+                                }
+                            },
                         }
                     }
                 }
@@ -585,11 +686,6 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
         }
 
         if let DataInstKind::FuncCall(func) = data_inst_def.kind {
-            let replace_origin = |this: &mut Self, new_origin| match this.use_stack.last_mut() {
-                Some(UseOrigin::IntraFunc { origin, .. }) => mem::replace(origin, new_origin),
-                _ => unreachable!(),
-            };
-
             // HACK(eddyb) visit `func` early, to control its `use_stack`, with
             // the later visit from `inner_visit_with` ignored as a duplicate.
             let old_origin = replace_origin(self, IntraFuncUseOrigin::CallCallee);
