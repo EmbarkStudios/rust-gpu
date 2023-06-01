@@ -407,7 +407,7 @@ impl<'a> SpanRegenerator<'a> {
                             const_u32(col_end),
                         )
                     }
-                    custom_inst @ CustomInst::ClearDebugSrcLoc => {
+                    custom_inst => {
                         unreachable!("src_loc_from_debug_inst({inst:?} => {custom_inst:?})")
                     }
                 }

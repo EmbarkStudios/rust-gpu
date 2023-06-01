@@ -121,6 +121,11 @@ impl Transformer for CustomDebuginfoToSpv<'_> {
                                 insts_to_remove.push(inst);
                                 continue;
                             }
+                            CustomInst::PushInlinedCallFrame { .. }
+                            | CustomInst::PopInlinedCallFrame => {
+                                insts_to_remove.push(inst);
+                                continue;
+                            }
                         }
                     }
                 }

@@ -116,4 +116,13 @@ def_custom_insts! {
     0 => SetDebugSrcLoc { file, line_start, line_end, col_start, col_end },
     // Like `DebugNoLine` (from `NonSemantic.Shader.DebugInfo.100`) or `OpNoLine`.
     1 => ClearDebugSrcLoc,
+
+    // Similar to `DebugInlinedAt` (from `NonSemantic.Shader.DebugInfo.100`),
+    // but simpler: there are no "scope objects", the location of the inlined
+    // callsite is given by other debuginfo (`SetDebugSrcLoc`/`OpLine`) active
+    // before this instruction, and only the name of the callee is recorded.
+    2 => PushInlinedCallFrame { callee_name },
+    // Leave the most recent inlined call frame entered by a `PushInlinedCallFrame`
+    // (i.e. the inlined call frames form a virtual call stack in debuginfo).
+    3 => PopInlinedCallFrame,
 }

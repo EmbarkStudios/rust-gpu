@@ -83,6 +83,7 @@ impl<'a> Zombies<'a> {
                         match CustomOp::decode_from_ext_inst(inst) {
                             CustomOp::SetDebugSrcLoc => debug_src_loc_inst = Some(inst),
                             CustomOp::ClearDebugSrcLoc => debug_src_loc_inst = None,
+                            _ => {}
                         }
                     }
                     _ => {}
@@ -135,6 +136,7 @@ impl<'a> Zombies<'a> {
                         match CustomOp::decode_from_ext_inst(inst) {
                             CustomOp::SetDebugSrcLoc => debug_src_loc_inst = Some(inst),
                             CustomOp::ClearDebugSrcLoc => debug_src_loc_inst = None,
+                            _ => {}
                         }
                     }
                     _ => {}
