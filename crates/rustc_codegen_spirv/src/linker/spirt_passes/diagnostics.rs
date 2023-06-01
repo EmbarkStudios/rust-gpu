@@ -199,41 +199,45 @@ enum IntraFuncUseOrigin {
     Other,
 }
 
+impl SpanRegenerator<'_> {
+    fn spirt_attrs_to_rustc_span(&mut self, cx: &Context, attrs: AttrSet) -> Option<Span> {
+        let attrs_def = &cx[attrs];
+        attrs_def
+            .attrs
+            .iter()
+            .find_map(|attr| match attr {
+                &Attr::SpvDebugLine {
+                    file_path,
+                    line,
+                    col,
+                } => self.src_loc_to_rustc(SrcLocDecoration {
+                    file_name: &cx[file_path.0],
+                    line_start: line,
+                    line_end: line,
+                    col_start: col,
+                    col_end: col,
+                }),
+                _ => None,
+            })
+            .or_else(|| {
+                self.src_loc_to_rustc(
+                    try_decode_custom_decoration::<SrcLocDecoration<'_>>(attrs_def)?.decode(),
+                )
+            })
+    }
+}
+
 impl UseOrigin<'_> {
     fn to_rustc_span(&self, cx: &Context, span_regen: &mut SpanRegenerator<'_>) -> Option<Span> {
-        let from_attrs = |attrs: AttrSet, span_regen: &mut SpanRegenerator<'_>| {
-            let attrs_def = &cx[attrs];
-            attrs_def
-                .attrs
-                .iter()
-                .find_map(|attr| match attr {
-                    &Attr::SpvDebugLine {
-                        file_path,
-                        line,
-                        col,
-                    } => span_regen.src_loc_to_rustc(SrcLocDecoration {
-                        file_name: &cx[file_path.0],
-                        line_start: line,
-                        line_end: line,
-                        col_start: col,
-                        col_end: col,
-                    }),
-                    _ => None,
-                })
-                .or_else(|| {
-                    span_regen.src_loc_to_rustc(
-                        try_decode_custom_decoration::<SrcLocDecoration<'_>>(attrs_def)?.decode(),
-                    )
-                })
-        };
         match *self {
-            Self::Global { attrs, .. } => from_attrs(attrs, span_regen),
+            Self::Global { attrs, .. } => span_regen.spirt_attrs_to_rustc_span(cx, attrs),
             Self::IntraFunc {
                 func_attrs,
                 last_debug_src_loc_inst,
                 inst_attrs,
                 ..
-            } => from_attrs(inst_attrs, span_regen)
+            } => span_regen
+                .spirt_attrs_to_rustc_span(cx, inst_attrs)
                 .or_else(|| {
                     let debug_inst_def = last_debug_src_loc_inst?;
 
@@ -291,7 +295,7 @@ impl UseOrigin<'_> {
                         col_end: const_u32(col_end),
                     })
                 })
-                .or_else(|| from_attrs(func_attrs, span_regen)),
+                .or_else(|| span_regen.spirt_attrs_to_rustc_span(cx, func_attrs)),
         }
     }
 
@@ -392,6 +396,13 @@ impl DiagnosticReporter<'_> {
                 let ZombieDecoration { reason } = zombie.decode();
                 let def_span = current_def
                     .and_then(|def| def.to_rustc_span(self.cx, &mut self.span_regen))
+                    .or_else(|| {
+                        // If there's no clear source for the span, try to get
+                        // it from the same attrs as the zombie, which could
+                        // be missing from `use_stack` in some edge cases
+                        // (such as zombied function parameters).
+                        self.span_regen.spirt_attrs_to_rustc_span(self.cx, attrs)
+                    })
                     .unwrap_or(DUMMY_SP);
                 let mut err = self.sess.struct_span_err(def_span, reason);
                 for use_origin in use_stack_for_def.iter().rev() {
