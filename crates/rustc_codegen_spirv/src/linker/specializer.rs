@@ -2379,7 +2379,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
         let expanded_debug_names = expand_debug_or_annotation(debug_names);
 
         // Expand `Op(Member)Decorate* %target ...`, when `target` is "generic".
-        let expanded_annotations = expand_debug_or_annotation(annotations);
+        let mut expanded_annotations = expand_debug_or_annotation(annotations);
 
         // Expand "generic" globals (types, constants and module-scoped variables).
         let mut expanded_types_global_values =
@@ -2440,6 +2440,8 @@ impl<'a, S: Specialization> Expander<'a, S> {
                     let mut rewrite_rules = FxHashMap::default();
 
                     for func in newly_expanded_functions {
+                        rewrite_rules.clear();
+
                         rewrite_rules.extend(func.parameters.iter_mut().map(|param| {
                             let old_id = param.result_id.unwrap();
                             let new_id = self.builder.id();
@@ -2460,6 +2462,18 @@ impl<'a, S: Specialization> Expander<'a, S> {
                         );
 
                         super::apply_rewrite_rules(&rewrite_rules, &mut func.blocks);
+
+                        // HACK(eddyb) this duplicates similar logic from `inline`.
+                        for annotation_idx in 0..expanded_annotations.len() {
+                            let inst = &expanded_annotations[annotation_idx];
+                            if let [Operand::IdRef(target), ..] = inst.operands[..] {
+                                if let Some(&rewritten_target) = rewrite_rules.get(&target) {
+                                    let mut expanded_inst = inst.clone();
+                                    expanded_inst.operands[0] = Operand::IdRef(rewritten_target);
+                                    expanded_annotations.push(expanded_inst);
+                                }
+                            }
+                        }
                     }
                 }
 
