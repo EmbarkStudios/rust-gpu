@@ -56,10 +56,12 @@ pub(crate) fn report_diagnostics(
                 inst_attrs: AttrSet::default(),
                 origin: IntraFuncUseOrigin::Other,
             });
-            export_key.inner_visit_with(&mut reporter);
             if reporter.seen_funcs.insert(func) {
                 reporter.visit_func_decl(func_decl);
             }
+            // NOTE(eddyb) this is visited last, so that uses of the interface
+            // variables don't lack relevant context from the function body.
+            export_key.inner_visit_with(&mut reporter);
             reporter.use_stack.pop();
         }
         export_key.inner_visit_with(&mut reporter);
@@ -486,12 +488,20 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
     fn visit_const_use(&mut self, ct: Const) {
         if self.seen_consts.insert(ct) {
             let ct_def = &self.cx[ct];
-            self.use_stack.push(UseOrigin::Global {
-                kind: &"constant",
-                attrs: ct_def.attrs,
-            });
-            self.visit_const_def(ct_def);
-            self.use_stack.pop();
+            match ct_def.ctor {
+                // HACK(eddyb) don't push an `UseOrigin` for `GlobalVar` pointers.
+                ConstCtor::PtrToGlobalVar(_) if ct_def.attrs == AttrSet::default() => {
+                    self.visit_const_def(ct_def);
+                }
+                _ => {
+                    self.use_stack.push(UseOrigin::Global {
+                        kind: &"constant",
+                        attrs: ct_def.attrs,
+                    });
+                    self.visit_const_def(ct_def);
+                    self.use_stack.pop();
+                }
+            }
         }
     }
 
