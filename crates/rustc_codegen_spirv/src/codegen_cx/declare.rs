@@ -7,6 +7,7 @@ use crate::spirv_type::SpirvType;
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, PreDefineMethods, StaticMethods};
+use rustc_hir::def::DefKind;
 use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
@@ -124,8 +125,16 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let declared = fn_id.with_type(function_type);
 
-        let attrs =
-            AggregatedSpirvAttributes::parse(self, self.tcx.get_attrs_unchecked(instance.def_id()));
+        let attrs = AggregatedSpirvAttributes::parse(
+            self,
+            match self.tcx.def_kind(instance.def_id()) {
+                // This was made to ICE cross-crate at some point, but then got
+                // reverted in https://github.com/rust-lang/rust/pull/111381.
+                // FIXME(eddyb) remove this workaround once we rustup past that.
+                DefKind::Closure => &[],
+                _ => self.tcx.get_attrs_unchecked(instance.def_id()),
+            },
+        );
         if let Some(entry) = attrs.entry.map(|attr| attr.value) {
             let entry_name = entry
                 .name
@@ -178,7 +187,12 @@ impl<'tcx> CodegenCx<'tcx> {
 
         // HACK(eddyb) there is no good way to identify this definition
         // (e.g. no `#[lang = "..."]` attribute), but this works well enough.
-        if demangled_symbol_name == "<core::fmt::Arguments>::new_v1" {
+        if [
+            "<core::fmt::Arguments>::new_v1",
+            "<core::fmt::Arguments>::new_const",
+        ]
+        .contains(&&demangled_symbol_name[..])
+        {
             self.fmt_args_new_fn_ids.borrow_mut().insert(fn_id);
         }
 

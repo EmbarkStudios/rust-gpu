@@ -683,6 +683,11 @@ impl<'tcx> BuilderSpirv<'tcx> {
         &self,
         span: Span,
     ) -> (DebugFileSpirv<'tcx>, Range<(u32, u32)>) {
+        // HACK(eddyb) this is similar to what `#[track_caller]` does, and it
+        // allows us to point to the use site of a macro, instead of inside the
+        // macro (but ideally we would record the entire macro backtrace).
+        let span = span.ctxt().outer_expn().expansion_cause().unwrap_or(span);
+
         let (lo, hi) = (span.lo(), span.hi());
 
         let lo_loc = self.source_map.lookup_char_pos(lo);

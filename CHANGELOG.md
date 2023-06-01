@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (using ranges instead of just the starting position, and tracking inlined calls)
 
 ### Changed 🛠
+- [PR#1067](https://github.com/EmbarkStudios/rust-gpu/pull/1067) updated toolchain to `nightly-2023-04-15`
 - [PR#1038](https://github.com/EmbarkStudios/rust-gpu/pull/1038) relaxed `glam` version requirements (from only `0.22`, to `>=0.22, <=0.24`)
 
 ### Removed 🔥
@@ -66,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (see also [the `--no-early-report-zombies` codegen args docs](docs/src/codegen-args.md#--no-early-report-zombies))
 - [PR#1035](https://github.com/EmbarkStudios/rust-gpu/pull/1035) reduced the number of CGUs ("codegen units") used by `spirv-builder` to just `1`
 - [PR#1011](https://github.com/EmbarkStudios/rust-gpu/pull/1011) made `NonWritable` all read-only storage buffers (i.e. those typed `&T`, where `T` doesn't have interior mutability)
-- [PR#1029](https://github.com/EmbarkStudios/rust-gpu/pull/1029) fixed SampledImage::sample() fns being unnecessarily marked as unsafe
+- [PR#1029](https://github.com/EmbarkStudios/rust-gpu/pull/1029) fixed `SampledImage::sample` `fn`s being unnecessarily marked as `unsafe`
+- [PR#1005](https://github.com/EmbarkStudios/rust-gpu/pull/1005) updated toolchain to `nightly-2023-03-04`
 
 ### Fixed 🩹
 - [PR#1041](https://github.com/EmbarkStudios/rust-gpu/pull/1041) fixed `Image::gather()` not always returning a `Vec4`.

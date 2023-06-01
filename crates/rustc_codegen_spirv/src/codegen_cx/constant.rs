@@ -127,6 +127,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     fn const_undef(&self, ty: Self::Type) -> Self::Value {
         self.undef(ty)
     }
+    fn const_poison(&self, ty: Self::Type) -> Self::Value {
+        // No distinction between undef and poison.
+        self.const_undef(ty)
+    }
     fn const_int(&self, t: Self::Type, i: i64) -> Self::Value {
         self.constant_int(t, i as u64)
     }

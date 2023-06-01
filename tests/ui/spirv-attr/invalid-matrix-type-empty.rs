@@ -4,9 +4,7 @@
 use spirv_std::spirv;
 
 #[spirv(matrix)]
-pub struct _EmptyStruct {}
+pub struct EmptyStruct {}
 
 #[spirv(fragment)]
-pub fn _entry() {
-    let _empty_struct = _EmptyStruct {};
-}
+pub fn entry(#[spirv(push_constant)] matrix: &EmptyStruct) {}

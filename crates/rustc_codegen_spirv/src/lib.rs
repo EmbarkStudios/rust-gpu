@@ -19,7 +19,7 @@
 #![feature(assert_matches)]
 #![feature(result_flattening)]
 #![feature(lint_reasons)]
-#![feature(once_cell)]
+#![feature(lazy_cell)]
 // crate-specific exceptions:
 #![allow(
     unsafe_code,                // rustc_codegen_ssa requires unsafe functions in traits to be impl'd
@@ -104,7 +104,7 @@ use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::mir::pretty::write_mir_pretty;
 use rustc_middle::ty::print::with_no_trimmed_paths;
-use rustc_middle::ty::{self, query, DefIdTree, Instance, InstanceDef, TyCtxt};
+use rustc_middle::ty::{self, query, Instance, InstanceDef, TyCtxt};
 use rustc_session::config::{self, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};

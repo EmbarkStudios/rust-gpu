@@ -657,6 +657,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn set_span(&mut self, span: Span) {
+        // HACK(eddyb) this is what `#[track_caller]` does, and we need it to be
+        // able to point at e.g. a use of `panic!`, instead of its implementation,
+        // but it should be more fine-grained and/or include macro backtraces in
+        // debuginfo (so the decision to use them can be deferred).
+        let span = span.ctxt().outer_expn().expansion_cause().unwrap_or(span);
+
         let old_span = self.current_span.replace(span);
 
         // FIXME(eddyb) enable this once cross-block interactions are figured out
@@ -2392,10 +2398,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     &[SpirvValue {
                         kind: SpirvValueKind::Def(format_args_id),
                         ..
-                    }, SpirvValue {
-                        kind: SpirvValueKind::IllegalConst(_panic_location_id),
-                        ..
-                    }] => format_args_id,
+                    }, _] => format_args_id,
 
                     _ => return None,
                 };
@@ -2445,21 +2448,27 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                         (operands.next().unwrap(), operands.next().unwrap())
                     })
                     .filter(|&(store_dst_id, _)| store_dst_id == load_src_id)?;
-                let (call_fmt_args_new_idx, _) = relevant_insts_next_back(Op::FunctionCall)
+                let call_fmt_args_new_idx = relevant_insts_next_back(Op::FunctionCall)
                     .filter(|&(_, result_id, _)| result_id == Some(store_val_id))
                     .map(|(i, _, mut operands)| (i, operands.next().unwrap(), operands))
                     .filter(|&(_, callee, _)| self.fmt_args_new_fn_ids.borrow().contains(&callee))
-                    .map(|(i, _, mut call_args)| {
-                        assert_eq!(call_args.len(), 4);
-                        let mut arg = || call_args.next().unwrap();
-                        (i, [arg(), arg(), arg(), arg()])
-                    })
-                    .filter(|&(_, [_, _, _, fmt_args_len_id])| {
-                        // Only ever remove `fmt::Arguments` with no runtime values.
-                        matches!(
-                            self.builder.lookup_const_by_id(fmt_args_len_id),
-                            Some(SpirvConst::U32(0))
-                        )
+                    .and_then(|(i, _, mut call_args)| {
+                        if call_args.len() == 4 {
+                            // `<core::fmt::Arguments>::new_v1`
+                            let mut arg = || call_args.next().unwrap();
+                            let [_, _, _, fmt_args_len_id] = [arg(), arg(), arg(), arg()];
+                            // Only ever remove `fmt::Arguments` with no runtime values.
+                            Some(i).filter(|_| {
+                                matches!(
+                                    self.builder.lookup_const_by_id(fmt_args_len_id),
+                                    Some(SpirvConst::U32(0))
+                                )
+                            })
+                        } else {
+                            // `<core::fmt::Arguments>::new_const`
+                            assert_eq!(call_args.len(), 2);
+                            Some(i)
+                        }
                     })?;
 
                 // Lastly, ensure that the `Op{Store,Load}` pair operates on
