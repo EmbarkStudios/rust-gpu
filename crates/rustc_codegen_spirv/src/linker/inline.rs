@@ -354,17 +354,16 @@ impl Inliner<'_, '_> {
 
     /// Applies all rewrite rules to the decorations in the header.
     fn apply_rewrite_for_decorations(&mut self, rewrite_rules: &FxHashMap<Word, Word>) {
-        // NOTE(siebencorgie): We don't care *what* decoration we rewrite atm. AFAIK there is no case where rewriting
-        // the decoration on inline wouldn't be valid.
+        // NOTE(siebencorgie): We don't care *what* decoration we rewrite atm.
+        // AFAIK there is no case where keeping decorations on inline wouldn't be valid.
         for annotation_idx in 0..self.annotations.len() {
-            if self.annotations[annotation_idx].class.opcode == Op::Decorate {
-                if let Some(id) = self.annotations[annotation_idx].operands[0].id_ref_any_mut() {
-                    if let Some(&rewrite) = rewrite_rules.get(id) {
-                        // Copy decoration instruction and push it.
-                        let mut instcpy = self.annotations[annotation_idx].clone();
-                        *instcpy.operands[0].id_ref_any_mut().unwrap() = rewrite;
-                        self.annotations.push(instcpy);
-                    }
+            let inst = &self.annotations[annotation_idx];
+            if let [Operand::IdRef(target), ..] = inst.operands[..] {
+                if let Some(&rewritten_target) = rewrite_rules.get(&target) {
+                    // Copy decoration instruction and push it.
+                    let mut cloned_inst = inst.clone();
+                    cloned_inst.operands[0] = Operand::IdRef(rewritten_target);
+                    self.annotations.push(cloned_inst);
                 }
             }
         }
