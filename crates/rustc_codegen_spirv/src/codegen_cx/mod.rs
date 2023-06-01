@@ -69,7 +69,7 @@ pub struct CodegenCx<'tcx> {
     // it mandatory even for `panic!("...")` (that were previously separate).
     pub panic_entry_point_ids: RefCell<FxHashSet<Word>>,
 
-    /// `core::fmt::Arguments::new_v1` instances (for Rust 2021 panics).
+    /// `core::fmt::Arguments::new_{v1,const}` instances (for Rust 2021 panics).
     pub fmt_args_new_fn_ids: RefCell<FxHashSet<Word>>,
 
     /// Intrinsic for loading a <T> from a &[u32]. The PassMode is the mode of the <T>.

@@ -424,7 +424,7 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
                 if let TyKind::Adt(adt, _) = self.ty.kind() {
                     if let Variants::Single { index } = self.variants {
                         for i in self.fields.index_by_increasing_offset() {
-                            let field = &adt.variants()[index].fields[i];
+                            let field = &adt.variants()[index].fields[i.into()];
                             field_names.push(field.name);
                         }
                     }
@@ -711,7 +711,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
         field_offsets.push(offset);
         if let Variants::Single { index } = ty.variants {
             if let TyKind::Adt(adt, _) = ty.ty.kind() {
-                let field = &adt.variants()[index].fields[i];
+                let field = &adt.variants()[index].fields[i.into()];
                 field_names.push(field.name);
             } else {
                 // FIXME(eddyb) this looks like something that should exist in rustc.
