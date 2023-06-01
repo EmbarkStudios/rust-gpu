@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added ⭐
+- [PR#1064](https://github.com/EmbarkStudios/rust-gpu/pull/1064) added a Rust-GPU-private
+  "extended instruction set" (to allow us to have custom `OpExtInst`s), with the
+  initial custom `OpExtInst`s being used to improve debuginfo source locations
+  (using ranges instead of just the starting position, and tracking inlined calls)
+
 ### Changed 🛠
 - [PR#1038](https://github.com/EmbarkStudios/rust-gpu/pull/1038) relaxed `glam` version requirements (from only `0.22`, to `>=0.22, <=0.24`)
 
