@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["ToolAssembler",""]]};
+window.SIDEBAR_ITEMS = {"struct":["ToolAssembler"]};

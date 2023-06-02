@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["bias","grad","lod","sample_index"],"struct":["NoneTy","SampleParams","SomeTy"],"trait":["OptionTy"]};

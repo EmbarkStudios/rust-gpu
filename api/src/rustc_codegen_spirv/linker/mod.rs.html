@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (84dd17b56 2023-04-14)" data-search-js="search-18a8966354e5d906.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -576,7 +576,59 @@
 <a href="#576" id="576">576</a>
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
-</pre><pre class="rust"><code><span class="attr">#[cfg(test)]
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+</pre></div><pre class="rust"><code><span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test;
 
 <span class="kw">mod </span>dce;
@@ -592,12 +644,13 @@
 <span class="kw">mod </span>simple_passes;
 <span class="kw">mod </span>specializer;
 <span class="kw">mod </span>spirt_passes;
-<span class="kw">mod </span>structurizer;
 <span class="kw">mod </span>zombies;
 
 <span class="kw">use </span>std::borrow::Cow;
 
 <span class="kw">use </span><span class="kw">crate</span>::codegen_cx::SpirvMetadata;
+<span class="kw">use </span><span class="kw">crate</span>::custom_decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
+<span class="kw">use </span><span class="kw">crate</span>::custom_insts;
 <span class="kw">use </span>either::Either;
 <span class="kw">use </span>rspirv::binary::{Assemble, Consumer};
 <span class="kw">use </span>rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
@@ -615,8 +668,9 @@
 </span><span class="kw">pub struct </span>Options {
     <span class="kw">pub </span>compact_ids: bool,
     <span class="kw">pub </span>dce: bool,
+    <span class="kw">pub </span>early_report_zombies: bool,
+    <span class="kw">pub </span>infer_storage_classes: bool,
     <span class="kw">pub </span>structurize: bool,
-    <span class="kw">pub </span>spirt: bool,
     <span class="kw">pub </span>spirt_passes: Vec&lt;String&gt;,
 
     <span class="kw">pub </span>emit_multiple_modules: bool,
@@ -633,6 +687,7 @@
     </span><span class="kw">pub </span>dump_post_merge: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
     <span class="kw">pub </span>dump_post_split: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
     <span class="kw">pub </span>dump_spirt_passes: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+    <span class="kw">pub </span>spirt_keep_custom_debuginfo_in_dumps: bool,
     <span class="kw">pub </span>specializer_debug: bool,
     <span class="kw">pub </span>specializer_dump_instances: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
     <span class="kw">pub </span>print_all_zombie: bool,
@@ -791,20 +846,27 @@
         simple_passes::check_fragment_insts(sess, <span class="kw-2">&amp;</span>output)<span class="question-mark">?</span>;
     }
 
-    <span class="comment">// HACK(eddyb) this has to run before the `remove_zombies` pass, so that any
-    // zombies that are passed as call arguments, but eventually unused, won&#39;t
-    // be (incorrectly) considered used.
+    <span class="comment">// HACK(eddyb) this has to run before the `report_and_remove_zombies` pass,
+    // so that any zombies that are passed as call arguments, but eventually unused,
+    // won&#39;t be (incorrectly) considered used.
     </span>{
         <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_remove_unused_params&quot;</span>);
         output = param_weakening::remove_unused_params(output);
     }
 
-    {
-        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_remove_zombies&quot;</span>);
-        zombies::remove_zombies(sess, opts, <span class="kw-2">&amp;mut </span>output)<span class="question-mark">?</span>;
+    <span class="kw">if </span>opts.early_report_zombies {
+        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_report_and_remove_zombies&quot;</span>);
+        zombies::report_and_remove_zombies(sess, opts, <span class="kw-2">&amp;mut </span>output)<span class="question-mark">?</span>;
     }
 
-    {
+    <span class="kw">if </span>opts.infer_storage_classes {
+        <span class="comment">// HACK(eddyb) this is not the best approach, but storage class inference
+        // can still fail in entirely legitimate ways (i.e. mismatches in zombies).
+        </span><span class="kw">if </span>!opts.early_report_zombies {
+            <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_dce-before-specialize_generic_storage_class&quot;</span>);
+            dce::dce(<span class="kw-2">&amp;mut </span>output);
+        }
+
         <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;specialize_generic_storage_class&quot;</span>);
         <span class="comment">// HACK(eddyb) `specializer` requires functions&#39; blocks to be in RPO order
         // (i.e. `block_ordering_pass`) - this could be relaxed by using RPO visit
@@ -836,7 +898,7 @@
     }
 
     <span class="comment">// NOTE(eddyb) with SPIR-T, we can do `mem2reg` before inlining, too!
-    </span><span class="kw">if </span>opts.spirt {
+    </span>{
         <span class="kw">if </span>opts.dce {
             <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_dce-before-inlining&quot;</span>);
             dce::dce(<span class="kw-2">&amp;mut </span>output);
@@ -890,13 +952,6 @@
         dce::dce(<span class="kw-2">&amp;mut </span>output);
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="kw">if </span>opts.structurize &amp;&amp; !opts.spirt {
-        <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_structurize&quot;</span>);
-        structurizer::structurize(output)
-    } <span class="kw">else </span>{
-        output
-    };
-
     {
         <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;link_block_ordering_pass_and_mem2reg-after-inlining&quot;</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>pointer_to_pointee = FxHashMap::default();
@@ -936,7 +991,8 @@
         }
     }
 
-    <span class="kw">if </span>opts.spirt {
+    <span class="comment">// NOTE(eddyb) SPIR-T pipeline is entirely limited to this block.
+    </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>per_pass_module_for_dumping = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>after_pass = |pass, module: <span class="kw-2">&amp;</span>spirt::Module| {
             <span class="kw">if </span>opts.dump_spirt_passes.is_some() {
@@ -977,7 +1033,8 @@
         }
 
         <span class="kw">if </span>!opts.spirt_passes.is_empty() {
-            spirt_passes::run_func_passes(
+            <span class="comment">// FIXME(eddyb) why does this focus on functions, it could just be module passes??
+            </span>spirt_passes::run_func_passes(
                 <span class="kw-2">&amp;mut </span>module,
                 <span class="kw-2">&amp;</span>opts.spirt_passes,
                 |name, _module| sess.timer(name),
@@ -988,12 +1045,26 @@
             );
         }
 
+        <span class="kw">let </span>report_diagnostics_result = {
+            <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt_passes::diagnostics::report_diagnostics&quot;</span>);
+            spirt_passes::diagnostics::report_diagnostics(sess, opts, <span class="kw-2">&amp;</span>module)
+        };
+
         <span class="comment">// NOTE(eddyb) this should be *before* `lift_to_spv` below,
         // so if that fails, the dump could be used to debug it.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(dump_dir) = <span class="kw-2">&amp;</span>opts.dump_spirt_passes {
             <span class="kw">let </span>dump_spirt_file_path = dump_dir
                 .join(disambiguated_crate_name_for_dumps)
                 .with_extension(<span class="string">&quot;spirt&quot;</span>);
+
+            <span class="comment">// HACK(eddyb) unless requested otherwise, clean up the pretty-printed
+            // SPIR-T output by converting our custom extended instructions, to
+            // standard SPIR-V debuginfo (which SPIR-T knows how to pretty-print).
+            </span><span class="kw">if </span>!opts.spirt_keep_custom_debuginfo_in_dumps {
+                <span class="kw">for </span>(<span class="kw">_</span>, module) <span class="kw">in </span><span class="kw-2">&amp;mut </span>per_pass_module_for_dumping {
+                    spirt_passes::debuginfo::convert_custom_debuginfo_to_spv(module);
+                }
+            }
 
             <span class="kw">let </span>plan = spirt::print::Plan::for_versions(
                 <span class="kw-2">&amp;</span>cx,
@@ -1005,23 +1076,23 @@
 
             <span class="comment">// FIXME(eddyb) don&#39;t allocate whole `String`s here.
             </span>std::fs::write(<span class="kw-2">&amp;</span>dump_spirt_file_path, pretty.to_string()).unwrap();
-            std::fs::write(dump_spirt_file_path.with_extension(<span class="string">&quot;spirt.html&quot;</span>), {
-                <span class="kw">let </span><span class="kw-2">mut </span>html = pretty
+            std::fs::write(
+                dump_spirt_file_path.with_extension(<span class="string">&quot;spirt.html&quot;</span>),
+                pretty
                     .render_to_html()
                     .with_dark_mode_support()
-                    .to_html_doc();
-                <span class="comment">// HACK(eddyb) this should be in `spirt::pretty` itself,
-                // but its need didn&#39;t become obvious until more recently.
-                </span>html += <span class="string">&quot;
-                        &lt;style&gt;
-                            pre.spirt-90c2056d-5b38-4644-824a-b4be1c82f14d sub {
-                                line-height: 0;
-                            }
-                        &lt;/style&gt;&quot;</span>;
-                html
-            })
+                    .to_html_doc(),
+            )
             .unwrap();
         }
+
+        <span class="comment">// NOTE(eddyb) this is late so that `--dump-spirt-passes` is processed,
+        // even/especially when errors were reported, but lifting to SPIR-V is
+        // skipped (since it could very well fail due to reported errors).
+        </span>report_diagnostics_result<span class="question-mark">?</span>;
+
+        <span class="comment">// Replace our custom debuginfo instructions just before lifting to SPIR-V.
+        </span>spirt_passes::debuginfo::convert_custom_debuginfo_to_spv(<span class="kw-2">&amp;mut </span>module);
 
         <span class="kw">let </span>spv_words = {
             <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt::Module::lift_to_spv_module_emitter&quot;</span>);
@@ -1035,7 +1106,32 @@
         };
     }
 
-    {
+    <span class="comment">// Ensure that no references remain, to our custom &quot;extended instruction set&quot;.
+    </span><span class="kw">for </span>inst <span class="kw">in </span><span class="kw-2">&amp;</span>output.ext_inst_imports {
+        <span class="macro">assert_eq!</span>(inst.class.opcode, Op::ExtInstImport);
+        <span class="kw">let </span>ext_inst_set = inst.operands[<span class="number">0</span>].unwrap_literal_string();
+        <span class="kw">if </span>ext_inst_set.starts_with(custom_insts::CUSTOM_EXT_INST_SET_PREFIX) {
+            <span class="kw">let </span>expected = <span class="kw-2">&amp;</span>custom_insts::CUSTOM_EXT_INST_SET[..];
+            <span class="kw">if </span>ext_inst_set == expected {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(sess.err(<span class="macro">format!</span>(
+                    <span class="string">&quot;`OpExtInstImport {ext_inst_set:?}` should not have been \
+                         left around after SPIR-T passes&quot;
+                </span>)));
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(sess.err(<span class="macro">format!</span>(
+                    <span class="string">&quot;unsupported `OpExtInstImport {ext_inst_set:?}`
+                     (expected {expected:?} name - version mismatch?)&quot;
+                </span>)));
+            }
+        }
+    }
+
+    <span class="comment">// FIXME(eddyb) rewrite these passes to SPIR-T ones, so we don&#39;t have to
+    // parse the output of `spirt::spv::lift` back into `rspirv` - also, for
+    // multi-module, it&#39;s much simpler with SPIR-T, just replace `module.exports`
+    // with a single-entry map, run `spirt::spv::lift` (or even `spirt::print`)
+    // on `module`, then put back the full original `module.exports` map.
+    </span>{
         <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;peephole_opts&quot;</span>);
         <span class="kw">let </span>types = peephole_opts::collect_types(<span class="kw-2">&amp;</span>output);
         <span class="kw">for </span>func <span class="kw">in </span><span class="kw-2">&amp;mut </span>output.functions {
@@ -1150,9 +1246,16 @@
             <span class="comment">// compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
             </span>output.header.as_mut().unwrap().bound = simple_passes::compact_ids(output);
         };
+
+        <span class="comment">// FIXME(eddyb) convert these into actual `OpLine`s with a SPIR-T pass,
+        // but that&#39;d require keeping the modules in SPIR-T form (once lowered),
+        // and never loading them back into `rspirv` once lifted back to SPIR-V.
+        </span>SrcLocDecoration::remove_all(output);
+
+        <span class="comment">// FIXME(eddyb) might make more sense to rewrite these away on SPIR-T.
+        </span>ZombieDecoration::remove_all(output);
     }
 
     <span class="prelude-val">Ok</span>(output)
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (5ce39f42b 2023-01-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>
+</code></pre></div></section></main></body></html>

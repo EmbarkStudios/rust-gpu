@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["ModuleParser",""]]};
+window.SIDEBAR_ITEMS = {"struct":["ModuleParser"]};

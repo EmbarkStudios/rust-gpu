@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/image.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>image.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../spirv_std/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/image.rs`."><title>image.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="spirv_std" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (84dd17b56 2023-04-14)" data-search-js="search-18a8966354e5d906.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../spirv_std/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1475,9 +1475,472 @@
 <a href="#1475" id="1475">1475</a>
 <a href="#1476" id="1476">1476</a>
 <a href="#1477" id="1477">1477</a>
-</pre><pre class="rust"><code><span class="doccomment">//! Image types
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
+<a href="#1489" id="1489">1489</a>
+<a href="#1490" id="1490">1490</a>
+<a href="#1491" id="1491">1491</a>
+<a href="#1492" id="1492">1492</a>
+<a href="#1493" id="1493">1493</a>
+<a href="#1494" id="1494">1494</a>
+<a href="#1495" id="1495">1495</a>
+<a href="#1496" id="1496">1496</a>
+<a href="#1497" id="1497">1497</a>
+<a href="#1498" id="1498">1498</a>
+<a href="#1499" id="1499">1499</a>
+<a href="#1500" id="1500">1500</a>
+<a href="#1501" id="1501">1501</a>
+<a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
+<a href="#1553" id="1553">1553</a>
+<a href="#1554" id="1554">1554</a>
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
+<a href="#1581" id="1581">1581</a>
+<a href="#1582" id="1582">1582</a>
+<a href="#1583" id="1583">1583</a>
+<a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
+<a href="#1592" id="1592">1592</a>
+<a href="#1593" id="1593">1593</a>
+<a href="#1594" id="1594">1594</a>
+<a href="#1595" id="1595">1595</a>
+<a href="#1596" id="1596">1596</a>
+<a href="#1597" id="1597">1597</a>
+<a href="#1598" id="1598">1598</a>
+<a href="#1599" id="1599">1599</a>
+<a href="#1600" id="1600">1600</a>
+<a href="#1601" id="1601">1601</a>
+<a href="#1602" id="1602">1602</a>
+<a href="#1603" id="1603">1603</a>
+<a href="#1604" id="1604">1604</a>
+<a href="#1605" id="1605">1605</a>
+<a href="#1606" id="1606">1606</a>
+<a href="#1607" id="1607">1607</a>
+<a href="#1608" id="1608">1608</a>
+<a href="#1609" id="1609">1609</a>
+<a href="#1610" id="1610">1610</a>
+<a href="#1611" id="1611">1611</a>
+<a href="#1612" id="1612">1612</a>
+<a href="#1613" id="1613">1613</a>
+<a href="#1614" id="1614">1614</a>
+<a href="#1615" id="1615">1615</a>
+<a href="#1616" id="1616">1616</a>
+<a href="#1617" id="1617">1617</a>
+<a href="#1618" id="1618">1618</a>
+<a href="#1619" id="1619">1619</a>
+<a href="#1620" id="1620">1620</a>
+<a href="#1621" id="1621">1621</a>
+<a href="#1622" id="1622">1622</a>
+<a href="#1623" id="1623">1623</a>
+<a href="#1624" id="1624">1624</a>
+<a href="#1625" id="1625">1625</a>
+<a href="#1626" id="1626">1626</a>
+<a href="#1627" id="1627">1627</a>
+<a href="#1628" id="1628">1628</a>
+<a href="#1629" id="1629">1629</a>
+<a href="#1630" id="1630">1630</a>
+<a href="#1631" id="1631">1631</a>
+<a href="#1632" id="1632">1632</a>
+<a href="#1633" id="1633">1633</a>
+<a href="#1634" id="1634">1634</a>
+<a href="#1635" id="1635">1635</a>
+<a href="#1636" id="1636">1636</a>
+<a href="#1637" id="1637">1637</a>
+<a href="#1638" id="1638">1638</a>
+<a href="#1639" id="1639">1639</a>
+<a href="#1640" id="1640">1640</a>
+<a href="#1641" id="1641">1641</a>
+<a href="#1642" id="1642">1642</a>
+<a href="#1643" id="1643">1643</a>
+<a href="#1644" id="1644">1644</a>
+<a href="#1645" id="1645">1645</a>
+<a href="#1646" id="1646">1646</a>
+<a href="#1647" id="1647">1647</a>
+<a href="#1648" id="1648">1648</a>
+<a href="#1649" id="1649">1649</a>
+<a href="#1650" id="1650">1650</a>
+<a href="#1651" id="1651">1651</a>
+<a href="#1652" id="1652">1652</a>
+<a href="#1653" id="1653">1653</a>
+<a href="#1654" id="1654">1654</a>
+<a href="#1655" id="1655">1655</a>
+<a href="#1656" id="1656">1656</a>
+<a href="#1657" id="1657">1657</a>
+<a href="#1658" id="1658">1658</a>
+<a href="#1659" id="1659">1659</a>
+<a href="#1660" id="1660">1660</a>
+<a href="#1661" id="1661">1661</a>
+<a href="#1662" id="1662">1662</a>
+<a href="#1663" id="1663">1663</a>
+<a href="#1664" id="1664">1664</a>
+<a href="#1665" id="1665">1665</a>
+<a href="#1666" id="1666">1666</a>
+<a href="#1667" id="1667">1667</a>
+<a href="#1668" id="1668">1668</a>
+<a href="#1669" id="1669">1669</a>
+<a href="#1670" id="1670">1670</a>
+<a href="#1671" id="1671">1671</a>
+<a href="#1672" id="1672">1672</a>
+<a href="#1673" id="1673">1673</a>
+<a href="#1674" id="1674">1674</a>
+<a href="#1675" id="1675">1675</a>
+<a href="#1676" id="1676">1676</a>
+<a href="#1677" id="1677">1677</a>
+<a href="#1678" id="1678">1678</a>
+<a href="#1679" id="1679">1679</a>
+<a href="#1680" id="1680">1680</a>
+<a href="#1681" id="1681">1681</a>
+<a href="#1682" id="1682">1682</a>
+<a href="#1683" id="1683">1683</a>
+<a href="#1684" id="1684">1684</a>
+<a href="#1685" id="1685">1685</a>
+<a href="#1686" id="1686">1686</a>
+<a href="#1687" id="1687">1687</a>
+<a href="#1688" id="1688">1688</a>
+<a href="#1689" id="1689">1689</a>
+<a href="#1690" id="1690">1690</a>
+<a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
+<a href="#1704" id="1704">1704</a>
+<a href="#1705" id="1705">1705</a>
+<a href="#1706" id="1706">1706</a>
+<a href="#1707" id="1707">1707</a>
+<a href="#1708" id="1708">1708</a>
+<a href="#1709" id="1709">1709</a>
+<a href="#1710" id="1710">1710</a>
+<a href="#1711" id="1711">1711</a>
+<a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
+<a href="#1715" id="1715">1715</a>
+<a href="#1716" id="1716">1716</a>
+<a href="#1717" id="1717">1717</a>
+<a href="#1718" id="1718">1718</a>
+<a href="#1719" id="1719">1719</a>
+<a href="#1720" id="1720">1720</a>
+<a href="#1721" id="1721">1721</a>
+<a href="#1722" id="1722">1722</a>
+<a href="#1723" id="1723">1723</a>
+<a href="#1724" id="1724">1724</a>
+<a href="#1725" id="1725">1725</a>
+<a href="#1726" id="1726">1726</a>
+<a href="#1727" id="1727">1727</a>
+<a href="#1728" id="1728">1728</a>
+<a href="#1729" id="1729">1729</a>
+<a href="#1730" id="1730">1730</a>
+<a href="#1731" id="1731">1731</a>
+<a href="#1732" id="1732">1732</a>
+<a href="#1733" id="1733">1733</a>
+<a href="#1734" id="1734">1734</a>
+<a href="#1735" id="1735">1735</a>
+<a href="#1736" id="1736">1736</a>
+<a href="#1737" id="1737">1737</a>
+<a href="#1738" id="1738">1738</a>
+<a href="#1739" id="1739">1739</a>
+<a href="#1740" id="1740">1740</a>
+<a href="#1741" id="1741">1741</a>
+<a href="#1742" id="1742">1742</a>
+<a href="#1743" id="1743">1743</a>
+<a href="#1744" id="1744">1744</a>
+<a href="#1745" id="1745">1745</a>
+<a href="#1746" id="1746">1746</a>
+<a href="#1747" id="1747">1747</a>
+<a href="#1748" id="1748">1748</a>
+<a href="#1749" id="1749">1749</a>
+<a href="#1750" id="1750">1750</a>
+<a href="#1751" id="1751">1751</a>
+<a href="#1752" id="1752">1752</a>
+<a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
+<a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a>
+<a href="#1762" id="1762">1762</a>
+<a href="#1763" id="1763">1763</a>
+<a href="#1764" id="1764">1764</a>
+<a href="#1765" id="1765">1765</a>
+<a href="#1766" id="1766">1766</a>
+<a href="#1767" id="1767">1767</a>
+<a href="#1768" id="1768">1768</a>
+<a href="#1769" id="1769">1769</a>
+<a href="#1770" id="1770">1770</a>
+<a href="#1771" id="1771">1771</a>
+<a href="#1772" id="1772">1772</a>
+<a href="#1773" id="1773">1773</a>
+<a href="#1774" id="1774">1774</a>
+<a href="#1775" id="1775">1775</a>
+<a href="#1776" id="1776">1776</a>
+<a href="#1777" id="1777">1777</a>
+<a href="#1778" id="1778">1778</a>
+<a href="#1779" id="1779">1779</a>
+<a href="#1780" id="1780">1780</a>
+<a href="#1781" id="1781">1781</a>
+<a href="#1782" id="1782">1782</a>
+<a href="#1783" id="1783">1783</a>
+<a href="#1784" id="1784">1784</a>
+<a href="#1785" id="1785">1785</a>
+<a href="#1786" id="1786">1786</a>
+<a href="#1787" id="1787">1787</a>
+<a href="#1788" id="1788">1788</a>
+<a href="#1789" id="1789">1789</a>
+<a href="#1790" id="1790">1790</a>
+<a href="#1791" id="1791">1791</a>
+<a href="#1792" id="1792">1792</a>
+<a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
+<a href="#1800" id="1800">1800</a>
+<a href="#1801" id="1801">1801</a>
+<a href="#1802" id="1802">1802</a>
+<a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a>
+<a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a>
+<a href="#1830" id="1830">1830</a>
+<a href="#1831" id="1831">1831</a>
+<a href="#1832" id="1832">1832</a>
+<a href="#1833" id="1833">1833</a>
+<a href="#1834" id="1834">1834</a>
+<a href="#1835" id="1835">1835</a>
+<a href="#1836" id="1836">1836</a>
+<a href="#1837" id="1837">1837</a>
+<a href="#1838" id="1838">1838</a>
+<a href="#1839" id="1839">1839</a>
+<a href="#1840" id="1840">1840</a>
+<a href="#1841" id="1841">1841</a>
+<a href="#1842" id="1842">1842</a>
+<a href="#1843" id="1843">1843</a>
+<a href="#1844" id="1844">1844</a>
+<a href="#1845" id="1845">1845</a>
+<a href="#1846" id="1846">1846</a>
+<a href="#1847" id="1847">1847</a>
+<a href="#1848" id="1848">1848</a>
+<a href="#1849" id="1849">1849</a>
+<a href="#1850" id="1850">1850</a>
+<a href="#1851" id="1851">1851</a>
+<a href="#1852" id="1852">1852</a>
+<a href="#1853" id="1853">1853</a>
+<a href="#1854" id="1854">1854</a>
+<a href="#1855" id="1855">1855</a>
+<a href="#1856" id="1856">1856</a>
+<a href="#1857" id="1857">1857</a>
+<a href="#1858" id="1858">1858</a>
+<a href="#1859" id="1859">1859</a>
+<a href="#1860" id="1860">1860</a>
+<a href="#1861" id="1861">1861</a>
+<a href="#1862" id="1862">1862</a>
+<a href="#1863" id="1863">1863</a>
+<a href="#1864" id="1864">1864</a>
+<a href="#1865" id="1865">1865</a>
+<a href="#1866" id="1866">1866</a>
+<a href="#1867" id="1867">1867</a>
+<a href="#1868" id="1868">1868</a>
+<a href="#1869" id="1869">1869</a>
+<a href="#1870" id="1870">1870</a>
+<a href="#1871" id="1871">1871</a>
+<a href="#1872" id="1872">1872</a>
+<a href="#1873" id="1873">1873</a>
+<a href="#1874" id="1874">1874</a>
+<a href="#1875" id="1875">1875</a>
+<a href="#1876" id="1876">1876</a>
+<a href="#1877" id="1877">1877</a>
+<a href="#1878" id="1878">1878</a>
+<a href="#1879" id="1879">1879</a>
+<a href="#1880" id="1880">1880</a>
+<a href="#1881" id="1881">1881</a>
+<a href="#1882" id="1882">1882</a>
+<a href="#1883" id="1883">1883</a>
+<a href="#1884" id="1884">1884</a>
+<a href="#1885" id="1885">1885</a>
+<a href="#1886" id="1886">1886</a>
+<a href="#1887" id="1887">1887</a>
+<a href="#1888" id="1888">1888</a>
+<a href="#1889" id="1889">1889</a>
+<a href="#1890" id="1890">1890</a>
+<a href="#1891" id="1891">1891</a>
+<a href="#1892" id="1892">1892</a>
+<a href="#1893" id="1893">1893</a>
+<a href="#1894" id="1894">1894</a>
+<a href="#1895" id="1895">1895</a>
+<a href="#1896" id="1896">1896</a>
+<a href="#1897" id="1897">1897</a>
+<a href="#1898" id="1898">1898</a>
+<a href="#1899" id="1899">1899</a>
+<a href="#1900" id="1900">1900</a>
+<a href="#1901" id="1901">1901</a>
+<a href="#1902" id="1902">1902</a>
+<a href="#1903" id="1903">1903</a>
+<a href="#1904" id="1904">1904</a>
+<a href="#1905" id="1905">1905</a>
+<a href="#1906" id="1906">1906</a>
+<a href="#1907" id="1907">1907</a>
+<a href="#1908" id="1908">1908</a>
+<a href="#1909" id="1909">1909</a>
+<a href="#1910" id="1910">1910</a>
+<a href="#1911" id="1911">1911</a>
+<a href="#1912" id="1912">1912</a>
+<a href="#1913" id="1913">1913</a>
+<a href="#1914" id="1914">1914</a>
+<a href="#1915" id="1915">1915</a>
+<a href="#1916" id="1916">1916</a>
+<a href="#1917" id="1917">1917</a>
+<a href="#1918" id="1918">1918</a>
+<a href="#1919" id="1919">1919</a>
+<a href="#1920" id="1920">1920</a>
+<a href="#1921" id="1921">1921</a>
+<a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Image types
 
 </span><span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::vector::VectorTruncateInto;
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;spirv&quot;</span>)]
 </span><span class="kw">use </span>core::arch::asm;
 
 <span class="comment">// Rustfmt formats long marker trait impls over multiple lines which makes them
@@ -1485,11 +1948,16 @@
 </span><span class="attr">#[rustfmt::skip]
 </span><span class="kw">mod </span>params;
 
+<span class="doccomment">/// Contains extra image operands
+</span><span class="kw">pub mod </span>sample_with;
+
 <span class="kw">pub use </span><span class="self">self</span>::params::{ImageCoordinate, ImageCoordinateSubpassData, SampleType};
 <span class="kw">pub use </span><span class="kw">crate</span>::macros::Image;
 <span class="kw">pub use </span>spirv_std_types::image_params::{
     AccessQualifier, Arrayed, Dimensionality, ImageDepth, ImageFormat, Multisampled, Sampled,
 };
+
+<span class="kw">use </span>sample_with::{NoneTy, SampleParams, SomeTy};
 
 <span class="kw">use crate</span>::{float::Float, integer::Integer, vector::Vector, Sampler};
 
@@ -1574,13 +2042,14 @@
 </span><span class="comment">// HACK(eddyb) avoids &quot;transparent newtype of `_anti_zst_padding`&quot; misinterpretation.
 </span><span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>Image&lt;
-    SampledType: SampleType&lt;FORMAT&gt;,
+    SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
     <span class="kw">const </span>DIM: u32,          <span class="comment">// Dimensionality,
     </span><span class="kw">const </span>DEPTH: u32,        <span class="comment">// ImageDepth,
     </span><span class="kw">const </span>ARRAYED: u32,      <span class="comment">// Arrayed,
     </span><span class="kw">const </span>MULTISAMPLED: u32, <span class="comment">// Multisampled,
     </span><span class="kw">const </span>SAMPLED: u32,      <span class="comment">// Sampled,
     </span><span class="kw">const </span>FORMAT: u32,       <span class="comment">// ImageFormat,
+    </span><span class="kw">const </span>COMPONENTS: u32,   <span class="comment">// NumberOfComponents,
 </span>&gt; {
     <span class="comment">// HACK(eddyb) avoids the layout becoming ZST (and being elided in one way
     // or another, before `#[spirv(generic_image_type)]` can special-case it).
@@ -1589,22 +2058,36 @@
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DIM: u32,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>FORMAT: u32,
-    &gt; Image&lt;SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, { Sampled::Yes <span class="kw">as </span>u32 }, FORMAT&gt;
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt;
+    Image&lt;
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        { Sampled::Yes <span class="kw">as </span>u32 },
+        FORMAT,
+        COMPONENTS,
+    &gt;
 {
     <span class="doccomment">/// Fetch a single texel with a sampler set at compile time
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageFetch&quot;</span>)]
-    </span><span class="kw">pub fn </span>fetch&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;) -&gt; SampledType::Vec4
+    </span><span class="kw">pub fn </span>fetch&lt;I&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;,
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>I: Integer,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
@@ -1616,18 +2099,29 @@
                 coordinate = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coordinate,
             }
         }
-        result
+        result.truncate_into()
     }
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DIM: u32,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
-    &gt; Image&lt;SampledType, DIM, DEPTH, ARRAYED, { Multisampled::False <span class="kw">as </span>u32 }, SAMPLED, FORMAT&gt;
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt;
+    Image&lt;
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False <span class="kw">as </span>u32 },
+        SAMPLED,
+        FORMAT,
+        COMPONENTS,
+    &gt;
 {
     <span class="comment">// Note: #[inline] is needed because in vulkan, the component must be a constant expression.
     </span><span class="doccomment">/// Gathers the requested component from four texels.
@@ -1644,7 +2138,7 @@
         </span><span class="self">Self</span>: HasGather,
         F: Float,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
                 <span class="string">&quot;%typeSampledImage = OpTypeSampledImage typeof*{this}&quot;</span>,
@@ -1670,12 +2164,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
-    ) -&gt; SampledType::Vec4
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>F: Float,
     {
         <span class="kw">unsafe </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+            <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
             <span class="macro">asm!</span>(
                 <span class="string">&quot;%typeSampledImage = OpTypeSampledImage typeof*{1}&quot;</span>,
                 <span class="string">&quot;%image = OpLoad typeof*{1} {1}&quot;</span>,
@@ -1689,7 +2183,7 @@
                 <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>sampler,
                 <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coord
             );
-            result
+            result.truncate_into()
         }
     }
 
@@ -1701,12 +2195,13 @@
         sampler: Sampler,
         coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
         bias: f32,
-    ) -&gt; SampledType::Vec4
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>F: Float,
     {
         <span class="kw">unsafe </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+            <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
+
             <span class="macro">asm!</span>(
                 <span class="string">&quot;%typeSampledImage = OpTypeSampledImage typeof*{1}&quot;</span>,
                 <span class="string">&quot;%image = OpLoad typeof*{1} {1}&quot;</span>,
@@ -1721,7 +2216,7 @@
                 <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coord,
                 <span class="kw">in</span>(reg) bias,
             );
-            result
+            result.truncate_into()
         }
     }
 
@@ -1734,11 +2229,11 @@
         sampler: Sampler,
         coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
         lod: f32,
-    ) -&gt; SampledType::Vec4
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>F: Float,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
         <span class="kw">unsafe </span>{
             <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
@@ -1755,7 +2250,7 @@
                 lod = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>lod
             );
         }
-        result
+        result.truncate_into()
     }
 
     <span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
@@ -1767,11 +2262,11 @@
         coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
         gradient_dx: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::False <span class="kw">as </span>u32 }&gt;,
         gradient_dy: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::False <span class="kw">as </span>u32 }&gt;,
-    ) -&gt; SampledType::Vec4
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>F: Float,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
         <span class="kw">unsafe </span>{
             <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
@@ -1790,7 +2285,7 @@
                 gradient_dy = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>gradient_dy,
             );
         }
-        result
+        result.truncate_into()
     }
 
     <span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
@@ -1901,11 +2396,12 @@
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DIM: u32,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>SAMPLED: u32,
         <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt;
     Image&lt;
         SampledType,
@@ -1915,6 +2411,7 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
     <span class="doccomment">/// Sample the image with a project coordinate
@@ -1924,12 +2421,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sampler: Sampler,
         project_coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::True <span class="kw">as </span>u32 }&gt;,
-    ) -&gt; SampledType::Vec4
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>F: Float,
     {
         <span class="kw">unsafe </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+            <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
             <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
@@ -1942,7 +2439,7 @@
                 sampler = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>sampler,
                 project_coordinate = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>project_coordinate,
             );
-            result
+            result.truncate_into()
         }
     }
 
@@ -2121,22 +2618,36 @@
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DIM: u32,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>FORMAT: u32,
-    &gt; Image&lt;SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, { Sampled::No <span class="kw">as </span>u32 }, FORMAT&gt;
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt;
+    Image&lt;
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        { Sampled::No <span class="kw">as </span>u32 },
+        FORMAT,
+        COMPONENTS,
+    &gt;
 {
     <span class="doccomment">/// Read a texel from an image without a sampler.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageRead&quot;</span>)]
-    </span><span class="kw">pub fn </span>read&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;) -&gt; SampledType::Vec4
+    </span><span class="kw">pub fn </span>read&lt;I&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;,
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>I: Integer,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
 
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
@@ -2150,7 +2661,7 @@
             }
         }
 
-        result
+        result.truncate_into()
     }
 
     <span class="doccomment">/// Write a texel to an image without a sampler.
@@ -2176,22 +2687,36 @@
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DIM: u32,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
-    &gt; Image&lt;SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, { Sampled::Unknown <span class="kw">as </span>u32 }, FORMAT&gt;
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt;
+    Image&lt;
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        { Sampled::Unknown <span class="kw">as </span>u32 },
+        FORMAT,
+        COMPONENTS,
+    &gt;
 {
     <span class="doccomment">/// Read a texel from an image without a sampler.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
     #[doc(alias = <span class="string">&quot;OpImageRead&quot;</span>)]
-    </span><span class="kw">pub fn </span>read&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;) -&gt; SampledType::Vec4
+    </span><span class="kw">pub fn </span>read&lt;I&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;,
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>I: Integer,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
 
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
@@ -2205,7 +2730,7 @@
             }
         }
 
-        result
+        result.truncate_into()
     }
 
     <span class="doccomment">/// Write a texel to an image without a sampler.
@@ -2231,11 +2756,12 @@
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt;
     Image&lt;
         SampledType,
@@ -2245,6 +2771,7 @@
         MULTISAMPLED,
         { Sampled::No <span class="kw">as </span>u32 },
         FORMAT,
+        COMPONENTS,
     &gt;
 {
     <span class="doccomment">/// Read a texel from subpass input attachment.
@@ -2254,11 +2781,11 @@
     </span><span class="kw">pub fn </span>read_subpass&lt;I&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         coordinate: <span class="kw">impl </span>ImageCoordinateSubpassData&lt;I, ARRAYED&gt;,
-    ) -&gt; SampledType::Vec4
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>I: Integer,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
 
         <span class="kw">unsafe </span>{
             <span class="macro">asm! </span>{
@@ -2272,19 +2799,20 @@
             }
         }
 
-        result
+        result.truncate_into()
     }
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DIM: u32,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>SAMPLED: u32,
         <span class="kw">const </span>FORMAT: u32,
-    &gt; Image&lt;SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT&gt;
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt; Image&lt;SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, COMPONENTS&gt;
 {
     <span class="doccomment">/// Query the number of mipmap levels.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
@@ -2365,13 +2893,24 @@
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DIM: u32,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
         <span class="kw">const </span>FORMAT: u32,
-    &gt; Image&lt;SampledType, DIM, DEPTH, ARRAYED, { Multisampled::False <span class="kw">as </span>u32 }, SAMPLED, FORMAT&gt;
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt;
+    Image&lt;
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False <span class="kw">as </span>u32 },
+        SAMPLED,
+        FORMAT,
+        COMPONENTS,
+    &gt;
 {
     <span class="doccomment">/// Query the dimensions of Image, with no level of detail.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
@@ -2399,11 +2938,12 @@
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
         <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt;
     Image&lt;
         SampledType,
@@ -2413,6 +2953,7 @@
         { Multisampled::True <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
     <span class="doccomment">/// Query the number of samples available per texel fetch in a multisample image.
@@ -2444,69 +2985,368 @@
 }
 
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DIM: u32,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
         <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt;
     SampledImage&lt;
-        Image&lt;SampledType, DIM, DEPTH, ARRAYED, { Multisampled::False <span class="kw">as </span>u32 }, SAMPLED, FORMAT&gt;,
+        Image&lt;
+            SampledType,
+            DIM,
+            DEPTH,
+            ARRAYED,
+            { Multisampled::False <span class="kw">as </span>u32 },
+            SAMPLED,
+            FORMAT,
+            COMPONENTS,
+        &gt;,
     &gt;
 {
     <span class="doccomment">/// Sample texels at `coord` from the sampled image with an implicit lod.
-    ///
-    /// # Safety
-    /// Sampling with a type (`S`) that doesn&#39;t match the image&#39;s image format
-    /// will result in undefined behaviour.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
-    </span><span class="kw">pub unsafe fn </span>sample&lt;F&gt;(
+    </span><span class="kw">pub fn </span>sample&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
-    ) -&gt; SampledType::Vec4
+    ) -&gt; SampledType::SampleResult
     <span class="kw">where
         </span>F: Float,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
-        <span class="macro">asm!</span>(
-            <span class="string">&quot;%sampledImage = OpLoad typeof*{1} {1}&quot;</span>,
-            <span class="string">&quot;%coord = OpLoad typeof*{2} {2}&quot;</span>,
-            <span class="string">&quot;%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord&quot;</span>,
-            <span class="string">&quot;OpStore {0} %result&quot;</span>,
-            <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
-            <span class="kw">in</span>(reg) <span class="self">self</span>,
-            <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coord
-        );
-        result
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
+        <span class="kw">unsafe </span>{
+            <span class="macro">asm!</span>(
+                <span class="string">&quot;%sampledImage = OpLoad typeof*{1} {1}&quot;</span>,
+                <span class="string">&quot;%coord = OpLoad typeof*{2} {2}&quot;</span>,
+                <span class="string">&quot;%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord&quot;</span>,
+                <span class="string">&quot;OpStore {0} %result&quot;</span>,
+                <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
+                <span class="kw">in</span>(reg) <span class="self">self</span>,
+                <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coord
+            );
+        }
+        result.truncate_into()
     }
 
     <span class="doccomment">/// Sample texels at `coord` from the sampled image with an explicit lod.
-    ///
-    /// # Safety
-    /// Sampling with a type (`S`) that doesn&#39;t match the image&#39;s image format
-    /// will result in undefined behaviour.
     </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
-    </span><span class="kw">pub unsafe fn </span>sample_by_lod&lt;F&gt;(
+    </span><span class="kw">pub fn </span>sample_by_lod&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
         lod: f32,
+    ) -&gt; SampledType::SampleResult
+    <span class="kw">where
+        </span>F: Float,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
+        <span class="kw">unsafe </span>{
+            <span class="macro">asm!</span>(
+                <span class="string">&quot;%sampledImage = OpLoad typeof*{1} {1}&quot;</span>,
+                <span class="string">&quot;%coord = OpLoad typeof*{2} {2}&quot;</span>,
+                <span class="string">&quot;%lod = OpLoad typeof*{3} {3}&quot;</span>,
+                <span class="string">&quot;%result = OpImageSampleExplicitLod typeof*{0} %sampledImage %coord Lod %lod&quot;</span>,
+                <span class="string">&quot;OpStore {0} %result&quot;</span>,
+                <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
+                <span class="kw">in</span>(reg) <span class="self">self</span>,
+                <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coord,
+                <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>lod,
+            );
+        }
+        result.truncate_into()
+    }
+}
+
+<span class="doccomment">/// Helper trait that defines all `*_with` methods on an `Image` that use the extra image operands,
+/// such as bias or lod, defined by the `SampleParams` struct.
+</span><span class="kw">pub trait </span>ImageWithMethods&lt;
+    SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+    <span class="kw">const </span>DIM: u32,
+    <span class="kw">const </span>DEPTH: u32,
+    <span class="kw">const </span>ARRAYED: u32,
+    <span class="kw">const </span>MULTISAMPLED: u32,
+    <span class="kw">const </span>SAMPLED: u32,
+    <span class="kw">const </span>FORMAT: u32,
+    <span class="kw">const </span>COMPONENTS: u32,
+    Params,
+&gt;
+{
+    <span class="doccomment">/// Fetch a single texel with a sampler set at compile time
+    </span><span class="attr">#[doc(alias = <span class="string">&quot;OpImageFetch&quot;</span>)]
+    </span><span class="kw">fn </span>fetch_with&lt;I&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;,
+        params: Params,
+    ) -&gt; SampledType::SampleResult
+    <span class="kw">where
+        </span>I: Integer;
+
+    <span class="doccomment">/// Gathers the requested component from four texels.
+    </span><span class="attr">#[doc(alias = <span class="string">&quot;OpImageGather&quot;</span>)]
+    </span><span class="kw">fn </span>gather_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
+        component: u32,
+        params: Params,
     ) -&gt; SampledType::Vec4
+    <span class="kw">where
+        </span><span class="self">Self</span>: HasGather,
+        F: Float;
+
+    <span class="doccomment">/// Sample texels at `coord` from the image using `sampler`.
+    </span><span class="kw">fn </span>sample_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
+        params: Params,
+    ) -&gt; SampledType::SampleResult
+    <span class="kw">where
+        </span>F: Float;
+
+    <span class="doccomment">/// Sample the image&#39;s depth reference
+    </span><span class="attr">#[doc(alias = <span class="string">&quot;OpImageSampleDrefImplicitLod&quot;</span>)]
+    </span><span class="kw">fn </span>sample_depth_reference_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
+        depth_reference: f32,
+        params: Params,
+    ) -&gt; SampledType
+    <span class="kw">where
+        </span>F: Float;
+
+    <span class="doccomment">/// Sample the image with a project coordinate
+    </span><span class="attr">#[doc(alias = <span class="string">&quot;OpImageSampleProjImplicitLod&quot;</span>)]
+    </span><span class="kw">fn </span>sample_with_project_coordinate_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        project_coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::True <span class="kw">as </span>u32 }&gt;,
+        params: Params,
+    ) -&gt; SampledType::SampleResult
+    <span class="kw">where
+        </span>F: Float;
+
+    <span class="doccomment">/// Sample the image&#39;s depth reference with the project coordinate
+    </span><span class="attr">#[doc(alias = <span class="string">&quot;OpImageSampleProjDrefImplicitLod&quot;</span>)]
+    </span><span class="kw">fn </span>sample_depth_reference_with_project_coordinate_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        project_coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::True <span class="kw">as </span>u32 }&gt;,
+        depth_reference: f32,
+        params: Params,
+    ) -&gt; SampledType
+    <span class="kw">where
+        </span>F: Float;
+}
+
+<span class="attr">#[<span class="kw">crate</span>::macros::gen_sample_param_permutations]
+</span><span class="kw">impl</span>&lt;
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+        <span class="kw">const </span>DIM: u32,
+        <span class="kw">const </span>DEPTH: u32,
+        <span class="kw">const </span>ARRAYED: u32,
+        <span class="kw">const </span>MULTISAMPLED: u32,
+        <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt;
+    ImageWithMethods&lt;
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        SAMPLED,
+        FORMAT,
+        COMPONENTS,
+        SampleParams,
+    &gt; <span class="kw">for </span>Image&lt;SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, COMPONENTS&gt;
+{
+    <span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
+    #[doc(alias = <span class="string">&quot;OpImageFetch&quot;</span>)]
+    </span><span class="kw">fn </span>fetch_with&lt;I&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        coordinate: <span class="kw">impl </span>ImageCoordinate&lt;I, DIM, ARRAYED&gt;,
+        params: SampleParams,
+    ) -&gt; SampledType::SampleResult
+    <span class="kw">where
+        </span>I: Integer,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
+        <span class="kw">unsafe </span>{
+            <span class="macro">asm! </span>{
+                <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
+                <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
+                <span class="string">&quot;%result = OpImageFetch typeof*{result} %image %coordinate $PARAMS&quot;</span>,
+                <span class="string">&quot;OpStore {result} %result&quot;</span>,
+                result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
+                this = <span class="kw">in</span>(reg) <span class="self">self</span>,
+                coordinate = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coordinate,
+            }
+        }
+        result.truncate_into()
+    }
+
+    <span class="doccomment">/// Gathers the requested component from four texels.
+    </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
+    #[doc(alias = <span class="string">&quot;OpImageGather&quot;</span>)]
+    #[inline]
+    </span><span class="kw">fn </span>gather_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
+        component: u32,
+        params: SampleParams,
+    ) -&gt; SampledType::Vec4
+    <span class="kw">where
+        </span><span class="self">Self</span>: HasGather,
+        F: Float,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
+        <span class="kw">unsafe </span>{
+            <span class="macro">asm! </span>{
+                <span class="string">&quot;%typeSampledImage = OpTypeSampledImage typeof*{this}&quot;</span>,
+                <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
+                <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
+                <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
+                <span class="string">&quot;%sampledImage = OpSampledImage %typeSampledImage %image %sampler&quot;</span>,
+                <span class="string">&quot;%result = OpImageGather typeof*{result} %sampledImage %coordinate {component} $PARAMS&quot;</span>,
+                <span class="string">&quot;OpStore {result} %result&quot;</span>,
+                result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
+                this = <span class="kw">in</span>(reg) <span class="self">self</span>,
+                sampler = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>sampler,
+                coordinate = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coordinate,
+                component = <span class="kw">in</span>(reg) component,
+            }
+        }
+        result
+    }
+
+    <span class="doccomment">/// Sample texels at `coord` from the image using `sampler`.
+    </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
+    </span><span class="kw">fn </span>sample_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        coord: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
+        params: SampleParams,
+    ) -&gt; SampledType::SampleResult
+    <span class="kw">where
+        </span>F: Float,
+    {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
+            <span class="macro">asm!</span>(
+                <span class="string">&quot;%typeSampledImage = OpTypeSampledImage typeof*{this}&quot;</span>,
+                <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
+                <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
+                <span class="string">&quot;%coord = OpLoad _ {coord}&quot;</span>,
+                <span class="string">&quot;%sampledImage = OpSampledImage %typeSampledImage %image %sampler&quot;</span>,
+                <span class="string">&quot;%result = OpImageSample$LOD typeof*{result} %sampledImage %coord $PARAMS&quot;</span>,
+                <span class="string">&quot;OpStore {result} %result&quot;</span>,
+                result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
+                this = <span class="kw">in</span>(reg) <span class="self">self</span>,
+                sampler = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>sampler,
+                coord = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coord,
+            );
+            result.truncate_into()
+        }
+    }
+
+    <span class="doccomment">/// Sample the image&#39;s depth reference
+    </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
+    #[doc(alias = <span class="string">&quot;OpImageSampleDrefImplicitLod&quot;</span>)]
+    </span><span class="kw">fn </span>sample_depth_reference_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, ARRAYED&gt;,
+        depth_reference: f32,
+        params: SampleParams,
+    ) -&gt; SampledType
     <span class="kw">where
         </span>F: Float,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
-        <span class="macro">asm!</span>(
-            <span class="string">&quot;%sampledImage = OpLoad typeof*{1} {1}&quot;</span>,
-            <span class="string">&quot;%coord = OpLoad typeof*{2} {2}&quot;</span>,
-            <span class="string">&quot;%lod = OpLoad typeof*{3} {3}&quot;</span>,
-            <span class="string">&quot;%result = OpImageSampleExplicitLod typeof*{0} %sampledImage %coord Lod %lod&quot;</span>,
-            <span class="string">&quot;OpStore {0} %result&quot;</span>,
-            <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
-            <span class="kw">in</span>(reg) <span class="self">self</span>,
-            <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coord,
-            <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>lod,
-        );
+        <span class="kw">unsafe </span>{
+            <span class="macro">asm!</span>(
+                <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
+                <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
+                <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
+                <span class="string">&quot;%depth_reference = OpLoad _ {depth_reference}&quot;</span>, <span class="comment">// not required to do this way, but done for consistency
+                </span><span class="string">&quot;%sampledImage = OpSampledImage _ %image %sampler&quot;</span>,
+                <span class="string">&quot;%result = OpImageSampleDref$LOD _ %sampledImage %coordinate %depth_reference $PARAMS&quot;</span>,
+                <span class="string">&quot;OpStore {result} %result&quot;</span>,
+                result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
+                this = <span class="kw">in</span>(reg) <span class="self">self</span>,
+                sampler = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>sampler,
+                coordinate = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>coordinate,
+                depth_reference = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>depth_reference,
+            );
+        }
+        result
+    }
+
+    <span class="doccomment">/// Sample the image with a project coordinate
+    </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
+    #[doc(alias = <span class="string">&quot;OpImageSampleProjImplicitLod&quot;</span>)]
+    </span><span class="kw">fn </span>sample_with_project_coordinate_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        project_coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::True <span class="kw">as </span>u32 }&gt;,
+        params: SampleParams,
+    ) -&gt; SampledType::SampleResult
+    <span class="kw">where
+        </span>F: Float,
+    {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>result = SampledType::Vec4::default();
+            <span class="macro">asm!</span>(
+                <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
+                <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
+                <span class="string">&quot;%project_coordinate = OpLoad _ {project_coordinate}&quot;</span>,
+                <span class="string">&quot;%sampledImage = OpSampledImage _ %image %sampler&quot;</span>,
+                <span class="string">&quot;%result = OpImageSampleProj$LOD _ %sampledImage %project_coordinate $PARAMS&quot;</span>,
+                <span class="string">&quot;OpStore {result} %result&quot;</span>,
+                result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
+                this = <span class="kw">in</span>(reg) <span class="self">self</span>,
+                sampler = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>sampler,
+                project_coordinate = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>project_coordinate,
+            );
+            result.truncate_into()
+        }
+    }
+
+    <span class="doccomment">/// Sample the image&#39;s depth reference with the project coordinate
+    </span><span class="attr">#[<span class="kw">crate</span>::macros::gpu_only]
+    #[doc(alias = <span class="string">&quot;OpImageSampleProjDrefImplicitLod&quot;</span>)]
+    </span><span class="kw">fn </span>sample_depth_reference_with_project_coordinate_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sampler: Sampler,
+        project_coordinate: <span class="kw">impl </span>ImageCoordinate&lt;F, DIM, { Arrayed::True <span class="kw">as </span>u32 }&gt;,
+        depth_reference: f32,
+        params: SampleParams,
+    ) -&gt; SampledType
+    <span class="kw">where
+        </span>F: Float,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>result = Default::default();
+        <span class="kw">unsafe </span>{
+            <span class="macro">asm!</span>(
+                <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
+                <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
+                <span class="string">&quot;%project_coordinate = OpLoad _ {project_coordinate}&quot;</span>,
+                <span class="string">&quot;%depth_reference = OpLoad _ {depth_reference}&quot;</span>, <span class="comment">// not required to do this way, but done for consistency
+                </span><span class="string">&quot;%sampledImage = OpSampledImage _ %image %sampler&quot;</span>,
+                <span class="string">&quot;%result = OpImageSampleProjDref$LOD _ %sampledImage %project_coordinate %depth_reference $PARAMS&quot;</span>,
+                <span class="string">&quot;OpStore {result} %result&quot;</span>,
+                result = <span class="kw">in</span>(reg) <span class="kw-2">&amp;mut </span>result,
+                this = <span class="kw">in</span>(reg) <span class="self">self</span>,
+                sampler = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>sampler,
+                project_coordinate = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>project_coordinate,
+                depth_reference = <span class="kw">in</span>(reg) <span class="kw-2">&amp;</span>depth_reference,
+            );
+        }
         result
     }
 }
@@ -2518,11 +3358,12 @@
 /// `OpTypeImage` must be 0.&quot;
 </span><span class="kw">pub trait </span>HasGather {}
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasGather
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2532,15 +3373,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasGather
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2550,15 +3393,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasGather
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2568,6 +3413,7 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
@@ -2578,12 +3424,13 @@
 /// &quot;Its Dim operand must be one of 1D, 2D, 3D, or Cube.&quot;
 </span><span class="kw">pub trait </span>HasQueryLevels {}
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQueryLevels
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2593,16 +3440,18 @@
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQueryLevels
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2612,16 +3461,18 @@
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQueryLevels
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2631,16 +3482,18 @@
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQueryLevels
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2650,6 +3503,7 @@
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
@@ -2661,11 +3515,12 @@
 /// 3D, or Cube, it must also have either an MS of 1 or a Sampled of 0 or 2.&quot;
 </span><span class="kw">pub trait </span>HasQuerySize {}
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2675,11 +3530,17 @@
         { Multisampled::True <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
-<span class="kw">impl</span>&lt;SampledType: SampleType&lt;FORMAT&gt;, <span class="kw">const </span>DEPTH: u32, <span class="kw">const </span>FORMAT: u32, <span class="kw">const </span>ARRAYED: u32&gt;
-    HasQuerySize
+<span class="kw">impl</span>&lt;
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+        <span class="kw">const </span>DEPTH: u32,
+        <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>ARRAYED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
         { Dimensionality::OneD <span class="kw">as </span>u32 },
@@ -2688,11 +3549,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         { Sampled::Unknown <span class="kw">as </span>u32 },
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
-<span class="kw">impl</span>&lt;SampledType: SampleType&lt;FORMAT&gt;, <span class="kw">const </span>DEPTH: u32, <span class="kw">const </span>FORMAT: u32, <span class="kw">const </span>ARRAYED: u32&gt;
-    HasQuerySize
+<span class="kw">impl</span>&lt;
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+        <span class="kw">const </span>DEPTH: u32,
+        <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>ARRAYED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
         { Dimensionality::OneD <span class="kw">as </span>u32 },
@@ -2701,15 +3568,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         { Sampled::No <span class="kw">as </span>u32 },
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2719,11 +3588,17 @@
         { Multisampled::True <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
-<span class="kw">impl</span>&lt;SampledType: SampleType&lt;FORMAT&gt;, <span class="kw">const </span>DEPTH: u32, <span class="kw">const </span>FORMAT: u32, <span class="kw">const </span>ARRAYED: u32&gt;
-    HasQuerySize
+<span class="kw">impl</span>&lt;
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+        <span class="kw">const </span>DEPTH: u32,
+        <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>ARRAYED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
         { Dimensionality::TwoD <span class="kw">as </span>u32 },
@@ -2732,11 +3607,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         { Sampled::Unknown <span class="kw">as </span>u32 },
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
-<span class="kw">impl</span>&lt;SampledType: SampleType&lt;FORMAT&gt;, <span class="kw">const </span>DEPTH: u32, <span class="kw">const </span>FORMAT: u32, <span class="kw">const </span>ARRAYED: u32&gt;
-    HasQuerySize
+<span class="kw">impl</span>&lt;
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+        <span class="kw">const </span>DEPTH: u32,
+        <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>ARRAYED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
         { Dimensionality::TwoD <span class="kw">as </span>u32 },
@@ -2745,15 +3626,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         { Sampled::No <span class="kw">as </span>u32 },
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2763,11 +3646,17 @@
         { Multisampled::True <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
-<span class="kw">impl</span>&lt;SampledType: SampleType&lt;FORMAT&gt;, <span class="kw">const </span>DEPTH: u32, <span class="kw">const </span>FORMAT: u32, <span class="kw">const </span>ARRAYED: u32&gt;
-    HasQuerySize
+<span class="kw">impl</span>&lt;
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+        <span class="kw">const </span>DEPTH: u32,
+        <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>ARRAYED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
         { Dimensionality::ThreeD <span class="kw">as </span>u32 },
@@ -2776,11 +3665,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         { Sampled::Unknown <span class="kw">as </span>u32 },
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
-<span class="kw">impl</span>&lt;SampledType: SampleType&lt;FORMAT&gt;, <span class="kw">const </span>DEPTH: u32, <span class="kw">const </span>FORMAT: u32, <span class="kw">const </span>ARRAYED: u32&gt;
-    HasQuerySize
+<span class="kw">impl</span>&lt;
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+        <span class="kw">const </span>DEPTH: u32,
+        <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>ARRAYED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
         { Dimensionality::ThreeD <span class="kw">as </span>u32 },
@@ -2789,15 +3684,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         { Sampled::No <span class="kw">as </span>u32 },
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2807,11 +3704,17 @@
         { Multisampled::True <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
-<span class="kw">impl</span>&lt;SampledType: SampleType&lt;FORMAT&gt;, <span class="kw">const </span>DEPTH: u32, <span class="kw">const </span>FORMAT: u32, <span class="kw">const </span>ARRAYED: u32&gt;
-    HasQuerySize
+<span class="kw">impl</span>&lt;
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+        <span class="kw">const </span>DEPTH: u32,
+        <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>ARRAYED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
         { Dimensionality::Cube <span class="kw">as </span>u32 },
@@ -2820,11 +3723,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         { Sampled::Unknown <span class="kw">as </span>u32 },
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
-<span class="kw">impl</span>&lt;SampledType: SampleType&lt;FORMAT&gt;, <span class="kw">const </span>DEPTH: u32, <span class="kw">const </span>FORMAT: u32, <span class="kw">const </span>ARRAYED: u32&gt;
-    HasQuerySize
+<span class="kw">impl</span>&lt;
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
+        <span class="kw">const </span>DEPTH: u32,
+        <span class="kw">const </span>FORMAT: u32,
+        <span class="kw">const </span>ARRAYED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
+    &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
         { Dimensionality::Cube <span class="kw">as </span>u32 },
@@ -2833,16 +3742,18 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         { Sampled::No <span class="kw">as </span>u32 },
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2852,16 +3763,18 @@
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>MULTISAMPLED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySize
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2871,6 +3784,7 @@
         MULTISAMPLED,
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
@@ -2881,11 +3795,12 @@
 /// &quot;Its Dim operand must be one of 1D, 2D, 3D, or Cube, and its MS must be 0.&quot;
 </span><span class="kw">pub trait </span>HasQuerySizeLod {}
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySizeLod
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2895,15 +3810,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySizeLod
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2913,15 +3830,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySizeLod
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2931,15 +3850,17 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
 <span class="kw">impl</span>&lt;
-        SampledType: SampleType&lt;FORMAT&gt;,
+        SampledType: SampleType&lt;FORMAT, COMPONENTS&gt;,
         <span class="kw">const </span>DEPTH: u32,
         <span class="kw">const </span>FORMAT: u32,
         <span class="kw">const </span>ARRAYED: u32,
         <span class="kw">const </span>SAMPLED: u32,
+        <span class="kw">const </span>COMPONENTS: u32,
     &gt; HasQuerySizeLod
     <span class="kw">for </span>Image&lt;
         SampledType,
@@ -2949,8 +3870,8 @@
         { Multisampled::False <span class="kw">as </span>u32 },
         SAMPLED,
         FORMAT,
+        COMPONENTS,
     &gt;
 {
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="spirv_std" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (5ce39f42b 2023-01-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>
+</code></pre></div></section></main></body></html>

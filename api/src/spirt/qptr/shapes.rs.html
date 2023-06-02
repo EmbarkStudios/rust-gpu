@@ -1,0 +1,211 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/qptr/shapes.rs`."><title>shapes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (84dd17b56 2023-04-14)" data-search-js="search-18a8966354e5d906.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<a href="#2" id="2">2</a>
+<a href="#3" id="3">3</a>
+<a href="#4" id="4">4</a>
+<a href="#5" id="5">5</a>
+<a href="#6" id="6">6</a>
+<a href="#7" id="7">7</a>
+<a href="#8" id="8">8</a>
+<a href="#9" id="9">9</a>
+<a href="#10" id="10">10</a>
+<a href="#11" id="11">11</a>
+<a href="#12" id="12">12</a>
+<a href="#13" id="13">13</a>
+<a href="#14" id="14">14</a>
+<a href="#15" id="15">15</a>
+<a href="#16" id="16">16</a>
+<a href="#17" id="17">17</a>
+<a href="#18" id="18">18</a>
+<a href="#19" id="19">19</a>
+<a href="#20" id="20">20</a>
+<a href="#21" id="21">21</a>
+<a href="#22" id="22">22</a>
+<a href="#23" id="23">23</a>
+<a href="#24" id="24">24</a>
+<a href="#25" id="25">25</a>
+<a href="#26" id="26">26</a>
+<a href="#27" id="27">27</a>
+<a href="#28" id="28">28</a>
+<a href="#29" id="29">29</a>
+<a href="#30" id="30">30</a>
+<a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
+<a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
+<a href="#42" id="42">42</a>
+<a href="#43" id="43">43</a>
+<a href="#44" id="44">44</a>
+<a href="#45" id="45">45</a>
+<a href="#46" id="46">46</a>
+<a href="#47" id="47">47</a>
+<a href="#48" id="48">48</a>
+<a href="#49" id="49">49</a>
+<a href="#50" id="50">50</a>
+<a href="#51" id="51">51</a>
+<a href="#52" id="52">52</a>
+<a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Variable shapes (untyped memory layouts vs abstract resources).
+</span><span class="comment">//
+// FIXME(eddyb) does this need its own module still?
+
+</span><span class="kw">use crate</span>::{AddrSpace, Type};
+<span class="kw">use </span>std::num::NonZeroU32;
+
+<span class="doccomment">/// `GlobalVar`s are currently used for both chunks of plain data (i.e. memory),
+/// and the &quot;shader interface&quot; (inherited by `Shader` SPIR-V from GLSL, whereas
+/// `Kernel` SPIR-V ended up with `OpenCL`&#39;s &quot;resources are passed to entry-points
+/// as regular function arguments&quot;, with `BuiltIn`+`Input` as a sole exception).
+</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>GlobalVarShape {
+    <span class="doccomment">/// One or more (i.e. optionally arrayed) &quot;abstract resource&quot; `Handle`s
+    /// (see `Handle` documentation for more on what it can represent).
+    ///
+    /// The single handle case is equivalent to a length `1` array of handles,
+    /// and as such is represented by having `fixed_count` be `Some(1)`.
+    </span>Handles {
+        handle: Handle,
+        fixed_count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+    },
+
+    <span class="comment">// FIXME(eddyb) unify terminology around &quot;concrete&quot;/&quot;memory&quot;/&quot;untyped (data)&quot;.
+    </span>UntypedData(MemLayout),
+
+    <span class="doccomment">/// Non-memory pipeline interface, which must keep the exact original type,
+    /// even if that type is concrete and could be handled just like memory.
+    ///
+    /// Typically `Input` or `Output`, but extensions (e.g. ray-tracing) may add
+    /// more such interface storage classes with strict type requirements.
+    </span><span class="comment">//
+    // FIXME(eddyb) consider replacing this with by-value entry-point args/return
+    // (though that would not solve some of the weirder ones).
+    </span>TypedInterface(Type),
+}
+
+<span class="doccomment">/// &quot;Abstract resource&quot; handle, that can be found in non-memory `GlobalVar`s.
+///
+/// This largely corresponds to the Vulkan concept of a &quot;descriptor&quot;, and arrays
+/// of handles (e.g. `GlobalVarShape::Handles` with `fixed_count != Some(1)`)
+/// map to the &quot;descriptor indexing&quot; usecase.
+</span><span class="comment">//
+// FIXME(eddyb) consider implementing &quot;descriptor indexing&quot; more like HLSL&#39;s
+// &quot;resource heap&quot; (with types only specified at use sites, &quot;casts&quot; almost).
+</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub enum </span>Handle&lt;BL = MaybeDynMemLayout&gt; {
+    <span class="doccomment">/// Fully opaque resources (e.g. samplers, images).
+    </span>Opaque(Type),
+
+    <span class="doccomment">/// Buffer resources, describing ranges of (technically) untyped memory in
+    /// some address space (e.g. `Uniform`, `StorageBuffer`), but being limited
+    /// by SPIR-V logical addressing (unlike e.g. `PhysicalStorageBuffer`).
+    ///
+    /// SPIR-V makes this particularly painful, through a couple of design flaws:
+    /// - forcing a static type (for the buffer contents) and disallowing any
+    ///   pointer casts, despite the fact that any plausible representation for
+    ///   &quot;logical pointer into a buffer&quot; (e.g. `(BufferDescriptor, Offset)`)
+    ///   must be *fundamentally* untyped (as it must allow access to relatively
+    ///   large amounts of memory, and also support dynamic array indexing),
+    ///   even when not a &quot;GPU memory address&quot; (like `PhysicalStorageBuffer`)
+    /// - encoding the buffer type using a (GLSL-style) &quot;interface block&quot;, where
+    ///   instead of a special type (or a pointer with the right storage class),
+    ///   an `OpTypeStruct` (having the statically typed buffer contents as fields)
+    ///   with the `Block` decoration is used, and then this &quot;interface block&quot;
+    ///   type can be further nested in `OpTypeArray` or `OpTypeRuntimeArray`
+    ///   to allow descriptor indexing - which leads to constructs like a GLSL
+    ///   `buffer { uint data[]; } bufs[];` being encoded with two levels of
+    ///   `OpTypeRuntimeArray`, separated not by any explicit indirection, but
+    ///   only by the `Block` decoration on the `OpTypeStruct` for `buffer {...}`
+    </span><span class="comment">//
+    // FIXME(eddyb) should `PushConstant` use `GlobalVarShape::UntypedData`
+    // instead of being treated like a buffer?
+    //
+    // FIXME(eddyb) should this be a `Type` of its own, that can be loaded from
+    // a handle `QPtr`, and then has data pointer / length ops *on that*?
+    </span>Buffer(AddrSpace, BL),
+}
+
+<span class="doccomment">/// Untyped memory shape with constant alignment and size.
+///
+/// `align`/`legacy_align` correspond to &quot;scalar&quot;/&quot;base&quot; alignments in Vulkan,
+/// and are both kept track of to detect ambiguity in implicit layouts, e.g.
+/// field offsets when the `Offset` decoration isn&#39;t being used.
+/// Note, however, that `legacy_align` can be raised to &quot;extended&quot; alignment,
+/// or completeley ignored, using [`LayoutConfig`](crate::qptr::LayoutConfig).
+///
+/// Only `align` is *required*, that is `size % align == 0` must be always enforced.
+</span><span class="comment">//
+// FIXME(eddyb) consider supporting specialization-constant-length arrays.
+</span><span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>MemLayout {
+    <span class="comment">// FIXME(eddyb) use proper newtypes (and log2 for align!).
+    </span><span class="kw">pub </span>align: u32,
+    <span class="kw">pub </span>legacy_align: u32,
+    <span class="kw">pub </span>size: u32,
+}
+
+<span class="doccomment">/// Untyped memory shape with constant alignment but potentially-dynamic size,
+/// roughly corresponding to a Rust `(FixedBase, [DynUnit])` type&#39;s layout.
+</span><span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>MaybeDynMemLayout {
+    <span class="kw">pub </span>fixed_base: MemLayout,
+    <span class="kw">pub </span>dyn_unit_stride: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+}
+</code></pre></div></section></main></body></html>

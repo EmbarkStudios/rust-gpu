@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.22.0/src/f32/sse2/vec4.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vec4.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/glam-0.24.0/src/f32/sse2/vec4.rs`."><title>vec4.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="glam" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (84dd17b56 2023-04-14)" data-search-js="search-18a8966354e5d906.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../glam/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1076,9 +1076,36 @@
 <a href="#1076" id="1076">1076</a>
 <a href="#1077" id="1077">1077</a>
 <a href="#1078" id="1078">1078</a>
-</pre><pre class="rust"><code><span class="comment">// Generated from vec.rs.tera template. Edit the template, not the generated file.
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+</pre></div><pre class="rust"><code><span class="comment">// Generated from vec.rs.tera template. Edit the template, not the generated file.
 
-</span><span class="kw">use crate</span>::{sse2::<span class="kw-2">*</span>, BVec4A, Vec2, Vec3, Vec3A};
+</span><span class="kw">use crate</span>::{f32::math, sse2::<span class="kw-2">*</span>, BVec4A, Vec2, Vec3, Vec3A};
 
 <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;spirv&quot;</span>))]
 </span><span class="kw">use </span>core::fmt;
@@ -1089,10 +1116,6 @@
 </span><span class="kw">use </span>core::arch::x86::<span class="kw-2">*</span>;
 <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
-
-<span class="attr">#[cfg(feature = <span class="string">&quot;libm&quot;</span>)]
-#[allow(unused_imports)]
-</span><span class="kw">use </span>num_traits::Float;
 
 <span class="kw">union </span>UnionCast {
     a: [f32; <span class="number">4</span>],
@@ -1105,9 +1128,11 @@
     Vec4::new(x, y, z, w)
 }
 
-<span class="doccomment">/// A 4-dimensional vector with SIMD support.
+<span class="doccomment">/// A 4-dimensional vector.
 ///
-/// This type uses 16 byte aligned SIMD vector type for storage.
+/// SIMD vector types are used for storage on supported platforms.
+///
+/// This type is 16 byte aligned.
 </span><span class="attr">#[derive(Clone, Copy)]
 #[repr(transparent)]
 </span><span class="kw">pub struct </span>Vec4(<span class="kw">pub</span>(<span class="kw">crate</span>) __m128);
@@ -1216,9 +1241,9 @@
 
     <span class="doccomment">/// Creates a 2D vector from the `x`, `y` and `z` elements of `self`, discarding `w`.
     ///
-    /// Truncation to `Vec3` may also be performed by using `self.xyz()` or `Vec3::from()`.
+    /// Truncation to [`Vec3`] may also be performed by using [`self.xyz()`][crate::swizzles::Vec4Swizzles::xyz()].
     ///
-    /// To truncate to `Vec3A` use `Vec3A::from()`.
+    /// To truncate to [`Vec3A`] use [`Vec3A::from()`].
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>truncate(<span class="self">self</span>) -&gt; Vec3 {
         <span class="kw">use </span><span class="kw">crate</span>::swizzles::Vec4Swizzles;
@@ -1372,6 +1397,18 @@
         }
     }
 
+    <span class="doccomment">/// Returns a vector with signs of `rhs` and the magnitudes of `self`.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>copysign(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>mask = <span class="self">Self</span>::splat(-<span class="number">0.0</span>);
+            <span class="self">Self</span>(_mm_or_ps(
+                _mm_and_ps(rhs.<span class="number">0</span>, mask.<span class="number">0</span>),
+                _mm_andnot_ps(mask.<span class="number">0</span>, <span class="self">self</span>.<span class="number">0</span>),
+            ))
+        }
+    }
+
     <span class="doccomment">/// Returns a bitmask with the lowest 4 bits set to the sign bits from the elements of `self`.
     ///
     /// A negative element results in a `1` bit and a positive element in a `0` bit.  Element `x` goes
@@ -1448,7 +1485,7 @@
     ///
     /// For valid results, `self` must _not_ be of length zero, nor very close to zero.
     ///
-    /// See also [`Self::try_normalize`] and [`Self::normalize_or_zero`].
+    /// See also [`Self::try_normalize()`] and [`Self::normalize_or_zero()`].
     ///
     /// Panics
     ///
@@ -1470,7 +1507,7 @@
     /// In particular, if the input is zero (or very close to zero), or non-finite,
     /// the result of this operation will be `None`.
     ///
-    /// See also [`Self::normalize_or_zero`].
+    /// See also [`Self::normalize_or_zero()`].
     </span><span class="attr">#[must_use]
     #[inline]
     </span><span class="kw">pub fn </span>try_normalize(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
@@ -1487,7 +1524,7 @@
     /// In particular, if the input is zero (or very close to zero), or non-finite,
     /// the result of this operation will be zero.
     ///
-    /// See also [`Self::try_normalize`].
+    /// See also [`Self::try_normalize()`].
     </span><span class="attr">#[must_use]
     #[inline]
     </span><span class="kw">pub fn </span>normalize_or_zero(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
@@ -1505,7 +1542,7 @@
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_normalized(<span class="self">self</span>) -&gt; bool {
         <span class="comment">// TODO: do something with epsilon
-        </span>(<span class="self">self</span>.length_squared() - <span class="number">1.0</span>).abs() &lt;= <span class="number">1e-4
+        </span>math::abs(<span class="self">self</span>.length_squared() - <span class="number">1.0</span>) &lt;= <span class="number">1e-4
     </span>}
 
     <span class="doccomment">/// Returns the vector projection of `self` onto `rhs`.
@@ -1603,17 +1640,22 @@
     /// `self`.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>exp(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new(<span class="self">self</span>.x.exp(), <span class="self">self</span>.y.exp(), <span class="self">self</span>.z.exp(), <span class="self">self</span>.w.exp())
+        <span class="self">Self</span>::new(
+            math::exp(<span class="self">self</span>.x),
+            math::exp(<span class="self">self</span>.y),
+            math::exp(<span class="self">self</span>.z),
+            math::exp(<span class="self">self</span>.w),
+        )
     }
 
     <span class="doccomment">/// Returns a vector containing each element of `self` raised to the power of `n`.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>powf(<span class="self">self</span>, n: f32) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(
-            <span class="self">self</span>.x.powf(n),
-            <span class="self">self</span>.y.powf(n),
-            <span class="self">self</span>.z.powf(n),
-            <span class="self">self</span>.w.powf(n),
+            math::powf(<span class="self">self</span>.x, n),
+            math::powf(<span class="self">self</span>.y, n),
+            math::powf(<span class="self">self</span>.z, n),
+            math::powf(<span class="self">self</span>.w, n),
         )
     }
 
@@ -1658,9 +1700,9 @@
         <span class="macro">glam_assert!</span>(min &lt;= max);
         <span class="kw">let </span>length_sq = <span class="self">self</span>.length_squared();
         <span class="kw">if </span>length_sq &lt; min * min {
-            <span class="self">self </span>* (length_sq.sqrt().recip() * min)
+            min * (<span class="self">self </span>/ math::sqrt(length_sq))
         } <span class="kw">else if </span>length_sq &gt; max * max {
-            <span class="self">self </span>* (length_sq.sqrt().recip() * max)
+            max * (<span class="self">self </span>/ math::sqrt(length_sq))
         } <span class="kw">else </span>{
             <span class="self">self
         </span>}
@@ -1670,7 +1712,7 @@
     </span><span class="kw">pub fn </span>clamp_length_max(<span class="self">self</span>, max: f32) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>length_sq = <span class="self">self</span>.length_squared();
         <span class="kw">if </span>length_sq &gt; max * max {
-            <span class="self">self </span>* (length_sq.sqrt().recip() * max)
+            max * (<span class="self">self </span>/ math::sqrt(length_sq))
         } <span class="kw">else </span>{
             <span class="self">self
         </span>}
@@ -1680,7 +1722,7 @@
     </span><span class="kw">pub fn </span>clamp_length_min(<span class="self">self</span>, min: f32) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>length_sq = <span class="self">self</span>.length_squared();
         <span class="kw">if </span>length_sq &lt; min * min {
-            <span class="self">self </span>* (length_sq.sqrt().recip() * min)
+            min * (<span class="self">self </span>/ math::sqrt(length_sq))
         } <span class="kw">else </span>{
             <span class="self">self
         </span>}
@@ -1701,10 +1743,10 @@
         }
         <span class="attr">#[cfg(not(target_feature = <span class="string">&quot;fma&quot;</span>))]
         </span><span class="self">Self</span>::new(
-            <span class="self">self</span>.x.mul_add(a.x, b.x),
-            <span class="self">self</span>.y.mul_add(a.y, b.y),
-            <span class="self">self</span>.z.mul_add(a.z, b.z),
-            <span class="self">self</span>.w.mul_add(a.w, b.w),
+            math::mul_add(<span class="self">self</span>.x, a.x, b.x),
+            math::mul_add(<span class="self">self</span>.y, a.y, b.y),
+            math::mul_add(<span class="self">self</span>.z, a.z, b.z),
+            math::mul_add(<span class="self">self</span>.w, a.w, b.w),
         )
     }
 
@@ -1724,6 +1766,18 @@
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>as_uvec4(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::UVec4 {
         <span class="kw">crate</span>::UVec4::new(<span class="self">self</span>.x <span class="kw">as </span>u32, <span class="self">self</span>.y <span class="kw">as </span>u32, <span class="self">self</span>.z <span class="kw">as </span>u32, <span class="self">self</span>.w <span class="kw">as </span>u32)
+    }
+
+    <span class="doccomment">/// Casts all elements of `self` to `i64`.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>as_i64vec4(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::I64Vec4 {
+        <span class="kw">crate</span>::I64Vec4::new(<span class="self">self</span>.x <span class="kw">as </span>i64, <span class="self">self</span>.y <span class="kw">as </span>i64, <span class="self">self</span>.z <span class="kw">as </span>i64, <span class="self">self</span>.w <span class="kw">as </span>i64)
+    }
+
+    <span class="doccomment">/// Casts all elements of `self` to `u64`.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>as_u64vec4(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::U64Vec4 {
+        <span class="kw">crate</span>::U64Vec4::new(<span class="self">self</span>.x <span class="kw">as </span>u64, <span class="self">self</span>.y <span class="kw">as </span>u64, <span class="self">self</span>.z <span class="kw">as </span>u64, <span class="self">self</span>.w <span class="kw">as </span>u64)
     }
 }
 
@@ -2154,5 +2208,4 @@
         <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(<span class="self">self </span><span class="kw">as </span><span class="kw-2">*mut </span><span class="self">Self</span>).cast() }
     }
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="glam" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (5ce39f42b 2023-01-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>
+</code></pre></div></section></main></body></html>

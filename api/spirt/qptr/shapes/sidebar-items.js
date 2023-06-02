@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["GlobalVarShape","Handle"],"struct":["MaybeDynMemLayout","MemLayout"]};

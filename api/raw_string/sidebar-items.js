@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["unix","Conversions only available on unix."]],"struct":[["RawStr","A `str` with unchecked contents."],["RawString","A `String` with unchecked contents."],["Utf8Chunk","A chunk of valid UTF-8, possibly followed by a broken character encoding."],["Utf8ChunksIter","An iterator over chunks of valid UTF-8 in a RawStr."]],"trait":[["RawStrIndex","The equivalent of `SliceIndex` for `RawStr`."]]};
+window.SIDEBAR_ITEMS = {"mod":["unix"],"struct":["RawStr","RawString","Utf8Chunk","Utf8ChunksIter"],"trait":["RawStrIndex"]};

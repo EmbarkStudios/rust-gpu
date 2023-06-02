@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["QPtrAttr","QPtrMemUsageKind","QPtrOp","QPtrUsage"],"mod":["analyze","lift","lower","shapes"],"struct":["LayoutConfig","QPtrMemUsage"]};

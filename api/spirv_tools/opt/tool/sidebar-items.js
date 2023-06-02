@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["ToolOptimizer",""]]};
+window.SIDEBAR_ITEMS = {"struct":["ToolOptimizer"]};

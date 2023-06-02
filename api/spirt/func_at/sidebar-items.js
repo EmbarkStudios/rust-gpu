@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["FuncAt","Immutable traversal (i.e. visiting) helper for intra-function entities."],["FuncAtMut","Mutable traversal (i.e. transforming) helper for intra-function entities."]]};
+window.SIDEBAR_ITEMS = {"struct":["FuncAt","FuncAtMut"]};

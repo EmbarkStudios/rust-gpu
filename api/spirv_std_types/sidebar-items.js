@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["image_params",""]]};
+window.SIDEBAR_ITEMS = {"mod":["image_params"]};

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spirt-0.1.0/src/spv/lift.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lift.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spirt-0.2.0/src/spv/lift.rs`."><title>lift.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (84dd17b56 2023-04-14)" data-search-js="search-18a8966354e5d906.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../spirt/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1870,7 +1870,37 @@
 <a href="#1870" id="1870">1870</a>
 <a href="#1871" id="1871">1871</a>
 <a href="#1872" id="1872">1872</a>
-</pre><pre class="rust"><code><span class="doccomment">//! SPIR-T to SPIR-V lifting.
+<a href="#1873" id="1873">1873</a>
+<a href="#1874" id="1874">1874</a>
+<a href="#1875" id="1875">1875</a>
+<a href="#1876" id="1876">1876</a>
+<a href="#1877" id="1877">1877</a>
+<a href="#1878" id="1878">1878</a>
+<a href="#1879" id="1879">1879</a>
+<a href="#1880" id="1880">1880</a>
+<a href="#1881" id="1881">1881</a>
+<a href="#1882" id="1882">1882</a>
+<a href="#1883" id="1883">1883</a>
+<a href="#1884" id="1884">1884</a>
+<a href="#1885" id="1885">1885</a>
+<a href="#1886" id="1886">1886</a>
+<a href="#1887" id="1887">1887</a>
+<a href="#1888" id="1888">1888</a>
+<a href="#1889" id="1889">1889</a>
+<a href="#1890" id="1890">1890</a>
+<a href="#1891" id="1891">1891</a>
+<a href="#1892" id="1892">1892</a>
+<a href="#1893" id="1893">1893</a>
+<a href="#1894" id="1894">1894</a>
+<a href="#1895" id="1895">1895</a>
+<a href="#1896" id="1896">1896</a>
+<a href="#1897" id="1897">1897</a>
+<a href="#1898" id="1898">1898</a>
+<a href="#1899" id="1899">1899</a>
+<a href="#1900" id="1900">1900</a>
+<a href="#1901" id="1901">1901</a>
+<a href="#1902" id="1902">1902</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-T to SPIR-V lifting.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::func_at::FuncAt;
 <span class="kw">use </span><span class="kw">crate</span>::spv::{<span class="self">self</span>, spec};
@@ -1994,6 +2024,12 @@
         }
         <span class="kw">let </span>ty_def = <span class="kw-2">&amp;</span><span class="self">self</span>.cx[ty];
         <span class="kw">match </span>ty_def.ctor {
+            <span class="comment">// FIXME(eddyb) this should be a proper `Result`-based error instead,
+            // and/or `spv::lift` should mutate the module for legalization.
+            </span>TypeCtor::QPtr =&gt; {
+                <span class="macro">unreachable!</span>(<span class="string">&quot;`TypeCtor::QPtr` should be legalized away before lifting&quot;</span>);
+            }
+
             TypeCtor::SpvInst(<span class="kw">_</span>) =&gt; {}
             TypeCtor::SpvStringLiteralForExtInst =&gt; {
                 <span class="macro">unreachable!</span>(
@@ -2073,16 +2109,26 @@
     }
     <span class="kw">fn </span>visit_attr(<span class="kw-2">&amp;mut </span><span class="self">self</span>, attr: <span class="kw-2">&amp;</span>Attr) {
         <span class="kw">match </span><span class="kw-2">*</span>attr {
-            Attr::SpvAnnotation { .. } | Attr::SpvBitflagsOperand(<span class="kw">_</span>) =&gt; {}
+            Attr::Diagnostics(<span class="kw">_</span>)
+            | Attr::QPtr(<span class="kw">_</span>)
+            | Attr::SpvAnnotation { .. }
+            | Attr::SpvBitflagsOperand(<span class="kw">_</span>) =&gt; {}
             Attr::SpvDebugLine { file_path, .. } =&gt; {
                 <span class="self">self</span>.debug_strings.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.cx[file_path.<span class="number">0</span>]);
             }
         }
+        attr.inner_visit_with(<span class="self">self</span>);
     }
 
     <span class="kw">fn </span>visit_data_inst_def(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data_inst_def: <span class="kw-2">&amp;</span>DataInstDef) {
         <span class="attr">#[allow(clippy::match_same_arms)]
         </span><span class="kw">match </span>data_inst_def.kind {
+            <span class="comment">// FIXME(eddyb) this should be a proper `Result`-based error instead,
+            // and/or `spv::lift` should mutate the module for legalization.
+            </span>DataInstKind::QPtr(<span class="kw">_</span>) =&gt; {
+                <span class="macro">unreachable!</span>(<span class="string">&quot;`DataInstKind::QPtr` should be legalized away before lifting&quot;</span>);
+            }
+
             DataInstKind::FuncCall(<span class="kw">_</span>) =&gt; {}
 
             DataInstKind::SpvInst(<span class="kw">_</span>) =&gt; {}
@@ -3064,7 +3110,7 @@
                         },
 
                         <span class="comment">// Not inserted into `globals` while visiting.
-                        </span>TypeCtor::SpvStringLiteralForExtInst =&gt; <span class="macro">unreachable!</span>(),
+                        </span>TypeCtor::QPtr | TypeCtor::SpvStringLiteralForExtInst =&gt; <span class="macro">unreachable!</span>(),
                     }
                 }
                 Global::Const(ct) =&gt; {
@@ -3079,6 +3125,11 @@
                             <span class="macro">assert!</span>(ct_def.ty == gv_decl.type_of_ptr_to);
 
                             <span class="kw">let </span>storage_class = <span class="kw">match </span>gv_decl.addr_space {
+                                AddrSpace::Handles =&gt; {
+                                    <span class="macro">unreachable!</span>(
+                                        <span class="string">&quot;`AddrSpace::Handles` should be legalized away before lifting&quot;
+                                    </span>);
+                                }
                                 AddrSpace::SpvStorageClass(sc) =&gt; {
                                     spv::Imm::Short(wk.StorageClass, sc)
                                 }
@@ -3178,6 +3229,9 @@
                 data_inst_def,
             } =&gt; {
                 <span class="kw">let </span>(inst, extra_initial_id_operand) = <span class="kw">match </span><span class="kw-2">&amp;</span>data_inst_def.kind {
+                    <span class="comment">// Disallowed while visiting.
+                    </span>DataInstKind::QPtr(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+
                     <span class="kw-2">&amp;</span>DataInstKind::FuncCall(callee) =&gt; {
                         (wk.OpFunctionCall.into(), <span class="prelude-val">Some</span>(ids.funcs[<span class="kw-2">&amp;</span>callee].func_id))
                     }
@@ -3491,6 +3545,10 @@
 
             <span class="kw">for </span>attr <span class="kw">in </span>cx[attrs].attrs.iter() {
                 <span class="kw">match </span>attr {
+                    Attr::Diagnostics(<span class="kw">_</span>)
+                    | Attr::QPtr(<span class="kw">_</span>)
+                    | Attr::SpvDebugLine { .. }
+                    | Attr::SpvBitflagsOperand(<span class="kw">_</span>) =&gt; {}
                     Attr::SpvAnnotation(inst @ spv::Inst { opcode, .. }) =&gt; {
                         <span class="kw">let </span>target_id = result_id.expect(
                             <span class="string">&quot;FIXME: it shouldn&#39;t be possible to attach \
@@ -3512,7 +3570,6 @@
                             decoration_insts.push(inst);
                         }
                     }
-                    Attr::SpvDebugLine { .. } | Attr::SpvBitflagsOperand(<span class="kw">_</span>) =&gt; {}
                 }
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(import) = import {
@@ -3648,7 +3705,10 @@
                     })<span class="question-mark">?</span>;
 
                     <span class="kw">while </span>!contents_rest.is_empty() {
-                        <span class="kw">let </span>(cont_chunk, rest) = contents_rest
+                        <span class="comment">// FIXME(eddyb) test with UTF-8! this `split_at` should
+                        // actually take *less* than the full possible size, to
+                        // avoid cutting a UTF-8 sequence.
+                        </span><span class="kw">let </span>(cont_chunk, rest) = contents_rest
                             .split_at(contents_rest.len().min(MAX_OP_SOURCE_CONT_CONTENTS_LEN));
                         contents_rest = rest;
 
@@ -3742,5 +3802,4 @@
         <span class="prelude-val">Ok</span>(emitter)
     }
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="spirt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (5ce39f42b 2023-01-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>
+</code></pre></div></section></main></body></html>

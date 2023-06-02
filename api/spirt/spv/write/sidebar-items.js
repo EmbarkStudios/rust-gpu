@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["ModuleEmitter",""]]};
+window.SIDEBAR_ITEMS = {"struct":["ModuleEmitter"]};

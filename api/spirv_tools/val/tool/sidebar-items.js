@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["ToolValidator",""]]};
+window.SIDEBAR_ITEMS = {"struct":["ToolValidator"]};

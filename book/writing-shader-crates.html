@@ -174,12 +174,12 @@ shader crate.</li>
 <p>If you're writing a bigger application and you want to integrate SPIR-V shader
 crates to display, it's recommended to use <code>spirv-builder</code> in a build script.</p>
 <ol>
-<li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain"><code>rust-toolchain</code></a> file to your project. (You must use the same
+<li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain.toml"><code>rust-toolchain.toml</code></a> file to your project. (You must use the same
 version of Rust as <code>rust-gpu</code>. Utimately, the build will fail with a nice
 error message when you don't use the exact same version)</li>
 <li>Reference <code>spirv-builder</code> in your Cargo.toml:
 <pre><code class="language-toml">[build-dependencies]
-spirv-builder = &quot;0.4&quot;
+spirv-builder = &quot;0.7&quot;
 </code></pre>
 All dependent crates are published on <a href="https://crates.io">crates.io</a>.</li>
 <li>Create a <code>build.rs</code> in your project root.</li>
@@ -265,9 +265,12 @@ build-std-features=[&quot;compiler-builtins-mem&quot;]
 <p>Now you should have <code>&lt;project_name&gt;.spv</code> SPIR-V file in <code>target/debug</code> that you
 can give to a renderer.</p>
 <h2 id="writing-your-first-shader"><a class="header" href="#writing-your-first-shader">Writing your first shader</a></h2>
-<p>Configure your shader crate as a <code>&quot;dylib&quot;</code> type crate, and add <code>spirv-std</code> to its dependencies. The following example also enables the <code>glam</code> vector library.</p>
-<pre><code class="language-toml">[dependencies]
-spirv-std = { version = &quot;0.6&quot; }
+<p>Configure your shader crate as a <code>&quot;dylib&quot;</code> type crate, and add <code>spirv-std</code> to its dependencies:</p>
+<pre><code class="language-toml">[lib]
+crate-type = [&quot;dylib&quot;]
+
+[dependencies]
+spirv-std = { version = &quot;0.7&quot; }
 </code></pre>
 <p>Make sure your shader code uses the <code>no_std</code> attribute and makes the <code>spirv</code> attribute visibile in the global scope. Then, you're ready to write your first shader. Here's a very simple fragment shader called <code>main_fs</code> as an example that outputs the color red:</p>
 <pre><pre class="playground"><code class="language-rust norun">#![no_std]

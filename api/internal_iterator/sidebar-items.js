@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["Chain","Cloned","Copied","Enumerate","Filter","FilterMap","FlatMap","Inspect","Internal","Map","Skip","Take"],"trait":["FromInternalIterator","InternalIterator","IntoInternalIterator","IteratorExt"]};

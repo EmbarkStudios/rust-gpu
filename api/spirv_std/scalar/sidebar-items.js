@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["Scalar","Abstract trait representing a SPIR-V scalar type."]]};
+window.SIDEBAR_ITEMS = {"trait":["Scalar"]};

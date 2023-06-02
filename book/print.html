@@ -299,10 +299,22 @@ linker, hasn't been tested for a while.</p>
 <p>Disables compaction of SPIR-V IDs at the end of linking. Causes absolutely ginormous IDs to be
 emitted. Useful if you're println debugging IDs in the linker (although spirv-opt will compact them
 anyway, be careful).</p>
+<h3 id="--no-early-report-zombies"><a class="header" href="#--no-early-report-zombies"><code>--no-early-report-zombies</code></a></h3>
+<p>Delays reporting zombies (aka &quot;deferred errors&quot;) even further, to allow more legalization.
+Currently this also replaces the zombie reporting with a SPIR-T-based version
+(which may become the default in the future).</p>
+<h3 id="--no-infer-storage-classes"><a class="header" href="#--no-infer-storage-classes"><code>--no-infer-storage-classes</code></a></h3>
+<p>Disables the old SPIR-V &quot;Storage Class&quot; (i.e. address space) inference pass,
+to allow testing alternatives to it (such as SPIR-T <code>qptr</code> passes).</p>
+<p>Note that this will produce illegal SPIR-V by default, and you need e.g.
+<code>--spirt-passes=qptr</code> in order to regain legal &quot;Storage Class&quot; assignments<br />
+(see <a href="https://github.com/EmbarkStudios/spirt/pull/24">SPIR-T <code>qptr</code> PR</a> for more information on <code>qptr</code> in general)</p>
 <h3 id="--no-structurize"><a class="header" href="#--no-structurize"><code>--no-structurize</code></a></h3>
 <p>Disables CFG structurization. Probably results in invalid modules.</p>
 <h3 id="--spirt-until-060"><a class="header" href="#--spirt-until-060"><code>--spirt</code> <sub><em>(until 0.6.0)</em></sub></a></h3>
-<p>Note: as of <code>rust-gpu 0.6.0</code>, <code>SPIR-🇹</code> is enabled by default. Use <code>--no-spirt</code> to disable.</p>
+<p><del>Note: as of <code>rust-gpu 0.6.0</code>, <code>SPIR-🇹</code> is enabled by default. Use <code>--no-spirt</code> to disable.</del>
+Note: as of <code>rust-gpu 0.8.0</code>, <code>SPIR-🇹</code> is always being used and cannot be disabled
+(to reduce the cost of maintenance, testing and further feature development).</p>
 <p>Enables using the experimental <a href="https://github.com/EmbarkStudios/spirt"><code>SPIR-🇹</code> shader IR framework</a> in the linker - more specifically, this:</p>
 <ul>
 <li>adds a <code>SPIR-V -&gt; SPIR-🇹 -&gt; SPIR-V</code> roundtrip<br />
@@ -311,7 +323,13 @@ anyway, be careful).</p>
 <li>runs some existing <code>SPIR-V</code> legalization/optimization passes (<code>mem2reg</code>) <em>before</em> inlining, instead of <em>only after</em> (as the <code>OpPhi</code>s they would produce are no longer an issue for structurization)</li>
 </ul>
 <p>For more information, also see <a href="https://github.com/EmbarkStudios/spirt">the <code>SPIR-🇹</code> repository</a>.</p>
-<h3 id="--no-spirt-060"><a class="header" href="#--no-spirt-060"><code>--no-spirt</code> <sub><em>(0.6.0)</em></sup></a></h3>
+<h3 id="--no-spirt-060-and-070"><a class="header" href="#--no-spirt-060-and-070"><code>--no-spirt</code> <sub><em>(0.6.0 and 0.7.0)</em></sup></a></h3>
+<p>Note: as of <code>rust-gpu 0.8.0</code>, <code>SPIR-🇹</code> is always being used and cannot be disabled
+(to reduce the cost of maintenance, testing and further feature development).</p>
+<p>Note: if you were using <code>--no-spirt</code> to work around <a href="https://github.com/gfx-rs/naga/issues/1977"><code>naga</code> issue #1977</a><br />
+(valid loops causing <code>The 'break' is used outside of a 'loop' or 'switch' context</code>),<br />
+you may be able to <code>cargo update -p naga</code> to update to a fixed <code>naga</code> version<br />
+(<code>0.11.1</code> for <code>wgpu 0.15</code>, <code>0.12.1</code> for <code>wgpu 0.16</code>, and any later versions).</p>
 <p>Disables the <a href="https://github.com/EmbarkStudios/spirt"><code>SPIR-🇹</code> shader IR framework</a> in the linker.</p>
 <h3 id="--spirt-passes-passes"><a class="header" href="#--spirt-passes-passes"><code>--spirt-passes PASSES</code></a></h3>
 <p>Enable additional <code>SPIR-🇹</code> passes, as listed in <code>PASSES</code> (comma-separated).<br />
@@ -320,6 +338,12 @@ Their implementation can be found in <a href="../../crates/rustc_codegen_spirv/s
 <h3 id="--dump-spirt-passes-dir"><a class="header" href="#--dump-spirt-passes-dir"><code>--dump-spirt-passes DIR</code></a></h3>
 <p>Dump the <code>SPIR-🇹</code> module across passes (i.e. all of the versions before/after each pass), as a combined report, to a pair of files (<code>.spirt</code> and <code>.spirt.html</code>) in <code>DIR</code>.<br />
 <sub>(the <code>.spirt.html</code> version of the report is the recommended form for viewing, as it uses tabling for versions, syntax-highlighting-like styling, and use-&gt;def linking)</sub></p>
+<h3 id="--spirt-keep-custom-debuginfo-in-dumps"><a class="header" href="#--spirt-keep-custom-debuginfo-in-dumps"><code>--spirt-keep-custom-debuginfo-in-dumps</code></a></h3>
+<p>When dumping (pretty-printed) <code>SPIR-🇹</code> (e.g. with <code>--dump-spirt-passes</code>), preserve
+all the custom (Rust-GPU-specific) debuginfo instructions, instead of converting
+them to the standard SPIR-V debuginfo (which <code>SPIR-🇹</code> pretty-prints specially).</p>
+<p>The default (of performing that conversion) has prettier results, but is lossier
+if you want to see all instructions exactly as e.g. <code>--spirt-passes</code> see them.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="minimizing-bugs-in-spir-v"><a class="header" href="#minimizing-bugs-in-spir-v">Minimizing bugs in SPIR-V</a></h1>
 <p>When debugging problems with SPIR-V generated by rust-gpu, you occasionally need
 to reduce the SPIR-V in order to make it easily shareable with others. We've
@@ -505,12 +529,12 @@ shader crate.</li>
 <p>If you're writing a bigger application and you want to integrate SPIR-V shader
 crates to display, it's recommended to use <code>spirv-builder</code> in a build script.</p>
 <ol>
-<li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain"><code>rust-toolchain</code></a> file to your project. (You must use the same
+<li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain.toml"><code>rust-toolchain.toml</code></a> file to your project. (You must use the same
 version of Rust as <code>rust-gpu</code>. Utimately, the build will fail with a nice
 error message when you don't use the exact same version)</li>
 <li>Reference <code>spirv-builder</code> in your Cargo.toml:
 <pre><code class="language-toml">[build-dependencies]
-spirv-builder = &quot;0.4&quot;
+spirv-builder = &quot;0.7&quot;
 </code></pre>
 All dependent crates are published on <a href="https://crates.io">crates.io</a>.</li>
 <li>Create a <code>build.rs</code> in your project root.</li>
@@ -596,9 +620,12 @@ build-std-features=[&quot;compiler-builtins-mem&quot;]
 <p>Now you should have <code>&lt;project_name&gt;.spv</code> SPIR-V file in <code>target/debug</code> that you
 can give to a renderer.</p>
 <h2 id="writing-your-first-shader"><a class="header" href="#writing-your-first-shader">Writing your first shader</a></h2>
-<p>Configure your shader crate as a <code>&quot;dylib&quot;</code> type crate, and add <code>spirv-std</code> to its dependencies. The following example also enables the <code>glam</code> vector library.</p>
-<pre><code class="language-toml">[dependencies]
-spirv-std = { version = &quot;0.6&quot; }
+<p>Configure your shader crate as a <code>&quot;dylib&quot;</code> type crate, and add <code>spirv-std</code> to its dependencies:</p>
+<pre><code class="language-toml">[lib]
+crate-type = [&quot;dylib&quot;]
+
+[dependencies]
+spirv-std = { version = &quot;0.7&quot; }
 </code></pre>
 <p>Make sure your shader code uses the <code>no_std</code> attribute and makes the <code>spirv</code> attribute visibile in the global scope. Then, you're ready to write your first shader. Here's a very simple fragment shader called <code>main_fs</code> as an example that outputs the color red:</p>
 <pre><pre class="playground"><code class="language-rust norun">#![no_std]

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Transformed","The result of a transformation (which is not in-place)."]],"trait":[["InnerInPlaceTransform","Like [`InnerTransform`], but only for the `in_place_transform_X` cases."],["InnerTransform","Trait implemented on “transformable” types, to further “elaborate” a type by transforming its “interior” (i.e. variants and/or fields)."],["Transformer",""]]};
+window.SIDEBAR_ITEMS = {"enum":["Transformed"],"trait":["InnerInPlaceTransform","InnerTransform","Transformer"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["EulerRot","Rotation Helper  Euler rotation sequences."]],"mod":[["bool","`bool` vector mask types. "],["f32","`f32` vector, quaternion and matrix types. "],["f64","`f64` vector, quaternion and matrix types. "],["i32","`i32` vector types. "],["swizzles","Traits adding swizzle methods to all vector types. "],["u32","`u32` vector types. "]],"trait":[["Vec2Swizzles",""],["Vec3Swizzles",""],["Vec4Swizzles",""]]};
+window.SIDEBAR_ITEMS = {"enum":["EulerRot"],"mod":["bool","f32","f64","i32","i64","swizzles","u32","u64"]};

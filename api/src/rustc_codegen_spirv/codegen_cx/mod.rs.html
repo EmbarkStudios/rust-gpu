@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/codegen_cx/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/codegen_cx/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (84dd17b56 2023-04-14)" data-search-js="search-18a8966354e5d906.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -892,30 +892,14 @@
 <a href="#892" id="892">892</a>
 <a href="#893" id="893">893</a>
 <a href="#894" id="894">894</a>
-<a href="#895" id="895">895</a>
-<a href="#896" id="896">896</a>
-<a href="#897" id="897">897</a>
-<a href="#898" id="898">898</a>
-<a href="#899" id="899">899</a>
-<a href="#900" id="900">900</a>
-<a href="#901" id="901">901</a>
-<a href="#902" id="902">902</a>
-<a href="#903" id="903">903</a>
-<a href="#904" id="904">904</a>
-<a href="#905" id="905">905</a>
-<a href="#906" id="906">906</a>
-<a href="#907" id="907">907</a>
-<a href="#908" id="908">908</a>
-<a href="#909" id="909">909</a>
-<a href="#910" id="910">910</a>
-</pre><pre class="rust"><code><span class="kw">mod </span>constant;
+</pre></div><pre class="rust"><code><span class="kw">mod </span>constant;
 <span class="kw">mod </span>declare;
 <span class="kw">mod </span>entry;
 <span class="kw">mod </span>type_;
 
 <span class="kw">use </span><span class="kw">crate</span>::builder::{ExtInst, InstructionTable};
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvConst, SpirvValue, SpirvValueKind};
-<span class="kw">use </span><span class="kw">crate</span>::decorations::{CustomDecoration, SerializedSpan, ZombieDecoration};
+<span class="kw">use </span><span class="kw">crate</span>::custom_decorations::{CustomDecoration, SrcLocDecoration, ZombieDecoration};
 <span class="kw">use </span><span class="kw">crate</span>::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 <span class="kw">use </span><span class="kw">crate</span>::symbols::Symbols;
 <span class="kw">use </span><span class="kw">crate</span>::target::SpirvTarget;
@@ -935,7 +919,7 @@
 <span class="kw">use </span>rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 <span class="kw">use </span>rustc_session::Session;
 <span class="kw">use </span>rustc_span::def_id::DefId;
-<span class="kw">use </span>rustc_span::symbol::{sym, Symbol};
+<span class="kw">use </span>rustc_span::symbol::Symbol;
 <span class="kw">use </span>rustc_span::{SourceFile, Span, DUMMY_SP};
 <span class="kw">use </span>rustc_target::abi::call::{FnAbi, PassMode};
 <span class="kw">use </span>rustc_target::abi::{HasDataLayout, TargetDataLayout};
@@ -960,10 +944,11 @@
     <span class="doccomment">/// Cache generated vtables
     </span><span class="kw">pub </span>vtables: RefCell&lt;FxHashMap&lt;(Ty&lt;<span class="lifetime">&#39;tcx</span>&gt;, <span class="prelude-ty">Option</span>&lt;PolyExistentialTraitRef&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;), SpirvValue&gt;&gt;,
     <span class="kw">pub </span>ext_inst: RefCell&lt;ExtInst&gt;,
-    <span class="doccomment">/// Invalid spir-v IDs that should be stripped from the final binary,
+    <span class="doccomment">/// Invalid SPIR-V IDs that should be stripped from the final binary,
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
-    </span>zombie_decorations: RefCell&lt;FxHashMap&lt;Word, ZombieDecoration&gt;&gt;,
+    </span>zombie_decorations:
+        RefCell&lt;FxHashMap&lt;Word, (ZombieDecoration&lt;<span class="lifetime">&#39;tcx</span>&gt;, <span class="prelude-ty">Option</span>&lt;SrcLocDecoration&lt;<span class="lifetime">&#39;tcx</span>&gt;&gt;)&gt;&gt;,
     <span class="doccomment">/// Cache of all the builtin symbols we need
     </span><span class="kw">pub </span>sym: Rc&lt;Symbols&gt;,
     <span class="kw">pub </span>instruction_table: InstructionTable,
@@ -978,7 +963,7 @@
     // it mandatory even for `panic!(&quot;...&quot;)` (that were previously separate).
     </span><span class="kw">pub </span>panic_entry_point_ids: RefCell&lt;FxHashSet&lt;Word&gt;&gt;,
 
-    <span class="doccomment">/// `core::fmt::Arguments::new_v1` instances (for Rust 2021 panics).
+    <span class="doccomment">/// `core::fmt::Arguments::new_{v1,const}` instances (for Rust 2021 panics).
     </span><span class="kw">pub </span>fmt_args_new_fn_ids: RefCell&lt;FxHashSet&lt;Word&gt;&gt;,
 
     <span class="doccomment">/// Intrinsic for loading a &lt;T&gt; from a &amp;[u32]. The PassMode is the mode of the &lt;T&gt;.
@@ -1027,7 +1012,7 @@
         <span class="self">Self </span>{
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(<span class="kw-2">&amp;</span>sym, <span class="kw-2">&amp;</span>target, <span class="kw-2">&amp;</span>features),
+            builder: BuilderSpirv::new(tcx, <span class="kw-2">&amp;</span>sym, <span class="kw-2">&amp;</span>target, <span class="kw-2">&amp;</span>features),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
@@ -1073,71 +1058,43 @@
     }
 
     <span class="doccomment">/// Zombie system:
-    /// When compiling libcore and other system libraries, if something unrepresentable is
-    /// encountered, we don&#39;t want to fail the compilation. Instead, we emit something bogus
-    /// (usually it&#39;s fairly faithful, though, e.g. u128 emits `OpTypeInt 128`), and then mark the
-    /// resulting ID as a &quot;zombie&quot;. We continue compiling the rest of the crate, then, at the very
-    /// end, anything that transtively references a zombie value is stripped from the binary.
     ///
-    /// If an exported function is stripped, then we emit a special &quot;zombie export&quot; item, which is
-    /// consumed by the linker, which continues to infect other values that reference it.
+    /// If something unrepresentable is encountered, we don&#39;t want to fail
+    /// the compilation. Instead, we emit something bogus (usually it&#39;s fairly
+    /// faithful, though, e.g. `u128` emits `OpTypeInt 128 0`), and then mark the
+    /// resulting ID as a &quot;zombie&quot;. We continue compiling the rest of the crate,
+    /// then, at the very end, anything that transitively references a zombie value
+    /// is stripped from the binary.
     ///
-    /// Finally, if *user* code is marked as zombie, then this means that the user tried to do
-    /// something that isn&#39;t supported, and should be an error.
+    /// Errors will only be emitted (by `linker::zombies`) for reachable zombies.
     </span><span class="kw">pub fn </span>zombie_with_span(<span class="kw-2">&amp;</span><span class="self">self</span>, word: Word, span: Span, reason: <span class="kw-2">&amp;</span>str) {
-        <span class="kw">if </span><span class="self">self</span>.is_system_crate(span) {
-            <span class="self">self</span>.zombie_even_in_user_code(word, span, reason);
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.tcx.sess.span_err(span, reason);
-        }
+        <span class="self">self</span>.zombie_decorations.borrow_mut().insert(
+            word,
+            (
+                ZombieDecoration {
+                    <span class="comment">// FIXME(eddyb) this could take advantage of `Cow` and use
+                    // either `&amp;&#39;static str` or `String`, on a case-by-case basis.
+                    </span>reason: reason.to_string().into(),
+                },
+                SrcLocDecoration::from_rustc_span(span, <span class="kw-2">&amp;</span><span class="self">self</span>.builder),
+            ),
+        );
     }
     <span class="kw">pub fn </span>zombie_no_span(<span class="kw-2">&amp;</span><span class="self">self</span>, word: Word, reason: <span class="kw-2">&amp;</span>str) {
         <span class="self">self</span>.zombie_with_span(word, DUMMY_SP, reason);
     }
-    <span class="kw">pub fn </span>zombie_even_in_user_code(<span class="kw-2">&amp;</span><span class="self">self</span>, word: Word, span: Span, reason: <span class="kw-2">&amp;</span>str) {
-        <span class="self">self</span>.zombie_decorations.borrow_mut().insert(
-            word,
-            ZombieDecoration {
-                reason: reason.to_string(),
-                span: SerializedSpan::from_rustc(span, <span class="self">self</span>.tcx.sess.source_map()),
-            },
-        );
-    }
-
-    <span class="doccomment">/// Returns `true` if the originating crate of `span` (which could very well
-    /// be a different crate, e.g. a generic/`#[inline]` function, or a macro),
-    /// is a &quot;system crate&quot;, and therefore allowed to have some errors deferred
-    /// as &quot;zombies&quot; (see `zombie_with_span`&#39;s docs above for more details).
-    </span><span class="kw">pub fn </span>is_system_crate(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span) -&gt; bool {
-        <span class="comment">// HACK(eddyb) this ignores `.lo` vs `.hi` potentially resulting in
-        // different `SourceFile`s (which is likely a bug anyway).
-        </span><span class="kw">let </span>cnum = <span class="self">self
-            </span>.tcx
-            .sess
-            .source_map()
-            .lookup_source_file(span.data().lo)
-            .cnum;
-
-        <span class="self">self</span>.tcx
-            .get_attr(cnum.as_def_id(), sym::compiler_builtins)
-            .is_some()
-            || [
-                sym::core,
-                <span class="self">self</span>.sym.spirv_std,
-                <span class="self">self</span>.sym.libm,
-                <span class="self">self</span>.sym.num_traits,
-            ]
-            .contains(<span class="kw-2">&amp;</span><span class="self">self</span>.tcx.crate_name(cnum))
-    }
 
     <span class="kw">pub fn </span>finalize_module(<span class="self">self</span>) -&gt; Module {
         <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="self">self</span>.builder.finalize();
-        result.annotations.extend(
-            <span class="self">self</span>.zombie_decorations
-                .into_inner()
-                .into_iter()
-                .map(|(id, zombie)| zombie.encode(id)),
-        );
+        result
+            .annotations
+            .extend(<span class="self">self</span>.zombie_decorations.into_inner().into_iter().flat_map(
+                |(id, (zombie, src_loc))| {
+                    [zombie.encode_to_inst(id)]
+                        .into_iter()
+                        .chain(src_loc.map(|src_loc| src_loc.encode_to_inst(id)))
+                },
+            ));
         result
     }
 
@@ -1267,13 +1224,18 @@
                 <span class="string">&quot;no-compact-ids&quot;</span>,
                 <span class="string">&quot;disables compaction of SPIR-V IDs at the end of linking&quot;</span>,
             );
-            opts.optflag(<span class="string">&quot;&quot;</span>, <span class="string">&quot;no-structurize&quot;</span>, <span class="string">&quot;disables CFG structurization&quot;</span>);
-
             opts.optflag(
                 <span class="string">&quot;&quot;</span>,
-                <span class="string">&quot;no-spirt&quot;</span>,
-                <span class="string">&quot;disable using SPIR-T for legalization (see also `docs/src/codegen-args.md`)&quot;</span>,
+                <span class="string">&quot;no-early-report-zombies&quot;</span>,
+                <span class="string">&quot;delays reporting zombies (to allow more legalization)&quot;</span>,
             );
+            opts.optflag(
+                <span class="string">&quot;&quot;</span>,
+                <span class="string">&quot;no-infer-storage-classes&quot;</span>,
+                <span class="string">&quot;disables SPIR-V Storage Class inference&quot;</span>,
+            );
+            opts.optflag(<span class="string">&quot;&quot;</span>, <span class="string">&quot;no-structurize&quot;</span>, <span class="string">&quot;disables CFG structurization&quot;</span>);
+
             opts.optmulti(
                 <span class="string">&quot;&quot;</span>,
                 <span class="string">&quot;spirt-passes&quot;</span>,
@@ -1300,6 +1262,11 @@
                 <span class="string">&quot;dump-spirt-passes&quot;</span>,
                 <span class="string">&quot;dump the SPIR-T module across passes, to a (pair of) file(s) in DIR&quot;</span>,
                 <span class="string">&quot;DIR&quot;</span>,
+            );
+            opts.optflag(
+                <span class="string">&quot;&quot;</span>,
+                <span class="string">&quot;spirt-keep-custom-debuginfo-in-dumps&quot;</span>,
+                <span class="string">&quot;keep custom debuginfo when dumping SPIR-T (instead of lossily prettifying it)&quot;</span>,
             );
             opts.optflag(
                 <span class="string">&quot;&quot;</span>,
@@ -1446,8 +1413,9 @@
             <span class="comment">// FIXME(eddyb) clean up this `no-` &quot;negation prefix&quot; situation.
             </span>dce: !matches.opt_present(<span class="string">&quot;no-dce&quot;</span>),
             compact_ids: !matches.opt_present(<span class="string">&quot;no-compact-ids&quot;</span>),
+            early_report_zombies: !matches.opt_present(<span class="string">&quot;no-early-report-zombies&quot;</span>),
+            infer_storage_classes: !matches.opt_present(<span class="string">&quot;no-infer-storage-classes&quot;</span>),
             structurize: !matches.opt_present(<span class="string">&quot;no-structurize&quot;</span>),
-            spirt: !matches.opt_present(<span class="string">&quot;no-spirt&quot;</span>),
             spirt_passes: matches
                 .opt_strs(<span class="string">&quot;spirt-passes&quot;</span>)
                 .iter()
@@ -1465,6 +1433,8 @@
             </span>dump_post_merge: matches_opt_dump_dir_path(<span class="string">&quot;dump-post-merge&quot;</span>),
             dump_post_split: matches_opt_dump_dir_path(<span class="string">&quot;dump-post-split&quot;</span>),
             dump_spirt_passes: matches_opt_dump_dir_path(<span class="string">&quot;dump-spirt-passes&quot;</span>),
+            spirt_keep_custom_debuginfo_in_dumps: matches
+                .opt_present(<span class="string">&quot;spirt-keep-custom-debuginfo-in-dumps&quot;</span>),
             specializer_debug: matches.opt_present(<span class="string">&quot;specializer-debug&quot;</span>),
             specializer_dump_instances: matches_opt_path(<span class="string">&quot;specializer-dump-instances&quot;</span>),
             print_all_zombie: matches.opt_present(<span class="string">&quot;print-all-zombie&quot;</span>),
@@ -1698,11 +1668,9 @@
         }
         .def(span, <span class="self">self</span>);
 
-        <span class="kw">if </span><span class="self">self</span>.is_system_crate(span) {
-            <span class="comment">// Create these undefs up front instead of on demand in SpirvValue::def because
-            // SpirvValue::def can&#39;t use cx.emit()
-            </span><span class="self">self</span>.def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
-        }
+        <span class="comment">// Create these `OpUndef`s up front, instead of on-demand in `SpirvValue::def`,
+        // because `SpirvValue::def` can&#39;t use `cx.emit()`.
+        </span><span class="self">self</span>.def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
 
         SpirvValue {
             kind: SpirvValueKind::FnAddr {
@@ -1818,5 +1786,4 @@
         <span class="macro">todo!</span>()
     }
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (5ce39f42b 2023-01-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>
+</code></pre></div></section></main></body></html>

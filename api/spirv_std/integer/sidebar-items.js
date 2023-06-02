@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["Integer","Abstract trait representing any SPIR-V integer type."],["SignedInteger","A trait for being generic over signed integer types."],["UnsignedInteger","A trait for being generic over unsigned integer types."]]};
+window.SIDEBAR_ITEMS = {"trait":["Integer","SignedInteger","UnsignedInteger"]};

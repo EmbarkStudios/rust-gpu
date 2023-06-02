@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/codegen_cx/entry.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>entry.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-52c5db6f6f352e54.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/codegen_cx/entry.rs`."><title>entry.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (84dd17b56 2023-04-14)" data-search-js="search-18a8966354e5d906.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../rustc_codegen_spirv/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -696,7 +696,135 @@
 <a href="#696" id="696">696</a>
 <a href="#697" id="697">697</a>
 <a href="#698" id="698">698</a>
-</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::CodegenCx;
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::CodegenCx;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::attr::{AggregatedSpirvAttributes, Entry, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::builder::Builder;
@@ -708,6 +836,7 @@
 };
 <span class="kw">use </span>rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 <span class="kw">use </span>rustc_data_structures::fx::FxHashMap;
+<span class="kw">use </span>rustc_errors::MultiSpan;
 <span class="kw">use </span>rustc_hir <span class="kw">as </span>hir;
 <span class="kw">use </span>rustc_middle::span_bug;
 <span class="kw">use </span>rustc_middle::ty::layout::{LayoutOf, TyAndLayout};
@@ -715,6 +844,37 @@
 <span class="kw">use </span>rustc_span::Span;
 <span class="kw">use </span>rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 <span class="kw">use </span>std::assert_matches::assert_matches;
+
+<span class="doccomment">/// Various information about an entry-point parameter, which can only be deduced
+/// (and/or checked) in all cases by using the original reference/value Rust type
+/// (e.g. `&amp;mut T` vs `&amp;T` vs `T`).
+///
+/// This is in contrast to other information about &quot;shader interface variables&quot;,
+/// that can rely on merely the SPIR-V type and/or `#[spirv(...)]` attributes.
+///
+/// See also `entry_param_deduce_from_rust_ref_or_value` (which computes this).
+</span><span class="kw">struct </span>EntryParamDeducedFromRustRefOrValue&lt;<span class="lifetime">&#39;tcx</span>&gt; {
+    <span class="doccomment">/// The type/layout for the data to pass onto the entry-point parameter,
+    /// either by-value (only for `Input`) or behind some kind of reference.
+    ///
+    /// That is, the original parameter type is (given `T = value_layout.ty`):
+    /// * `T` (iff `storage_class` is `Input`)
+    /// * `&amp;T` (all shader interface storage classes other than `Input`/`Output`)
+    /// * `&amp;mut T` (only writable storage classes)
+    </span>value_layout: TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+
+    <span class="doccomment">/// The SPIR-V storage class to declare the shader interface variable in,
+    /// either deduced from the type (e.g. opaque handles use `UniformConstant`),
+    /// provided via `#[spirv(...)]` attributes, or an `Input`/`Output` default.
+    </span>storage_class: StorageClass,
+
+    <span class="doccomment">/// Whether this entry-point parameter doesn&#39;t allow writes to the underlying
+    /// shader interface variable (i.e. is by-value, or `&amp;T` where `T: Freeze`).
+    ///
+    /// For some storage classes, this can be mapped to `NonWritable` decorations
+    /// (only `StorageBuffer` for now, with few others, if any, plausible at all).
+    </span>read_only: bool,
+}
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tcx</span>&gt; CodegenCx&lt;<span class="lifetime">&#39;tcx</span>&gt; {
     <span class="comment">// Entry points declare their &quot;interface&quot; (all uniforms, inputs, outputs, etc.) as parameters.
@@ -729,14 +889,17 @@
         name: String,
         entry: Entry,
     ) {
-        <span class="kw">let </span>span = <span class="self">self</span>.tcx.def_span(instance.def_id());
+        <span class="kw">let </span>span = <span class="self">self
+            </span>.tcx
+            .def_ident_span(instance.def_id())
+            .unwrap_or_else(|| <span class="self">self</span>.tcx.def_span(instance.def_id()));
         <span class="kw">let </span>hir_params = {
             <span class="kw">let </span>fn_local_def_id = <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = instance.def_id().as_local() {
                 id
             } <span class="kw">else </span>{
                 <span class="self">self</span>.tcx
                     .sess
-                    .span_err(span, <span class="macro">format!</span>(<span class="string">&quot;Cannot declare {name} as an entry point&quot;</span>));
+                    .span_err(span, <span class="macro">format!</span>(<span class="string">&quot;cannot declare {name} as an entry point&quot;</span>));
                 <span class="kw">return</span>;
             };
             <span class="kw">let </span>body = <span class="self">self
@@ -871,30 +1034,61 @@
         stub_fn_id
     }
 
-    <span class="kw">fn </span>infer_param_ty_and_storage_class(
+    <span class="doccomment">/// Attempt to compute `EntryParamDeducedFromRustRefOrValue` (see its docs)
+    /// from `ref_or_value_layout` (and potentially some of `attrs`).
+    ///
+    </span><span class="comment">// FIXME(eddyb) document this by itself.
+    </span><span class="kw">fn </span>entry_param_deduce_from_rust_ref_or_value(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        layout: TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt;,
+        ref_or_value_layout: TyAndLayout&lt;<span class="lifetime">&#39;tcx</span>&gt;,
         hir_param: <span class="kw-2">&amp;</span>hir::Param&lt;<span class="lifetime">&#39;tcx</span>&gt;,
         attrs: <span class="kw-2">&amp;</span>AggregatedSpirvAttributes,
-    ) -&gt; (Word, StorageClass) {
+    ) -&gt; EntryParamDeducedFromRustRefOrValue&lt;<span class="lifetime">&#39;tcx</span>&gt; {
         <span class="comment">// FIXME(eddyb) attribute validation should be done ahead of time.
-        // FIXME(eddyb) also take into account `&amp;T` interior mutability,
-        // i.e. it&#39;s only immutable if `T: Freeze`, which we should check.
         // FIXME(eddyb) also check the type for compatibility with being
         // part of the interface, including potentially `Sync`ness etc.
-        </span><span class="kw">let </span>(value_ty, mutbl, is_ref) = <span class="kw">match </span><span class="kw-2">*</span>layout.ty.kind() {
-            ty::Ref(<span class="kw">_</span>, pointee_ty, mutbl) =&gt; (pointee_ty, mutbl, <span class="bool-val">true</span>),
-            <span class="kw">_ </span>=&gt; (layout.ty, hir::Mutability::Not, <span class="bool-val">false</span>),
+        // FIXME(eddyb) really need to require `T: Sync` for references
+        // (especially relevant with interior mutability!).
+        </span><span class="kw">let </span>(value_layout, explicit_mutbl, is_ref) = <span class="kw">match </span><span class="kw-2">*</span>ref_or_value_layout.ty.kind() {
+            ty::Ref(<span class="kw">_</span>, pointee_ty, mutbl) =&gt; (<span class="self">self</span>.layout_of(pointee_ty), mutbl, <span class="bool-val">true</span>),
+            <span class="kw">_ </span>=&gt; (ref_or_value_layout, hir::Mutability::Not, <span class="bool-val">false</span>),
         };
-        <span class="kw">let </span>spirv_ty = <span class="self">self</span>.layout_of(value_ty).spirv_type(hir_param.ty_span, <span class="self">self</span>);
+        <span class="kw">let </span>effective_mutbl = <span class="kw">match </span>explicit_mutbl {
+            <span class="comment">// NOTE(eddyb) `T: !Freeze` used to detect &quot;`T` has interior mutability&quot;
+            // (i.e. &quot;`&amp;T` is a shared+mutable reference&quot;), more specifically `T`
+            // containing `UnsafeCell` (but not behind any indirection), which
+            // includes many safe abstractions (e.g. `Cell`, `RefCell`, `Atomic*`).
+            </span>hir::Mutability::Not
+                <span class="kw">if </span>is_ref
+                    &amp;&amp; !value_layout
+                        .ty
+                        .is_freeze(<span class="self">self</span>.tcx, ty::ParamEnv::reveal_all()) =&gt;
+            {
+                hir::Mutability::Mut
+            }
+            <span class="kw">_ </span>=&gt; explicit_mutbl,
+        };
+        <span class="comment">// FIXME(eddyb) this should maybe be an extension method on `StorageClass`?
+        </span><span class="kw">let </span>expected_mutbl_for = |storage_class| <span class="kw">match </span>storage_class {
+            StorageClass::UniformConstant
+            | StorageClass::Input
+            | StorageClass::Uniform
+            | StorageClass::PushConstant =&gt; hir::Mutability::Not,
+
+            <span class="comment">// FIXME(eddyb) further categorize this by which want interior
+            // mutability (+`Sync`!), likely almost all of them, and which
+            // can be per-lane-owning `&amp;mut T`.
+            </span><span class="kw">_ </span>=&gt; hir::Mutability::Mut,
+        };
+        <span class="kw">let </span>value_spirv_type = value_layout.spirv_type(hir_param.ty_span, <span class="self">self</span>);
         <span class="comment">// Some types automatically specify a storage class. Compute that here.
-        </span><span class="kw">let </span>element_ty = <span class="kw">match </span><span class="self">self</span>.lookup_type(spirv_ty) {
+        </span><span class="kw">let </span>element_ty = <span class="kw">match </span><span class="self">self</span>.lookup_type(value_spirv_type) {
             SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } =&gt; {
                 <span class="self">self</span>.lookup_type(element)
             }
             ty =&gt; ty,
         };
-        <span class="kw">let </span>inferred_storage_class_from_ty = <span class="kw">match </span>element_ty {
+        <span class="kw">let </span>deduced_storage_class_from_ty = <span class="kw">match </span>element_ty {
             SpirvType::Image { .. }
             | SpirvType::Sampler
             | SpirvType::SampledImage { .. }
@@ -906,7 +1100,7 @@
                         hir_param.ty_span,
                         <span class="macro">format!</span>(
                             <span class="string">&quot;entry parameter type must be by-reference: `&amp;{}`&quot;</span>,
-                            layout.ty,
+                            value_layout.ty,
                         ),
                     );
                     <span class="prelude-val">None
@@ -918,49 +1112,39 @@
         </span><span class="kw">let </span>attr_storage_class = attrs.storage_class.map(|storage_class_attr| {
             <span class="kw">let </span>storage_class = storage_class_attr.value;
 
-            <span class="kw">let </span>expected_mutbl = <span class="kw">match </span>storage_class {
-                StorageClass::UniformConstant
-                | StorageClass::Input
-                | StorageClass::Uniform
-                | StorageClass::PushConstant =&gt; hir::Mutability::Not,
-
-                <span class="kw">_ </span>=&gt; hir::Mutability::Mut,
-            };
-
             <span class="kw">if </span>!is_ref {
                 <span class="self">self</span>.tcx.sess.span_fatal(
                     hir_param.ty_span,
                     <span class="macro">format!</span>(
-                        <span class="string">&quot;invalid entry param type `{}` for storage class `{:?}` \
+                        <span class="string">&quot;invalid entry param type `{}` for storage class `{storage_class:?}` \
                          (expected `&amp;{}T`)&quot;</span>,
-                        layout.ty,
-                        storage_class,
-                        expected_mutbl.prefix_str()
+                        value_layout.ty,
+                        expected_mutbl_for(storage_class).prefix_str()
                     ),
                 )
             }
 
-            <span class="kw">match </span>inferred_storage_class_from_ty {
-                <span class="prelude-val">Some</span>(inferred) <span class="kw">if </span>storage_class == inferred =&gt; <span class="self">self</span>.tcx.sess.span_warn(
+            <span class="kw">match </span>deduced_storage_class_from_ty {
+                <span class="prelude-val">Some</span>(deduced) <span class="kw">if </span>storage_class == deduced =&gt; <span class="self">self</span>.tcx.sess.span_warn(
                     storage_class_attr.span,
-                    <span class="string">&quot;redundant storage class specifier, storage class is inferred from type&quot;</span>,
+                    <span class="string">&quot;redundant storage class attribute, storage class is deduced from type&quot;</span>,
                 ),
-                <span class="prelude-val">Some</span>(inferred) =&gt; {
+                <span class="prelude-val">Some</span>(deduced) =&gt; {
                     <span class="self">self</span>.tcx
                         .sess
                         .struct_span_err(hir_param.span, <span class="string">&quot;storage class mismatch&quot;</span>)
                         .span_label(
                             storage_class_attr.span,
-                            <span class="macro">format!</span>(<span class="string">&quot;{storage_class:?} specified in attribute&quot;</span>),
+                            <span class="macro">format!</span>(<span class="string">&quot;`{storage_class:?}` specified in attribute&quot;</span>),
                         )
                         .span_label(
                             hir_param.ty_span,
-                            <span class="macro">format!</span>(<span class="string">&quot;{inferred:?} inferred from type&quot;</span>),
+                            <span class="macro">format!</span>(<span class="string">&quot;`{deduced:?}` deduced from type&quot;</span>),
                         )
                         .span_help(
                             storage_class_attr.span,
                             <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                                <span class="string">&quot;remove storage class attribute to use {inferred:?} as storage class&quot;
+                                <span class="string">&quot;remove storage class attribute to use `{deduced:?}` as storage class&quot;
                             </span>),
                         )
                         .emit();
@@ -970,22 +1154,69 @@
 
             storage_class
         });
-        <span class="comment">// If storage class was not inferred nor specified, compute the default (i.e. input/output)
-        </span><span class="kw">let </span>storage_class = inferred_storage_class_from_ty
+        <span class="comment">// If storage class was not deduced nor specified, compute the default (i.e. input/output)
+        </span><span class="kw">let </span>storage_class = deduced_storage_class_from_ty
             .or(attr_storage_class)
-            .unwrap_or_else(|| <span class="kw">match </span>(is_ref, mutbl) {
+            .unwrap_or_else(|| <span class="kw">match </span>(is_ref, explicit_mutbl) {
                 (<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; StorageClass::Input,
                 (<span class="bool-val">true</span>, hir::Mutability::Mut) =&gt; StorageClass::Output,
                 (<span class="bool-val">true</span>, hir::Mutability::Not) =&gt; <span class="self">self</span>.tcx.sess.span_fatal(
                     hir_param.ty_span,
                     <span class="macro">format!</span>(
                         <span class="string">&quot;invalid entry param type `{}` (expected `{}` or `&amp;mut {1}`)&quot;</span>,
-                        layout.ty, value_ty
+                        ref_or_value_layout.ty, value_layout.ty
                     ),
                 ),
             });
 
-        (spirv_ty, storage_class)
+        <span class="comment">// Validate reference mutability against the *final* storage class.
+        </span><span class="kw">let </span>read_only = effective_mutbl == hir::Mutability::Not;
+        <span class="kw">if </span>is_ref {
+            <span class="comment">// FIXME(eddyb) named booleans make uses a bit more readable.
+            </span><span class="kw">let </span>ref_is_read_only = read_only;
+            <span class="kw">let </span>storage_class_requires_read_only =
+                expected_mutbl_for(storage_class) == hir::Mutability::Not;
+            <span class="kw">if </span>!ref_is_read_only &amp;&amp; storage_class_requires_read_only {
+                <span class="kw">let </span><span class="kw-2">mut </span>err = <span class="self">self</span>.tcx.sess.struct_span_err(
+                    hir_param.ty_span,
+                    <span class="macro">format!</span>(
+                        <span class="string">&quot;entry-point requires {}...&quot;</span>,
+                        <span class="kw">match </span>explicit_mutbl {
+                            hir::Mutability::Not =&gt; <span class="string">&quot;interior mutability&quot;</span>,
+                            hir::Mutability::Mut =&gt; <span class="string">&quot;a mutable reference&quot;</span>,
+                        }
+                    ),
+                );
+                {
+                    <span class="kw">let </span>note_message =
+                        <span class="macro">format!</span>(<span class="string">&quot;...but storage class `{storage_class:?}` is read-only&quot;</span>);
+                    <span class="kw">let </span>(note_label_span, note_label) =
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(storage_class_attr) = attrs.storage_class {
+                            (
+                                storage_class_attr.span,
+                                <span class="macro">format!</span>(<span class="string">&quot;`{storage_class:?}` specified in attribute&quot;</span>),
+                            )
+                        } <span class="kw">else </span>{
+                            (
+                                hir_param.ty_span,
+                                <span class="macro">format!</span>(<span class="string">&quot;`{storage_class:?}` deduced from type&quot;</span>),
+                            )
+                        };
+                    <span class="comment">// HACK(eddyb) have to use `MultiSpan` directly for labels,
+                    // as there&#39;s no `span_label` equivalent for `span_note`s.
+                    </span><span class="kw">let </span><span class="kw-2">mut </span>note_multi_span: MultiSpan = <span class="macro">vec!</span>[note_label_span].into();
+                    note_multi_span.push_span_label(note_label_span, note_label);
+                    err.span_note(note_multi_span, note_message);
+                }
+                err.emit();
+            }
+        }
+
+        EntryParamDeducedFromRustRefOrValue {
+            value_layout,
+            storage_class,
+            read_only,
+        }
     }
 
     <span class="attr">#[allow(clippy::too_many_arguments)]
@@ -1004,8 +1235,23 @@
         <span class="comment">// Pre-allocate the module-scoped `OpVariable`&#39;s *Result* ID.
         </span><span class="kw">let </span>var = <span class="self">self</span>.emit_global().id();
 
-        <span class="kw">let </span>(value_spirv_type, storage_class) =
-            <span class="self">self</span>.infer_param_ty_and_storage_class(entry_arg_abi.layout, hir_param, <span class="kw-2">&amp;</span>attrs);
+        <span class="kw">let </span>EntryParamDeducedFromRustRefOrValue {
+            value_layout,
+            storage_class,
+            read_only,
+        } = <span class="self">self</span>.entry_param_deduce_from_rust_ref_or_value(entry_arg_abi.layout, hir_param, <span class="kw-2">&amp;</span>attrs);
+        <span class="kw">let </span>value_spirv_type = value_layout.spirv_type(hir_param.ty_span, <span class="self">self</span>);
+
+        <span class="comment">// Emit decorations deduced from the reference/value Rust type.
+        </span><span class="kw">if </span>read_only {
+            <span class="comment">// NOTE(eddyb) it appears only `StorageBuffer`s simultaneously:
+            // - allow `NonWritable` decorations on shader interface variables
+            // - default to writable (i.e. the decoration actually has an effect)
+            </span><span class="kw">if </span>storage_class == StorageClass::StorageBuffer {
+                <span class="self">self</span>.emit_global()
+                    .decorate(var, Decoration::NonWritable, []);
+            }
+        }
 
         <span class="comment">// Certain storage classes require an `OpTypeStruct` decorated with `Block`,
         // which we represent with `SpirvType::InterfaceBlock` (see its doc comment).
@@ -1013,6 +1259,16 @@
         </span><span class="kw">let </span>is_unsized = <span class="self">self</span>.lookup_type(value_spirv_type).sizeof(<span class="self">self</span>).is_none();
         <span class="kw">let </span>is_pair = <span class="macro">matches!</span>(entry_arg_abi.mode, PassMode::Pair(..));
         <span class="kw">let </span>is_unsized_with_len = is_pair &amp;&amp; is_unsized;
+        <span class="comment">// HACK(eddyb) sanity check because we get the same information in two
+        // very different ways, and going out of sync could cause subtle issues.
+        </span><span class="macro">assert_eq!</span>(
+            is_unsized_with_len,
+            value_layout.is_unsized(),
+            <span class="string">&quot;`{}` param mismatch in call ABI (is_pair={is_pair}) + \
+             SPIR-V type (is_unsized={is_unsized}) \
+             vs layout:\n{value_layout:#?}&quot;</span>,
+            entry_arg_abi.layout.ty
+        );
         <span class="kw">if </span>is_pair &amp;&amp; !is_unsized {
             <span class="comment">// If PassMode is Pair, then we need to fill in the second part of the pair with a
             // value. We currently only do that with unsized types, so if a type is a pair for some
@@ -1394,5 +1650,4 @@
         }
     }
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rustc_codegen_spirv" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (5ce39f42b 2023-01-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>
+</code></pre></div></section></main></body></html>

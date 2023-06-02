@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["FrozenVec","Append-only version of `std::vec::Vec` where insertion does not require mutable access"],["Iter","Iterator over FrozenVec, obtained via `.iter()`"]]};
+window.SIDEBAR_ITEMS = {"struct":["FrozenVec","Iter"]};

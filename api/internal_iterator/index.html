@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Internal iterator equivalent of `std::iter::Iterator`."><title>internal_iterator - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="internal_iterator" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (84dd17b56 2023-04-14)" data-search-js="search-18a8966354e5d906.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../internal_iterator/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../internal_iterator/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Crate internal_iterator</a></h2><div class="sidebar-elems"><ul class="block"><li class="version">Version 0.2.1</li><li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">internal_iterator</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../src/internal_iterator/lib.rs.html#1-829">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Internal iterator equivalent of <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator"><code>std::iter::Iterator</code></a>.</p>
+<p>In some cases implementing <code>Iterator</code> can be difficult - for tree shaped
+structures you would need to store iteration state at every level, which
+implies dynamic allocation and nontrivial amounts of state. On the other
+hand, internal iteration is roughly equivalent to calling a provided
+function on every element you need to yield and is much simpler to
+implement.</p>
+<p>This library aims to provide <code>std</code>-like iteration facilities, but
+based on internal iteration. The goal is to be easy to make use of and feel
+familiar to users of <code>Iterator</code>. There is one core trait, <a href="trait.InternalIterator.html" title="trait internal_iterator::InternalIterator"><code>InternalIterator</code></a>.
+By implementing it you can use its provided methods to construct iterator
+pipelines similar to those possible by using regular iterators.</p>
+<h2 id="implementing-internaliterator"><a href="#implementing-internaliterator">Implementing <code>InternalIterator</code></a></h2>
+<p>Whereas the driving method for regular iterators is <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#tymethod.next" title="method core::iter::traits::iterator::Iterator::next"><code>Iterator::next</code></a>, the one
+used here is <a href="trait.InternalIterator.html#tymethod.try_for_each" title="method internal_iterator::InternalIterator::try_for_each"><code>InternalIterator::try_for_each</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::ops::ControlFlow;
+<span class="kw">use </span>internal_iterator::{InternalIterator, IteratorExt};
+
+<span class="kw">struct </span>Tree {
+    value: i32,
+    children: Vec&lt;Tree&gt;,
+}
+
+<span class="comment">// We implement InternalIterator on the tree directly. You could also
+// introduce a wrapper struct and create it in `.iter()`, `.iter_mut()`, just
+// like with usual collections.
+</span><span class="kw">impl </span>InternalIterator <span class="kw">for </span>Tree {
+    <span class="kw">type </span>Item = i32;
+
+    <span class="kw">fn </span>try_for_each&lt;T, F&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>f: F) -&gt; ControlFlow&lt;T&gt;
+    <span class="kw">where
+        </span>F: FnMut(i32) -&gt; ControlFlow&lt;T&gt;,
+    {
+        <span class="self">self</span>.iter_helper(<span class="kw-2">&amp;mut </span>f)
+    }
+}
+
+<span class="kw">impl </span>Tree {
+    <span class="kw">fn </span>iter_helper&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(i32) -&gt; ControlFlow&lt;T&gt;) -&gt; ControlFlow&lt;T&gt; {
+        f(<span class="self">self</span>.value)<span class="question-mark">?</span>;
+        <span class="kw">for </span>child <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.children {
+            child.iter_helper(f)<span class="question-mark">?</span>;
+        }
+        ControlFlow::Continue(())
+    }
+}
+
+<span class="comment">// now we can use InternalIterator facilities to construct iterator pipelines
+
+</span><span class="kw">let </span>tree = Tree {
+    value: <span class="number">1</span>,
+    children: <span class="macro">vec!</span>[
+        Tree {
+            value: <span class="number">2</span>,
+            children: Vec::new(),
+        },
+        Tree {
+            value: <span class="number">3</span>,
+            children: <span class="macro">vec!</span>[
+                Tree {
+                    value: <span class="number">4</span>,
+                    children: Vec::new(),
+                },
+            ]
+        },
+    ]
+};
+
+<span class="kw">let </span>result = tree
+    .map(|x| x * <span class="number">2</span>)
+    .filter(|<span class="kw-2">&amp;</span>x| x &gt; <span class="number">3</span>)
+    .flat_map(|x| [x, x * <span class="number">10</span>])
+    .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+
+<span class="macro">assert_eq!</span>(result, <span class="macro">vec!</span>[<span class="number">4</span>, <span class="number">40</span>, <span class="number">6</span>, <span class="number">60</span>, <span class="number">8</span>, <span class="number">80</span>]);</code></pre></div>
+<h2 id="differences-from-stditeriterator"><a href="#differences-from-stditeriterator">Differences from <code>std::iter::Iterator</code></a></h2>
+<p>The main difference between <code>Iterator</code> and <code>InternalIterator</code> traits is that
+all methods in <code>InternalIterator</code> consume the iterators. While for regular
+iterators you can for example call <code>nth</code> and then keep using the iterator with
+remaining elements being untouched, you cannot do so with <code>InternalIterator</code>.
+This is a deliberate choice, as the goal of this library allow having a simpler
+iterator implementation without losing too much power. Regular iterators must
+keep state to be able to implement <code>next</code>, but state is not a hard requirement
+for internal iteration and requiring it would defeat the purpose of the library.</p>
+<p>Because internal iterators drive themselves instead of being driven by an
+outside called, some methods from <code>Iterator</code> are not possible to implement. The
+most prominent example is <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#method.zip" title="method core::iter::traits::iterator::Iterator::zip"><code>Iterator::zip</code></a>.</p>
+<h2 id="nostd-compatibility"><a href="#nostd-compatibility"><code>nostd</code> compatibility</a></h2>
+<p>This crate has two optional features:</p>
+<ul>
+<li><code>alloc</code> - includes <code>FromInternalIterator</code> and <code>IntoInternalIterator</code> impls
+for <code>String</code>, <code>Vec</code>, <code>BTreeMap</code>, and <code>BTreeSet</code>. Brings in a dependency on
+<code>alloc</code>.</li>
+<li><code>std</code> - includes <code>FromInternalIterator</code> and <code>IntoInternalIterator</code> impls for
+<code>HashSet</code> and <code>HashMap</code>. Brings in a dependency on <code>std</code>.</li>
+</ul>
+<p>Both of these features are enabled by default, but you can disable them if you
+are compiling without <code>std</code> or even without <code>alloc</code>.</p>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.Chain.html" title="struct internal_iterator::Chain">Chain</a></div><div class="desc docblock-short">An iterator that links two iterators together, in a chain.</div></li><li><div class="item-name"><a class="struct" href="struct.Cloned.html" title="struct internal_iterator::Cloned">Cloned</a></div><div class="desc docblock-short">An iterator that clones the elements of an underlying iterator.</div></li><li><div class="item-name"><a class="struct" href="struct.Copied.html" title="struct internal_iterator::Copied">Copied</a></div><div class="desc docblock-short">An iterator that copies the elements of an underlying iterator.</div></li><li><div class="item-name"><a class="struct" href="struct.Enumerate.html" title="struct internal_iterator::Enumerate">Enumerate</a></div><div class="desc docblock-short">An iterator that yields the current count and the element during iteration.</div></li><li><div class="item-name"><a class="struct" href="struct.Filter.html" title="struct internal_iterator::Filter">Filter</a></div><div class="desc docblock-short">An iterator that filters the elements of <code>iter</code> with <code>predicate</code>.</div></li><li><div class="item-name"><a class="struct" href="struct.FilterMap.html" title="struct internal_iterator::FilterMap">FilterMap</a></div><div class="desc docblock-short">An iterator that uses <code>f</code> to both filter and map elements from <code>iter</code>.</div></li><li><div class="item-name"><a class="struct" href="struct.FlatMap.html" title="struct internal_iterator::FlatMap">FlatMap</a></div><div class="desc docblock-short">An iterator that maps each element to an iterator, and yields the elements
+of the produced iterators.</div></li><li><div class="item-name"><a class="struct" href="struct.Inspect.html" title="struct internal_iterator::Inspect">Inspect</a></div><div class="desc docblock-short">An iterator that calls a function with a reference to each element before
+yielding it.</div></li><li><div class="item-name"><a class="struct" href="struct.Internal.html" title="struct internal_iterator::Internal">Internal</a></div><div class="desc docblock-short">A wrapper type to convert <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator"><code>std::iter::Iterator</code></a> to <a href="trait.InternalIterator.html" title="trait internal_iterator::InternalIterator"><code>InternalIterator</code></a>.</div></li><li><div class="item-name"><a class="struct" href="struct.Map.html" title="struct internal_iterator::Map">Map</a></div><div class="desc docblock-short">An iterator that maps the values of <code>iter</code> with <code>f</code>.</div></li><li><div class="item-name"><a class="struct" href="struct.Skip.html" title="struct internal_iterator::Skip">Skip</a></div><div class="desc docblock-short">An iterator that skips over <code>n</code> elements of <code>iter</code>.</div></li><li><div class="item-name"><a class="struct" href="struct.Take.html" title="struct internal_iterator::Take">Take</a></div><div class="desc docblock-short">An iterator that only iterates over the first <code>n</code> iterations of <code>iter</code>.</div></li></ul><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2><ul class="item-table"><li><div class="item-name"><a class="trait" href="trait.FromInternalIterator.html" title="trait internal_iterator::FromInternalIterator">FromInternalIterator</a></div><div class="desc docblock-short">Conversion from an <a href="trait.InternalIterator.html" title="trait internal_iterator::InternalIterator"><code>InternalIterator</code></a>.</div></li><li><div class="item-name"><a class="trait" href="trait.InternalIterator.html" title="trait internal_iterator::InternalIterator">InternalIterator</a></div><div class="desc docblock-short">Internal iterator over a collection.</div></li><li><div class="item-name"><a class="trait" href="trait.IntoInternalIterator.html" title="trait internal_iterator::IntoInternalIterator">IntoInternalIterator</a></div><div class="desc docblock-short">Conversion to an <a href="trait.InternalIterator.html" title="trait internal_iterator::InternalIterator"><code>InternalIterator</code></a>.</div></li><li><div class="item-name"><a class="trait" href="trait.IteratorExt.html" title="trait internal_iterator::IteratorExt">IteratorExt</a></div><div class="desc docblock-short">Extension trait to add conversion to <a href="trait.InternalIterator.html" title="trait internal_iterator::InternalIterator"><code>InternalIterator</code></a> for regular
+iterators.</div></li></ul></section></div></main></body></html>

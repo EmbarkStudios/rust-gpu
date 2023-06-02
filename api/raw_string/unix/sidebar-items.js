@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["RawStrExt",""],["RawStringExt",""]]};
+window.SIDEBAR_ITEMS = {"trait":["RawStrExt","RawStringExt"]};

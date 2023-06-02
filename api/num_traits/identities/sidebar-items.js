@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["one","Returns the multiplicative identity, `1`."],["zero","Returns the additive identity, `0`."]],"trait":[["One","Defines a multiplicative identity element for `Self`."],["Zero","Defines an additive identity element for `Self`."]]};
+window.SIDEBAR_ITEMS = {"fn":["one","zero"],"trait":["One","Zero"]};

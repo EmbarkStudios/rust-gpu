@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["Inv","Unary operator for retrieving the multiplicative inverse, or reciprocal, of a value."]]};
+window.SIDEBAR_ITEMS = {"trait":["Inv"]};

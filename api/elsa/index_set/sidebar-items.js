@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["FrozenIndexSet","Append-only version of `indexmap::IndexSet` where insertion does not require mutable access"]]};
+window.SIDEBAR_ITEMS = {"struct":["FrozenIndexSet"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["ArrayString","A string with a fixed capacity."],["ArrayVec","A vector with a fixed capacity."],["CapacityError","Error value indicating insufficient capacity"],["Drain","A draining iterator for `ArrayVec`."],["IntoIter","By-value iterator for `ArrayVec`."]]};
+window.SIDEBAR_ITEMS = {"struct":["ArrayString","ArrayVec","CapacityError","Drain","IntoIter"]};

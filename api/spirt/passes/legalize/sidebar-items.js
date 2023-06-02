@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["structurize_func_cfgs","Apply the [`cfg::Structurizer`] algorithm to all function definitions in `module`."]]};
+window.SIDEBAR_ITEMS = {"fn":["structurize_func_cfgs"]};

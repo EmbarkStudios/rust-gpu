@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["binary","Module for SPIR-V binary processing."],["dr","Data representation of various SPIR-V language constructs."],["grammar","The module containing the whole SPIR-V syntax grammar."],["lift","Infrastructure of lifting the data representation (DR) into structured representation (SR)."],["sr","Structured representation of various SPIR-V language constructs."]]};
+window.SIDEBAR_ITEMS = {"mod":["binary","dr","grammar","lift","sr"]};

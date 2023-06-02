@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["legalize",""],["link",""]]};
+window.SIDEBAR_ITEMS = {"mod":["legalize","link","qptr"]};
