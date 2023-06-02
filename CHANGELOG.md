@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0]
+
 ### Added ⭐
 - [PR#1064](https://github.com/EmbarkStudios/rust-gpu/pull/1064) added a Rust-GPU-private
   "extended instruction set" (to allow us to have custom `OpExtInst`s), with the
