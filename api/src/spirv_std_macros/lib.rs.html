@@ -831,6 +831,8 @@
 <a href="#831" id="831">831</a>
 <a href="#832" id="832">832</a>
 <a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
 </pre></div><pre class="rust"><code><span class="comment">// BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;
@@ -1325,7 +1327,7 @@
                         <span class="kw">return </span>parsing_error(
                             <span class="string">&quot;Unterminated format specifier: missing type after precision&quot;</span>,
                             span,
-                        )
+                        );
                     }
                 };
 
@@ -1339,17 +1341,19 @@
                         <span class="kw">return </span>parsing_error(
                             <span class="string">&quot;Unterminated format specifier: missing type after decimal point&quot;</span>,
                             span,
-                        )
+                        );
                     }
                 };
 
                 <span class="kw">while </span>ch.is_ascii_digit() {
                     ch = <span class="kw">match </span>chars.next() {
                         <span class="prelude-val">Some</span>(ch) =&gt; ch,
-                        <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>parsing_error(
-                            <span class="string">&quot;Unterminated format specifier: missing type after fraction precision&quot;</span>,
-                            span,
-                        ),
+                        <span class="prelude-val">None </span>=&gt; {
+                            <span class="kw">return </span>parsing_error(
+                                <span class="string">&quot;Unterminated format specifier: missing type after fraction precision&quot;</span>,
+                                span,
+                            );
+                        }
                     };
                 }
             }
@@ -1360,7 +1364,7 @@
                     <span class="prelude-val">Some</span>(<span class="string">&#39;3&#39;</span>) =&gt; <span class="number">3</span>,
                     <span class="prelude-val">Some</span>(<span class="string">&#39;4&#39;</span>) =&gt; <span class="number">4</span>,
                     <span class="prelude-val">Some</span>(ch) =&gt; {
-                        <span class="kw">return </span>parsing_error(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Invalid width for vector: {ch}&quot;</span>), span)
+                        <span class="kw">return </span>parsing_error(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Invalid width for vector: {ch}&quot;</span>), span);
                     }
                     <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>parsing_error(<span class="string">&quot;Missing vector dimensions specifier&quot;</span>, span),
                 };
@@ -1376,7 +1380,7 @@
                         <span class="kw">return </span>parsing_error(
                             <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unrecognised vector type specifier: &#39;{ch}&#39;&quot;</span>),
                             span,
-                        )
+                        );
                     }
                 };
 
@@ -1388,7 +1392,7 @@
                         <span class="kw">return </span>parsing_error(
                             <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unrecognised format specifier: &#39;{ch}&#39;&quot;</span>),
                             span,
-                        )
+                        );
                     }
                 };
 

@@ -5059,10 +5059,13 @@
             // HACK(eddyb) this is basically a `try` block.
             </span><span class="kw">let </span>remove_format_args_if_possible = || -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
                 <span class="kw">let </span>format_args_id = <span class="kw">match </span>args {
-                    <span class="kw-2">&amp;</span>[SpirvValue {
-                        kind: SpirvValueKind::Def(format_args_id),
-                        ..
-                    }, <span class="kw">_</span>] =&gt; format_args_id,
+                    <span class="kw-2">&amp;</span>[
+                        SpirvValue {
+                            kind: SpirvValueKind::Def(format_args_id),
+                            ..
+                        },
+                        <span class="kw">_</span>,
+                    ] =&gt; format_args_id,
 
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
                 };
@@ -5165,15 +5168,13 @@
 
                 <span class="kw">let </span>(rt_args_slice_ptr_id, rt_args_count) = <span class="kw">match </span>try_rev_take(<span class="number">3</span>)<span class="question-mark">?</span>[..] {
                     [
-                        <span class="comment">// HACK(eddyb) comment works around `rustfmt` array bugs.
-                        </span>Inst::Call(call_ret_id, callee_id, <span class="kw-2">ref </span>call_args),
+                        Inst::Call(call_ret_id, callee_id, <span class="kw-2">ref </span>call_args),
                         Inst::Store(st_dst_id, st_val_id),
                         Inst::Load(ld_val_id, ld_src_id),
-                    ]
-                        <span class="kw">if </span><span class="self">self</span>.fmt_args_new_fn_ids.borrow().contains(<span class="kw-2">&amp;</span>callee_id)
-                            &amp;&amp; call_ret_id == st_val_id
-                            &amp;&amp; st_dst_id == ld_src_id
-                            &amp;&amp; ld_val_id == format_args_id =&gt;
+                    ] <span class="kw">if </span><span class="self">self</span>.fmt_args_new_fn_ids.borrow().contains(<span class="kw-2">&amp;</span>callee_id)
+                        &amp;&amp; call_ret_id == st_val_id
+                        &amp;&amp; st_dst_id == ld_src_id
+                        &amp;&amp; ld_val_id == format_args_id =&gt;
                     {
                         require_local_var(st_dst_id)<span class="question-mark">?</span>;
                         <span class="kw">match </span>call_args[..] {
@@ -5227,8 +5228,7 @@
                     {
                         <span class="kw">let </span>rt_arg_var_id = <span class="kw">match </span>init_of_rt_arg_var_insts[..] {
                             [
-                                <span class="comment">// HACK(eddyb) comment works around `rustfmt` array bugs.
-                                </span>Inst::Bitcast(b, <span class="kw">_</span>),
+                                Inst::Bitcast(b, <span class="kw">_</span>),
                                 Inst::Bitcast(a, <span class="kw">_</span>),
                                 Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(<span class="number">0</span>)),
                                 Inst::Store(a_st_dst, a_st_val),
@@ -5249,8 +5249,7 @@
                             copy_from_rt_arg_var_to_rt_args_array_insts.split_at(<span class="number">4</span>);
                         <span class="kw">let </span>(a, b) = <span class="kw">match </span>copy_loads[..] {
                             [
-                                <span class="comment">// HACK(eddyb) comment works around `rustfmt` array bugs.
-                                </span>Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(<span class="number">0</span>)),
+                                Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(<span class="number">0</span>)),
                                 Inst::Load(a_ld_val, a_ld_src),
                                 Inst::AccessChain(b_ptr, b_base_ptr, SpirvConst::U32(<span class="number">1</span>)),
                                 Inst::Load(b_ld_val, b_ld_src),
@@ -5263,8 +5262,11 @@
                         };
                         <span class="kw">match </span>copy_stores[..] {
                             [
-                                <span class="comment">// HACK(eddyb) comment works around `rustfmt` array bugs.
-                                </span>Inst::InBoundsAccessChain(array_slot_ptr, array_base_ptr, SpirvConst::U32(array_idx)),
+                                Inst::InBoundsAccessChain(
+                                    array_slot_ptr,
+                                    array_base_ptr,
+                                    SpirvConst::U32(array_idx),
+                                ),
                                 Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(<span class="number">0</span>)),
                                 Inst::Store(a_st_dst, a_st_val),
                                 Inst::AccessChain(b_ptr, b_base_ptr, SpirvConst::U32(<span class="number">1</span>)),
@@ -5273,9 +5275,7 @@
                                 &amp;&amp; array_idx <span class="kw">as </span>usize == rt_arg_idx
                                 &amp;&amp; [a_base_ptr, b_base_ptr] == [array_slot_ptr; <span class="number">2</span>]
                                 &amp;&amp; (a, b) == (a_st_val, b_st_val)
-                                &amp;&amp; (a_ptr, b_ptr) == (a_st_dst, b_st_dst) =&gt;
-                            {
-                            }
+                                &amp;&amp; (a_ptr, b_ptr) == (a_st_dst, b_st_dst) =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
                         }
                     }
