@@ -125,10 +125,11 @@ fn compute_idom(preds: &[Vec<usize>], reachable_blocks: &[bool]) -> Vec<Option<u
             }
         }
     }
-    assert!(idom
-        .iter()
-        .enumerate()
-        .all(|(i, x)| x.is_some() == reachable_blocks[i]));
+    assert!(
+        idom.iter()
+            .enumerate()
+            .all(|(i, x)| x.is_some() == reachable_blocks[i])
+    );
     idom
 }
 

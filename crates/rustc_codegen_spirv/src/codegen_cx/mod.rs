@@ -500,7 +500,7 @@ impl CodegenArgs {
             Some(v) => {
                 return Err(rustc_session::getopts::Fail::UnrecognizedOption(
                     v.to_string(),
-                ))
+                ));
             }
         };
 

@@ -25,11 +25,7 @@ pub enum Arrayed {
 
 impl From<bool> for Arrayed {
     fn from(val: bool) -> Self {
-        if val {
-            Self::True
-        } else {
-            Self::False
-        }
+        if val { Self::True } else { Self::False }
     }
 }
 
@@ -102,11 +98,7 @@ pub enum Multisampled {
 
 impl From<bool> for Multisampled {
     fn from(val: bool) -> Self {
-        if val {
-            Self::True
-        } else {
-            Self::False
-        }
+        if val { Self::True } else { Self::False }
     }
 }
 

@@ -2397,10 +2397,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // HACK(eddyb) this is basically a `try` block.
             let remove_format_args_if_possible = || -> Option<()> {
                 let format_args_id = match args {
-                    &[SpirvValue {
-                        kind: SpirvValueKind::Def(format_args_id),
-                        ..
-                    }, _] => format_args_id,
+                    &[
+                        SpirvValue {
+                            kind: SpirvValueKind::Def(format_args_id),
+                            ..
+                        },
+                        _,
+                    ] => format_args_id,
 
                     _ => return None,
                 };
@@ -2503,15 +2506,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
                 let (rt_args_slice_ptr_id, rt_args_count) = match try_rev_take(3)?[..] {
                     [
-                        // HACK(eddyb) comment works around `rustfmt` array bugs.
                         Inst::Call(call_ret_id, callee_id, ref call_args),
                         Inst::Store(st_dst_id, st_val_id),
                         Inst::Load(ld_val_id, ld_src_id),
-                    ]
-                        if self.fmt_args_new_fn_ids.borrow().contains(&callee_id)
-                            && call_ret_id == st_val_id
-                            && st_dst_id == ld_src_id
-                            && ld_val_id == format_args_id =>
+                    ] if self.fmt_args_new_fn_ids.borrow().contains(&callee_id)
+                        && call_ret_id == st_val_id
+                        && st_dst_id == ld_src_id
+                        && ld_val_id == format_args_id =>
                     {
                         require_local_var(st_dst_id)?;
                         match call_args[..] {
@@ -2565,7 +2566,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     {
                         let rt_arg_var_id = match init_of_rt_arg_var_insts[..] {
                             [
-                                // HACK(eddyb) comment works around `rustfmt` array bugs.
                                 Inst::Bitcast(b, _),
                                 Inst::Bitcast(a, _),
                                 Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(0)),
@@ -2587,7 +2587,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                             copy_from_rt_arg_var_to_rt_args_array_insts.split_at(4);
                         let (a, b) = match copy_loads[..] {
                             [
-                                // HACK(eddyb) comment works around `rustfmt` array bugs.
                                 Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(0)),
                                 Inst::Load(a_ld_val, a_ld_src),
                                 Inst::AccessChain(b_ptr, b_base_ptr, SpirvConst::U32(1)),
@@ -2601,8 +2600,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                         };
                         match copy_stores[..] {
                             [
-                                // HACK(eddyb) comment works around `rustfmt` array bugs.
-                                Inst::InBoundsAccessChain(array_slot_ptr, array_base_ptr, SpirvConst::U32(array_idx)),
+                                Inst::InBoundsAccessChain(
+                                    array_slot_ptr,
+                                    array_base_ptr,
+                                    SpirvConst::U32(array_idx),
+                                ),
                                 Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(0)),
                                 Inst::Store(a_st_dst, a_st_val),
                                 Inst::AccessChain(b_ptr, b_base_ptr, SpirvConst::U32(1)),
@@ -2611,9 +2613,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                                 && array_idx as usize == rt_arg_idx
                                 && [a_base_ptr, b_base_ptr] == [array_slot_ptr; 2]
                                 && (a, b) == (a_st_val, b_st_val)
-                                && (a_ptr, b_ptr) == (a_st_dst, b_st_dst) =>
-                            {
-                            }
+                                && (a_ptr, b_ptr) == (a_st_dst, b_st_dst) => {}
                             _ => return None,
                         }
                     }

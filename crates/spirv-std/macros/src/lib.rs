@@ -492,7 +492,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                         return parsing_error(
                             "Unterminated format specifier: missing type after precision",
                             span,
-                        )
+                        );
                     }
                 };
 
@@ -506,17 +506,19 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                         return parsing_error(
                             "Unterminated format specifier: missing type after decimal point",
                             span,
-                        )
+                        );
                     }
                 };
 
                 while ch.is_ascii_digit() {
                     ch = match chars.next() {
                         Some(ch) => ch,
-                        None => return parsing_error(
-                            "Unterminated format specifier: missing type after fraction precision",
-                            span,
-                        ),
+                        None => {
+                            return parsing_error(
+                                "Unterminated format specifier: missing type after fraction precision",
+                                span,
+                            );
+                        }
                     };
                 }
             }
@@ -527,7 +529,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                     Some('3') => 3,
                     Some('4') => 4,
                     Some(ch) => {
-                        return parsing_error(&format!("Invalid width for vector: {ch}"), span)
+                        return parsing_error(&format!("Invalid width for vector: {ch}"), span);
                     }
                     None => return parsing_error("Missing vector dimensions specifier", span),
                 };
@@ -543,7 +545,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                         return parsing_error(
                             &format!("Unrecognised vector type specifier: '{ch}'"),
                             span,
-                        )
+                        );
                     }
                 };
 
@@ -555,7 +557,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                         return parsing_error(
                             &format!("Unrecognised format specifier: '{ch}'"),
                             span,
-                        )
+                        );
                     }
                 };
 

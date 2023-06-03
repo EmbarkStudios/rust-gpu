@@ -1276,7 +1276,7 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                         return Ok(Match {
                             ambiguous: true,
                             ..Match::default()
-                        })
+                        });
                     }
                     InferOperand::Var(_) => return Err(Unapplicable),
                     InferOperand::Instance(instance) => instance,
