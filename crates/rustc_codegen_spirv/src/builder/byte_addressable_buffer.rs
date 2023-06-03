@@ -177,7 +177,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 return SpirvValue {
                     kind: SpirvValueKind::IllegalTypeUsed(result_type),
                     ty: result_type,
-                }
+                };
             }
             // PassMode::Pair is identical to PassMode::Direct - it's returned as a struct
             PassMode::Direct(_) | PassMode::Pair(_, _) => (),

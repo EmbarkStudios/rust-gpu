@@ -42,7 +42,9 @@ fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
             return Err(Box::<dyn Error>::from(format!(
                 "error: building from local source while `REQUIRED_RUST_TOOLCHAIN` (defined in `{}`) doesn't match `{}`",
                 file!(),
-                std::path::Path::new("../../rust-toolchain.toml").canonicalize()?.display()
+                std::path::Path::new("../../rust-toolchain.toml")
+                    .canonicalize()?
+                    .display()
             )));
         }
     }

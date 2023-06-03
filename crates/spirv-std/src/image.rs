@@ -120,14 +120,14 @@ pub struct Image<
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DIM: u32,
-        const DEPTH: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const FORMAT: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+>
     Image<
         SampledType,
         DIM,
@@ -166,14 +166,14 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DIM: u32,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+>
     Image<
         SampledType,
         DIM,
@@ -458,13 +458,13 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DIM: u32,
-        const DEPTH: u32,
-        const SAMPLED: u32,
-        const FORMAT: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const SAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+>
     Image<
         SampledType,
         DIM,
@@ -680,14 +680,14 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DIM: u32,
-        const DEPTH: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const FORMAT: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+>
     Image<
         SampledType,
         DIM,
@@ -749,14 +749,14 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DIM: u32,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const COMPONENTS: u32,
+>
     Image<
         SampledType,
         DIM,
@@ -818,13 +818,13 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const FORMAT: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+>
     Image<
         SampledType,
         { Dimensionality::SubpassData as u32 },
@@ -866,15 +866,15 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DIM: u32,
-        const DEPTH: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const SAMPLED: u32,
-        const FORMAT: u32,
-        const COMPONENTS: u32,
-    > Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, COMPONENTS>
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const SAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+> Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, COMPONENTS>
 {
     /// Query the number of mipmap levels.
     #[crate::macros::gpu_only]
@@ -955,14 +955,14 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DIM: u32,
-        const DEPTH: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const FORMAT: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+>
     Image<
         SampledType,
         DIM,
@@ -1000,13 +1000,13 @@ impl<
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const FORMAT: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+>
     Image<
         SampledType,
         { Dimensionality::TwoD as u32 },
@@ -1047,14 +1047,14 @@ pub struct SampledImage<I> {
 }
 
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DIM: u32,
-        const DEPTH: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const FORMAT: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+>
     SampledImage<
         Image<
             SampledType,
@@ -1205,15 +1205,15 @@ pub trait ImageWithMethods<
 
 #[crate::macros::gen_sample_param_permutations]
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DIM: u32,
-        const DEPTH: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const SAMPLED: u32,
-        const FORMAT: u32,
-        const COMPONENTS: u32,
-    >
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DIM: u32,
+    const DEPTH: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const SAMPLED: u32,
+    const FORMAT: u32,
+    const COMPONENTS: u32,
+>
     ImageWithMethods<
         SampledType,
         DIM,
@@ -1420,13 +1420,13 @@ impl<
 /// `OpTypeImage` must be 0."
 pub trait HasGather {}
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasGather
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasGather
     for Image<
         SampledType,
         { Dimensionality::TwoD as u32 },
@@ -1440,13 +1440,13 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasGather
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasGather
     for Image<
         SampledType,
         { Dimensionality::Rect as u32 },
@@ -1460,13 +1460,13 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasGather
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasGather
     for Image<
         SampledType,
         { Dimensionality::Cube as u32 },
@@ -1486,14 +1486,14 @@ impl<
 /// "Its Dim operand must be one of 1D, 2D, 3D, or Cube."
 pub trait HasQueryLevels {}
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQueryLevels
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQueryLevels
     for Image<
         SampledType,
         { Dimensionality::OneD as u32 },
@@ -1507,14 +1507,14 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQueryLevels
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQueryLevels
     for Image<
         SampledType,
         { Dimensionality::TwoD as u32 },
@@ -1528,14 +1528,14 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQueryLevels
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQueryLevels
     for Image<
         SampledType,
         { Dimensionality::ThreeD as u32 },
@@ -1549,14 +1549,14 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQueryLevels
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQueryLevels
     for Image<
         SampledType,
         { Dimensionality::Cube as u32 },
@@ -1577,13 +1577,13 @@ impl<
 /// 3D, or Cube, it must also have either an MS of 1 or a Sampled of 0 or 2."
 pub trait HasQuerySize {}
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::OneD as u32 },
@@ -1597,12 +1597,12 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::OneD as u32 },
@@ -1616,12 +1616,12 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::OneD as u32 },
@@ -1635,13 +1635,13 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::TwoD as u32 },
@@ -1655,12 +1655,12 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::TwoD as u32 },
@@ -1674,12 +1674,12 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::TwoD as u32 },
@@ -1693,13 +1693,13 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::ThreeD as u32 },
@@ -1713,12 +1713,12 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::ThreeD as u32 },
@@ -1732,12 +1732,12 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::ThreeD as u32 },
@@ -1751,13 +1751,13 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::Cube as u32 },
@@ -1771,12 +1771,12 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::Cube as u32 },
@@ -1790,12 +1790,12 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::Cube as u32 },
@@ -1809,14 +1809,14 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::Rect as u32 },
@@ -1830,14 +1830,14 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const MULTISAMPLED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySize
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const MULTISAMPLED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySize
     for Image<
         SampledType,
         { Dimensionality::Buffer as u32 },
@@ -1857,13 +1857,13 @@ impl<
 /// "Its Dim operand must be one of 1D, 2D, 3D, or Cube, and its MS must be 0."
 pub trait HasQuerySizeLod {}
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySizeLod
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySizeLod
     for Image<
         SampledType,
         { Dimensionality::OneD as u32 },
@@ -1877,13 +1877,13 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySizeLod
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySizeLod
     for Image<
         SampledType,
         { Dimensionality::TwoD as u32 },
@@ -1897,13 +1897,13 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySizeLod
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySizeLod
     for Image<
         SampledType,
         { Dimensionality::ThreeD as u32 },
@@ -1917,13 +1917,13 @@ impl<
 {
 }
 impl<
-        SampledType: SampleType<FORMAT, COMPONENTS>,
-        const DEPTH: u32,
-        const FORMAT: u32,
-        const ARRAYED: u32,
-        const SAMPLED: u32,
-        const COMPONENTS: u32,
-    > HasQuerySizeLod
+    SampledType: SampleType<FORMAT, COMPONENTS>,
+    const DEPTH: u32,
+    const FORMAT: u32,
+    const ARRAYED: u32,
+    const SAMPLED: u32,
+    const COMPONENTS: u32,
+> HasQuerySizeLod
     for Image<
         SampledType,
         { Dimensionality::Cube as u32 },

@@ -649,7 +649,7 @@ fn parse_entry_attrs(
                                 format!(
                                     "#[spirv({name}(..))] unknown attribute argument {attr_name}"
                                 ),
-                            ))
+                            ));
                         }
                     }
                 } else {

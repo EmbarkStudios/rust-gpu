@@ -233,11 +233,11 @@ const _: () = {
     use spirt::{func_at::*, visit::*, *};
 
     impl<
-            'a,
-            S,
-            VCR: FnMut(&mut S, FuncAt<'a, ControlRegion>),
-            VCN: FnMut(&mut S, FuncAt<'a, ControlNode>),
-        > Visitor<'a> for VisitAllControlRegionsAndNodes<S, VCR, VCN>
+        'a,
+        S,
+        VCR: FnMut(&mut S, FuncAt<'a, ControlRegion>),
+        VCN: FnMut(&mut S, FuncAt<'a, ControlNode>),
+    > Visitor<'a> for VisitAllControlRegionsAndNodes<S, VCR, VCN>
     {
         // FIXME(eddyb) this is excessive, maybe different kinds of
         // visitors should exist for module-level and func-level?

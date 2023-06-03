@@ -487,10 +487,10 @@ impl<'tcx> CodegenCx<'tcx> {
                     *offset += size;
                 } else {
                     assert_eq!(
-                    offset.bytes_usize(),
-                    alloc.inner().len(),
-                    "create_const_alloc must consume all bytes of an Allocation after an unsized struct"
-                );
+                        offset.bytes_usize(),
+                        alloc.inner().len(),
+                        "create_const_alloc must consume all bytes of an Allocation after an unsized struct"
+                    );
                 }
                 self.constant_composite(ty, values.into_iter())
             }

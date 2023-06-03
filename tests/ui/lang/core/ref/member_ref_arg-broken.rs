@@ -39,7 +39,7 @@ fn h(xyz: (&u32, &u32, &u32)) -> (u32, u32, u32) {
 // should just never exist by-value, and `qptr` may very well get rid of them).
 #[inline(never)]
 fn h_newtyped(xyz: ((&u32, &u32, &u32),)) -> (u32, u32, u32) {
-    (*xyz.0 .0, *xyz.0 .1, *xyz.0 .2)
+    (*xyz.0.0, *xyz.0.1, *xyz.0.2)
 }
 
 #[spirv(fragment)]

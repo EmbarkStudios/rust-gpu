@@ -719,10 +719,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
         // FIXME(eddyb) try multiple signatures until one fits.
         let mut sig = match instruction_signatures(instruction.class.opcode)? {
-            [sig @ InstSig {
-                output_type: Some(_),
-                ..
-            }] => *sig,
+            [
+                sig @ InstSig {
+                    output_type: Some(_),
+                    ..
+                },
+            ] => *sig,
             _ => return None,
         };
 

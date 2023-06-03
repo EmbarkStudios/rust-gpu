@@ -299,7 +299,9 @@ fn type_mismatch() {
     let result = assemble_and_link(&[&a, &b]);
     assert_eq!(
         result.err().as_deref(),
-        Some("error: Types mismatch for \"foo\"\n  |\n  = note: import type: (TypeFloat)\n  = note: export type: (TypeInt)")
+        Some(
+            "error: Types mismatch for \"foo\"\n  |\n  = note: import type: (TypeFloat)\n  = note: export type: (TypeInt)"
+        )
     );
 }
 

@@ -472,11 +472,7 @@ impl<'a> SpanRegenerator<'a> {
                     })
                     .unwrap_or(false);
 
-                if sf_src_matches {
-                    Some(sf)
-                } else {
-                    None
-                }
+                if sf_src_matches { Some(sf) } else { None }
             });
         }
         file.as_deref()

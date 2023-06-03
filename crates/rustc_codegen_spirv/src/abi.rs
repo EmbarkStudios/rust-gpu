@@ -162,7 +162,7 @@ pub(crate) fn provide(providers: &mut Providers) {
         if hide_niche {
             layout = tcx.mk_layout(LayoutS {
                 largest_niche: None,
-                ..clone_layout(layout.0 .0)
+                ..clone_layout(layout.0.0)
             });
         }
 

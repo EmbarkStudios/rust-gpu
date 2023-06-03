@@ -57,11 +57,7 @@ pub fn acos_approx(v: f32) -> f32 {
     let mut res = -0.155972 * x + 1.56467; // p(x)
     res *= (1.0f32 - x).sqrt();
 
-    if v >= 0.0 {
-        res
-    } else {
-        PI - res
-    }
+    if v >= 0.0 { res } else { PI - res }
 }
 
 pub fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {

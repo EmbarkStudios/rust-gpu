@@ -463,9 +463,11 @@ mod params {
             "r8ui" => ImageFormat::R8ui,
             "r64ui" => ImageFormat::R64ui,
             "r64i" => ImageFormat::R64i,
-            _ => return Err(
-                "Unknown specified image format. Use `type=<type>` instead if this is intentional.",
-            ),
+            _ => {
+                return Err(
+                    "Unknown specified image format. Use `type=<type>` instead if this is intentional.",
+                );
+            }
         })
     }
 
