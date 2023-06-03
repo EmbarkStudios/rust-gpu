@@ -4,8 +4,6 @@
 use spirv_std::spirv;
 
 #[spirv(ray_generation)]
-// Rustfmt will eat long attributes (https://github.com/rust-lang/rustfmt/issues/4579)
-#[rustfmt::skip]
 pub fn main(
     #[spirv(descriptor_set = 0, binding = 0)]
     acceleration_structure: &spirv_std::ray_tracing::AccelerationStructure,

@@ -5,9 +5,6 @@ use crate::vector::VectorTruncateInto;
 #[cfg(target_arch = "spirv")]
 use core::arch::asm;
 
-// Rustfmt formats long marker trait impls over multiple lines which makes them
-// harder to read.
-#[rustfmt::skip]
 mod params;
 
 /// Contains extra image operands
