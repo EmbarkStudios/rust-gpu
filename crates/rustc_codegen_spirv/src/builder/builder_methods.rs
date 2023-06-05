@@ -18,6 +18,7 @@ use rustc_codegen_ssa::traits::{
 use rustc_codegen_ssa::MemFlags;
 use rustc_data_structures::fx::FxHashSet;
 use rustc_middle::bug;
+use rustc_middle::middle::codegen_fn_attrs::CodegenFnAttrs;
 use rustc_middle::ty::Ty;
 use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
@@ -760,9 +761,19 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         then_llbb: Self::BasicBlock,
         else_llbb: Self::BasicBlock,
     ) {
-        self.emit()
-            .branch_conditional(cond.def(self), then_llbb, else_llbb, empty())
-            .unwrap();
+        let cond = cond.def(self);
+
+        // HACK(eddyb) constant-fold branches early on, as the `core` library is
+        // starting to get a lot of `if cfg!(debug_assertions)` added to it.
+        match self.builder.lookup_const_by_id(cond) {
+            Some(SpirvConst::Bool(true)) => self.br(then_llbb),
+            Some(SpirvConst::Bool(false)) => self.br(else_llbb),
+            _ => {
+                self.emit()
+                    .branch_conditional(cond, then_llbb, else_llbb, empty())
+                    .unwrap();
+            }
+        }
     }
 
     fn switch(
@@ -840,6 +851,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn invoke(
         &mut self,
         llty: Self::Type,
+        fn_attrs: Option<&CodegenFnAttrs>,
         fn_abi: Option<&FnAbi<'tcx, Ty<'tcx>>>,
         llfn: Self::Value,
         args: &[Self::Value],
@@ -848,7 +860,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         funclet: Option<&Self::Funclet>,
     ) -> Self::Value {
         // Exceptions don't exist, jump directly to then block
-        let result = self.call(llty, fn_abi, llfn, args, funclet);
+        let result = self.call(llty, fn_attrs, fn_abi, llfn, args, funclet);
         self.emit().branch(then).unwrap();
         result
     }
@@ -2095,6 +2107,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         todo!()
     }
 
+    fn filter_landing_pad(&mut self, _pers_fn: Self::Value) -> (Self::Value, Self::Value) {
+        todo!()
+    }
+
     fn resume(&mut self, _exn0: Self::Value, _exn1: Self::Value) {
         todo!()
     }
@@ -2309,6 +2325,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn call(
         &mut self,
         callee_ty: Self::Type,
+        _fn_attrs: Option<&CodegenFnAttrs>,
         _fn_abi: Option<&FnAbi<'tcx, Ty<'tcx>>>,
         callee: Self::Value,
         args: &[Self::Value],

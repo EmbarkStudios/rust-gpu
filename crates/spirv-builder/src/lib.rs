@@ -440,6 +440,10 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         "-Csymbol-mangling-version=v0".to_string(),
         "-Zcrate-attr=feature(register_tool)".to_string(),
         "-Zcrate-attr=register_tool(rust_gpu)".to_string(),
+        // HACK(eddyb) this is the same configuration that we test with, and
+        // ensures no unwanted surprises from e.g. `core` debug assertions.
+        "-Coverflow-checks=off".to_string(),
+        "-Cdebug-assertions=off".to_string(),
     ];
 
     // Wrapper for `env::var` that appropriately informs Cargo of the dependency.

@@ -89,6 +89,7 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+/// Public re-export of the `spirv-std-macros` crate.
 #[macro_use]
 pub extern crate spirv_std_macros as macros;
 pub use macros::spirv;

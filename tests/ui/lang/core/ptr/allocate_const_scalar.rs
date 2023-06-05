@@ -8,9 +8,10 @@
 use spirv_std::spirv;
 
 use core::ptr::Unique;
+
 const POINTER: Unique<[u8; 4]> = Unique::<[u8; 4]>::dangling();
 
 #[spirv(fragment)]
-pub fn main() {
-    let _pointer = POINTER;
+pub fn main(output: &mut Unique<[u8; 4]>) {
+    *output = POINTER;
 }

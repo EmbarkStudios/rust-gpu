@@ -306,10 +306,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 let storage_class = inst.operands[0].unwrap_storage_class();
                 if storage_class != StorageClass::Generic {
                     self.struct_err("TypePointer in asm! requires `Generic` storage class")
-                        .note(&format!(
+                        .note(format!(
                             "`{storage_class:?}` storage class was specified"
                         ))
-                        .help(&format!(
+                        .help(format!(
                             "the storage class will be inferred automatically (e.g. to `{storage_class:?}`)"
                         ))
                         .emit();

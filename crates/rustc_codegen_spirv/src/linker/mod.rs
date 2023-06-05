@@ -225,6 +225,17 @@ pub fn link(
     }
 
     if opts.early_report_zombies {
+        // HACK(eddyb) `report_and_remove_zombies` is bad at determining whether
+        // some things are dead (such as whole blocks), and there's no reason to
+        // *not* run DCE, given SPIR-T exists and makes DCE mandatory, but we're
+        // still only going to do the minimum necessary ("block ordering").
+        {
+            let _timer = sess.timer("link_block_ordering_pass-before-report_and_remove_zombies");
+            for func in &mut output.functions {
+                simple_passes::block_ordering_pass(func);
+            }
+        }
+
         let _timer = sess.timer("link_report_and_remove_zombies");
         zombies::report_and_remove_zombies(sess, opts, &mut output)?;
     }

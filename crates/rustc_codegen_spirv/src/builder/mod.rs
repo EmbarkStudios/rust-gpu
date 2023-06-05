@@ -438,16 +438,4 @@ impl<'tcx> FnAbiOfHelpers<'tcx> for Builder<'_, 'tcx> {
     }
 }
 
-impl<'tcx> TypeMembershipMethods<'tcx> for CodegenCx<'tcx> {
-    fn set_type_metadata(&self, _function: Self::Function, _typeid: String) {
-        // ignore
-    }
-
-    fn typeid_metadata(&self, _typeid: String) -> Self::Value {
-        todo!()
-    }
-
-    fn set_kcfi_type_metadata(&self, _function: Self::Function, _typeid: u32) {
-        // ignore
-    }
-}
+impl<'tcx> TypeMembershipMethods<'tcx> for CodegenCx<'tcx> {}

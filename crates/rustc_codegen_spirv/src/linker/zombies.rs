@@ -292,7 +292,10 @@ impl<'a> ZombieReporter<'a> {
         match zombie.kind {
             ZombieKind::Leaf => {
                 let reason = self.span_regen.zombie_for_id(zombie.id).unwrap().reason;
-                errors_keyed_by_leaf_id.insert(zombie.id, self.sess.struct_span_err(span, reason));
+                errors_keyed_by_leaf_id.insert(
+                    zombie.id,
+                    self.sess.struct_span_err(span, reason.to_string()),
+                );
             }
             ZombieKind::Uses(zombie_uses) => {
                 for zombie_use in zombie_uses {
