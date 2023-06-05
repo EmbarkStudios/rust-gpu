@@ -405,6 +405,12 @@ pub fn link(
         };
         after_pass("lower_from_spv", &module);
 
+        // NOTE(eddyb) this *must* run on unstructured CFGs, to do its job.
+        {
+            let _timer = sess.timer("spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points");
+            spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points(&mut module);
+        }
+
         if opts.structurize {
             {
                 let _timer = sess.timer("spirt::legalize::structurize_func_cfgs");
@@ -473,7 +479,10 @@ pub fn link(
         report_diagnostics_result?;
 
         // Replace our custom debuginfo instructions just before lifting to SPIR-V.
-        spirt_passes::debuginfo::convert_custom_debuginfo_to_spv(&mut module);
+        {
+            let _timer = sess.timer("spirt_passes::debuginfo::convert_custom_debuginfo_to_spv");
+            spirt_passes::debuginfo::convert_custom_debuginfo_to_spv(&mut module);
+        }
 
         let spv_words = {
             let _timer = sess.timer("spirt::Module::lift_to_spv_module_emitter");

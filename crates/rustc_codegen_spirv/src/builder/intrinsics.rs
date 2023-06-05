@@ -2,6 +2,7 @@ use super::Builder;
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
+use crate::custom_insts::CustomInst;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::GLOp;
 use rustc_codegen_ssa::mir::operand::OperandRef;
@@ -337,17 +338,18 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     }
 
     fn abort(&mut self) {
+        // FIXME(eddyb) this should be cached more efficiently.
+        let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
+
         // HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
-        // so the best thing we can do is inject an infinite loop.
-        // (While there is `OpKill`, it doesn't really have the right semantics)
-        let abort_loop_bb = self.append_sibling_block("abort_loop");
-        let abort_continue_bb = self.append_sibling_block("abort_continue");
-        self.br(abort_loop_bb);
+        // so the best thing we can do is use our own custom instruction.
+        self.custom_inst(void_ty, CustomInst::Abort);
+        self.unreachable();
 
-        self.switch_to_block(abort_loop_bb);
-        self.br(abort_loop_bb);
-
-        self.switch_to_block(abort_continue_bb);
+        // HACK(eddyb) we still need an active block in case the user of this
+        // `Builder` will continue to emit instructions after the `.abort()`.
+        let post_abort_dead_bb = self.append_sibling_block("post_abort_dead");
+        self.switch_to_block(post_abort_dead_bb);
     }
 
     fn assume(&mut self, _val: Self::Value) {

@@ -125,4 +125,55 @@ def_custom_insts! {
     // Leave the most recent inlined call frame entered by a `PushInlinedCallFrame`
     // (i.e. the inlined call frames form a virtual call stack in debuginfo).
     3 => PopInlinedCallFrame,
+
+    // [Semantic] Similar to some proposed `OpAbort`, but without any ability to
+    // indicate abnormal termination (so it's closer to `OpTerminateInvocation`,
+    // which we could theoretically use, but that's limited to fragment shaders).
+    //
+    // Lowering takes advantage of inlining happening before CFG structurization
+    // (by forcing inlining of `Abort`s all the way up to entry-points, as to be
+    // able to turn the `Abort`s into regular `OpReturn`s, from an entry-point),
+    // but if/when inlining works on structured SPIR-T instead, it's not much
+    // harder to make any call to a "may (transitively) abort" function branch on
+    // an additional returned `bool`, instead (i.e. a form of emulated unwinding).
+    //
+    // As this is a custom terminator, it must only appear before `OpUnreachable`,
+    // *without* any instructions in between (not even debuginfo ones).
+    //
+    // FIXME(eddyb) long-term this kind of custom control-flow could be generalized
+    // to fully emulate unwinding (resulting in codegen similar to `?` in functions
+    // returning `Option` or `Result`), to e.g. run destructors, or even allow
+    // users to do `catch_unwind` at the top-level of their shader to handle
+    // panics specially (e.g. by appending to a custom buffer, or using some
+    // specific color in a fragment shader, to indicate a panic happened).
+    4 => Abort,
+}
+
+impl CustomOp {
+    /// Returns `true` iff this `CustomOp` is a custom debuginfo instruction,
+    /// i.e. non-semantic (can/must be ignored wherever `OpLine`/`OpNoLine` are).
+    pub fn is_debuginfo(self) -> bool {
+        match self {
+            CustomOp::SetDebugSrcLoc
+            | CustomOp::ClearDebugSrcLoc
+            | CustomOp::PushInlinedCallFrame
+            | CustomOp::PopInlinedCallFrame => true,
+
+            CustomOp::Abort => false,
+        }
+    }
+
+    /// Returns `true` iff this `CustomOp` is a custom terminator instruction,
+    /// i.e. semantic and must always appear just before an `OpUnreachable`
+    /// standard terminator (without even debuginfo in between the two).
+    pub fn is_terminator(self) -> bool {
+        match self {
+            CustomOp::SetDebugSrcLoc
+            | CustomOp::ClearDebugSrcLoc
+            | CustomOp::PushInlinedCallFrame
+            | CustomOp::PopInlinedCallFrame => false,
+
+            CustomOp::Abort => true,
+        }
+    }
 }

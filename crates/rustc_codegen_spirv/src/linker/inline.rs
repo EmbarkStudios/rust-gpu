@@ -5,6 +5,7 @@
 //! run mem2reg (see mem2reg.rs) on the result to "unwrap" the Function pointer.
 
 use super::apply_rewrite_rules;
+use super::ipo::CallGraph;
 use super::simple_passes::outgoing_edges;
 use super::{get_name, get_names};
 use crate::custom_insts::{self, CustomInst, CustomOp};
@@ -30,6 +31,64 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     // This algorithm gets real sad if there's recursion - but, good news, SPIR-V bans recursion
     deny_recursion_in_module(sess, module)?;
 
+    let custom_ext_inst_set_import = module
+        .ext_inst_imports
+        .iter()
+        .find(|inst| {
+            assert_eq!(inst.class.opcode, Op::ExtInstImport);
+            inst.operands[0].unwrap_literal_string() == &custom_insts::CUSTOM_EXT_INST_SET[..]
+        })
+        .map(|inst| inst.result_id.unwrap());
+
+    // HACK(eddyb) compute the set of functions that may `Abort` *transitively*,
+    // which is only needed because of how we inline (sometimes it's outside-in,
+    // aka top-down, instead of always being inside-out, aka bottom-up).
+    //
+    // (inlining is needed in the first place because our custom `Abort`
+    // instructions get lowered to a simple `OpReturn` in entry-points, but
+    // that requires that they get inlined all the way up to the entry-points)
+    let functions_that_may_abort = custom_ext_inst_set_import
+        .map(|custom_ext_inst_set_import| {
+            let mut may_abort_by_id = FxHashSet::default();
+
+            // FIXME(eddyb) use this `CallGraph` abstraction more during inlining.
+            let call_graph = CallGraph::collect(module);
+            for func_idx in call_graph.post_order() {
+                let func_id = module.functions[func_idx].def_id().unwrap();
+
+                let any_callee_may_abort = call_graph.callees[func_idx].iter().any(|&callee_idx| {
+                    may_abort_by_id.contains(&module.functions[callee_idx].def_id().unwrap())
+                });
+                if any_callee_may_abort {
+                    may_abort_by_id.insert(func_id);
+                    continue;
+                }
+
+                let may_abort_directly = module.functions[func_idx].blocks.iter().any(|block| {
+                    match &block.instructions[..] {
+                        [.., last_normal_inst, terminator_inst]
+                            if last_normal_inst.class.opcode == Op::ExtInst
+                                && last_normal_inst.operands[0].unwrap_id_ref()
+                                    == custom_ext_inst_set_import
+                                && CustomOp::decode_from_ext_inst(last_normal_inst)
+                                    == CustomOp::Abort =>
+                        {
+                            assert_eq!(terminator_inst.class.opcode, Op::Unreachable);
+                            true
+                        }
+
+                        _ => false,
+                    }
+                });
+                if may_abort_directly {
+                    may_abort_by_id.insert(func_id);
+                }
+            }
+
+            may_abort_by_id
+        })
+        .unwrap_or_default();
+
     let functions = module
         .functions
         .iter()
@@ -42,7 +101,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     let mut dropped_ids = FxHashSet::default();
     let mut inlined_to_legalize_dont_inlines = Vec::new();
     module.functions.retain(|f| {
-        let should_inline_f = should_inline(&legal_globals, f, None);
+        let should_inline_f = should_inline(&legal_globals, &functions_that_may_abort, f, None);
         if should_inline_f != Ok(false) {
             if should_inline_f == Err(MustInlineToLegalize) && has_dont_inline(f) {
                 inlined_to_legalize_dont_inlines.push(f.def_id().unwrap());
@@ -82,27 +141,19 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
                 id
             }),
 
-        custom_ext_inst_set_import: module
-            .ext_inst_imports
-            .iter()
-            .find(|inst| {
-                assert_eq!(inst.class.opcode, Op::ExtInstImport);
-                inst.operands[0].unwrap_literal_string() == &custom_insts::CUSTOM_EXT_INST_SET[..]
-            })
-            .map(|inst| inst.result_id.unwrap())
-            .unwrap_or_else(|| {
-                let id = next_id(header);
-                let inst = Instruction::new(
-                    Op::ExtInstImport,
-                    None,
-                    Some(id),
-                    vec![Operand::LiteralString(
-                        custom_insts::CUSTOM_EXT_INST_SET.to_string(),
-                    )],
-                );
-                module.ext_inst_imports.push(inst);
-                id
-            }),
+        custom_ext_inst_set_import: custom_ext_inst_set_import.unwrap_or_else(|| {
+            let id = next_id(header);
+            let inst = Instruction::new(
+                Op::ExtInstImport,
+                None,
+                Some(id),
+                vec![Operand::LiteralString(
+                    custom_insts::CUSTOM_EXT_INST_SET.to_string(),
+                )],
+            );
+            module.ext_inst_imports.push(inst);
+            id
+        }),
 
         id_to_name: module
             .debug_names
@@ -125,6 +176,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
 
         functions: &functions,
         legal_globals: &legal_globals,
+        functions_that_may_abort: &functions_that_may_abort,
     };
     for function in &mut module.functions {
         inliner.inline_fn(function);
@@ -329,11 +381,19 @@ struct MustInlineToLegalize;
 /// and inlining is *mandatory* due to an illegal signature/arguments.
 fn should_inline(
     legal_globals: &FxHashMap<Word, LegalGlobal>,
+    functions_that_may_abort: &FxHashSet<Word>,
     callee: &Function,
     call_site: Option<CallSite<'_>>,
 ) -> Result<bool, MustInlineToLegalize> {
     let callee_def = callee.def.as_ref().unwrap();
     let callee_control = callee_def.operands[0].unwrap_function_control();
+
+    // HACK(eddyb) this "has a call-site" check ensures entry-points don't get
+    // accidentally removed as "must inline to legalize" function, but can still
+    // be inlined into other entry-points (if such an unusual situation arises).
+    if call_site.is_some() && functions_that_may_abort.contains(&callee.def_id().unwrap()) {
+        return Err(MustInlineToLegalize);
+    }
 
     let ret_ty = legal_globals
         .get(&callee_def.result_type.unwrap())
@@ -428,6 +488,7 @@ struct Inliner<'m, 'map> {
 
     functions: &'map FunctionMap,
     legal_globals: &'map FxHashMap<Word, LegalGlobal>,
+    functions_that_may_abort: &'map FxHashSet<Word>,
     // rewrite_rules: FxHashMap<Word, Word>,
 }
 
@@ -509,7 +570,12 @@ impl Inliner<'_, '_> {
                     caller,
                     call_inst: inst,
                 };
-                match should_inline(self.legal_globals, f, Some(call_site)) {
+                match should_inline(
+                    self.legal_globals,
+                    self.functions_that_may_abort,
+                    f,
+                    Some(call_site),
+                ) {
                     Ok(inline) => inline,
                     Err(MustInlineToLegalize) => true,
                 }
@@ -655,16 +721,9 @@ impl Inliner<'_, '_> {
                 insts.retain_mut(|inst| {
                     let is_debuginfo = match inst.class.opcode {
                         Op::Line | Op::NoLine => true,
-                        Op::ExtInst
-                            if inst.operands[0].unwrap_id_ref()
-                                == self.custom_ext_inst_set_import =>
-                        {
-                            match CustomOp::decode_from_ext_inst(inst) {
-                                CustomOp::SetDebugSrcLoc
-                                | CustomOp::ClearDebugSrcLoc
-                                | CustomOp::PushInlinedCallFrame
-                                | CustomOp::PopInlinedCallFrame => true,
-                            }
+                        Op::ExtInst => {
+                            inst.operands[0].unwrap_id_ref() == self.custom_ext_inst_set_import
+                                && CustomOp::decode_from_ext_inst(inst).is_debuginfo()
                         }
                         _ => false,
                     };
@@ -737,6 +796,12 @@ impl Inliner<'_, '_> {
         return_variable: Option<Word>,
         return_jump: Word,
     ) -> Vec<Block> {
+        let Self {
+            custom_ext_inst_set_import,
+            op_type_void_id,
+            ..
+        } = *self;
+
         // Prepare the debuginfo insts to prepend/append to every block.
         // FIXME(eddyb) this could be more efficient if we only used one pair of
         // `{Push,Pop}InlinedCallFrame` for the whole inlined callee, but there
@@ -774,10 +839,10 @@ impl Inliner<'_, '_> {
             let mut custom_inst_to_inst = |inst: CustomInst<_>| {
                 Instruction::new(
                     Op::ExtInst,
-                    Some(self.op_type_void_id),
+                    Some(op_type_void_id),
                     Some(self.id()),
                     [
-                        Operand::IdRef(self.custom_ext_inst_set_import),
+                        Operand::IdRef(custom_ext_inst_set_import),
                         Operand::LiteralExtInstInteger(inst.op() as u32),
                     ]
                     .into_iter()
@@ -837,7 +902,21 @@ impl Inliner<'_, '_> {
                     // Insert the suffix debuginfo instructions before the terminator,
                     // which sadly can't be covered by them.
                     {
-                        let i = block.instructions.len() - 1;
+                        let last_non_terminator = block.instructions.iter().rposition(|inst| {
+                            let is_standard_terminator =
+                                rspirv::grammar::reflect::is_block_terminator(inst.class.opcode);
+                            let is_custom_terminator = match inst.class.opcode {
+                                Op::ExtInst
+                                    if inst.operands[0].unwrap_id_ref()
+                                        == custom_ext_inst_set_import =>
+                                {
+                                    CustomOp::decode_from_ext_inst(inst).is_terminator()
+                                }
+                                _ => false,
+                            };
+                            !(is_standard_terminator || is_custom_terminator)
+                        });
+                        let i = last_non_terminator.map_or(0, |x| x + 1);
                         i..i
                     },
                     debuginfo_suffix,
