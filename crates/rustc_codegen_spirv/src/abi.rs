@@ -7,9 +7,9 @@ use crate::spirv_type::SpirvType;
 use rspirv::spirv::{StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorGuaranteed;
-use rustc_index::vec::Idx;
+use rustc_index::Idx;
+use rustc_middle::query::{ExternProviders, Providers};
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
-use rustc_middle::ty::query::{ExternProviders, Providers};
 use rustc_middle::ty::subst::SubstsRef;
 use rustc_middle::ty::{
     self, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
@@ -972,7 +972,7 @@ fn trans_intrinsic_type<'tcx>(
                         .tcx
                         .sess
                         .struct_span_err(span, "#[spirv(matrix)] type fields must all be vectors")
-                        .note(&format!("field type is {}", ty.debug(elem_type, cx)))
+                        .note(format!("field type is {}", ty.debug(elem_type, cx)))
                         .emit());
                 }
             }

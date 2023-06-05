@@ -191,6 +191,7 @@ impl<'tcx> CodegenCx<'tcx> {
         bx.set_span(span);
         bx.call(
             entry_func.ty,
+            None,
             Some(entry_fn_abi),
             entry_func,
             &call_args,
@@ -317,7 +318,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         )
                         .span_help(
                             storage_class_attr.span,
-                            &format!(
+                            format!(
                                 "remove storage class attribute to use `{deduced:?}` as storage class"
                             ),
                         )

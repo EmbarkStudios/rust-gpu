@@ -15,7 +15,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             self.debug_type(original_type)
         ));
         if original_type != invalid_type {
-            err.note(&format!(
+            err.note(format!(
                 "due to containing type {}",
                 self.debug_type(invalid_type)
             ));
@@ -210,7 +210,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             self.debug_type(original_type)
         ));
         if original_type != value.ty {
-            err.note(&format!("due to containing type {}", value.ty));
+            err.note(format!("due to containing type {}", value.ty));
         }
         Err(err.emit())
     }

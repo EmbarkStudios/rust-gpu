@@ -115,6 +115,7 @@ fn link_with_linker_opts(
                 Default::default(),
                 None,
                 None,
+                rustc_interface::util::rustc_version_str().unwrap_or("unknown"),
             );
 
             // HACK(eddyb) inject `write_diags` into `sess`, to work around

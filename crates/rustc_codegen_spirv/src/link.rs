@@ -274,8 +274,8 @@ fn post_link_single_module(
         if let Err(e) = std::fs::write(out_filename, spirv_tools::binary::from_binary(&spv_binary))
         {
             let mut err = sess.struct_err("failed to serialize spirv-binary to disk");
-            err.note(&format!("module `{}`", out_filename.display()));
-            err.note(&format!("I/O error: {e:#}"));
+            err.note(format!("module `{}`", out_filename.display()));
+            err.note(format!("I/O error: {e:#}"));
             err.emit();
         }
 
@@ -324,14 +324,14 @@ fn do_spirv_opt(
                 Level::Fatal | Level::InternalError => {
                     // FIXME(eddyb) this was `struct_fatal` but that doesn't seem
                     // necessary and also lacks `.forget_guarantee()`.
-                    sess.struct_err(&msg.message).forget_guarantee()
+                    sess.struct_err(msg.message).forget_guarantee()
                 }
-                Level::Error => sess.struct_err(&msg.message).forget_guarantee(),
-                Level::Warning => sess.struct_warn(&msg.message),
-                Level::Info | Level::Debug => sess.struct_note_without_error(&msg.message),
+                Level::Error => sess.struct_err(msg.message).forget_guarantee(),
+                Level::Warning => sess.struct_warn(msg.message),
+                Level::Info | Level::Debug => sess.struct_note_without_error(msg.message),
             };
 
-            err.note(&format!("module `{}`", filename.display()));
+            err.note(format!("module `{}`", filename.display()));
             err.emit();
         },
         Some(options),
@@ -341,9 +341,9 @@ fn do_spirv_opt(
         Ok(spirv_tools::binary::Binary::OwnedU32(words)) => words,
         Ok(binary) => binary.as_words().to_vec(),
         Err(e) => {
-            let mut err = sess.struct_warn(&e.to_string());
+            let mut err = sess.struct_warn(e.to_string());
             err.note("spirv-opt failed, leaving as unoptimized");
-            err.note(&format!("module `{}`", filename.display()));
+            err.note(format!("module `{}`", filename.display()));
             err.emit();
             spv_binary
         }
@@ -361,9 +361,9 @@ fn do_spirv_val(
     let validator = val::create(sess.target.options.env.parse().ok());
 
     if let Err(e) = validator.validate(spv_binary, Some(options)) {
-        let mut err = sess.struct_err(&e.to_string());
+        let mut err = sess.struct_err(e.to_string());
         err.note("spirv-val failed");
-        err.note(&format!("module `{}`", filename.display()));
+        err.note(format!("module `{}`", filename.display()));
         err.emit();
     }
 }

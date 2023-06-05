@@ -11,7 +11,7 @@ use rustc_hir::def_id::LocalDefId;
 use rustc_hir::intravisit::{self, Visitor};
 use rustc_hir::{HirId, MethodKind, Target, CRATE_HIR_ID};
 use rustc_middle::hir::nested_filter;
-use rustc_middle::ty::query::Providers;
+use rustc_middle::query::Providers;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::{Span, Symbol};
 use std::rc::Rc;
@@ -369,9 +369,9 @@ impl CheckSpirvAttrVisitor<'_> {
                             .sess
                             .struct_span_err(
                                 span,
-                                &format!("only one {category} attribute is allowed on a {target}"),
+                                format!("only one {category} attribute is allowed on a {target}"),
                             )
-                            .span_note(prev_span, &format!("previous {category} attribute"))
+                            .span_note(prev_span, format!("previous {category} attribute"))
                             .emit();
                     }
                 },

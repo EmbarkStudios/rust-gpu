@@ -103,8 +103,9 @@ use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::mir::pretty::write_mir_pretty;
+use rustc_middle::query;
 use rustc_middle::ty::print::with_no_trimmed_paths;
-use rustc_middle::ty::{self, query, Instance, InstanceDef, TyCtxt};
+use rustc_middle::ty::{self, Instance, InstanceDef, TyCtxt};
 use rustc_session::config::{self, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
@@ -137,7 +138,7 @@ fn is_blocklisted_fn<'tcx>(
     instance: Instance<'tcx>,
 ) -> bool {
     // TODO: These sometimes have a constant value of an enum variant with a hole
-    if let InstanceDef::Item(def) = instance.def {
+    if let InstanceDef::Item(def_id) = instance.def {
         if let Some(debug_trait_def_id) = tcx.get_diagnostic_item(sym::Debug) {
             // Helper for detecting `<_ as core::fmt::Debug>::fmt` (in impls).
             let is_debug_fmt_method = |def_id| match tcx.opt_associated_item(def_id) {
@@ -153,12 +154,12 @@ fn is_blocklisted_fn<'tcx>(
                 _ => false,
             };
 
-            if is_debug_fmt_method(def.did) {
+            if is_debug_fmt_method(def_id) {
                 return true;
             }
 
-            if tcx.opt_item_ident(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
-                if let Some(parent_def_id) = tcx.opt_parent(def.did) {
+            if tcx.opt_item_ident(def_id).map(|i| i.name) == Some(sym.fmt_decimal) {
+                if let Some(parent_def_id) = tcx.opt_parent(def_id) {
                     if is_debug_fmt_method(parent_def_id) {
                         return true;
                     }
@@ -491,47 +492,17 @@ impl Drop for DumpModuleOnPanic<'_, '_, '_> {
 /// This is the entrypoint for a hot plugged `rustc_codegen_spirv`
 #[no_mangle]
 pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
-    // Override rustc's panic hook with our own to override the ICE error
-    // message, and direct people to `rust-gpu`.
-    let _rustc_hook = std::panic::take_hook();
-    let default_hook = std::panic::take_hook();
-    {
-        // NOTE(eddyb) the reason we can get access to the default panic hook,
-        // is that `std::panic::take_hook` has this phrase in its documentation:
-        //
-        // > If no custom hook is registered, the default hook will be returned.
-        //
-        // But just in case (races with other threads?), we can do it a few more
-        // times, and require that we get the same "boxed" ZST every time.
-        let more_hooks = [
-            std::panic::take_hook(),
-            std::panic::take_hook(),
-            std::panic::take_hook(),
-            std::panic::take_hook(),
-        ];
-        assert_eq!(
-            std::mem::size_of_val(&*default_hook),
-            0,
-            "failed to acquire default panic hook using `std::panic::take_hook`, \
-             or default panic hook not a ZST anymore"
-        );
-        #[allow(clippy::vtable_address_comparisons)]
-        for other_hook in more_hooks {
-            assert!(
-                std::ptr::eq(&*default_hook, &*other_hook),
-                "failed to acquire default panic hook using `std::panic::take_hook`, \
-                 or `std::panic::set_hook` was used on another thread"
-            );
-        }
-    }
-    std::panic::set_hook(Box::new(move |panic_info| {
-        default_hook(panic_info);
-        rustc_driver::report_ice(
-            panic_info,
-            "https://github.com/EmbarkStudios/rust-gpu/issues/new",
-        );
-        eprintln!("note: `rust-gpu` version {}\n", env!("CARGO_PKG_VERSION"));
-    }));
+    // Tweak rustc's default ICE panic hook, to direct people to `rust-gpu`.
+    rustc_driver::install_ice_hook(
+        "https://github.com/EmbarkStudios/rust-gpu/issues/new",
+        |handler| {
+            handler.note_without_error(concat!(
+                "`rust-gpu` version `",
+                env!("CARGO_PKG_VERSION"),
+                "`"
+            ));
+        },
+    );
 
     Box::new(SpirvCodegenBackend)
 }

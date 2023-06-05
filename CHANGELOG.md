@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed 🛠
+- [PR#1071](https://github.com/EmbarkStudios/rust-gpu/pull/1071) updated toolchain to `nightly-2023-05-27`
+
 ## [0.8.0]
 
 ### Added ⭐

@@ -425,7 +425,7 @@ impl DiagnosticReporter<'_> {
                         self.span_regen.spirt_attrs_to_rustc_span(self.cx, attrs)
                     })
                     .unwrap_or(DUMMY_SP);
-                let mut err = self.sess.struct_span_err(def_span, reason);
+                let mut err = self.sess.struct_span_err(def_span, reason.to_string());
                 for use_origin in use_stack_for_def.iter().rev() {
                     use_origin.note(self.cx, &mut self.span_regen, &mut err);
                 }
