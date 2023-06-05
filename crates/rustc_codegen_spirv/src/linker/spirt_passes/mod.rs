@@ -1,5 +1,6 @@
 //! SPIR-T pass infrastructure and supporting utilities.
 
+pub(crate) mod controlflow;
 pub(crate) mod debuginfo;
 pub(crate) mod diagnostics;
 mod fuse_selects;
@@ -92,6 +93,8 @@ macro_rules! def_spv_spec_with_extra_well_known {
 }
 def_spv_spec_with_extra_well_known! {
     opcode: spv::spec::Opcode = [
+        OpTypeVoid,
+
         OpConstantComposite,
 
         OpBitcast,

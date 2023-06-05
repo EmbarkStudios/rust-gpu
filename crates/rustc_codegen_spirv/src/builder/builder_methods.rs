@@ -2457,8 +2457,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                         let is_standard_debug = [Op::Line, Op::NoLine].contains(&inst.class.opcode);
                         let is_custom_debug = inst.class.opcode == Op::ExtInst
                             && inst.operands[0].unwrap_id_ref() == custom_ext_inst_set_import
-                            && [CustomOp::SetDebugSrcLoc, CustomOp::ClearDebugSrcLoc]
-                                .contains(&CustomOp::decode_from_ext_inst(inst));
+                            && CustomOp::decode_from_ext_inst(inst).is_debuginfo();
                         !(is_standard_debug || is_custom_debug)
                     });
 

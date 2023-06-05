@@ -62,7 +62,7 @@ pub struct CodegenCx<'tcx> {
 
     /// All `panic!(...)`s and builtin panics (from MIR `Assert`s) call into one
     /// of these lang items, which we always replace with an "abort", erasing
-    /// anything passed in (and that "abort" is just an infinite loop for now).
+    /// anything passed in.
     //
     // FIXME(eddyb) we should not erase anywhere near as much, but `format_args!`
     // is not representable due to containg Rust slices, and Rust 2021 has made

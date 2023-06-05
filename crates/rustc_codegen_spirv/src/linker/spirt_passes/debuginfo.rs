@@ -85,7 +85,8 @@ impl Transformer for CustomDebuginfoToSpv<'_> {
                 } = data_inst_def.kind
                 {
                     if ext_set == self.custom_ext_inst_set {
-                        match CustomOp::decode(ext_inst).with_operands(&data_inst_def.inputs) {
+                        let custom_op = CustomOp::decode(ext_inst);
+                        match custom_op.with_operands(&data_inst_def.inputs) {
                             CustomInst::SetDebugSrcLoc {
                                 file,
                                 line_start: line,
@@ -125,6 +126,12 @@ impl Transformer for CustomDebuginfoToSpv<'_> {
                             | CustomInst::PopInlinedCallFrame => {
                                 insts_to_remove.push(inst);
                                 continue;
+                            }
+                            CustomInst::Abort => {
+                                assert!(
+                                    !custom_op.is_debuginfo(),
+                                    "`CustomOp::{custom_op:?}` debuginfo not lowered"
+                                );
                             }
                         }
                     }
