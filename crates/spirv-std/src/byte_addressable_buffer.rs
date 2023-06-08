@@ -3,8 +3,9 @@
 use core::mem;
 
 #[spirv(buffer_load_intrinsic)]
+// HACK(eddyb) try to prevent MIR inlining from breaking our intrinsics.
+#[inline(never)]
 #[spirv_std_macros::gpu_only]
-#[allow(improper_ctypes_definitions)]
 unsafe fn buffer_load_intrinsic<T>(
     buffer: &[u32],
     // FIXME(eddyb) should be `usize`.
@@ -22,8 +23,9 @@ unsafe fn buffer_load_intrinsic<T>(
 }
 
 #[spirv(buffer_store_intrinsic)]
+// HACK(eddyb) try to prevent MIR inlining from breaking our intrinsics.
+#[inline(never)]
 #[spirv_std_macros::gpu_only]
-#[allow(improper_ctypes_definitions)]
 unsafe fn buffer_store_intrinsic<T>(
     buffer: &mut [u32],
     // FIXME(eddyb) should be `usize`.
