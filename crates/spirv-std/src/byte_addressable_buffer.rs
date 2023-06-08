@@ -5,16 +5,41 @@ use core::mem;
 #[spirv(buffer_load_intrinsic)]
 #[spirv_std_macros::gpu_only]
 #[allow(improper_ctypes_definitions)]
-unsafe fn buffer_load_intrinsic<T>(_buffer: &[u32], _offset: u32) -> T {
-    unimplemented!()
-} // actually implemented in the compiler
+unsafe fn buffer_load_intrinsic<T>(
+    buffer: &[u32],
+    // FIXME(eddyb) should be `usize`.
+    offset: u32,
+) -> T {
+    // NOTE(eddyb) this doesn't work with `rustc_codegen_spirv` and is only here
+    // for explanatory purposes, and to cause some kind of verbose error if
+    // `#[spirv(buffer_load_intrinsic)]` fails to replace calls to this function.
+    buffer
+        .as_ptr()
+        .cast::<u8>()
+        .add(offset as usize)
+        .cast::<T>()
+        .read()
+}
 
 #[spirv(buffer_store_intrinsic)]
 #[spirv_std_macros::gpu_only]
 #[allow(improper_ctypes_definitions)]
-unsafe fn buffer_store_intrinsic<T>(_buffer: &mut [u32], _offset: u32, _value: T) {
-    unimplemented!()
-} // actually implemented in the compiler
+unsafe fn buffer_store_intrinsic<T>(
+    buffer: &mut [u32],
+    // FIXME(eddyb) should be `usize`.
+    offset: u32,
+    value: T,
+) {
+    // NOTE(eddyb) this doesn't work with `rustc_codegen_spirv` and is only here
+    // for explanatory purposes, and to cause some kind of verbose error if
+    // `#[spirv(buffer_store_intrinsic)]` fails to replace calls to this function.
+    buffer
+        .as_mut_ptr()
+        .cast::<u8>()
+        .add(offset as usize)
+        .cast::<T>()
+        .write(value);
+}
 
 /// `ByteAddressableBuffer` is an untyped blob of data, allowing loads and stores of arbitrary
 /// basic data types at arbitrary indicies. However, all data must be aligned to size 4, each
