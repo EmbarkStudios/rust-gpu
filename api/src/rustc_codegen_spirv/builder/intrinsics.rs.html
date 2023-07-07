@@ -380,10 +380,13 @@
 <a href="#380" id="380">380</a>
 <a href="#381" id="381">381</a>
 <a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvValue, SpirvValueExt};
 <span class="kw">use </span><span class="kw">crate</span>::codegen_cx::CodegenCx;
+<span class="kw">use </span><span class="kw">crate</span>::custom_insts::CustomInst;
 <span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
 <span class="kw">use </span>rspirv::spirv::GLOp;
 <span class="kw">use </span>rustc_codegen_ssa::mir::operand::OperandRef;
@@ -719,17 +722,18 @@
     }
 
     <span class="kw">fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// FIXME(eddyb) this should be cached more efficiently.
+        </span><span class="kw">let </span>void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, <span class="self">self</span>);
+
         <span class="comment">// HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
-        // so the best thing we can do is inject an infinite loop.
-        // (While there is `OpKill`, it doesn&#39;t really have the right semantics)
-        </span><span class="kw">let </span>abort_loop_bb = <span class="self">self</span>.append_sibling_block(<span class="string">&quot;abort_loop&quot;</span>);
-        <span class="kw">let </span>abort_continue_bb = <span class="self">self</span>.append_sibling_block(<span class="string">&quot;abort_continue&quot;</span>);
-        <span class="self">self</span>.br(abort_loop_bb);
+        // so the best thing we can do is use our own custom instruction.
+        </span><span class="self">self</span>.custom_inst(void_ty, CustomInst::Abort);
+        <span class="self">self</span>.unreachable();
 
-        <span class="self">self</span>.switch_to_block(abort_loop_bb);
-        <span class="self">self</span>.br(abort_loop_bb);
-
-        <span class="self">self</span>.switch_to_block(abort_continue_bb);
+        <span class="comment">// HACK(eddyb) we still need an active block in case the user of this
+        // `Builder` will continue to emit instructions after the `.abort()`.
+        </span><span class="kw">let </span>post_abort_dead_bb = <span class="self">self</span>.append_sibling_block(<span class="string">&quot;post_abort_dead&quot;</span>);
+        <span class="self">self</span>.switch_to_block(post_abort_dead_bb);
     }
 
     <span class="kw">fn </span>assume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _val: <span class="self">Self</span>::Value) {

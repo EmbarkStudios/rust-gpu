@@ -159,6 +159,13 @@
 <a href="#159" id="159">159</a>
 <a href="#160" id="160">160</a>
 <a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-T passes related to debuginfo.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::custom_insts::{<span class="self">self</span>, CustomInst, CustomOp};
@@ -246,7 +253,8 @@
                 } = data_inst_def.kind
                 {
                     <span class="kw">if </span>ext_set == <span class="self">self</span>.custom_ext_inst_set {
-                        <span class="kw">match </span>CustomOp::decode(ext_inst).with_operands(<span class="kw-2">&amp;</span>data_inst_def.inputs) {
+                        <span class="kw">let </span>custom_op = CustomOp::decode(ext_inst);
+                        <span class="kw">match </span>custom_op.with_operands(<span class="kw-2">&amp;</span>data_inst_def.inputs) {
                             CustomInst::SetDebugSrcLoc {
                                 file,
                                 line_start: line,
@@ -286,6 +294,12 @@
                             | CustomInst::PopInlinedCallFrame =&gt; {
                                 insts_to_remove.push(inst);
                                 <span class="kw">continue</span>;
+                            }
+                            CustomInst::Abort =&gt; {
+                                <span class="macro">assert!</span>(
+                                    !custom_op.is_debuginfo(),
+                                    <span class="string">&quot;`CustomOp::{custom_op:?}` debuginfo not lowered&quot;
+                                </span>);
                             }
                         }
                     }

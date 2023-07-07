@@ -2676,7 +2676,6 @@
 <a href="#2676" id="2676">2676</a>
 <a href="#2677" id="2677">2677</a>
 <a href="#2678" id="2678">2678</a>
-<a href="#2679" id="2679">2679</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
@@ -5136,8 +5135,7 @@
                         <span class="kw">let </span>is_standard_debug = [Op::Line, Op::NoLine].contains(<span class="kw-2">&amp;</span>inst.class.opcode);
                         <span class="kw">let </span>is_custom_debug = inst.class.opcode == Op::ExtInst
                             &amp;&amp; inst.operands[<span class="number">0</span>].unwrap_id_ref() == custom_ext_inst_set_import
-                            &amp;&amp; [CustomOp::SetDebugSrcLoc, CustomOp::ClearDebugSrcLoc]
-                                .contains(<span class="kw-2">&amp;</span>CustomOp::decode_from_ext_inst(inst));
+                            &amp;&amp; CustomOp::decode_from_ext_inst(inst).is_debuginfo();
                         !(is_standard_debug || is_custom_debug)
                     });
 

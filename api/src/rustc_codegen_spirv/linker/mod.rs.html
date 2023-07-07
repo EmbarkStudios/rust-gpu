@@ -639,6 +639,15 @@
 <a href="#639" id="639">639</a>
 <a href="#640" id="640">640</a>
 <a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test;
 
@@ -1046,6 +1055,12 @@
         };
         after_pass(<span class="string">&quot;lower_from_spv&quot;</span>, <span class="kw-2">&amp;</span>module);
 
+        <span class="comment">// NOTE(eddyb) this *must* run on unstructured CFGs, to do its job.
+        </span>{
+            <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points&quot;</span>);
+            spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points(<span class="kw-2">&amp;mut </span>module);
+        }
+
         <span class="kw">if </span>opts.structurize {
             {
                 <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt::legalize::structurize_func_cfgs&quot;</span>);
@@ -1114,7 +1129,10 @@
         </span>report_diagnostics_result<span class="question-mark">?</span>;
 
         <span class="comment">// Replace our custom debuginfo instructions just before lifting to SPIR-V.
-        </span>spirt_passes::debuginfo::convert_custom_debuginfo_to_spv(<span class="kw-2">&amp;mut </span>module);
+        </span>{
+            <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt_passes::debuginfo::convert_custom_debuginfo_to_spv&quot;</span>);
+            spirt_passes::debuginfo::convert_custom_debuginfo_to_spv(<span class="kw-2">&amp;mut </span>module);
+        }
 
         <span class="kw">let </span>spv_words = {
             <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt::Module::lift_to_spv_module_emitter&quot;</span>);

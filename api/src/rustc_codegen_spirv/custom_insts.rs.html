@@ -126,6 +126,57 @@
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-V (extended) instructions specific to `rustc_codegen_spirv`, produced
 //! during the original codegen of a crate, and consumed by the `linker`.
 
@@ -253,5 +304,56 @@
     <span class="comment">// Leave the most recent inlined call frame entered by a `PushInlinedCallFrame`
     // (i.e. the inlined call frames form a virtual call stack in debuginfo).
     </span><span class="number">3 </span>=&gt; PopInlinedCallFrame,
+
+    <span class="comment">// [Semantic] Similar to some proposed `OpAbort`, but without any ability to
+    // indicate abnormal termination (so it&#39;s closer to `OpTerminateInvocation`,
+    // which we could theoretically use, but that&#39;s limited to fragment shaders).
+    //
+    // Lowering takes advantage of inlining happening before CFG structurization
+    // (by forcing inlining of `Abort`s all the way up to entry-points, as to be
+    // able to turn the `Abort`s into regular `OpReturn`s, from an entry-point),
+    // but if/when inlining works on structured SPIR-T instead, it&#39;s not much
+    // harder to make any call to a &quot;may (transitively) abort&quot; function branch on
+    // an additional returned `bool`, instead (i.e. a form of emulated unwinding).
+    //
+    // As this is a custom terminator, it must only appear before `OpUnreachable`,
+    // *without* any instructions in between (not even debuginfo ones).
+    //
+    // FIXME(eddyb) long-term this kind of custom control-flow could be generalized
+    // to fully emulate unwinding (resulting in codegen similar to `?` in functions
+    // returning `Option` or `Result`), to e.g. run destructors, or even allow
+    // users to do `catch_unwind` at the top-level of their shader to handle
+    // panics specially (e.g. by appending to a custom buffer, or using some
+    // specific color in a fragment shader, to indicate a panic happened).
+    </span><span class="number">4 </span>=&gt; Abort,
+}
+
+<span class="kw">impl </span>CustomOp {
+    <span class="doccomment">/// Returns `true` iff this `CustomOp` is a custom debuginfo instruction,
+    /// i.e. non-semantic (can/must be ignored wherever `OpLine`/`OpNoLine` are).
+    </span><span class="kw">pub fn </span>is_debuginfo(<span class="self">self</span>) -&gt; bool {
+        <span class="kw">match </span><span class="self">self </span>{
+            CustomOp::SetDebugSrcLoc
+            | CustomOp::ClearDebugSrcLoc
+            | CustomOp::PushInlinedCallFrame
+            | CustomOp::PopInlinedCallFrame =&gt; <span class="bool-val">true</span>,
+
+            CustomOp::Abort =&gt; <span class="bool-val">false</span>,
+        }
+    }
+
+    <span class="doccomment">/// Returns `true` iff this `CustomOp` is a custom terminator instruction,
+    /// i.e. semantic and must always appear just before an `OpUnreachable`
+    /// standard terminator (without even debuginfo in between the two).
+    </span><span class="kw">pub fn </span>is_terminator(<span class="self">self</span>) -&gt; bool {
+        <span class="kw">match </span><span class="self">self </span>{
+            CustomOp::SetDebugSrcLoc
+            | CustomOp::ClearDebugSrcLoc
+            | CustomOp::PushInlinedCallFrame
+            | CustomOp::PopInlinedCallFrame =&gt; <span class="bool-val">false</span>,
+
+            CustomOp::Abort =&gt; <span class="bool-val">true</span>,
+        }
+    }
 }
 </code></pre></div></section></main></body></html>
