@@ -235,15 +235,23 @@ pub(crate) fn reduce_in_func(cx: &Context, func_def_body: &mut FuncDefBody) {
             break;
         }
 
-        func_def_body.inner_in_place_transform_with(&mut ReplaceValueWith(|v| match v {
-            Value::Const(_) => None,
-            _ => value_replacements
-                .get(&HashableValue(v))
-                .copied()
-                .map(|new| {
-                    any_changes = true;
-                    new
-                }),
+        func_def_body.inner_in_place_transform_with(&mut ReplaceValueWith(|mut v| {
+            let old = v;
+            loop {
+                match v {
+                    Value::Const(_) => break,
+                    _ => match value_replacements.get(&HashableValue(v)) {
+                        Some(&new) => v = new,
+                        None => break,
+                    },
+                }
+            }
+            if v != old {
+                any_changes = true;
+                Some(v)
+            } else {
+                None
+            }
         }));
     }
 }
