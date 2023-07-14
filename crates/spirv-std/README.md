@@ -4,10 +4,6 @@ Core functions, traits, and more that make up a “standard library” for SPIR-
 
 This crate gives a `rust-gpu` shader access to the required `#![spirv(..)]` attribute, as well as povide all kinds of APIs that allows a shader to access GPU resources such as textures and buffers. Optionally, through the use of the `"glam"` feature, it includes some boilerplate trait implementations to make `glam` vector types compatible with these APIs.
 
-## 🚨 BREAKING 🚨
-
-As of `0.4.0-alpha.16`, your shaders will require a different preamble. See [this migration guide][migration] for more information.
-
 ## Example
 
 ![Sky shader](https://github.com/EmbarkStudios/rust-gpu/raw/b12a2f3f6a54bc841d05a9224bc577909d519228/docs/assets/sky.jpg)

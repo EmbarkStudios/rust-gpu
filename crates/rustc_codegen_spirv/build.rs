@@ -8,7 +8,7 @@ use std::process::{Command, ExitCode};
 /// Current `rust-toolchain.toml` file
 /// Unfortunately, directly including the actual workspace `rust-toolchain.toml` doesn't work together with
 /// `cargo publish`. We need to figure out a way to do this properly, but let's hardcode it for now :/
-//const REQUIRED_RUST_TOOLCHAIN: &str = include_str!("../../rust-toolchain");
+//const REQUIRED_RUST_TOOLCHAIN: &str = include_str!("../../rust-toolchain.toml");
 const REQUIRED_RUST_TOOLCHAIN: &str = r#"[toolchain]
 channel = "nightly-2023-05-27"
 components = ["rust-src", "rustc-dev", "llvm-tools-preview"]
@@ -65,7 +65,7 @@ fn check_toolchain_version() -> Result<(), Box<dyn Error>> {
 
             return Err(Box::<dyn Error>::from(format!(
                 r#"error: wrong toolchain detected (found commit hash `{current_hash}`, expected `{required_hash}`).
-Make sure your `rust-toolchain` file contains the following:
+Make sure your `rust-toolchain.toml` file contains the following:
 -------------
 {stripped_toolchain}
 -------------"#
