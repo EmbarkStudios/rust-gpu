@@ -174,6 +174,62 @@ pub enum SpirvMetadata {
     Full,
 }
 
+/// Strategy used to handle Rust `panic!`s in shaders compiled to SPIR-V.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum ShaderPanicStrategy {
+    /// Return from shader entry-point with no side-effects **(default)**.
+    ///
+    /// While similar to the standard SPIR-V `OpTerminateInvocation`, this is
+    /// *not* limited to fragment shaders, and instead supports all shaders
+    /// (as it's handled via control-flow rewriting, instead of SPIR-V features).
+    SilentExit,
+
+    /// Like `SilentExit`, but also using `debugPrintf` to report the panic in
+    /// a way that can reach the user, before returning from the entry-point.
+    ///
+    /// Will automatically require the `SPV_KHR_non_semantic_info` extension,
+    /// as `debugPrintf` uses a "non-semantic extended instruction set".
+    ///
+    /// If you have multiple entry-points, you *may* need to also enable the
+    /// `multimodule` node (see <https://github.com/KhronosGroup/SPIRV-Tools/issues/4892>).
+    ///
+    /// **Note**: actually obtaining the `debugPrintf` output requires enabling:
+    /// * `VK_KHR_shader_non_semantic_info` Vulkan *Device* extension
+    /// * Vulkan Validation Layers (which contain the `debugPrintf` implementation)
+    /// * `VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT` in Validation Layers,
+    ///   either by using `VkValidationFeaturesEXT` during instance creating,
+    ///   setting the `VK_LAYER_ENABLES` environment variable to that value,
+    ///   or adding it to `khronos_validation.enables` in `vk_layer_settings.txt`
+    ///
+    /// See also: <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/main/docs/debug_printf.md>.
+    DebugPrintfThenExit {
+        /// Whether to also print the entry-point inputs (excluding buffers/resources),
+        /// which should uniquely identify the panicking shader invocation.
+        print_inputs: bool,
+
+        /// Whether to also print a "backtrace" (i.e. the chain of function calls
+        /// that led to the `panic!).
+        ///
+        /// As there is no way to dynamically compute this information, the string
+        /// containing the full backtrace of each `panic!` is statically generated,
+        /// meaning this option could significantly increase binary size.
+        print_backtrace: bool,
+    },
+
+    /// **Warning**: this is _**unsound**_ (i.e. adds Undefined Behavior to *safe* Rust code)
+    ///
+    /// This option only exists for testing (hence the unfriendly name it has),
+    /// and more specifically testing whether conditional panics are responsible
+    /// for performance differences when upgrading from older Rust-GPU versions
+    /// (which used infinite loops for panics, that `spirv-opt`/drivers could've
+    /// sometimes treated as UB, and optimized as if they were impossible to reach).
+    ///
+    /// Unlike those infinite loops, however, this uses `OpUnreachable`, so it
+    /// forces the old worst-case (all `panic!`s become UB and are optimized out).
+    #[allow(non_camel_case_types)]
+    UNSOUND_DO_NOT_USE_UndefinedBehaviorViaUnreachable,
+}
+
 pub struct SpirvBuilder {
     path_to_crate: PathBuf,
     print_metadata: MetadataPrintout,
@@ -185,6 +241,9 @@ pub struct SpirvBuilder {
     capabilities: Vec<Capability>,
     extensions: Vec<String>,
     extra_args: Vec<String>,
+
+    // `rustc_codegen_spirv::linker` codegen args
+    pub shader_panic_strategy: ShaderPanicStrategy,
 
     // spirv-val flags
     pub relax_struct_store: bool,
@@ -211,6 +270,8 @@ impl SpirvBuilder {
             capabilities: Vec::new(),
             extensions: Vec::new(),
             extra_args: Vec::new(),
+
+            shader_panic_strategy: ShaderPanicStrategy::SilentExit,
 
             relax_struct_store: false,
             relax_logical_pointer: false,
@@ -273,6 +334,13 @@ impl SpirvBuilder {
     #[must_use]
     pub fn extension(mut self, extension: impl Into<String>) -> Self {
         self.extensions.push(extension.into());
+        self
+    }
+
+    /// Change the shader `panic!` handling strategy (see [`ShaderPanicStrategy`]).
+    #[must_use]
+    pub fn shader_panic_strategy(mut self, shader_panic_strategy: ShaderPanicStrategy) -> Self {
+        self.shader_panic_strategy = shader_panic_strategy;
         self
     }
 
@@ -511,6 +579,25 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     if builder.preserve_bindings {
         llvm_args.push("--preserve-bindings".to_string());
     }
+    let mut target_features = vec![];
+    let abort_strategy = match builder.shader_panic_strategy {
+        ShaderPanicStrategy::SilentExit => None,
+        ShaderPanicStrategy::DebugPrintfThenExit {
+            print_inputs,
+            print_backtrace,
+        } => {
+            target_features.push("+ext:SPV_KHR_non_semantic_info".into());
+            Some(format!(
+                "debug-printf{}{}",
+                if print_inputs { "+inputs" } else { "" },
+                if print_backtrace { "+backtrace" } else { "" }
+            ))
+        }
+        ShaderPanicStrategy::UNSOUND_DO_NOT_USE_UndefinedBehaviorViaUnreachable => {
+            Some("unreachable".into())
+        }
+    };
+    llvm_args.extend(abort_strategy.map(|strategy| format!("--abort-strategy={strategy}")));
 
     if let Ok(extra_codegen_args) = tracked_env_var_get("RUSTGPU_CODEGEN_ARGS") {
         llvm_args.extend(extra_codegen_args.split_whitespace().map(|s| s.to_string()));
@@ -523,7 +610,6 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         rustflags.push(["-Cllvm-args=", &llvm_args].concat());
     }
 
-    let mut target_features = vec![];
     target_features.extend(builder.capabilities.iter().map(|cap| format!("+{cap:?}")));
     target_features.extend(builder.extensions.iter().map(|ext| format!("+ext:{ext}")));
     let target_features = join_checking_for_separators(target_features, ",");

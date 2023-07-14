@@ -107,7 +107,7 @@ impl<D> LazilyDecoded<D> {
     }
 }
 
-fn decode_spv_lit_str_with<R>(imms: &[spv::Imm], f: impl FnOnce(&str) -> R) -> R {
+pub(super) fn decode_spv_lit_str_with<R>(imms: &[spv::Imm], f: impl FnOnce(&str) -> R) -> R {
     let wk = &super::SpvSpecWithExtras::get().well_known;
 
     // FIXME(eddyb) deduplicate with `spirt::spv::extract_literal_string`.
@@ -578,7 +578,13 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
     }
 
     fn visit_control_node_def(&mut self, func_at_control_node: FuncAt<'a, ControlNode>) {
+        let original_use_stack_len = self.use_stack.len();
+
         func_at_control_node.inner_visit_with(self);
+
+        // HACK(eddyb) avoid `use_stack` from growing due to having some
+        // `PushInlinedCallFrame` without matching `PopInlinedCallFrame`.
+        self.use_stack.truncate(original_use_stack_len);
 
         // HACK(eddyb) this relies on the fact that `ControlNodeKind::Block` maps
         // to one original SPIR-V block, which may not necessarily be true, and
@@ -677,7 +683,7 @@ impl<'a> Visitor<'a> for DiagnosticReporter<'a> {
                                         _ => unreachable!(),
                                     }
                                 }
-                                CustomInst::Abort => {}
+                                CustomInst::Abort { .. } => {}
                             },
                         }
                     }

@@ -138,7 +138,7 @@ def_custom_insts! {
     // an additional returned `bool`, instead (i.e. a form of emulated unwinding).
     //
     // As this is a custom terminator, it must only appear before `OpUnreachable`,
-    // *without* any instructions in between (not even debuginfo ones).
+    // with at most debuginfo instructions (standard or custom), between the two.
     //
     // FIXME(eddyb) long-term this kind of custom control-flow could be generalized
     // to fully emulate unwinding (resulting in codegen similar to `?` in functions
@@ -146,7 +146,7 @@ def_custom_insts! {
     // users to do `catch_unwind` at the top-level of their shader to handle
     // panics specially (e.g. by appending to a custom buffer, or using some
     // specific color in a fragment shader, to indicate a panic happened).
-    4 => Abort,
+    4 => Abort { message },
 }
 
 impl CustomOp {
@@ -164,8 +164,8 @@ impl CustomOp {
     }
 
     /// Returns `true` iff this `CustomOp` is a custom terminator instruction,
-    /// i.e. semantic and must always appear just before an `OpUnreachable`
-    /// standard terminator (without even debuginfo in between the two).
+    /// i.e. semantic and must precede an `OpUnreachable` standard terminator,
+    /// with at most debuginfo instructions (standard or custom), between the two.
     pub fn is_terminator(self) -> bool {
         match self {
             CustomOp::SetDebugSrcLoc

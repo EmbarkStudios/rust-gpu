@@ -4,6 +4,7 @@ use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::custom_insts::CustomInst;
 use crate::spirv_type::SpirvType;
+use rspirv::dr::Operand;
 use rspirv::spirv::GLOp;
 use rustc_codegen_ssa::mir::operand::OperandRef;
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -338,18 +339,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     }
 
     fn abort(&mut self) {
-        // FIXME(eddyb) this should be cached more efficiently.
-        let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
-
-        // HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
-        // so the best thing we can do is use our own custom instruction.
-        self.custom_inst(void_ty, CustomInst::Abort);
-        self.unreachable();
-
-        // HACK(eddyb) we still need an active block in case the user of this
-        // `Builder` will continue to emit instructions after the `.abort()`.
-        let post_abort_dead_bb = self.append_sibling_block("post_abort_dead");
-        self.switch_to_block(post_abort_dead_bb);
+        self.abort_with_message("intrinsics::abort()".into());
     }
 
     fn assume(&mut self, _val: Self::Value) {
@@ -380,5 +370,28 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 
     fn va_end(&mut self, _val: Self::Value) -> Self::Value {
         todo!()
+    }
+}
+
+impl Builder<'_, '_> {
+    pub fn abort_with_message(&mut self, message: String) {
+        // FIXME(eddyb) this should be cached more efficiently.
+        let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
+
+        // HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
+        // so the best thing we can do is use our own custom instruction.
+        let message_id = self.emit().string(message);
+        self.custom_inst(
+            void_ty,
+            CustomInst::Abort {
+                message: Operand::IdRef(message_id),
+            },
+        );
+        self.unreachable();
+
+        // HACK(eddyb) we still need an active block in case the user of this
+        // `Builder` will continue to emit instructions after the `.abort()`.
+        let post_abort_dead_bb = self.append_sibling_block("post_abort_dead");
+        self.switch_to_block(post_abort_dead_bb);
     }
 }

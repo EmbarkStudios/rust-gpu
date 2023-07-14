@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added ⭐
+- [PR#1080](https://github.com/EmbarkStudios/rust-gpu/pull/1080) added `debugPrintf`-based
+  panic reporting, with the desired behavior selected via `spirv_builder::ShaderPanicStrategy`
+  (see its documentation for more details about each available panic handling strategy)
+
 ### Changed 🛠
 - [PR#1079](https://github.com/EmbarkStudios/rust-gpu/pull/1079) revised `spirv-builder`'s `README.md`,
   and added a way for `docs.rs` to be able to build it (via `cargo +stable doc --no-default-features`)
