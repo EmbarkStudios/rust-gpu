@@ -149,6 +149,10 @@ jobs:
         run: rustfmt --check tests/ui/**/*.rs
       - name: Check docs are valid
         run: RUSTDOCFLAGS=-Dwarnings cargo doc --no-deps
+      - name: Check docs for `spirv-std` and `spirv-builder` on stable (for docs.rs)
+        run: |
+          RUSTDOCFLAGS=-Dwarnings cargo +stable doc --no-deps -p spirv-std
+          RUSTDOCFLAGS=-Dwarnings cargo +stable doc --no-deps -p spirv-builder --no-default-features
       - name: Clippy & custom lints
         run: .github/workflows/lint.sh
 

@@ -71,6 +71,31 @@
 // #![allow()]
 #![doc = include_str!("../README.md")]
 
+// HACK(eddyb) try to catch misuse of Cargo package features very early on
+// (see `spirv-builder/Cargo.toml` for why we go through all of this).
+#[cfg(all(
+    not(any(feature = "use-compiled-tools", feature = "use-installed-tools")),
+    not(doc)
+))]
+compile_error!(
+    "at least one of `use-compiled-tools` or `use-installed-tools` features must be enabled
+(outside of documentation builds, which require disabling both to build on stable)"
+);
+
+#[cfg(doc)]
+fn _ensure_cfg_doc_means_rustdoc() {
+    // HACK(eddyb) this relies on specific `rustdoc` behavior (i.e. it skips
+    // type-checking function bodies, so we trigger a compile-time `panic! from
+    // a type) to check that we're in fact under `rustdoc`, not just `--cfg doc`.
+    #[rustfmt::skip]
+    let _: [(); panic!("
+
+            `--cfg doc` was set outside of `rustdoc`
+            (if you are running `rustdoc` or `cargo doc`, please file an issue)
+
+")];
+}
+
 mod depfile;
 #[cfg(feature = "watch")]
 mod watch;
