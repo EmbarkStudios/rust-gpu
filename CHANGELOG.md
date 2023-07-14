@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed 🛠
+- [PR#1079](https://github.com/EmbarkStudios/rust-gpu/pull/1079) revised `spirv-builder`'s `README.md`,
+  and added a way for `docs.rs` to be able to build it (via `cargo +stable doc --no-default-features`)
 - [PR#1070](https://github.com/EmbarkStudios/rust-gpu/pull/1070) made panics (via the `abort` intrinsic)
   early-exit (i.e. `return` from) the shader entry-point, instead of looping infinitely
 - [PR#1071](https://github.com/EmbarkStudios/rust-gpu/pull/1071) updated toolchain to `nightly-2023-05-27`
