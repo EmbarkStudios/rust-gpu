@@ -374,7 +374,7 @@ fn path_from_ident(ident: Ident) -> syn::Type {
 /// debug_printfln!("pos.x: %f, pos.z: %f, int: %i", pos.x, pos.z, int);
 /// ```
 ///
-/// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
+/// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/main/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
 #[proc_macro]
 pub fn debug_printf(input: TokenStream) -> TokenStream {
     debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput))

@@ -130,12 +130,14 @@ pub fn main() {
     ctx.build_pipelines(
         vk::PipelineCache::null(),
         vec![(
+            // HACK(eddyb) used to be `module: "sky_shader"` but we need `multimodule`
+            // for `debugPrintf` instrumentation to work (see `compile_shaders`).
             VertexShaderEntryPoint {
-                module: "sky_shader".into(),
+                module: "sky_shader::main_vs".into(),
                 entry_point: "main_vs".into(),
             },
             FragmentShaderEntryPoint {
-                module: "sky_shader".into(),
+                module: "sky_shader::main_fs".into(),
                 entry_point: "main_fs".into(),
             },
         )],
@@ -207,19 +209,27 @@ pub fn compile_shaders() -> Vec<SpvFile> {
     std::env::set_var("OUT_DIR", env!("OUT_DIR"));
     std::env::set_var("PROFILE", env!("PROFILE"));
 
-    let sky_shader_path =
-        SpirvBuilder::new("examples/shaders/sky-shader", "spirv-unknown-vulkan1.1")
-            .print_metadata(MetadataPrintout::None)
-            .build()
-            .unwrap()
-            .module
-            .unwrap_single()
-            .to_path_buf();
-    let sky_shader = SpvFile {
-        name: "sky_shader".to_string(),
-        data: read_spv(&mut File::open(sky_shader_path).unwrap()).unwrap(),
-    };
-    vec![sky_shader]
+    SpirvBuilder::new("examples/shaders/sky-shader", "spirv-unknown-vulkan1.1")
+        .print_metadata(MetadataPrintout::None)
+        // HACK(eddyb) having the `ash` runner do this is the easiest way I found
+        // to test this `panic!` feature with actual `debugPrintf` support.
+        .shader_panic_strategy(spirv_builder::ShaderPanicStrategy::DebugPrintfThenExit {
+            print_inputs: true,
+            print_backtrace: true,
+        })
+        // HACK(eddyb) needed because of `debugPrintf` instrumentation limitations
+        // (see https://github.com/KhronosGroup/SPIRV-Tools/issues/4892).
+        .multimodule(true)
+        .build()
+        .unwrap()
+        .module
+        .unwrap_multi()
+        .iter()
+        .map(|(name, path)| SpvFile {
+            name: format!("sky_shader::{name}"),
+            data: read_spv(&mut File::open(path).unwrap()).unwrap(),
+        })
+        .collect()
 }
 
 #[derive(Debug)]
@@ -370,7 +380,10 @@ impl RenderBase {
         };
 
         let device: ash::Device = {
-            let device_extension_names_raw = [khr::Swapchain::name().as_ptr()];
+            let mut device_extension_names_raw = vec![khr::Swapchain::name().as_ptr()];
+            if options.debug_layer {
+                device_extension_names_raw.push(vk::KhrShaderNonSemanticInfoFn::name().as_ptr());
+            }
             let features = vk::PhysicalDeviceFeatures {
                 shader_clip_distance: 1,
                 ..Default::default()

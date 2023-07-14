@@ -348,6 +348,12 @@ impl CodegenArgs {
                 "enable additional SPIR-T passes (comma-separated)",
                 "PASSES",
             );
+            opts.optopt(
+                "",
+                "abort-strategy",
+                "select a non-default abort (i.e. panic) strategy - see `spirv-builder` docs",
+                "STRATEGY",
+            );
 
             // NOTE(eddyb) these are debugging options that used to be env vars
             // (for more information see `docs/src/codegen-args.md`).
@@ -528,6 +534,8 @@ impl CodegenArgs {
                 .flat_map(|s| s.split(','))
                 .map(|s| s.to_string())
                 .collect(),
+
+            abort_strategy: matches.opt_str("abort-strategy"),
 
             // FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
             emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,

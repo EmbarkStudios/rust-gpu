@@ -43,6 +43,8 @@ pub struct Options {
     pub structurize: bool,
     pub spirt_passes: Vec<String>,
 
+    pub abort_strategy: Option<String>,
+
     pub emit_multiple_modules: bool,
     pub spirv_metadata: SpirvMetadata,
 
@@ -408,7 +410,7 @@ pub fn link(
         // NOTE(eddyb) this *must* run on unstructured CFGs, to do its job.
         {
             let _timer = sess.timer("spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points");
-            spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points(&mut module);
+            spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points(opts, &mut module);
         }
 
         if opts.structurize {

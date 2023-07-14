@@ -13,7 +13,7 @@ use rustc_codegen_ssa::common::{
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
-    BackendTypes, BuilderMethods, ConstMethods, IntrinsicCallMethods, LayoutTypeMethods, OverflowOp,
+    BackendTypes, BuilderMethods, ConstMethods, LayoutTypeMethods, OverflowOp,
 };
 use rustc_codegen_ssa::MemFlags;
 use rustc_data_structures::fx::FxHashSet;
@@ -2647,7 +2647,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
             // HACK(eddyb) redirect any possible panic call to an abort, to avoid
             // needing to materialize `&core::panic::Location` or `format_args!`.
-            self.abort();
+            // FIXME(eddyb) find a way to extract the original message.
+            self.abort_with_message("panic!(...)".into());
             self.undef(result_type)
         } else if let Some(mode) = buffer_load_intrinsic {
             self.codegen_buffer_load_intrinsic(result_type, args, mode)
