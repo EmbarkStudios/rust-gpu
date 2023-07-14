@@ -1,26 +1,39 @@
 [package]
 name = "spirv-builder"
 description = "Helper for building shaders with rust-gpu"
-# Documentation currently fails on docs.rs, but it doesn't have to. See https://github.com/EmbarkStudios/rust-gpu/issues/970
-documentation = "https://embarkstudios.github.io/rust-gpu/api/spirv_builder/index.html"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
-# See rustc_codegen_spirv/Cargo.toml for details on these features
+# HACK(eddyb) allow `docs.rs` to build this crate by making `rustc_codegen_spirv`
+# dependency optional in a way that will always result in it being enabled
+# during normal builds (as `use-{installed,compiled}-tools` both require it),
+# and produces a compile-time error if it's missing and `cfg(doc)` isn't set.
+[package.metadata.docs.rs]
+no-default-features = true
+
+# NOTE(eddyb) the `dep:` prefixes used here prevents a feature with the name as
+# that optional dependency, from being automatically created by Cargo, see:
+# https://doc.rust-lang.org/cargo/reference/features.html#optional-dependencies
 [features]
+# See `rustc_codegen_spirv/Cargo.toml` for details on these features.
 default = ["use-compiled-tools"]
-use-installed-tools = ["rustc_codegen_spirv/use-installed-tools"]
-use-compiled-tools = ["rustc_codegen_spirv/use-compiled-tools"]
+use-installed-tools = ["dep:rustc_codegen_spirv", "rustc_codegen_spirv/use-installed-tools"]
+use-compiled-tools = ["dep:rustc_codegen_spirv", "rustc_codegen_spirv/use-compiled-tools"]
 skip-toolchain-check = ["rustc_codegen_spirv/skip-toolchain-check"]
-watch = ["notify"]
+
+watch = ["dep:notify"]
 
 [dependencies]
-rustc_codegen_spirv-types.workspace = true
-# See comment in lib.rs invoke_rustc for why this is here
+# See comment in `src/lib.rs` `invoke_rustc` regarding `rustc_codegen_spirv` dep.
 rustc_codegen_spirv.workspace = true
+# HACK(eddyb) see `docs.rs`-related comment above for why this is optional.
+rustc_codegen_spirv.optional = true
+
+rustc_codegen_spirv-types.workspace = true
+
 memchr = "2.4"
 raw-string = "0.3.5"
 serde = { version = "1.0", features = ["derive"] }
