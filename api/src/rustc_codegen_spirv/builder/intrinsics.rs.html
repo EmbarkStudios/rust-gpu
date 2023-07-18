@@ -382,12 +382,26 @@
 <a href="#382" id="382">382</a>
 <a href="#383" id="383">383</a>
 <a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvValue, SpirvValueExt};
 <span class="kw">use </span><span class="kw">crate</span>::codegen_cx::CodegenCx;
 <span class="kw">use </span><span class="kw">crate</span>::custom_insts::CustomInst;
 <span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
+<span class="kw">use </span>rspirv::dr::Operand;
 <span class="kw">use </span>rspirv::spirv::GLOp;
 <span class="kw">use </span>rustc_codegen_ssa::mir::operand::OperandRef;
 <span class="kw">use </span>rustc_codegen_ssa::mir::place::PlaceRef;
@@ -722,18 +736,7 @@
     }
 
     <span class="kw">fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="comment">// FIXME(eddyb) this should be cached more efficiently.
-        </span><span class="kw">let </span>void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, <span class="self">self</span>);
-
-        <span class="comment">// HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
-        // so the best thing we can do is use our own custom instruction.
-        </span><span class="self">self</span>.custom_inst(void_ty, CustomInst::Abort);
-        <span class="self">self</span>.unreachable();
-
-        <span class="comment">// HACK(eddyb) we still need an active block in case the user of this
-        // `Builder` will continue to emit instructions after the `.abort()`.
-        </span><span class="kw">let </span>post_abort_dead_bb = <span class="self">self</span>.append_sibling_block(<span class="string">&quot;post_abort_dead&quot;</span>);
-        <span class="self">self</span>.switch_to_block(post_abort_dead_bb);
+        <span class="self">self</span>.abort_with_message(<span class="string">&quot;intrinsics::abort()&quot;</span>.into());
     }
 
     <span class="kw">fn </span>assume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _val: <span class="self">Self</span>::Value) {
@@ -764,6 +767,29 @@
 
     <span class="kw">fn </span>va_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _val: <span class="self">Self</span>::Value) -&gt; <span class="self">Self</span>::Value {
         <span class="macro">todo!</span>()
+    }
+}
+
+<span class="kw">impl </span>Builder&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">pub fn </span>abort_with_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, message: String) {
+        <span class="comment">// FIXME(eddyb) this should be cached more efficiently.
+        </span><span class="kw">let </span>void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, <span class="self">self</span>);
+
+        <span class="comment">// HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
+        // so the best thing we can do is use our own custom instruction.
+        </span><span class="kw">let </span>message_id = <span class="self">self</span>.emit().string(message);
+        <span class="self">self</span>.custom_inst(
+            void_ty,
+            CustomInst::Abort {
+                message: Operand::IdRef(message_id),
+            },
+        );
+        <span class="self">self</span>.unreachable();
+
+        <span class="comment">// HACK(eddyb) we still need an active block in case the user of this
+        // `Builder` will continue to emit instructions after the `.abort()`.
+        </span><span class="kw">let </span>post_abort_dead_bb = <span class="self">self</span>.append_sibling_block(<span class="string">&quot;post_abort_dead&quot;</span>);
+        <span class="self">self</span>.switch_to_block(post_abort_dead_bb);
     }
 }
 </code></pre></div></section></main></body></html>

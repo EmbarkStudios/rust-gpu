@@ -1031,6 +1031,59 @@
 <a href="#1031" id="1031">1031</a>
 <a href="#1032" id="1032">1032</a>
 <a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.
 //! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a
 //! `StorageClass::Input` pointer. Our frontend definitely allows it, though, this is like taking a
@@ -1627,19 +1680,14 @@
         };
         <span class="kw">let </span>call_result_id = call_inst.result_id.unwrap();
 
-        <span class="comment">// Get the debuginfo source location instruction that applies to the call.
-        </span><span class="kw">let </span>call_debug_src_loc_inst = caller.blocks[block_idx].instructions[..call_index]
+        <span class="comment">// Get the debuginfo instructions that apply to the call.
+        </span><span class="kw">let </span>custom_ext_inst_set_import = <span class="self">self</span>.custom_ext_inst_set_import;
+        <span class="kw">let </span>call_debug_insts = caller.blocks[block_idx].instructions[..call_index]
             .iter()
-            .rev()
-            .find(|inst| <span class="kw">match </span>inst.class.opcode {
+            .filter(|inst| <span class="kw">match </span>inst.class.opcode {
                 Op::Line | Op::NoLine =&gt; <span class="bool-val">true</span>,
-                Op::ExtInst
-                    <span class="kw">if </span>inst.operands[<span class="number">0</span>].unwrap_id_ref() == <span class="self">self</span>.custom_ext_inst_set_import =&gt;
-                {
-                    <span class="macro">matches!</span>(
-                        CustomOp::decode_from_ext_inst(inst),
-                        CustomOp::SetDebugSrcLoc | CustomOp::ClearDebugSrcLoc
-                    )
+                Op::ExtInst <span class="kw">if </span>inst.operands[<span class="number">0</span>].unwrap_id_ref() == custom_ext_inst_set_import =&gt; {
+                    CustomOp::decode_from_ext_inst(inst).is_debuginfo()
                 }
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             });
@@ -1663,12 +1711,8 @@
         </span>};
         <span class="kw">let </span>return_jump = <span class="self">self</span>.id();
         <span class="comment">// Rewrite OpReturns of the callee.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>inlined_callee_blocks = <span class="self">self</span>.get_inlined_blocks(
-            callee,
-            call_debug_src_loc_inst,
-            return_variable,
-            return_jump,
-        );
+        </span><span class="kw">let </span>(<span class="kw-2">mut </span>inlined_callee_blocks, extra_debug_insts_pre_call, extra_debug_insts_post_call) =
+            <span class="self">self</span>.get_inlined_blocks(callee, call_debug_insts, return_variable, return_jump);
         <span class="comment">// Clone the IDs of the callee, because otherwise they&#39;d be defined multiple times if the
         // fn is inlined multiple times.
         </span><span class="self">self</span>.add_clone_id_rules(<span class="kw-2">&amp;mut </span>rewrite_rules, <span class="kw-2">&amp;</span>inlined_callee_blocks);
@@ -1682,12 +1726,20 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>post_call_block_insts = caller.blocks[pre_call_block_idx]
             .instructions
             .split_off(call_index + <span class="number">1</span>);
+
         <span class="comment">// pop off OpFunctionCall
         </span><span class="kw">let </span>call = caller.blocks[pre_call_block_idx]
             .instructions
             .pop()
             .unwrap();
         <span class="macro">assert!</span>(call.class.opcode == Op::FunctionCall);
+
+        <span class="comment">// HACK(eddyb) inject the additional debuginfo instructions generated by
+        // `get_inlined_blocks`, so the inlined call frame &quot;stack&quot; isn&#39;t corrupted.
+        </span>caller.blocks[pre_call_block_idx]
+            .instructions
+            .extend(extra_debug_insts_pre_call);
+        post_call_block_insts.splice(<span class="number">0</span>..<span class="number">0</span>, extra_debug_insts_post_call);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(call_result_type) = call_result_type {
             <span class="comment">// Generate the storage space for the return value: Do this *after* the split above,
@@ -1822,18 +1874,57 @@
         }
     }
 
-    <span class="kw">fn </span>get_inlined_blocks(
+    <span class="comment">// HACK(eddyb) the second and third return values are additional debuginfo
+    // instructions that need to be inserted just before/after the callsite.
+    </span><span class="kw">fn </span>get_inlined_blocks&lt;<span class="lifetime">&#39;a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         callee: <span class="kw-2">&amp;</span>Function,
-        call_debug_src_loc_inst: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Instruction&gt;,
+        call_debug_insts: <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Instruction&gt;,
         return_variable: <span class="prelude-ty">Option</span>&lt;Word&gt;,
         return_jump: Word,
-    ) -&gt; Vec&lt;Block&gt; {
+    ) -&gt; (
+        Vec&lt;Block&gt;,
+        SmallVec&lt;[Instruction; <span class="number">8</span>]&gt;,
+        SmallVec&lt;[Instruction; <span class="number">8</span>]&gt;,
+    ) {
         <span class="kw">let </span><span class="self">Self </span>{
             custom_ext_inst_set_import,
             op_type_void_id,
             ..
         } = <span class="kw-2">*</span><span class="self">self</span>;
+
+        <span class="comment">// HACK(eddyb) this is terrible, but we have to deal with it becasue of
+        // how this inliner is outside-in, instead of inside-out, meaning that
+        // context builds up &quot;outside&quot; of the callee blocks, inside the caller.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>enclosing_inlined_frames = SmallVec::&lt;[<span class="kw">_</span>; <span class="number">8</span>]&gt;::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>current_debug_src_loc_inst = <span class="prelude-val">None</span>;
+        <span class="kw">for </span>inst <span class="kw">in </span>call_debug_insts {
+            <span class="kw">match </span>inst.class.opcode {
+                Op::Line =&gt; current_debug_src_loc_inst = <span class="prelude-val">Some</span>(inst),
+                Op::NoLine =&gt; current_debug_src_loc_inst = <span class="prelude-val">None</span>,
+                Op::ExtInst
+                    <span class="kw">if </span>inst.operands[<span class="number">0</span>].unwrap_id_ref() == <span class="self">self</span>.custom_ext_inst_set_import =&gt;
+                {
+                    <span class="kw">match </span>CustomOp::decode_from_ext_inst(inst) {
+                        CustomOp::SetDebugSrcLoc =&gt; current_debug_src_loc_inst = <span class="prelude-val">Some</span>(inst),
+                        CustomOp::ClearDebugSrcLoc =&gt; current_debug_src_loc_inst = <span class="prelude-val">None</span>,
+                        CustomOp::PushInlinedCallFrame =&gt; {
+                            enclosing_inlined_frames
+                                .push((current_debug_src_loc_inst.take(), inst));
+                        }
+                        CustomOp::PopInlinedCallFrame =&gt; {
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>((callsite_debug_src_loc_inst, <span class="kw">_</span>)) =
+                                enclosing_inlined_frames.pop()
+                            {
+                                current_debug_src_loc_inst = callsite_debug_src_loc_inst;
+                            }
+                        }
+                        CustomOp::Abort =&gt; {}
+                    }
+                }
+                <span class="kw">_ </span>=&gt; {}
+            }
+        }
 
         <span class="comment">// Prepare the debuginfo insts to prepend/append to every block.
         // FIXME(eddyb) this could be more efficient if we only used one pair of
@@ -1859,21 +1950,21 @@
                 ));
                 id
             });
-        <span class="kw">let </span><span class="kw-2">mut </span>mk_debuginfo_prefix_and_suffix = || {
+        <span class="kw">let </span><span class="kw-2">mut </span>mk_debuginfo_prefix_and_suffix = |include_callee_frame| {
             <span class="comment">// NOTE(eddyb) `OpExtInst`s have a result ID, even if unused, and
             // it has to be unique (same goes for the other instructions below).
-            </span><span class="kw">let </span>instantiated_src_loc_inst = call_debug_src_loc_inst.map(|inst| {
+            </span><span class="kw">let </span>instantiate_debuginfo = |this: <span class="kw-2">&amp;mut </span><span class="self">Self</span>, inst: <span class="kw-2">&amp;</span>Instruction| {
                 <span class="kw">let </span><span class="kw-2">mut </span>inst = inst.clone();
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="kw-2">&amp;mut </span>inst.result_id {
-                    <span class="kw-2">*</span>id = <span class="self">self</span>.id();
+                    <span class="kw-2">*</span>id = this.id();
                 }
                 inst
-            });
-            <span class="kw">let </span><span class="kw-2">mut </span>custom_inst_to_inst = |inst: CustomInst&lt;<span class="kw">_</span>&gt;| {
+            };
+            <span class="kw">let </span>custom_inst_to_inst = |this: <span class="kw-2">&amp;mut </span><span class="self">Self</span>, inst: CustomInst&lt;<span class="kw">_</span>&gt;| {
                 Instruction::new(
                     Op::ExtInst,
                     <span class="prelude-val">Some</span>(op_type_void_id),
-                    <span class="prelude-val">Some</span>(<span class="self">self</span>.id()),
+                    <span class="prelude-val">Some</span>(this.id()),
                     [
                         Operand::IdRef(custom_ext_inst_set_import),
                         Operand::LiteralExtInstInteger(inst.op() <span class="kw">as </span>u32),
@@ -1883,14 +1974,33 @@
                     .collect(),
                 )
             };
-            (
-                instantiated_src_loc_inst.into_iter().chain([{
-                    custom_inst_to_inst(CustomInst::PushInlinedCallFrame {
+            <span class="comment">// FIXME(eddyb) this only allocates to avoid borrow conflicts.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>prefix = SmallVec::&lt;[<span class="kw">_</span>; <span class="number">8</span>]&gt;::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>suffix = SmallVec::&lt;[<span class="kw">_</span>; <span class="number">8</span>]&gt;::new();
+            <span class="kw">for </span><span class="kw-2">&amp;</span>(callsite_debug_src_loc_inst, push_inlined_call_frame_inst) <span class="kw">in
+                </span><span class="kw-2">&amp;</span>enclosing_inlined_frames
+            {
+                prefix.extend(
+                    callsite_debug_src_loc_inst
+                        .into_iter()
+                        .chain([push_inlined_call_frame_inst])
+                        .map(|inst| instantiate_debuginfo(<span class="self">self</span>, inst)),
+                );
+                suffix.push(custom_inst_to_inst(<span class="self">self</span>, CustomInst::PopInlinedCallFrame));
+            }
+            prefix.extend(current_debug_src_loc_inst.map(|inst| instantiate_debuginfo(<span class="self">self</span>, inst)));
+
+            <span class="kw">if </span>include_callee_frame {
+                prefix.push(custom_inst_to_inst(
+                    <span class="self">self</span>,
+                    CustomInst::PushInlinedCallFrame {
                         callee_name: Operand::IdRef(callee_name_id),
-                    })
-                }]),
-                [custom_inst_to_inst(CustomInst::PopInlinedCallFrame)].into_iter(),
-            )
+                    },
+                ));
+                suffix.push(custom_inst_to_inst(<span class="self">self</span>, CustomInst::PopInlinedCallFrame));
+            }
+
+            (prefix, suffix)
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>blocks = callee.blocks.clone();
@@ -1916,47 +2026,43 @@
                 }
                 <span class="kw-2">*</span>block.instructions.last_mut().unwrap() =
                     Instruction::new(Op::Branch, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[Operand::IdRef(return_jump)]);
-
-                <span class="kw">let </span>(debuginfo_prefix, debuginfo_suffix) = mk_debuginfo_prefix_and_suffix();
-                block.instructions.splice(
-                    <span class="comment">// Insert the prefix debuginfo instructions after `OpPhi`s,
-                    // which sadly can&#39;t be covered by them.
-                    </span>{
-                        <span class="kw">let </span>i = block
-                            .instructions
-                            .iter()
-                            .position(|inst| inst.class.opcode != Op::Phi)
-                            .unwrap();
-                        i..i
-                    },
-                    debuginfo_prefix,
-                );
-                block.instructions.splice(
-                    <span class="comment">// Insert the suffix debuginfo instructions before the terminator,
-                    // which sadly can&#39;t be covered by them.
-                    </span>{
-                        <span class="kw">let </span>last_non_terminator = block.instructions.iter().rposition(|inst| {
-                            <span class="kw">let </span>is_standard_terminator =
-                                rspirv::grammar::reflect::is_block_terminator(inst.class.opcode);
-                            <span class="kw">let </span>is_custom_terminator = <span class="kw">match </span>inst.class.opcode {
-                                Op::ExtInst
-                                    <span class="kw">if </span>inst.operands[<span class="number">0</span>].unwrap_id_ref()
-                                        == custom_ext_inst_set_import =&gt;
-                                {
-                                    CustomOp::decode_from_ext_inst(inst).is_terminator()
-                                }
-                                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-                            };
-                            !(is_standard_terminator || is_custom_terminator)
-                        });
-                        <span class="kw">let </span>i = last_non_terminator.map_or(<span class="number">0</span>, |x| x + <span class="number">1</span>);
-                        i..i
-                    },
-                    debuginfo_suffix,
-                );
             }
+
+            <span class="kw">let </span>(debuginfo_prefix, debuginfo_suffix) = mk_debuginfo_prefix_and_suffix(<span class="bool-val">true</span>);
+            block.instructions.splice(
+                <span class="comment">// Insert the prefix debuginfo instructions after `OpPhi`s,
+                // which sadly can&#39;t be covered by them.
+                </span>{
+                    <span class="kw">let </span>i = block
+                        .instructions
+                        .iter()
+                        .position(|inst| inst.class.opcode != Op::Phi)
+                        .unwrap();
+                    i..i
+                },
+                debuginfo_prefix,
+            );
+            block.instructions.splice(
+                <span class="comment">// Insert the suffix debuginfo instructions before the terminator,
+                // which sadly can&#39;t be covered by them.
+                </span>{
+                    <span class="kw">let </span>last_non_terminator = block.instructions.iter().rposition(|inst| {
+                        !rspirv::grammar::reflect::is_block_terminator(inst.class.opcode)
+                    });
+                    <span class="kw">let </span>i = last_non_terminator.map_or(<span class="number">0</span>, |x| x + <span class="number">1</span>);
+                    i..i
+                },
+                debuginfo_suffix,
+            );
         }
-        blocks
+
+        <span class="kw">let </span>(caller_restore_debuginfo_after_call, calleer_reset_debuginfo_before_call) =
+            mk_debuginfo_prefix_and_suffix(<span class="bool-val">false</span>);
+        (
+            blocks,
+            calleer_reset_debuginfo_before_call,
+            caller_restore_debuginfo_after_call,
+        )
     }
 }
 

@@ -648,6 +648,8 @@
 <a href="#648" id="648">648</a>
 <a href="#649" id="649">649</a>
 <a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test;
 
@@ -692,6 +694,8 @@
     <span class="kw">pub </span>infer_storage_classes: bool,
     <span class="kw">pub </span>structurize: bool,
     <span class="kw">pub </span>spirt_passes: Vec&lt;String&gt;,
+
+    <span class="kw">pub </span>abort_strategy: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     <span class="kw">pub </span>emit_multiple_modules: bool,
     <span class="kw">pub </span>spirv_metadata: SpirvMetadata,
@@ -1058,7 +1062,7 @@
         <span class="comment">// NOTE(eddyb) this *must* run on unstructured CFGs, to do its job.
         </span>{
             <span class="kw">let </span>_timer = sess.timer(<span class="string">&quot;spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points&quot;</span>);
-            spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points(<span class="kw-2">&amp;mut </span>module);
+            spirt_passes::controlflow::convert_custom_aborts_to_unstructured_returns_in_entry_points(opts, <span class="kw-2">&amp;mut </span>module);
         }
 
         <span class="kw">if </span>opts.structurize {

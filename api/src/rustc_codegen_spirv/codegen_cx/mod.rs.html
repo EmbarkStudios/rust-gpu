@@ -892,6 +892,14 @@
 <a href="#892" id="892">892</a>
 <a href="#893" id="893">893</a>
 <a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>constant;
 <span class="kw">mod </span>declare;
 <span class="kw">mod </span>entry;
@@ -1242,6 +1250,12 @@
                 <span class="string">&quot;enable additional SPIR-T passes (comma-separated)&quot;</span>,
                 <span class="string">&quot;PASSES&quot;</span>,
             );
+            opts.optopt(
+                <span class="string">&quot;&quot;</span>,
+                <span class="string">&quot;abort-strategy&quot;</span>,
+                <span class="string">&quot;select a non-default abort (i.e. panic) strategy - see `spirv-builder` docs&quot;</span>,
+                <span class="string">&quot;STRATEGY&quot;</span>,
+            );
 
             <span class="comment">// NOTE(eddyb) these are debugging options that used to be env vars
             // (for more information see `docs/src/codegen-args.md`).
@@ -1422,6 +1436,8 @@
                 .flat_map(|s| s.split(<span class="string">&#39;,&#39;</span>))
                 .map(|s| s.to_string())
                 .collect(),
+
+            abort_strategy: matches.opt_str(<span class="string">&quot;abort-strategy&quot;</span>),
 
             <span class="comment">// FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
             </span>emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,

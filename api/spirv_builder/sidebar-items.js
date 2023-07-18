@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Capability","MetadataPrintout","ModuleResult","SpirvBuilderError","SpirvMetadata"],"struct":["CompileResult","SpirvBuilder"]};
+window.SIDEBAR_ITEMS = {"enum":["Capability","MetadataPrintout","ModuleResult","ShaderPanicStrategy","SpirvBuilderError","SpirvMetadata"],"struct":["CompileResult","SpirvBuilder"]};

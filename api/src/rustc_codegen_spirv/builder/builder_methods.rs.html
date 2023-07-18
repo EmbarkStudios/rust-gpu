@@ -2676,6 +2676,7 @@
 <a href="#2676" id="2676">2676</a>
 <a href="#2677" id="2677">2677</a>
 <a href="#2678" id="2678">2678</a>
+<a href="#2679" id="2679">2679</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
@@ -2691,7 +2692,7 @@
 <span class="kw">use </span>rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 <span class="kw">use </span>rustc_codegen_ssa::mir::place::PlaceRef;
 <span class="kw">use </span>rustc_codegen_ssa::traits::{
-    BackendTypes, BuilderMethods, ConstMethods, IntrinsicCallMethods, LayoutTypeMethods, OverflowOp,
+    BackendTypes, BuilderMethods, ConstMethods, LayoutTypeMethods, OverflowOp,
 };
 <span class="kw">use </span>rustc_codegen_ssa::MemFlags;
 <span class="kw">use </span>rustc_data_structures::fx::FxHashSet;
@@ -5325,7 +5326,8 @@
 
             <span class="comment">// HACK(eddyb) redirect any possible panic call to an abort, to avoid
             // needing to materialize `&amp;core::panic::Location` or `format_args!`.
-            </span><span class="self">self</span>.abort();
+            // FIXME(eddyb) find a way to extract the original message.
+            </span><span class="self">self</span>.abort_with_message(<span class="string">&quot;panic!(...)&quot;</span>.into());
             <span class="self">self</span>.undef(result_type)
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(mode) = buffer_load_intrinsic {
             <span class="self">self</span>.codegen_buffer_load_intrinsic(result_type, args, mode)

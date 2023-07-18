@@ -702,6 +702,92 @@
 <a href="#702" id="702">702</a>
 <a href="#703" id="703">703</a>
 <a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
 </pre></div><pre class="rust"><code><span class="comment">// BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;
@@ -878,6 +964,62 @@
     </span>Full,
 }
 
+<span class="doccomment">/// Strategy used to handle Rust `panic!`s in shaders compiled to SPIR-V.
+</span><span class="attr">#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+</span><span class="kw">pub enum </span>ShaderPanicStrategy {
+    <span class="doccomment">/// Return from shader entry-point with no side-effects **(default)**.
+    ///
+    /// While similar to the standard SPIR-V `OpTerminateInvocation`, this is
+    /// *not* limited to fragment shaders, and instead supports all shaders
+    /// (as it&#39;s handled via control-flow rewriting, instead of SPIR-V features).
+    </span>SilentExit,
+
+    <span class="doccomment">/// Like `SilentExit`, but also using `debugPrintf` to report the panic in
+    /// a way that can reach the user, before returning from the entry-point.
+    ///
+    /// Will automatically require the `SPV_KHR_non_semantic_info` extension,
+    /// as `debugPrintf` uses a &quot;non-semantic extended instruction set&quot;.
+    ///
+    /// If you have multiple entry-points, you *may* need to also enable the
+    /// `multimodule` node (see &lt;https://github.com/KhronosGroup/SPIRV-Tools/issues/4892&gt;).
+    ///
+    /// **Note**: actually obtaining the `debugPrintf` output requires enabling:
+    /// * `VK_KHR_shader_non_semantic_info` Vulkan *Device* extension
+    /// * Vulkan Validation Layers (which contain the `debugPrintf` implementation)
+    /// * `VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT` in Validation Layers,
+    ///   either by using `VkValidationFeaturesEXT` during instance creating,
+    ///   setting the `VK_LAYER_ENABLES` environment variable to that value,
+    ///   or adding it to `khronos_validation.enables` in `vk_layer_settings.txt`
+    ///
+    /// See also: &lt;https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/main/docs/debug_printf.md&gt;.
+    </span>DebugPrintfThenExit {
+        <span class="doccomment">/// Whether to also print the entry-point inputs (excluding buffers/resources),
+        /// which should uniquely identify the panicking shader invocation.
+        </span>print_inputs: bool,
+
+        <span class="doccomment">/// Whether to also print a &quot;backtrace&quot; (i.e. the chain of function calls
+        /// that led to the `panic!).
+        ///
+        /// As there is no way to dynamically compute this information, the string
+        /// containing the full backtrace of each `panic!` is statically generated,
+        /// meaning this option could significantly increase binary size.
+        </span>print_backtrace: bool,
+    },
+
+    <span class="doccomment">/// **Warning**: this is _**unsound**_ (i.e. adds Undefined Behavior to *safe* Rust code)
+    ///
+    /// This option only exists for testing (hence the unfriendly name it has),
+    /// and more specifically testing whether conditional panics are responsible
+    /// for performance differences when upgrading from older Rust-GPU versions
+    /// (which used infinite loops for panics, that `spirv-opt`/drivers could&#39;ve
+    /// sometimes treated as UB, and optimized as if they were impossible to reach).
+    ///
+    /// Unlike those infinite loops, however, this uses `OpUnreachable`, so it
+    /// forces the old worst-case (all `panic!`s become UB and are optimized out).
+    </span><span class="attr">#[allow(non_camel_case_types)]
+    </span>UNSOUND_DO_NOT_USE_UndefinedBehaviorViaUnreachable,
+}
+
 <span class="kw">pub struct </span>SpirvBuilder {
     path_to_crate: PathBuf,
     print_metadata: MetadataPrintout,
@@ -889,6 +1031,9 @@
     capabilities: Vec&lt;Capability&gt;,
     extensions: Vec&lt;String&gt;,
     extra_args: Vec&lt;String&gt;,
+
+    <span class="comment">// `rustc_codegen_spirv::linker` codegen args
+    </span><span class="kw">pub </span>shader_panic_strategy: ShaderPanicStrategy,
 
     <span class="comment">// spirv-val flags
     </span><span class="kw">pub </span>relax_struct_store: bool,
@@ -915,6 +1060,8 @@
             capabilities: Vec::new(),
             extensions: Vec::new(),
             extra_args: Vec::new(),
+
+            shader_panic_strategy: ShaderPanicStrategy::SilentExit,
 
             relax_struct_store: <span class="bool-val">false</span>,
             relax_logical_pointer: <span class="bool-val">false</span>,
@@ -977,6 +1124,13 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>extension(<span class="kw-2">mut </span><span class="self">self</span>, extension: <span class="kw">impl </span>Into&lt;String&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.extensions.push(extension.into());
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Change the shader `panic!` handling strategy (see [`ShaderPanicStrategy`]).
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>shader_panic_strategy(<span class="kw-2">mut </span><span class="self">self</span>, shader_panic_strategy: ShaderPanicStrategy) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.shader_panic_strategy = shader_panic_strategy;
         <span class="self">self
     </span>}
 
@@ -1215,6 +1369,25 @@
     <span class="kw">if </span>builder.preserve_bindings {
         llvm_args.push(<span class="string">&quot;--preserve-bindings&quot;</span>.to_string());
     }
+    <span class="kw">let </span><span class="kw-2">mut </span>target_features = <span class="macro">vec!</span>[];
+    <span class="kw">let </span>abort_strategy = <span class="kw">match </span>builder.shader_panic_strategy {
+        ShaderPanicStrategy::SilentExit =&gt; <span class="prelude-val">None</span>,
+        ShaderPanicStrategy::DebugPrintfThenExit {
+            print_inputs,
+            print_backtrace,
+        } =&gt; {
+            target_features.push(<span class="string">&quot;+ext:SPV_KHR_non_semantic_info&quot;</span>.into());
+            <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;debug-printf{}{}&quot;</span>,
+                <span class="kw">if </span>print_inputs { <span class="string">&quot;+inputs&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;&quot; </span>},
+                <span class="kw">if </span>print_backtrace { <span class="string">&quot;+backtrace&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;&quot; </span>}
+            ))
+        }
+        ShaderPanicStrategy::UNSOUND_DO_NOT_USE_UndefinedBehaviorViaUnreachable =&gt; {
+            <span class="prelude-val">Some</span>(<span class="string">&quot;unreachable&quot;</span>.into())
+        }
+    };
+    llvm_args.extend(abort_strategy.map(|strategy| <span class="macro">format!</span>(<span class="string">&quot;--abort-strategy={strategy}&quot;</span>)));
 
     <span class="kw">if let </span><span class="prelude-val">Ok</span>(extra_codegen_args) = tracked_env_var_get(<span class="string">&quot;RUSTGPU_CODEGEN_ARGS&quot;</span>) {
         llvm_args.extend(extra_codegen_args.split_whitespace().map(|s| s.to_string()));
@@ -1227,7 +1400,6 @@
         rustflags.push([<span class="string">&quot;-Cllvm-args=&quot;</span>, <span class="kw-2">&amp;</span>llvm_args].concat());
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>target_features = <span class="macro">vec!</span>[];
     target_features.extend(builder.capabilities.iter().map(|cap| <span class="macro">format!</span>(<span class="string">&quot;+{cap:?}&quot;</span>)));
     target_features.extend(builder.extensions.iter().map(|ext| <span class="macro">format!</span>(<span class="string">&quot;+ext:{ext}&quot;</span>)));
     <span class="kw">let </span>target_features = join_checking_for_separators(target_features, <span class="string">&quot;,&quot;</span>);
