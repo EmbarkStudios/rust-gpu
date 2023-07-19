@@ -110,3 +110,47 @@ fn main(#[spirv(workgroup)] var: &mut [Vec4; 4]) { }
 ## Generic storage classes
 
 The SPIR-V storage class of types is inferred for function signatures. The inference logic can be guided by attributes on the interface specification in the entry points. This also means it needs to be clear from the documentation if an API requires a certain storage class (e.g `workgroup`) for a variable. Storage class attributes are only permitted on entry points.
+
+## Specialization constants
+
+Entry point inputs also allow access to [SPIR-V "specialization constants"](https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#SpecializationSection),
+which are each associated with an user-specified numeric "ID" (SPIR-V `SpecId`),
+used to override them later ("specializing" the shader):
+* in Vulkan: [during pipeline creation, via `VkSpecializationInfo`](https://registry.khronos.org/vulkan/specs/1.3-extensions/html/chap10.html#pipelines-specialization-constants)
+* in WebGPU: [during pipeline creation, via `GPUProgrammableStage`<i>`#constants`</i>](https://www.w3.org/TR/webgpu/#gpuprogrammablestage)
+  * note: WebGPU calls them ["pipeline-overridable constants"](https://gpuweb.github.io/gpuweb/wgsl/#pipeline-overridable)
+* in OpenCL: [via `clSetProgramSpecializationConstant()` calls, before `clBuildProgram()`](https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clSetProgramSpecializationConstant.html)
+
+If a "specialization constant" is not overriden, it falls back to its *default*
+value, which is either user-specified (via `default = ...`), or `0` otherwise.
+
+While only "specialization constants" of type `u32` are currently supported, it's
+always possible to *manually* create values of other types, from one or more `u32`s.
+
+Example:
+
+```rust
+#[spirv(vertex)]
+fn main(
+    // Default is implicitly `0`, if not specified.
+    #[spirv(spec_constant(id = 1))] no_default: u32,
+
+    // IDs don't need to be sequential or obey any order.
+    #[spirv(spec_constant(id = 9000, default = 123))] default_123: u32,
+
+    // Assembling a larger value out of multiple `u32` is also possible.
+    #[spirv(spec_constant(id = 100))] x_u64_lo: u32,
+    #[spirv(spec_constant(id = 101))] x_u64_hi: u32,
+) {
+    let x_u64 = ((x_u64_hi as u64) << 32) | (x_u64_lo as u64);
+}
+```
+
+<sub>**Note**: despite the name "constants", they are *runtime values* from the
+perspective of compiled Rust code (or at most similar to "link-time constants"),
+and as such have no connection to *Rust constants*, especially not Rust type-level
+constants and `const` generics - while specializing some e.g. `fn foo<const N: u32>`
+by `N` long after it was compiled to SPIR-V, or using "specialization constants"
+as Rust array lengths, Rust would sadly require *dependent types* to type-check
+such code (as it would for e.g. expressing C `T[n]` types with runtime `n`),
+and the main benefit over truly dynamic inputs is a (potential) performance boost.<sub>

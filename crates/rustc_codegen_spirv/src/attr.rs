@@ -68,6 +68,12 @@ pub enum IntrinsicType {
     Matrix,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct SpecConstant {
+    pub id: u32,
+    pub default: Option<u32>,
+}
+
 // NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside
 // `tests/ui/spirv-attr` should be updated (and new ones added if necessary).
 #[derive(Debug, Clone)]
@@ -87,6 +93,7 @@ pub enum SpirvAttribute {
     Flat,
     Invariant,
     InputAttachmentIndex(u32),
+    SpecConstant(SpecConstant),
 
     // `fn`/closure attributes:
     BufferLoadIntrinsic,
@@ -121,6 +128,7 @@ pub struct AggregatedSpirvAttributes {
     pub flat: Option<Spanned<()>>,
     pub invariant: Option<Spanned<()>>,
     pub input_attachment_index: Option<Spanned<u32>>,
+    pub spec_constant: Option<Spanned<SpecConstant>>,
 
     // `fn`/closure attributes:
     pub buffer_load_intrinsic: Option<Spanned<()>>,
@@ -211,6 +219,12 @@ impl AggregatedSpirvAttributes {
                 span,
                 "#[spirv(attachment_index)]",
             ),
+            SpecConstant(value) => try_insert(
+                &mut self.spec_constant,
+                value,
+                span,
+                "#[spirv(spec_constant)]",
+            ),
             BufferLoadIntrinsic => try_insert(
                 &mut self.buffer_load_intrinsic,
                 (),
@@ -300,7 +314,8 @@ impl CheckSpirvAttrVisitor<'_> {
                 | SpirvAttribute::Binding(_)
                 | SpirvAttribute::Flat
                 | SpirvAttribute::Invariant
-                | SpirvAttribute::InputAttachmentIndex(_) => match target {
+                | SpirvAttribute::InputAttachmentIndex(_)
+                | SpirvAttribute::SpecConstant(_) => match target {
                     Target::Param => {
                         let parent_hir_id = self.tcx.hir().parent_id(hir_id);
                         let parent_is_entry_point =
