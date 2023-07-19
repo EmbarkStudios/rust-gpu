@@ -1,6 +1,6 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
-use crate::attr::{AggregatedSpirvAttributes, Entry, Spanned};
+use crate::attr::{AggregatedSpirvAttributes, Entry, Spanned, SpecConstant};
 use crate::builder::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
@@ -40,7 +40,10 @@ struct EntryParamDeducedFromRustRefOrValue<'tcx> {
     /// The SPIR-V storage class to declare the shader interface variable in,
     /// either deduced from the type (e.g. opaque handles use `UniformConstant`),
     /// provided via `#[spirv(...)]` attributes, or an `Input`/`Output` default.
-    storage_class: StorageClass,
+    //
+    // HACK(eddyb) this can be `Err(SpecConstant)` to indicate this is actually
+    // an `OpSpecConstant` being exposed as if it were an `Input`
+    storage_class: Result<StorageClass, SpecConstant>,
 
     /// Whether this entry-point parameter doesn't allow writes to the underlying
     /// shader interface variable (i.e. is by-value, or `&T` where `T: Freeze`).
@@ -387,6 +390,30 @@ impl<'tcx> CodegenCx<'tcx> {
             }
         }
 
+        // HACK(eddyb) only handle `attrs.spec_constant` after everything above
+        // would've assumed it was actually an implicitly-`Input`.
+        let mut storage_class = Ok(storage_class);
+        if let Some(spec_constant) = attrs.spec_constant {
+            if ref_or_value_layout.ty != self.tcx.types.u32 {
+                self.tcx.sess.span_err(
+                    hir_param.ty_span,
+                    format!(
+                        "unsupported `#[spirv(spec_constant)]` type `{}` (expected `{}`)",
+                        ref_or_value_layout.ty, self.tcx.types.u32
+                    ),
+                );
+            } else if let Some(storage_class) = attrs.storage_class {
+                self.tcx.sess.span_err(
+                    storage_class.span,
+                    "`#[spirv(spec_constant)]` cannot have a storage class",
+                );
+            } else {
+                assert_eq!(storage_class, Ok(StorageClass::Input));
+                assert!(!is_ref);
+                storage_class = Err(spec_constant.value);
+            }
+        }
+
         EntryParamDeducedFromRustRefOrValue {
             value_layout,
             storage_class,
@@ -407,9 +434,6 @@ impl<'tcx> CodegenCx<'tcx> {
     ) {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
 
-        // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
-        let var = self.emit_global().id();
-
         let EntryParamDeducedFromRustRefOrValue {
             value_layout,
             storage_class,
@@ -417,14 +441,35 @@ impl<'tcx> CodegenCx<'tcx> {
         } = self.entry_param_deduce_from_rust_ref_or_value(entry_arg_abi.layout, hir_param, &attrs);
         let value_spirv_type = value_layout.spirv_type(hir_param.ty_span, self);
 
+        let (var_id, spec_const_id) = match storage_class {
+            // Pre-allocate the module-scoped `OpVariable` *Result* ID.
+            Ok(_) => (
+                Ok(self.emit_global().id()),
+                Err("entry-point interface variable is not a `#[spirv(spec_constant)]`"),
+            ),
+            Err(SpecConstant { id, default }) => {
+                let mut emit = self.emit_global();
+                let spec_const_id = emit.spec_constant_u32(value_spirv_type, default.unwrap_or(0));
+                emit.decorate(
+                    spec_const_id,
+                    Decoration::SpecId,
+                    [Operand::LiteralInt32(id)],
+                );
+                (
+                    Err("`#[spirv(spec_constant)]` is not an entry-point interface variable"),
+                    Ok(spec_const_id),
+                )
+            }
+        };
+
         // Emit decorations deduced from the reference/value Rust type.
         if read_only {
             // NOTE(eddyb) it appears only `StorageBuffer`s simultaneously:
             // - allow `NonWritable` decorations on shader interface variables
             // - default to writable (i.e. the decoration actually has an effect)
-            if storage_class == StorageClass::StorageBuffer {
+            if storage_class == Ok(StorageClass::StorageBuffer) {
                 self.emit_global()
-                    .decorate(var, Decoration::NonWritable, []);
+                    .decorate(var_id.unwrap(), Decoration::NonWritable, []);
             }
         }
 
@@ -454,14 +499,20 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         let var_ptr_spirv_type;
         let (value_ptr, value_len) = match storage_class {
-            StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer => {
+            Ok(
+                StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer,
+            ) => {
                 let var_spirv_type = SpirvType::InterfaceBlock {
                     inner_type: value_spirv_type,
                 }
                 .def(hir_param.span, self);
                 var_ptr_spirv_type = self.type_ptr_to(var_spirv_type);
 
-                let value_ptr = bx.struct_gep(var_spirv_type, var.with_type(var_ptr_spirv_type), 0);
+                let value_ptr = bx.struct_gep(
+                    var_spirv_type,
+                    var_id.unwrap().with_type(var_ptr_spirv_type),
+                    0,
+                );
 
                 let value_len = if is_unsized_with_len {
                     match self.lookup_type(value_spirv_type) {
@@ -478,7 +529,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     let len_spirv_type = self.type_isize();
                     let len = bx
                         .emit()
-                        .array_length(len_spirv_type, None, var, 0)
+                        .array_length(len_spirv_type, None, var_id.unwrap(), 0)
                         .unwrap();
 
                     Some(len.with_type(len_spirv_type))
@@ -493,9 +544,9 @@ impl<'tcx> CodegenCx<'tcx> {
                     None
                 };
 
-                (value_ptr, value_len)
+                (Ok(value_ptr), value_len)
             }
-            StorageClass::UniformConstant => {
+            Ok(StorageClass::UniformConstant) => {
                 var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
 
                 match self.lookup_type(value_spirv_type) {
@@ -524,7 +575,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     None
                 };
 
-                (var.with_type(var_ptr_spirv_type), value_len)
+                (Ok(var_id.unwrap().with_type(var_ptr_spirv_type)), value_len)
             }
             _ => {
                 var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
@@ -533,12 +584,19 @@ impl<'tcx> CodegenCx<'tcx> {
                     self.tcx.sess.span_fatal(
                         hir_param.ty_span,
                         format!(
-                            "unsized types are not supported for storage class {storage_class:?}"
+                            "unsized types are not supported for {}",
+                            match storage_class {
+                                Ok(storage_class) => format!("storage class {storage_class:?}"),
+                                Err(SpecConstant { .. }) => "`#[spirv(spec_constant)]`".into(),
+                            },
                         ),
                     );
                 }
 
-                (var.with_type(var_ptr_spirv_type), None)
+                (
+                    var_id.map(|var_id| var_id.with_type(var_ptr_spirv_type)),
+                    None,
+                )
             }
         };
 
@@ -546,21 +604,26 @@ impl<'tcx> CodegenCx<'tcx> {
         // starting from the `value_ptr` pointing to a `value_spirv_type`
         // (e.g. `Input` doesn't use indirection, so we have to load from it).
         if let ty::Ref(..) = entry_arg_abi.layout.ty.kind() {
-            call_args.push(value_ptr);
+            call_args.push(value_ptr.unwrap());
             match entry_arg_abi.mode {
                 PassMode::Direct(_) => assert_eq!(value_len, None),
                 PassMode::Pair(..) => call_args.push(value_len.unwrap()),
                 _ => unreachable!(),
             }
         } else {
-            assert_eq!(storage_class, StorageClass::Input);
             assert_matches!(entry_arg_abi.mode, PassMode::Direct(_));
 
-            let value = bx.load(
-                entry_arg_abi.layout.spirv_type(hir_param.ty_span, bx),
-                value_ptr,
-                entry_arg_abi.layout.align.abi,
-            );
+            let value = match storage_class {
+                Ok(_) => {
+                    assert_eq!(storage_class, Ok(StorageClass::Input));
+                    bx.load(
+                        entry_arg_abi.layout.spirv_type(hir_param.ty_span, bx),
+                        value_ptr.unwrap(),
+                        entry_arg_abi.layout.align.abi,
+                    )
+                }
+                Err(SpecConstant { .. }) => spec_const_id.unwrap().with_type(value_spirv_type),
+            };
             call_args.push(value);
             assert_eq!(value_len, None);
         }
@@ -573,48 +636,76 @@ impl<'tcx> CodegenCx<'tcx> {
         // name (e.g. "foo" for `foo: Vec3`). While `OpName` is *not* suppposed
         // to be semantic, OpenGL and some tooling rely on it for reflection.
         if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
-            self.emit_global().name(var, ident.to_string());
+            self.emit_global()
+                .name(var_id.or(spec_const_id).unwrap(), ident.to_string());
         }
 
         // Emit `OpDecorate`s based on attributes.
         let mut decoration_supersedes_location = false;
-        if let Some(builtin) = attrs.builtin.map(|attr| attr.value) {
-            self.emit_global().decorate(
-                var,
-                Decoration::BuiltIn,
-                std::iter::once(Operand::BuiltIn(builtin)),
-            );
-            decoration_supersedes_location = true;
-        }
-        if let Some(index) = attrs.descriptor_set.map(|attr| attr.value) {
-            self.emit_global().decorate(
-                var,
-                Decoration::DescriptorSet,
-                std::iter::once(Operand::LiteralInt32(index)),
-            );
-            decoration_supersedes_location = true;
-        }
-        if let Some(index) = attrs.binding.map(|attr| attr.value) {
-            self.emit_global().decorate(
-                var,
-                Decoration::Binding,
-                std::iter::once(Operand::LiteralInt32(index)),
-            );
-            decoration_supersedes_location = true;
-        }
-        if attrs.flat.is_some() {
-            self.emit_global()
-                .decorate(var, Decoration::Flat, std::iter::empty());
-        }
-        if let Some(invariant) = attrs.invariant {
-            self.emit_global()
-                .decorate(var, Decoration::Invariant, std::iter::empty());
-            if storage_class != StorageClass::Output {
-                self.tcx.sess.span_err(
-                    invariant.span,
-                    "#[spirv(invariant)] is only valid on Output variables",
+        if let Some(builtin) = attrs.builtin {
+            if let Err(SpecConstant { .. }) = storage_class {
+                self.tcx.sess.span_fatal(
+                    builtin.span,
+                    format!(
+                        "`#[spirv(spec_constant)]` cannot be `{:?}` builtin",
+                        builtin.value
+                    ),
                 );
             }
+            self.emit_global().decorate(
+                var_id.unwrap(),
+                Decoration::BuiltIn,
+                std::iter::once(Operand::BuiltIn(builtin.value)),
+            );
+            decoration_supersedes_location = true;
+        }
+        if let Some(descriptor_set) = attrs.descriptor_set {
+            if let Err(SpecConstant { .. }) = storage_class {
+                self.tcx.sess.span_fatal(
+                    descriptor_set.span,
+                    "`#[spirv(descriptor_set = ...)]` cannot apply to `#[spirv(spec_constant)]`",
+                );
+            }
+            self.emit_global().decorate(
+                var_id.unwrap(),
+                Decoration::DescriptorSet,
+                std::iter::once(Operand::LiteralInt32(descriptor_set.value)),
+            );
+            decoration_supersedes_location = true;
+        }
+        if let Some(binding) = attrs.binding {
+            if let Err(SpecConstant { .. }) = storage_class {
+                self.tcx.sess.span_fatal(
+                    binding.span,
+                    "`#[spirv(binding = ...)]` cannot apply to `#[spirv(spec_constant)]`",
+                );
+            }
+            self.emit_global().decorate(
+                var_id.unwrap(),
+                Decoration::Binding,
+                std::iter::once(Operand::LiteralInt32(binding.value)),
+            );
+            decoration_supersedes_location = true;
+        }
+        if let Some(flat) = attrs.flat {
+            if let Err(SpecConstant { .. }) = storage_class {
+                self.tcx.sess.span_fatal(
+                    flat.span,
+                    "`#[spirv(flat)]` cannot apply to `#[spirv(spec_constant)]`",
+                );
+            }
+            self.emit_global()
+                .decorate(var_id.unwrap(), Decoration::Flat, std::iter::empty());
+        }
+        if let Some(invariant) = attrs.invariant {
+            if storage_class != Ok(StorageClass::Output) {
+                self.tcx.sess.span_fatal(
+                    invariant.span,
+                    "`#[spirv(invariant)]` is only valid on Output variables",
+                );
+            }
+            self.emit_global()
+                .decorate(var_id.unwrap(), Decoration::Invariant, std::iter::empty());
         }
 
         let is_subpass_input = match self.lookup_type(value_spirv_type) {
@@ -635,7 +726,7 @@ impl<'tcx> CodegenCx<'tcx> {
         if let Some(attachment_index) = attrs.input_attachment_index {
             if is_subpass_input && self.builder.has_capability(Capability::InputAttachment) {
                 self.emit_global().decorate(
-                    var,
+                    var_id.unwrap(),
                     Decoration::InputAttachmentIndex,
                     std::iter::once(Operand::LiteralInt32(attachment_index.value)),
                 );
@@ -657,14 +748,16 @@ impl<'tcx> CodegenCx<'tcx> {
             );
         }
 
-        self.check_for_bad_types(
-            execution_model,
-            hir_param.ty_span,
-            var_ptr_spirv_type,
-            storage_class,
-            attrs.builtin.is_some(),
-            attrs.flat,
-        );
+        if let Ok(storage_class) = storage_class {
+            self.check_for_bad_types(
+                execution_model,
+                hir_param.ty_span,
+                var_ptr_spirv_type,
+                storage_class,
+                attrs.builtin.is_some(),
+                attrs.flat,
+            );
+        }
 
         // Assign locations from left to right, incrementing each storage class
         // individually.
@@ -673,34 +766,43 @@ impl<'tcx> CodegenCx<'tcx> {
         let has_location = !decoration_supersedes_location
             && matches!(
                 storage_class,
-                StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
+                Ok(StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant)
             );
         if has_location {
             let location = decoration_locations
-                .entry(storage_class)
+                .entry(storage_class.unwrap())
                 .or_insert_with(|| 0);
             self.emit_global().decorate(
-                var,
+                var_id.unwrap(),
                 Decoration::Location,
                 std::iter::once(Operand::LiteralInt32(*location)),
             );
             *location += 1;
         }
 
-        // Emit the `OpVariable` with its *Result* ID set to `var`.
-        self.emit_global()
-            .variable(var_ptr_spirv_type, Some(var), storage_class, None);
+        match storage_class {
+            Ok(storage_class) => {
+                let var = var_id.unwrap();
 
-        // Record this `OpVariable` as needing to be added (if applicable),
-        // to the *Interface* operands of the `OpEntryPoint` instruction.
-        if self.emit_global().version().unwrap() > (1, 3) {
-            // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            op_entry_point_interface_operands.push(var);
-        } else {
-            // SPIR-V <= v1.3 only includes Input and Output in the interface.
-            if storage_class == StorageClass::Input || storage_class == StorageClass::Output {
-                op_entry_point_interface_operands.push(var);
+                // Emit the `OpVariable` with its *Result* ID set to `var_id`.
+                self.emit_global()
+                    .variable(var_ptr_spirv_type, Some(var), storage_class, None);
+
+                // Record this `OpVariable` as needing to be added (if applicable),
+                // to the *Interface* operands of the `OpEntryPoint` instruction.
+                if self.emit_global().version().unwrap() > (1, 3) {
+                    // SPIR-V >= v1.4 includes all OpVariables in the interface.
+                    op_entry_point_interface_operands.push(var);
+                } else {
+                    // SPIR-V <= v1.3 only includes Input and Output in the interface.
+                    if storage_class == StorageClass::Input || storage_class == StorageClass::Output
+                    {
+                        op_entry_point_interface_operands.push(var);
+                    }
+                }
             }
+            // Emitted earlier.
+            Err(SpecConstant { .. }) => {}
         }
     }
 

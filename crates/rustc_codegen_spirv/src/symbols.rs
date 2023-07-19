@@ -1,4 +1,4 @@
-use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
+use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpecConstant, SpirvAttribute};
 use crate::builder::libm_intrinsics;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, LitIntType, LitKind, MetaItemLit, NestedMetaItem};
@@ -29,6 +29,10 @@ pub struct Symbols {
     descriptor_set: Symbol,
     binding: Symbol,
     input_attachment_index: Symbol,
+
+    spec_constant: Symbol,
+    id: Symbol,
+    default: Symbol,
 
     attributes: FxHashMap<Symbol, SpirvAttribute>,
     execution_modes: FxHashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
@@ -392,6 +396,10 @@ impl Symbols {
             binding: Symbol::intern("binding"),
             input_attachment_index: Symbol::intern("input_attachment_index"),
 
+            spec_constant: Symbol::intern("spec_constant"),
+            id: Symbol::intern("id"),
+            default: Symbol::intern("default"),
+
             attributes,
             execution_modes,
             libm_intrinsics,
@@ -466,6 +474,8 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                     SpirvAttribute::Binding(parse_attr_int_value(arg)?)
                 } else if arg.has_name(sym.input_attachment_index) {
                     SpirvAttribute::InputAttachmentIndex(parse_attr_int_value(arg)?)
+                } else if arg.has_name(sym.spec_constant) {
+                    SpirvAttribute::SpecConstant(parse_spec_constant_attr(sym, arg)?)
                 } else {
                     let name = match arg.ident() {
                         Some(i) => i,
@@ -491,6 +501,38 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                 };
                 Ok((span, parsed_attr))
             }))
+    })
+}
+
+fn parse_spec_constant_attr(
+    sym: &Symbols,
+    arg: &NestedMetaItem,
+) -> Result<SpecConstant, ParseAttrError> {
+    let mut id = None;
+    let mut default = None;
+
+    if let Some(attrs) = arg.meta_item_list() {
+        for attr in attrs {
+            if attr.has_name(sym.id) {
+                if id.is_none() {
+                    id = Some(parse_attr_int_value(attr)?);
+                } else {
+                    return Err((attr.span(), "`id` may only be specified once".into()));
+                }
+            } else if attr.has_name(sym.default) {
+                if default.is_none() {
+                    default = Some(parse_attr_int_value(attr)?);
+                } else {
+                    return Err((attr.span(), "`default` may only be specified once".into()));
+                }
+            } else {
+                return Err((attr.span(), "expected `id = ...` or `default = ...`".into()));
+            }
+        }
+    }
+    Ok(SpecConstant {
+        id: id.ok_or_else(|| (arg.span(), "expected `spec_constant(id = ...)`".into()))?,
+        default,
     })
 }
 
