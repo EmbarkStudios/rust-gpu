@@ -49,9 +49,9 @@ lazy_static! {
 }
 
 macro_rules! def_custom_insts {
-    ($($num:literal => $name:ident $({ $($field:ident),+ $(,)? })?),+ $(,)?) => {
+    ($($num:literal => $name:ident $({ $($field:ident),+ $(, ..$variadic_field:ident)? $(,)? })?),+ $(,)?) => {
         const SCHEMA: &[(u32, &str, &[&str])] = &[
-            $(($num, stringify!($name), &[$($(stringify!($field)),+)?])),+
+            $(($num, stringify!($name), &[$($(stringify!($field),)+ $(stringify!(..$variadic_field),)?)?])),+
         ];
 
         #[repr(u32)]
@@ -74,16 +74,19 @@ macro_rules! def_custom_insts {
             pub fn with_operands<T: Clone>(self, operands: &[T]) -> CustomInst<T> {
                 match self {
                     $(Self::$name => match operands {
-                        [$($($field),+)?] => CustomInst::$name $({ $($field: $field.clone()),+ })?,
+                        [$($($field,)+ $(ref $variadic_field @ ..)?)?] => CustomInst::$name $({
+                            $($field: $field.clone(),)+
+                            $($variadic_field: $variadic_field.iter().cloned().collect())?
+                        })?,
                         _ => unreachable!("{self:?} does not have the right number of operands"),
                     }),+
                 }
             }
         }
 
-        #[derive(Copy, Clone, Debug)]
+        #[derive(Clone, Debug)]
         pub enum CustomInst<T> {
-            $($name $({ $($field: T),+ })?),+
+            $($name $({ $($field: T,)+ $($variadic_field: SmallVec<[T; 4]>)? })?),+
         }
 
         impl<T> CustomInst<T> {
@@ -96,7 +99,9 @@ macro_rules! def_custom_insts {
             // HACK(eddyb) this should return an iterator, but that's too much effort.
             pub fn into_operands(self) -> SmallVec<[T; 8]> {
                 match self {
-                    $(Self::$name $({ $($field),+ })? => [$($($field),+)?].into_iter().collect()),+
+                    $(Self::$name $({ $($field,)+ $($variadic_field)? })? => {
+                        [$($($field),+)?].into_iter() $($(.chain($variadic_field))?)? .collect()
+                    })+
                 }
             }
         }
@@ -146,7 +151,9 @@ def_custom_insts! {
     // users to do `catch_unwind` at the top-level of their shader to handle
     // panics specially (e.g. by appending to a custom buffer, or using some
     // specific color in a fragment shader, to indicate a panic happened).
-    4 => Abort { message },
+    // NOTE(eddyb) the `message` string follows `debugPrintf` rules, with remaining
+    // operands (collected into `debug_printf_args`) being its formatting arguments.
+    4 => Abort { message, ..debug_printf_args },
 }
 
 impl CustomOp {
