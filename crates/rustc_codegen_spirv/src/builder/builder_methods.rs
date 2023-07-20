@@ -2648,7 +2648,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // HACK(eddyb) redirect any possible panic call to an abort, to avoid
             // needing to materialize `&core::panic::Location` or `format_args!`.
             // FIXME(eddyb) find a way to extract the original message.
-            self.abort_with_message("panic!(...)".into());
+            self.abort_with_message("panicked: <unknown message>".into());
             self.undef(result_type)
         } else if let Some(mode) = buffer_load_intrinsic {
             self.codegen_buffer_load_intrinsic(result_type, args, mode)

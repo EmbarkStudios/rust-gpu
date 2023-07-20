@@ -330,12 +330,16 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                         let mut fmt = String::new();
 
                         // HACK(eddyb) this improves readability w/ very verbose Vulkan loggers.
-                        fmt += "\n  ";
+                        fmt += "\n";
 
-                        if let Some((file, line, col)) = current_debug_src_loc.take() {
-                            fmt += &format!("{file}:{line}:{col}: ").replace('%', "%%");
-                        }
+                        fmt += "[RUST-GPU] ";
                         fmt += &cx[const_str(message)].replace('%', "%%");
+
+                        // FIXME(eddyb) deduplicate with "called at" form below
+                        // (not trivial becasue both closures would borrow `fmt`).
+                        if let Some((file, line, col)) = current_debug_src_loc.take() {
+                            fmt += &format!("\n      at {file}:{line}:{col}").replace('%', "%%");
+                        }
 
                         let mut innermost = true;
                         let mut append_call = |callsite_debug_src_loc, callee: &str| {
@@ -359,6 +363,8 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                             append_call(callsite_debug_src_loc, &cx[callee].replace('%', "%%"));
                         }
                         append_call(None, &debug_printf_context_fmt_str);
+
+                        fmt += "\n";
 
                         let abort_inst_def = &mut func_def_body.data_insts[abort_inst];
                         abort_inst_def.kind = DataInstKind::SpvExtInst {
