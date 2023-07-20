@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added ⭐
+- [PR#1036](https://github.com/EmbarkStudios/rust-gpu/pull/1036) added a `--force-spirv-passthru` flag to `example-runner-wgpu`, to bypass Naga (`wgpu`'s shader translator),
+  used it to test `debugPrintf` for `wgpu`,  and updated `ShaderPanicStrategy::DebugPrintfThenExit` docs to reflect what "enabling `debugPrintf`" looks like for `wgpu`  
+  <sub><sup>(e.g. `VK_LOADER_LAYERS_ENABLE=VK_LAYER_KHRONOS_validation VK_LAYER_ENABLES=VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT DEBUG_PRINTF_TO_STDOUT=1`)</sup></sub>
 - [PR#1080](https://github.com/EmbarkStudios/rust-gpu/pull/1080) added `debugPrintf`-based
   panic reporting, with the desired behavior selected via `spirv_builder::ShaderPanicStrategy`
   (see its documentation for more details about each available panic handling strategy)
