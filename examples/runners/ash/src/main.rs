@@ -187,6 +187,19 @@ pub fn main() {
                         });
                     }
                 }
+                Some(key @ (VirtualKeyCode::NumpadAdd | VirtualKeyCode::NumpadSubtract)) => {
+                    let factor =
+                        &mut ctx.sky_fs_spec_id_0x5007_sun_intensity_extra_spec_const_factor;
+                    *factor = if key == VirtualKeyCode::NumpadAdd {
+                        factor.saturating_add(1)
+                    } else {
+                        factor.saturating_sub(1)
+                    };
+
+                    // HACK(eddyb) to see any changes, re-specializing the
+                    // shader module is needed (e.g. during pipeline rebuild).
+                    ctx.rebuild_pipelines(vk::PipelineCache::null());
+                }
                 _ => *control_flow = ControlFlow::Wait,
             },
             WindowEvent::Resized(_) => {
@@ -657,6 +670,9 @@ pub struct RenderCtx {
     pub rendering_paused: bool,
     pub recompiling_shaders: bool,
     pub start: std::time::Instant,
+
+    // NOTE(eddyb) this acts like an integration test for specialization constants.
+    pub sky_fs_spec_id_0x5007_sun_intensity_extra_spec_const_factor: u32,
 }
 
 impl RenderCtx {
@@ -702,6 +718,8 @@ impl RenderCtx {
             rendering_paused: false,
             recompiling_shaders: false,
             start: std::time::Instant::now(),
+
+            sky_fs_spec_id_0x5007_sun_intensity_extra_spec_const_factor: 100,
         }
     }
 
@@ -723,6 +741,18 @@ impl RenderCtx {
     }
 
     pub fn rebuild_pipelines(&mut self, pipeline_cache: vk::PipelineCache) {
+        // NOTE(eddyb) this acts like an integration test for specialization constants.
+        let spec_const_entries = [vk::SpecializationMapEntry::builder()
+            .constant_id(0x5007)
+            .offset(0)
+            .size(4)
+            .build()];
+        let spec_const_data =
+            u32::to_le_bytes(self.sky_fs_spec_id_0x5007_sun_intensity_extra_spec_const_factor);
+        let specialization_info = vk::SpecializationInfo::builder()
+            .map_entries(&spec_const_entries)
+            .data(&spec_const_data);
+
         self.cleanup_pipelines();
         let pipeline_layout = self.create_pipeline_layout();
         let viewport = vk::PipelineViewportStateCreateInfo::builder()
@@ -754,6 +784,7 @@ impl RenderCtx {
                         module: *frag_module,
                         p_name: (*frag_name).as_ptr(),
                         stage: vk::ShaderStageFlags::FRAGMENT,
+                        p_specialization_info: &*specialization_info,
                         ..Default::default()
                     },
                 ]))

@@ -71,7 +71,7 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
         )
 }
 
-fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
+fn sky(dir: Vec3, sun_position: Vec3, sun_intensity_extra_spec_const_factor: u32) -> Vec3 {
     let up = vec3(0.0, 1.0, 0.0);
     let sunfade = 1.0 - (1.0 - saturate(sun_position.y / 450000.0).exp());
     let rayleigh_coefficient = RAYLEIGH - (1.0 * (1.0 - sunfade));
@@ -96,7 +96,12 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let beta_r_theta = beta_r * rayleigh_phase(cos_theta * 0.5 + 0.5);
 
     let beta_m_theta = beta_m * henyey_greenstein_phase(cos_theta, MIE_DIRECTIONAL_G);
-    let sun_e = sun_intensity(sun_direction.dot(up));
+    let sun_e = sun_intensity(sun_direction.dot(up))
+
+    // HACK(eddyb) this acts like an integration test for specialization constants,
+    // but the correct value is only obtained when this is a noop (multiplies by `1`).
+        * (sun_intensity_extra_spec_const_factor as f32 / 100.0);
+
     let mut lin = pow(
         sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * (Vec3::splat(1.0) - fex),
         1.5,
@@ -130,7 +135,11 @@ fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3) -> Vec3 {
     (forward + uv.x * right + uv.y * up).normalize()
 }
 
-pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
+pub fn fs(
+    constants: &ShaderConstants,
+    frag_coord: Vec2,
+    sun_intensity_extra_spec_const_factor: u32,
+) -> Vec4 {
     let mut uv = (frag_coord - 0.5 * vec2(constants.width as f32, constants.height as f32))
         / constants.height as f32;
     uv.y = -uv.y;
@@ -141,7 +150,7 @@ pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
     let dir = get_ray_dir(uv, eye_pos, sun_pos);
 
     // evaluate Preetham sky model
-    let color = sky(dir, sun_pos);
+    let color = sky(dir, sun_pos, sun_intensity_extra_spec_const_factor);
 
     // Tonemapping
     let color = color.max(Vec3::splat(0.0)).min(Vec3::splat(1024.0));
@@ -154,9 +163,12 @@ pub fn main_fs(
     #[spirv(frag_coord)] in_frag_coord: Vec4,
     #[spirv(push_constant)] constants: &ShaderConstants,
     output: &mut Vec4,
+
+    // NOTE(eddyb) this acts like an integration test for specialization constants.
+    #[spirv(spec_constant(id = 0x5007, default = 100))] sun_intensity_extra_spec_const_factor: u32,
 ) {
     let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
-    *output = fs(constants, frag_coord);
+    *output = fs(constants, frag_coord, sun_intensity_extra_spec_const_factor);
 }
 
 #[spirv(vertex)]
