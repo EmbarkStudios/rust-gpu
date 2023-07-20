@@ -240,8 +240,13 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                 .map(|(func_at_inst, custom)| (func_at_inst, custom.unwrap()))
                 .find(|(_, custom)| !custom.op().is_debuginfo())
                 .filter(|(_, custom)| custom.op().is_terminator());
-            if let Some((func_at_abort_inst, CustomInst::Abort { message })) =
-                custom_terminator_inst
+            if let Some((
+                func_at_abort_inst,
+                CustomInst::Abort {
+                    message,
+                    debug_printf_args: message_debug_printf_args,
+                },
+            )) = custom_terminator_inst
             {
                 let abort_inst = func_at_abort_inst.position;
                 terminator.kind = cfg::ControlInstKind::Return;
@@ -332,29 +337,38 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                         // HACK(eddyb) this improves readability w/ very verbose Vulkan loggers.
                         fmt += "\n";
 
-                        fmt += "[RUST-GPU] ";
-                        fmt += &cx[const_str(message)].replace('%', "%%");
+                        fmt += "[";
 
-                        // FIXME(eddyb) deduplicate with "called at" form below
-                        // (not trivial becasue both closures would borrow `fmt`).
+                        // NB: `message` has its own `message_debug_printf_args`
+                        // it formats, and as such any escaping is already done.
+                        let message = &cx[const_str(message)];
+                        let (message_kind, message) =
+                            message.split_once('|').unwrap_or(("", message));
+
                         if let Some((file, line, col)) = current_debug_src_loc.take() {
-                            fmt += &format!("\n      at {file}:{line}:{col}").replace('%', "%%");
+                            fmt += &format!("Rust {message_kind} at {file}:{line}:{col}")
+                                .replace('%', "%%");
+                        } else {
+                            fmt += message_kind;
                         }
+
+                        fmt += "]\n ";
+                        fmt += &message.replace('\n', "\n ");
 
                         let mut innermost = true;
                         let mut append_call = |callsite_debug_src_loc, callee: &str| {
                             if innermost {
                                 innermost = false;
-                                fmt += "\n    in ";
+                                fmt += "\n      in ";
                             } else if current_debug_src_loc.is_some() {
-                                fmt += "\n    by ";
+                                fmt += "\n      by ";
                             } else {
                                 // HACK(eddyb) previous call didn't have a `called at` line.
-                                fmt += "\n    called by ";
+                                fmt += "\n      called by ";
                             }
                             fmt += callee;
                             if let Some((file, line, col)) = callsite_debug_src_loc {
-                                fmt += &format!("\n      called at {file}:{line}:{col}")
+                                fmt += &format!("\n        called at {file}:{line}:{col}")
                                     .replace('%', "%%");
                             }
                             current_debug_src_loc = callsite_debug_src_loc;
@@ -373,6 +387,7 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                         };
                         abort_inst_def.inputs = [Value::Const(mk_const_str(cx.intern(fmt)))]
                             .into_iter()
+                            .chain(message_debug_printf_args)
                             .chain(debug_printf_context_inputs.iter().copied())
                             .collect();
 

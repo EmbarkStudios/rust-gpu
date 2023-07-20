@@ -339,7 +339,11 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     }
 
     fn abort(&mut self) {
-        self.abort_with_message("aborted: intrinsics::abort() called".into());
+        // HACK(eddyb) `|` is an ad-hoc convention of `linker::spirt_passes::controlflow`.
+        self.abort_with_message_and_debug_printf_args(
+            "aborted|intrinsics::abort() called".into(),
+            [],
+        );
     }
 
     fn assume(&mut self, _val: Self::Value) {
@@ -374,7 +378,11 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 }
 
 impl Builder<'_, '_> {
-    pub fn abort_with_message(&mut self, message: String) {
+    pub fn abort_with_message_and_debug_printf_args(
+        &mut self,
+        message: String,
+        debug_printf_args: impl IntoIterator<Item = SpirvValue>,
+    ) {
         // FIXME(eddyb) this should be cached more efficiently.
         let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
 
@@ -385,6 +393,10 @@ impl Builder<'_, '_> {
             void_ty,
             CustomInst::Abort {
                 message: Operand::IdRef(message_id),
+                debug_printf_args: debug_printf_args
+                    .into_iter()
+                    .map(|arg| Operand::IdRef(arg.def(self)))
+                    .collect(),
             },
         );
         self.unreachable();

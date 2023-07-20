@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added ⭐
+- [PR#1082](https://github.com/EmbarkStudios/rust-gpu/pull/1082) added partial
+  support for extracting `format_args!` from `panic!`s, and converting them to
+  `debugPrintf` calls (if enabled via `ShaderPanicStrategy`), including runtime
+  arguments (`u32`/`i32`/`f32` with `Display`/`Debug` formatting, for now)
 - [PR#1081](https://github.com/EmbarkStudios/rust-gpu/pull/1081) added the ability
   to access SPIR-V specialization constants (`OpSpecConstant`) via entry-point
   inputs declared as `#[spirv(spec_constant(id = ..., default = ...))] x: u32`  

@@ -20,11 +20,13 @@ use rustc_codegen_ssa::MemFlags;
 use rustc_data_structures::fx::FxHashSet;
 use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::CodegenFnAttrs;
+use rustc_middle::ty::layout::LayoutOf;
 use rustc_middle::ty::Ty;
 use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Abi, Align, Scalar, Size, WrappingRange};
 use smallvec::SmallVec;
+use std::borrow::Cow;
 use std::cell::Cell;
 use std::convert::TryInto;
 use std::iter::{self, empty};
@@ -2414,12 +2416,25 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // nor simplified in MIR (e.g. promoted to a constant) in any way,
             // so we have to try and remove the `fmt::Arguments::new` call here.
             #[derive(Default)]
-            struct DecodedFormatArgs {}
+            struct DecodedFormatArgs<'tcx> {
+                /// If fully constant, the `pieces: &'a [&'static str]` input
+                /// of `fmt::Arguments<'a>` (i.e. the strings between args).
+                const_pieces: Option<SmallVec<[String; 2]>>,
+
+                /// Original references for `fmt::Arguments<'a>` dynamic arguments,
+                /// i.e. the `&'a T` passed to `fmt::rt::Argument::<'a>::new_*`,
+                /// tracking the type `T` and `char` formatting specifier.
+                ///
+                /// E.g. for `format_args!("{a} {b:x}")` they'll be:
+                /// * `&a` with `typeof a` and ' ',
+                ///  *`&b` with `typeof b` and 'x'
+                ref_arg_ids_with_ty_and_spec: SmallVec<[(Word, Ty<'tcx>, char); 2]>,
+            }
             struct FormatArgsNotRecognized(String);
 
             // HACK(eddyb) this is basically a `try` block.
             let try_decode_and_remove_format_args = || {
-                let decoded_format_args = DecodedFormatArgs::default();
+                let mut decoded_format_args = DecodedFormatArgs::default();
 
                 let const_u32_as_usize = |ct_id| match self.builder.lookup_const_by_id(ct_id)? {
                     SpirvConst::U32(x) => Some(x as usize),
@@ -2441,6 +2456,32 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     }
                     None
                 };
+                let const_str_as_utf8 = |str_ptr_and_len_ids: &[Word]| {
+                    let piece_str_bytes = const_slice_as_elem_ids(str_ptr_and_len_ids)?
+                        .iter()
+                        .map(|&id| u8::try_from(const_u32_as_usize(id)?).ok())
+                        .collect::<Option<Vec<u8>>>()?;
+                    String::from_utf8(piece_str_bytes).ok()
+                };
+
+                // HACK(eddyb) some entry-points only take a `&str`, not `fmt::Arguments`.
+                if let [
+                    SpirvValue {
+                        kind: SpirvValueKind::Def(a_id),
+                        ..
+                    },
+                    SpirvValue {
+                        kind: SpirvValueKind::Def(b_id),
+                        ..
+                    },
+                    _, // `&'static panic::Location<'static>`
+                ] = args[..]
+                {
+                    if let Some(const_msg) = const_str_as_utf8(&[a_id, b_id]) {
+                        decoded_format_args.const_pieces = Some([const_msg].into_iter().collect());
+                        return Ok(decoded_format_args);
+                    }
+                }
 
                 let format_args_id = match args {
                     &[
@@ -2503,6 +2544,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 #[derive(Debug)]
                 enum Inst<'tcx, ID> {
                     Bitcast(ID, ID),
+                    CompositeExtract(ID, ID, u32),
                     AccessChain(ID, ID, SpirvConst<'tcx>),
                     InBoundsAccessChain(ID, ID, SpirvConst<'tcx>),
                     Store(ID, ID),
@@ -2518,6 +2560,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     let maybe_rev_insts = (0..count).map(|_| {
                         let (i, inst) = non_debug_insts.next_back()?;
                         taken_inst_idx_range.start.set(i);
+
+                        // HACK(eddyb) avoid the logic below that assumes only ID operands
+                        if inst.class.opcode == Op::CompositeExtract {
+                            if let (Some(r), &[Operand::IdRef(x), Operand::LiteralInt32(i)]) =
+                                (inst.result_id, &inst.operands[..])
+                            {
+                                return Some(Inst::CompositeExtract(r, x, i));
+                            }
+                        }
 
                         // HACK(eddyb) all instructions accepted below
                         // are expected to take no more than 4 operands,
@@ -2716,6 +2767,26 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     }
                 }
 
+                // If the `pieces: &[&str]` slice needs a bitcast, it'll be here.
+                let pieces_slice_ptr_id = match try_rev_take(1).as_deref() {
+                    Some(&[Inst::Bitcast(out_id, in_id)]) if out_id == pieces_slice_ptr_id => in_id,
+                    _ => pieces_slice_ptr_id,
+                };
+                decoded_format_args.const_pieces =
+                    const_slice_as_elem_ids(&[pieces_slice_ptr_id, pieces_len_id]).and_then(
+                        |piece_ids| {
+                            piece_ids
+                                .iter()
+                                .map(|&piece_id| {
+                                    match self.builder.lookup_const_by_id(piece_id)? {
+                                        SpirvConst::Composite(piece) => const_str_as_utf8(piece),
+                                        _ => None,
+                                    }
+                                })
+                                .collect::<Option<_>>()
+                        },
+                    );
+
                 // Keep all instructions up to (but not including) the last one
                 // confirmed above to be the first instruction of `format_args!`.
                 func.blocks[block_idx]
@@ -2725,8 +2796,61 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 Ok(decoded_format_args)
             };
 
-            match try_decode_and_remove_format_args() {
-                Ok(DecodedFormatArgs {}) => {}
+            let mut debug_printf_args = SmallVec::<[_; 2]>::new();
+            let message = match try_decode_and_remove_format_args() {
+                Ok(DecodedFormatArgs {
+                    const_pieces,
+                    ref_arg_ids_with_ty_and_spec,
+                }) => {
+                    match const_pieces {
+                        Some(const_pieces) => {
+                            const_pieces
+                                .into_iter()
+                                .map(|s| Cow::Owned(s.replace('%', "%%")))
+                                .interleave(ref_arg_ids_with_ty_and_spec.iter().map(
+                                    |&(ref_id, ty, spec)| {
+                                        use rustc_target::abi::{Integer::*, Primitive::*};
+
+                                        let layout = self.layout_of(ty);
+
+                                        let scalar = match layout.abi {
+                                            Abi::Scalar(scalar) => Some(scalar.primitive()),
+                                            _ => None,
+                                        };
+                                        let debug_printf_fmt = match (spec, scalar) {
+                                            // FIXME(eddyb) support more of these,
+                                            // potentially recursing to print ADTs.
+                                            (' ' | '?', Some(Int(I32, false))) => "%u",
+                                            ('x', Some(Int(I32, false))) => "%x",
+                                            (' ' | '?', Some(Int(I32, true))) => "%i",
+                                            (' ' | '?', Some(F32)) => "%f",
+
+                                            _ => "",
+                                        };
+
+                                        if debug_printf_fmt.is_empty() {
+                                            return Cow::Owned(
+                                                format!("{{/* unprintable {ty} */:{spec}}}")
+                                                    .replace('%', "%%"),
+                                            );
+                                        }
+
+                                        let spirv_type = layout.spirv_type(self.span(), self);
+                                        debug_printf_args.push(
+                                            self.emit()
+                                                .load(spirv_type, None, ref_id, None, [])
+                                                .unwrap()
+                                                .with_type(spirv_type),
+                                        );
+                                        Cow::Borrowed(debug_printf_fmt)
+                                    },
+                                ))
+                                .collect::<String>()
+                        }
+                        None => "<unknown message>".into(),
+                    }
+                }
+
                 Err(FormatArgsNotRecognized(step)) => {
                     if let Some(current_span) = self.current_span {
                         let mut warn = self.tcx.sess.struct_span_warn(
@@ -2738,8 +2862,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                             "compilation may later fail due to leftover `format_args!` internals",
                         );
 
-                        if self.tcx.sess.opts.unstable_opts.inline_mir != Some(true) {
-                            warn.note("missing `-Zinline-mir=on` flag (should've been set by `spirv-builder`)")
+                        if self.tcx.sess.opts.unstable_opts.inline_mir != Some(false) {
+                            warn.note("missing `-Zinline-mir=off` flag (should've been set by `spirv-builder`)")
                                 .help("check `.cargo` and environment variables for potential overrides")
                                 .help("(or, if not using `spirv-builder` at all, add the flag manually)");
                         } else {
@@ -2748,13 +2872,17 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
                         warn.emit();
                     }
+                    "<unknown message> (failed to find/decode `format_args!` expansion)".into()
                 }
-            }
+            };
 
             // HACK(eddyb) redirect any possible panic call to an abort, to avoid
             // needing to materialize `&core::panic::Location` or `format_args!`.
-            // FIXME(eddyb) find a way to extract the original message.
-            self.abort_with_message("panicked: <unknown message>".into());
+            self.abort_with_message_and_debug_printf_args(
+                // HACK(eddyb) `|` is an ad-hoc convention of `linker::spirt_passes::controlflow`.
+                format!("panicked|{message}"),
+                debug_printf_args,
+            );
             self.undef(result_type)
         } else if let Some(mode) = buffer_load_intrinsic {
             self.codegen_buffer_load_intrinsic(result_type, args, mode)
