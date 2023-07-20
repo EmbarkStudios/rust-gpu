@@ -380,6 +380,12 @@
 <a href="#380" id="380">380</a>
 <a href="#381" id="381">381</a>
 <a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-T passes related to control-flow.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::custom_insts::{<span class="self">self</span>, CustomInst, CustomOp};
@@ -712,12 +718,16 @@
                         <span class="kw">let </span><span class="kw-2">mut </span>fmt = String::new();
 
                         <span class="comment">// HACK(eddyb) this improves readability w/ very verbose Vulkan loggers.
-                        </span>fmt += <span class="string">&quot;\n  &quot;</span>;
+                        </span>fmt += <span class="string">&quot;\n&quot;</span>;
 
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>((file, line, col)) = current_debug_src_loc.take() {
-                            fmt += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{file}:{line}:{col}: &quot;</span>).replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>);
-                        }
+                        fmt += <span class="string">&quot;[RUST-GPU] &quot;</span>;
                         fmt += <span class="kw-2">&amp;</span>cx[const_str(message)].replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>);
+
+                        <span class="comment">// FIXME(eddyb) deduplicate with &quot;called at&quot; form below
+                        // (not trivial becasue both closures would borrow `fmt`).
+                        </span><span class="kw">if let </span><span class="prelude-val">Some</span>((file, line, col)) = current_debug_src_loc.take() {
+                            fmt += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;\n      at {file}:{line}:{col}&quot;</span>).replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>);
+                        }
 
                         <span class="kw">let </span><span class="kw-2">mut </span>innermost = <span class="bool-val">true</span>;
                         <span class="kw">let </span><span class="kw-2">mut </span>append_call = |callsite_debug_src_loc, callee: <span class="kw-2">&amp;</span>str| {
@@ -741,6 +751,8 @@
                             append_call(callsite_debug_src_loc, <span class="kw-2">&amp;</span>cx[callee].replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>));
                         }
                         append_call(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>debug_printf_context_fmt_str);
+
+                        fmt += <span class="string">&quot;\n&quot;</span>;
 
                         <span class="kw">let </span>abort_inst_def = <span class="kw-2">&amp;mut </span>func_def_body.data_insts[abort_inst];
                         abort_inst_def.kind = DataInstKind::SpvExtInst {

@@ -788,6 +788,31 @@
 <a href="#788" id="788">788</a>
 <a href="#789" id="789">789</a>
 <a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
 </pre></div><pre class="rust"><code><span class="comment">// BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;
@@ -983,15 +1008,40 @@
     /// If you have multiple entry-points, you *may* need to also enable the
     /// `multimodule` node (see &lt;https://github.com/KhronosGroup/SPIRV-Tools/issues/4892&gt;).
     ///
-    /// **Note**: actually obtaining the `debugPrintf` output requires enabling:
-    /// * `VK_KHR_shader_non_semantic_info` Vulkan *Device* extension
-    /// * Vulkan Validation Layers (which contain the `debugPrintf` implementation)
-    /// * `VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT` in Validation Layers,
-    ///   either by using `VkValidationFeaturesEXT` during instance creating,
-    ///   setting the `VK_LAYER_ENABLES` environment variable to that value,
-    ///   or adding it to `khronos_validation.enables` in `vk_layer_settings.txt`
-    ///
-    /// See also: &lt;https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/main/docs/debug_printf.md&gt;.
+    /// **Note**: actually obtaining the `debugPrintf` output requires:
+    /// * Vulkan Validation Layers (from e.g. the Vulkan SDK)
+    ///   * (they contain the `debugPrintf` implementation, a SPIR-V -&gt; SPIR-V translation)
+    ///   * **set the `VK_LOADER_LAYERS_ENABLE=VK_LAYER_KHRONOS_validation`
+    ///     environment variable** to easily enable them without any code changes
+    ///   * alternatively, `&quot;VK_LAYER_KHRONOS_validation&quot;` can be passed during
+    ///     instance creation, to enable them programmatically
+    /// * Validation Layers&#39; `debugPrintf` support:
+    ///   * **set the `VK_LAYER_ENABLES=VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT`
+    ///     environment variable** to easily enable the `debugPrintf` support
+    ///   * alternatively, `VkValidationFeaturesEXT` during instance creation,
+    ///     or the `khronos_validation.enables` field in `vk_layer_settings.txt`,
+    ///     can be used to enable `VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT`
+    ///     (see also &lt;https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/main/docs/debug_printf.md&gt;)
+    /// * for outputting the `debugPrintf` messages sent back from the GPU:
+    ///   * **set the `DEBUG_PRINTF_TO_STDOUT=1` environment variable** if you don&#39;t
+    ///     plan on customizing the reporting (see below for alternatives)
+    /// * for `wgpu`:
+    ///   * **required**: `wgpu::Features::SPIRV_SHADER_PASSTHROUGH` (Naga lacks `debugPrintf`)
+    ///   * *optional*: building in debug mode (and/or with debug-assertions enabled),
+    ///     to enable `wgpu` logging/debug support
+    ///     * (the debug assertions requirement may be lifted in future `wgpu` versions)
+    ///     * this uses `VK_EXT_debug_utils` internally, and is a better-integrated
+    ///       alternative to just setting `DEBUG_PRINTF_TO_STDOUT=1`
+    ///     * `RUST_LOG=wgpu_hal::vulkan=info` (or equivalent) will enable said
+    ///       output (as `debugPrintf` messages have the &quot;info&quot; level)
+    ///     * `RUST_LOG` controls `env_logger`, which isn&#39;t itself required,
+    ///       but *some* `log`/`tracing` subscriber is needed to get any output
+    /// * for Vulkan (e.g. via `ash`):
+    ///   * **required**: enabling the `VK_KHR_shader_non_semantic_info` Vulkan *Device* extension
+    ///   * *optional*: as described above, enabling the Validation Layers and
+    ///     their `debugPrintf` support can be done during instance creation
+    ///   * *optional*: integrating [`VK_EXT_debug_utils`](https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_EXT_debug_utils.html)
+    ///     allows more reporting flexibility than `DEBUG_PRINTF_TO_STDOUT=1`)
     </span>DebugPrintfThenExit {
         <span class="doccomment">/// Whether to also print the entry-point inputs (excluding buffers/resources),
         /// which should uniquely identify the panicking shader invocation.
