@@ -24,7 +24,8 @@ pub async fn start_internal(
         .await
         .expect("Failed to find an appropriate adapter");
 
-    let mut features = wgpu::Features::TIMESTAMP_QUERY;
+    let mut features =
+        wgpu::Features::TIMESTAMP_QUERY | wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES;
     if options.force_spirv_passthru {
         features |= wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
     }
@@ -110,10 +111,17 @@ pub async fn start_internal(
     let timestamp_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("Timestamps buffer"),
         size: 16,
+        usage: wgpu::BufferUsages::QUERY_RESOLVE | wgpu::BufferUsages::COPY_SRC,
+        mapped_at_creation: false,
+    });
+
+    let timestamp_readback_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: None,
+        size: 16,
         usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: true,
     });
-    timestamp_buffer.unmap();
+    timestamp_readback_buffer.unmap();
 
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
         label: None,
@@ -150,10 +158,17 @@ pub async fn start_internal(
         src.len() as wgpu::BufferAddress,
     );
     encoder.resolve_query_set(&queries, 0..2, &timestamp_buffer, 0);
+    encoder.copy_buffer_to_buffer(
+        &timestamp_buffer,
+        0,
+        &timestamp_readback_buffer,
+        0,
+        timestamp_buffer.size(),
+    );
 
     queue.submit(Some(encoder.finish()));
     let buffer_slice = readback_buffer.slice(..);
-    let timestamp_slice = timestamp_buffer.slice(..);
+    let timestamp_slice = timestamp_readback_buffer.slice(..);
     timestamp_slice.map_async(wgpu::MapMode::Read, |r| r.unwrap());
     buffer_slice.map_async(wgpu::MapMode::Read, |r| r.unwrap());
     // NOTE(eddyb) `poll` should return only after the above callbacks fire
@@ -173,7 +188,7 @@ pub async fn start_internal(
     drop(data);
     readback_buffer.unmap();
     drop(timing_data);
-    timestamp_buffer.unmap();
+    timestamp_readback_buffer.unmap();
     let mut max = 0;
     for (src, out) in src_range.zip(result.iter().copied()) {
         if out == u32::MAX {
