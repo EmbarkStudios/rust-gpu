@@ -4,6 +4,7 @@ use crate::attr::AggregatedSpirvAttributes;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::custom_decorations::{CustomDecoration, SrcLocDecoration};
 use crate::spirv_type::SpirvType;
+use itertools::Itertools;
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, PreDefineMethods, StaticMethods};
@@ -177,15 +178,13 @@ impl<'tcx> CodegenCx<'tcx> {
         if [
             self.tcx.lang_items().panic_fn(),
             self.tcx.lang_items().panic_fmt(),
-            self.tcx.lang_items().panic_display(),
-            self.tcx.lang_items().panic_bounds_check_fn(),
         ]
         .contains(&Some(instance_def_id))
         {
             self.panic_entry_point_ids.borrow_mut().insert(fn_id);
         }
 
-        // HACK(eddyb) there is no good way to identify this definition
+        // HACK(eddyb) there is no good way to identify these definitions
         // (e.g. no `#[lang = "..."]` attribute), but this works well enough.
         if [
             "<core::fmt::Arguments>::new_v1",
@@ -194,6 +193,33 @@ impl<'tcx> CodegenCx<'tcx> {
         .contains(&&demangled_symbol_name[..])
         {
             self.fmt_args_new_fn_ids.borrow_mut().insert(fn_id);
+        }
+
+        // HACK(eddyb) there is no good way to identify these definitions
+        // (e.g. no `#[lang = "..."]` attribute), but this works well enough.
+        if let Some(suffix) = demangled_symbol_name.strip_prefix("<core::fmt::rt::Argument>::new_")
+        {
+            let spec = suffix.split_once("::<").and_then(|(method_suffix, _)| {
+                Some(match method_suffix {
+                    "display" => ' ',
+                    "debug" => '?',
+                    "octal" => 'o',
+                    "lower_hex" => 'x',
+                    "upper_hex" => 'X',
+                    "pointer" => 'p',
+                    "binary" => 'b',
+                    "lower_exp" => 'e',
+                    "upper_exp" => 'E',
+                    _ => return None,
+                })
+            });
+            if let Some(spec) = spec {
+                if let Some((ty,)) = instance.substs.types().collect_tuple() {
+                    self.fmt_rt_arg_new_fn_ids_to_ty_and_spec
+                        .borrow_mut()
+                        .insert(fn_id, (ty, spec));
+                }
+            }
         }
 
         declared
