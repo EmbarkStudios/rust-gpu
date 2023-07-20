@@ -61,16 +61,16 @@ pub struct CodegenCx<'tcx> {
     pub libm_intrinsics: RefCell<FxHashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// All `panic!(...)`s and builtin panics (from MIR `Assert`s) call into one
-    /// of these lang items, which we always replace with an "abort", erasing
-    /// anything passed in.
-    //
-    // FIXME(eddyb) we should not erase anywhere near as much, but `format_args!`
-    // is not representable due to containg Rust slices, and Rust 2021 has made
-    // it mandatory even for `panic!("...")` (that were previously separate).
+    /// of these lang items, which we always replace with an "abort".
     pub panic_entry_point_ids: RefCell<FxHashSet<Word>>,
 
     /// `core::fmt::Arguments::new_{v1,const}` instances (for Rust 2021 panics).
     pub fmt_args_new_fn_ids: RefCell<FxHashSet<Word>>,
+
+    /// `core::fmt::rt::Argument::new_*::<T>` instances (for panics' `format_args!`),
+    /// with their `T` type (i.e. of the value being formatted), and formatting
+    /// "specifier" as a `char` (' ' for `Display`, `x` for `LowerHex`, etc.)
+    pub fmt_rt_arg_new_fn_ids_to_ty_and_spec: RefCell<FxHashMap<Word, (Ty<'tcx>, char)>>,
 
     /// Intrinsic for loading a <T> from a &[u32]. The PassMode is the mode of the <T>.
     pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
@@ -131,6 +131,7 @@ impl<'tcx> CodegenCx<'tcx> {
             libm_intrinsics: Default::default(),
             panic_entry_point_ids: Default::default(),
             fmt_args_new_fn_ids: Default::default(),
+            fmt_rt_arg_new_fn_ids_to_ty_and_spec: Default::default(),
             buffer_load_intrinsic_fn_id: Default::default(),
             buffer_store_intrinsic_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,

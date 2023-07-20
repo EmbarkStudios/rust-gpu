@@ -4,6 +4,7 @@ use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt,
 use crate::custom_insts::{CustomInst, CustomOp};
 use crate::rustc_codegen_ssa::traits::BaseTypeMethods;
 use crate::spirv_type::SpirvType;
+use itertools::Itertools;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
 use rspirv::spirv::{Capability, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word};
 use rustc_apfloat::{ieee, Float, Round, Status};
@@ -24,6 +25,7 @@ use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Abi, Align, Scalar, Size, WrappingRange};
 use smallvec::SmallVec;
+use std::cell::Cell;
 use std::convert::TryInto;
 use std::iter::{self, empty};
 
@@ -2411,18 +2413,49 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // more complex and neither immediate (`fmt::Arguments` is too big)
             // nor simplified in MIR (e.g. promoted to a constant) in any way,
             // so we have to try and remove the `fmt::Arguments::new` call here.
+            #[derive(Default)]
+            struct DecodedFormatArgs {}
+            struct FormatArgsNotRecognized(String);
+
             // HACK(eddyb) this is basically a `try` block.
-            let remove_format_args_if_possible = || -> Option<()> {
+            let try_decode_and_remove_format_args = || {
+                let decoded_format_args = DecodedFormatArgs::default();
+
+                let const_u32_as_usize = |ct_id| match self.builder.lookup_const_by_id(ct_id)? {
+                    SpirvConst::U32(x) => Some(x as usize),
+                    _ => None,
+                };
+                let const_slice_as_elem_ids = |slice_ptr_and_len_ids: &[Word]| {
+                    if let [ptr_id, len_id] = slice_ptr_and_len_ids[..] {
+                        if let SpirvConst::PtrTo { pointee } =
+                            self.builder.lookup_const_by_id(ptr_id)?
+                        {
+                            if let SpirvConst::Composite(elems) =
+                                self.builder.lookup_const_by_id(pointee)?
+                            {
+                                if elems.len() == const_u32_as_usize(len_id)? {
+                                    return Some(elems);
+                                }
+                            }
+                        }
+                    }
+                    None
+                };
+
                 let format_args_id = match args {
                     &[
                         SpirvValue {
                             kind: SpirvValueKind::Def(format_args_id),
                             ..
                         },
-                        _,
+                        _, // `&'static panic::Location<'static>`
                     ] => format_args_id,
 
-                    _ => return None,
+                    _ => {
+                        return Err(FormatArgsNotRecognized(
+                            "panic entry-point call args".into(),
+                        ));
+                    }
                 };
 
                 let custom_ext_inst_set_import = self.ext_inst.borrow_mut().import_custom(self);
@@ -2446,8 +2479,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     .take_while(|inst| inst.class.opcode == Op::Variable)
                     .map(|inst| inst.result_id.unwrap())
                     .collect();
-                let require_local_var =
-                    |ptr_id| Some(()).filter(|()| local_var_ids.contains(&ptr_id));
+                let require_local_var = |ptr_id, var| {
+                    Some(())
+                        .filter(|()| local_var_ids.contains(&ptr_id))
+                        .ok_or_else(|| FormatArgsNotRecognized(format!("{var} storage not local")))
+                };
 
                 let mut non_debug_insts = func.blocks[block_idx]
                     .instructions
@@ -2474,14 +2510,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     Call(ID, ID, SmallVec<[ID; 4]>),
                 }
 
-                let mut taken_inst_idx_range = func.blocks[block_idx].instructions.len()..;
+                let taken_inst_idx_range = Cell::new(func.blocks[block_idx].instructions.len())..;
 
                 // Take `count` instructions, advancing backwards, but returning
                 // instructions in their original order (and decoded to `Inst`s).
                 let mut try_rev_take = |count| {
                     let maybe_rev_insts = (0..count).map(|_| {
                         let (i, inst) = non_debug_insts.next_back()?;
-                        taken_inst_idx_range = i..;
+                        taken_inst_idx_range.start.set(i);
 
                         // HACK(eddyb) all instructions accepted below
                         // are expected to take no more than 4 operands,
@@ -2519,102 +2555,143 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     insts.reverse();
                     Some(insts)
                 };
+                let fmt_args_new_call_insts = try_rev_take(3).ok_or_else(|| {
+                    FormatArgsNotRecognized(
+                        "fmt::Arguments::new call: ran out of instructions".into(),
+                    )
+                })?;
+                let ((pieces_slice_ptr_id, pieces_len_id), (rt_args_slice_ptr_id, rt_args_count)) =
+                    match fmt_args_new_call_insts[..] {
+                        [
+                            Inst::Call(call_ret_id, callee_id, ref call_args),
+                            Inst::Store(st_dst_id, st_val_id),
+                            Inst::Load(ld_val_id, ld_src_id),
+                        ] if self.fmt_args_new_fn_ids.borrow().contains(&callee_id)
+                            && call_ret_id == st_val_id
+                            && st_dst_id == ld_src_id
+                            && ld_val_id == format_args_id =>
+                        {
+                            require_local_var(st_dst_id, "fmt::Arguments::new destination")?;
 
-                let (rt_args_slice_ptr_id, rt_args_count) = match try_rev_take(3)?[..] {
-                    [
-                        Inst::Call(call_ret_id, callee_id, ref call_args),
-                        Inst::Store(st_dst_id, st_val_id),
-                        Inst::Load(ld_val_id, ld_src_id),
-                    ] if self.fmt_args_new_fn_ids.borrow().contains(&callee_id)
-                        && call_ret_id == st_val_id
-                        && st_dst_id == ld_src_id
-                        && ld_val_id == format_args_id =>
-                    {
-                        require_local_var(st_dst_id)?;
-                        match call_args[..] {
-                            // `<core::fmt::Arguments>::new_v1`
-                            [_, _, rt_args_slice_ptr_id, rt_args_len_id] => (
-                                Some(rt_args_slice_ptr_id),
-                                self.builder
-                                    .lookup_const_by_id(rt_args_len_id)
-                                    .and_then(|ct| match ct {
-                                        SpirvConst::U32(x) => Some(x as usize),
-                                        _ => None,
-                                    })?,
-                            ),
+                            match call_args[..] {
+                                // `<core::fmt::Arguments>::new_v1`
+                                [
+                                    pieces_slice_ptr_id,
+                                    pieces_len_id,
+                                    rt_args_slice_ptr_id,
+                                    rt_args_len_id,
+                                ] => (
+                                    (pieces_slice_ptr_id, pieces_len_id),
+                                    (
+                                        Some(rt_args_slice_ptr_id),
+                                        const_u32_as_usize(rt_args_len_id).ok_or_else(|| {
+                                            FormatArgsNotRecognized(
+                                                "fmt::Arguments::new: args.len() not constant"
+                                                    .into(),
+                                            )
+                                        })?,
+                                    ),
+                                ),
 
-                            // `<core::fmt::Arguments>::new_const`
-                            [_, _] => (None, 0),
+                                // `<core::fmt::Arguments>::new_const`
+                                [pieces_slice_ptr_id, pieces_len_id] => {
+                                    ((pieces_slice_ptr_id, pieces_len_id), (None, 0))
+                                }
 
-                            _ => return None,
+                                _ => {
+                                    return Err(FormatArgsNotRecognized(
+                                        "fmt::Arguments::new call args".into(),
+                                    ));
+                                }
+                            }
                         }
-                    }
-                    _ => return None,
-                };
+                        _ => {
+                            // HACK(eddyb) this gathers more context before reporting.
+                            let mut insts = fmt_args_new_call_insts;
+                            insts.reverse();
+                            while let Some(extra_inst) = try_rev_take(1) {
+                                insts.extend(extra_inst);
+                                if insts.len() >= 32 {
+                                    break;
+                                }
+                            }
+                            insts.reverse();
+
+                            return Err(FormatArgsNotRecognized(format!(
+                                "fmt::Arguments::new call sequence ({insts:?})",
+                            )));
+                        }
+                    };
 
                 // HACK(eddyb) this is the worst part: if we do have runtime
                 // arguments (from e.g. new `assert!`s being added to `core`),
                 // we have to confirm their many instructions for removal.
                 if rt_args_count > 0 {
                     let rt_args_slice_ptr_id = rt_args_slice_ptr_id.unwrap();
-                    let rt_args_array_ptr_id = match try_rev_take(1)?[..] {
-                        [Inst::Bitcast(out_id, in_id)] if out_id == rt_args_slice_ptr_id => in_id,
-                        _ => return None,
-                    };
-                    require_local_var(rt_args_array_ptr_id);
-
-                    // Each runtime argument has its own variable, 6 instructions
-                    // to initialize it, and 9 instructions to copy it to the
-                    // appropriate slot in the array. The groups of 6 and 9
-                    // instructions, for all runtime args, are each separate.
-                    let copies_from_rt_arg_vars_to_rt_args_array = try_rev_take(rt_args_count * 9)?;
-                    let copies_from_rt_arg_vars_to_rt_args_array =
-                        copies_from_rt_arg_vars_to_rt_args_array.chunks(9);
-                    let inits_of_rt_arg_vars = try_rev_take(rt_args_count * 6)?;
-                    let inits_of_rt_arg_vars = inits_of_rt_arg_vars.chunks(6);
-
-                    for (
-                        rt_arg_idx,
-                        (init_of_rt_arg_var_insts, copy_from_rt_arg_var_to_rt_args_array_insts),
-                    ) in inits_of_rt_arg_vars
-                        .zip(copies_from_rt_arg_vars_to_rt_args_array)
-                        .enumerate()
+                    let rt_args_array_ptr_id = match try_rev_take(1).ok_or_else(|| {
+                        FormatArgsNotRecognized(
+                            "&[fmt::rt::Argument] bitcast: ran out of instructions".into(),
+                        )
+                    })?[..]
                     {
-                        let rt_arg_var_id = match init_of_rt_arg_var_insts[..] {
-                            [
-                                Inst::Bitcast(b, _),
-                                Inst::Bitcast(a, _),
-                                Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(0)),
-                                Inst::Store(a_st_dst, a_st_val),
-                                Inst::AccessChain(b_ptr, b_base_ptr, SpirvConst::U32(1)),
-                                Inst::Store(b_st_dst, b_st_val),
-                            ] if a_base_ptr == b_base_ptr
-                                && (a, b) == (a_st_val, b_st_val)
-                                && (a_ptr, b_ptr) == (a_st_dst, b_st_dst) =>
-                            {
-                                require_local_var(a_base_ptr);
-                                a_base_ptr
-                            }
-                            _ => return None,
-                        };
+                        [Inst::Bitcast(out_id, in_id)] if out_id == rt_args_slice_ptr_id => in_id,
+                        _ => {
+                            return Err(FormatArgsNotRecognized(
+                                "&[fmt::rt::Argument] bitcast".into(),
+                            ));
+                        }
+                    };
+                    require_local_var(rt_args_array_ptr_id, "[fmt::rt::Argument; N]")?;
 
-                        // HACK(eddyb) this is only split to allow variable name reuse.
-                        let (copy_loads, copy_stores) =
-                            copy_from_rt_arg_var_to_rt_args_array_insts.split_at(4);
-                        let (a, b) = match copy_loads[..] {
+                    // Each runtime argument has 3 instructions to call one of
+                    // the `fmt::rt::Argument::new_*` functions (and split its
+                    // scalar pair result), and 5 instructions to store it into
+                    // the appropriate slot in the array. The groups of 3 and 5
+                    // instructions, for all runtime args, are each separate.
+                    let stores_to_rt_args_array =
+                        try_rev_take(rt_args_count * 5).ok_or_else(|| {
+                            FormatArgsNotRecognized(
+                                "[fmt::rt::Argument; N] stores: ran out of instructions".into(),
+                            )
+                        })?;
+                    let stores_to_rt_args_array = stores_to_rt_args_array.chunks(5);
+                    let rt_arg_new_calls = try_rev_take(rt_args_count * 3).ok_or_else(|| {
+                        FormatArgsNotRecognized(
+                            "fmt::rt::Argument::new calls: ran out of instructions".into(),
+                        )
+                    })?;
+                    let rt_arg_new_calls = rt_arg_new_calls.chunks(3);
+
+                    for (rt_arg_idx, (rt_arg_new_call_insts, store_to_rt_args_array_insts)) in
+                        rt_arg_new_calls.zip(stores_to_rt_args_array).enumerate()
+                    {
+                        let (a, b) = match rt_arg_new_call_insts[..] {
                             [
-                                Inst::AccessChain(a_ptr, a_base_ptr, SpirvConst::U32(0)),
-                                Inst::Load(a_ld_val, a_ld_src),
-                                Inst::AccessChain(b_ptr, b_base_ptr, SpirvConst::U32(1)),
-                                Inst::Load(b_ld_val, b_ld_src),
-                            ] if [a_base_ptr, b_base_ptr] == [rt_arg_var_id; 2]
-                                && (a_ptr, b_ptr) == (a_ld_src, b_ld_src) =>
-                            {
-                                (a_ld_val, b_ld_val)
-                            }
-                            _ => return None,
-                        };
-                        match copy_stores[..] {
+                                Inst::Call(call_ret_id, callee_id, ref call_args),
+                                Inst::CompositeExtract(a, a_parent_pair, 0),
+                                Inst::CompositeExtract(b, b_parent_pair, 1),
+                            ] if [a_parent_pair, b_parent_pair] == [call_ret_id; 2] => self
+                                .fmt_rt_arg_new_fn_ids_to_ty_and_spec
+                                .borrow()
+                                .get(&callee_id)
+                                .and_then(|&(ty, spec)| match call_args[..] {
+                                    [x] => {
+                                        decoded_format_args
+                                            .ref_arg_ids_with_ty_and_spec
+                                            .push((x, ty, spec));
+                                        Some((a, b))
+                                    }
+                                    _ => None,
+                                }),
+                            _ => None,
+                        }
+                        .ok_or_else(|| {
+                            FormatArgsNotRecognized(format!(
+                                "fmt::rt::Argument::new call sequence ({rt_arg_new_call_insts:?})"
+                            ))
+                        })?;
+
+                        match store_to_rt_args_array_insts[..] {
                             [
                                 Inst::InBoundsAccessChain(
                                     array_slot_ptr,
@@ -2630,7 +2707,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                                 && [a_base_ptr, b_base_ptr] == [array_slot_ptr; 2]
                                 && (a, b) == (a_st_val, b_st_val)
                                 && (a_ptr, b_ptr) == (a_st_dst, b_st_dst) => {}
-                            _ => return None,
+                            _ => {
+                                return Err(FormatArgsNotRecognized(format!(
+                                    "[fmt::rt::Argument; N] stores sequence ({store_to_rt_args_array_insts:?})"
+                                )));
+                            }
                         }
                     }
                 }
@@ -2639,11 +2720,36 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // confirmed above to be the first instruction of `format_args!`.
                 func.blocks[block_idx]
                     .instructions
-                    .truncate(taken_inst_idx_range.start);
+                    .truncate(taken_inst_idx_range.start.get());
 
-                None
+                Ok(decoded_format_args)
             };
-            remove_format_args_if_possible();
+
+            match try_decode_and_remove_format_args() {
+                Ok(DecodedFormatArgs {}) => {}
+                Err(FormatArgsNotRecognized(step)) => {
+                    if let Some(current_span) = self.current_span {
+                        let mut warn = self.tcx.sess.struct_span_warn(
+                            current_span,
+                            "failed to find and remove `format_args!` construction for this `panic!`",
+                        );
+
+                        warn.note(
+                            "compilation may later fail due to leftover `format_args!` internals",
+                        );
+
+                        if self.tcx.sess.opts.unstable_opts.inline_mir != Some(true) {
+                            warn.note("missing `-Zinline-mir=on` flag (should've been set by `spirv-builder`)")
+                                .help("check `.cargo` and environment variables for potential overrides")
+                                .help("(or, if not using `spirv-builder` at all, add the flag manually)");
+                        } else {
+                            warn.note(format!("[RUST-GPU BUG] bailed from {step}"));
+                        }
+
+                        warn.emit();
+                    }
+                }
+            }
 
             // HACK(eddyb) redirect any possible panic call to an abort, to avoid
             // needing to materialize `&core::panic::Location` or `format_args!`.

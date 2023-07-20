@@ -346,14 +346,20 @@ fn rust_flags(codegen_backend_path: &Path) -> String {
         // to rebuild crates compiled with it when it changes (this used to be
         // the default until https://github.com/rust-lang/rust/pull/93969).
         "-Zbinary-dep-depinfo",
-        "-Coverflow-checks=off",
-        "-Cdebug-assertions=off",
-        "-Cdebuginfo=2",
-        "-Cembed-bitcode=no",
-        &format!("-Ctarget-feature=+{}", target_features.join(",+")),
         "-Csymbol-mangling-version=v0",
         "-Zcrate-attr=feature(register_tool)",
         "-Zcrate-attr=register_tool(rust_gpu)",
+        // HACK(eddyb) this is the same configuration that we test with, and
+        // ensures no unwanted surprises from e.g. `core` debug assertions.
+        "-Coverflow-checks=off",
+        "-Cdebug-assertions=off",
+        // HACK(eddyb) we need this for `core::fmt::rt::Argument::new_*` calls
+        // to *never* be inlined, so we can pattern-match the calls themselves.
+        "-Zinline-mir=off",
+        // NOTE(eddyb) flags copied from `spirv-builder` are all above this line.
+        "-Cdebuginfo=2",
+        "-Cembed-bitcode=no",
+        &format!("-Ctarget-feature=+{}", target_features.join(",+")),
     ]
     .join(" ")
 }

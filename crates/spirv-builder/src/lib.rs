@@ -562,6 +562,9 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         // ensures no unwanted surprises from e.g. `core` debug assertions.
         "-Coverflow-checks=off".to_string(),
         "-Cdebug-assertions=off".to_string(),
+        // HACK(eddyb) we need this for `core::fmt::rt::Argument::new_*` calls
+        // to *never* be inlined, so we can pattern-match the calls themselves.
+        "-Zinline-mir=off".to_string(),
     ];
 
     // Wrapper for `env::var` that appropriately informs Cargo of the dependency.
