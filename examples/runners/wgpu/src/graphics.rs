@@ -1,6 +1,5 @@
-use crate::maybe_watch;
+use crate::{maybe_watch, CompiledShaderModules, Options};
 
-use super::Options;
 use shared::ShaderConstants;
 use winit::{
     event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
@@ -34,9 +33,9 @@ fn mouse_button_index(button: MouseButton) -> usize {
 
 async fn run(
     options: Options,
-    event_loop: EventLoop<wgpu::ShaderModuleDescriptorSpirV<'static>>,
+    event_loop: EventLoop<CompiledShaderModules>,
     window: Window,
-    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
+    compiled_shader_modules: CompiledShaderModules,
 ) {
     let backends = wgpu::util::backend_bits_from_env()
         .unwrap_or(wgpu::Backends::VULKAN | wgpu::Backends::METAL);
@@ -135,7 +134,7 @@ async fn run(
             |pending| pending.preferred_format,
             |(_, surface_config)| surface_config.format,
         ),
-        shader_binary,
+        compiled_shader_modules,
     );
 
     let start = std::time::Instant::now();
@@ -336,24 +335,45 @@ fn create_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &wgpu::PipelineLayout,
     surface_format: wgpu::TextureFormat,
-    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'_>,
+    compiled_shader_modules: CompiledShaderModules,
 ) -> wgpu::RenderPipeline {
     // FIXME(eddyb) automate this decision by default.
-    let module = if options.force_spirv_passthru {
-        unsafe { device.create_shader_module_spirv(&shader_binary) }
-    } else {
-        let wgpu::ShaderModuleDescriptorSpirV { label, source } = shader_binary;
-        device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label,
-            source: wgpu::ShaderSource::SpirV(source),
-        })
+    let create_module = |module| {
+        if options.force_spirv_passthru {
+            unsafe { device.create_shader_module_spirv(&module) }
+        } else {
+            let wgpu::ShaderModuleDescriptorSpirV { label, source } = module;
+            device.create_shader_module(wgpu::ShaderModuleDescriptor {
+                label,
+                source: wgpu::ShaderSource::SpirV(source),
+            })
+        }
     };
+
+    let vs_entry_point = shaders::main_vs;
+    let fs_entry_point = shaders::main_fs;
+
+    let vs_module_descr = compiled_shader_modules.spv_module_for_entry_point(vs_entry_point);
+    let fs_module_descr = compiled_shader_modules.spv_module_for_entry_point(fs_entry_point);
+
+    // HACK(eddyb) avoid calling `device.create_shader_module` twice unnecessarily.
+    let vs_fs_same_module = std::ptr::eq(&vs_module_descr.source[..], &fs_module_descr.source[..]);
+
+    let vs_module = &create_module(vs_module_descr);
+    let fs_module;
+    let fs_module = if vs_fs_same_module {
+        vs_module
+    } else {
+        fs_module = create_module(fs_module_descr);
+        &fs_module
+    };
+
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(pipeline_layout),
         vertex: wgpu::VertexState {
-            module: &module,
-            entry_point: shaders::main_vs,
+            module: vs_module,
+            entry_point: vs_entry_point,
             buffers: &[],
         },
         primitive: wgpu::PrimitiveState {
@@ -372,8 +392,8 @@ fn create_pipeline(
             alpha_to_coverage_enabled: false,
         },
         fragment: Some(wgpu::FragmentState {
-            module: &module,
-            entry_point: shaders::main_fs,
+            module: fs_module,
+            entry_point: fs_entry_point,
             targets: &[Some(wgpu::ColorTargetState {
                 format: surface_format,
                 blend: None,
@@ -410,7 +430,7 @@ pub fn start(
 
     // Build the shader before we pop open a window, since it might take a while.
     let initial_shader = maybe_watch(
-        options.shader,
+        options,
         #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
         {
             let proxy = event_loop.create_proxy();
