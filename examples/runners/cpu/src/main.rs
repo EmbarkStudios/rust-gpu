@@ -141,7 +141,7 @@ fn main() {
                 * vec2(WIDTH as f32, HEIGHT as f32);
 
             // evaluate the fragment shader for the specific pixel
-            let color = shader_module::fs(&push_constants, frag_coord);
+            let color = shader_module::fs(&push_constants, frag_coord, 1);
 
             color_u32_from_vec4(color)
         })
