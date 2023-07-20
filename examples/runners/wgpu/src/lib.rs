@@ -197,11 +197,16 @@ fn maybe_watch(
     }
     #[cfg(any(target_os = "android", target_arch = "wasm32"))]
     {
-        match shader {
-            RustGPUShader::Simplest => wgpu::include_spirv_raw!(env!("simplest_shader.spv")),
+        let module = match options.shader {
+            RustGPUShader::Simplest => {
+                wgpu::include_spirv_raw!(env!("simplest_shader.spv"))
+            }
             RustGPUShader::Sky => wgpu::include_spirv_raw!(env!("sky_shader.spv")),
             RustGPUShader::Compute => wgpu::include_spirv_raw!(env!("compute_shader.spv")),
             RustGPUShader::Mouse => wgpu::include_spirv_raw!(env!("mouse_shader.spv")),
+        };
+        CompiledShaderModules {
+            named_spv_modules: vec![(None, module)],
         }
     }
 }
