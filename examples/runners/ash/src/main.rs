@@ -211,8 +211,6 @@ pub fn compile_shaders() -> Vec<SpvFile> {
 
     SpirvBuilder::new("examples/shaders/sky-shader", "spirv-unknown-vulkan1.1")
         .print_metadata(MetadataPrintout::None)
-        // HACK(eddyb) having the `ash` runner do this is the easiest way I found
-        // to test this `panic!` feature with actual `debugPrintf` support.
         .shader_panic_strategy(spirv_builder::ShaderPanicStrategy::DebugPrintfThenExit {
             print_inputs: true,
             print_backtrace: true,
@@ -380,10 +378,10 @@ impl RenderBase {
         };
 
         let device: ash::Device = {
-            let mut device_extension_names_raw = vec![khr::Swapchain::name().as_ptr()];
-            if options.debug_layer {
-                device_extension_names_raw.push(vk::KhrShaderNonSemanticInfoFn::name().as_ptr());
-            }
+            let device_extension_names_raw = [
+                khr::Swapchain::name().as_ptr(),
+                vk::KhrShaderNonSemanticInfoFn::name().as_ptr(),
+            ];
             let features = vk::PhysicalDeviceFeatures {
                 shader_clip_distance: 1,
                 ..Default::default()

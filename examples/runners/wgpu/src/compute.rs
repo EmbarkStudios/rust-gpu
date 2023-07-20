@@ -1,20 +1,17 @@
-use wgpu::util::DeviceExt;
+use crate::{maybe_watch, CompiledShaderModules, Options};
 
-use super::Options;
 use std::{convert::TryInto, time::Duration};
+use wgpu::util::DeviceExt;
 
 pub fn start(options: &Options) {
     env_logger::init();
 
-    let shader_binary = crate::maybe_watch(options.shader, None);
+    let compiled_shader_modules = maybe_watch(options, None);
 
-    futures::executor::block_on(start_internal(options, shader_binary));
+    futures::executor::block_on(start_internal(options, compiled_shader_modules));
 }
 
-pub async fn start_internal(
-    options: &Options,
-    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
-) {
+async fn start_internal(options: &Options, compiled_shader_modules: CompiledShaderModules) {
     let backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::PRIMARY);
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
         backends,
@@ -46,11 +43,14 @@ pub async fn start_internal(
 
     let timestamp_period = queue.get_timestamp_period();
 
+    let entry_point = "main_cs";
+
     // FIXME(eddyb) automate this decision by default.
+    let module = compiled_shader_modules.spv_module_for_entry_point(entry_point);
     let module = if options.force_spirv_passthru {
-        unsafe { device.create_shader_module_spirv(&shader_binary) }
+        unsafe { device.create_shader_module_spirv(&module) }
     } else {
-        let wgpu::ShaderModuleDescriptorSpirV { label, source } = shader_binary;
+        let wgpu::ShaderModuleDescriptorSpirV { label, source } = module;
         device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label,
             source: wgpu::ShaderSource::SpirV(source),
@@ -89,7 +89,7 @@ pub async fn start_internal(
         label: None,
         layout: Some(&pipeline_layout),
         module: &module,
-        entry_point: "main_cs",
+        entry_point,
     });
 
     let readback_buffer = device.create_buffer(&wgpu::BufferDescriptor {
