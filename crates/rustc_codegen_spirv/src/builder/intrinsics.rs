@@ -339,7 +339,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     }
 
     fn abort(&mut self) {
-        self.abort_with_message("intrinsics::abort()".into());
+        self.abort_with_message("aborted: intrinsics::abort() called".into());
     }
 
     fn assume(&mut self, _val: Self::Value) {
