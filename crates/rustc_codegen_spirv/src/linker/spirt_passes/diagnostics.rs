@@ -17,11 +17,22 @@ use spirt::{
 use std::marker::PhantomData;
 use std::{mem, str};
 
+pub(crate) struct ReportedDiagnostics {
+    pub rustc_errors_guarantee: rustc_errors::ErrorGuaranteed,
+    pub any_errors_were_spirt_bugs: bool,
+}
+
+impl From<ReportedDiagnostics> for rustc_errors::ErrorGuaranteed {
+    fn from(r: ReportedDiagnostics) -> Self {
+        r.rustc_errors_guarantee
+    }
+}
+
 pub(crate) fn report_diagnostics(
     sess: &Session,
     linker_options: &crate::linker::Options,
     module: &Module,
-) -> crate::linker::Result<()> {
+) -> Result<(), ReportedDiagnostics> {
     let cx = &module.cx();
 
     let mut reporter = DiagnosticReporter {
@@ -68,28 +79,12 @@ pub(crate) fn report_diagnostics(
         exportee.inner_visit_with(&mut reporter);
     }
 
-    if reporter.any_spirt_bugs {
-        let mut note = sess.struct_note_without_error("SPIR-T bugs were reported");
-        match &linker_options.dump_spirt_passes {
-            Some(dump_dir) => {
-                note.help(format!(
-                    "pretty-printed SPIR-T will be saved to `{}`, as `.spirt.html` files",
-                    dump_dir.display()
-                ));
-            }
-            None => {
-                // FIXME(eddyb) maybe just always generate the files in a tmpdir?
-                note.help(
-                    "re-run with `RUSTGPU_CODEGEN_ARGS=\"--dump-spirt-passes=$PWD\"` to \
-                     get pretty-printed SPIR-T (`.spirt.html`)",
-                );
-            }
-        }
-        note.note("pretty-printed SPIR-T is preferred when reporting Rust-GPU issues")
-            .emit();
-    }
-
-    reporter.overall_result
+    reporter
+        .overall_result
+        .map_err(|rustc_errors_guarantee| ReportedDiagnostics {
+            rustc_errors_guarantee,
+            any_errors_were_spirt_bugs: reporter.any_spirt_bugs,
+        })
 }
 
 // HACK(eddyb) version of `decorations::LazilyDecoded` that works for SPIR-T.
