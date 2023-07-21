@@ -825,9 +825,111 @@
 <a href="#825" id="825">825</a>
 <a href="#826" id="826">826</a>
 <a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a>
+<a href="#876" id="876">876</a>
+<a href="#877" id="877">877</a>
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::CodegenCx;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
-<span class="kw">use </span><span class="kw">crate</span>::attr::{AggregatedSpirvAttributes, Entry, Spanned};
+<span class="kw">use </span><span class="kw">crate</span>::attr::{AggregatedSpirvAttributes, Entry, Spanned, SpecConstant};
 <span class="kw">use </span><span class="kw">crate</span>::builder::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvValue, SpirvValueExt};
 <span class="kw">use </span><span class="kw">crate</span>::spirv_type::SpirvType;
@@ -867,7 +969,10 @@
     <span class="doccomment">/// The SPIR-V storage class to declare the shader interface variable in,
     /// either deduced from the type (e.g. opaque handles use `UniformConstant`),
     /// provided via `#[spirv(...)]` attributes, or an `Input`/`Output` default.
-    </span>storage_class: StorageClass,
+    </span><span class="comment">//
+    // HACK(eddyb) this can be `Err(SpecConstant)` to indicate this is actually
+    // an `OpSpecConstant` being exposed as if it were an `Input`
+    </span>storage_class: <span class="prelude-ty">Result</span>&lt;StorageClass, SpecConstant&gt;,
 
     <span class="doccomment">/// Whether this entry-point parameter doesn&#39;t allow writes to the underlying
     /// shader interface variable (i.e. is by-value, or `&amp;T` where `T: Freeze`).
@@ -1214,6 +1319,30 @@
             }
         }
 
+        <span class="comment">// HACK(eddyb) only handle `attrs.spec_constant` after everything above
+        // would&#39;ve assumed it was actually an implicitly-`Input`.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>storage_class = <span class="prelude-val">Ok</span>(storage_class);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(spec_constant) = attrs.spec_constant {
+            <span class="kw">if </span>ref_or_value_layout.ty != <span class="self">self</span>.tcx.types.u32 {
+                <span class="self">self</span>.tcx.sess.span_err(
+                    hir_param.ty_span,
+                    <span class="macro">format!</span>(
+                        <span class="string">&quot;unsupported `#[spirv(spec_constant)]` type `{}` (expected `{}`)&quot;</span>,
+                        ref_or_value_layout.ty, <span class="self">self</span>.tcx.types.u32
+                    ),
+                );
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(storage_class) = attrs.storage_class {
+                <span class="self">self</span>.tcx.sess.span_err(
+                    storage_class.span,
+                    <span class="string">&quot;`#[spirv(spec_constant)]` cannot have a storage class&quot;</span>,
+                );
+            } <span class="kw">else </span>{
+                <span class="macro">assert_eq!</span>(storage_class, <span class="prelude-val">Ok</span>(StorageClass::Input));
+                <span class="macro">assert!</span>(!is_ref);
+                storage_class = <span class="prelude-val">Err</span>(spec_constant.value);
+            }
+        }
+
         EntryParamDeducedFromRustRefOrValue {
             value_layout,
             storage_class,
@@ -1234,9 +1363,6 @@
     ) {
         <span class="kw">let </span>attrs = AggregatedSpirvAttributes::parse(<span class="self">self</span>, <span class="self">self</span>.tcx.hir().attrs(hir_param.hir_id));
 
-        <span class="comment">// Pre-allocate the module-scoped `OpVariable`&#39;s *Result* ID.
-        </span><span class="kw">let </span>var = <span class="self">self</span>.emit_global().id();
-
         <span class="kw">let </span>EntryParamDeducedFromRustRefOrValue {
             value_layout,
             storage_class,
@@ -1244,14 +1370,35 @@
         } = <span class="self">self</span>.entry_param_deduce_from_rust_ref_or_value(entry_arg_abi.layout, hir_param, <span class="kw-2">&amp;</span>attrs);
         <span class="kw">let </span>value_spirv_type = value_layout.spirv_type(hir_param.ty_span, <span class="self">self</span>);
 
+        <span class="kw">let </span>(var_id, spec_const_id) = <span class="kw">match </span>storage_class {
+            <span class="comment">// Pre-allocate the module-scoped `OpVariable` *Result* ID.
+            </span><span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; (
+                <span class="prelude-val">Ok</span>(<span class="self">self</span>.emit_global().id()),
+                <span class="prelude-val">Err</span>(<span class="string">&quot;entry-point interface variable is not a `#[spirv(spec_constant)]`&quot;</span>),
+            ),
+            <span class="prelude-val">Err</span>(SpecConstant { id, default }) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>emit = <span class="self">self</span>.emit_global();
+                <span class="kw">let </span>spec_const_id = emit.spec_constant_u32(value_spirv_type, default.unwrap_or(<span class="number">0</span>));
+                emit.decorate(
+                    spec_const_id,
+                    Decoration::SpecId,
+                    [Operand::LiteralInt32(id)],
+                );
+                (
+                    <span class="prelude-val">Err</span>(<span class="string">&quot;`#[spirv(spec_constant)]` is not an entry-point interface variable&quot;</span>),
+                    <span class="prelude-val">Ok</span>(spec_const_id),
+                )
+            }
+        };
+
         <span class="comment">// Emit decorations deduced from the reference/value Rust type.
         </span><span class="kw">if </span>read_only {
             <span class="comment">// NOTE(eddyb) it appears only `StorageBuffer`s simultaneously:
             // - allow `NonWritable` decorations on shader interface variables
             // - default to writable (i.e. the decoration actually has an effect)
-            </span><span class="kw">if </span>storage_class == StorageClass::StorageBuffer {
+            </span><span class="kw">if </span>storage_class == <span class="prelude-val">Ok</span>(StorageClass::StorageBuffer) {
                 <span class="self">self</span>.emit_global()
-                    .decorate(var, Decoration::NonWritable, []);
+                    .decorate(var_id.unwrap(), Decoration::NonWritable, []);
             }
         }
 
@@ -1281,14 +1428,20 @@
         }
         <span class="kw">let </span>var_ptr_spirv_type;
         <span class="kw">let </span>(value_ptr, value_len) = <span class="kw">match </span>storage_class {
-            StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer =&gt; {
+            <span class="prelude-val">Ok</span>(
+                StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer,
+            ) =&gt; {
                 <span class="kw">let </span>var_spirv_type = SpirvType::InterfaceBlock {
                     inner_type: value_spirv_type,
                 }
                 .def(hir_param.span, <span class="self">self</span>);
                 var_ptr_spirv_type = <span class="self">self</span>.type_ptr_to(var_spirv_type);
 
-                <span class="kw">let </span>value_ptr = bx.struct_gep(var_spirv_type, var.with_type(var_ptr_spirv_type), <span class="number">0</span>);
+                <span class="kw">let </span>value_ptr = bx.struct_gep(
+                    var_spirv_type,
+                    var_id.unwrap().with_type(var_ptr_spirv_type),
+                    <span class="number">0</span>,
+                );
 
                 <span class="kw">let </span>value_len = <span class="kw">if </span>is_unsized_with_len {
                     <span class="kw">match </span><span class="self">self</span>.lookup_type(value_spirv_type) {
@@ -1305,7 +1458,7 @@
                     </span><span class="kw">let </span>len_spirv_type = <span class="self">self</span>.type_isize();
                     <span class="kw">let </span>len = bx
                         .emit()
-                        .array_length(len_spirv_type, <span class="prelude-val">None</span>, var, <span class="number">0</span>)
+                        .array_length(len_spirv_type, <span class="prelude-val">None</span>, var_id.unwrap(), <span class="number">0</span>)
                         .unwrap();
 
                     <span class="prelude-val">Some</span>(len.with_type(len_spirv_type))
@@ -1320,9 +1473,9 @@
                     <span class="prelude-val">None
                 </span>};
 
-                (value_ptr, value_len)
+                (<span class="prelude-val">Ok</span>(value_ptr), value_len)
             }
-            StorageClass::UniformConstant =&gt; {
+            <span class="prelude-val">Ok</span>(StorageClass::UniformConstant) =&gt; {
                 var_ptr_spirv_type = <span class="self">self</span>.type_ptr_to(value_spirv_type);
 
                 <span class="kw">match </span><span class="self">self</span>.lookup_type(value_spirv_type) {
@@ -1351,7 +1504,7 @@
                     <span class="prelude-val">None
                 </span>};
 
-                (var.with_type(var_ptr_spirv_type), value_len)
+                (<span class="prelude-val">Ok</span>(var_id.unwrap().with_type(var_ptr_spirv_type)), value_len)
             }
             <span class="kw">_ </span>=&gt; {
                 var_ptr_spirv_type = <span class="self">self</span>.type_ptr_to(value_spirv_type);
@@ -1360,12 +1513,19 @@
                     <span class="self">self</span>.tcx.sess.span_fatal(
                         hir_param.ty_span,
                         <span class="macro">format!</span>(
-                            <span class="string">&quot;unsized types are not supported for storage class {storage_class:?}&quot;
-                        </span>),
+                            <span class="string">&quot;unsized types are not supported for {}&quot;</span>,
+                            <span class="kw">match </span>storage_class {
+                                <span class="prelude-val">Ok</span>(storage_class) =&gt; <span class="macro">format!</span>(<span class="string">&quot;storage class {storage_class:?}&quot;</span>),
+                                <span class="prelude-val">Err</span>(SpecConstant { .. }) =&gt; <span class="string">&quot;`#[spirv(spec_constant)]`&quot;</span>.into(),
+                            },
+                        ),
                     );
                 }
 
-                (var.with_type(var_ptr_spirv_type), <span class="prelude-val">None</span>)
+                (
+                    var_id.map(|var_id| var_id.with_type(var_ptr_spirv_type)),
+                    <span class="prelude-val">None</span>,
+                )
             }
         };
 
@@ -1373,21 +1533,26 @@
         // starting from the `value_ptr` pointing to a `value_spirv_type`
         // (e.g. `Input` doesn&#39;t use indirection, so we have to load from it).
         </span><span class="kw">if let </span>ty::Ref(..) = entry_arg_abi.layout.ty.kind() {
-            call_args.push(value_ptr);
+            call_args.push(value_ptr.unwrap());
             <span class="kw">match </span>entry_arg_abi.mode {
                 PassMode::Direct(<span class="kw">_</span>) =&gt; <span class="macro">assert_eq!</span>(value_len, <span class="prelude-val">None</span>),
                 PassMode::Pair(..) =&gt; call_args.push(value_len.unwrap()),
                 <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
             }
         } <span class="kw">else </span>{
-            <span class="macro">assert_eq!</span>(storage_class, StorageClass::Input);
             <span class="macro">assert_matches!</span>(entry_arg_abi.mode, PassMode::Direct(<span class="kw">_</span>));
 
-            <span class="kw">let </span>value = bx.load(
-                entry_arg_abi.layout.spirv_type(hir_param.ty_span, bx),
-                value_ptr,
-                entry_arg_abi.layout.align.abi,
-            );
+            <span class="kw">let </span>value = <span class="kw">match </span>storage_class {
+                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+                    <span class="macro">assert_eq!</span>(storage_class, <span class="prelude-val">Ok</span>(StorageClass::Input));
+                    bx.load(
+                        entry_arg_abi.layout.spirv_type(hir_param.ty_span, bx),
+                        value_ptr.unwrap(),
+                        entry_arg_abi.layout.align.abi,
+                    )
+                }
+                <span class="prelude-val">Err</span>(SpecConstant { .. }) =&gt; spec_const_id.unwrap().with_type(value_spirv_type),
+            };
             call_args.push(value);
             <span class="macro">assert_eq!</span>(value_len, <span class="prelude-val">None</span>);
         }
@@ -1400,48 +1565,76 @@
         // name (e.g. &quot;foo&quot; for `foo: Vec3`). While `OpName` is *not* suppposed
         // to be semantic, OpenGL and some tooling rely on it for reflection.
         </span><span class="kw">if let </span>hir::PatKind::Binding(<span class="kw">_</span>, <span class="kw">_</span>, ident, <span class="kw">_</span>) = <span class="kw-2">&amp;</span>hir_param.pat.kind {
-            <span class="self">self</span>.emit_global().name(var, ident.to_string());
+            <span class="self">self</span>.emit_global()
+                .name(var_id.or(spec_const_id).unwrap(), ident.to_string());
         }
 
         <span class="comment">// Emit `OpDecorate`s based on attributes.
         </span><span class="kw">let </span><span class="kw-2">mut </span>decoration_supersedes_location = <span class="bool-val">false</span>;
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(builtin) = attrs.builtin.map(|attr| attr.value) {
-            <span class="self">self</span>.emit_global().decorate(
-                var,
-                Decoration::BuiltIn,
-                std::iter::once(Operand::BuiltIn(builtin)),
-            );
-            decoration_supersedes_location = <span class="bool-val">true</span>;
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = attrs.descriptor_set.map(|attr| attr.value) {
-            <span class="self">self</span>.emit_global().decorate(
-                var,
-                Decoration::DescriptorSet,
-                std::iter::once(Operand::LiteralInt32(index)),
-            );
-            decoration_supersedes_location = <span class="bool-val">true</span>;
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = attrs.binding.map(|attr| attr.value) {
-            <span class="self">self</span>.emit_global().decorate(
-                var,
-                Decoration::Binding,
-                std::iter::once(Operand::LiteralInt32(index)),
-            );
-            decoration_supersedes_location = <span class="bool-val">true</span>;
-        }
-        <span class="kw">if </span>attrs.flat.is_some() {
-            <span class="self">self</span>.emit_global()
-                .decorate(var, Decoration::Flat, std::iter::empty());
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(invariant) = attrs.invariant {
-            <span class="self">self</span>.emit_global()
-                .decorate(var, Decoration::Invariant, std::iter::empty());
-            <span class="kw">if </span>storage_class != StorageClass::Output {
-                <span class="self">self</span>.tcx.sess.span_err(
-                    invariant.span,
-                    <span class="string">&quot;#[spirv(invariant)] is only valid on Output variables&quot;</span>,
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(builtin) = attrs.builtin {
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(SpecConstant { .. }) = storage_class {
+                <span class="self">self</span>.tcx.sess.span_fatal(
+                    builtin.span,
+                    <span class="macro">format!</span>(
+                        <span class="string">&quot;`#[spirv(spec_constant)]` cannot be `{:?}` builtin&quot;</span>,
+                        builtin.value
+                    ),
                 );
             }
+            <span class="self">self</span>.emit_global().decorate(
+                var_id.unwrap(),
+                Decoration::BuiltIn,
+                std::iter::once(Operand::BuiltIn(builtin.value)),
+            );
+            decoration_supersedes_location = <span class="bool-val">true</span>;
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(descriptor_set) = attrs.descriptor_set {
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(SpecConstant { .. }) = storage_class {
+                <span class="self">self</span>.tcx.sess.span_fatal(
+                    descriptor_set.span,
+                    <span class="string">&quot;`#[spirv(descriptor_set = ...)]` cannot apply to `#[spirv(spec_constant)]`&quot;</span>,
+                );
+            }
+            <span class="self">self</span>.emit_global().decorate(
+                var_id.unwrap(),
+                Decoration::DescriptorSet,
+                std::iter::once(Operand::LiteralInt32(descriptor_set.value)),
+            );
+            decoration_supersedes_location = <span class="bool-val">true</span>;
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(binding) = attrs.binding {
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(SpecConstant { .. }) = storage_class {
+                <span class="self">self</span>.tcx.sess.span_fatal(
+                    binding.span,
+                    <span class="string">&quot;`#[spirv(binding = ...)]` cannot apply to `#[spirv(spec_constant)]`&quot;</span>,
+                );
+            }
+            <span class="self">self</span>.emit_global().decorate(
+                var_id.unwrap(),
+                Decoration::Binding,
+                std::iter::once(Operand::LiteralInt32(binding.value)),
+            );
+            decoration_supersedes_location = <span class="bool-val">true</span>;
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(flat) = attrs.flat {
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(SpecConstant { .. }) = storage_class {
+                <span class="self">self</span>.tcx.sess.span_fatal(
+                    flat.span,
+                    <span class="string">&quot;`#[spirv(flat)]` cannot apply to `#[spirv(spec_constant)]`&quot;</span>,
+                );
+            }
+            <span class="self">self</span>.emit_global()
+                .decorate(var_id.unwrap(), Decoration::Flat, std::iter::empty());
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(invariant) = attrs.invariant {
+            <span class="kw">if </span>storage_class != <span class="prelude-val">Ok</span>(StorageClass::Output) {
+                <span class="self">self</span>.tcx.sess.span_fatal(
+                    invariant.span,
+                    <span class="string">&quot;`#[spirv(invariant)]` is only valid on Output variables&quot;</span>,
+                );
+            }
+            <span class="self">self</span>.emit_global()
+                .decorate(var_id.unwrap(), Decoration::Invariant, std::iter::empty());
         }
 
         <span class="kw">let </span>is_subpass_input = <span class="kw">match </span><span class="self">self</span>.lookup_type(value_spirv_type) {
@@ -1462,7 +1655,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(attachment_index) = attrs.input_attachment_index {
             <span class="kw">if </span>is_subpass_input &amp;&amp; <span class="self">self</span>.builder.has_capability(Capability::InputAttachment) {
                 <span class="self">self</span>.emit_global().decorate(
-                    var,
+                    var_id.unwrap(),
                     Decoration::InputAttachmentIndex,
                     std::iter::once(Operand::LiteralInt32(attachment_index.value)),
                 );
@@ -1484,14 +1677,16 @@
             );
         }
 
-        <span class="self">self</span>.check_for_bad_types(
-            execution_model,
-            hir_param.ty_span,
-            var_ptr_spirv_type,
-            storage_class,
-            attrs.builtin.is_some(),
-            attrs.flat,
-        );
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(storage_class) = storage_class {
+            <span class="self">self</span>.check_for_bad_types(
+                execution_model,
+                hir_param.ty_span,
+                var_ptr_spirv_type,
+                storage_class,
+                attrs.builtin.is_some(),
+                attrs.flat,
+            );
+        }
 
         <span class="comment">// Assign locations from left to right, incrementing each storage class
         // individually.
@@ -1500,34 +1695,43 @@
         </span><span class="kw">let </span>has_location = !decoration_supersedes_location
             &amp;&amp; <span class="macro">matches!</span>(
                 storage_class,
-                StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
+                <span class="prelude-val">Ok</span>(StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant)
             );
         <span class="kw">if </span>has_location {
             <span class="kw">let </span>location = decoration_locations
-                .entry(storage_class)
+                .entry(storage_class.unwrap())
                 .or_insert_with(|| <span class="number">0</span>);
             <span class="self">self</span>.emit_global().decorate(
-                var,
+                var_id.unwrap(),
                 Decoration::Location,
                 std::iter::once(Operand::LiteralInt32(<span class="kw-2">*</span>location)),
             );
             <span class="kw-2">*</span>location += <span class="number">1</span>;
         }
 
-        <span class="comment">// Emit the `OpVariable` with its *Result* ID set to `var`.
-        </span><span class="self">self</span>.emit_global()
-            .variable(var_ptr_spirv_type, <span class="prelude-val">Some</span>(var), storage_class, <span class="prelude-val">None</span>);
+        <span class="kw">match </span>storage_class {
+            <span class="prelude-val">Ok</span>(storage_class) =&gt; {
+                <span class="kw">let </span>var = var_id.unwrap();
 
-        <span class="comment">// Record this `OpVariable` as needing to be added (if applicable),
-        // to the *Interface* operands of the `OpEntryPoint` instruction.
-        </span><span class="kw">if </span><span class="self">self</span>.emit_global().version().unwrap() &gt; (<span class="number">1</span>, <span class="number">3</span>) {
-            <span class="comment">// SPIR-V &gt;= v1.4 includes all OpVariables in the interface.
-            </span>op_entry_point_interface_operands.push(var);
-        } <span class="kw">else </span>{
-            <span class="comment">// SPIR-V &lt;= v1.3 only includes Input and Output in the interface.
-            </span><span class="kw">if </span>storage_class == StorageClass::Input || storage_class == StorageClass::Output {
-                op_entry_point_interface_operands.push(var);
+                <span class="comment">// Emit the `OpVariable` with its *Result* ID set to `var_id`.
+                </span><span class="self">self</span>.emit_global()
+                    .variable(var_ptr_spirv_type, <span class="prelude-val">Some</span>(var), storage_class, <span class="prelude-val">None</span>);
+
+                <span class="comment">// Record this `OpVariable` as needing to be added (if applicable),
+                // to the *Interface* operands of the `OpEntryPoint` instruction.
+                </span><span class="kw">if </span><span class="self">self</span>.emit_global().version().unwrap() &gt; (<span class="number">1</span>, <span class="number">3</span>) {
+                    <span class="comment">// SPIR-V &gt;= v1.4 includes all OpVariables in the interface.
+                    </span>op_entry_point_interface_operands.push(var);
+                } <span class="kw">else </span>{
+                    <span class="comment">// SPIR-V &lt;= v1.3 only includes Input and Output in the interface.
+                    </span><span class="kw">if </span>storage_class == StorageClass::Input || storage_class == StorageClass::Output
+                    {
+                        op_entry_point_interface_operands.push(var);
+                    }
+                }
             }
+            <span class="comment">// Emitted earlier.
+            </span><span class="prelude-val">Err</span>(SpecConstant { .. }) =&gt; {}
         }
     }
 
