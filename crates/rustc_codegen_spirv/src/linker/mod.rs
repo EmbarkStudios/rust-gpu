@@ -27,6 +27,7 @@ use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorGuaranteed;
+use rustc_session::config::OutputFilenames;
 use rustc_session::Session;
 use std::collections::BTreeMap;
 use std::ffi::{OsStr, OsString};
@@ -151,6 +152,7 @@ pub fn link(
     sess: &Session,
     mut inputs: Vec<Module>,
     opts: &Options,
+    outputs: &OutputFilenames,
     disambiguated_crate_name_for_dumps: &OsStr,
 ) -> Result<LinkResult> {
     let mut output = {
@@ -383,9 +385,13 @@ pub fn link(
             }
         };
 
+        let spv_words;
         let spv_bytes = {
             let _timer = sess.timer("assemble-to-spv_bytes-for-spirt");
-            spirv_tools::binary::from_binary(&output.assemble()).to_vec()
+            spv_words = output.assemble();
+            // FIXME(eddyb) this is wastefully cloning all the bytes, but also
+            // `spirt::Module` should have a method that takes `Vec<u32>`.
+            spirv_tools::binary::from_binary(&spv_words).to_vec()
         };
         let cx = std::rc::Rc::new(spirt::Context::new());
         let mut module = {
@@ -393,14 +399,20 @@ pub fn link(
             match spirt::Module::lower_from_spv_bytes(cx.clone(), spv_bytes) {
                 Ok(module) => module,
                 Err(e) => {
-                    use rspirv::binary::Disassemble;
+                    let spv_path = outputs.temp_path_ext("spirt-lower-from-spv-input.spv", None);
+
+                    let was_saved_msg = match std::fs::write(
+                        &spv_path,
+                        spirv_tools::binary::from_binary(&spv_words),
+                    ) {
+                        Ok(()) => format!("was saved to {}", spv_path.display()),
+                        Err(e) => format!("could not be saved: {e}"),
+                    };
 
                     return Err(sess
                         .struct_err(format!("{e}"))
-                        .note(format!(
-                            "while lowering this SPIR-V module to SPIR-T:\n{}",
-                            output.disassemble()
-                        ))
+                        .note("while lowering SPIR-V module to SPIR-T (spirt::spv::lower)")
+                        .note(format!("input SPIR-V module {was_saved_msg}"))
                         .emit());
                 }
             }
@@ -438,14 +450,30 @@ pub fn link(
             let _timer = sess.timer("spirt_passes::diagnostics::report_diagnostics");
             spirt_passes::diagnostics::report_diagnostics(sess, opts, &module)
         };
+        let any_spirt_bugs = report_diagnostics_result
+            .as_ref()
+            .err()
+            .map_or(false, |e| e.any_errors_were_spirt_bugs);
+
+        let mut dump_spirt_file_path = opts.dump_spirt_passes.as_ref().map(|dump_dir| {
+            dump_dir
+                .join(disambiguated_crate_name_for_dumps)
+                .with_extension("spirt")
+        });
+
+        // FIXME(eddyb) this won't allow seeing the individual passes, but it's
+        // better than nothing (we could theoretically put this whole block in
+        // a loop so that we redo everything but keeping `Module` clones?).
+        if any_spirt_bugs && dump_spirt_file_path.is_none() {
+            if per_pass_module_for_dumping.is_empty() {
+                per_pass_module_for_dumping.push(("", module.clone()));
+            }
+            dump_spirt_file_path = Some(outputs.temp_path_ext("spirt", None));
+        }
 
         // NOTE(eddyb) this should be *before* `lift_to_spv` below,
         // so if that fails, the dump could be used to debug it.
-        if let Some(dump_dir) = &opts.dump_spirt_passes {
-            let dump_spirt_file_path = dump_dir
-                .join(disambiguated_crate_name_for_dumps)
-                .with_extension("spirt");
-
+        if let Some(dump_spirt_file_path) = &dump_spirt_file_path {
             // HACK(eddyb) unless requested otherwise, clean up the pretty-printed
             // SPIR-T output by converting our custom extended instructions, to
             // standard SPIR-V debuginfo (which SPIR-T knows how to pretty-print).
@@ -464,7 +492,7 @@ pub fn link(
             let pretty = plan.pretty_print();
 
             // FIXME(eddyb) don't allocate whole `String`s here.
-            std::fs::write(&dump_spirt_file_path, pretty.to_string()).unwrap();
+            std::fs::write(dump_spirt_file_path, pretty.to_string()).unwrap();
             std::fs::write(
                 dump_spirt_file_path.with_extension("spirt.html"),
                 pretty
@@ -473,6 +501,19 @@ pub fn link(
                     .to_html_doc(),
             )
             .unwrap();
+        }
+
+        if any_spirt_bugs {
+            let mut note = sess.struct_note_without_error("SPIR-T bugs were reported");
+            note.help(format!(
+                "pretty-printed SPIR-T was saved to {}.html",
+                dump_spirt_file_path.as_ref().unwrap().display()
+            ));
+            if opts.dump_spirt_passes.is_none() {
+                note.help("re-run with `RUSTGPU_CODEGEN_ARGS=\"--dump-spirt-passes=$PWD\"` for more details");
+            }
+            note.note("pretty-printed SPIR-T is preferred when reporting Rust-GPU issues")
+                .emit();
         }
 
         // NOTE(eddyb) this is late so that `--dump-spirt-passes` is processed,

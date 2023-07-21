@@ -78,6 +78,7 @@ pub fn link(
                         crate_type,
                         &out_filename,
                         codegen_results,
+                        outputs,
                         &disambiguated_crate_name_for_dumps,
                     );
                 }
@@ -123,6 +124,7 @@ fn link_exe(
     crate_type: CrateType,
     out_filename: &Path,
     codegen_results: &CodegenResults,
+    outputs: &OutputFilenames,
     disambiguated_crate_name_for_dumps: &OsStr,
 ) {
     let mut objects = Vec::new();
@@ -152,6 +154,7 @@ fn link_exe(
         &cg_args,
         &objects,
         &rlibs,
+        outputs,
         disambiguated_crate_name_for_dumps,
     );
     let compile_result = match link_result {
@@ -517,6 +520,7 @@ fn do_link(
     cg_args: &CodegenArgs,
     objects: &[PathBuf],
     rlibs: &[PathBuf],
+    outputs: &OutputFilenames,
     disambiguated_crate_name_for_dumps: &OsStr,
 ) -> linker::LinkResult {
     let load_modules_timer = sess.timer("link_load_modules");
@@ -570,6 +574,7 @@ fn do_link(
         sess,
         modules,
         &cg_args.linker_opts,
+        outputs,
         disambiguated_crate_name_for_dumps,
     );
 

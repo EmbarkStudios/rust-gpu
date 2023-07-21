@@ -2,7 +2,8 @@ use super::{link, LinkResult};
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
 use rustc_errors::{registry::Registry, TerminalUrl};
-use rustc_session::{config::Input, CompilerIO};
+use rustc_session::config::{Input, OutputFilenames, OutputTypes};
+use rustc_session::CompilerIO;
 use rustc_span::FileName;
 use std::io::Read;
 
@@ -148,7 +149,20 @@ fn link_with_linker_opts(
                 )
             };
 
-            let res = link(&sess, modules, opts, Default::default());
+            let res = link(
+                &sess,
+                modules,
+                opts,
+                &OutputFilenames::new(
+                    std::env::current_dir().unwrap_or_default(),
+                    "".into(),
+                    None,
+                    None,
+                    "".into(),
+                    OutputTypes::new(&[]),
+                ),
+                Default::default(),
+            );
             assert_eq!(sess.has_errors(), res.as_ref().err().copied());
             res.map(|res| match res {
                 LinkResult::SingleModule(m) => *m,
