@@ -586,6 +586,10 @@
 <a href="#586" id="586">586</a>
 <a href="#587" id="587">587</a>
 <a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::CodegenCx;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
@@ -760,12 +764,16 @@
         <span class="kw">let </span>str_ty = <span class="self">self
             </span>.layout_of(<span class="self">self</span>.tcx.types.str_)
             .spirv_type(DUMMY_SP, <span class="self">self</span>);
-        <span class="comment">// FIXME(eddyb) include the actual byte data.
-        </span>(
+        (
             <span class="self">self</span>.def_constant(
                 <span class="self">self</span>.type_ptr_to(str_ty),
                 SpirvConst::PtrTo {
-                    pointee: <span class="self">self</span>.undef(str_ty).def_cx(<span class="self">self</span>),
+                    pointee: <span class="self">self
+                        </span>.constant_composite(
+                            str_ty,
+                            s.bytes().map(|b| <span class="self">self</span>.const_u8(b).def_cx(<span class="self">self</span>)),
+                        )
+                        .def_cx(<span class="self">self</span>),
                 },
             ),
             <span class="self">self</span>.const_usize(len <span class="kw">as </span>u64),

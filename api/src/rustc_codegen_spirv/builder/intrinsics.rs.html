@@ -395,6 +395,18 @@
 <a href="#395" id="395">395</a>
 <a href="#396" id="396">396</a>
 <a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::abi::ConvSpirvType;
 <span class="kw">use </span><span class="kw">crate</span>::builder_spirv::{SpirvValue, SpirvValueExt};
@@ -736,7 +748,11 @@
     }
 
     <span class="kw">fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.abort_with_message(<span class="string">&quot;aborted: intrinsics::abort() called&quot;</span>.into());
+        <span class="comment">// HACK(eddyb) `|` is an ad-hoc convention of `linker::spirt_passes::controlflow`.
+        </span><span class="self">self</span>.abort_with_message_and_debug_printf_args(
+            <span class="string">&quot;aborted|intrinsics::abort() called&quot;</span>.into(),
+            [],
+        );
     }
 
     <span class="kw">fn </span>assume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _val: <span class="self">Self</span>::Value) {
@@ -771,7 +787,11 @@
 }
 
 <span class="kw">impl </span>Builder&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
-    <span class="kw">pub fn </span>abort_with_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, message: String) {
+    <span class="kw">pub fn </span>abort_with_message_and_debug_printf_args(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        message: String,
+        debug_printf_args: <span class="kw">impl </span>IntoIterator&lt;Item = SpirvValue&gt;,
+    ) {
         <span class="comment">// FIXME(eddyb) this should be cached more efficiently.
         </span><span class="kw">let </span>void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, <span class="self">self</span>);
 
@@ -782,6 +802,10 @@
             void_ty,
             CustomInst::Abort {
                 message: Operand::IdRef(message_id),
+                debug_printf_args: debug_printf_args
+                    .into_iter()
+                    .map(|arg| Operand::IdRef(arg.def(<span class="self">self</span>)))
+                    .collect(),
             },
         );
         <span class="self">self</span>.unreachable();

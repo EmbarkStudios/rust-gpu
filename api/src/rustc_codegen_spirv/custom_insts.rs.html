@@ -177,6 +177,13 @@
 <a href="#177" id="177">177</a>
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-V (extended) instructions specific to `rustc_codegen_spirv`, produced
 //! during the original codegen of a crate, and consumed by the `linker`.
 
@@ -228,9 +235,9 @@
 }
 
 <span class="macro">macro_rules! </span>def_custom_insts {
-    ($(<span class="macro-nonterminal">$num</span>:literal =&gt; <span class="macro-nonterminal">$name</span>:ident $({ $(<span class="macro-nonterminal">$field</span>:ident),+ $(,)<span class="question-mark">? </span>})<span class="question-mark">?</span>),+ $(,)<span class="question-mark">?</span>) =&gt; {
+    ($(<span class="macro-nonterminal">$num</span>:literal =&gt; <span class="macro-nonterminal">$name</span>:ident $({ $(<span class="macro-nonterminal">$field</span>:ident),+ $(, ..<span class="macro-nonterminal">$variadic_field</span>:ident)<span class="question-mark">? </span>$(,)<span class="question-mark">? </span>})<span class="question-mark">?</span>),+ $(,)<span class="question-mark">?</span>) =&gt; {
         <span class="kw">const </span>SCHEMA: <span class="kw-2">&amp;</span>[(u32, <span class="kw-2">&amp;</span>str, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str])] = <span class="kw-2">&amp;</span>[
-            $((<span class="macro-nonterminal">$num</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$name</span>), <span class="kw-2">&amp;</span>[$($(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$field</span>)),+)<span class="question-mark">?</span>])),+
+            $((<span class="macro-nonterminal">$num</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$name</span>), <span class="kw-2">&amp;</span>[$($(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$field</span>),)+ $(<span class="macro">stringify!</span>(..<span class="macro-nonterminal">$variadic_field</span>),)<span class="question-mark">?</span>)<span class="question-mark">?</span>])),+
         ];
 
         <span class="attr">#[repr(u32)]
@@ -253,16 +260,19 @@
             <span class="kw">pub fn </span>with_operands&lt;T: Clone&gt;(<span class="self">self</span>, operands: <span class="kw-2">&amp;</span>[T]) -&gt; CustomInst&lt;T&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     $(<span class="self">Self</span>::<span class="macro-nonterminal">$name </span>=&gt; <span class="kw">match </span>operands {
-                        [$($(<span class="macro-nonterminal">$field</span>),+)<span class="question-mark">?</span>] =&gt; CustomInst::<span class="macro-nonterminal">$name </span>$({ $(<span class="macro-nonterminal">$field</span>: <span class="macro-nonterminal">$field</span>.clone()),+ })<span class="question-mark">?</span>,
+                        [$($(<span class="macro-nonterminal">$field</span>,)+ $(<span class="kw-2">ref </span><span class="macro-nonterminal">$variadic_field </span>@ ..)<span class="question-mark">?</span>)<span class="question-mark">?</span>] =&gt; CustomInst::<span class="macro-nonterminal">$name </span>$({
+                            $(<span class="macro-nonterminal">$field</span>: <span class="macro-nonterminal">$field</span>.clone(),)+
+                            $(<span class="macro-nonterminal">$variadic_field</span>: <span class="macro-nonterminal">$variadic_field</span>.iter().cloned().collect())<span class="question-mark">?
+                        </span>})<span class="question-mark">?</span>,
                         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;{self:?} does not have the right number of operands&quot;</span>),
                     }),+
                 }
             }
         }
 
-        <span class="attr">#[derive(Copy, Clone, Debug)]
+        <span class="attr">#[derive(Clone, Debug)]
         </span><span class="kw">pub enum </span>CustomInst&lt;T&gt; {
-            $(<span class="macro-nonterminal">$name </span>$({ $(<span class="macro-nonterminal">$field</span>: T),+ })<span class="question-mark">?</span>),+
+            $(<span class="macro-nonterminal">$name </span>$({ $(<span class="macro-nonterminal">$field</span>: T,)+ $(<span class="macro-nonterminal">$variadic_field</span>: SmallVec&lt;[T; <span class="number">4</span>]&gt;)<span class="question-mark">? </span>})<span class="question-mark">?</span>),+
         }
 
         <span class="kw">impl</span>&lt;T&gt; CustomInst&lt;T&gt; {
@@ -275,7 +285,9 @@
             <span class="comment">// HACK(eddyb) this should return an iterator, but that&#39;s too much effort.
             </span><span class="kw">pub fn </span>into_operands(<span class="self">self</span>) -&gt; SmallVec&lt;[T; <span class="number">8</span>]&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
-                    $(<span class="self">Self</span>::<span class="macro-nonterminal">$name </span>$({ $(<span class="macro-nonterminal">$field</span>),+ })<span class="question-mark">? </span>=&gt; [$($(<span class="macro-nonterminal">$field</span>),+)<span class="question-mark">?</span>].into_iter().collect()),+
+                    $(<span class="self">Self</span>::<span class="macro-nonterminal">$name </span>$({ $(<span class="macro-nonterminal">$field</span>,)+ $(<span class="macro-nonterminal">$variadic_field</span>)<span class="question-mark">? </span>})<span class="question-mark">? </span>=&gt; {
+                        [$($(<span class="macro-nonterminal">$field</span>),+)<span class="question-mark">?</span>].into_iter() $($(.chain(<span class="macro-nonterminal">$variadic_field</span>))<span class="question-mark">?</span>)<span class="question-mark">? </span>.collect()
+                    })+
                 }
             }
         }
@@ -325,7 +337,9 @@
     // users to do `catch_unwind` at the top-level of their shader to handle
     // panics specially (e.g. by appending to a custom buffer, or using some
     // specific color in a fragment shader, to indicate a panic happened).
-    </span><span class="number">4 </span>=&gt; Abort { message },
+    // NOTE(eddyb) the `message` string follows `debugPrintf` rules, with remaining
+    // operands (collected into `debug_printf_args`) being its formatting arguments.
+    </span><span class="number">4 </span>=&gt; Abort { message, ..debug_printf_args },
 }
 
 <span class="kw">impl </span>CustomOp {

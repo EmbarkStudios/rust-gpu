@@ -386,6 +386,21 @@
 <a href="#386" id="386">386</a>
 <a href="#387" id="387">387</a>
 <a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! SPIR-T passes related to control-flow.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::custom_insts::{<span class="self">self</span>, CustomInst, CustomOp};
@@ -628,8 +643,13 @@
                 .map(|(func_at_inst, custom)| (func_at_inst, custom.unwrap()))
                 .find(|(<span class="kw">_</span>, custom)| !custom.op().is_debuginfo())
                 .filter(|(<span class="kw">_</span>, custom)| custom.op().is_terminator());
-            <span class="kw">if let </span><span class="prelude-val">Some</span>((func_at_abort_inst, CustomInst::Abort { message })) =
-                custom_terminator_inst
+            <span class="kw">if let </span><span class="prelude-val">Some</span>((
+                func_at_abort_inst,
+                CustomInst::Abort {
+                    message,
+                    debug_printf_args: message_debug_printf_args,
+                },
+            )) = custom_terminator_inst
             {
                 <span class="kw">let </span>abort_inst = func_at_abort_inst.position;
                 terminator.kind = cfg::ControlInstKind::Return;
@@ -720,29 +740,38 @@
                         <span class="comment">// HACK(eddyb) this improves readability w/ very verbose Vulkan loggers.
                         </span>fmt += <span class="string">&quot;\n&quot;</span>;
 
-                        fmt += <span class="string">&quot;[RUST-GPU] &quot;</span>;
-                        fmt += <span class="kw-2">&amp;</span>cx[const_str(message)].replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>);
+                        fmt += <span class="string">&quot;[&quot;</span>;
 
-                        <span class="comment">// FIXME(eddyb) deduplicate with &quot;called at&quot; form below
-                        // (not trivial becasue both closures would borrow `fmt`).
-                        </span><span class="kw">if let </span><span class="prelude-val">Some</span>((file, line, col)) = current_debug_src_loc.take() {
-                            fmt += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;\n      at {file}:{line}:{col}&quot;</span>).replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>);
+                        <span class="comment">// NB: `message` has its own `message_debug_printf_args`
+                        // it formats, and as such any escaping is already done.
+                        </span><span class="kw">let </span>message = <span class="kw-2">&amp;</span>cx[const_str(message)];
+                        <span class="kw">let </span>(message_kind, message) =
+                            message.split_once(<span class="string">&#39;|&#39;</span>).unwrap_or((<span class="string">&quot;&quot;</span>, message));
+
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>((file, line, col)) = current_debug_src_loc.take() {
+                            fmt += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Rust {message_kind} at {file}:{line}:{col}&quot;</span>)
+                                .replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>);
+                        } <span class="kw">else </span>{
+                            fmt += message_kind;
                         }
+
+                        fmt += <span class="string">&quot;]\n &quot;</span>;
+                        fmt += <span class="kw-2">&amp;</span>message.replace(<span class="string">&#39;\n&#39;</span>, <span class="string">&quot;\n &quot;</span>);
 
                         <span class="kw">let </span><span class="kw-2">mut </span>innermost = <span class="bool-val">true</span>;
                         <span class="kw">let </span><span class="kw-2">mut </span>append_call = |callsite_debug_src_loc, callee: <span class="kw-2">&amp;</span>str| {
                             <span class="kw">if </span>innermost {
                                 innermost = <span class="bool-val">false</span>;
-                                fmt += <span class="string">&quot;\n    in &quot;</span>;
+                                fmt += <span class="string">&quot;\n      in &quot;</span>;
                             } <span class="kw">else if </span>current_debug_src_loc.is_some() {
-                                fmt += <span class="string">&quot;\n    by &quot;</span>;
+                                fmt += <span class="string">&quot;\n      by &quot;</span>;
                             } <span class="kw">else </span>{
                                 <span class="comment">// HACK(eddyb) previous call didn&#39;t have a `called at` line.
-                                </span>fmt += <span class="string">&quot;\n    called by &quot;</span>;
+                                </span>fmt += <span class="string">&quot;\n      called by &quot;</span>;
                             }
                             fmt += callee;
                             <span class="kw">if let </span><span class="prelude-val">Some</span>((file, line, col)) = callsite_debug_src_loc {
-                                fmt += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;\n      called at {file}:{line}:{col}&quot;</span>)
+                                fmt += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;\n        called at {file}:{line}:{col}&quot;</span>)
                                     .replace(<span class="string">&#39;%&#39;</span>, <span class="string">&quot;%%&quot;</span>);
                             }
                             current_debug_src_loc = callsite_debug_src_loc;
@@ -761,6 +790,7 @@
                         };
                         abort_inst_def.inputs = [Value::Const(mk_const_str(cx.intern(fmt)))]
                             .into_iter()
+                            .chain(message_debug_printf_args)
                             .chain(debug_printf_context_inputs.iter().copied())
                             .collect();
 
