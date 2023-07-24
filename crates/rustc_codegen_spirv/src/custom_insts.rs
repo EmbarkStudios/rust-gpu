@@ -15,6 +15,18 @@ use smallvec::SmallVec;
 /// See `CUSTOM_EXT_INST_SET`'s docs for further constraints on the full name.
 pub const CUSTOM_EXT_INST_SET_PREFIX: &str = concat!("Rust.", env!("CARGO_PKG_NAME"), ".");
 
+macro_rules! join_cargo_pkg_version_major_minor_patch {
+    ($sep:literal) => {
+        concat!(
+            env!("CARGO_PKG_VERSION_MAJOR"),
+            $sep,
+            env!("CARGO_PKG_VERSION_MINOR"),
+            $sep,
+            env!("CARGO_PKG_VERSION_PATCH"),
+        )
+    };
+}
+
 lazy_static! {
     /// `OpExtInstImport` "instruction set" name for all Rust-GPU instructions.
     ///
@@ -30,10 +42,6 @@ lazy_static! {
     ///   if the definitions of the custom instructions have changed - this is
     ///   achieved by hashing the `SCHEMA` constant from `def_custom_insts!` below
     pub static ref CUSTOM_EXT_INST_SET: String = {
-        const VER_MAJOR: &str = env!("CARGO_PKG_VERSION_MAJOR");
-        const VER_MINOR: &str = env!("CARGO_PKG_VERSION_MINOR");
-        const VER_PATCH: &str = env!("CARGO_PKG_VERSION_PATCH");
-
         let schema_hash = {
             use rustc_data_structures::stable_hasher::StableHasher;
             use std::hash::Hash;
@@ -43,9 +51,45 @@ lazy_static! {
             let (lo, hi) = hasher.finalize();
             (lo as u128) | ((hi as u128) << 64)
         };
-
-        format!("{CUSTOM_EXT_INST_SET_PREFIX}{VER_MAJOR}_{VER_MINOR}_{VER_PATCH}.{schema_hash:x}")
+        let version = join_cargo_pkg_version_major_minor_patch!("_");
+        format!("{CUSTOM_EXT_INST_SET_PREFIX}{version}.{schema_hash:x}")
     };
+}
+
+pub fn register_to_spirt_context(cx: &spirt::Context) {
+    use spirt::spv::spec::{ExtInstSetDesc, ExtInstSetInstructionDesc};
+    cx.register_custom_ext_inst_set(
+        &CUSTOM_EXT_INST_SET,
+        ExtInstSetDesc {
+            // HACK(eddyb) this is the most compact form I've found, that isn't
+            // outright lossy by omitting "Rust vs Rust-GPU" or the version.
+            short_alias: Some(
+                concat!("Rust-GPU ", join_cargo_pkg_version_major_minor_patch!(".")).into(),
+            ),
+            instructions: SCHEMA
+                .iter()
+                .map(|&(i, name, operand_names)| {
+                    (
+                        i,
+                        ExtInstSetInstructionDesc {
+                            name: name.into(),
+                            operand_names: operand_names
+                                .iter()
+                                .map(|name| {
+                                    name.strip_prefix("..")
+                                        .unwrap_or(name)
+                                        .replace('_', " ")
+                                        .into()
+                                })
+                                .collect(),
+                            is_debuginfo: name.contains("Debug")
+                                || name.contains("InlinedCallFrame"),
+                        },
+                    )
+                })
+                .collect(),
+        },
+    );
 }
 
 macro_rules! def_custom_insts {
