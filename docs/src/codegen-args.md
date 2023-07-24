@@ -192,11 +192,19 @@ _Note: passes that are not already enabled by default are considered experimenta
 Dump the `SPIR-🇹` module across passes (i.e. all of the versions before/after each pass), as a combined report, to a pair of files (`.spirt` and `.spirt.html`) in `DIR`.  
 <sub>(the `.spirt.html` version of the report is the recommended form for viewing, as it uses tabling for versions, syntax-highlighting-like styling, and use->def linking)</sub>
 
-### `--spirt-keep-custom-debuginfo-in-dumps`
+### `--spirt-strip-custom-debuginfo-from-dumps`
+
+When dumping (pretty-printed) `SPIR-🇹` (e.g. with `--dump-spirt-passes`), strip
+all the custom (Rust-GPU-specific) debuginfo instructions, by converting them
+to the standard SPIR-V debuginfo (which `SPIR-🇹` understands more directly).
+
+The default (keeping the custom instructions) is more verbose, but also lossless,
+if you want to see all instructions exactly as e.g. `--spirt-passes` see them.
+
+### `--spirt-keep-debug-sources-in-dumps`
 
 When dumping (pretty-printed) `SPIR-🇹` (e.g. with `--dump-spirt-passes`), preserve
-all the custom (Rust-GPU-specific) debuginfo instructions, instead of converting
-them to the standard SPIR-V debuginfo (which `SPIR-🇹` pretty-prints specially).
+all the "file contents debuginfo" (i.e. from SPIR-V `OpSource` instructions),
+which will end up being included, in full, at the start of the dump.
 
-The default (of performing that conversion) has prettier results, but is lossier
-if you want to see all instructions exactly as e.g. `--spirt-passes` see them.
+The default (of hiding the file contents) is less verbose, but (arguably) lossier.

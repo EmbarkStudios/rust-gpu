@@ -708,6 +708,23 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     },
                 );
             }
+
+            // HACK(eddyb) remove the previous instruction if made irrelevant.
+            let mut builder = self.emit();
+            if let (Some(func_idx), Some(block_idx)) =
+                (builder.selected_function(), builder.selected_block())
+            {
+                let block = &mut builder.module_mut().functions[func_idx].blocks[block_idx];
+                match &block.instructions[..] {
+                    [.., a, b]
+                        if a.class.opcode == b.class.opcode
+                            && a.operands[..2] == b.operands[..2] =>
+                    {
+                        block.instructions.remove(block.instructions.len() - 2);
+                    }
+                    _ => {}
+                }
+            }
         } else {
             // We may not always have valid spans.
             // FIXME(eddyb) reduce the sources of this as much as possible.

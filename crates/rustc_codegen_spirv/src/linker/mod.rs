@@ -60,7 +60,8 @@ pub struct Options {
     pub dump_post_merge: Option<PathBuf>,
     pub dump_post_split: Option<PathBuf>,
     pub dump_spirt_passes: Option<PathBuf>,
-    pub spirt_keep_custom_debuginfo_in_dumps: bool,
+    pub spirt_strip_custom_debuginfo_from_dumps: bool,
+    pub spirt_keep_debug_sources_in_dumps: bool,
     pub specializer_debug: bool,
     pub specializer_dump_instances: Option<PathBuf>,
     pub print_all_zombie: bool,
@@ -327,6 +328,13 @@ pub fn link(
         }
     }
 
+    if opts.dce {
+        let _timer =
+            sess.timer("link_dce-and-remove_duplicate_debuginfo-after-mem2reg-before-inlining");
+        dce::dce(&mut output);
+        duplicates::remove_duplicate_debuginfo(&mut output);
+    }
+
     {
         let _timer = sess.timer("link_inline");
         inline::inline(sess, &mut output)?;
@@ -374,6 +382,13 @@ pub fn link(
             );
             destructure_composites::destructure_composites(func);
         }
+    }
+
+    if opts.dce {
+        let _timer =
+            sess.timer("link_dce-and-remove_duplicate_debuginfo-after-mem2reg-after-inlining");
+        dce::dce(&mut output);
+        duplicates::remove_duplicate_debuginfo(&mut output);
     }
 
     // NOTE(eddyb) SPIR-T pipeline is entirely limited to this block.
@@ -474,12 +489,26 @@ pub fn link(
         // NOTE(eddyb) this should be *before* `lift_to_spv` below,
         // so if that fails, the dump could be used to debug it.
         if let Some(dump_spirt_file_path) = &dump_spirt_file_path {
-            // HACK(eddyb) unless requested otherwise, clean up the pretty-printed
-            // SPIR-T output by converting our custom extended instructions, to
-            // standard SPIR-V debuginfo (which SPIR-T knows how to pretty-print).
-            if !opts.spirt_keep_custom_debuginfo_in_dumps {
+            if opts.spirt_strip_custom_debuginfo_from_dumps {
                 for (_, module) in &mut per_pass_module_for_dumping {
                     spirt_passes::debuginfo::convert_custom_debuginfo_to_spv(module);
+                }
+            }
+            if !opts.spirt_keep_debug_sources_in_dumps {
+                for (_, module) in &mut per_pass_module_for_dumping {
+                    let spirt::ModuleDebugInfo::Spv(debuginfo) = &mut module.debug_info;
+                    for sources in debuginfo.source_languages.values_mut() {
+                        const DOTS: &str = "⋯";
+                        for file in sources.file_contents.values_mut() {
+                            *file = DOTS.into();
+                        }
+                        sources.file_contents.insert(
+                            cx.intern(DOTS),
+                            "sources hidden, to show them use \
+                             `RUSTGPU_CODEGEN_ARGS=--spirt-keep-debug-sources-in-dumps`"
+                                .into(),
+                        );
+                    }
                 }
             }
 
@@ -670,8 +699,8 @@ pub fn link(
         }
 
         {
-            let _timer = sess.timer("link_remove_duplicate_lines");
-            duplicates::remove_duplicate_lines(output);
+            let _timer = sess.timer("link_remove_duplicate_debuginfo");
+            duplicates::remove_duplicate_debuginfo(output);
         }
 
         if opts.compact_ids {
