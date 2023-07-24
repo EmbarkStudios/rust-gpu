@@ -151,9 +151,10 @@ def_custom_insts! {
     // users to do `catch_unwind` at the top-level of their shader to handle
     // panics specially (e.g. by appending to a custom buffer, or using some
     // specific color in a fragment shader, to indicate a panic happened).
-    // NOTE(eddyb) the `message` string follows `debugPrintf` rules, with remaining
-    // operands (collected into `debug_printf_args`) being its formatting arguments.
-    4 => Abort { message, ..debug_printf_args },
+    // NOTE(eddyb) `message_debug_printf` operands form a complete `debugPrintf`
+    // invocation (format string followed by inputs) for the "message", while
+    // `kind` only distinguishes broad categories like `"abort"` vs `"panic"`.
+    4 => Abort { kind, ..message_debug_printf },
 }
 
 impl CustomOp {

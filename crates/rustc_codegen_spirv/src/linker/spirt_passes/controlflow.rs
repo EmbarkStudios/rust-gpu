@@ -244,8 +244,8 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
             if let Some((
                 func_at_abort_inst,
                 CustomInst::Abort {
-                    message,
-                    debug_printf_args: message_debug_printf_args,
+                    kind: abort_kind,
+                    message_debug_printf,
                 },
             )) = custom_terminator_inst
             {
@@ -335,26 +335,38 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
 
                         let mut fmt = String::new();
 
+                        let (message_debug_printf_fmt_str, message_debug_printf_args) =
+                            message_debug_printf
+                                .split_first()
+                                .map(|(&fmt_str, args)| (&cx[const_str(fmt_str)], args))
+                                .unwrap_or_default();
+
+                        let fmt_dbg_src_loc = |(file, line, col)| {
+                            format!("{file}:{line}:{col}").replace('%', "%%")
+                        };
+
                         // HACK(eddyb) this improves readability w/ very verbose Vulkan loggers.
                         fmt += "\n";
 
-                        fmt += "[";
+                        fmt += "[Rust ";
 
-                        // NB: `message` has its own `message_debug_printf_args`
-                        // it formats, and as such any escaping is already done.
-                        let message = &cx[const_str(message)];
-                        let (message_kind, message) =
-                            message.split_once('|').unwrap_or(("", message));
+                        // HACK(eddyb) turn "panic" into "panicked", while the
+                        // general case looks like "abort" -> "aborted".
+                        match &cx[const_str(abort_kind)] {
+                            "panic" => fmt += "panicked",
+                            verb => {
+                                fmt += verb;
+                                fmt += "en";
+                            }
+                        };
 
-                        if let Some((file, line, col)) = current_debug_src_loc.take() {
-                            fmt += &format!("Rust {message_kind} at {file}:{line}:{col}")
-                                .replace('%', "%%");
-                        } else {
-                            fmt += message_kind;
+                        if let Some(loc) = current_debug_src_loc.take() {
+                            fmt += " at ";
+                            fmt += &fmt_dbg_src_loc(loc);
                         }
 
                         fmt += "]\n ";
-                        fmt += &message.replace('\n', "\n ");
+                        fmt += &message_debug_printf_fmt_str.replace('\n', "\n ");
 
                         let mut innermost = true;
                         let mut append_call = |callsite_debug_src_loc, callee: &str| {
@@ -368,9 +380,9 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                                 fmt += "\n      called by ";
                             }
                             fmt += callee;
-                            if let Some((file, line, col)) = callsite_debug_src_loc {
-                                fmt += &format!("\n        called at {file}:{line}:{col}")
-                                    .replace('%', "%%");
+                            if let Some(loc) = callsite_debug_src_loc {
+                                fmt += "\n        called at ";
+                                fmt += &fmt_dbg_src_loc(loc);
                             }
                             current_debug_src_loc = callsite_debug_src_loc;
                         };
@@ -391,7 +403,7 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                         });
                         abort_inst_def.inputs = [Value::Const(mk_const_str(cx.intern(fmt)))]
                             .into_iter()
-                            .chain(message_debug_printf_args)
+                            .chain(message_debug_printf_args.iter().copied())
                             .chain(debug_printf_context_inputs.iter().copied())
                             .collect();
 
