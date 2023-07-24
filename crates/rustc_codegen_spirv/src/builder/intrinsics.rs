@@ -339,11 +339,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     }
 
     fn abort(&mut self) {
-        // HACK(eddyb) `|` is an ad-hoc convention of `linker::spirt_passes::controlflow`.
-        self.abort_with_message_and_debug_printf_args(
-            "aborted|intrinsics::abort() called".into(),
-            [],
-        );
+        self.abort_with_kind_and_message_debug_printf("abort", "intrinsics::abort() called", []);
     }
 
     fn assume(&mut self, _val: Self::Value) {
@@ -378,24 +374,31 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 }
 
 impl Builder<'_, '_> {
-    pub fn abort_with_message_and_debug_printf_args(
+    pub fn abort_with_kind_and_message_debug_printf(
         &mut self,
-        message: String,
-        debug_printf_args: impl IntoIterator<Item = SpirvValue>,
+        kind: &str,
+        message_debug_printf_fmt_str: impl Into<String>,
+        message_debug_printf_args: impl IntoIterator<Item = SpirvValue>,
     ) {
         // FIXME(eddyb) this should be cached more efficiently.
         let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
 
         // HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
         // so the best thing we can do is use our own custom instruction.
-        let message_id = self.emit().string(message);
+        let kind_id = self.emit().string(kind);
+        let message_debug_printf_fmt_str_id = self.emit().string(message_debug_printf_fmt_str);
         self.custom_inst(
             void_ty,
             CustomInst::Abort {
-                message: Operand::IdRef(message_id),
-                debug_printf_args: debug_printf_args
+                kind: Operand::IdRef(kind_id),
+                message_debug_printf: [message_debug_printf_fmt_str_id]
                     .into_iter()
-                    .map(|arg| Operand::IdRef(arg.def(self)))
+                    .chain(
+                        message_debug_printf_args
+                            .into_iter()
+                            .map(|arg| arg.def(self)),
+                    )
+                    .map(Operand::IdRef)
                     .collect(),
             },
         );
