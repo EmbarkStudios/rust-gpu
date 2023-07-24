@@ -342,6 +342,15 @@ pub fn convert_custom_aborts_to_unstructured_returns_in_entry_points(
                                 .unwrap_or_default();
 
                         let fmt_dbg_src_loc = |(file, line, col)| {
+                            // FIXME(eddyb) figure out what is going on with
+                            // these column number conventions, below is a
+                            // related comment from `spirt::print`:
+                            // > // HACK(eddyb) Rust-GPU's column numbers seem
+                            // > // off-by-one wrt what e.g. VSCode expects
+                            // > // for `:line:col` syntax, but it's hard to
+                            // > // tell from the spec and `glslang` doesn't
+                            // > // even emit column numbers at all!
+                            let col = col + 1;
                             format!("{file}:{line}:{col}").replace('%', "%%")
                         };
 
