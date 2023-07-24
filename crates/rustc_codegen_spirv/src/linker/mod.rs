@@ -409,6 +409,7 @@ pub fn link(
             spirv_tools::binary::from_binary(&spv_words).to_vec()
         };
         let cx = std::rc::Rc::new(spirt::Context::new());
+        crate::custom_insts::register_to_spirt_context(&cx);
         let mut module = {
             let _timer = sess.timer("spirt::Module::lower_from_spv_file");
             match spirt::Module::lower_from_spv_bytes(cx.clone(), spv_bytes) {

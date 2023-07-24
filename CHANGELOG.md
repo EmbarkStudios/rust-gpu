@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (see its documentation for more details about each available panic handling strategy)
 
 ### Changed 🛠
+- [PR#1083](https://github.com/EmbarkStudios/rust-gpu/pull/1083) updated SPIR-T to get pretty-printer
+  improvements (especially for `OpExtInst`, including Rust-GPU's custom ones), and started more
+  aggressively deduplicating custom debuginfo instructions (to make SPIR-T dumps more readable)
 - [PR#1079](https://github.com/EmbarkStudios/rust-gpu/pull/1079) revised `spirv-builder`'s `README.md`,
   and added a way for `docs.rs` to be able to build it (via `cargo +stable doc --no-default-features`)
 - [PR#1070](https://github.com/EmbarkStudios/rust-gpu/pull/1070) made panics (via the `abort` intrinsic)
