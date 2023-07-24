@@ -154,7 +154,7 @@ fn link_with_linker_opts(
                 modules,
                 opts,
                 &OutputFilenames::new(
-                    std::env::current_dir().unwrap_or_default(),
+                    "".into(),
                     "".into(),
                     None,
                     None,
