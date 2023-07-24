@@ -919,55 +919,67 @@ impl Inliner<'_, '_> {
 
         let mut blocks = callee.blocks.clone();
         for block in &mut blocks {
-            let last = block.instructions.last().unwrap();
-            if let Op::Return | Op::ReturnValue = last.class.opcode {
-                if Op::ReturnValue == last.class.opcode {
-                    let return_value = last.operands[0].id_ref_any().unwrap();
-                    block.instructions.insert(
-                        block.instructions.len() - 1,
-                        Instruction::new(
-                            Op::Store,
-                            None,
-                            None,
-                            vec![
-                                Operand::IdRef(return_variable.unwrap()),
-                                Operand::IdRef(return_value),
-                            ],
-                        ),
-                    );
+            let mut terminator = block.instructions.pop().unwrap();
+
+            // HACK(eddyb) strip trailing debuginfo (as it can't impact terminators).
+            while let Some(last) = block.instructions.last() {
+                let can_remove = match last.class.opcode {
+                    Op::Line | Op::NoLine => true,
+                    Op::ExtInst => {
+                        last.operands[0].unwrap_id_ref() == custom_ext_inst_set_import
+                            && matches!(
+                                CustomOp::decode_from_ext_inst(last),
+                                CustomOp::SetDebugSrcLoc | CustomOp::ClearDebugSrcLoc
+                            )
+                    }
+                    _ => false,
+                };
+                if can_remove {
+                    block.instructions.pop();
+                } else {
+                    break;
+                }
+            }
+
+            if let Op::Return | Op::ReturnValue = terminator.class.opcode {
+                if Op::ReturnValue == terminator.class.opcode {
+                    let return_value = terminator.operands[0].id_ref_any().unwrap();
+                    block.instructions.push(Instruction::new(
+                        Op::Store,
+                        None,
+                        None,
+                        vec![
+                            Operand::IdRef(return_variable.unwrap()),
+                            Operand::IdRef(return_value),
+                        ],
+                    ));
                 } else {
                     assert!(return_variable.is_none());
                 }
-                *block.instructions.last_mut().unwrap() =
+                terminator =
                     Instruction::new(Op::Branch, None, None, vec![Operand::IdRef(return_jump)]);
             }
 
-            let (debuginfo_prefix, debuginfo_suffix) = mk_debuginfo_prefix_and_suffix(true);
-            block.instructions.splice(
+            let num_phis = block
+                .instructions
+                .iter()
+                .take_while(|inst| inst.class.opcode == Op::Phi)
+                .count();
+
+            // HACK(eddyb) avoid adding debuginfo to otherwise-empty blocks.
+            if block.instructions.len() > num_phis {
+                let (debuginfo_prefix, debuginfo_suffix) = mk_debuginfo_prefix_and_suffix(true);
                 // Insert the prefix debuginfo instructions after `OpPhi`s,
                 // which sadly can't be covered by them.
-                {
-                    let i = block
-                        .instructions
-                        .iter()
-                        .position(|inst| inst.class.opcode != Op::Phi)
-                        .unwrap();
-                    i..i
-                },
-                debuginfo_prefix,
-            );
-            block.instructions.splice(
+                block
+                    .instructions
+                    .splice(num_phis..num_phis, debuginfo_prefix);
                 // Insert the suffix debuginfo instructions before the terminator,
                 // which sadly can't be covered by them.
-                {
-                    let last_non_terminator = block.instructions.iter().rposition(|inst| {
-                        !rspirv::grammar::reflect::is_block_terminator(inst.class.opcode)
-                    });
-                    let i = last_non_terminator.map_or(0, |x| x + 1);
-                    i..i
-                },
-                debuginfo_suffix,
-            );
+                block.instructions.extend(debuginfo_suffix);
+            }
+
+            block.instructions.push(terminator);
         }
 
         let (caller_restore_debuginfo_after_call, calleer_reset_debuginfo_before_call) =

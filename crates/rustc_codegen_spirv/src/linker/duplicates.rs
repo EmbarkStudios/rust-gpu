@@ -1,9 +1,12 @@
+use crate::custom_insts::{self, CustomOp};
 use rspirv::binary::Assemble;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::bug;
+use smallvec::SmallVec;
 use std::collections::hash_map;
+use std::mem;
 
 // FIXME(eddyb) consider deduplicating the `OpString` and `OpSource` created for
 // file-level debuginfo (but using SPIR-T for linking might be better?).
@@ -269,19 +272,272 @@ pub fn remove_duplicate_types(module: &mut Module) {
     });
 }
 
-pub fn remove_duplicate_lines(module: &mut Module) {
+pub fn remove_duplicate_debuginfo(module: &mut Module) {
+    // FIXME(eddyb) avoid repeating this across different passes/helpers.
+    let custom_ext_inst_set_import = module
+        .ext_inst_imports
+        .iter()
+        .find(|inst| {
+            assert_eq!(inst.class.opcode, Op::ExtInstImport);
+            inst.operands[0].unwrap_literal_string() == &custom_insts::CUSTOM_EXT_INST_SET[..]
+        })
+        .map(|inst| inst.result_id.unwrap());
+
     for func in &mut module.functions {
         for block in &mut func.blocks {
-            block.instructions.dedup_by(|a, b| {
-                if a.class.opcode == Op::Line && b.class.opcode == Op::Line {
-                    // dedup_by removes the *second* element in a pair of duplicates. We want to
-                    // remove the *first* (so the last OpLine is kept). So, swap them! :D
-                    std::mem::swap(a, b);
-                    true
-                } else {
-                    false
+            // Ignore the terminator, it's effectively "outside" debuginfo.
+            let (_, insts) = block.instructions.split_last_mut().unwrap();
+
+            // HACK(eddyb) to make random access easier, we first replace unused
+            // instructions with `OpNop`, and then remove all the `OpNop`s.
+
+            #[derive(Clone)]
+            struct DbgLocInst {
+                inst_idx: usize,
+                used: bool,
+            }
+
+            fn nop() -> Instruction {
+                Instruction::new(Op::Nop, None, None, vec![])
+            }
+            impl DbgLocInst {
+                fn nop_if_unused(&self, insts: &mut [Instruction]) {
+                    if !self.used {
+                        insts[self.inst_idx] = nop();
+                    }
                 }
-            });
+            }
+
+            #[derive(Clone, Default)]
+            struct DbgState {
+                loc: Option<DbgLocInst>,
+                has_semantic_insts: bool,
+            }
+            let mut dbg = DbgState::default();
+
+            struct Frame {
+                call_dbg: DbgState,
+                push_inst_idx: usize,
+            }
+            let mut inlined_frames = SmallVec::<[Frame; 8]>::new();
+
+            // HACK(eddyb) `PopInlinedCallFrame` moves `inlined_frames.last()`
+            // `fusable_freshly_popped_inlined_frames.last()`, so a sequence of
+            // N pops will reverse the N last entries of `inlined_frames` into
+            // this vector (and go from outside-in, to inside-out), which allows
+            // *fusing* a pop with a push (of an identical inlined frame), when
+            // no interverning instructions prevent it (such instructions will
+            // clear this vector to indicate the pops are "fully committed").
+            struct PoppedFrame {
+                frame: Frame,
+                callee_has_semantic_insts: bool,
+                pop_inst_idx: usize,
+            }
+            let mut fusable_freshly_popped_inlined_frames = SmallVec::<[PoppedFrame; 8]>::new();
+
+            for inst_idx in 0..insts.len() {
+                let inst = &insts[inst_idx];
+                let custom_op = match inst.class.opcode {
+                    Op::ExtInst
+                        if Some(inst.operands[0].unwrap_id_ref()) == custom_ext_inst_set_import =>
+                    {
+                        Some(CustomOp::decode_from_ext_inst(inst))
+                    }
+                    _ => None,
+                };
+
+                fn inst_eq_key(inst: &Instruction) -> impl PartialEq + '_ {
+                    (inst.class.opcode, &inst.operands)
+                }
+
+                // NOTE(eddyb) `fusable_freshly_popped_inlined_frames`-preserving
+                // cases must all use `if can_continue { continue; }` to skip the
+                // draining logic (`can_continue` is only `false` at the very end).
+                let can_continue = inst_idx < insts.len() - 1;
+                let prev_dbg_loc_snapshot = dbg.loc.clone();
+                match (inst.class.opcode, custom_op) {
+                    (Op::Line | Op::NoLine, _)
+                    | (_, Some(CustomOp::SetDebugSrcLoc | CustomOp::ClearDebugSrcLoc)) => {
+                        // HACK(eddyb) prefer keeping older active `DbgLocInst`s,
+                        // if all the details are the same (it helps with fusion).
+                        if dbg.loc.as_ref().is_some_and(|old_dbg_loc| {
+                            inst_eq_key(inst) == inst_eq_key(&insts[old_dbg_loc.inst_idx])
+                        }) {
+                            insts[inst_idx] = nop();
+                            if can_continue {
+                                continue;
+                            }
+                        } else {
+                            dbg.loc = Some(DbgLocInst {
+                                inst_idx,
+                                used: false,
+                            });
+                        }
+                    }
+                    (_, Some(CustomOp::PushInlinedCallFrame)) => {
+                        // HACK(eddyb) attempt fusing this push with the last pop.
+                        let fuse_with_last_pop = fusable_freshly_popped_inlined_frames
+                            .last()
+                            .is_some_and(|last_popped| {
+                                // HACK(eddyb) updating `dbg.loc` deduplicates eagerly,
+                                // so here it suffices to check the (deduped) indices.
+                                let dbg_loc_inst_idx =
+                                    |dbg: &DbgState| dbg.loc.as_ref().map(|d| d.inst_idx);
+                                dbg_loc_inst_idx(&last_popped.frame.call_dbg)
+                                    == dbg_loc_inst_idx(&dbg)
+                                    && inst_eq_key(inst)
+                                        == inst_eq_key(&insts[last_popped.frame.push_inst_idx])
+                            });
+                        if fuse_with_last_pop {
+                            let PoppedFrame {
+                                frame,
+                                callee_has_semantic_insts,
+                                pop_inst_idx,
+                            } = fusable_freshly_popped_inlined_frames.pop().unwrap();
+
+                            insts[pop_inst_idx] = nop();
+
+                            // Can't make entering an inlined function a nop,
+                            // as it needs to reset callee-side `DbgLocInst`,
+                            // but we can replace it in-place and hope later
+                            // it get nop'd out by some real `DbgLocInst`.
+                            insts[inst_idx].operands.splice(
+                                1..,
+                                [Operand::LiteralExtInstInteger(
+                                    CustomOp::ClearDebugSrcLoc as u32,
+                                )],
+                            );
+                            dbg = DbgState {
+                                loc: Some(DbgLocInst {
+                                    inst_idx,
+                                    used: false,
+                                }),
+                                has_semantic_insts: callee_has_semantic_insts,
+                            };
+
+                            inlined_frames.push(frame);
+
+                            // Allow further fusing to occur.
+                            if can_continue {
+                                continue;
+                            }
+                        } else {
+                            // HACK(eddyb) the actual push to `inlined_frames` is
+                            // done at the very end of the loop body, to be able
+                            // to process any pending updates on the previous state.
+                        }
+                    }
+                    (_, Some(CustomOp::PopInlinedCallFrame)) => {
+                        // Leaving an inlined function doesn't use `DbgLocInst`.
+                        if let Some(dbg_loc) = dbg.loc.take() {
+                            // HACK(eddyb) only treat as "definitely unused"
+                            // instructions that are too "recent" to have been
+                            // used by a `PushInlinedCallFrame` with a still
+                            // uncommitted `PopInlinedCallFrame`.
+                            let min_safe_inst_idx_to_nop = fusable_freshly_popped_inlined_frames
+                                .last()
+                                .map_or(0, |last_popped| last_popped.pop_inst_idx);
+                            if dbg_loc.inst_idx > min_safe_inst_idx_to_nop {
+                                dbg_loc.nop_if_unused(insts);
+                            }
+                        }
+                        if let Some(frame) = inlined_frames.pop() {
+                            let callee_has_semantic_insts = dbg.has_semantic_insts;
+                            dbg = frame.call_dbg.clone();
+                            dbg.has_semantic_insts |= callee_has_semantic_insts;
+
+                            // HACK(eddyb) inform future `PushInlinedCallFrame`s
+                            // of potential fusion, by saving a copy of the frame.
+                            fusable_freshly_popped_inlined_frames.push(PoppedFrame {
+                                frame,
+                                callee_has_semantic_insts,
+                                pop_inst_idx: inst_idx,
+                            });
+                        } else {
+                            // FIXME(eddyb) this may indicate a bug elsewhere.
+                            insts[inst_idx] = nop();
+                        }
+                        if can_continue {
+                            continue;
+                        }
+                    }
+                    _ => {
+                        if let Some(dbg_loc) = &mut dbg.loc {
+                            dbg_loc.used = true;
+                        }
+                        dbg.has_semantic_insts = true;
+                    }
+                }
+
+                // NOTE(eddyb) mutable so that it may be marked as used below.
+                let mut freshly_replaced_dbg_loc = prev_dbg_loc_snapshot.filter(|prev_dbg_loc| {
+                    dbg.loc.as_ref().map(|d| d.inst_idx) != Some(prev_dbg_loc.inst_idx)
+                });
+
+                // NOTE(eddyb) the iteration order doesn't matter, as this is
+                // effectively a set of `PopInlinedCallFrame`s which have had
+                // all their other side-effects processed, and didn't get a
+                // chance to be fused away, so they're getting committed.
+                for popped in fusable_freshly_popped_inlined_frames.drain(..) {
+                    let PoppedFrame {
+                        mut frame,
+                        callee_has_semantic_insts,
+                        pop_inst_idx,
+                    } = popped;
+
+                    // HACK(eddyb) this popped frame's `call_dbg.loc` may still
+                    // be used elsewhere, in which case that use takes precedence,
+                    // and is effectively the new "owner" of the `DbgLocInst`.
+                    let call_dbg_loc_used_elsewhere =
+                        frame.call_dbg.loc.as_ref().and_then(|call_dbg_loc| {
+                            [dbg.loc.as_mut(), freshly_replaced_dbg_loc.as_mut()]
+                                .into_iter()
+                                .flatten()
+                                .find(|dbg_loc| dbg_loc.inst_idx == call_dbg_loc.inst_idx)
+                        });
+                    if call_dbg_loc_used_elsewhere.is_some() {
+                        frame.call_dbg.loc = None;
+                    }
+
+                    if callee_has_semantic_insts {
+                        // The `PushInlinedCallFrame` being kept requires its
+                        // original `DbgLocInst` to also be kept around.
+                        if let Some(call_dbg_loc) = call_dbg_loc_used_elsewhere {
+                            call_dbg_loc.used = true;
+                        }
+                    } else {
+                        // If the entire inlined call is all `OpNop`s now,
+                        // entering/leaving it can also become `OpNop`s.
+                        if let Some(call_dbg_loc) = &mut frame.call_dbg.loc {
+                            call_dbg_loc.nop_if_unused(insts);
+                        }
+                        insts[frame.push_inst_idx] = nop();
+                        insts[pop_inst_idx] = nop();
+                    }
+                }
+
+                // Only remove a replaced `DbgLocInst` after it had a chance to
+                // be marked as used above (for e.g. a `PushInlinedCallFrame`).
+                if let Some(old_dbg_loc) = freshly_replaced_dbg_loc {
+                    old_dbg_loc.nop_if_unused(insts);
+                }
+
+                // HACK(eddyb) the actual push to `inlined_frames` is
+                // done at the very end of the loop body, to be able
+                // to process any pending updates on the previous state.
+                if custom_op == Some(CustomOp::PushInlinedCallFrame) {
+                    inlined_frames.push(Frame {
+                        call_dbg: mem::take(&mut dbg),
+                        push_inst_idx: inst_idx,
+                    });
+                }
+            }
+
+            assert!(fusable_freshly_popped_inlined_frames.is_empty());
+
+            block
+                .instructions
+                .retain(|inst| inst.class.opcode != Op::Nop);
         }
     }
 }
