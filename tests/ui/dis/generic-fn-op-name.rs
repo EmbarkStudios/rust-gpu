@@ -11,8 +11,16 @@
 #![feature(adt_const_params)]
 #![allow(incomplete_features)]
 
-use spirv_std::image::Dimensionality;
 use spirv_std::spirv;
+
+// HACK(eddyb) not using `spirv_std::image::Dimensionality` as that `enum` doesn't
+// actually implement `ConstParamTy` (nor do we need *that* `enum`, just any).
+#[derive(PartialEq, Eq, PartialOrd, Ord, core::marker::ConstParamTy)]
+enum Dimensionality {
+    OneD,
+    TwoD,
+    ThreeD,
+}
 
 fn generic<T, const DIM: Dimensionality>() {}
 

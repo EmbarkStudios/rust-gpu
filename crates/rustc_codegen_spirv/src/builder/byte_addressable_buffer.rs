@@ -10,7 +10,7 @@ use rustc_target::abi::{Align, Size};
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
     fn load_err(&mut self, original_type: Word, invalid_type: Word) -> SpirvValue {
-        let mut err = self.struct_err(&format!(
+        let mut err = self.struct_err(format!(
             "cannot load type {} in an untyped buffer load",
             self.debug_type(original_type)
         ));
@@ -191,7 +191,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
         // Signature: fn load<T>(array: &[u32], index: u32) -> T;
         if args.len() != 3 {
-            self.fatal(&format!(
+            self.fatal(format!(
                 "buffer_load_intrinsic should have 3 args, it has {}",
                 args.len()
             ));
@@ -205,7 +205,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     fn store_err(&mut self, original_type: Word, value: SpirvValue) -> Result<(), ErrorGuaranteed> {
-        let mut err = self.struct_err(&format!(
+        let mut err = self.struct_err(format!(
             "cannot store type {} in an untyped buffer store",
             self.debug_type(original_type)
         ));
@@ -358,7 +358,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         };
         let expected_args = if is_pair { 5 } else { 4 };
         if args.len() != expected_args {
-            self.fatal(&format!(
+            self.fatal(format!(
                 "buffer_store_intrinsic should have {} args, it has {}",
                 expected_args,
                 args.len()

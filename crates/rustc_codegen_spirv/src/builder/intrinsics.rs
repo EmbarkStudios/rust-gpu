@@ -124,7 +124,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         self.add(args[0].immediate(), args[1].immediate())
                     }
                     TyKind::Float(_) => self.fadd(args[0].immediate(), args[1].immediate()),
-                    other => self.fatal(&format!(
+                    other => self.fatal(format!(
                         "Unimplemented saturating_add intrinsic type: {other:#?}"
                     )),
                 };
@@ -139,7 +139,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         self.sub(args[0].immediate(), args[1].immediate())
                     }
                     TyKind::Float(_) => self.fsub(args[0].immediate(), args[1].immediate()),
-                    other => self.fatal(&format!(
+                    other => self.fatal(format!(
                         "Unimplemented saturating_sub intrinsic type: {other:#?}"
                     )),
                 };
@@ -327,7 +327,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
 
-            _ => self.fatal(&format!("TODO: Unknown intrinsic '{name}'")),
+            _ => self.fatal(format!("TODO: Unknown intrinsic '{name}'")),
         };
 
         if !fn_abi.ret.is_ignore() {

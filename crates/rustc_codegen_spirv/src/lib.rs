@@ -97,7 +97,7 @@ use rustc_codegen_ssa::traits::{
     WriteBackendMethods,
 };
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
-use rustc_data_structures::fx::FxHashMap;
+use rustc_data_structures::fx::FxIndexMap;
 use rustc_errors::{ErrorGuaranteed, FatalError, Handler};
 use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
@@ -257,7 +257,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
         _outputs: &OutputFilenames,
-    ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorGuaranteed> {
+    ) -> Result<(CodegenResults, FxIndexMap<WorkProductId, WorkProduct>), ErrorGuaranteed> {
         let (codegen_results, work_products) = ongoing_codegen
             .downcast::<OngoingCodegen<Self>>()
             .expect("Expected OngoingCodegen, found Box<Any>")

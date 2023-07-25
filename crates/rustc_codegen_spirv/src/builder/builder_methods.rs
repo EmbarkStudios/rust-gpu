@@ -201,7 +201,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 64 => self
                     .constant_u64(self.span(), memset_fill_u64(fill_byte))
                     .def(self),
-                _ => self.fatal(&format!(
+                _ => self.fatal(format!(
                     "memset on integer width {width} not implemented yet"
                 )),
             },
@@ -212,9 +212,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 64 => self
                     .constant_f64(self.span(), f64::from_bits(memset_fill_u64(fill_byte)))
                     .def(self),
-                _ => self.fatal(&format!(
-                    "memset on float width {width} not implemented yet"
-                )),
+                _ => self.fatal(format!("memset on float width {width} not implemented yet")),
             },
             SpirvType::Adt { .. } => self.fatal("memset on structs not implemented yet"),
             SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => {
@@ -259,16 +257,14 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 16 => memset_dynamic_scalar(self, fill_var, 2, false),
                 32 => memset_dynamic_scalar(self, fill_var, 4, false),
                 64 => memset_dynamic_scalar(self, fill_var, 8, false),
-                _ => self.fatal(&format!(
+                _ => self.fatal(format!(
                     "memset on integer width {width} not implemented yet"
                 )),
             },
             SpirvType::Float(width) => match width {
                 32 => memset_dynamic_scalar(self, fill_var, 4, true),
                 64 => memset_dynamic_scalar(self, fill_var, 8, true),
-                _ => self.fatal(&format!(
-                    "memset on float width {width} not implemented yet"
-                )),
+                _ => self.fatal(format!("memset on float width {width} not implemented yet")),
             },
             SpirvType::Adt { .. } => self.fatal("memset on structs not implemented yet"),
             SpirvType::Array { element, count } => {
@@ -805,7 +801,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     ) {
         fn construct_8(self_: &Builder<'_, '_>, signed: bool, v: u128) -> Operand {
             if v > u8::MAX as u128 {
-                self_.fatal(&format!(
+                self_.fatal(format!(
                     "Switches to values above u8::MAX not supported: {v:?}"
                 ))
             } else if signed {
@@ -817,7 +813,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
         fn construct_16(self_: &Builder<'_, '_>, signed: bool, v: u128) -> Operand {
             if v > u16::MAX as u128 {
-                self_.fatal(&format!(
+                self_.fatal(format!(
                     "Switches to values above u16::MAX not supported: {v:?}"
                 ))
             } else if signed {
@@ -828,7 +824,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
         fn construct_32(self_: &Builder<'_, '_>, _signed: bool, v: u128) -> Operand {
             if v > u32::MAX as u128 {
-                self_.fatal(&format!(
+                self_.fatal(format!(
                     "Switches to values above u32::MAX not supported: {v:?}"
                 ))
             } else {
@@ -837,7 +833,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
         fn construct_64(self_: &Builder<'_, '_>, _signed: bool, v: u128) -> Operand {
             if v > u64::MAX as u128 {
-                self_.fatal(&format!(
+                self_.fatal(format!(
                     "Switches to values above u64::MAX not supported: {v:?}"
                 ))
             } else {
@@ -852,13 +848,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     16 => construct_16,
                     32 => construct_32,
                     64 => construct_64,
-                    other => self.fatal(&format!(
+                    other => self.fatal(format!(
                         "switch selector cannot have width {other} (only 8, 16, 32, and 64 bits allowed)"
                     )),
                 };
                 (signed, construct_case)
             }
-            other => self.fatal(&format!(
+            other => self.fatal(format!(
                 "switch selector cannot have non-integer type {}",
                 other.debug(v.ty, self)
             )),
@@ -947,7 +943,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Bool => self
                 .emit()
                 .logical_and(ty, None, lhs.def(self), rhs.def(self)),
-            o => self.fatal(&format!(
+            o => self.fatal(format!(
                 "and() not implemented for type {}",
                 o.debug(ty, self)
             )),
@@ -966,7 +962,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Bool => self
                 .emit()
                 .logical_or(ty, None, lhs.def(self), rhs.def(self)),
-            o => self.fatal(&format!(
+            o => self.fatal(format!(
                 "or() not implemented for type {}",
                 o.debug(ty, self)
             )),
@@ -986,7 +982,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 self.emit()
                     .logical_not_equal(ty, None, lhs.def(self), rhs.def(self))
             }
-            o => self.fatal(&format!(
+            o => self.fatal(format!(
                 "xor() not implemented for type {}",
                 o.debug(ty, self)
             )),
@@ -1003,7 +999,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 self.emit()
                     .logical_not_equal(val.ty, None, val.def(self), true_.def(self))
             }
-            o => self.fatal(&format!(
+            o => self.fatal(format!(
                 "not() not implemented for type {}",
                 o.debug(val.ty, self)
             )),
@@ -1104,7 +1100,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 assert_ty_eq!(self, ty, pointee);
                 pointee
             }
-            ty => self.fatal(&format!(
+            ty => self.fatal(format!(
                 "load called on variable that wasn't a pointer: {ty:?}"
             )),
         };
@@ -1133,7 +1129,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 assert_ty_eq!(self, ty, pointee);
                 pointee
             }
-            ty => self.fatal(&format!(
+            ty => self.fatal(format!(
                 "atomic_load called on variable that wasn't a pointer: {ty:?}"
             )),
         };
@@ -1160,7 +1156,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         place: PlaceRef<'tcx, Self::Value>,
     ) -> OperandRef<'tcx, Self::Value> {
         if place.layout.is_zst() {
-            return OperandRef::new_zst(self, place.layout);
+            return OperandRef::zero_sized(place.layout);
         }
 
         let val = if let Some(llextra) = place.llextra {
@@ -1236,7 +1232,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn store(&mut self, val: Self::Value, ptr: Self::Value, _align: Align) -> Self::Value {
         let ptr_elem_ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee } => pointee,
-            ty => self.fatal(&format!(
+            ty => self.fatal(format!(
                 "store called on variable that wasn't a pointer: {ty:?}"
             )),
         };
@@ -1268,7 +1264,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         flags: MemFlags,
     ) -> Self::Value {
         if flags != MemFlags::empty() {
-            self.err(&format!("store_with_flags is not supported yet: {flags:?}"));
+            self.err(format!("store_with_flags is not supported yet: {flags:?}"));
         }
         self.store(val, ptr, align)
     }
@@ -1282,7 +1278,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     ) {
         let ptr_elem_ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee } => pointee,
-            ty => self.fatal(&format!(
+            ty => self.fatal(format!(
                 "atomic_store called on variable that wasn't a pointer: {ty:?}"
             )),
         };
@@ -1320,7 +1316,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 assert_ty_eq!(self, ty, pointee);
                 pointee
             }
-            other => self.fatal(&format!(
+            other => self.fatal(format!(
                 "struct_gep not on pointer type: {other:?}, index {idx}"
             )),
         };
@@ -1335,7 +1331,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 assert_eq!(idx, 0);
                 inner_type
             }
-            other => self.fatal(&format!(
+            other => self.fatal(format!(
                 "struct_gep not on struct, array, or vector type: {other:?}, index {idx}"
             )),
         };
@@ -1480,7 +1476,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn ptrtoint(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         match self.lookup_type(val.ty) {
             SpirvType::Pointer { .. } => (),
-            other => self.fatal(&format!(
+            other => self.fatal(format!(
                 "ptrtoint called on non-pointer source type: {other:?}"
             )),
         }
@@ -1500,7 +1496,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn inttoptr(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         match self.lookup_type(dest_ty) {
             SpirvType::Pointer { .. } => (),
-            other => self.fatal(&format!(
+            other => self.fatal(format!(
                 "inttoptr called on non-pointer dest type: {other:?}"
             )),
         }
@@ -1603,7 +1599,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     .unwrap()
                     .with_type(dest_ty)
             }
-            (val_ty, dest_ty_spv) => self.fatal(&format!(
+            (val_ty, dest_ty_spv) => self.fatal(format!(
                 "TODO: intcast not implemented yet: val={val:?} val.ty={val_ty:?} dest_ty={dest_ty_spv:?} is_signed={is_signed}"
             )),
         }
@@ -1628,14 +1624,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
             _ => match self.lookup_type(val.ty) {
                 SpirvType::Pointer { pointee } => (val, pointee),
-                other => self.fatal(&format!(
+                other => self.fatal(format!(
                     "pointercast called on non-pointer source type: {other:?}"
                 )),
             },
         };
         let dest_pointee = match self.lookup_type(dest_ty) {
             SpirvType::Pointer { pointee } => pointee,
-            other => self.fatal(&format!(
+            other => self.fatal(format!(
                 "pointercast called on non-pointer dest type: {other:?}"
             )),
         };
@@ -1860,7 +1856,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 IntSLT => self.fatal("TODO: boolean operator IntSLT not implemented yet"),
                 IntSLE => self.fatal("TODO: boolean operator IntSLE not implemented yet"),
             },
-            other => self.fatal(&format!(
+            other => self.fatal(format!(
                 "Int comparison not implemented on {}",
                 other.debug(lhs.ty, self)
             )),
@@ -1930,7 +1926,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         flags: MemFlags,
     ) {
         if flags != MemFlags::empty() {
-            self.err(&format!(
+            self.err(format!(
                 "memcpy with mem flags is not supported yet: {flags:?}"
             ));
         }
@@ -1988,13 +1984,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         flags: MemFlags,
     ) {
         if flags != MemFlags::empty() {
-            self.err(&format!(
+            self.err(format!(
                 "memset with mem flags is not supported yet: {flags:?}"
             ));
         }
         let elem_ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee } => pointee,
-            _ => self.fatal(&format!(
+            _ => self.fatal(format!(
                 "memset called on non-pointer type: {}",
                 self.debug_type(ptr.ty)
             )),
@@ -2038,9 +2034,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn extract_element(&mut self, vec: Self::Value, idx: Self::Value) -> Self::Value {
         let result_type = match self.lookup_type(vec.ty) {
             SpirvType::Vector { element, .. } => element,
-            other => self.fatal(&format!(
-                "extract_element not implemented on type {other:?}"
-            )),
+            other => self.fatal(format!("extract_element not implemented on type {other:?}")),
         };
         match self.builder.lookup_const_u64(idx) {
             Some(const_index) => self.emit().composite_extract(
@@ -2084,7 +2078,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Array { element, .. }
             | SpirvType::Vector { element, .. }
             | SpirvType::Matrix { element, .. } => element,
-            other => self.fatal(&format!(
+            other => self.fatal(format!(
                 "extract_value not implemented on type {}",
                 other.debug(agg_val.ty, self)
             )),
@@ -2105,7 +2099,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Adt { field_types, .. } => {
                 assert_ty_eq!(self, field_types[idx as usize], elt.ty);
             }
-            other => self.fatal(&format!("insert_value not implemented on type {other:?}")),
+            other => self.fatal(format!("insert_value not implemented on type {other:?}")),
         };
         self.emit()
             .composite_insert(
@@ -2173,7 +2167,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     ) -> Self::Value {
         let dst_pointee_ty = match self.lookup_type(dst.ty) {
             SpirvType::Pointer { pointee } => pointee,
-            ty => self.fatal(&format!(
+            ty => self.fatal(format!(
                 "atomic_cmpxchg called on variable that wasn't a pointer: {ty:?}"
             )),
         };
@@ -2209,7 +2203,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     ) -> Self::Value {
         let dst_pointee_ty = match self.lookup_type(dst.ty) {
             SpirvType::Pointer { pointee } => pointee,
-            ty => self.fatal(&format!(
+            ty => self.fatal(format!(
                 "atomic_rmw called on variable that wasn't a pointer: {ty:?}"
             )),
         };
@@ -2562,8 +2556,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 enum Inst<'tcx, ID> {
                     Bitcast(ID, ID),
                     CompositeExtract(ID, ID, u32),
-                    AccessChain(ID, ID, SpirvConst<'tcx>),
-                    InBoundsAccessChain(ID, ID, SpirvConst<'tcx>),
+                    AccessChain(ID, ID, SpirvConst<'tcx, 'tcx>),
+                    InBoundsAccessChain(ID, ID, SpirvConst<'tcx, 'tcx>),
                     Store(ID, ID),
                     Load(ID, ID),
                     Call(ID, ID, SmallVec<[ID; 4]>),
