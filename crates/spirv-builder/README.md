@@ -37,6 +37,7 @@ Rust toolchain version history across [rust-gpu releases](https://github.com/Emb
 
 |`spirv-builder`<br>version|Rust toolchain<br>version|
 |:-:|:-:|
+|`0.9`|`nightly-2023-05-27`|
 |`0.8`|`nightly-2023-04-15`|
 |`0.7`|`nightly-2023-03-04`|
 |`0.6`|`nightly-2023-01-21`|
