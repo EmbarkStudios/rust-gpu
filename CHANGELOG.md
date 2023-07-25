@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0]
+
 ### Added ⭐
 - [PR#1082](https://github.com/EmbarkStudios/rust-gpu/pull/1082) added partial
   support for extracting `format_args!` from `panic!`s, and converting them to

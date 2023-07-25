@@ -41,7 +41,7 @@ crates to display, it's recommended to use `spirv-builder` in a build script.
 2. Reference `spirv-builder` in your Cargo.toml:
     ```toml
     [build-dependencies]
-    spirv-builder = "0.8"
+    spirv-builder = "0.9"
     ```
     All dependent crates are published on [crates.io](https://crates.io).
 3. Create a `build.rs` in your project root.
@@ -153,7 +153,7 @@ Configure your shader crate as a `"dylib"` type crate, and add `spirv-std` to it
 crate-type = ["dylib"]
 
 [dependencies]
-spirv-std = { version = "0.8" }
+spirv-std = { version = "0.9" }
 ```
 
 Make sure your shader code uses the `no_std` attribute and makes the `spirv` attribute visibile in the global scope. Then, you're ready to write your first shader. Here's a very simple fragment shader called `main_fs` as an example that outputs the color red:
